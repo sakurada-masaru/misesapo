@@ -260,6 +260,20 @@ def render_page(path: Path, preset_context: Optional[Dict[str, object]] = None) 
 
     # 3) final placeholder pass (top-level replacements)
     text = apply_placeholders(text, {k: v for k, v in context.items() if isinstance(v, (str, int, float))})
+    
+    # 4) Fix absolute paths for GitHub Pages (replace /path with /repo/path if base_path is not /)
+    base_path = context.get("base_path", "/")
+    if base_path != "/":
+        # Replace absolute paths (href="/...", src="/...", url("/..."))
+        # But preserve external URLs (http://, https://, //)
+        text = re.sub(r'(href|src|url)\s*=\s*["\'](/[^"\']*)["\']', 
+                     lambda m: f'{m.group(1)}="{base_path.rstrip("/")}{m.group(2)}"',
+                     text)
+        # Also handle CSS url() syntax
+        text = re.sub(r'url\(["\']?/([^"\']*)["\']?\)', 
+                     lambda m: f'url("{base_path.rstrip("/")}/{m.group(1)}")',
+                     text)
+    
     return text
 
 
