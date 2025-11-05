@@ -271,7 +271,6 @@
         
         function updateReleaseCheckBadges() {
           const allChecks = getAllReleaseChecks();
-          console.log('All checks:', allChecks); // デバッグ用
           
           // 全てのsitemap-itemを取得
           const items = document.querySelectorAll('.sitemap-item');
@@ -294,7 +293,6 @@
             for (const path of pathVariations) {
               if (allChecks[path]) {
                 checks = allChecks[path];
-                console.log(`Found checks for path: ${path}`, checks); // デバッグ用
                 break;
               }
             }
