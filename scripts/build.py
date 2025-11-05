@@ -265,13 +265,10 @@ def render_page(path: Path, preset_context: Optional[Dict[str, object]] = None) 
     base_path = context.get("base_path", "/")
     if base_path != "/":
         base_prefix = base_path.rstrip("/")
-        # First, protect base tag from replacement (must be done after placeholder replacement)
-        base_tag_pattern = r'<base\s+href=["\']([^"\']*)["\']\s*/>'
+        # Protect base tag from replacement - must match exact base_path value
+        base_tag_pattern = rf'<base\s+href=["\']{re.escape(base_path)}["\']\s*/>'
         base_match = re.search(base_tag_pattern, text)
-        original_base_href = None
         if base_match:
-            # Store original base tag href value
-            original_base_href = base_match.group(1)
             # Temporarily replace with placeholder that won't match our regex
             text = text.replace(base_match.group(0), "___BASE_TAG_PLACEHOLDER___")
         
@@ -292,9 +289,9 @@ def render_page(path: Path, preset_context: Optional[Dict[str, object]] = None) 
                      lambda m: f'url("{base_prefix}/{m.group(1)}")',
                      text)
         
-        # Restore original base tag with correct href
-        if base_match and original_base_href:
-            text = text.replace("___BASE_TAG_PLACEHOLDER___", f'<base href="{original_base_href}" />')
+        # Restore original base tag
+        if base_match:
+            text = text.replace("___BASE_TAG_PLACEHOLDER___", f'<base href="{base_path}" />')
     
     return text
 
