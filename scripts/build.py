@@ -25,6 +25,7 @@ import re
 import json
 import csv
 import sys
+import os
 from dataclasses import dataclass
 from pathlib import Path
 import shutil
@@ -214,6 +215,17 @@ def process_jsonvar_directives(text: str, context: Dict[str, object]) -> str:
             raise BuildError(f"Failed to serialize ${var} to JSON: {e}")
 
     return RE_JSONVAR.sub(_sub, text)
+def get_base_path() -> str:
+    """Get base path for GitHub Pages or local development."""
+    # Check if running in GitHub Actions (GitHub Pages)
+    github_repository = os.environ.get("GITHUB_REPOSITORY")
+    if github_repository:
+        # Extract repository name from GITHUB_REPOSITORY (e.g., "sakurada-masaru/misesapo" -> "misesapo")
+        repo_name = github_repository.split("/")[1] if "/" in github_repository else github_repository
+        return f"/{repo_name}/"
+    # Local development
+    return "/"
+
 def render_page(path: Path, preset_context: Optional[Dict[str, object]] = None) -> str:
     raw = read_text(path)
     # 0) detect optional layout directive (single, top-most)
@@ -232,6 +244,8 @@ def render_page(path: Path, preset_context: Optional[Dict[str, object]] = None) 
     context: Dict[str, object] = {}
     if preset_context:
         context.update(preset_context)
+    # Add base_path to context
+    context["base_path"] = get_base_path()
     text = process_json_directives(text, context)
     text = render_foreach_blocks(text, context)
     text = process_jsonvar_directives(text, context)
