@@ -527,28 +527,18 @@
             has_screenshot: screenshotData ? 'あり' : 'なし'
           };
 
+          // スクリーンショットがある場合は、HTML画像として埋め込む
+          if (screenshotData) {
+            // base64画像をHTMLのimgタグとして埋め込む
+            // EmailJSのテンプレートでHTMLメールとして表示される
+            templateParams.screenshot_image = `<img src="${screenshotData}" alt="スクリーンショット" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; margin: 10px 0;" />`;
+            templateParams.screenshot_base64 = screenshotData; // テンプレートで直接使用する場合
+          }
+
           // EmailJSで送信
           emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
             .then(function(response) {
               console.log('送信成功:', response.status, response.text);
-              
-              // スクリーンショットがある場合は、別途添付ファイルとして送信
-              if (screenshotData) {
-                // スクリーンショットをbase64からBlobに変換
-                const byteString = atob(screenshotData.split(',')[1]);
-                const mimeString = screenshotData.split(',')[0].split(':')[1].split(';')[0];
-                const ab = new ArrayBuffer(byteString.length);
-                const ia = new Uint8Array(ab);
-                for (let i = 0; i < byteString.length; i++) {
-                  ia[i] = byteString.charCodeAt(i);
-                }
-                const blob = new Blob([ab], { type: mimeString });
-
-                // EmailJSでファイル添付（添付ファイル機能がある場合）
-                // 注意: EmailJSの無料プランでは添付ファイルが制限される場合があります
-                // その場合は、スクリーンショットを画像URLとして共有するか、
-                // 別のサービス（Formspree等）を使用する必要があります
-              }
 
               alert('フィードバックを送信しました！');
               
