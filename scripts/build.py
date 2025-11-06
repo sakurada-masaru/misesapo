@@ -571,6 +571,54 @@ def _build_client_edit_pages(template: Path, outputs: List[str]) -> None:
         outputs.append(str(out_path))
 
 
+def _build_assignment_detail_pages(template: Path, outputs: List[str]) -> None:
+    """Generate pages/staff/assignments/{id}.html from staff_assignments.json and the template [id].html."""
+    data_path = SRC / "data" / "staff_assignments.json"
+    try:
+        data = json.loads(read_text(data_path))
+    except Exception as e:
+        raise BuildError(f"Failed to load staff assignments data: {e}")
+    assignments = data.get("assignments") or []
+    if not isinstance(assignments, list):
+        raise BuildError("staff_assignments.json: 'assignments' must be a list")
+
+    for assignment in assignments:
+        aid = assignment.get("id")
+        if aid is None:
+            continue
+
+        # Prepare context with all assignment fields
+        tasks = assignment.get("tasks") or []
+        notes = assignment.get("notes", "")
+        
+        ctx = {
+            "id": str(aid),
+            "assignment_date": assignment.get("assignment_date", ""),
+            "assignment_time": assignment.get("assignment_time", ""),
+            "assignment_status": assignment.get("assignment_status", ""),
+            "status_text": assignment.get("status_text", ""),
+            "store_name": assignment.get("store_name", ""),
+            "store_address": assignment.get("store_address", ""),
+            "contact_person": assignment.get("contact_person", ""),
+            "contact_phone": assignment.get("contact_phone", ""),
+            "tasks": tasks,
+            "notes": notes,
+            "report_id": str(assignment.get("report_id")) if assignment.get("report_id") else "",
+        }
+
+        out_path = PUBLIC / "staff" / "assignments" / f"{aid}.html"
+        html = render_page(template, ctx)
+        ensure_dir(out_path)
+        # overwrite cleanly to avoid any potential residual content
+        try:
+            if out_path.exists():
+                out_path.unlink()
+        except Exception:
+            pass
+        out_path.write_text(html, encoding="utf-8")
+        outputs.append(str(out_path))
+
+
 def build_all() -> List[str]:
     if not PAGES_DIR.exists():
         raise BuildError(f"Missing input directory: {PAGES_DIR}")
@@ -595,6 +643,10 @@ def build_all() -> List[str]:
         # Special: generate edit pages from sales/clients/[id]/edit.html
         if str(rel).startswith("sales/clients/") and "edit.html" in str(rel):
             _build_client_edit_pages(page, outputs)
+            continue
+        # Special: generate detail pages from staff/assignments/[id].html
+        if str(rel).startswith("staff/assignments/") and rel.name == "[id].html":
+            _build_assignment_detail_pages(page, outputs)
             continue
         out_path = PUBLIC / rel
         html = render_page(page)

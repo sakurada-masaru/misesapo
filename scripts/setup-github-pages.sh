@@ -76,3 +76,4 @@ gh run list --workflow="Deploy to GitHub Pages" --limit 5 || echo "ワークフ�
 echo ""
 echo "完了しました！"
 
+
