@@ -1,238 +1,955 @@
-@layout('layouts.base')
-@json('data/meta/index_title.json', $title)
-@json('data/meta/index_body_class.json', $body_class)
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ミセサポ</title>
 
-<!-- Password Protection Modal -->
-<div id="password-protection-modal" class="password-protection-modal">
-  <div class="password-protection-overlay"></div>
-  <div class="password-protection-dialog">
-    <div class="password-protection-content">
-      <img src="/images/logo_144x144.png" alt="ミセサポ" class="password-protection-logo" />
-      <h2 class="password-protection-title">アクセス保護</h2>
-      <p class="password-protection-message">このページはパスワード保護されています。<br />パスワードを入力してください。</p>
-      <form id="password-protection-form" class="password-protection-form">
-        <div class="password-protection-field">
-          <input 
-            type="password" 
-            id="password-input" 
-            class="password-protection-input" 
-            placeholder="パスワードを入力" 
-            autocomplete="off"
-            required 
-          />
-          <button type="button" class="password-protection-toggle" aria-label="パスワードを表示" onclick="togglePasswordVisibility('password-input')">
-            <i class="fas fa-eye"></i>
-          </button>
+        <!--GoogleFonts(Noto Sans JP)-->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        <!--GoogleFonts(Noto Sans JP) end-->
+        <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+        <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+        <link rel="stylesheet" href="/css/style.css">
+    </head>
+
+    <body>
+        <header>
+            <div class="header-flex wrapper">
+                <h1 class="header-logo">
+                    <a href="/"><img src="/images/header-logo.jpg" alt="ミセサポ"></a>
+                </h1>
+                <button class="btn"><span></span><span></span><span></span></button>
+                <nav id="g-nav">
+                    <div id="g-nav-list">
+                        <ul>
+                            <li><a href="#about">ミセサポとは</a></li>
+                            <li><a href="#service">対応可能サービス</a></li>
+                            <li><a href="#reason">選ばれる理由</a></li>
+                            <li><a href="#use">ご利用イメージ</a></li>
+                            <li><a href="#customer">既存顧客一覧</a></li>
+                            <li><a href="#voice">お客様の声</a></li>
+                            <li><a href="/contact.html">お問い合わせ</a></li>
+                            <li><a href="/service.html" class="order-button">発注はこちら</a></li>
+                            <li><a href="/report.html">レポート</a></li>
+                            <li><a href="/mypage.html">マイページ</a></li>
+                            <li><a href="/concierge.html">コンシェルジュ</a></li>
+                            <li><a href="/signin.html" class="login-button">ログイン</a></li>
+                            <li><a href="/signup.html" class="signup-button">新規登録</a></li>
+
+                            <li class="g-nav-orderBox wrapper">
+                                <div class="g-nav-orderBox-title">＼まずは無料で相談してみませんか？／</div>
+                                <a class="gradient-link tel-link" href="tel:070-3332-3939"><span class="tel-icon"></span>070-3332-3939</a>
+                                <a class="gradient-link web-link" href="#order-form">Webでのお申し込みはこちら</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            <!--キービジュアル-->
+            <div class="key-visual order-box-view">
+                <div class="key-visual-wrapper-pc">
+                    <div class="key-visual-titleBox">
+                        <div class="key-sub-txt">「従業員の負担増加につながる清掃作業を、一挙に引き受けるサービスがあれば・・・」と、お悩みの方へ</div>
+                        <h2 class="key-title">
+                            <div class="key-title-inner key-title-inner-scroll">清掃も設備もまとめて管理！</div>
+                            <div class="key-title-inner">店舗の清掃は<span>ミセサポ</span>へ！！</div>
+                        </h2>
         </div>
-        <div id="password-error" class="password-protection-error" style="display: none;">
-          パスワードが正しくありません。
+                    <div class="key-visual-orderBox">
+                        <div class="key-visual-orderBox-title">＼まずは無料で相談してみませんか？／</div>
+                        <div class="key-visual-linkBox">
+                            <a class="key-visual-link tel-link" href="tel:070-3332-3939"><span class="tel-icon tel-icon-pink"></span>070-3332-3939</a>
+                            <a class="key-visual-link web-link" href="#order-form">Webでのお申し込みはこちら</a>
         </div>
-        <button type="submit" class="btn btn-primary btn-round btn-full btn-lg fw-700 password-protection-submit">
-          認証
-        </button>
-      </form>
     </div>
   </div>
 </div>
+            <!--キービジュアル end-->
 
-<!-- Splash Screen -->
-<div id="splash-screen" class="splash-screen">
-  <img src="/images/logo_144x144.png" alt="ミセサポ" class="splash-logo" />
+            <!--こんなお悩みありませんか-->
+            <article id="problem" class="problem-bg section-box">
+                <div class="wrapper problem-box">
+                    <h2 class="h2-title problem-h2 border-line fadeUp">こんなお悩みありませんか？</h2>
+                    <ul class="fadeUp">
+                        <li><span class="problem-icon"></span>清掃作業に負担がかかり、本業に集中できない</li>
+                        <li><span class="problem-icon"></span>清掃作業の外注は、シンプルに済ませたい</li>
+                        <li><span class="problem-icon"></span>従業員の満足度を、さらに上げていきたい</li>
+                        <li><span class="problem-icon"></span>「これもホントはやってほしいんだけど・・・」に答えるサービスがあると便利</li>
+                    </ul>
+                    <img class="fadeUp" src="/images/problem-illust.png" alt="悩んでいる2人の店舗従業員のイラスト">
 </div>
+            </article>
+            <!--こんなお悩みありませんか end-->
 
-<!-- Main Content (hidden during splash) -->
-<div id="page-content" class="page-content-hidden">
-<!-- Hero (full-bleed) -->
-<section class="hero">
-  <img class="hero-img"
-       src="/images/header-main.png"
-       srcset="/images/hero-1200x400.svg 1200w, /images/header-main.png 1600w"
-       sizes="100vw"
-       alt="ミセサポ ヒーロー" />
-  <div class="hero-overlay" aria-hidden="true"></div>
-  <button class="carousel-btn left" aria-label="前へ">
-    <i class="fas fa-chevron-left"></i>
-  </button>
-  <button class="carousel-btn right" aria-label="次へ">
-    <i class="fas fa-chevron-right"></i>
-  </button>
+            <!--ミセサポとは-->
+            <section id="about" class="about-bg section-box">
+                <h2 class="h2-title about-h2-title"><span class="fadeUp about-h2-normal">ミセサポなら、</span><span class="pink-slide">飲食店の地味に大変な作業を</span><br><span class="about-h2-pink fadeIn">全て</span><span class="pink-slide">丸投げできます！！</span></h2>
+                <div class="about-article-items wrapper">
+                    <article class="about-article-box fadeUp">
+                        <div class="about-article-flex">
+                            <img src="/images/about01.jpg" alt="清掃作業員">
+                            <div class="about-article-txt">
+                                <h3>清掃のプロに依頼するため、時間のかかる教育は不要です！</h3>
+                                <p>スキルや道具を持ったプロに依頼をするため、毎回１から教育をする必要はありません。</p>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="about-article-box fadeUp">
+                        <div class="about-article-flex">
+                            <img src="/images/about02.jpg" alt="清掃作業員">
+                            <div class="about-article-txt">
+                                <h3>品質保証を重視し、最後まで責任を持って清掃に取り組みます！</h3>
+                                <p>仕事の品質まで責任を持って保証いたします。ただマッチングするだけではありません。</p>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="about-article-box fadeUp">
+                        <div class="about-article-flex">
+                            <img src="/images/about03.jpg" alt="清掃作業員">
+                            <div class="about-article-txt">
+                                <h3>プラン提案から様々な清掃業務までを一挙に行うため、丸投げでOKです！</h3>
+                                <p>複数まとめて依頼が行えます。なにから対応するべきか等のご提案まで可能です。</p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
 </section>
+            <!--ミセサポとは end-->
 
-<!-- Category Tabs just below Hero -->
-<section class="container section-gap-lg">
-  <div class="tabs-row">
-    <div class="tabs">
-      <button class="tab active" data-category="all">全て</button>
-      <button class="tab" data-category="厨房設備">厨房設備</button>
-      <button class="tab" data-category="空調設備">空調設備</button>
-      <button class="tab" data-category="フロア">フロア</button>
-      <button class="tab" data-category="その他">その他</button>
+            <!--お問い合わせボタンボックス-->
+            <section class="contact-box">
+                <div class="contact-box-inner wrapper">
+                    <p class="contact-box-catchphrase">「これもホントはやってほしいんだけど・・・」<br>「痒いところに手が届く清掃サービスがあれば・・・」</p>
+                    <div class="g-nav-orderBox-title contact-box-subTitle">＼まずは無料で相談してみませんか？／</div>
+                    <h2 class="contact-box-title">店舗の清掃はミセサポへ！！</h2>
+                    <div class="contact-box-flex">
+                        <a class="gradient-link tel-link" href="tel:070-3332-3939"><span class="tel-icon"></span>070-3332-3939</a>
+                        <a class="gradient-link web-link" href="#order-form">Webでのお申し込みはこちら</a>
     </div>
   </div>
   </section>
+            <!--お問い合わせボタンボックス end-->
 
-<!-- Main Content -->
-<!-- Cart and Categories -->
-<section class="container section-gap-lg">
-  <div class="cart-row">
-    <a class="btn btn-primary cart-button" href="/cart.html">
-      <i class="fas fa-shopping-cart"></i>
-      <span>カートを見る</span>
-      <span class="cart-badge">0</span>
-    </a>
+            <!--対応可能サービス-->
+            <section id="service" class="section-box">
+                <h2 class="h2-title">対応可能サービス</h2>
+                <article class="wrapper service-grid article-margin">
+                    <div class="service-box opacityIn">
+                        <img src="/images/service43.jpg" alt="ロースター清掃">
+                        <p>ロースター清掃</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service04.jpg" alt="ダクト洗浄">
+                        <p>ダクト洗浄</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service19.jpeg" alt="ファンベルト交換調整">
+                        <p>ファンベルト交換調整</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service03.jpg" alt="レンジフード洗浄">
+                        <p>レンジフード洗浄</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service05.jpg" alt="換気扇洗浄">
+                        <p>換気扇洗浄</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service01.jpg" alt="グリストラップ洗浄">
+                        <p>グリストラップ洗浄</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service06.jpg" alt="厨房機器洗浄">
+                        <p>厨房機器洗浄</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service37.jpg" alt="厨房機器の入れ替え">
+                        <p>厨房機器の入れ替え</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service07.jpg" alt="シンク洗浄">
+                        <p>シンク洗浄</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service12.jpeg" alt="グレーチング清掃">
+                        <p>グレーチング清掃</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service41.jpg" alt="U字溝清掃">
+                        <p>U字溝清掃</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service42.jpg" alt="配管清掃">
+                        <p>配管清掃</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service13.jpg" alt="階段清掃">
+                        <p>階段清掃</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service14.jpg" alt="テーブル拭き">
+                        <p>テーブル拭き</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service15.jpeg" alt="シールはがし">
+                        <p>シールはがし</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service16.jpg" alt="5Sコンサル(整理・整頓・清掃・躾・清潔)">
+                        <p>5Sコンサル<span>(整理・整頓・清掃・躾・清潔)</span></p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service17.jpeg" alt="防火シャッター">
+                        <p>防火シャッター</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service18.jpeg" alt="排気ファン">
+                        <p>排気ファン</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service21.jpg" alt="窓洗浄">
+                        <p>窓洗浄</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service23.jpg" alt="不用品回収">
+                        <p>不用品回収</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service24.jpg" alt="粗大ごみ回収">
+                        <p>粗大ごみ回収</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service39.jpg" alt="可燃ごみ・不燃ごみ回収">
+                        <p>可燃ごみ・不燃ごみ<br>回収</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service22.jpg" alt="トイレ分解洗浄">
+                        <p>トイレ分解洗浄</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service28.jpeg" alt="スタッフルーム清掃">
+                        <p>スタッフルーム清掃</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service29.jpg" alt="玄関マット交換">
+                        <p>玄関マット交換</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service30.jpeg" alt="高所・厨房機内埃取り">
+                        <p>高所・厨房機内埃取り</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service38.jpg" alt="内装リフォーム">
+                        <p>内装リフォーム</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service33.jpg" alt="壁紙補修">
+                        <p>壁紙補修</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service35.jpg" alt="店舗什器修繕">
+                        <p>店舗什器修繕</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service34.jpg" alt="床補修">
+                        <p>床補修</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service40.jpg" alt="床洗浄">
+                        <p>床洗浄</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service31.jpg" alt="エアコン法定点検">
+                        <p>エアコン法定点検</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service02.jpg" alt="エアコン分解洗浄（全タイプ対応）">
+                        <p>エアコン分解洗浄<br>（全タイプ対応）</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service36.jpg" alt="エアコンの取り付け">
+                        <p>エアコンの取り付け</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service25.jpeg" alt="整理整頓">
+                        <p>整理整頓</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service26.jpeg" alt="配線整理">
+                        <p>配線整理</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service27.jpg" alt="ソファークリーニング(リンサークリーナー)">
+                        <p>ソファークリーニング<span>(リンサークリーナー)</span></p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service08.jpg" alt="害虫駆除">
+                        <p>害虫駆除</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service09.jpg" alt="ネズミ駆除">
+                        <p>ネズミ駆除</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service32.jpeg" alt="店舗査察">
+                        <p>店舗査察</p>
+                    </div>
+                    <div class="service-box opacityIn">
+                        <img src="/images/service10.jpeg" alt="ワックス">
+                        <p>ワックス</p>
   </div>
+                </article>
+                <div class="service-catchphrase border-line fadeUp">その他のサービスも順次拡大中です!!</div>
+            </section>
+            <!--対応可能サービス end-->
 
-  <p class="muted text-center small">
-    ※料金は目安となります。店舗の広さや業態、建物の状況により金額が前後する場合がございます。<br />
-    クリックすると詳細入力画面が表示されます。
-  </p>
-
-  <!-- Services Grid -->
-  @json('data/service_items.json', $service_items)
-  <div class="service-grid">
-    <!-- Service Items (generated) -->
-    @foreach $service_items
-    <article class="card-service" data-id="{{ id }}" data-category="{{ category }}">
-      <div class="thumb">
-        <img src="{{ image }}" alt="{{ title }}" loading="lazy" decoding="async" />
+            <!--ミセサポが選ばれる理由-->
+            <section id="reason" class="reason-bg section-box">
+                <h2 class="h2-title">ミセサポが選ばれる理由</h2>
+                <div class="wrapper reason-grid article-margin">
+                    <article class="reason-article-box fadeUp">
+                        <div class="number">01</div>
+                        <img src="/images/reason01.png" alt="2人の従業員のイラスト">
+                        <div class="reason-sentence">
+                            <h3>専門清掃を手軽にし、人手不足を解消します</h3>
+                            <p>店舗をただ綺麗にして終わりではなく、厨房・エアコン・害虫害獣駆除など、<span>店舗全体の衛生管理を手がけるプロ集団です。</span></p>
+                        </div>
+                    </article>
+                    <article class="reason-article-box fadeUp">
+                        <div class="number">02</div>
+                        <img src="/images/reason02.png" alt="仕事中の従業員のイラスト">
+                        <div class="reason-sentence">
+                            <h3>スタッフの負担を軽減し、定着率アップに繋げます</h3>
+                            <p>負担が大きい清掃業務をプロにお任せすることでスタッフの心理的負担を減らし、<span>"誰もが安心して長く働ける職場"</span>へと変わります。</p>
+                        </div>
+                    </article>
+                    <article class="reason-article-box fadeUp">
+                        <div class="number">03</div>
+                        <img src="/images/reason03.png" alt="収益アップのイラスト">
+                        <div class="reason-sentence">
+                            <h3>清掃作業から解放され、本業に集中できる働き方へ</h3>
+                            <p>清掃は営業時間外に実施します。面倒な清掃の段取りや手配から解放され、集中して本業に取り組めることで、業績アップにも繋がります。</p>
       </div>
-      <div class="content">
-        <h3>{{ title }}</h3>
-        <p class="price">{{ price }}</p>
+                    </article>
+                    <article class="reason-article-box fadeUp">
+                        <div class="number">04</div>
+                        <img src="/images/reason04.png" alt="店舗のイラスト">
+                        <div class="reason-sentence">
+                            <h3>専門のプロフェッショナルが店舗を訪問し、5S活動を支援します</h3>
+                            <p>5S（整理・整頓・清掃・清潔・躾）活動を定着化させ、清潔な環境や顧客満足度、及び、スタッフの定着率アップへと繋がります。</p>
       </div>
     </article>
-    @endforeach
   </div>
 </section>
+            <!--ミセサポが選ばれる理由 end-->
 
-@include('partials.service_item_modal')
-@include('partials.details_modal')
-@include('partials.cart_added_modal')
-<script>
-  // Password protection
-  (function() {
-    const PASSWORD_KEY = 'index_page_authenticated';
-    const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-    // パスワード（本番環境では環境変数や設定ファイルから取得することを推奨）
-    // デフォルトパスワード: misesapo2024
-    const PASSWORD_HASH = 'd41d8cd98f00b204e9800998ecf8427e'; // MD5 hash of default password
-    
-    function checkAuthentication() {
-      const authData = sessionStorage.getItem(PASSWORD_KEY);
-      if (!authData) return false;
-      
-      try {
-        const { timestamp } = JSON.parse(authData);
-        const now = Date.now();
-        // セッション期限をチェック
-        if (now - timestamp > SESSION_DURATION) {
-          sessionStorage.removeItem(PASSWORD_KEY);
-          return false;
-        }
-        return true;
-      } catch (e) {
-        return false;
-      }
-    }
-    
-    function setAuthentication() {
-      sessionStorage.setItem(PASSWORD_KEY, JSON.stringify({
-        timestamp: Date.now()
-      }));
-    }
-    
-    function hashPassword(password) {
-      // Simple hash function (for demo purposes)
-      // In production, use a proper hashing library
-      let hash = 0;
-      for (let i = 0; i < password.length; i++) {
-        const char = password.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-      }
-      return hash.toString(16);
-    }
-    
-    function verifyPassword(password) {
-      // Simple verification - in production, use proper password hashing
-      const hashed = hashPassword(password);
-      // For demo, accept multiple passwords
-      const validPasswords = [
-        'misesapo2024',
-        'misesapo',
-        'password'
-      ];
-      return validPasswords.includes(password);
-    }
-    
-    function togglePasswordVisibility(inputId) {
-      const input = document.getElementById(inputId);
-      const toggle = input.nextElementSibling;
-      if (input.type === 'password') {
-        input.type = 'text';
-        toggle.querySelector('i').classList.remove('fa-eye');
-        toggle.querySelector('i').classList.add('fa-eye-slash');
-      } else {
-        input.type = 'password';
-        toggle.querySelector('i').classList.remove('fa-eye-slash');
-        toggle.querySelector('i').classList.add('fa-eye');
-      }
-    }
-    
-    // Check authentication on page load
-    if (!checkAuthentication()) {
-      // Show password protection modal
-      const modal = document.getElementById('password-protection-modal');
-      const form = document.getElementById('password-protection-form');
-      const input = document.getElementById('password-input');
-      const error = document.getElementById('password-error');
-      
-      modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-      
-      // Focus on input
-      setTimeout(() => input.focus(), 100);
-      
-      // Handle form submission
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const password = input.value.trim();
-        
-        if (verifyPassword(password)) {
-          setAuthentication();
-          modal.style.display = 'none';
-          document.body.style.overflow = '';
-          error.style.display = 'none';
-          // Show page content (splash screen will handle the animation)
-          const pageContent = document.getElementById('page-content');
-          if (pageContent) {
-            pageContent.classList.remove('page-content-hidden');
-          }
-        } else {
-          error.style.display = 'block';
-          input.value = '';
-          input.focus();
-        }
-      });
-      
-      // Hide page content until authenticated
-      const pageContent = document.getElementById('page-content');
-      if (pageContent) {
-        pageContent.classList.add('page-content-hidden');
-      }
-    } else {
-      // Already authenticated, hide modal
-      document.getElementById('password-protection-modal').style.display = 'none';
-      // Show page content (splash screen will handle the animation)
-      const pageContent = document.getElementById('page-content');
-      if (pageContent) {
-        pageContent.classList.remove('page-content-hidden');
-      }
-    }
-  })();
-  
-  window.SERVICE_ITEMS = @jsonvar $service_items;
-  // body_class と title は JSON で供給
-</script>
+            <!--お問い合わせボタンボックス-->
+            <section class="contact-box">
+                <div class="contact-box-inner wrapper">
+                    <p class="contact-box-catchphrase">「これもホントはやってほしいんだけど・・・」<br>「痒いところに手が届く清掃サービスがあれば・・・」</p>
+                    <div class="g-nav-orderBox-title contact-box-subTitle">＼まずは無料で相談してみませんか？／</div>
+                    <h2 class="contact-box-title">店舗の清掃はミセサポへ！！</h2>
+                    <div class="contact-box-flex">
+                        <a class="gradient-link tel-link" href="tel:070-3332-3939"><span class="tel-icon"></span>070-3332-3939</a>
+                        <a class="gradient-link web-link" href="#order-form">Webでのお申し込みはこちら</a>
+                    </div>
+                </div>
+            </section>
+            <!--お問い合わせボタンボックス end-->
+
+            <!--ご利用イメージ-->
+            <section id="use" class="section-box">
+                <h2 class="h2-title">ご利用イメージ</h2>
+                <div class="wrapper use-grid article-margin">
+                    <article class="use-article opacityIn">
+                        <div class="step-number">STEP<span>01</span></div>
+                        <h3 class="use-title">お問い合わせ・現地調査</h3>
+                        <div class="use-box">
+                            <div class="use-image-box"><img src="/images/use01.jpg" alt="お問い合わせ・現地調査"></div>
+                            <p>お問い合わせ内容をヒアリング後、専門スタッフが店舗を訪問します。店舗設備や清掃頻度等をチェックし、最適な清掃プランをご提案致します。</p>
+                        </div>
+                    </article>
+                    <article class="use-article opacityIn">
+                        <div class="step-number">STEP<span>02</span></div>
+                        <h3 class="use-title">お見積・ご契約</h3>
+                        <div class="use-box">
+                            <div class="use-image-box"><img src="/images/use02.jpg" alt="お見積・ご契約"></div>
+                            <p>清掃プランに合意後、契約書を締結します。作業レポート用IDや鍵の管理方法（預かり・キーボックス等）も、この段階で決定致します。</p>
+                        </div>
+                    </article>
+                    <article class="use-article opacityIn">
+                        <div class="step-number">STEP<span>03</span></div>
+                        <h3 class="use-title">プロによる清掃実施</h3>
+                        <div class="use-box">
+                            <div class="use-image-box"><img src="/images/use03.jpg" alt="プロによる清掃実施"></div>
+                            <p>弊社が依頼した専門スタッフが来店し、事前に合意した清掃プランに基づいて、清掃作業を行います。</p>
+                        </div>
+                    </article>
+                    <article class="use-article opacityIn">
+                        <div class="step-number">STEP<span>04</span></div>
+                        <h3 class="use-title">レポートで安心管理</h3>
+                        <div class="use-box">
+                            <div class="use-image-box"><img src="/images/use04.jpeg" alt="レポートで安心管理"></div>
+                            <p>清掃後は、専門スタッフが作業内容一覧や写真等のレポートを、弊社システムで送信します。清掃前と清掃後の違いを明確に識別することができます。</p>
+                        </div>
+                    </article>
+                    <article class="use-article opacityIn">
+                        <div class="step-number">STEP<span>05</span></div>
+                        <h3 class="use-title">毎月の清掃や、設備管理を一元サポート</h3>
+                        <div class="use-box">
+                            <div class="use-image-box"><img src="/images/use05.jpeg" alt="毎月の清掃や、設備管理を一元サポート"></div>
+                            <p>翌月以降も、弊社から最適な清掃提案が届くため、継続的に衛生環境を維持できます。</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+            <!--ご利用イメージ end-->
+
+            <!--既存顧客一覧-->
+            <section id="customer" class="section-box">
+                <h2 class="h2-title">既存顧客一覧</h2>
+                <section id="customer-swiper" class="article-margin">
+                    <div class="swiper infinite-slider swiper-left">
+                        <ul class="swiper-wrapper customer-items">
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer01.jpg" alt="株式会社Dart Ace">
+                                <p>株式会社Dart Ace</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer02.jpg" alt="合同会社TRANSAM">
+                                <p>合同会社TRANSAM</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer03.jpg" alt="Japrise">
+                                <p>Japrise</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer04.jpg" alt="株式会社がっと">
+                                <p>株式会社がっと</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer05.jpg" alt="合同会社FOOD GROOVE JAPAN">
+                                <p>合同会社FOOD GROOVE JAPAN</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer06.jpg" alt="麺と肴　担々麺 ペン坊">
+                                <p>麺と肴　担々麺 ペン坊</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer07.jpg" alt="株式会社クラフトマスタージャパン">
+                                <p>株式会社クラフトマスタージャパン</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer08.jpg" alt="創作イタリアン肉バル　スオーノ">
+                                <p>創作イタリアン肉バル　スオーノ</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer09.jpg" alt="株式会社名店館">
+                                <p>株式会社名店館</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer10.jpg" alt="リストランティアーノ　ルベロ">
+                                <p>リストランティアーノ　ルベロ</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer11.jpg" alt="株式会社Next Culture">
+                                <p>株式会社Next Culture</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer12.jpg" alt="株式会社フードアンドパートナーズ">
+                                <p>株式会社フードアンドパートナーズ</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer13.jpg" alt="株式会社しゃぶ庵">
+                                <p>株式会社しゃぶ庵</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer14.jpg" alt="合同会社SKTC">
+                                <p>合同会社SKTC</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer15.jpg" alt="アークワークス株式会社">
+                                <p>アークワークス株式会社</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer16.jpg" alt="株式会社FELICE">
+                                <p>株式会社FELICE</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer17.jpg" alt="光フードサービス株式会社">
+                                <p>光フードサービス株式会社</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer18.jpg" alt="焼きとん　大黒">
+                                <p>焼きとん　大黒</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer19.jpg" alt="立ち吞み　魚椿">
+                                <p>立ち吞み　魚椿</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer20.jpg" alt="株式会社価値創り研究所">
+                                <p>株式会社価値創り研究所</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer21.jpg" alt="ステーキロッヂ">
+                                <p>ステーキロッヂ</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer22.jpg" alt="株式会社エイトシナジー">
+                                <p>株式会社エイトシナジー</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer23.jpg" alt="蕎麦割烹居酒屋　更科天狐〜さらしなてんこ〜">
+                                <p>蕎麦割烹居酒屋　更科天狐〜さらしなてんこ〜</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer24.jpg" alt="ダイキチシステム株式会社">
+                                <p>ダイキチシステム株式会社</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer25.jpg" alt="やきとり大吉">
+                                <p>やきとり大吉</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="swiper infinite-slider swiper-right">
+                        <ul class="swiper-wrapper customer-items">
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer26.jpg" alt="株式会社まんてん">
+                                <p>株式会社まんてん</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer26.jpg" alt="炉端居酒屋">
+                                <p>炉端居酒屋</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer27.jpg" alt="炭火焼きホルモンまんてん">
+                                <p>炭火焼きホルモンまんてん</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer28.jpg" alt="株式会社ストラク">
+                                <p>株式会社ストラク</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer29.jpg" alt="焼肉商店浦島屋　津田沼店">
+                                <p>焼肉商店浦島屋　津田沼店</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer30.jpg" alt="株式会社INGS">
+                                <p>株式会社INGS</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer31.jpg" alt="CONA　千葉駅前店">
+                                <p>CONA　千葉駅前店</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer32.jpg" alt="ラ・フェス">
+                                <p>ラ・フェス</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer33.jpg" alt="有限会社タカネット">
+                                <p>有限会社タカネット</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer34.jpg" alt="ベトナムパレス船橋">
+                                <p>ベトナムパレス船橋</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer35.jpg" alt="発酵デリカテッセン カフェテリアKouji&ko">
+                                <p>発酵デリカテッセン カフェテリアKouji&ko</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer36.jpg" alt="株式会社アクティブソース">
+                                <p>株式会社アクティブソース</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer37.jpg" alt="晩杯屋">
+                                <p>晩杯屋</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer38.jpg" alt="株式会社雷神">
+                                <p>株式会社雷神</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer39.jpg" alt="油そば雷神　市川店">
+                                <p>油そば雷神　市川店</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer40.jpg" alt="西麻布ZERO">
+                                <p>西麻布ZERO</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer41.jpg" alt="西麻布カラオケCLT">
+                                <p>西麻布カラオケCLT</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer42.jpg" alt="株式会社エデュケーション">
+                                <p>株式会社エデュケーション</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer43.jpg" alt="モンキーツリー">
+                                <p>モンキーツリー</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer44.jpg" alt="株式会社ZANGIRI">
+                                <p>株式会社ZANGIRI</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer45.jpg" alt="株式会社SSG">
+                                <p>株式会社SSG</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer46.jpg" alt="株式会社GOSSO">
+                                <p>株式会社GOSSO</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer47.jpg" alt="0秒レモンサワー仙台ホルモン焼肉酒場ときわ亭　渋谷店">
+                                <p>0秒レモンサワー仙台ホルモン焼肉酒場ときわ亭　渋谷店</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer48.jpg" alt="板前寿司ジャパン">
+                                <p>板前寿司ジャパン</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer49.jpg" alt="株式会社カワイハイ">
+                                <p>株式会社カワイハイ</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="swiper infinite-slider swiper-left">
+                        <ul class="swiper-wrapper customer-items">
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer50.jpg" alt="東京五反田串揚げ酒場仲丸">
+                                <p>東京五反田串揚げ酒場仲丸</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer51.jpg" alt="人形町和食居酒屋なかまる">
+                                <p>人形町和食居酒屋なかまる</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer52.jpg" alt="株式会社でですけ">
+                                <p>株式会社でですけ</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer53.jpg" alt="でですけサイゴンキッチン">
+                                <p>でですけサイゴンキッチン</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer54.jpg" alt="株式会社小肥羊ジャパン">
+                                <p>株式会社小肥羊ジャパン</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer55.jpg" alt="株式会社パズルフードサービス">
+                                <p>株式会社パズルフードサービス</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer56.jpg" alt="株式会社ニュートン">
+                                <p>株式会社ニュートン</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer57.jpg" alt="カラオケパセラ">
+                                <p>カラオケパセラ</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer58.jpg" alt="株式会社ラムラ">
+                                <p>株式会社ラムラ</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer59.jpg" alt="すし土風炉　登戸店">
+                                <p>すし土風炉　登戸店</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer60.jpg" alt="株式会社2M8">
+                                <p>株式会社2M8</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer61.jpg" alt="株式会社デイジイ">
+                                <p>株式会社デイジイ</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer62.jpg" alt="株式会社CatchBall">
+                                <p>株式会社CatchBall</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer63.jpg" alt="御座敷天婦羅　神楽坂 天孝">
+                                <p>御座敷天婦羅　神楽坂 天孝</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer64.jpg" alt="FEEP">
+                                <p>FEEP</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer65.jpg" alt="一般社団法人日本創世推進機構">
+                                <p>一般社団法人日本創世推進機構</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer66.jpg" alt="株式会社スモールズ">
+                                <p>株式会社スモールズ</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer67.jpg" alt="オイスター&珍味 bar 不夜城">
+                                <p>オイスター&珍味 bar 不夜城</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer68.jpg" alt="ディストピアBar KARMA カルマン">
+                                <p>ディストピアBar KARMA カルマン</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer69.jpg" alt="Japanese Bar　猪鹿蝶">
+                                <p>Japanese Bar　猪鹿蝶</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer70.jpg" alt="Bar ANIME HOLIC アニメホリック goldengai">
+                                <p>Bar ANIME HOLIC アニメホリック goldengai</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer71.jpg" alt="Bar 灯鏡 tokyo　歌舞伎町レッドのれん街">
+                                <p>Bar 灯鏡 tokyo　歌舞伎町レッドのれん街</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer72.jpg" alt="株式会社千寿菊">
+                                <p>株式会社千寿菊</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer73.jpg" alt="株式会社ビック・バン">
+                                <p>株式会社ビック・バン</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer74.jpg" alt="ホルモン屋　だん">
+                                <p>ホルモン屋　だん</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer75.jpg" alt="生ラムかんな">
+                                <p>生ラムかんな</p>
+                            </li>
+                            <li class="swiper-slide customer-box">
+                                <img src="/images/customer76.jpg" alt="株式会社マッスルボディメイク">
+                                <p>株式会社マッスルボディメイク</p>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+            </section>
+            <!--既存顧客一覧 end-->
+
+            <!--お客様の声-->
+            <section id="voice" class="section-box">
+                <h2 class="h2-title">お客様の声</h2>
+                <div id="voice-swiper" class="article-margin">
+                    <div class="swiper swiper-cards">
+                        <div class="swiper-wrapper swiper-cards-wrapper">
+                            <div class="swiper-slide">
+                                <article class="voice-box">
+                                    <img src="/images/voice01.jpg" alt="代田橋レストラン">
+                                    <h3>代田橋レストラン</h3>
+                                    <p>
+                                        代田橋でレストランをやっております。
+                                        普段自分たちで清掃をしていたのですが、どうしても汚れてしまうので定期清掃を入れることにしました。
+                                        定額で、きになったところをこちらが指示しなくても清掃していただけるので、大変助かっております。
+                                        うちは月5万円で
+                                    </p>
+                                    <ul class="voice-ul">
+                                        <li>グリストラップ清掃</li>
+                                        <li>ダクト清掃</li>
+                                        <li>レンジフード清掃</li>
+                                        <li>グリスフィルター</li>
+                                        <li>害虫駆除</li>
+                                        <li>床清掃</li>
+                                        <li>エアコンフィルター</li>
+                                        <li>換気扇清掃</li>
+                                    </ul>
+                                    <p>を依頼できていて、コスパは最強です。</p>
+                                </article>
+                            </div>
+                            <div class="swiper-slide">
+                                <article class="voice-box">
+                                    <img src="/images/voice02.jpg" alt="三軒茶屋ビストロ">
+                                    <h3>三軒茶屋ビストロ</h3>
+                                    <p>
+                                        三軒茶屋で小さなビストロを営んでいます。<br>
+                                        以前は自分たちで清掃していましたが、忙しくなりミセサポさんにお願いしました。<br>
+                                        グリストラップや換気扇、ダクト、床まで丸ごとやってくれて、正直「この金額でいいの！？」というレベル。<br>
+                                        こちらが言わずとも、必要な箇所をきちんと見つけて対応してくれるのがすごいです。<br>
+                                        あえて言うなら、窓の外側とか、店外の清掃も少し入れてくれたら嬉しいな…というのが正直なところ（笑）<br>
+                                        でも、現状でもコスパ最強なのでこれからも続けます！
+                                    </p>
+                                </article>
+                            </div>
+                            <div class="swiper-slide">
+                                <article class="voice-box">
+                                    <img src="/images/voice03.jpg" alt="中目黒酒屋">
+                                    <h3>中目黒酒屋</h3>
+                                    <p>
+                                        中目黒で居酒屋をやっていて、油汚れがひどく困っていました。<br>
+                                        そんな中、紹介で知ったミセサポさん。<br>
+                                        月5万円の定額で、エアコンのフィルターや床清掃、害虫駆除までやってくれるので安心して営業に集中できています。<br>
+                                        個人的には、営業前に簡単な拭き掃除やゴミ捨てもオプションで選べるとさらに最高かも。<br>
+                                        とはいえ、現場目線で「今、何が必要か」を判断してくれるこのサービス、助かりすぎて感謝しかないです。
+                                </article>
+                            </div>
+                        </div>
+                        <!-- 必要に応じてナビボタン -->
+                            <div class="swiper-button-prev"></div>
+                            <div class="swiper-button-next"></div>
+                            <!-- 必要に応じてページネーション -->
+                            <div class="swiper-pagination"></div>
+                    </div>
+                </div>
+            </section>
+            <!--お客様の声 end-->
+
+            <!--お問い合わせボタンボックス-->
+            <section class="contact-box">
+                <div class="contact-box-inner wrapper">
+                    <p class="contact-box-catchphrase">「これもホントはやってほしいんだけど・・・」<br>「痒いところに手が届く清掃サービスがあれば・・・」</p>
+                    <div class="g-nav-orderBox-title contact-box-subTitle">＼まずは無料で相談してみませんか？／</div>
+                    <h2 class="contact-box-title">店舗の清掃はミセサポへ！！</h2>
+                    <div class="contact-box-flex">
+                        <a class="gradient-link tel-link" href="tel:070-3332-3939"><span class="tel-icon"></span>070-3332-3939</a>
+                        <a class="gradient-link web-link" href="#order-form">Webでのお申し込みはこちら</a>
+                    </div>
+                </div>
+            </section>
+            <!--お問い合わせボタンボックス end-->
+
+            <!--発注フォーム-->
+            <section id="order-form" class="section-box">
+                <h2 class="h2-title">発注フォーム・相談フォーム</h2>
+                <div class="article-margin wrapper">
+                    <div class="tab-switch">
+                        <label><input class="form-tab" type="radio" name="TAB" checked>発注フォーム</label>
+                        <form class="order-form-box" method="post" action="">
+                            <label class="label-title" for="shop-name">店舗名<span class="required-span">必須</span></label>
+                                <input type="text" id="shop-name">
+                            <label class="label-title" for="shop-url">店舗URL<span class="any-span">任意</span></label>
+                                <input type="text" id="shop-url">
+                            <label class="label-title" for="your-name">発注者氏名<span class="required-span">必須</span></label>
+                                <input type="text" id="your-name">
+                            <label class="label-title" for="tel">お電話番号<span class="required-span">必須</span></label>
+                                <input type="tel" id="tel">
+                            <label class="label-title" for="email">メールアドレス<span class="any-span">任意</span></label>
+                                <div class="attention">※入力頂いたメールアドレスが、登録IDとなります。</div>
+                                <input type="email" id="email">
+                            <label class="label-title" for="facility">設備の選択<span class="required-span">必須</span></label>
+                            <div class="facility-box">
+                                <select id="facility" class="facility-select styled">
+                                    <button class="city-select-button">
+                                        <!-- ここに選択済みのoptionの複製が表示される -->
+                                        <selectedcontent></selectedcontent>
+                                    </button>
+                                    <div class="city-option-wrapper">
+                                        <option class="disabled-option" value="" disabled selected>清掃希望の設備を選択してください</option>
+                                        <option class="able-option" value="floor">床</option>
+                                        <option class="able-option" value="commercial_ac">業務用エアコン</option>
+                                        <option class="able-option" value="kitchen_floor">厨房床</option>
+                                        <option class="able-option" value="kitchen_floor">厨房床</option>
+                                        <option class="able-option" value="garbage_removal">ゴミ掻き出し</option>
+                                        <option class="able-option" value="sink">シンク</option>
+                                        <option class="able-option" value="kitchen">キッチン</option>
+                                        <option class="able-option" value="5s_consulting">5Sコンサル</option>
+                                        <option class="able-option" value="grease_trap">グリストラップ</option>
+                                    </div>
+                                </select>
+                            </div>
+                            <label class="label-title" for="facility-years">設備の使用年数<span class="any-span">任意</span></label>
+                                <div class="input-flex"><input type="text" id="facility-years"><span>年</span></div>
+                            <label class="label-title" for="facility-number">設備の型番<span class="any-span">任意</span></label>
+                                <input type="text" id="facility-number">
+                            <label class="label-title" for="facility-maker">設備のメーカー名<span class="any-span">任意</span></label>
+                                <input type="text" id="facility-maker">
+                            <label class="label-title date-form" for="date-form">訪問希望日時<span class="required-span">必須</span></label>
+                                <div class="date-flex">
+                                    <div class="year-box">
+                                        <select id="year" class="date-select styled">
+                                            <div class="city-option-wrapper">
+                                            </div>
+                                        </select>年
+                                    </div>
+                                    <div class="month-box">
+                                        <select id="month" class="date-select styled">
+                                            <div class="city-option-wrapper">
+                                            </div>
+                                        </select>月
+                                    </div>
+                                    <div class="day-box">
+                                        <select id="day" class="date-select styled">
+                                            <div class="city-option-wrapper">
+                                            </div>
+                                        </select>日
+                                    </div>
+                                </div>
+                            <div class="attention">※日程等の詳細につきましては、後日、弊社よりご連絡差し上げます。</div>
+                            <div class="submit-button"><input type="submit" value="送信する"></div>
+                            <div class="form-illust"><img src="/images/form-illust.png" alt="2人の従業員のイラスト"></div>
+                        </form>
+
+                        <label><input class="form-tab" type="radio" name="TAB">相談フォーム</label>
+                        <form class="order-form-box" method="post" action="">
+                            <label class="label-title" for="shop-name">店舗名<span class="required-span">必須</span></label>
+                                <input type="text" id="shop-name">
+                            <label class="label-title" for="shop-url">店舗URL<span class="any-span">任意</span></label>
+                                <input type="text" id="shop-url">
+                            <label class="label-title" for="your-name">お名前<span class="required-span">必須</span></label>
+                                <input type="text" id="your-name">
+                            <label class="label-title" for="tel">お電話番号<span class="required-span">必須</span></label>
+                                <input type="tel" id="tel">
+                            <label class="label-title" for="email">メールアドレス<span class="any-span">任意</span></label>
+                                <div class="attention">※入力頂いたメールアドレスが、登録IDとなります。</div>
+                                <input type="email" id="email">
+                            <label class="label-title" for="comment">お問い合わせ内容<span class="any-span">任意</span></label>
+                            <textarea></textarea>
+                            <div class="attention">※後日、弊社よりご連絡差し上げます。</div>
+                            <div class="submit-button"><input type="submit" value="送信する"></div>
+                            <div class="form-illust"><img src="/images/form-illust.png" alt="2人の従業員のイラスト"></div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+            <!--発注フォーム end-->
+        </main>
+
+        <footer id="footer" class="order-box-view">
+            <section class="footer-flex section-box wrapper">
+                <img src="/images/footer-logo.jpg" alt="ミセサポ">
+                <table class="footer-info">
+                    <tr>
+                        <th>運営会社</th>
+                        <td>株式会社ミセサポ</td>
+                    </tr>
+                     <tr>
+                        <th>代表取締役</th>
+                        <td>正田和輝</td>
+                    </tr>
+                     <tr>
+                        <th>住所</th>
+                        <td>〒103-0025 東京都中央区日本橋茅場町1-8-1　茅場町一丁目平和ビル7F</td>
+                    </tr>
+                     <tr>
+                        <th>電話番号</th>
+                        <td><a class="footer-tel-link" href="tel:070-3332-3939">070-3332-3939</a></td>
+                    </tr>
+                </table>
+            </section>
+            <div class="footer-bottom">&#169;2025 ミセサポ</div>
+        </footer>
+
+        <!--お問い合わせBOX-->
+        <div class="order-bottom-box">
+            <div class="order-bottom-box-inner">
+                <a class="bottom-box-link tel-link" href="tel:070-3332-3939"><span class="tel-icon"></span>070-3332-3939</a>
+                <a class="bottom-box-link web-link" href="#order-form">Webでのお申し込みはこちら</a>
+            </div>
 </div>
-<!-- End of page-content -->
+        <!--お問い合わせBOX end-->
+        <div class="pagetop"><a href="#"><img src="/images/topbtn.png" alt="TOPへ戻る"></a></div>
+        <script src="/js/swiper-bundle.min.js"></script>
+        <script src="/js/script.js"></script>
+    </body>
+</html>

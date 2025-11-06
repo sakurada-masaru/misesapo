@@ -1,0 +1,57 @@
+@charset "UTF-8";
+/*=========================
+    キービジュアル
+========================*/
+.key-visual {
+    background: var(--lightpink-bg-color);
+    padding: 6rem 2rem;
+}
+.contact-kv-title .h2-title {
+    margin: 0 auto 3rem 0;
+}
+.contact-kv-title p {
+    font-size: min(6vw, 2rem);
+    font-weight: bold;
+    margin: 0 auto 1rem 0;
+}
+.contact-kv-flex img {
+    width: min(70vw, 25rem);
+    margin: 4rem auto 0;
+}
+.contact-kv-title span {
+    font-size: 1.2rem;
+}
+
+/*=========================
+    お問い合わせフォーム
+========================*/
+textarea {
+    height: 20rem;
+    border-radius: 10px;
+    border: 1px solid #dddddd;
+    background: var(--white);
+    width: 100%;
+    padding: 1rem;
+    margin: 1rem auto 2.7rem;
+}
+
+
+/*=====================
+    PCサイズの記述
+*=====================*/
+@media screen and (min-width: 768px) {
+    /*=========================
+        キービジュアル
+    ========================*/
+    .contact-kv-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .key-visual {
+        height: auto;
+    }
+    .article-margin {
+        margin: 0 auto;
+    }
+}
