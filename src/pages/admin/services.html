@@ -10,6 +10,9 @@
         <i class="fas fa-exclamation-circle"></i>
         <span id="pending-changes-count">0</span>件の未反映の変更があります
       </div>
+      <button type="button" class="btn btn-help" id="btn-help" title="使い方を確認">
+        <i class="fas fa-question-circle"></i>
+      </button>
       <a href="/admin/services/new.html" class="btn btn-primary">
         <i class="fas fa-plus"></i> 新規サービス登録
       </a>
@@ -49,15 +52,12 @@
       <i class="fas fa-info-circle"></i>
       <div class="alert-text">
         <strong>未反映の変更があります</strong>
-        <p>ローカルで編集・作成されたサービスがあります。GitHub Pagesに反映するには、技術者にプッシュを依頼してください。</p>
+        <p>ローカルで編集・作成されたサービスがあります。ネット上に反映するには、技術者に公開作業を依頼してください。</p>
         <div class="pending-changes-list" id="pending-changes-list"></div>
         <div class="alert-actions">
-          <button type="button" class="btn btn-outline btn-sm" id="btn-pull-from-github">
-            <i class="fas fa-download"></i> GitHubから最新データを取得
-          </button>
-          <button type="button" class="btn btn-outline btn-sm btn-danger" id="btn-discard-changes">
-            <i class="fas fa-undo"></i> ローカルの変更を破棄
-          </button>
+          <a href="/admin/services/review.html" class="btn btn-primary btn-sm">
+            <i class="fas fa-code-branch"></i> 変更内容をレビュー（開発者専用）
+          </a>
         </div>
       </div>
     </div>
@@ -65,6 +65,95 @@
 
   <div class="services-grid" id="services-grid">
     <!-- Service cards will be rendered dynamically by JavaScript -->
+  </div>
+
+  <!-- ヘルプモーダル -->
+  <div id="help-modal" class="help-modal hidden">
+    <div class="help-modal-overlay"></div>
+    <div class="help-modal-dialog">
+      <button class="help-modal-close" id="help-modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="help-modal-content">
+        <h2 class="help-modal-title">
+          <i class="fas fa-question-circle"></i>
+          サービス管理の使い方
+        </h2>
+        <div class="help-modal-body">
+          <div class="help-section">
+            <h3 class="help-section-title">
+              <i class="fas fa-check-circle"></i>
+              できること
+            </h3>
+            <ul class="help-list">
+              <li>
+                <strong>サービスの新規作成</strong>
+                <p>「新規サービス登録」ボタンから、新しいサービスを追加できます。フォームに情報を入力して「登録する」をクリックしてください。</p>
+              </li>
+              <li>
+                <strong>サービスの編集</strong>
+                <p>各サービスの「編集」ボタンから、サービス情報を修正できます。変更後「保存する」をクリックしてください。</p>
+              </li>
+              <li>
+                <strong>サービスの削除</strong>
+                <p>各サービスの「削除」ボタンから、サービスを削除できます。確認ダイアログで「OK」をクリックしてください。</p>
+              </li>
+              <li>
+                <strong>変更内容の確認</strong>
+                <p>編集・作成した内容は、ページ上部に表示されます。変更されたサービス一覧を確認できます。</p>
+              </li>
+            </ul>
+          </div>
+          
+          <div class="help-section">
+            <h3 class="help-section-title">
+              <i class="fas fa-info-circle"></i>
+              重要な注意事項
+            </h3>
+            <ul class="help-list">
+              <li>
+                <strong>ローカルのみに保存されます</strong>
+                <p>編集・作成した内容は、ローカルのみに保存されます。ネット上に反映するには、技術者に公開作業を依頼してください。</p>
+              </li>
+              <li>
+                <strong>未反映の変更がある場合</strong>
+                <p>ページ上部に「未反映の変更があります」というアラートが表示されます。技術者に「変更を公開してほしい」と依頼してください。</p>
+              </li>
+              <li>
+                <strong>公開作業はできません</strong>
+                <p>ネット上から最新データを取得したり、変更を破棄したり、公開作業を行ったりすることはできません。これらは技術者のみが実行できます。</p>
+              </li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h3 class="help-section-title">
+              <i class="fas fa-lightbulb"></i>
+              よくある質問
+            </h3>
+            <ul class="help-list">
+              <li>
+                <strong>Q: 編集した内容がすぐに反映されないのはなぜ？</strong>
+                <p>A: 編集した内容はローカルのみに保存されます。ネット上に反映するには、技術者が公開作業を行う必要があります。</p>
+              </li>
+              <li>
+                <strong>Q: 間違えて編集してしまった場合は？</strong>
+                <p>A: 技術者に連絡してください。技術者が変更を破棄することができます。</p>
+              </li>
+              <li>
+                <strong>Q: 新しいサービスを追加したらどうなる？</strong>
+                <p>A: ローカルに保存され、新しいページが生成されます。技術者に公開作業を依頼すると、ネット上にも反映されます。</p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="help-modal-footer">
+          <button type="button" class="btn btn-primary" id="help-modal-close-btn">
+            <i class="fas fa-check"></i> わかりました
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -88,15 +177,36 @@
         'other': 'その他'
       };
       
+      // 問題点リストを最大4項目に制限する関数
+      function truncateProblems(problems, maxItems = 4) {
+        if (!problems || problems.length === 0) return [];
+        if (problems.length <= maxItems) return problems;
+        return problems.slice(0, maxItems);
+      }
+      
       // Render services
       function renderServices(servicesToRender) {
         servicesGridEl.innerHTML = servicesToRender.map(service => {
           const category = service.category || '';
           const price = service.price || '価格未設定';
           
+          // 詳細ページで設定された画像（detail-image）を優先、なければ image を使用
+          const imagePath = service['detail-image'] || service.image || '';
+          const imageUrl = imagePath ? (imagePath.startsWith('/') ? imagePath : '/' + imagePath) : '/images/service-300x200.svg';
+          
+          // 問題点を最大4項目に制限
+          const truncatedProblems = service.problems ? truncateProblems(service.problems, 4) : [];
+          const hasMoreProblems = service.problems && service.problems.length > 4;
+          
           return `
             <div class="service-card" data-category="${category}" data-search="${(service.title || '').toLowerCase()}">
-              <div class="service-header">
+              ${imagePath ? `
+                <div class="service-image">
+                  <img src="${imageUrl}" alt="${service.title || ''}" loading="lazy" onerror="this.src='/images/service-300x200.svg'" />
+                </div>
+              ` : ''}
+              <div class="service-card-content">
+                <div class="service-header">
                 <div class="service-info">
                   <h3 class="service-name">
                     <a href="/admin/services/${service.id}.html" class="service-name-link">${service.title || ''}</a>
@@ -108,16 +218,16 @@
               <div class="service-content">
                 <div class="service-price">${price}</div>
                 ${service.description ? `<div class="service-description"><strong>説明:</strong> ${service.description}</div>` : ''}
-                ${service.problems && service.problems.length > 0 ? `
+                ${truncatedProblems.length > 0 ? `
                   <div class="service-problems">
                     <strong>問題点:</strong>
                     <ul>
-                      ${service.problems.map(p => `<li>${p}</li>`).join('')}
+                      ${truncatedProblems.map(p => `<li>${p}</li>`).join('')}
+                      ${hasMoreProblems ? '<li class="truncated-indicator">......</li>' : ''}
                     </ul>
                   </div>
                 ` : ''}
-                ${service.solution ? `<div class="service-solution"><strong>解決策:</strong> ${service.solution}</div>` : ''}
-                ${!service.description && !service.problems && !service.solution && service.id ? `<div class="service-description">サービスID: ${service.id}</div>` : ''}
+                ${!service.description && truncatedProblems.length === 0 && service.id ? `<div class="service-description">サービスID: ${service.id}</div>` : ''}
               </div>
               <div class="service-actions">
                 <a href="/admin/services/${service.id}.html" class="btn btn-outline btn-sm">
@@ -129,6 +239,7 @@
                 <button class="btn btn-outline btn-sm" onclick="deleteService(${service.id})">
                   <i class="fas fa-trash"></i> 削除
                 </button>
+              </div>
               </div>
             </div>
           `;
@@ -245,80 +356,45 @@
         }
       }
       
-      // GitHubから最新データを取得
-      const btnPull = document.getElementById('btn-pull-from-github');
-      if (btnPull) {
-        btnPull.addEventListener('click', async function() {
-          if (!confirm('GitHubから最新データを取得しますか？\nローカルの変更が上書きされる可能性があります。')) {
-            return;
-          }
-          
-          btnPull.disabled = true;
-          btnPull.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 取得中...';
-          
-          try {
-            const response = await fetch('/api/pull', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            });
-            
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-              alert('GitHubから最新データを取得しました。\nページを再読み込みします。');
-              window.location.reload();
-            } else {
-              alert(`エラー: ${data.message}`);
-              btnPull.disabled = false;
-              btnPull.innerHTML = '<i class="fas fa-download"></i> GitHubから最新データを取得';
-            }
-          } catch (err) {
-            alert(`エラーが発生しました: ${err.message}`);
-            btnPull.disabled = false;
-            btnPull.innerHTML = '<i class="fas fa-download"></i> GitHubから最新データを取得';
-          }
-        });
-      }
+      // ヘルプモーダル
+      const helpBtn = document.getElementById('btn-help');
+      const helpModal = document.getElementById('help-modal');
+      const helpModalClose = document.getElementById('help-modal-close');
+      const helpModalCloseBtn = document.getElementById('help-modal-close-btn');
       
-      // ローカルの変更を破棄
-      const btnDiscard = document.getElementById('btn-discard-changes');
-      if (btnDiscard) {
-        btnDiscard.addEventListener('click', async function() {
-          if (!confirm('ローカルの変更を破棄しますか？\nこの操作は取り消せません。')) {
-            return;
-          }
-          
-          if (!confirm('本当に変更を破棄しますか？')) {
-            return;
-          }
-          
-          btnDiscard.disabled = true;
-          btnDiscard.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 破棄中...';
-          
-          try {
-            const response = await fetch('/api/discard-changes', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            });
-            
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-              alert('ローカルの変更を破棄しました。\nページを再読み込みします。');
-              window.location.reload();
-            } else {
-              alert(`エラー: ${data.message}`);
-              btnDiscard.disabled = false;
-              btnDiscard.innerHTML = '<i class="fas fa-undo"></i> ローカルの変更を破棄';
-            }
-          } catch (err) {
-            alert(`エラーが発生しました: ${err.message}`);
-            btnDiscard.disabled = false;
-            btnDiscard.innerHTML = '<i class="fas fa-undo"></i> ローカルの変更を破棄';
+      if (helpBtn && helpModal) {
+        // モーダルを開く
+        helpBtn.addEventListener('click', function() {
+          helpModal.classList.remove('hidden');
+          helpModal.classList.add('open');
+          document.body.style.overflow = 'hidden';
+        });
+        
+        // モーダルを閉じる
+        function closeHelpModal() {
+          helpModal.classList.add('hidden');
+          helpModal.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+        
+        if (helpModalClose) {
+          helpModalClose.addEventListener('click', closeHelpModal);
+        }
+        
+        if (helpModalCloseBtn) {
+          helpModalCloseBtn.addEventListener('click', closeHelpModal);
+        }
+        
+        // オーバーレイをクリックしても閉じる
+        const overlay = helpModal.querySelector('.help-modal-overlay');
+        if (overlay) {
+          overlay.addEventListener('click', closeHelpModal);
+        }
+        
+        // ESCキーで閉じる
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && helpModal.classList.contains('open')) {
+            closeHelpModal();
           }
         });
       }
@@ -442,6 +518,195 @@
       color: #111827;
       margin: 0;
     }
+    
+    /* ヘルプボタン */
+    .btn-help {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border: 2px solid #f472b6;
+      border-radius: 50%;
+      background: #fce7f3;
+      color: #ec4899;
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-help:hover {
+      background: #fbcfe8;
+      border-color: #ec4899;
+      transform: scale(1.05);
+    }
+    
+    /* ヘルプモーダル */
+    .help-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    
+    .help-modal.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .help-modal.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .help-modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+    }
+    
+    .help-modal-dialog {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      border: 3px solid #f472b6;
+      box-shadow: 0 20px 60px rgba(244, 114, 182, 0.3);
+      width: 100%;
+      max-width: 700px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      z-index: 1001;
+    }
+    
+    .help-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      border: 2px solid #f472b6;
+      border-radius: 50%;
+      background: #fce7f3;
+      color: #ec4899;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 1002;
+    }
+    
+    .help-modal-close:hover {
+      background: #fbcfe8;
+      border-color: #ec4899;
+      transform: scale(1.1);
+    }
+    
+    .help-modal-content {
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .help-modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ec4899;
+      margin: 0;
+      padding: 24px 24px 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 2px solid #fce7f3;
+    }
+    
+    .help-modal-body {
+      padding: 24px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    
+    .help-section {
+      margin-bottom: 32px;
+    }
+    
+    .help-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .help-section-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #ec4899;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #fce7f3;
+    }
+    
+    .help-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .help-list li {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: #fef7ff;
+      border-left: 4px solid #f472b6;
+      border-radius: 8px;
+    }
+    
+    .help-list li:last-child {
+      margin-bottom: 0;
+    }
+    
+    .help-list li strong {
+      display: block;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ec4899;
+      margin-bottom: 8px;
+    }
+    
+    .help-list li p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+    
+    .help-modal-footer {
+      padding: 20px 24px;
+      border-top: 2px solid #fce7f3;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .help-modal-footer .btn {
+      min-width: 200px;
+    }
     .filter-bar {
       display: flex;
       gap: 16px;
@@ -492,10 +757,41 @@
     .service-card {
       background: #ffffff;
       border-radius: 12px;
-      padding: 20px;
+      padding: 0;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       display: flex;
       flex-direction: column;
+      overflow: hidden;
+      height: 100%;
+      min-height: 500px;
+    }
+    
+    .service-image {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+      background: #f9fafb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .service-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    
+    .service-card:hover .service-image img {
+      transform: scale(1.05);
+    }
+    
+    .service-card-content {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
     }
     .service-header {
       display: flex;
@@ -564,6 +860,12 @@
       color: #6b7280;
       line-height: 1.6;
       margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-height: calc(1.6em * 4);
     }
     .service-problems {
       font-size: 0.875rem;
@@ -574,9 +876,21 @@
     .service-problems ul {
       margin: 8px 0 0 20px;
       padding: 0;
+      list-style: disc;
     }
     .service-problems li {
       margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .service-problems li.truncated-indicator {
+      color: #9ca3af;
+      font-style: italic;
+      list-style: none;
+      margin-left: -20px;
     }
     .service-solution {
       font-size: 0.875rem;

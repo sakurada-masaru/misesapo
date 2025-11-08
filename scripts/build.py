@@ -468,6 +468,23 @@ def copy_assets(outputs: List[str]) -> None:
         outputs.append(str(dst_path))
 
 
+def copy_data_files(outputs: List[str]) -> None:
+    """Copy JSON files from src/data/ to public/data/ for client-side access"""
+    data_dir = SRC / "data"
+    if not data_dir.exists():
+        return
+    
+    for src_path in data_dir.rglob("*.json"):
+        if src_path.is_dir():
+            continue
+        # mirror under public/data/ keeping the same structure
+        rel = src_path.relative_to(data_dir)
+        dst_path = PUBLIC / "data" / rel
+        ensure_dir(dst_path)
+        shutil.copy2(src_path, dst_path)
+        outputs.append(str(dst_path))
+
+
 def _build_client_detail_pages(template: Path, outputs: List[str]) -> None:
     """Generate pages/sales/clients/{id}.html from clients.json and the template [id].html."""
     data_path = SRC / "data" / "clients.json"
@@ -631,6 +648,55 @@ def _build_assignment_detail_pages(template: Path, outputs: List[str]) -> None:
         outputs.append(str(out_path))
 
 
+def _build_service_pages(template: Path, outputs: List[str]) -> None:
+    """Build user-facing service detail pages: service/[id].html"""
+    if not template.exists():
+        return
+    data_path = SRC / "data" / "service_items.json"
+    try:
+        services = json.loads(read_text(data_path))
+    except Exception as e:
+        raise BuildError(f"Failed to load service items data: {e}")
+    if not isinstance(services, list):
+        raise BuildError("service_items.json: must be a list")
+
+    for service in services:
+        sid = service.get("id")
+        if sid is None:
+            continue
+
+        # Prepare context with all service fields
+        problems = service.get("problems") or []
+        detail_image = service.get("detail-image") or service.get("detail_image") or ""
+        forms = service.get("forms") or []
+        details = service.get("details") or []
+        
+        ctx = {
+            "id": str(sid),
+            "title": service.get("title", ""),
+            "category": service.get("category", ""),
+            "price": service.get("price", ""),
+            "image": service.get("image", ""),
+            "detail_image": detail_image,
+            "description": service.get("description", ""),
+            "problems": [{"value": p} for p in problems],  # list for foreach blocks
+            "solution": service.get("solution", ""),
+            "forms": forms,
+            "details": details,
+        }
+
+        out_path = PUBLIC / "service" / f"{sid}.html"
+        html = render_page(template, ctx)
+        ensure_dir(out_path)
+        # overwrite cleanly to avoid any potential residual content
+        try:
+            if out_path.exists():
+                out_path.unlink()
+        except Exception:
+            pass
+        out_path.write_text(html, encoding="utf-8")
+        outputs.append(str(out_path))
+
 def _build_service_detail_pages(template: Path, outputs: List[str]) -> None:
     """Generate pages/admin/services/{id}.html from service_items.json and the template [id].html."""
     data_path = SRC / "data" / "service_items.json"
@@ -757,6 +823,10 @@ def build_all() -> List[str]:
         if str(rel).startswith("admin/services/") and "edit.html" in str(rel):
             _build_service_edit_pages(page, outputs)
             continue
+        # Special: generate user-facing service pages from service/[id].html
+        if str(rel).startswith("service/") and rel.name == "[id].html":
+            _build_service_pages(page, outputs)
+            continue
         out_path = PUBLIC / rel
         html = render_page(page)
         ensure_dir(out_path)
@@ -764,6 +834,8 @@ def build_all() -> List[str]:
         outputs.append(str(out_path))
     # copy static assets last
     copy_assets(outputs)
+    # copy data files for client-side access
+    copy_data_files(outputs)
     return outputs
 
 

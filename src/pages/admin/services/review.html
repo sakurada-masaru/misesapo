@@ -1,0 +1,711 @@
+@layout('layouts.base')
+@json('data/meta/admin_services_title.json', $page_title)
+@json('data/meta/admin_services_body_class.json', $body_class)
+
+<main id="main" class="container admin-services-review">
+  <div class="page-header">
+    <h1 class="page-title">
+      <i class="fas fa-code-branch"></i>
+      変更内容レビュー（開発者専用）
+    </h1>
+    <div class="header-actions">
+      <button type="button" class="btn btn-outline btn-sm" id="btn-refresh">
+        <i class="fas fa-sync-alt"></i> 更新
+      </button>
+      <a href="/admin/services.html" class="btn btn-outline btn-sm">
+        <i class="fas fa-arrow-left"></i> サービス管理に戻る
+      </a>
+    </div>
+  </div>
+
+  <!-- 認証フォーム（初回アクセス時のみ表示） -->
+  <div class="auth-form" id="auth-form" style="display: none;">
+    <div class="auth-card">
+      <h2>開発者認証</h2>
+      <p class="auth-description">このページは開発者専用です。パスワードを入力してください。</p>
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label">パスワード</label>
+          <input type="password" class="form-input" id="password-input" placeholder="パスワードを入力" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fas fa-lock"></i> 認証
+        </button>
+      </form>
+      <p class="auth-error" id="auth-error" style="display: none;"></p>
+    </div>
+  </div>
+
+  <!-- メインコンテンツ（認証後表示） -->
+  <div class="review-content" id="review-content" style="display: none;">
+    <!-- 変更状況サマリー -->
+    <div class="status-summary" id="status-summary">
+      <div class="status-card">
+        <i class="fas fa-info-circle"></i>
+        <div class="status-text">
+          <strong>変更状況を確認中...</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- 変更内容一覧 -->
+    <div class="changes-section" id="changes-section" style="display: none;">
+      <h2 class="section-title">
+        <i class="fas fa-list"></i>
+        変更内容
+      </h2>
+      <div class="changes-list" id="changes-list"></div>
+    </div>
+
+    <!-- 操作パネル -->
+    <div class="action-panel" id="action-panel" style="display: none;">
+      <h2 class="section-title">
+        <i class="fas fa-tools"></i>
+        操作
+      </h2>
+      <div class="action-buttons">
+        <button type="button" class="btn btn-outline" id="btn-pull-from-github">
+          <i class="fas fa-download"></i> GitHubから最新データを取得
+        </button>
+        <button type="button" class="btn btn-outline btn-danger" id="btn-discard-changes">
+          <i class="fas fa-undo"></i> ローカルの変更を破棄
+        </button>
+        <button type="button" class="btn btn-primary" id="btn-commit-and-push">
+          <i class="fas fa-cloud-upload-alt"></i> Gitにコミット・プッシュ
+        </button>
+      </div>
+    </div>
+
+    <!-- Git状態表示 -->
+    <div class="git-status" id="git-status" style="display: none;">
+      <h2 class="section-title">
+        <i class="fas fa-code-branch"></i>
+        Git状態
+      </h2>
+      <div class="git-info" id="git-info"></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // 認証管理
+      const AUTH_KEY = 'dev_review_authenticated';
+      const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8時間
+      // パスワード（本番環境では環境変数や設定ファイルから取得することを推奨）
+      const DEV_PASSWORD = 'misesapo1234'; // 開発用パスワード
+      
+      const authForm = document.getElementById('auth-form');
+      const reviewContent = document.getElementById('review-content');
+      const loginForm = document.getElementById('login-form');
+      const passwordInput = document.getElementById('password-input');
+      const authError = document.getElementById('auth-error');
+      
+      function checkAuthentication() {
+        const authData = sessionStorage.getItem(AUTH_KEY);
+        if (!authData) return false;
+        
+        try {
+          const { timestamp } = JSON.parse(authData);
+          const now = Date.now();
+          if (now - timestamp > SESSION_DURATION) {
+            sessionStorage.removeItem(AUTH_KEY);
+            return false;
+          }
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+      
+      function setAuthentication() {
+        sessionStorage.setItem(AUTH_KEY, JSON.stringify({
+          timestamp: Date.now()
+        }));
+      }
+      
+      function showAuthForm() {
+        authForm.style.display = 'block';
+        reviewContent.style.display = 'none';
+      }
+      
+      function showReviewContent() {
+        authForm.style.display = 'none';
+        reviewContent.style.display = 'block';
+        loadChanges();
+      }
+      
+      // 認証チェック
+      if (checkAuthentication()) {
+        showReviewContent();
+      } else {
+        showAuthForm();
+      }
+      
+      // ログインフォーム
+      if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const password = passwordInput.value;
+          
+          if (password === DEV_PASSWORD) {
+            setAuthentication();
+            authError.style.display = 'none';
+            showReviewContent();
+          } else {
+            authError.textContent = 'パスワードが正しくありません';
+            authError.style.display = 'block';
+            passwordInput.value = '';
+          }
+        });
+      }
+      
+      // 変更内容の読み込み
+      async function loadChanges() {
+        const statusSummary = document.getElementById('status-summary');
+        const changesSection = document.getElementById('changes-section');
+        const actionPanel = document.getElementById('action-panel');
+        const changesList = document.getElementById('changes-list');
+        
+        try {
+          // 未反映の変更を取得
+          const response = await fetch('/api/pending-changes');
+          const data = await response.ok ? await response.json() : { hasChanges: false, changes: [] };
+          
+          if (data.hasChanges && data.changes && data.changes.length > 0) {
+            statusSummary.innerHTML = `
+              <div class="status-card status-warning">
+                <i class="fas fa-exclamation-circle"></i>
+                <div class="status-text">
+                  <strong>${data.changes.length}件の未反映の変更があります</strong>
+                  <p>変更内容を確認してから、コミット・プッシュしてください。</p>
+                </div>
+              </div>
+            `;
+            
+            changesSection.style.display = 'block';
+            actionPanel.style.display = 'block';
+            
+            // 変更内容を表示
+            changesList.innerHTML = data.changes.map(change => {
+              const serviceName = change.serviceName || `サービスID ${change.serviceId}`;
+              const changeType = change.type === 'created' ? '新規作成' : '編集';
+              const icon = change.type === 'created' ? 'plus-circle' : 'edit';
+              const link = `/admin/services/${change.serviceId}.html`;
+              return `
+                <div class="change-item">
+                  <i class="fas fa-${icon}"></i>
+                  <div class="change-details">
+                    <a href="${link}" target="_blank" class="change-link">
+                      <strong>${serviceName}</strong>
+                    </a>
+                    <span class="change-type">${changeType}</span>
+                    <span class="change-time">${change.timestamp}</span>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          } else {
+            statusSummary.innerHTML = `
+              <div class="status-card status-success">
+                <i class="fas fa-check-circle"></i>
+                <div class="status-text">
+                  <strong>未反映の変更はありません</strong>
+                  <p>すべての変更がGitHubに反映されています。</p>
+                </div>
+              </div>
+            `;
+            changesSection.style.display = 'none';
+            actionPanel.style.display = 'block';
+          }
+          
+          // Git状態を取得
+          loadGitStatus();
+        } catch (err) {
+          statusSummary.innerHTML = `
+            <div class="status-card status-error">
+              <i class="fas fa-exclamation-triangle"></i>
+              <div class="status-text">
+                <strong>エラーが発生しました</strong>
+                <p>${err.message}</p>
+              </div>
+            </div>
+          `;
+        }
+      }
+      
+      // Git状態の読み込み
+      async function loadGitStatus() {
+        const gitStatus = document.getElementById('git-status');
+        const gitInfo = document.getElementById('git-info');
+        
+        try {
+          // Git状態を取得（簡易版）
+          gitStatus.style.display = 'block';
+          gitInfo.innerHTML = '<p>Git状態を確認中...</p>';
+          
+          // 実際のGit状態取得はサーバー側で実装が必要
+          gitInfo.innerHTML = `
+            <div class="git-status-item">
+              <i class="fas fa-code-branch"></i>
+              <span>ブランチ: main</span>
+            </div>
+            <div class="git-status-item">
+              <i class="fas fa-info-circle"></i>
+              <span>詳細なGit状態はサーバー側で確認してください</span>
+            </div>
+          `;
+        } catch (err) {
+          gitInfo.innerHTML = `<p class="error">Git状態の取得に失敗しました: ${err.message}</p>`;
+        }
+      }
+      
+      // 更新ボタン
+      const btnRefresh = document.getElementById('btn-refresh');
+      if (btnRefresh) {
+        btnRefresh.addEventListener('click', function() {
+          loadChanges();
+        });
+      }
+      
+      // GitHubから最新データを取得
+      const btnPull = document.getElementById('btn-pull-from-github');
+      if (btnPull) {
+        btnPull.addEventListener('click', async function() {
+          if (!confirm('GitHubから最新データを取得しますか？\nローカルの変更が上書きされる可能性があります。')) {
+            return;
+          }
+          
+          btnPull.disabled = true;
+          btnPull.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 取得中...';
+          
+          try {
+            const response = await fetch('/api/pull', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+              alert('GitHubから最新データを取得しました。\nページを再読み込みします。');
+              window.location.reload();
+            } else {
+              alert(`エラー: ${data.message}`);
+              btnPull.disabled = false;
+              btnPull.innerHTML = '<i class="fas fa-download"></i> GitHubから最新データを取得';
+            }
+          } catch (err) {
+            alert(`エラーが発生しました: ${err.message}`);
+            btnPull.disabled = false;
+            btnPull.innerHTML = '<i class="fas fa-download"></i> GitHubから最新データを取得';
+          }
+        });
+      }
+      
+      // ローカルの変更を破棄
+      const btnDiscard = document.getElementById('btn-discard-changes');
+      if (btnDiscard) {
+        btnDiscard.addEventListener('click', async function() {
+          if (!confirm('ローカルの変更を破棄しますか？\nこの操作は取り消せません。')) {
+            return;
+          }
+          
+          if (!confirm('本当に変更を破棄しますか？')) {
+            return;
+          }
+          
+          btnDiscard.disabled = true;
+          btnDiscard.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 破棄中...';
+          
+          try {
+            const response = await fetch('/api/discard-changes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+              alert('ローカルの変更を破棄しました。\nページを再読み込みします。');
+              window.location.reload();
+            } else {
+              alert(`エラー: ${data.message}`);
+              btnDiscard.disabled = false;
+              btnDiscard.innerHTML = '<i class="fas fa-undo"></i> ローカルの変更を破棄';
+            }
+          } catch (err) {
+            alert(`エラーが発生しました: ${err.message}`);
+            btnDiscard.disabled = false;
+            btnDiscard.innerHTML = '<i class="fas fa-undo"></i> ローカルの変更を破棄';
+          }
+        });
+      }
+      
+      // Gitにコミット・プッシュ
+      const btnCommitPush = document.getElementById('btn-commit-and-push');
+      if (btnCommitPush) {
+        btnCommitPush.addEventListener('click', async function() {
+          if (!confirm('変更をGitHubにコミット・プッシュしますか？\n数分後にGitHub Pagesに反映されます。')) {
+            return;
+          }
+          
+          btnCommitPush.disabled = true;
+          btnCommitPush.innerHTML = '<i class="fas fa-spinner fa-spin"></i> プッシュ中...';
+          
+          try {
+            const response = await fetch('/api/commit-and-push', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+              alert('GitHubにプッシュしました。\n数分後にGitHub Pagesに反映されます。\nページを再読み込みします。');
+              window.location.reload();
+            } else if (data.status === 'info') {
+              alert(data.message);
+              btnCommitPush.disabled = false;
+              btnCommitPush.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Gitにコミット・プッシュ';
+            } else {
+              alert(`エラー: ${data.message}`);
+              btnCommitPush.disabled = false;
+              btnCommitPush.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Gitにコミット・プッシュ';
+            }
+          } catch (err) {
+            alert(`エラーが発生しました: ${err.message}`);
+            btnCommitPush.disabled = false;
+            btnCommitPush.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Gitにコミット・プッシュ';
+          }
+        });
+      }
+    })();
+  </script>
+
+  <style>
+    .admin-services-review {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    /* 認証フォーム */
+    .auth-form {
+      max-width: 400px;
+      margin: 80px auto;
+    }
+    
+    .auth-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .auth-card h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 8px 0;
+    }
+    
+    .auth-description {
+      color: #6b7280;
+      margin: 0 0 24px 0;
+      font-size: 0.875rem;
+    }
+    
+    .auth-error {
+      color: #dc2626;
+      font-size: 0.875rem;
+      margin-top: 16px;
+      padding: 12px;
+      background: #fee2e2;
+      border-radius: 4px;
+    }
+    
+    /* ステータスサマリー */
+    .status-summary {
+      margin-bottom: 32px;
+    }
+    
+    .status-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+    
+    .status-card i {
+      font-size: 1.5rem;
+      margin-top: 2px;
+    }
+    
+    .status-card.status-warning {
+      background: #fef3c7;
+      border-color: #fbbf24;
+    }
+    
+    .status-card.status-warning i {
+      color: #f59e0b;
+    }
+    
+    .status-card.status-success {
+      background: #d1fae5;
+      border-color: #10b981;
+    }
+    
+    .status-card.status-success i {
+      color: #10b981;
+    }
+    
+    .status-card.status-error {
+      background: #fee2e2;
+      border-color: #f87171;
+    }
+    
+    .status-card.status-error i {
+      color: #dc2626;
+    }
+    
+    .status-text {
+      flex: 1;
+    }
+    
+    .status-text strong {
+      display: block;
+      font-size: 1.125rem;
+      margin-bottom: 4px;
+      color: #111827;
+    }
+    
+    .status-text p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    
+    /* セクション */
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .changes-section,
+    .action-panel,
+    .git-status {
+      margin-bottom: 32px;
+    }
+    
+    /* 変更内容リスト */
+    .changes-list {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .change-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .change-item:last-child {
+      border-bottom: none;
+    }
+    
+    .change-item i {
+      font-size: 1.25rem;
+      color: #6b7280;
+    }
+    
+    .change-details {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .change-link {
+      color: #111827;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    .change-link:hover {
+      color: #3b82f6;
+      text-decoration: underline;
+    }
+    
+    .change-type {
+      padding: 4px 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    
+    .change-time {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    
+    /* 操作ボタン */
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    /* Git状態 */
+    .git-info {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    
+    .git-status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      color: #6b7280;
+    }
+    
+    .git-status-item i {
+      color: #3b82f6;
+    }
+    
+    /* ボタン */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      color: #374151;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    
+    .btn:hover:not(:disabled) {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn-primary {
+      background: #3b82f6;
+      color: #fff;
+      border-color: #3b82f6;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+    
+    .btn-outline {
+      background: #fff;
+      color: #374151;
+      border-color: #d1d5db;
+    }
+    
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fca5a5;
+    }
+    
+    .btn-danger:hover:not(:disabled) {
+      background: #fecaca;
+      color: #7f1d1d;
+    }
+    
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8125rem;
+    }
+    
+    .btn-block {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    /* フォーム */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+  </style>
+</main>
+

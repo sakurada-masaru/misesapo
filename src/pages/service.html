@@ -93,13 +93,15 @@
     <!-- Service Items (generated) -->
     @foreach $service_items
     <article class="card-service" data-id="{{ id }}" data-category="{{ category }}">
-      <div class="thumb">
-        <img src="{{ image }}" alt="{{ title }}" loading="lazy" decoding="async" />
-      </div>
-      <div class="content">
-        <h3>{{ title }}</h3>
-        <p class="price">{{ price }}</p>
-      </div>
+      <a href="/service/{{ id }}.html" class="card-service-link">
+        <div class="thumb">
+          <img src="{{ image }}" alt="{{ title }}" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>{{ title }}</h3>
+          <p class="price">{{ price }}</p>
+        </div>
+      </a>
     </article>
     @endforeach
   </div>
@@ -107,6 +109,7 @@
 
 @include('partials.service_item_modal')
 @include('partials.details_modal')
+@include('partials.order_modal')
 @include('partials.cart_added_modal')
 <script>
   // Password protection

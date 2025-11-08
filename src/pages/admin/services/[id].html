@@ -11,18 +11,22 @@
   </div>
 
   <div class="service-detail-card">
-    <div class="service-detail-header">
-      <div class="service-info">
-        <h2 class="service-name">{{ title }}</h2>
-        <div class="service-meta">
-          <span class="service-category">{{ category }}</span>
-          <span class="service-id">サービスID: {{ id }}</span>
-        </div>
-      </div>
-      <div class="service-price-large">{{ price }}</div>
+    <div class="service-hero-image">
+      <img id="service-hero-img" src="/{{ detail_image }}" alt="{{ title }}" data-fallback="/{{ image }}" />
     </div>
+    <div class="service-detail-card-content">
+      <div class="service-detail-header">
+        <div class="service-info">
+          <h2 class="service-name">{{ title }}</h2>
+          <div class="service-meta">
+            <span class="service-category">{{ category }}</span>
+            <span class="service-id">サービスID: {{ id }}</span>
+          </div>
+        </div>
+        <div class="service-price-large">{{ price }}</div>
+      </div>
 
-    <div class="service-detail-content">
+      <div class="service-detail-content">
       <section class="detail-section">
         <h3 class="section-title">サービス説明</h3>
         <p class="section-content">{{ description }}</p>
@@ -45,25 +49,240 @@
       <section class="detail-section">
         <h3 class="section-title">サービス画像</h3>
         <div class="service-image">
-          <img src="/{{ detail_image }}" alt="{{ title }}" />
+          <img id="service-detail-img" src="/{{ image }}" alt="{{ title }}" data-fallback="/{{ detail_image }}" />
         </div>
+      </section>
+
+      <!-- モーダル表示内容 -->
+      <section class="detail-section" id="modal-forms-section" style="display: none;">
+        <h3 class="section-title">モーダル表示内容（最初の選択画面）</h3>
+        <div id="modal-forms-content" class="modal-content-display"></div>
+      </section>
+
+      <section class="detail-section" id="modal-details-section" style="display: none;">
+        <h3 class="section-title">モーダル表示内容（詳細選択画面）</h3>
+        <div id="modal-details-content" class="modal-content-display"></div>
       </section>
     </div>
 
-    <div class="service-detail-actions">
-      <a href="/admin/services.html" class="btn btn-outline">
-        <i class="fas fa-arrow-left"></i> 一覧に戻る
-      </a>
-      <a href="/admin/services/{{ id }}/edit.html" class="btn btn-primary">
-        <i class="fas fa-edit"></i> 編集
-      </a>
-      <button class="btn btn-danger" onclick="deleteService({{ id }})">
-        <i class="fas fa-trash"></i> 削除
-      </button>
+      <div class="service-detail-actions">
+        <a href="/admin/services.html" class="btn btn-outline">
+          <i class="fas fa-arrow-left"></i> 一覧に戻る
+        </a>
+        <button class="btn btn-primary" id="preview-modal-btn">
+          <i class="fas fa-eye"></i> モーダルをプレビュー
+        </button>
+        <a href="/admin/services/{{ id }}/edit.html" class="btn btn-primary">
+          <i class="fas fa-edit"></i> 編集
+        </a>
+        <button class="btn btn-danger" onclick="deleteService({{ id }})">
+          <i class="fas fa-trash"></i> 削除
+        </button>
+      </div>
     </div>
   </div>
+</main>
+
+@include('partials.service_item_modal')
+@include('partials.details_modal')
+@include('partials.order_modal')
+@include('partials.cart_added_modal')
 
   <script>
+    // Load service data and render modal content
+    (function() {
+      async function loadServiceData() {
+        try {
+          const response = await fetch('/api/services');
+          const services = await response.json();
+          const serviceId = {{ id }};
+          const service = services.find(s => s.id === serviceId);
+          
+          if (service) {
+            // Render forms
+            if (service.forms && service.forms.length > 0) {
+              renderModalContent('modal-forms-content', service.forms);
+              document.getElementById('modal-forms-section').style.display = 'block';
+            }
+            
+            // Render details
+            if (service.details && service.details.length > 0) {
+              renderModalContent('modal-details-content', service.details);
+              document.getElementById('modal-details-section').style.display = 'block';
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load service data:', error);
+        }
+      }
+      
+      function renderModalContent(containerId, sections) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        sections.forEach((sec, idx) => {
+          const sectionDiv = document.createElement('div');
+          sectionDiv.className = 'modal-section';
+          
+          const title = document.createElement('h4');
+          title.className = 'modal-section-title';
+          title.textContent = sec['section-title'] || `セクション ${idx + 1}`;
+          sectionDiv.appendChild(title);
+          
+          const type = (sec['section-type'] || 'radio-text').toLowerCase();
+          const items = sec['section-items'] || [];
+          
+          if (type === 'textarea') {
+            const textareaInfo = document.createElement('div');
+            textareaInfo.className = 'modal-textarea-info';
+            textareaInfo.innerHTML = `
+              <p><strong>プレースホルダー:</strong> ${sec.placeholder || 'なし'}</p>
+              <p><strong>最大文字数:</strong> ${sec.maxLength || '制限なし'}</p>
+              <p><strong>キー:</strong> ${sec.key || 'なし'}</p>
+            `;
+            sectionDiv.appendChild(textareaInfo);
+          } else if (items.length > 0) {
+            const itemsList = document.createElement('ul');
+            itemsList.className = 'modal-items-list';
+            
+            items.forEach(item => {
+              const li = document.createElement('li');
+              li.className = 'modal-item';
+              
+              if (typeof item === 'string') {
+                li.textContent = item;
+              } else {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'modal-item-content';
+                
+                if (item['img-url'] || item.img) {
+                  const img = document.createElement('img');
+                  img.src = '/' + (item['img-url'] || item.img);
+                  img.alt = item.text || '';
+                  img.className = 'modal-item-image';
+                  img.onerror = function() { this.style.display = 'none'; };
+                  itemDiv.appendChild(img);
+                }
+                
+                const text = document.createElement('span');
+                text.textContent = item.text || item;
+                itemDiv.appendChild(text);
+                
+                if (item.countable) {
+                  const countInfo = document.createElement('span');
+                  countInfo.className = 'modal-item-count';
+                  countInfo.textContent = `（数量入力: ${item.unit || ''}）`;
+                  itemDiv.appendChild(countInfo);
+                }
+                
+                li.appendChild(itemDiv);
+              }
+              
+              itemsList.appendChild(li);
+            });
+            
+            sectionDiv.appendChild(itemsList);
+          }
+          
+          if (sec.required !== undefined) {
+            const requiredBadge = document.createElement('span');
+            requiredBadge.className = 'modal-required-badge';
+            requiredBadge.textContent = sec.required ? '必須' : '任意';
+            title.appendChild(requiredBadge);
+          }
+          
+          container.appendChild(sectionDiv);
+        });
+      }
+      
+      loadServiceData();
+    })();
+    
+    // Modal preview functionality
+    (function() {
+      const previewBtn = document.getElementById('preview-modal-btn');
+      if (previewBtn) {
+        previewBtn.addEventListener('click', function() {
+          // Load service data and open modal
+          fetch('/api/services')
+            .then(response => response.json())
+            .then(services => {
+              const serviceId = {{ id }};
+              const service = services.find(s => s.id === serviceId);
+              if (service) {
+                if (window.ModalManager) {
+                  window.ModalManager.open('service-modal', service);
+                } else if (window.openModal) {
+                  window.openModal(service);
+                } else {
+                  alert('モーダル機能が利用できません。app.js または modal_manager.js が読み込まれているか確認してください。');
+                }
+              } else {
+                alert('サービスデータが見つかりませんでした。');
+              }
+            })
+            .catch(error => {
+              console.error('Failed to load service data:', error);
+              alert('サービスデータの読み込みに失敗しました。');
+            });
+        });
+      }
+    })();
+    
+    // Image fallback handling
+    (function() {
+      const heroImg = document.getElementById('service-hero-img');
+      if (heroImg) {
+        const fallback = heroImg.dataset.fallback;
+        const defaultImg = '/images/service-300x200.svg';
+        
+        // Check if current image is empty or invalid
+        if (!heroImg.src || heroImg.src.endsWith('/') || heroImg.src.includes('undefined')) {
+          if (fallback && fallback !== '/' && !fallback.includes('undefined')) {
+            heroImg.src = fallback;
+          } else {
+            heroImg.src = defaultImg;
+          }
+        }
+        
+        // Handle image load error
+        heroImg.addEventListener('error', function() {
+          if (this.src !== fallback && fallback && fallback !== '/' && !fallback.includes('undefined')) {
+            this.src = fallback;
+          } else if (this.src !== defaultImg) {
+            this.src = defaultImg;
+          }
+        });
+      }
+      
+      // Service detail image fallback handling
+      const detailImg = document.getElementById('service-detail-img');
+      if (detailImg) {
+        const fallback = detailImg.dataset.fallback;
+        const defaultImg = '/images/service-300x200.svg';
+        
+        // Check if current image is empty or invalid
+        if (!detailImg.src || detailImg.src.endsWith('/') || detailImg.src.includes('undefined')) {
+          if (fallback && fallback !== '/' && !fallback.includes('undefined')) {
+            detailImg.src = fallback;
+          } else {
+            detailImg.src = defaultImg;
+          }
+        }
+        
+        // Handle image load error
+        detailImg.addEventListener('error', function() {
+          if (this.src !== fallback && fallback && fallback !== '/' && !fallback.includes('undefined')) {
+            this.src = fallback;
+          } else if (this.src !== defaultImg) {
+            this.src = defaultImg;
+          }
+        });
+      }
+    })();
+    
     // Edit and delete functions (placeholder)
     window.editService = function(id) {
       // TODO: Implement edit functionality
@@ -110,8 +329,30 @@
     .service-detail-card {
       background: #ffffff;
       border-radius: 12px;
-      padding: 32px;
+      padding: 0;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    
+    .service-hero-image {
+      width: 100%;
+      height: 400px;
+      overflow: hidden;
+      background: #f9fafb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0;
+    }
+    
+    .service-hero-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .service-detail-card-content {
+      padding: 32px;
     }
     .service-detail-header {
       display: flex;
@@ -201,6 +442,79 @@
       border-radius: 8px;
       border: 1px solid #e5e7eb;
     }
+    .modal-content-display {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 24px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-section {
+      margin-bottom: 24px;
+      padding: 20px;
+      border: 2px solid #fce7f3;
+      border-radius: 8px;
+      background: #fef7ff;
+    }
+    .modal-section:last-child {
+      margin-bottom: 0;
+    }
+    .modal-section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .modal-required-badge {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      background: #fee2e2;
+      color: #991b1b;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .modal-items-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .modal-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-item-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .modal-item-image {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-item-count {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-left: auto;
+    }
+    .modal-textarea-info {
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-textarea-info p {
+      margin: 8px 0;
+      font-size: 0.875rem;
+      color: #374151;
+    }
     .service-detail-actions {
       display: flex;
       gap: 12px;
@@ -225,8 +539,12 @@
       .admin-service-detail {
         padding: 16px;
       }
-      .service-detail-card {
+      .service-detail-card-content {
         padding: 20px;
+      }
+      
+      .service-hero-image {
+        height: 250px;
       }
       .service-detail-header {
         flex-direction: column;

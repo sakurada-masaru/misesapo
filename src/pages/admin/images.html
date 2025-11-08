@@ -1,0 +1,583 @@
+@layout('layouts.base')
+@json('data/meta/admin_services_title.json', $page_title)
+@json('data/meta/admin_services_body_class.json', $body_class)
+
+<main id="main" class="container admin-images">
+  <div class="page-header">
+    <h1 class="page-title">
+      <i class="fas fa-images"></i>
+      画像一覧
+    </h1>
+    <div class="header-actions">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="image-search" class="search-input" placeholder="画像名で検索..." />
+      </div>
+      <select id="image-filter" class="filter-select">
+        <option value="">すべての形式</option>
+        <option value="png">PNG</option>
+        <option value="jpg">JPG</option>
+        <option value="jpeg">JPEG</option>
+        <option value="svg">SVG</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="images-stats" id="images-stats">
+    <div class="stat-card">
+      <i class="fas fa-images"></i>
+      <div class="stat-content">
+        <strong id="total-count">0</strong>
+        <span>件の画像</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="images-grid" id="images-grid">
+    <!-- 画像はJavaScriptで動的に読み込まれます -->
+  </div>
+
+  <!-- 画像プレビューモーダル -->
+  <div id="image-modal" class="image-modal hidden">
+    <div class="image-modal-overlay"></div>
+    <div class="image-modal-content">
+      <button class="image-modal-close" id="image-modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="image-modal-header">
+        <h3 id="image-modal-title" class="image-modal-title"></h3>
+        <div class="image-modal-path" id="image-modal-path"></div>
+      </div>
+      <div class="image-modal-body">
+        <img id="image-modal-img" src="" alt="" />
+      </div>
+      <div class="image-modal-footer">
+        <button type="button" class="btn btn-primary" id="image-copy-path">
+          <i class="fas fa-copy"></i> パスをコピー
+        </button>
+        <a id="image-download-link" href="" download class="btn btn-outline">
+          <i class="fas fa-download"></i> ダウンロード
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // 画像一覧を取得
+      async function loadImages() {
+        try {
+          const response = await fetch('/api/images');
+          const data = await response.ok ? await response.json() : { images: [] };
+          
+          if (data.images && data.images.length > 0) {
+            const imagePaths = data.images.map(img => img.path);
+            renderImages(imagePaths);
+          } else {
+            document.getElementById('images-grid').innerHTML = `
+              <div class="error-message">
+                <i class="fas fa-info-circle"></i>
+                <p>画像が見つかりませんでした</p>
+              </div>
+            `;
+          }
+        } catch (err) {
+          console.error('画像の読み込みに失敗しました:', err);
+          document.getElementById('images-grid').innerHTML = `
+            <div class="error-message">
+              <i class="fas fa-exclamation-triangle"></i>
+              <p>画像の読み込みに失敗しました: ${err.message}</p>
+            </div>
+          `;
+        }
+      }
+      
+      // 画像をレンダリング
+      function renderImages(imagePaths) {
+        const grid = document.getElementById('images-grid');
+        const searchQuery = (document.getElementById('image-search')?.value || '').toLowerCase();
+        const filterType = document.getElementById('image-filter')?.value || '';
+        
+        // フィルタリング
+        let filteredImages = imagePaths;
+        if (searchQuery) {
+          filteredImages = filteredImages.filter(path => 
+            path.toLowerCase().includes(searchQuery)
+          );
+        }
+        if (filterType) {
+          filteredImages = filteredImages.filter(path => 
+            path.toLowerCase().endsWith('.' + filterType)
+          );
+        }
+        
+        // 統計を更新
+        document.getElementById('total-count').textContent = filteredImages.length;
+        
+        // 画像グリッドを生成
+        grid.innerHTML = filteredImages.map(path => {
+          const fileName = path.split('/').pop();
+          const fileExt = fileName.split('.').pop().toLowerCase();
+          return `
+            <div class="image-card" data-path="${path}">
+              <div class="image-card-thumb">
+                <img src="${path}" alt="${fileName}" loading="lazy" onerror="this.src='/images/service-300x200.svg'" />
+                <div class="image-card-overlay">
+                  <i class="fas fa-eye"></i>
+                </div>
+              </div>
+              <div class="image-card-info">
+                <div class="image-card-name" title="${fileName}">${fileName}</div>
+                <div class="image-card-path" title="${path}">${path}</div>
+                <div class="image-card-badge">${fileExt.toUpperCase()}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        // クリックイベントを追加
+        document.querySelectorAll('.image-card').forEach(card => {
+          card.addEventListener('click', function() {
+            const path = this.dataset.path;
+            const fileName = path.split('/').pop();
+            openImageModal(path, fileName);
+          });
+        });
+      }
+      
+      // 画像モーダルを開く
+      function openImageModal(path, fileName) {
+        const modal = document.getElementById('image-modal');
+        const img = document.getElementById('image-modal-img');
+        const title = document.getElementById('image-modal-title');
+        const pathEl = document.getElementById('image-modal-path');
+        const downloadLink = document.getElementById('image-download-link');
+        
+        img.src = path;
+        img.alt = fileName;
+        title.textContent = fileName;
+        pathEl.textContent = path;
+        downloadLink.href = path;
+        downloadLink.download = fileName;
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+      
+      // 画像モーダルを閉じる
+      function closeImageModal() {
+        const modal = document.getElementById('image-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+      
+      // パスをコピー
+      document.getElementById('image-copy-path')?.addEventListener('click', function() {
+        const path = document.getElementById('image-modal-path')?.textContent;
+        if (path) {
+          navigator.clipboard.writeText(path).then(() => {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> コピーしました';
+            btn.classList.add('btn-success');
+            setTimeout(() => {
+              btn.innerHTML = originalText;
+              btn.classList.remove('btn-success');
+            }, 2000);
+          });
+        }
+      });
+      
+      // モーダルを閉じる
+      document.getElementById('image-modal-close')?.addEventListener('click', closeImageModal);
+      document.querySelector('.image-modal-overlay')?.addEventListener('click', closeImageModal);
+      
+      // ESCキーで閉じる
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          const modal = document.getElementById('image-modal');
+          if (modal.classList.contains('open')) {
+            closeImageModal();
+          }
+        }
+      });
+      
+      // 検索・フィルタ
+      document.getElementById('image-search')?.addEventListener('input', function() {
+        loadImages();
+      });
+      
+      document.getElementById('image-filter')?.addEventListener('change', function() {
+        loadImages();
+      });
+      
+      // 初期読み込み
+      loadImages();
+    })();
+  </script>
+
+  <style>
+    .admin-images {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    
+    .search-box i {
+      position: absolute;
+      left: 12px;
+      color: #6b7280;
+    }
+    
+    .search-input {
+      padding: 8px 12px 8px 36px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      min-width: 250px;
+    }
+    
+    .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      background: #fff;
+    }
+    
+    .images-stats {
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+    
+    .stat-card i {
+      font-size: 1.5rem;
+      color: #3b82f6;
+    }
+    
+    .stat-content {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    
+    .stat-content strong {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    
+    .stat-content span {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    
+    .images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    
+    .image-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .image-card:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .image-card-thumb {
+      position: relative;
+      width: 100%;
+      padding-top: 75%; /* 4:3 アスペクト比 */
+      background: #f9fafb;
+      overflow: hidden;
+    }
+    
+    .image-card-thumb img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .image-card-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    
+    .image-card:hover .image-card-overlay {
+      opacity: 1;
+    }
+    
+    .image-card-overlay i {
+      color: #fff;
+      font-size: 2rem;
+    }
+    
+    .image-card-info {
+      padding: 12px;
+    }
+    
+    .image-card-name {
+      font-weight: 600;
+      color: #111827;
+      font-size: 0.875rem;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .image-card-path {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .image-card-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      background: #e5e7eb;
+      color: #6b7280;
+      border-radius: 4px;
+      font-size: 0.625rem;
+      font-weight: 600;
+    }
+    
+    /* 画像モーダル */
+    .image-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    
+    .image-modal.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .image-modal.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .image-modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      cursor: pointer;
+    }
+    
+    .image-modal-content {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      z-index: 1001;
+    }
+    
+    .image-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.5);
+      color: #fff;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 1002;
+    }
+    
+    .image-modal-close:hover {
+      background: rgba(0, 0, 0, 0.7);
+      transform: scale(1.1);
+    }
+    
+    .image-modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .image-modal-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 4px 0;
+    }
+    
+    .image-modal-path {
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-family: monospace;
+    }
+    
+    .image-modal-body {
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 60vh;
+      overflow: auto;
+    }
+    
+    .image-modal-body img {
+      max-width: 100%;
+      max-height: 60vh;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+    
+    .image-modal-footer {
+      padding: 20px 24px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      color: #374151;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    
+    .btn:hover {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+    
+    .btn-primary {
+      background: #3b82f6;
+      color: #fff;
+      border-color: #3b82f6;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+    
+    .btn-outline {
+      background: #fff;
+      color: #374151;
+      border-color: #d1d5db;
+    }
+    
+    .btn-success {
+      background: #10b981;
+      color: #fff;
+      border-color: #10b981;
+    }
+    
+    .error-message {
+      text-align: center;
+      padding: 48px;
+      color: #dc2626;
+    }
+    
+    .error-message i {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+  </style>
+</main>
+

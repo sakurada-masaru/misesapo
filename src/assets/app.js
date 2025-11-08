@@ -30,8 +30,18 @@
           const img = document.createElement('img');
           img.className = 'avatar-round';
           const imgPath = it['img-url'] || it['img'] || 'https://placehold.co/150x150/e2e8f0/666';
-          img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') ? imgPath : (imgPath.startsWith('/') ? imgPath : (document.querySelector('base')?.href.replace(/\/$/, '') || '') + '/' + imgPath);
+          // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
+          if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+            img.src = imgPath;
+          } else if (imgPath.startsWith('/')) {
+            img.src = imgPath;
+          } else {
+            img.src = '/' + imgPath;
+          }
           img.alt = (it['text'] || '');
+          img.onerror = function() {
+            this.src = '/images/service-300x200.svg';
+          };
           const p = document.createElement('p');
           p.className = 'item-name';
           p.textContent = it['text'] || '';
@@ -72,8 +82,18 @@
           const img = document.createElement('img');
           img.className = 'thumb-211';
           const imgPath = it['img-url'] || it['img'] || '/images/service-300x200.svg';
-          img.src = imgPath.startsWith('/') ? imgPath : (document.querySelector('base')?.href.replace(/\/$/, '') || '') + '/' + imgPath;
+          // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
+          if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+            img.src = imgPath;
+          } else if (imgPath.startsWith('/')) {
+            img.src = imgPath;
+          } else {
+            img.src = '/' + imgPath;
+          }
           img.alt = (it['text'] || '');
+          img.onerror = function() {
+            this.src = '/images/service-300x200.svg';
+          };
           const span = document.createElement('span');
           span.textContent = it['text'] || '';
           label.appendChild(input);
@@ -121,17 +141,25 @@
     const formBox = $('#modal-form', modal);
 
     if (img) {
-      const imgPath = data.image || '/images/service-300x200.svg';
-      img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') 
-        ? imgPath 
-        : (imgPath.startsWith('/') 
-          ? imgPath 
-          : (document.querySelector('base')?.href.replace(/\/$/, '') || '') + '/' + imgPath);
+      // サービス詳細ページで設定された画像（detail-image）を優先、なければ image を使用
+      const imgPath = data['detail-image'] || data.image || '/images/service-300x200.svg';
+      // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
+      if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+        img.src = imgPath;
+      } else if (imgPath.startsWith('/')) {
+        img.src = imgPath;
+      } else {
+        img.src = '/' + imgPath;
+      }
+      img.onerror = function() {
+        this.src = '/images/service-300x200.svg';
+      };
     }
     if (title) title.textContent = data.title || 'サービス詳細（ダミー）';
 
     // render dynamic form sections if provided
-    if (formBox) renderSections(formBox, data.forms, 'form');
+    // サービス詳細ページで編集した forms を使用
+    if (formBox) renderSections(formBox, data.forms || [], 'form');
 
     modal.classList.add('open');
     modal.classList.remove('hidden');
@@ -153,15 +181,23 @@
     const title = $('#details-modal-title', modal);
     const box = $('#details-form', modal);
     if (img) {
-      const imgPath = data.image || '/images/service-300x200.svg';
-      img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') 
-        ? imgPath 
-        : (imgPath.startsWith('/') 
-          ? imgPath 
-          : (document.querySelector('base')?.href.replace(/\/$/, '') || '') + '/' + imgPath);
+      // サービス詳細ページで設定された画像（detail-image）を優先、なければ image を使用
+      const imgPath = data['detail-image'] || data.image || '/images/service-300x200.svg';
+      // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
+      if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+        img.src = imgPath;
+      } else if (imgPath.startsWith('/')) {
+        img.src = imgPath;
+      } else {
+        img.src = '/' + imgPath;
+      }
+      img.onerror = function() {
+        this.src = '/images/service-300x200.svg';
+      };
     }
     if (title) title.textContent = data.title || 'サービス詳細（ダミー）';
-    if (box) renderSections(box, data.details, 'detail');
+    // サービス詳細ページで編集した details を使用
+    if (box) renderSections(box, data.details || [], 'detail');
     modal.classList.add('open');
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -183,11 +219,17 @@
     const details = $('#cart-added-item-details', modal);
     if (img) {
       const imgPath = data.image || '/images/service-300x200.svg';
-      img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') 
-        ? imgPath 
-        : (imgPath.startsWith('/') 
-          ? imgPath 
-          : (document.querySelector('base')?.href.replace(/\/$/, '') || '') + '/' + imgPath);
+      // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
+      if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+        img.src = imgPath;
+      } else if (imgPath.startsWith('/')) {
+        img.src = imgPath;
+      } else {
+        img.src = '/' + imgPath;
+      }
+      img.onerror = function() {
+        this.src = '/images/service-300x200.svg';
+      };
     }
     if (title) title.textContent = data.title || 'サービス名';
     if (details) details.textContent = '選択内容: ダミー';
@@ -339,7 +381,14 @@
     } catch (_) { /* no-op */ }
 
     // Open on any service card click (dummy OK)
+    // If card has a link, let it navigate; otherwise open modal
     $all('.card-service').forEach((card) => {
+      const link = card.querySelector('.card-service-link');
+      if (link) {
+        // Card has a link, let it navigate to the service page
+        return;
+      }
+      // No link, open modal (for backward compatibility)
       card.addEventListener('click', () => {
         const id = card.getAttribute('data-id');
         const match = id ? byId.get(String(id)) : null;
@@ -360,7 +409,7 @@
     const backBtn = $('#back-modal-btn', modal);
     if (backBtn) backBtn.addEventListener('click', closeModal);
 
-    // Next → Details
+    // Next → Details (ModalManagerを使用)
     const nextBtn = modal.querySelector('.actions .btn-primary');
     if (nextBtn) nextBtn.addEventListener('click', () => {
       const anyCard = document.querySelector('.card-service');
@@ -370,7 +419,12 @@
       const image = anyCard ? (anyCard.querySelector('img')?.getAttribute('src') || '') : '';
       const data = match || { title, image };
       closeModal();
-      openDetails(data);
+      // ModalManagerを使用して次のモーダルを開く
+      if (window.ModalManager) {
+        window.ModalManager.open('details-modal', data);
+      } else {
+        openDetails(data);
+      }
     });
 
     // Details modal events
@@ -386,15 +440,85 @@
         const image = anyCard ? (anyCard.querySelector('img')?.getAttribute('src') || '') : '';
         openModal({ title, image });
       });
-      const addToCart = $('#add-to-cart-btn', details);
+      // Next → Order modal
+      const nextBtn = details.querySelector('.actions .btn-primary');
+      if (nextBtn) nextBtn.addEventListener('click', () => {
+        const anyCard = document.querySelector('.card-service');
+        const id = anyCard ? anyCard.getAttribute('data-id') : null;
+        const match = id ? byId.get(String(id)) : null;
+        const title = anyCard ? (anyCard.querySelector('h3')?.textContent || '') : '';
+        const image = anyCard ? (anyCard.querySelector('img')?.getAttribute('src') || '') : '';
+        const data = match || { title, image };
+        closeDetails();
+        openOrder(data);
+      });
+      details.addEventListener('click', (e) => { if (e.target === details) closeDetails(); });
+    }
+
+    // Order modal functions
+    function openOrder(data) {
+      const modal = $('#order-modal');
+      if (!modal) return;
+      const img = $('#order-modal-image', modal);
+      const title = $('#order-modal-title', modal);
+      if (img) {
+        const imgPath = data['detail-image'] || data.image || '/images/service-300x200.svg';
+        // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
+        if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+          img.src = imgPath;
+        } else if (imgPath.startsWith('/')) {
+          img.src = imgPath;
+        } else {
+          img.src = '/' + imgPath;
+        }
+        img.onerror = function() {
+          this.src = '/images/service-300x200.svg';
+        };
+      }
+      if (title) title.textContent = data.title || 'サービス詳細（ダミー）';
+      modal.classList.add('open');
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeOrder() {
+      const modal = $('#order-modal');
+      if (!modal) return;
+      modal.classList.remove('open');
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Order modal events
+    const order = $('#order-modal');
+    if (order) {
+      const closeO = $('#close-order-modal-btn', order);
+      if (closeO) closeO.addEventListener('click', closeOrder);
+      const backToDetails = $('#back-to-details-modal-btn', order);
+      if (backToDetails) backToDetails.addEventListener('click', () => {
+        const anyCard = document.querySelector('.card-service');
+        const id = anyCard ? anyCard.getAttribute('data-id') : null;
+        const match = id ? byId.get(String(id)) : null;
+        const title = anyCard ? (anyCard.querySelector('h3')?.textContent || '') : '';
+        const image = anyCard ? (anyCard.querySelector('img')?.getAttribute('src') || '') : '';
+        const data = match || { title, image };
+        closeOrder();
+        openDetails(data);
+      });
+      const addToCart = $('#add-to-cart-btn', order);
       if (addToCart) addToCart.addEventListener('click', () => {
         const anyCard = document.querySelector('.card-service');
         const title = anyCard ? (anyCard.querySelector('h3')?.textContent || '') : '';
         const image = anyCard ? (anyCard.querySelector('img')?.getAttribute('src') || '') : '';
-        closeDetails();
+        closeOrder();
         openCartAdded({ title, image });
       });
-      details.addEventListener('click', (e) => { if (e.target === details) closeDetails(); });
+      const setRegularOrder = $('#set-regular-order-btn', order);
+      if (setRegularOrder) setRegularOrder.addEventListener('click', () => {
+        // 定期発注の処理（将来実装）
+        alert('定期発注機能は実装予定です');
+      });
+      order.addEventListener('click', (e) => { if (e.target === order) closeOrder(); });
     }
 
     // Cart added modal events

@@ -51,6 +51,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         elif self.path == '/api/pending-changes':
             # 未反映の変更を確認
             self.handle_pending_changes()
+        elif self.path == '/api/images':
+            # 画像一覧を返す
+            self.handle_images_list()
         else:
             self.send_error(404, "API endpoint not found")
     
@@ -65,6 +68,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         elif self.path == '/api/discard-changes':
             # ローカルの変更を破棄
             self.handle_discard_changes()
+        elif self.path == '/api/commit-and-push':
+            # Gitにコミット・プッシュ
+            self.handle_commit_and_push()
         else:
             self.send_error(404, "API endpoint not found")
     
@@ -206,6 +212,38 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             })
         except Exception as e:
             self.send_json_response({'hasChanges': False, 'changes': [], 'error': str(e)})
+    
+    def handle_images_list(self):
+        """画像一覧を取得"""
+        try:
+            images_dir = PUBLIC / "images"
+            if not images_dir.exists():
+                self.send_json_response({'images': []})
+                return
+            
+            # 画像ファイルを再帰的に検索
+            image_extensions = {'.png', '.jpg', '.jpeg', '.svg', '.gif', '.webp'}
+            images = []
+            
+            for img_path in images_dir.rglob('*'):
+                if img_path.is_file() and img_path.suffix.lower() in image_extensions:
+                    # public/からの相対パスを取得
+                    rel_path = img_path.relative_to(PUBLIC)
+                    # /images/... の形式に変換
+                    image_path = '/' + str(rel_path).replace('\\', '/')
+                    images.append({
+                        'path': image_path,
+                        'name': img_path.name,
+                        'size': img_path.stat().st_size,
+                        'extension': img_path.suffix.lower()
+                    })
+            
+            # パスでソート
+            images.sort(key=lambda x: x['path'])
+            
+            self.send_json_response({'images': images})
+        except Exception as e:
+            self.send_json_response({'images': [], 'error': str(e)})
     
     def get_file_timestamp(self, file_path: Path) -> str:
         """ファイルの更新日時を取得"""
@@ -363,6 +401,119 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 'message': f'エラーが発生しました: {str(e)}'
             })
     
+    def handle_commit_and_push(self):
+        """Gitにコミット・プッシュ（手動実行）"""
+        try:
+            # Gitリポジトリか確認
+            git_dir = ROOT / ".git"
+            if not git_dir.exists():
+                self.send_json_response({
+                    'status': 'error',
+                    'message': 'Gitリポジトリが見つかりません'
+                })
+                return
+            
+            # 変更があるか確認
+            result = subprocess.run(
+                ['git', 'status', '--porcelain'],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if not result.stdout.strip():
+                self.send_json_response({
+                    'status': 'info',
+                    'message': 'コミットする変更がありません'
+                })
+                return
+            
+            # 変更をステージング
+            # public/ は .gitignore で無視されているため、src/data/service_items.json のみをステージング
+            # public/ 内のファイルはビルド出力なので、通常はコミットしない
+            add_result = subprocess.run(
+                ['git', 'add', 'src/data/service_items.json'],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if add_result.returncode != 0:
+                self.send_json_response({
+                    'status': 'error',
+                    'message': 'ファイルのステージングに失敗しました',
+                    'error': add_result.stderr or add_result.stdout
+                })
+                return
+            
+            # コミット
+            commit_message = "chore: サービス管理の更新"
+            commit_result = subprocess.run(
+                ['git', 'commit', '-m', commit_message],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if commit_result.returncode != 0:
+                self.send_json_response({
+                    'status': 'error',
+                    'message': 'コミットに失敗しました',
+                    'error': commit_result.stderr
+                })
+                return
+            
+            # プッシュ（リモートが設定されている場合のみ）
+            remote_result = subprocess.run(
+                ['git', 'remote', '-v'],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if not remote_result.stdout.strip():
+                self.send_json_response({
+                    'status': 'error',
+                    'message': 'リモートリポジトリが設定されていません'
+                })
+                return
+            
+            push_result = subprocess.run(
+                ['git', 'push', 'origin', 'main'],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            
+            if push_result.returncode == 0:
+                self.send_json_response({
+                    'status': 'success',
+                    'message': 'GitHubにプッシュしました。数分後にGitHub Pagesに反映されます。',
+                    'output': push_result.stdout
+                })
+            else:
+                self.send_json_response({
+                    'status': 'error',
+                    'message': 'プッシュに失敗しました',
+                    'error': push_result.stderr
+                })
+                
+        except subprocess.TimeoutExpired:
+            self.send_json_response({
+                'status': 'error',
+                'message': 'Git操作がタイムアウトしました'
+            })
+        except Exception as e:
+            self.send_json_response({
+                'status': 'error',
+                'message': f'エラーが発生しました: {str(e)}'
+            })
+    
     def handle_api_put(self):
         """API PUT処理: サービス更新"""
         # /api/services/{id} の形式をパース
@@ -466,8 +617,8 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                     print(f"Build error: {result.stderr}", file=sys.stderr)
                     return
                 
-                # ビルド成功後、自動的にGitHubにコミット・プッシュ（オプション）
-                self.auto_commit_and_push()
+                # ビルド成功後、自動的にGitHubにコミット・プッシュは行わない
+                # 技術者が確認してから手動で実行する
             except Exception as e:
                 print(f"Build exception: {e}", file=sys.stderr)
         

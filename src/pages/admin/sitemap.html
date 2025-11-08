@@ -142,6 +142,11 @@
         color: #9f1239; 
         border: 1px solid #fbcfe8;
       }
+      .role-developer { 
+        background: #dbeafe; 
+        color: #1e40af; 
+        border: 1px solid #93c5fd; 
+      }
       .role-public { 
         background: #f3f4f6; 
         color: #374151; 
@@ -415,6 +420,10 @@
           <div class="legend-item">
             <span class="role-badge role-admin">管理者</span>
             <span>管理者</span>
+          </div>
+          <div class="legend-item">
+            <span class="role-badge role-developer">開発者</span>
+            <span>開発者</span>
           </div>
         </div>
       </div>
@@ -1011,6 +1020,28 @@
             <div class="sitemap-item">
               <span class="sitemap-item-name"><a href="/admin/services.html">サービス管理</a></span>
               <code class="sitemap-item-path">/admin/services.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-admin">管理者</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+            <div class="sitemap-children">
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/admin/services/review.html">変更内容レビュー（開発者専用）</a></span>
+                  <code class="sitemap-item-path">/admin/services/review.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-developer">開発者</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/admin/images.html">画像一覧</a></span>
+              <code class="sitemap-item-path">/admin/images.html</code>
               <div class="sitemap-item-badges">
                 <span class="role-badge role-admin">管理者</span>
                 <span class="status-badge status implemented">実装済み</span>

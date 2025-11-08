@@ -491,6 +491,8 @@ main { width: 100%; max-width: var(--container-lg); margin: 24px auto; padding: 
 /* Service card */
 .card-service { background: #fff; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.06); cursor: pointer; transition: box-shadow .2s ease, transform .2s ease; width: 211px; }
 .card-service:hover { box-shadow: 0 8px 22px rgba(0,0,0,0.12); transform: translateY(-1px); }
+.card-service-link { display: block; text-decoration: none; color: inherit; }
+.card-service-link:hover { text-decoration: none; }
 .card-service .thumb { width: 100%; aspect-ratio: 211 / 98; overflow: hidden; background: #f3f4f6; }
 .card-service .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .card-service .content { padding: 12px; text-align: center; }

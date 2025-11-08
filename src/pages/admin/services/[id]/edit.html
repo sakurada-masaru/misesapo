@@ -42,13 +42,29 @@
         </div>
         <div class="form-group full-width">
           <label class="form-label">サービス画像URL</label>
-          <input type="text" class="form-input" name="image" value="{{ image }}" placeholder="例: images/gurisuto.png" />
-          <p class="form-hint">画像のパスを入力してください</p>
+          <div class="image-input-group">
+            <input type="text" class="form-input" name="image" id="image" value="{{ image }}" placeholder="例: images/gurisuto.png" />
+            <button type="button" class="btn btn-outline btn-select-image" data-target="image" data-preview="image_preview">
+              <i class="fas fa-images"></i> 画像を選択
+            </button>
+          </div>
+          <div class="image-preview" id="image_preview" style="display: none;">
+            <img src="" alt="プレビュー" />
+          </div>
+          <p class="form-hint">画像のパスを入力するか、「画像を選択」ボタンから選択してください</p>
         </div>
         <div class="form-group full-width">
           <label class="form-label">詳細画像URL</label>
-          <input type="text" class="form-input" name="detail_image" value="{{ detail_image }}" placeholder="例: images/ミセサポ2025/グレーチング洗浄.png" />
-          <p class="form-hint">詳細ページで表示する画像のパスを入力してください</p>
+          <div class="image-input-group">
+            <input type="text" class="form-input" name="detail_image" id="detail_image" value="{{ detail_image }}" placeholder="例: images/ミセサポ2025/グレーチング洗浄.png" />
+            <button type="button" class="btn btn-outline btn-select-image" data-target="detail_image" data-preview="detail_image_preview">
+              <i class="fas fa-images"></i> 画像を選択
+            </button>
+          </div>
+          <div class="image-preview" id="detail_image_preview" style="display: none;">
+            <img src="" alt="プレビュー" />
+          </div>
+          <p class="form-hint">詳細ページで表示する画像のパスを入力するか、「画像を選択」ボタンから選択してください</p>
         </div>
       </div>
     </div>
@@ -78,6 +94,40 @@
       </div>
     </div>
 
+    <!-- モーダル表示内容 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-window-maximize"></i>
+        モーダル表示内容
+      </h2>
+      
+      <!-- 最初の選択画面（forms） -->
+      <div class="modal-edit-section">
+        <div class="modal-edit-header">
+          <h3 class="modal-edit-title">最初の選択画面（forms）</h3>
+          <button type="button" class="btn btn-outline btn-sm" id="add-forms-section-btn">
+            <i class="fas fa-plus"></i> セクションを追加
+          </button>
+        </div>
+        <div id="forms-sections-container" class="modal-sections-container"></div>
+      </div>
+
+      <!-- 詳細選択画面（details） -->
+      <div class="modal-edit-section">
+        <div class="modal-edit-header">
+          <h3 class="modal-edit-title">詳細選択画面（details）</h3>
+          <button type="button" class="btn btn-outline btn-sm" id="add-details-section-btn">
+            <i class="fas fa-plus"></i> セクションを追加
+          </button>
+        </div>
+        <div id="details-sections-container" class="modal-sections-container"></div>
+      </div>
+      
+      <!-- Hidden inputs for JSON data -->
+      <input type="hidden" name="forms" id="forms-json-input" />
+      <input type="hidden" name="details" id="details-json-input" />
+    </div>
+
     <!-- フォームアクション -->
     <div class="form-actions">
       <a href="/admin/services/{{ id }}.html" class="btn btn-outline">
@@ -90,6 +140,10 @@
       </button>
     </div>
   </form>
+
+  <!-- Preview Modals -->
+  @include('partials.service_item_modal')
+  @include('partials.details_modal')
 
   <style>
     .admin-services-edit {
@@ -139,13 +193,14 @@
     }
     .form-section {
       margin-bottom: 32px;
-      padding-bottom: 32px;
-      border-bottom: 1px solid #f3f4f6;
+      padding: 24px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 2px solid #fce7f3; /* Pink border */
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .form-section:last-of-type {
-      border-bottom: none;
       margin-bottom: 0;
-      padding-bottom: 0;
     }
     .section-title {
       display: flex;
@@ -155,6 +210,8 @@
       font-weight: 600;
       color: #111827;
       margin: 0 0 24px 0;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f3f4f6;
     }
     .section-title i {
       color: var(--primary);
@@ -209,6 +266,345 @@
       color: #6b7280;
       margin: 0;
     }
+    .form-hint code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .form-error {
+      color: #dc2626;
+      font-size: 0.875rem;
+      margin-top: 8px;
+      padding: 8px;
+      background: #fee2e2;
+      border-radius: 4px;
+      border: 1px solid #fecaca;
+    }
+    .modal-edit-section {
+      margin-bottom: 32px;
+      padding: 24px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-edit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+    .modal-edit-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+    .modal-sections-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .modal-section-editor {
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 2px solid var(--primary);
+    }
+    .modal-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .modal-section-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+    .modal-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .modal-item-editor {
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .modal-item-number {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #6b7280;
+    }
+    .btn-xs {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+    }
+    .image-preview-small {
+      margin-top: 8px;
+    }
+    .image-preview-small img {
+      max-width: 100px;
+      max-height: 100px;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .image-input-group {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    
+    .image-input-group .form-input {
+      flex: 1;
+    }
+    
+    .btn-select-image {
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    
+    .image-preview {
+      margin-top: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .image-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+    
+    /* 画像選択モーダル */
+    .image-select-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    
+    .image-select-modal.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .image-select-modal.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .image-select-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+    }
+    
+    .image-select-dialog {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      max-width: 90vw;
+      max-height: 90vh;
+      width: 100%;
+      max-width: 1000px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      z-index: 2001;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    
+    .image-select-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .image-select-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .image-select-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #6b7280;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    
+    .image-select-close:hover {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    
+    .image-select-search {
+      padding: 16px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    
+    .image-select-search .search-box {
+      flex: 1;
+      position: relative;
+    }
+    
+    .image-select-search .search-box i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+    }
+    
+    .image-select-search .search-input {
+      width: 100%;
+      padding: 8px 12px 8px 36px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+    
+    .image-select-search .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      background: #fff;
+    }
+    
+    .image-select-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      max-height: 60vh;
+    }
+    
+    .image-select-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+    }
+    
+    .image-select-card {
+      background: #fff;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .image-select-card:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .image-select-thumb {
+      position: relative;
+      width: 100%;
+      padding-top: 75%;
+      background: #f9fafb;
+      overflow: hidden;
+    }
+    
+    .image-select-thumb img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .image-select-info {
+      padding: 8px;
+    }
+    
+    .image-select-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .image-select-path {
+      font-size: 0.625rem;
+      color: #6b7280;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .loading-spinner {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+    
+    .loading-spinner i {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    
+    .empty-message,
+    .error-message {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
     .form-actions {
       display: flex;
       justify-content: flex-end;
@@ -219,6 +615,16 @@
     }
     .form-actions .btn {
       min-width: 140px;
+    }
+    .btn-preview {
+      border: 2px solid var(--primary);
+      background: #ffffff;
+      color: var(--primary);
+      margin-top: 12px;
+    }
+    .btn-preview:hover {
+      background: #fff5f8;
+      color: var(--primary-600);
     }
     @media (max-width: 768px) {
       .admin-services-edit {
@@ -249,6 +655,1138 @@
       }
     })();
 
+    // Modal content editor (forms/details)
+    (function() {
+      let imageSelectModal = null;
+      let currentImageTarget = null;
+      
+      async function loadServiceData() {
+        try {
+          const response = await fetch('/api/services');
+          const services = await response.json();
+          const serviceId = {{ id }};
+          const service = services.find(s => s.id === serviceId);
+          
+          if (service) {
+            renderFormsSections(service.forms || []);
+            renderDetailsSections(service.details || []);
+          }
+        } catch (error) {
+          console.error('Failed to load service data:', error);
+        }
+      }
+      
+      // Render forms sections
+      function renderFormsSections(sections) {
+        const container = document.getElementById('forms-sections-container');
+        if (!container) return;
+        container.innerHTML = '';
+        
+        sections.forEach((section, idx) => {
+          container.appendChild(createFormsSectionElement(section, idx));
+        });
+        
+        updateFormsJSON();
+      }
+      
+      // Render details sections
+      function renderDetailsSections(sections) {
+        const container = document.getElementById('details-sections-container');
+        if (!container) return;
+        container.innerHTML = '';
+        
+        sections.forEach((section, idx) => {
+          container.appendChild(createDetailsSectionElement(section, idx));
+        });
+        
+        updateDetailsJSON();
+      }
+      
+      // Create forms section element
+      function createFormsSectionElement(section, idx) {
+        const div = document.createElement('div');
+        div.className = 'modal-section-editor';
+        div.dataset.index = idx;
+        
+        const sectionType = section['section-type'] || 'radio-text';
+        const items = section['section-items'] || [];
+        const requiredChecked = section.required ? 'checked' : '';
+        const radioTextSelected = sectionType === 'radio-text' ? 'selected' : '';
+        const radioImageSelected = sectionType === 'radio-image' ? 'selected' : '';
+        
+        div.innerHTML = `
+          <div class="modal-section-header">
+            <h4 class="modal-section-label">セクション ${idx + 1}</h4>
+            <button type="button" class="btn btn-danger btn-sm btn-remove-section" data-section-index="${idx}">
+              <i class="fas fa-trash"></i> 削除
+            </button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">セクションタイトル</label>
+            <input type="text" class="form-input section-title-input" value="${escapeHtml(section['section-title'] || '')}" placeholder="例: 日頃のお掃除の状況について教えてください" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">タイプ</label>
+            <select class="form-select section-type-select">
+              <option value="radio-text" ${radioTextSelected}>テキスト選択</option>
+              <option value="radio-image" ${radioImageSelected}>画像選択</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <input type="checkbox" class="section-required-checkbox" ${requiredChecked} />
+              必須項目
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="form-label">選択肢</label>
+            <div class="modal-items-list" data-section-index="${idx}">
+              ${items.map((item, itemIdx) => createFormsItemHTML(item, idx, itemIdx, sectionType)).join('')}
+            </div>
+            <button type="button" class="btn btn-outline btn-sm btn-add-item" data-section-index="${idx}">
+              <i class="fas fa-plus"></i> 選択肢を追加
+            </button>
+            <button type="button" class="btn btn-preview btn-sm btn-preview-section" data-section-index="${idx}" data-section-type="forms">
+              <i class="fas fa-eye"></i> プレビュー
+            </button>
+          </div>
+        `;
+        
+        // Add event listeners
+        div.querySelectorAll('.section-title-input, .section-type-select, .section-required-checkbox').forEach(el => {
+          el.addEventListener('change', updateFormsJSON);
+        });
+        
+        // Add event listeners for buttons
+        div.querySelector('.btn-remove-section')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          window.removeFormsSection(sectionIdx);
+        });
+        
+        div.querySelector('.btn-add-item')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          window.addFormsItem(sectionIdx);
+        });
+        
+        // Add event listener for preview button
+        div.querySelector('.btn-preview-section')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          const sectionType = this.dataset.sectionType;
+          window.previewSection(sectionIdx, sectionType);
+        });
+        
+        // Add event listeners for remove item buttons
+        div.querySelectorAll('.btn-remove-item').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const sectionIdx = parseInt(this.dataset.sectionIndex);
+            const itemIdx = parseInt(this.dataset.itemIndex);
+            window.removeFormsItem(sectionIdx, itemIdx);
+          });
+        });
+        
+        // Add event listeners for image select buttons
+        div.querySelectorAll('.btn-select-image[data-type="forms"]').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const sectionIdx = parseInt(this.dataset.sectionIndex);
+            const itemIdx = parseInt(this.dataset.itemIndex);
+            window.openImageSelectForItem(sectionIdx, itemIdx);
+          });
+        });
+        
+        return div;
+      }
+      
+      // Create forms item HTML
+      function createFormsItemHTML(item, sectionIdx, itemIdx, sectionType) {
+        if (sectionType === 'radio-image') {
+          const text = typeof item === 'string' ? item : (item.text || '');
+          const imgUrl = typeof item === 'object' ? (item['img-url'] || item.img || '') : '';
+          const imagePreview = imgUrl ? `<div class="image-preview-small"><img src="/${imgUrl}" alt="プレビュー" onerror="this.style.display='none'" /></div>` : '';
+          return `
+            <div class="modal-item-editor" data-item-index="${itemIdx}">
+              <div class="modal-item-header">
+                <span class="modal-item-number">選択肢 ${itemIdx + 1}</span>
+                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="form-group">
+                <label class="form-label">テキスト</label>
+                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: 表面がきれいになれば十分" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">画像</label>
+                <div class="image-input-group">
+                  <input type="text" class="form-input item-image-input" value="${escapeHtml(imgUrl)}" placeholder="例: images/example.png" />
+                  <button type="button" class="btn btn-outline btn-sm btn-select-image" data-section-index="${sectionIdx}" data-item-index="${itemIdx}" data-type="forms">
+                    <i class="fas fa-images"></i> 画像を選択
+                  </button>
+                </div>
+                ${imagePreview}
+              </div>
+            </div>
+          `;
+        } else {
+          const text = typeof item === 'string' ? item : (item.text || '');
+          return `
+            <div class="modal-item-editor" data-item-index="${itemIdx}">
+              <div class="modal-item-header">
+                <span class="modal-item-number">選択肢 ${itemIdx + 1}</span>
+                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="form-group">
+                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: 毎日清掃している" />
+              </div>
+            </div>
+          `;
+        }
+      }
+      
+      // Helper function for textarea section
+      function createDetailsTextareaSection(section) {
+        return `
+          <div class="form-group">
+            <label class="form-label">プレースホルダー</label>
+            <input type="text" class="form-input textarea-placeholder-input" value="${escapeHtml(section.placeholder || '')}" placeholder="例: 設置場所、使用時間帯、臭気の有無など" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">最大文字数</label>
+            <input type="number" class="form-input textarea-maxlength-input" value="${section.maxLength || 500}" min="1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">キー</label>
+            <input type="text" class="form-input textarea-key-input" value="${escapeHtml(section.key || '')}" placeholder="例: note" />
+          </div>
+        `;
+      }
+      
+      // Helper function for items section
+      function createDetailsItemsSection(idx, items) {
+        return `
+          <div class="form-group">
+            <label class="form-label">項目</label>
+            <div class="modal-items-list" data-section-index="${idx}">
+              ${items.map((item, itemIdx) => createDetailsItemHTML(item, idx, itemIdx)).join('')}
+            </div>
+            <button type="button" class="btn btn-outline btn-sm btn-add-item" data-section-index="${idx}">
+              <i class="fas fa-plus"></i> 項目を追加
+            </button>
+            <button type="button" class="btn btn-preview btn-sm btn-preview-section" data-section-index="${idx}" data-section-type="details">
+              <i class="fas fa-eye"></i> プレビュー
+            </button>
+          </div>
+        `;
+      }
+      
+      // Create details section element
+      function createDetailsSectionElement(section, idx) {
+        const div = document.createElement('div');
+        div.className = 'modal-section-editor';
+        div.dataset.index = idx;
+        
+        const sectionType = section['section-type'] || 'grid-items';
+        const items = section['section-items'] || [];
+        const gridItemsSelected = sectionType === 'grid-items' ? 'selected' : '';
+        const textareaSelected = sectionType === 'textarea' ? 'selected' : '';
+        
+        div.innerHTML = `
+          <div class="modal-section-header">
+            <h4 class="modal-section-label">セクション ${idx + 1}</h4>
+            <button type="button" class="btn btn-danger btn-sm btn-remove-section" data-section-index="${idx}">
+              <i class="fas fa-trash"></i> 削除
+            </button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">セクションタイトル</label>
+            <input type="text" class="form-input section-title-input" value="${escapeHtml(section['section-title'] || '')}" placeholder="例: 種類" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">タイプ</label>
+            <select class="form-select details-section-type-select">
+              <option value="grid-items" ${gridItemsSelected}>項目選択</option>
+              <option value="textarea" ${textareaSelected}>テキストエリア</option>
+            </select>
+          </div>
+          ${sectionType === 'textarea' ? createDetailsTextareaSection(section) : createDetailsItemsSection(idx, items)}
+        `;
+        
+        // Add event listeners
+        div.querySelectorAll('.section-title-input, .details-section-type-select, .textarea-placeholder-input, .textarea-maxlength-input, .textarea-key-input').forEach(el => {
+          el.addEventListener('change', function() {
+            if (el.classList.contains('details-section-type-select')) {
+              // Re-render section when type changes
+              const idx = parseInt(div.dataset.index);
+              const container = document.getElementById('details-sections-container');
+              const sections = Array.from(container.children).map((el, i) => {
+                const title = el.querySelector('.section-title-input')?.value || '';
+                const type = el.querySelector('.details-section-type-select')?.value || 'grid-items';
+                if (type === 'textarea') {
+                  const placeholder = el.querySelector('.textarea-placeholder-input')?.value || '';
+                  const maxLength = parseInt(el.querySelector('.textarea-maxlength-input')?.value || '500', 10);
+                  const key = el.querySelector('.textarea-key-input')?.value || '';
+                  return { 'section-title': title, 'section-type': 'textarea', placeholder, maxLength, key: key || undefined };
+                } else {
+                  const itemsEl = el.querySelector('.modal-items-list');
+                  const items = Array.from(itemsEl?.children || []).map(itemEl => {
+                    const text = itemEl.querySelector('.item-text-input')?.value || '';
+                    const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+                    const countable = itemEl.querySelector('.item-countable-checkbox')?.checked || false;
+                    const unit = itemEl.querySelector('.item-unit-input')?.value || '';
+                    return { text, 'img-url': imgUrl, countable, unit: countable ? unit : undefined, count: 0 };
+                  });
+                  return { 'section-title': title, 'section-type': 'grid-items', 'section-items': items };
+                }
+              });
+              renderDetailsSections(sections);
+            } else {
+              updateDetailsJSON();
+            }
+          });
+        });
+        
+        // Add event listeners for buttons
+        div.querySelector('.btn-remove-section')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          window.removeDetailsSection(sectionIdx);
+        });
+        
+        div.querySelector('.btn-add-item')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          window.addDetailsItem(sectionIdx);
+        });
+        
+        // Add event listener for preview button
+        div.querySelector('.btn-preview-section')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          const sectionType = this.dataset.sectionType;
+          window.previewSection(sectionIdx, sectionType);
+        });
+        
+        // Add event listeners for remove item buttons
+        div.querySelectorAll('.btn-remove-item').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const sectionIdx = parseInt(this.dataset.sectionIndex);
+            const itemIdx = parseInt(this.dataset.itemIndex);
+            window.removeDetailsItem(sectionIdx, itemIdx);
+          });
+        });
+        
+        // Add event listeners for image select buttons
+        div.querySelectorAll('.btn-select-image[data-type="details"]').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const sectionIdx = parseInt(this.dataset.sectionIndex);
+            const itemIdx = parseInt(this.dataset.itemIndex);
+            window.openImageSelectForDetailsItem(sectionIdx, itemIdx);
+          });
+        });
+        
+        return div;
+      }
+      
+      // Create details item HTML
+      function createDetailsItemHTML(item, sectionIdx, itemIdx) {
+        const text = item.text || '';
+        const imgUrl = item['img-url'] || item.img || '';
+        const countable = item.countable || false;
+        const unit = item.unit || '';
+        
+        const checkedAttr = countable ? 'checked' : '';
+        const styleAttr = countable ? '' : 'display: none;';
+        const imagePreview = imgUrl ? `<div class="image-preview-small"><img src="/${imgUrl}" alt="プレビュー" onerror="this.style.display='none'" /></div>` : '';
+        
+        return `
+          <div class="modal-item-editor" data-item-index="${itemIdx}">
+            <div class="modal-item-header">
+              <span class="modal-item-number">項目 ${itemIdx + 1}</span>
+              <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="form-group">
+              <label class="form-label">項目名</label>
+              <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: U字溝" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">画像</label>
+              <div class="image-input-group">
+                <input type="text" class="form-input item-image-input" value="${escapeHtml(imgUrl)}" placeholder="例: images/example.png" />
+                <button type="button" class="btn btn-outline btn-sm btn-select-image" data-section-index="${sectionIdx}" data-item-index="${itemIdx}" data-type="details">
+                  <i class="fas fa-images"></i> 画像を選択
+                </button>
+              </div>
+              ${imagePreview}
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <input type="checkbox" class="item-countable-checkbox" ${checkedAttr} />
+                数量入力あり
+              </label>
+            </div>
+            <div class="form-group" style="${styleAttr}" data-countable-group>
+              <label class="form-label">単位</label>
+              <input type="text" class="form-input item-unit-input" value="${escapeHtml(unit)}" placeholder="例: m, 本, 個" />
+            </div>
+          </div>
+        `;
+      }
+      
+      // Update forms JSON
+      function updateFormsJSON() {
+        const container = document.getElementById('forms-sections-container');
+        if (!container) return;
+        
+        const sections = Array.from(container.children).map(sectionEl => {
+          const title = sectionEl.querySelector('.section-title-input')?.value || '';
+          const type = sectionEl.querySelector('.section-type-select')?.value || 'radio-text';
+          const required = sectionEl.querySelector('.section-required-checkbox')?.checked || false;
+          const itemsEl = sectionEl.querySelector('.modal-items-list');
+          const items = Array.from(itemsEl?.children || []).map(itemEl => {
+            const text = itemEl.querySelector('.item-text-input')?.value || '';
+            if (type === 'radio-image') {
+              const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+              return { text, 'img-url': imgUrl };
+            } else {
+              return text;
+            }
+          }).filter(item => (typeof item === 'string' ? item.trim() : item.text.trim()));
+          
+          return {
+            'section-title': title,
+            'section-type': type,
+            required,
+            'section-items': items
+          };
+        }).filter(section => section['section-title'].trim());
+        
+        document.getElementById('forms-json-input').value = JSON.stringify(sections);
+      }
+      
+      // Update details JSON
+      function updateDetailsJSON() {
+        const container = document.getElementById('details-sections-container');
+        if (!container) return;
+        
+        const sections = Array.from(container.children).map(sectionEl => {
+          const title = sectionEl.querySelector('.section-title-input')?.value || '';
+          const type = sectionEl.querySelector('.details-section-type-select')?.value || 'grid-items';
+          
+          if (type === 'textarea') {
+            const placeholder = sectionEl.querySelector('.textarea-placeholder-input')?.value || '';
+            const maxLength = parseInt(sectionEl.querySelector('.textarea-maxlength-input')?.value || '500', 10);
+            const key = sectionEl.querySelector('.textarea-key-input')?.value || '';
+            return {
+              'section-title': title,
+              'section-type': 'textarea',
+              placeholder,
+              maxLength,
+              key: key || undefined
+            };
+          } else {
+            const itemsEl = sectionEl.querySelector('.modal-items-list');
+            const items = Array.from(itemsEl?.children || []).map(itemEl => {
+              const text = itemEl.querySelector('.item-text-input')?.value || '';
+              const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+              const countable = itemEl.querySelector('.item-countable-checkbox')?.checked || false;
+              const unit = itemEl.querySelector('.item-unit-input')?.value || '';
+              
+              return {
+                text,
+                'img-url': imgUrl,
+                countable,
+                unit: countable ? unit : undefined,
+                count: 0
+              };
+            }).filter(item => item.text.trim());
+            
+            return {
+              'section-title': title,
+              'section-type': 'grid-items',
+              'section-items': items
+            };
+          }
+        }).filter(section => section['section-title'].trim());
+        
+        document.getElementById('details-json-input').value = JSON.stringify(sections);
+      }
+      
+      // Helper functions
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+      
+      // Global functions for buttons
+      window.addFormsSection = function() {
+        const container = document.getElementById('forms-sections-container');
+        const newSection = {
+          'section-title': '',
+          'section-type': 'radio-text',
+          required: false,
+          'section-items': []
+        };
+        container.appendChild(createFormsSectionElement(newSection, container.children.length));
+        updateFormsJSON();
+      };
+      
+      window.removeFormsSection = function(idx) {
+        if (!confirm('このセクションを削除してもよろしいですか？')) return;
+        const container = document.getElementById('forms-sections-container');
+        const section = container.querySelector(`[data-index="${idx}"]`);
+        if (section) {
+          section.remove();
+          renderFormsSections(Array.from(container.children).map((el, i) => {
+            const title = el.querySelector('.section-title-input')?.value || '';
+            const type = el.querySelector('.section-type-select')?.value || 'radio-text';
+            const required = el.querySelector('.section-required-checkbox')?.checked || false;
+            const itemsEl = el.querySelector('.modal-items-list');
+            const items = Array.from(itemsEl?.children || []).map(itemEl => {
+              const text = itemEl.querySelector('.item-text-input')?.value || '';
+              if (type === 'radio-image') {
+                const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+                return { text, 'img-url': imgUrl };
+              } else {
+                return text;
+              }
+            });
+            return { 'section-title': title, 'section-type': type, required, 'section-items': items };
+          }));
+        }
+      };
+      
+      window.addFormsItem = function(sectionIdx) {
+        const container = document.getElementById('forms-sections-container');
+        const section = container.querySelector(`[data-index="${sectionIdx}"]`);
+        if (!section) return;
+        const type = section.querySelector('.section-type-select')?.value || 'radio-text';
+        const itemsList = section.querySelector('.modal-items-list');
+        const itemIdx = itemsList.children.length;
+        const itemHTML = createFormsItemHTML(type === 'radio-image' ? { text: '', 'img-url': '' } : '', sectionIdx, itemIdx, type);
+        itemsList.insertAdjacentHTML('beforeend', itemHTML);
+        
+        // Add event listeners for inputs
+        const newItem = itemsList.lastElementChild;
+        newItem.querySelectorAll('.item-text-input, .item-image-input').forEach(el => {
+          el.addEventListener('change', updateFormsJSON);
+        });
+        
+        // Add event listener for remove button
+        newItem.querySelector('.btn-remove-item')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          const itemIdx = parseInt(this.dataset.itemIndex);
+          window.removeFormsItem(sectionIdx, itemIdx);
+        });
+        
+        // Add event listener for image select button
+        newItem.querySelector('.btn-select-image[data-type="forms"]')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          const itemIdx = parseInt(this.dataset.itemIndex);
+          window.openImageSelectForItem(sectionIdx, itemIdx);
+        });
+        
+        updateFormsJSON();
+      };
+      
+      window.removeFormsItem = function(sectionIdx, itemIdx) {
+        const container = document.getElementById('forms-sections-container');
+        const section = container.querySelector(`[data-index="${sectionIdx}"]`);
+        if (!section) return;
+        const item = section.querySelector(`[data-item-index="${itemIdx}"]`);
+        if (item) {
+          item.remove();
+          updateFormsJSON();
+        }
+      };
+      
+      window.addDetailsSection = function() {
+        const container = document.getElementById('details-sections-container');
+        const newSection = {
+          'section-title': '',
+          'section-type': 'grid-items',
+          'section-items': []
+        };
+        container.appendChild(createDetailsSectionElement(newSection, container.children.length));
+        updateDetailsJSON();
+      };
+      
+      window.removeDetailsSection = function(idx) {
+        if (!confirm('このセクションを削除してもよろしいですか？')) return;
+        const container = document.getElementById('details-sections-container');
+        const section = container.querySelector(`[data-index="${idx}"]`);
+        if (section) {
+          section.remove();
+          renderDetailsSections(Array.from(container.children).map((el, i) => {
+            const title = el.querySelector('.section-title-input')?.value || '';
+            const type = el.querySelector('.section-type-select')?.value || 'grid-items';
+            if (type === 'textarea') {
+              const placeholder = el.querySelector('.textarea-placeholder-input')?.value || '';
+              const maxLength = parseInt(el.querySelector('.textarea-maxlength-input')?.value || '500', 10);
+              const key = el.querySelector('.textarea-key-input')?.value || '';
+              return { 'section-title': title, 'section-type': 'textarea', placeholder, maxLength, key: key || undefined };
+            } else {
+              const itemsEl = el.querySelector('.modal-items-list');
+              const items = Array.from(itemsEl?.children || []).map(itemEl => {
+                const text = itemEl.querySelector('.item-text-input')?.value || '';
+                const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+                const countable = itemEl.querySelector('.item-countable-checkbox')?.checked || false;
+                const unit = itemEl.querySelector('.item-unit-input')?.value || '';
+                return { text, 'img-url': imgUrl, countable, unit: countable ? unit : undefined, count: 0 };
+              });
+              return { 'section-title': title, 'section-type': 'grid-items', 'section-items': items };
+            }
+          }));
+        }
+      };
+      
+      window.addDetailsItem = function(sectionIdx) {
+        const container = document.getElementById('details-sections-container');
+        const section = container.querySelector(`[data-index="${sectionIdx}"]`);
+        if (!section) return;
+        const itemsList = section.querySelector('.modal-items-list');
+        if (!itemsList) return;
+        const itemIdx = itemsList.children.length;
+        const itemHTML = createDetailsItemHTML({ text: '', 'img-url': '', countable: false, unit: '' }, sectionIdx, itemIdx);
+        itemsList.insertAdjacentHTML('beforeend', itemHTML);
+        
+        // Add event listeners for inputs
+        const newItem = itemsList.lastElementChild;
+        newItem.querySelectorAll('.item-text-input, .item-image-input, .item-countable-checkbox, .item-unit-input').forEach(el => {
+          el.addEventListener('change', function() {
+            if (el.classList.contains('item-countable-checkbox')) {
+              const group = el.closest('.modal-item-editor').querySelector('[data-countable-group]');
+              if (group) group.style.display = el.checked ? '' : 'none';
+            }
+            updateDetailsJSON();
+          });
+        });
+        
+        // Add event listener for remove button
+        newItem.querySelector('.btn-remove-item')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          const itemIdx = parseInt(this.dataset.itemIndex);
+          window.removeDetailsItem(sectionIdx, itemIdx);
+        });
+        
+        // Add event listener for image select button
+        newItem.querySelector('.btn-select-image[data-type="details"]')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          const itemIdx = parseInt(this.dataset.itemIndex);
+          window.openImageSelectForDetailsItem(sectionIdx, itemIdx);
+        });
+        
+        updateDetailsJSON();
+      };
+      
+      window.removeDetailsItem = function(sectionIdx, itemIdx) {
+        const container = document.getElementById('details-sections-container');
+        const section = container.querySelector(`[data-index="${sectionIdx}"]`);
+        if (!section) return;
+        const item = section.querySelector(`[data-item-index="${itemIdx}"]`);
+        if (item) {
+          item.remove();
+          updateDetailsJSON();
+        }
+      };
+      
+      window.openImageSelectForItem = function(sectionIdx, itemIdx) {
+        currentImageTarget = { type: 'forms', sectionIdx, itemIdx };
+        openImageSelectModal();
+      };
+      
+      window.openImageSelectForDetailsItem = function(sectionIdx, itemIdx) {
+        currentImageTarget = { type: 'details', sectionIdx, itemIdx };
+        openImageSelectModal();
+      };
+      
+      function openImageSelectModal() {
+        // Use existing image select modal from image selection feature
+        // This will be implemented using the existing image selection modal
+        alert('画像選択機能は実装中です。手動で画像パスを入力してください。');
+      }
+      
+      // Preview section function
+      window.previewSection = function(sectionIdx, sectionType) {
+        let sectionData = null;
+        
+        if (sectionType === 'forms') {
+          const container = document.getElementById('forms-sections-container');
+          const sectionEl = container.querySelector(`[data-index="${sectionIdx}"]`);
+          if (!sectionEl) return;
+          
+          const title = sectionEl.querySelector('.section-title-input')?.value || '';
+          const type = sectionEl.querySelector('.section-type-select')?.value || 'radio-text';
+          const required = sectionEl.querySelector('.section-required-checkbox')?.checked || false;
+          const itemsEl = sectionEl.querySelector('.modal-items-list');
+          const items = Array.from(itemsEl?.children || []).map(itemEl => {
+            const text = itemEl.querySelector('.item-text-input')?.value || '';
+            const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+            if (type === 'radio-image' && imgUrl) {
+              return { text, 'img-url': imgUrl };
+            }
+            return text || { text };
+          });
+          
+          sectionData = {
+            'section-title': title,
+            'section-type': type,
+            'section-items': items,
+            required: required
+          };
+          
+          // Show forms modal
+          showFormsPreview([sectionData]);
+        } else if (sectionType === 'details') {
+          const container = document.getElementById('details-sections-container');
+          const sectionEl = container.querySelector(`[data-index="${sectionIdx}"]`);
+          if (!sectionEl) return;
+          
+          const title = sectionEl.querySelector('.section-title-input')?.value || '';
+          const type = sectionEl.querySelector('.details-section-type-select')?.value || 'grid-items';
+          
+          if (type === 'textarea') {
+            const placeholder = sectionEl.querySelector('.textarea-placeholder-input')?.value || '';
+            const maxLength = parseInt(sectionEl.querySelector('.textarea-maxlength-input')?.value || '500', 10);
+            const key = sectionEl.querySelector('.textarea-key-input')?.value || '';
+            sectionData = {
+              'section-title': title,
+              'section-type': 'textarea',
+              placeholder,
+              maxLength,
+              key: key || undefined
+            };
+          } else {
+            const itemsEl = sectionEl.querySelector('.modal-items-list');
+            const items = Array.from(itemsEl?.children || []).map(itemEl => {
+              const text = itemEl.querySelector('.item-text-input')?.value || '';
+              const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+              const countable = itemEl.querySelector('.item-countable-checkbox')?.checked || false;
+              const unit = itemEl.querySelector('.item-unit-input')?.value || '';
+              return { text, 'img-url': imgUrl, countable, unit: countable ? unit : undefined, count: 0 };
+            });
+            sectionData = {
+              'section-title': title,
+              'section-type': 'grid-items',
+              'section-items': items
+            };
+          }
+          
+          // Show details modal
+          showDetailsPreview([sectionData]);
+        }
+      };
+      
+      // Show forms preview modal
+      function showFormsPreview(sections) {
+        const modal = document.getElementById('service-modal');
+        if (!modal) return;
+        
+        const title = document.getElementById('modal-title');
+        const formBox = document.getElementById('modal-form');
+        const img = document.getElementById('modal-image');
+        
+        // Get service image
+        const imageInput = document.getElementById('image');
+        const detailImageInput = document.getElementById('detail_image');
+        const imagePath = (detailImageInput?.value || imageInput?.value || '/images/service-300x200.svg').trim();
+        if (img) {
+          img.src = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+        }
+        
+        // Get service title
+        const titleInput = document.querySelector('input[name="title"]');
+        if (title) title.textContent = titleInput?.value || 'プレビュー';
+        
+        // Render sections
+        if (formBox) {
+          renderPreviewSections(formBox, sections, 'form');
+        }
+        
+        modal.classList.add('open');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Close button handlers
+        const closeBtn = document.getElementById('close-modal-btn');
+        const backBtn = document.getElementById('back-modal-btn');
+        if (closeBtn) {
+          closeBtn.onclick = function() {
+            modal.classList.remove('open');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+          };
+        }
+        if (backBtn) {
+          backBtn.onclick = function() {
+            modal.classList.remove('open');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+          };
+        }
+      }
+      
+      // Show details preview modal
+      function showDetailsPreview(sections) {
+        const modal = document.getElementById('details-modal');
+        if (!modal) return;
+        
+        const title = document.getElementById('details-modal-title');
+        const formBox = document.getElementById('details-form');
+        const img = document.getElementById('details-modal-image');
+        
+        // Get service image
+        const imageInput = document.getElementById('image');
+        const detailImageInput = document.getElementById('detail_image');
+        const imagePath = (detailImageInput?.value || imageInput?.value || '/images/service-300x200.svg').trim();
+        if (img) {
+          img.src = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+        }
+        
+        // Get service title
+        const titleInput = document.querySelector('input[name="title"]');
+        if (title) title.textContent = titleInput?.value || 'プレビュー';
+        
+        // Render sections
+        if (formBox) {
+          renderPreviewSections(formBox, sections, 'detail');
+        }
+        
+        modal.classList.add('open');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Close button handlers
+        const closeBtn = document.getElementById('close-details-modal-btn');
+        const backBtn = document.getElementById('back-to-service-modal-btn');
+        if (closeBtn) {
+          closeBtn.onclick = function() {
+            modal.classList.remove('open');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+          };
+        }
+        if (backBtn) {
+          backBtn.onclick = function() {
+            modal.classList.remove('open');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+          };
+        }
+      }
+      
+      // Render preview sections (simplified version of app.js renderSections)
+      function renderPreviewSections(container, sections, namePrefix) {
+        if (!container) return;
+        container.innerHTML = '';
+        
+        sections.forEach((sec, idx) => {
+          const wrap = document.createElement('div');
+          const h = document.createElement('h3');
+          h.className = 'section-title';
+          h.textContent = sec['section-title'] || '';
+          wrap.appendChild(h);
+          
+          const type = (sec['section-type'] || 'radio-text').toLowerCase();
+          const body = document.createElement('div');
+          body.className = (type === 'grid' || type === 'grid-items' || type === 'items') ? 'grid grid-2-4 gap-16' : 'stack sm';
+          const name = `${namePrefix}_${idx+1}`;
+          const items = sec['section-items'] || [];
+          
+          if (type === 'textarea') {
+            const textarea = document.createElement('textarea');
+            textarea.className = 'textarea';
+            textarea.rows = 3;
+            textarea.placeholder = sec.placeholder || '自由入力';
+            textarea.maxLength = sec.maxLength || 500;
+            body.appendChild(textarea);
+          } else {
+            items.forEach((it) => {
+              const hasImg = !!(it && (it['img-url'] || it['img']));
+              if (type === 'grid' || type === 'grid-items' || type === 'items') {
+                const card = document.createElement('div');
+                card.className = 'item-card text-center';
+                if (hasImg) {
+                  const img = document.createElement('img');
+                  img.className = 'avatar-round';
+                  const imgPath = it['img-url'] || it['img'] || 'https://placehold.co/150x150/e2e8f0/666';
+                  img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') ? imgPath : (imgPath.startsWith('/') ? imgPath : '/' + imgPath);
+                  img.alt = (it['text'] || '');
+                  card.appendChild(img);
+                }
+                const p = document.createElement('p');
+                p.className = 'item-name';
+                p.textContent = it['text'] || (typeof it === 'string' ? it : '');
+                card.appendChild(p);
+                
+                if (it['countable']) {
+                  const qty = document.createElement('div');
+                  qty.className = 'qty';
+                  const dec = document.createElement('button');
+                  dec.className = 'btn btn-ghost btn-qty';
+                  dec.textContent = '-';
+                  const span = document.createElement('span');
+                  span.className = 'qty-val';
+                  span.textContent = '0';
+                  const inc = document.createElement('button');
+                  inc.className = 'btn btn-ghost btn-qty';
+                  inc.textContent = '+';
+                  const unit = document.createElement('span');
+                  unit.className = 'muted unit';
+                  unit.textContent = it['unit'] || '';
+                  qty.appendChild(dec);
+                  qty.appendChild(span);
+                  qty.appendChild(inc);
+                  qty.appendChild(unit);
+                  card.appendChild(qty);
+                }
+                body.appendChild(card);
+              } else if (type === 'radio-image' || hasImg) {
+                const label = document.createElement('label');
+                label.className = 'choice-card';
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = name;
+                input.className = 'radio';
+                const img = document.createElement('img');
+                img.className = 'thumb-211';
+                const imgPath = it['img-url'] || it['img'] || '/images/service-300x200.svg';
+                img.src = imgPath.startsWith('/') ? imgPath : '/' + imgPath;
+                img.alt = (it['text'] || '');
+                const span = document.createElement('span');
+                span.textContent = it['text'] || (typeof it === 'string' ? it : '');
+                label.appendChild(input);
+                label.appendChild(img);
+                label.appendChild(span);
+                body.appendChild(label);
+              } else {
+                const label = document.createElement('label');
+                label.className = 'choice-row';
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = name;
+                input.className = 'radio';
+                const span = document.createElement('span');
+                span.textContent = (typeof it === 'string') ? it : (it['text'] || '');
+                label.appendChild(input);
+                label.appendChild(span);
+                body.appendChild(label);
+              }
+            });
+          }
+          
+          wrap.appendChild(body);
+          container.appendChild(wrap);
+        });
+      }
+      
+      // Event listeners
+      document.getElementById('add-forms-section-btn')?.addEventListener('click', window.addFormsSection);
+      document.getElementById('add-details-section-btn')?.addEventListener('click', window.addDetailsSection);
+      
+      // Load initial data
+      loadServiceData();
+    })();
+
+    // 画像選択機能
+    (function() {
+      let imageSelectModal = null;
+      
+      // 画像選択ボタンのイベント
+      document.querySelectorAll('.btn-select-image').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const targetInputId = this.dataset.target;
+          const previewId = this.dataset.preview;
+          openImageSelectModal(targetInputId, previewId);
+        });
+      });
+      
+      // 画像入力欄の変更時にプレビューを更新
+      document.getElementById('image')?.addEventListener('input', function() {
+        updateImagePreview('image_preview', this.value);
+      });
+      
+      document.getElementById('detail_image')?.addEventListener('input', function() {
+        updateImagePreview('detail_image_preview', this.value);
+      });
+      
+      // 初期値がある場合はプレビューを表示
+      const imageValue = document.getElementById('image')?.value;
+      const detailImageValue = document.getElementById('detail_image')?.value;
+      if (imageValue) {
+        updateImagePreview('image_preview', imageValue);
+      }
+      if (detailImageValue) {
+        updateImagePreview('detail_image_preview', detailImageValue);
+      }
+      
+      // 画像プレビューを更新
+      function updateImagePreview(previewId, imagePath) {
+        const preview = document.getElementById(previewId);
+        if (!preview) return;
+        
+        if (imagePath && imagePath.trim()) {
+          const img = preview.querySelector('img');
+          if (img) {
+            // パスが / で始まっていない場合は / を追加
+            const path = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+            img.src = path;
+            preview.style.display = 'block';
+          }
+        } else {
+          preview.style.display = 'none';
+        }
+      }
+      
+      // 画像選択モーダルを開く
+      function openImageSelectModal(targetInputId, previewId) {
+        if (!imageSelectModal) {
+          createImageSelectModal();
+        }
+        
+        imageSelectModal.dataset.targetInput = targetInputId;
+        imageSelectModal.dataset.previewId = previewId;
+        imageSelectModal.classList.remove('hidden');
+        imageSelectModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        
+        // 画像一覧を読み込む
+        loadImagesForSelect();
+      }
+      
+      // 画像選択モーダルを作成
+      function createImageSelectModal() {
+        imageSelectModal = document.createElement('div');
+        imageSelectModal.id = 'image-select-modal';
+        imageSelectModal.className = 'image-select-modal hidden';
+        imageSelectModal.innerHTML = `
+          <div class="image-select-overlay"></div>
+          <div class="image-select-dialog">
+            <div class="image-select-header">
+              <h3 class="image-select-title">
+                <i class="fas fa-images"></i> 画像を選択
+              </h3>
+              <button class="image-select-close" aria-label="閉じる">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="image-select-search">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" class="search-input" id="image-select-search" placeholder="画像名で検索..." />
+              </div>
+              <select class="filter-select" id="image-select-filter">
+                <option value="">すべての形式</option>
+                <option value="png">PNG</option>
+                <option value="jpg">JPG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="svg">SVG</option>
+              </select>
+            </div>
+            <div class="image-select-body">
+              <div class="image-select-grid" id="image-select-grid">
+                <div class="loading-spinner">
+                  <i class="fas fa-spinner fa-spin"></i> 画像を読み込み中...
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(imageSelectModal);
+        
+        // 閉じるボタン
+        imageSelectModal.querySelector('.image-select-close')?.addEventListener('click', closeImageSelectModal);
+        imageSelectModal.querySelector('.image-select-overlay')?.addEventListener('click', closeImageSelectModal);
+        
+        // ESCキーで閉じる
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && imageSelectModal.classList.contains('open')) {
+            closeImageSelectModal();
+          }
+        });
+        
+        // 検索・フィルタ
+        imageSelectModal.querySelector('#image-select-search')?.addEventListener('input', loadImagesForSelect);
+        imageSelectModal.querySelector('#image-select-filter')?.addEventListener('change', loadImagesForSelect);
+      }
+      
+      // 画像選択モーダルを閉じる
+      function closeImageSelectModal() {
+        if (imageSelectModal) {
+          imageSelectModal.classList.add('hidden');
+          imageSelectModal.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+      }
+      
+      // 画像一覧を読み込む
+      async function loadImagesForSelect() {
+        const grid = document.getElementById('image-select-grid');
+        if (!grid) return;
+        
+        try {
+          const response = await fetch('/api/images');
+          const data = await response.ok ? await response.json() : { images: [] };
+          
+          if (data.images && data.images.length > 0) {
+            const searchQuery = (document.getElementById('image-select-search')?.value || '').toLowerCase();
+            const filterType = document.getElementById('image-select-filter')?.value || '';
+            
+            // フィルタリング
+            let filteredImages = data.images;
+            if (searchQuery) {
+              filteredImages = filteredImages.filter(img => 
+                img.name.toLowerCase().includes(searchQuery) || img.path.toLowerCase().includes(searchQuery)
+              );
+            }
+            if (filterType) {
+              filteredImages = filteredImages.filter(img => 
+                img.extension === '.' + filterType
+              );
+            }
+            
+            // グリッドを生成
+            grid.innerHTML = filteredImages.map(img => {
+              return `
+                <div class="image-select-card" data-path="${img.path}">
+                  <div class="image-select-thumb">
+                    <img src="${img.path}" alt="${img.name}" loading="lazy" onerror="this.src='/images/service-300x200.svg'" />
+                  </div>
+                  <div class="image-select-info">
+                    <div class="image-select-name" title="${img.name}">${img.name}</div>
+                    <div class="image-select-path" title="${img.path}">${img.path}</div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+            
+            // クリックイベント
+            grid.querySelectorAll('.image-select-card').forEach(card => {
+              card.addEventListener('click', function() {
+                const path = this.dataset.path;
+                const targetInputId = imageSelectModal.dataset.targetInput;
+                const previewId = imageSelectModal.dataset.previewId;
+                
+                // 入力欄にパスを設定（先頭の / を削除）
+                const input = document.getElementById(targetInputId);
+                if (input) {
+                  input.value = path.startsWith('/') ? path.substring(1) : path;
+                  updateImagePreview(previewId, input.value);
+                }
+                
+                closeImageSelectModal();
+              });
+            });
+          } else {
+            grid.innerHTML = '<div class="empty-message">画像が見つかりませんでした</div>';
+          }
+        } catch (err) {
+          console.error('画像の読み込みに失敗しました:', err);
+          grid.innerHTML = '<div class="error-message">画像の読み込みに失敗しました</div>';
+        }
+      }
+    })();
+    
     // Form submission
     (function() {
       const form = document.getElementById('service-form');
@@ -268,6 +1806,35 @@
             const problemsText = formData.get('problems') || '';
             const problems = problemsText.split('\n').filter(p => p.trim());
             
+            // Parse forms and details from hidden inputs
+            let forms = [];
+            let details = [];
+            try {
+              const formsText = document.getElementById('forms-json-input')?.value || '[]';
+              forms = JSON.parse(formsText);
+              if (!Array.isArray(forms)) {
+                throw new Error('formsは配列である必要があります');
+              }
+            } catch (e) {
+              alert(`formsのデータが無効です: ${e.message}`);
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalText;
+              return;
+            }
+            
+            try {
+              const detailsText = document.getElementById('details-json-input')?.value || '[]';
+              details = JSON.parse(detailsText);
+              if (!Array.isArray(details)) {
+                throw new Error('detailsは配列である必要があります');
+              }
+            } catch (e) {
+              alert(`detailsのデータが無効です: ${e.message}`);
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalText;
+              return;
+            }
+            
             const serviceData = {
               id: parseInt(formData.get('id')),
               title: formData.get('title'),
@@ -278,8 +1845,8 @@
               description: formData.get('description') || '',
               problems: problems.length > 0 ? problems : undefined,
               solution: formData.get('solution') || undefined,
-              forms: [],
-              details: []
+              forms: forms,
+              details: details
             };
             
             // Remove undefined fields
