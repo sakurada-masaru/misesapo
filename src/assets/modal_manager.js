@@ -10,7 +10,13 @@
   // モーダル設定を読み込む
   async function loadModalConfig() {
     try {
-      const response = await fetch('/data/modal_flow.json');
+      // baseタグを考慮してパスを取得
+      const base = document.querySelector('base');
+      const basePath = base ? base.getAttribute('href') : '/';
+      const configPath = basePath.endsWith('/') 
+        ? `${basePath}data/modal_flow.json` 
+        : `${basePath}/data/modal_flow.json`;
+      const response = await fetch(configPath);
       modalConfig = await response.json();
       return modalConfig;
     } catch (error) {
