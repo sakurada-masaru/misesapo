@@ -2,7 +2,7 @@
 @json('data/meta/admin_services_title.json', $page_title)
 @json('data/meta/admin_services_body_class.json', $body_class)
 
-<main id="main" class="container admin-service-detail">
+<main id="main" class="container admin-service-detail" data-service-id="{{ id }}">
   <div class="page-header">
     <a href="/admin/services.html" class="back-link">
       <i class="fas fa-arrow-left"></i> サービス一覧に戻る
@@ -12,7 +12,7 @@
 
   <div class="service-detail-card">
     <div class="service-hero-image">
-      <img id="service-hero-img" src="/{{ detail_image }}" alt="{{ title }}" data-fallback="/{{ image }}" />
+      <img id="service-hero-img" src="/{{ image }}" alt="{{ title }}" />
     </div>
     <div class="service-detail-card-content">
       <div class="service-detail-header">
@@ -46,22 +46,10 @@
         <p class="section-content solution-text">{{ solution }}</p>
       </section>
 
-      <section class="detail-section">
-        <h3 class="section-title">サービス画像</h3>
-        <div class="service-image">
-          <img id="service-detail-img" src="/{{ image }}" alt="{{ title }}" data-fallback="/{{ detail_image }}" />
-        </div>
-      </section>
-
       <!-- モーダル表示内容 -->
-      <section class="detail-section" id="modal-forms-section" style="display: none;">
-        <h3 class="section-title">モーダル表示内容（最初の選択画面）</h3>
-        <div id="modal-forms-content" class="modal-content-display"></div>
-      </section>
-
-      <section class="detail-section" id="modal-details-section" style="display: none;">
-        <h3 class="section-title">モーダル表示内容（詳細選択画面）</h3>
-        <div id="modal-details-content" class="modal-content-display"></div>
+      <section class="detail-section" id="modal-sections-section" style="display: none;">
+        <h3 class="section-title">モーダル表示内容（セクション一覧）</h3>
+        <div id="modal-sections-content" class="modal-content-display"></div>
       </section>
     </div>
 
@@ -75,7 +63,7 @@
         <a href="/admin/services/{{ id }}/edit.html" class="btn btn-primary">
           <i class="fas fa-edit"></i> 編集
         </a>
-        <button class="btn btn-danger" onclick="deleteService({{ id }})">
+        <button class="btn btn-danger" onclick="deleteService(parseInt(document.getElementById('main').dataset.serviceId))">
           <i class="fas fa-trash"></i> 削除
         </button>
       </div>
@@ -95,20 +83,27 @@
         try {
           const response = await fetch('/api/services');
           const services = await response.json();
-          const serviceId = {{ id }};
+          const serviceId = parseInt(document.getElementById('main').dataset.serviceId || '0');
           const service = services.find(s => s.id === serviceId);
           
           if (service) {
-            // Render forms
-            if (service.forms && service.forms.length > 0) {
-              renderModalContent('modal-forms-content', service.forms);
-              document.getElementById('modal-forms-section').style.display = 'block';
+            // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            let sections = service.sections || [];
+            if (!sections.length && (service.forms || service.details)) {
+              // formsとdetailsを統合してsectionsに変換
+              sections = [];
+              if (service.forms && service.forms.length > 0) {
+                sections = sections.concat(service.forms);
+              }
+              if (service.details && service.details.length > 0) {
+                sections = sections.concat(service.details);
+              }
             }
             
-            // Render details
-            if (service.details && service.details.length > 0) {
-              renderModalContent('modal-details-content', service.details);
-              document.getElementById('modal-details-section').style.display = 'block';
+            // Render sections
+            if (sections.length > 0) {
+              renderModalContent('modal-sections-content', sections);
+              document.getElementById('modal-sections-section').style.display = 'block';
             }
           }
         } catch (error) {
@@ -209,7 +204,7 @@
           fetch('/api/services')
             .then(response => response.json())
             .then(services => {
-              const serviceId = {{ id }};
+              const serviceId = parseInt(document.getElementById('main').dataset.serviceId || '0');
               const service = services.find(s => s.id === serviceId);
               if (service) {
                 if (window.ModalManager) {
@@ -235,52 +230,21 @@
     (function() {
       const heroImg = document.getElementById('service-hero-img');
       if (heroImg) {
-        const fallback = heroImg.dataset.fallback;
         const defaultImg = '/images/service-300x200.svg';
         
         // Check if current image is empty or invalid
         if (!heroImg.src || heroImg.src.endsWith('/') || heroImg.src.includes('undefined')) {
-          if (fallback && fallback !== '/' && !fallback.includes('undefined')) {
-            heroImg.src = fallback;
-          } else {
-            heroImg.src = defaultImg;
-          }
+          heroImg.src = defaultImg;
         }
         
         // Handle image load error
         heroImg.addEventListener('error', function() {
-          if (this.src !== fallback && fallback && fallback !== '/' && !fallback.includes('undefined')) {
-            this.src = fallback;
-          } else if (this.src !== defaultImg) {
+          if (this.src !== defaultImg) {
             this.src = defaultImg;
           }
         });
       }
       
-      // Service detail image fallback handling
-      const detailImg = document.getElementById('service-detail-img');
-      if (detailImg) {
-        const fallback = detailImg.dataset.fallback;
-        const defaultImg = '/images/service-300x200.svg';
-        
-        // Check if current image is empty or invalid
-        if (!detailImg.src || detailImg.src.endsWith('/') || detailImg.src.includes('undefined')) {
-          if (fallback && fallback !== '/' && !fallback.includes('undefined')) {
-            detailImg.src = fallback;
-          } else {
-            detailImg.src = defaultImg;
-          }
-        }
-        
-        // Handle image load error
-        detailImg.addEventListener('error', function() {
-          if (this.src !== fallback && fallback && fallback !== '/' && !fallback.includes('undefined')) {
-            this.src = fallback;
-          } else if (this.src !== defaultImg) {
-            this.src = defaultImg;
-          }
-        });
-      }
     })();
     
     // Edit and delete functions (placeholder)

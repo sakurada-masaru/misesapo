@@ -10,13 +10,7 @@
   // モーダル設定を読み込む
   async function loadModalConfig() {
     try {
-      // baseタグを考慮してパスを取得
-      const base = document.querySelector('base');
-      const basePath = base ? base.getAttribute('href') : '/';
-      const configPath = basePath.endsWith('/') 
-        ? `${basePath}data/modal_flow.json` 
-        : `${basePath}/data/modal_flow.json`;
-      const response = await fetch(configPath);
+      const response = await fetch('/data/modal_flow.json');
       modalConfig = await response.json();
       return modalConfig;
     } catch (error) {
@@ -47,6 +41,15 @@
     // dataが渡されていない場合は、currentModalDataを使用（モーダル間の遷移時）
     const modalData = data || currentModalData || {};
     currentModalData = modalData;
+    
+    console.log('[ModalManager] Opening modal:', {
+      modalId: modalId,
+      hasData: !!data,
+      hasCurrentData: !!currentModalData,
+      modalDataKeys: Object.keys(modalData),
+      detailImage: modalData['detail-image'],
+      image: modalData.image
+    });
 
     // 画像を設定
     if (modalDef.imageId) {
@@ -63,15 +66,25 @@
           finalPath = '/' + imgPath;
         }
         img.src = finalPath;
+        console.log('[ModalManager] Setting image:', {
+          imageId: modalDef.imageId,
+          originalPath: imgPath,
+          finalPath: finalPath,
+          imgElement: img
+        });
         img.onerror = function() {
           console.error('[ModalManager] Image load error:', this.src);
           this.src = '/images/service-300x200.svg';
+        };
+        img.onload = function() {
+          console.log('[ModalManager] Image loaded successfully:', this.src);
         };
       } else {
         console.warn('[ModalManager] Image element not found or no data:', {
           imageId: modalDef.imageId,
           imgFound: !!img,
-          dataFound: !!modalData
+          dataFound: !!modalData,
+          currentModalData: currentModalData
         });
       }
     }
@@ -88,8 +101,23 @@
     if (modalDef.formContainerId && modalDef.formDataKey && modalData) {
       const formContainer = document.getElementById(modalDef.formContainerId);
       if (formContainer && window.renderSections) {
-        const formData = modalData[modalDef.formDataKey] || [];
-        window.renderSections(formContainer, formData, modalDef.formDataKey === 'forms' ? 'form' : 'detail');
+        // 新しい sections 配列構造に対応
+        if (modalData.sections && Array.isArray(modalData.sections)) {
+          // sections 配列を使用
+          let sectionsToRender = [];
+          if (modalDef.formDataKey === 'forms') {
+            // 最初のセクション（モーダル1）を表示
+            sectionsToRender = modalData.sections.length > 0 ? [modalData.sections[0]] : [];
+          } else if (modalDef.formDataKey === 'details') {
+            // 2番目以降のセクション（モーダル2以降）を表示
+            sectionsToRender = modalData.sections.length > 1 ? modalData.sections.slice(1) : [];
+          }
+          window.renderSections(formContainer, sectionsToRender, modalDef.formDataKey === 'forms' ? 'form' : 'detail');
+        } else {
+          // 後方互換性: 古い forms/details 構造を使用
+          const formData = modalData[modalDef.formDataKey] || [];
+          window.renderSections(formContainer, formData, modalDef.formDataKey === 'forms' ? 'form' : 'detail');
+        }
       }
     }
 
@@ -113,6 +141,11 @@
             finalPath = '/' + imgPath;
           }
           img.src = finalPath;
+          console.log('[ModalManager] Re-setting image after modal open:', {
+            imageId: modalDef.imageId,
+            finalPath: finalPath,
+            imgElement: img
+          });
         }
       }
     }, 100);
@@ -151,6 +184,10 @@
               }
             } else {
               // currentModalDataを明示的に渡す
+              console.log('[ModalManager] Navigating to modal:', {
+                target: buttonDef.target,
+                currentModalData: currentModalData
+              });
               openModalById(buttonDef.target, currentModalData);
             }
           }, 150);

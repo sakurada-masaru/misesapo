@@ -41,7 +41,7 @@
           <p class="form-hint">価格表示形式で入力してください</p>
         </div>
         <div class="form-group full-width">
-          <label class="form-label">サービス画像URL</label>
+          <label class="form-label">サービスメイン画像</label>
           <div class="image-input-group">
             <input type="text" class="form-input" name="image" id="image" value="{{ image }}" placeholder="例: images/gurisuto.png" />
             <button type="button" class="btn btn-outline btn-select-image" data-target="image" data-preview="image_preview">
@@ -51,20 +51,7 @@
           <div class="image-preview" id="image_preview" style="display: none;">
             <img src="" alt="プレビュー" />
           </div>
-          <p class="form-hint">画像のパスを入力するか、「画像を選択」ボタンから選択してください</p>
-        </div>
-        <div class="form-group full-width">
-          <label class="form-label">詳細画像URL</label>
-          <div class="image-input-group">
-            <input type="text" class="form-input" name="detail_image" id="detail_image" value="{{ detail_image }}" placeholder="例: images/ミセサポ2025/グレーチング洗浄.png" />
-            <button type="button" class="btn btn-outline btn-select-image" data-target="detail_image" data-preview="detail_image_preview">
-              <i class="fas fa-images"></i> 画像を選択
-            </button>
-          </div>
-          <div class="image-preview" id="detail_image_preview" style="display: none;">
-            <img src="" alt="プレビュー" />
-          </div>
-          <p class="form-hint">詳細ページで表示する画像のパスを入力するか、「画像を選択」ボタンから選択してください</p>
+          <p class="form-hint">この画像はサービスカードの上部（TOPイメージ）に表示されます。画像のパスを入力するか、「画像を選択」ボタンから選択してください</p>
         </div>
       </div>
     </div>
@@ -98,34 +85,24 @@
     <div class="form-section">
       <h2 class="section-title">
         <i class="fas fa-window-maximize"></i>
-        モーダル表示内容
+        モーダル表示内容（セクション設定）
       </h2>
       
-      <!-- 最初の選択画面（forms） -->
       <div class="modal-edit-section">
         <div class="modal-edit-header">
-          <h3 class="modal-edit-title">最初の選択画面（forms）</h3>
-          <button type="button" class="btn btn-outline btn-sm" id="add-forms-section-btn">
+          <h3 class="modal-edit-title">モーダルセクション一覧</h3>
+          <button type="button" class="btn btn-outline btn-sm" id="add-section-btn">
             <i class="fas fa-plus"></i> セクションを追加
           </button>
         </div>
-        <div id="forms-sections-container" class="modal-sections-container"></div>
-      </div>
-
-      <!-- 詳細選択画面（details） -->
-      <div class="modal-edit-section">
-        <div class="modal-edit-header">
-          <h3 class="modal-edit-title">詳細選択画面（details）</h3>
-          <button type="button" class="btn btn-outline btn-sm" id="add-details-section-btn">
-            <i class="fas fa-plus"></i> セクションを追加
-          </button>
-        </div>
-        <div id="details-sections-container" class="modal-sections-container"></div>
+        <div id="sections-container" class="modal-sections-container"></div>
+        <p class="form-hint" style="margin-top: 16px;">
+          <i class="fas fa-info-circle"></i> セクションは順番に表示されます。最後のセクションの後は自動的にエンドセクション（発注確認画面）が表示されます。
+        </p>
       </div>
       
-      <!-- Hidden inputs for JSON data -->
-      <input type="hidden" name="forms" id="forms-json-input" />
-      <input type="hidden" name="details" id="details-json-input" />
+      <!-- Hidden input for JSON data -->
+      <input type="hidden" name="sections" id="sections-json-input" />
     </div>
 
     <!-- フォームアクション -->
@@ -668,111 +645,133 @@
           const service = services.find(s => s.id === serviceId);
           
           if (service) {
-            renderFormsSections(service.forms || []);
-            renderDetailsSections(service.details || []);
+            // 既存のforms/detailsをsectionsに変換（後方互換性）
+            let sections = service.sections || [];
+            if (!sections.length && (service.forms || service.details)) {
+              // formsとdetailsを統合してsectionsに変換
+              sections = [];
+              if (service.forms && service.forms.length > 0) {
+                sections = sections.concat(service.forms.map(s => ({ ...s, sectionIndex: sections.length })));
+              }
+              if (service.details && service.details.length > 0) {
+                sections = sections.concat(service.details.map(s => ({ ...s, sectionIndex: sections.length })));
+              }
+            }
+            renderSections(sections);
           }
         } catch (error) {
           console.error('Failed to load service data:', error);
         }
       }
       
-      // Render forms sections
-      function renderFormsSections(sections) {
-        const container = document.getElementById('forms-sections-container');
+      // Render sections
+      function renderSections(sections) {
+        const container = document.getElementById('sections-container');
         if (!container) return;
         container.innerHTML = '';
         
         sections.forEach((section, idx) => {
-          container.appendChild(createFormsSectionElement(section, idx));
+          container.appendChild(createSectionElement(section, idx));
         });
         
-        updateFormsJSON();
+        updateSectionsJSON();
       }
       
-      // Render details sections
-      function renderDetailsSections(sections) {
-        const container = document.getElementById('details-sections-container');
-        if (!container) return;
-        container.innerHTML = '';
-        
-        sections.forEach((section, idx) => {
-          container.appendChild(createDetailsSectionElement(section, idx));
-        });
-        
-        updateDetailsJSON();
-      }
-      
-      // Create forms section element
-      function createFormsSectionElement(section, idx) {
+      // Create section element (unified for all section types)
+      function createSectionElement(section, idx) {
         const div = document.createElement('div');
         div.className = 'modal-section-editor';
         div.dataset.index = idx;
         
         const sectionType = section['section-type'] || 'radio-text';
-        const items = section['section-items'] || [];
+        const sectionImage = section['section-image'] || section['section-image-url'] || '';
         const requiredChecked = section.required ? 'checked' : '';
+        
+        // タイプ別の選択肢
         const radioTextSelected = sectionType === 'radio-text' ? 'selected' : '';
         const radioImageSelected = sectionType === 'radio-image' ? 'selected' : '';
+        const gridItemsSelected = sectionType === 'grid-items' ? 'selected' : '';
+        const textareaSelected = sectionType === 'textarea' ? 'selected' : '';
         
         div.innerHTML = `
           <div class="modal-section-header">
-            <h4 class="modal-section-label">セクション ${idx + 1}</h4>
+            <h4 class="modal-section-label">モーダル ${idx + 1}</h4>
             <button type="button" class="btn btn-danger btn-sm btn-remove-section" data-section-index="${idx}">
               <i class="fas fa-trash"></i> 削除
             </button>
           </div>
           <div class="form-group">
-            <label class="form-label">セクションタイトル</label>
-            <input type="text" class="form-input section-title-input" value="${escapeHtml(section['section-title'] || '')}" placeholder="例: 日頃のお掃除の状況について教えてください" />
+            <label class="form-label">セクションタイトル <span class="required">必須</span></label>
+            <input type="text" class="form-input section-title-input" value="${escapeHtml(section['section-title'] || '')}" placeholder="例: 日頃のお掃除の状況について教えてください" required />
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label">モーダルTOP画像</label>
+            <div class="image-input-group">
+              <input type="text" class="form-input section-image-input" id="section-image-${idx}" value="${escapeHtml(sectionImage)}" placeholder="例: images/gure-chingu.png" />
+              <button type="button" class="btn btn-outline btn-select-image btn-sm" data-target="section-image-${idx}">
+                <i class="fas fa-images"></i> 画像を選択
+              </button>
+            </div>
+            <p class="form-hint">この画像はモーダルの上部（TOPイメージ）に表示されます（任意）</p>
           </div>
           <div class="form-group">
-            <label class="form-label">タイプ</label>
-            <select class="form-select section-type-select">
+            <label class="form-label">セクションの目的（タイプ） <span class="required">必須</span></label>
+            <select class="form-select section-type-select" required>
               <option value="radio-text" ${radioTextSelected}>テキスト選択</option>
               <option value="radio-image" ${radioImageSelected}>画像選択</option>
+              <option value="grid-items" ${gridItemsSelected}>項目選択（数量入力可能）</option>
+              <option value="textarea" ${textareaSelected}>テキストエリア（自由入力）</option>
             </select>
+            <p class="form-hint">タイプによって選択肢の形式が変わります</p>
           </div>
+          ${sectionType === 'radio-text' || sectionType === 'radio-image' ? `
           <div class="form-group">
             <label class="form-label">
               <input type="checkbox" class="section-required-checkbox" ${requiredChecked} />
               必須項目
             </label>
           </div>
-          <div class="form-group">
-            <label class="form-label">選択肢</label>
-            <div class="modal-items-list" data-section-index="${idx}">
-              ${items.map((item, itemIdx) => createFormsItemHTML(item, idx, itemIdx, sectionType)).join('')}
-            </div>
-            <button type="button" class="btn btn-outline btn-sm btn-add-item" data-section-index="${idx}">
-              <i class="fas fa-plus"></i> 選択肢を追加
-            </button>
-            <button type="button" class="btn btn-preview btn-sm btn-preview-section" data-section-index="${idx}" data-section-type="forms">
-              <i class="fas fa-eye"></i> プレビュー
-            </button>
-          </div>
+          ` : ''}
+          ${sectionType === 'textarea' ? createTextareaSectionFields(section) : createItemsSectionFields(section, idx, sectionType)}
         `;
         
         // Add event listeners
-        div.querySelectorAll('.section-title-input, .section-type-select, .section-required-checkbox').forEach(el => {
-          el.addEventListener('change', updateFormsJSON);
+        div.querySelectorAll('.section-title-input, .section-type-select, .section-required-checkbox, .section-image-input, .textarea-placeholder-input, .textarea-maxlength-input, .textarea-key-input, .item-text-input, .item-image-input, .item-countable-checkbox, .item-unit-input').forEach(el => {
+          el.addEventListener('change', updateSectionsJSON);
+          el.addEventListener('input', updateSectionsJSON);
+        });
+        
+        // タイプ変更時の再レンダリング
+        div.querySelector('.section-type-select')?.addEventListener('change', function() {
+          const idx = parseInt(div.dataset.index);
+          const container = document.getElementById('sections-container');
+          const sections = Array.from(container.children).map((el, i) => {
+            return getSectionDataFromElement(el);
+          });
+          renderSections(sections);
+        });
+        
+        // 数量入力可能チェックボックスの変更時に単位フィールドを表示/非表示
+        div.querySelectorAll('.item-countable-checkbox').forEach(checkbox => {
+          checkbox.addEventListener('change', function() {
+            const itemEl = this.closest('.modal-item-editor');
+            const unitGroup = itemEl?.querySelector('[data-countable-group]');
+            if (unitGroup) {
+              unitGroup.style.display = this.checked ? 'block' : 'none';
+            }
+            updateSectionsJSON();
+          });
         });
         
         // Add event listeners for buttons
         div.querySelector('.btn-remove-section')?.addEventListener('click', function() {
           const sectionIdx = parseInt(this.dataset.sectionIndex);
-          window.removeFormsSection(sectionIdx);
+          window.removeSection(sectionIdx);
         });
         
         div.querySelector('.btn-add-item')?.addEventListener('click', function() {
           const sectionIdx = parseInt(this.dataset.sectionIndex);
-          window.addFormsItem(sectionIdx);
-        });
-        
-        // Add event listener for preview button
-        div.querySelector('.btn-preview-section')?.addEventListener('click', function() {
-          const sectionIdx = parseInt(this.dataset.sectionIndex);
-          const sectionType = this.dataset.sectionType;
-          window.previewSection(sectionIdx, sectionType);
+          window.addItem(sectionIdx);
         });
         
         // Add event listeners for remove item buttons
@@ -780,72 +779,76 @@
           btn.addEventListener('click', function() {
             const sectionIdx = parseInt(this.dataset.sectionIndex);
             const itemIdx = parseInt(this.dataset.itemIndex);
-            window.removeFormsItem(sectionIdx, itemIdx);
-          });
-        });
-        
-        // Add event listeners for image select buttons
-        div.querySelectorAll('.btn-select-image[data-type="forms"]').forEach(btn => {
-          btn.addEventListener('click', function() {
-            const sectionIdx = parseInt(this.dataset.sectionIndex);
-            const itemIdx = parseInt(this.dataset.itemIndex);
-            window.openImageSelectForItem(sectionIdx, itemIdx);
+            window.removeItem(sectionIdx, itemIdx);
           });
         });
         
         return div;
       }
       
-      // Create forms item HTML
-      function createFormsItemHTML(item, sectionIdx, itemIdx, sectionType) {
-        if (sectionType === 'radio-image') {
-          const text = typeof item === 'string' ? item : (item.text || '');
-          const imgUrl = typeof item === 'object' ? (item['img-url'] || item.img || '') : '';
-          const imagePreview = imgUrl ? `<div class="image-preview-small"><img src="/${imgUrl}" alt="プレビュー" onerror="this.style.display='none'" /></div>` : '';
-          return `
-            <div class="modal-item-editor" data-item-index="${itemIdx}">
-              <div class="modal-item-header">
-                <span class="modal-item-number">選択肢 ${itemIdx + 1}</span>
-                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-              <div class="form-group">
-                <label class="form-label">テキスト</label>
-                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: 表面がきれいになれば十分" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">画像</label>
-                <div class="image-input-group">
-                  <input type="text" class="form-input item-image-input" value="${escapeHtml(imgUrl)}" placeholder="例: images/example.png" />
-                  <button type="button" class="btn btn-outline btn-sm btn-select-image" data-section-index="${sectionIdx}" data-item-index="${itemIdx}" data-type="forms">
-                    <i class="fas fa-images"></i> 画像を選択
-                  </button>
-                </div>
-                ${imagePreview}
-              </div>
-            </div>
-          `;
+      // Helper function to get section data from element
+      function getSectionDataFromElement(el) {
+        const title = el.querySelector('.section-title-input')?.value || '';
+        const type = el.querySelector('.section-type-select')?.value || 'radio-text';
+        const sectionImage = el.querySelector('.section-image-input')?.value || '';
+        const required = el.querySelector('.section-required-checkbox')?.checked || false;
+        
+        if (type === 'textarea') {
+          const placeholder = el.querySelector('.textarea-placeholder-input')?.value || '';
+          const maxLength = parseInt(el.querySelector('.textarea-maxlength-input')?.value || '500', 10);
+          const key = el.querySelector('.textarea-key-input')?.value || '';
+          const sectionData = {
+            'section-title': title,
+            'section-type': 'textarea',
+            placeholder,
+            maxLength,
+            key: key || undefined
+          };
+          if (sectionImage.trim()) {
+            sectionData['section-image'] = sectionImage.trim();
+          }
+          return sectionData;
         } else {
-          const text = typeof item === 'string' ? item : (item.text || '');
-          return `
-            <div class="modal-item-editor" data-item-index="${itemIdx}">
-              <div class="modal-item-header">
-                <span class="modal-item-number">選択肢 ${itemIdx + 1}</span>
-                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-              <div class="form-group">
-                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: 毎日清掃している" />
-              </div>
-            </div>
-          `;
+          const itemsEl = el.querySelector('.modal-items-list');
+          const items = Array.from(itemsEl?.children || []).map(itemEl => {
+            const text = itemEl.querySelector('.item-text-input')?.value || '';
+            if (type === 'radio-text') {
+              return text;
+            } else if (type === 'radio-image') {
+              const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+              return { text, 'img-url': imgUrl };
+            } else if (type === 'grid-items') {
+              const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+              const countable = itemEl.querySelector('.item-countable-checkbox')?.checked || false;
+              const unit = itemEl.querySelector('.item-unit-input')?.value || '';
+              return { text, 'img-url': imgUrl, countable, unit: countable ? unit : undefined, count: 0 };
+            }
+            return text;
+          }).filter(item => {
+            if (typeof item === 'string') {
+              return item.trim();
+            } else {
+              return item.text && item.text.trim();
+            }
+          });
+          
+          const sectionData = {
+            'section-title': title,
+            'section-type': type,
+            'section-items': items
+          };
+          if (type === 'radio-text' || type === 'radio-image') {
+            sectionData.required = required;
+          }
+          if (sectionImage.trim()) {
+            sectionData['section-image'] = sectionImage.trim();
+          }
+          return sectionData;
         }
       }
       
-      // Helper function for textarea section
-      function createDetailsTextareaSection(section) {
+      // Helper function for textarea section fields
+      function createTextareaSectionFields(section) {
         return `
           <div class="form-group">
             <label class="form-label">プレースホルダー</label>
@@ -862,254 +865,199 @@
         `;
       }
       
-      // Helper function for items section
-      function createDetailsItemsSection(idx, items) {
+      // Helper function for items section fields
+      function createItemsSectionFields(section, idx, sectionType) {
+        const items = section['section-items'] || [];
         return `
           <div class="form-group">
-            <label class="form-label">項目</label>
+            <label class="form-label">選択肢</label>
             <div class="modal-items-list" data-section-index="${idx}">
-              ${items.map((item, itemIdx) => createDetailsItemHTML(item, idx, itemIdx)).join('')}
+              ${items.map((item, itemIdx) => createItemHTML(item, idx, itemIdx, sectionType)).join('')}
             </div>
             <button type="button" class="btn btn-outline btn-sm btn-add-item" data-section-index="${idx}">
-              <i class="fas fa-plus"></i> 項目を追加
-            </button>
-            <button type="button" class="btn btn-preview btn-sm btn-preview-section" data-section-index="${idx}" data-section-type="details">
-              <i class="fas fa-eye"></i> プレビュー
+              <i class="fas fa-plus"></i> 選択肢を追加
             </button>
           </div>
         `;
       }
       
-      // Create details section element
-      function createDetailsSectionElement(section, idx) {
-        const div = document.createElement('div');
-        div.className = 'modal-section-editor';
-        div.dataset.index = idx;
-        
-        const sectionType = section['section-type'] || 'grid-items';
-        const items = section['section-items'] || [];
-        const gridItemsSelected = sectionType === 'grid-items' ? 'selected' : '';
-        const textareaSelected = sectionType === 'textarea' ? 'selected' : '';
-        
-        div.innerHTML = `
-          <div class="modal-section-header">
-            <h4 class="modal-section-label">セクション ${idx + 1}</h4>
-            <button type="button" class="btn btn-danger btn-sm btn-remove-section" data-section-index="${idx}">
-              <i class="fas fa-trash"></i> 削除
-            </button>
-          </div>
-          <div class="form-group">
-            <label class="form-label">セクションタイトル</label>
-            <input type="text" class="form-input section-title-input" value="${escapeHtml(section['section-title'] || '')}" placeholder="例: 種類" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">タイプ</label>
-            <select class="form-select details-section-type-select">
-              <option value="grid-items" ${gridItemsSelected}>項目選択</option>
-              <option value="textarea" ${textareaSelected}>テキストエリア</option>
-            </select>
-          </div>
-          ${sectionType === 'textarea' ? createDetailsTextareaSection(section) : createDetailsItemsSection(idx, items)}
-        `;
-        
-        // Add event listeners
-        div.querySelectorAll('.section-title-input, .details-section-type-select, .textarea-placeholder-input, .textarea-maxlength-input, .textarea-key-input').forEach(el => {
-          el.addEventListener('change', function() {
-            if (el.classList.contains('details-section-type-select')) {
-              // Re-render section when type changes
-              const idx = parseInt(div.dataset.index);
-              const container = document.getElementById('details-sections-container');
-              const sections = Array.from(container.children).map((el, i) => {
-                const title = el.querySelector('.section-title-input')?.value || '';
-                const type = el.querySelector('.details-section-type-select')?.value || 'grid-items';
-                if (type === 'textarea') {
-                  const placeholder = el.querySelector('.textarea-placeholder-input')?.value || '';
-                  const maxLength = parseInt(el.querySelector('.textarea-maxlength-input')?.value || '500', 10);
-                  const key = el.querySelector('.textarea-key-input')?.value || '';
-                  return { 'section-title': title, 'section-type': 'textarea', placeholder, maxLength, key: key || undefined };
-                } else {
-                  const itemsEl = el.querySelector('.modal-items-list');
-                  const items = Array.from(itemsEl?.children || []).map(itemEl => {
-                    const text = itemEl.querySelector('.item-text-input')?.value || '';
-                    const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
-                    const countable = itemEl.querySelector('.item-countable-checkbox')?.checked || false;
-                    const unit = itemEl.querySelector('.item-unit-input')?.value || '';
-                    return { text, 'img-url': imgUrl, countable, unit: countable ? unit : undefined, count: 0 };
-                  });
-                  return { 'section-title': title, 'section-type': 'grid-items', 'section-items': items };
-                }
-              });
-              renderDetailsSections(sections);
-            } else {
-              updateDetailsJSON();
-            }
-          });
-        });
-        
-        // Add event listeners for buttons
-        div.querySelector('.btn-remove-section')?.addEventListener('click', function() {
-          const sectionIdx = parseInt(this.dataset.sectionIndex);
-          window.removeDetailsSection(sectionIdx);
-        });
-        
-        div.querySelector('.btn-add-item')?.addEventListener('click', function() {
-          const sectionIdx = parseInt(this.dataset.sectionIndex);
-          window.addDetailsItem(sectionIdx);
-        });
-        
-        // Add event listener for preview button
-        div.querySelector('.btn-preview-section')?.addEventListener('click', function() {
-          const sectionIdx = parseInt(this.dataset.sectionIndex);
-          const sectionType = this.dataset.sectionType;
-          window.previewSection(sectionIdx, sectionType);
-        });
-        
-        // Add event listeners for remove item buttons
-        div.querySelectorAll('.btn-remove-item').forEach(btn => {
-          btn.addEventListener('click', function() {
-            const sectionIdx = parseInt(this.dataset.sectionIndex);
-            const itemIdx = parseInt(this.dataset.itemIndex);
-            window.removeDetailsItem(sectionIdx, itemIdx);
-          });
-        });
-        
-        // Add event listeners for image select buttons
-        div.querySelectorAll('.btn-select-image[data-type="details"]').forEach(btn => {
-          btn.addEventListener('click', function() {
-            const sectionIdx = parseInt(this.dataset.sectionIndex);
-            const itemIdx = parseInt(this.dataset.itemIndex);
-            window.openImageSelectForDetailsItem(sectionIdx, itemIdx);
-          });
-        });
-        
-        return div;
-      }
-      
-      // Create details item HTML
-      function createDetailsItemHTML(item, sectionIdx, itemIdx) {
-        const text = item.text || '';
-        const imgUrl = item['img-url'] || item.img || '';
-        const countable = item.countable || false;
-        const unit = item.unit || '';
-        
-        const checkedAttr = countable ? 'checked' : '';
-        const styleAttr = countable ? '' : 'display: none;';
-        const imagePreview = imgUrl ? `<div class="image-preview-small"><img src="/${imgUrl}" alt="プレビュー" onerror="this.style.display='none'" /></div>` : '';
-        
-        return `
-          <div class="modal-item-editor" data-item-index="${itemIdx}">
-            <div class="modal-item-header">
-              <span class="modal-item-number">項目 ${itemIdx + 1}</span>
-              <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <div class="form-group">
-              <label class="form-label">項目名</label>
-              <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: U字溝" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">画像</label>
-              <div class="image-input-group">
-                <input type="text" class="form-input item-image-input" value="${escapeHtml(imgUrl)}" placeholder="例: images/example.png" />
-                <button type="button" class="btn btn-outline btn-sm btn-select-image" data-section-index="${sectionIdx}" data-item-index="${itemIdx}" data-type="details">
-                  <i class="fas fa-images"></i> 画像を選択
+      // Create item HTML (unified for all types)
+      function createItemHTML(item, sectionIdx, itemIdx, sectionType) {
+        if (sectionType === 'radio-text') {
+          const text = typeof item === 'string' ? item : (item.text || '');
+          return `
+            <div class="modal-item-editor" data-item-index="${itemIdx}">
+              <div class="modal-item-header">
+                <span class="modal-item-number">選択肢 ${itemIdx + 1}</span>
+                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                  <i class="fas fa-times"></i>
                 </button>
               </div>
-              ${imagePreview}
+              <div class="form-group">
+                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: 毎日清掃している" />
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">
-                <input type="checkbox" class="item-countable-checkbox" ${checkedAttr} />
-                数量入力あり
-              </label>
+          `;
+        } else if (sectionType === 'radio-image') {
+          const text = typeof item === 'string' ? item : (item.text || '');
+          const imgUrl = typeof item === 'object' ? (item['img-url'] || item.img || '') : '';
+          return `
+            <div class="modal-item-editor" data-item-index="${itemIdx}">
+              <div class="modal-item-header">
+                <span class="modal-item-number">選択肢 ${itemIdx + 1}</span>
+                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="form-group">
+                <label class="form-label">テキスト</label>
+                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: 表面がきれいになれば十分" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">画像</label>
+                <div class="image-input-group">
+                  <input type="text" class="form-input item-image-input" value="${escapeHtml(imgUrl)}" placeholder="例: images/example.png" />
+                  <button type="button" class="btn btn-outline btn-sm btn-select-image" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                    <i class="fas fa-images"></i> 画像を選択
+                  </button>
+                </div>
+              </div>
             </div>
-            <div class="form-group" style="${styleAttr}" data-countable-group>
-              <label class="form-label">単位</label>
-              <input type="text" class="form-input item-unit-input" value="${escapeHtml(unit)}" placeholder="例: m, 本, 個" />
+          `;
+        } else if (sectionType === 'grid-items') {
+          const text = typeof item === 'string' ? item : (item.text || '');
+          const imgUrl = typeof item === 'object' ? (item['img-url'] || item.img || '') : '';
+          const countable = typeof item === 'object' ? (item.countable || false) : false;
+          const unit = typeof item === 'object' ? (item.unit || '') : '';
+          const countableChecked = countable ? 'checked' : '';
+          return `
+            <div class="modal-item-editor" data-item-index="${itemIdx}">
+              <div class="modal-item-header">
+                <span class="modal-item-number">項目 ${itemIdx + 1}</span>
+                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="form-group">
+                <label class="form-label">項目名</label>
+                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: U字溝" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">画像</label>
+                <div class="image-input-group">
+                  <input type="text" class="form-input item-image-input" value="${escapeHtml(imgUrl)}" placeholder="例: images/example.png" />
+                  <button type="button" class="btn btn-outline btn-sm btn-select-image" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                    <i class="fas fa-images"></i> 画像を選択
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <input type="checkbox" class="item-countable-checkbox" ${countableChecked} />
+                  数量入力可能
+                </label>
+              </div>
+              <div class="form-group" style="${countable ? '' : 'display: none;'}" data-countable-group>
+                <label class="form-label">単位</label>
+                <input type="text" class="form-input item-unit-input" value="${escapeHtml(unit)}" placeholder="例: m, 本, ㎡" />
+              </div>
             </div>
-          </div>
-        `;
+          `;
+        }
+        return '';
       }
       
-      // Update forms JSON
-      function updateFormsJSON() {
-        const container = document.getElementById('forms-sections-container');
+      // Deprecated functions removed - use createSectionElement instead
+      // Update sections JSON
+      function updateSectionsJSON() {
+        const container = document.getElementById('sections-container');
         if (!container) return;
         
         const sections = Array.from(container.children).map(sectionEl => {
-          const title = sectionEl.querySelector('.section-title-input')?.value || '';
-          const type = sectionEl.querySelector('.section-type-select')?.value || 'radio-text';
-          const required = sectionEl.querySelector('.section-required-checkbox')?.checked || false;
-          const itemsEl = sectionEl.querySelector('.modal-items-list');
-          const items = Array.from(itemsEl?.children || []).map(itemEl => {
-            const text = itemEl.querySelector('.item-text-input')?.value || '';
-            if (type === 'radio-image') {
-              const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
-              return { text, 'img-url': imgUrl };
-            } else {
-              return text;
-            }
-          }).filter(item => (typeof item === 'string' ? item.trim() : item.text.trim()));
-          
-          return {
-            'section-title': title,
-            'section-type': type,
-            required,
-            'section-items': items
-          };
-        }).filter(section => section['section-title'].trim());
+          return getSectionDataFromElement(sectionEl);
+        }).filter(section => section['section-title'] && section['section-title'].trim());
         
-        document.getElementById('forms-json-input').value = JSON.stringify(sections);
+        document.getElementById('sections-json-input').value = JSON.stringify(sections);
       }
       
-      // Update details JSON
-      function updateDetailsJSON() {
-        const container = document.getElementById('details-sections-container');
+      // Add section
+      window.addSection = function() {
+        const container = document.getElementById('sections-container');
         if (!container) return;
         
-        const sections = Array.from(container.children).map(sectionEl => {
-          const title = sectionEl.querySelector('.section-title-input')?.value || '';
-          const type = sectionEl.querySelector('.details-section-type-select')?.value || 'grid-items';
-          
-          if (type === 'textarea') {
-            const placeholder = sectionEl.querySelector('.textarea-placeholder-input')?.value || '';
-            const maxLength = parseInt(sectionEl.querySelector('.textarea-maxlength-input')?.value || '500', 10);
-            const key = sectionEl.querySelector('.textarea-key-input')?.value || '';
-            return {
-              'section-title': title,
-              'section-type': 'textarea',
-              placeholder,
-              maxLength,
-              key: key || undefined
-            };
-          } else {
-            const itemsEl = sectionEl.querySelector('.modal-items-list');
-            const items = Array.from(itemsEl?.children || []).map(itemEl => {
-              const text = itemEl.querySelector('.item-text-input')?.value || '';
-              const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
-              const countable = itemEl.querySelector('.item-countable-checkbox')?.checked || false;
-              const unit = itemEl.querySelector('.item-unit-input')?.value || '';
-              
-              return {
-                text,
-                'img-url': imgUrl,
-                countable,
-                unit: countable ? unit : undefined,
-                count: 0
-              };
-            }).filter(item => item.text.trim());
-            
-            return {
-              'section-title': title,
-              'section-type': 'grid-items',
-              'section-items': items
-            };
+        const sections = Array.from(container.children).map(el => getSectionDataFromElement(el));
+        sections.push({
+          'section-title': '',
+          'section-type': 'radio-text',
+          'section-items': [],
+          required: false
+        });
+        renderSections(sections);
+      };
+      
+      // Remove section
+      window.removeSection = function(idx) {
+        if (!confirm('このセクションを削除してもよろしいですか？')) return;
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        
+        const sections = Array.from(container.children).map(el => getSectionDataFromElement(el));
+        sections.splice(idx, 1);
+        renderSections(sections);
+      };
+      
+      // Add item to section
+      window.addItem = function(sectionIdx) {
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        
+        const sectionEl = container.children[sectionIdx];
+        if (!sectionEl) return;
+        
+        const section = getSectionDataFromElement(sectionEl);
+        const sectionType = section['section-type'] || 'radio-text';
+        const items = section['section-items'] || [];
+        
+        if (sectionType === 'radio-text') {
+          items.push('');
+        } else if (sectionType === 'radio-image') {
+          items.push({ text: '', 'img-url': '' });
+        } else if (sectionType === 'grid-items') {
+          items.push({ text: '', 'img-url': '', countable: false, unit: '', count: 0 });
+        }
+        
+        section['section-items'] = items;
+        
+        const sections = Array.from(container.children).map((el, i) => {
+          if (i === sectionIdx) {
+            return section;
           }
-        }).filter(section => section['section-title'].trim());
+          return getSectionDataFromElement(el);
+        });
+        renderSections(sections);
+      };
+      
+      // Remove item from section
+      window.removeItem = function(sectionIdx, itemIdx) {
+        const container = document.getElementById('sections-container');
+        if (!container) return;
         
-        document.getElementById('details-json-input').value = JSON.stringify(sections);
-      }
+        const sectionEl = container.children[sectionIdx];
+        if (!sectionEl) return;
+        
+        const section = getSectionDataFromElement(sectionEl);
+        const items = section['section-items'] || [];
+        items.splice(itemIdx, 1);
+        section['section-items'] = items;
+        
+        const sections = Array.from(container.children).map((el, i) => {
+          if (i === sectionIdx) {
+            return section;
+          }
+          return getSectionDataFromElement(el);
+        });
+        renderSections(sections);
+      };
       
       // Helper functions
       function escapeHtml(text) {
@@ -1118,471 +1066,12 @@
         return div.innerHTML;
       }
       
-      // Global functions for buttons
-      window.addFormsSection = function() {
-        const container = document.getElementById('forms-sections-container');
-        const newSection = {
-          'section-title': '',
-          'section-type': 'radio-text',
-          required: false,
-          'section-items': []
-        };
-        container.appendChild(createFormsSectionElement(newSection, container.children.length));
-        updateFormsJSON();
-      };
+      // Deprecated global functions removed - use window.addSection, window.removeSection, window.addItem, window.removeItem instead
       
-      window.removeFormsSection = function(idx) {
-        if (!confirm('このセクションを削除してもよろしいですか？')) return;
-        const container = document.getElementById('forms-sections-container');
-        const section = container.querySelector(`[data-index="${idx}"]`);
-        if (section) {
-          section.remove();
-          renderFormsSections(Array.from(container.children).map((el, i) => {
-            const title = el.querySelector('.section-title-input')?.value || '';
-            const type = el.querySelector('.section-type-select')?.value || 'radio-text';
-            const required = el.querySelector('.section-required-checkbox')?.checked || false;
-            const itemsEl = el.querySelector('.modal-items-list');
-            const items = Array.from(itemsEl?.children || []).map(itemEl => {
-              const text = itemEl.querySelector('.item-text-input')?.value || '';
-              if (type === 'radio-image') {
-                const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
-                return { text, 'img-url': imgUrl };
-              } else {
-                return text;
-              }
-            });
-            return { 'section-title': title, 'section-type': type, required, 'section-items': items };
-          }));
-        }
-      };
-      
-      window.addFormsItem = function(sectionIdx) {
-        const container = document.getElementById('forms-sections-container');
-        const section = container.querySelector(`[data-index="${sectionIdx}"]`);
-        if (!section) return;
-        const type = section.querySelector('.section-type-select')?.value || 'radio-text';
-        const itemsList = section.querySelector('.modal-items-list');
-        const itemIdx = itemsList.children.length;
-        const itemHTML = createFormsItemHTML(type === 'radio-image' ? { text: '', 'img-url': '' } : '', sectionIdx, itemIdx, type);
-        itemsList.insertAdjacentHTML('beforeend', itemHTML);
-        
-        // Add event listeners for inputs
-        const newItem = itemsList.lastElementChild;
-        newItem.querySelectorAll('.item-text-input, .item-image-input').forEach(el => {
-          el.addEventListener('change', updateFormsJSON);
-        });
-        
-        // Add event listener for remove button
-        newItem.querySelector('.btn-remove-item')?.addEventListener('click', function() {
-          const sectionIdx = parseInt(this.dataset.sectionIndex);
-          const itemIdx = parseInt(this.dataset.itemIndex);
-          window.removeFormsItem(sectionIdx, itemIdx);
-        });
-        
-        // Add event listener for image select button
-        newItem.querySelector('.btn-select-image[data-type="forms"]')?.addEventListener('click', function() {
-          const sectionIdx = parseInt(this.dataset.sectionIndex);
-          const itemIdx = parseInt(this.dataset.itemIndex);
-          window.openImageSelectForItem(sectionIdx, itemIdx);
-        });
-        
-        updateFormsJSON();
-      };
-      
-      window.removeFormsItem = function(sectionIdx, itemIdx) {
-        const container = document.getElementById('forms-sections-container');
-        const section = container.querySelector(`[data-index="${sectionIdx}"]`);
-        if (!section) return;
-        const item = section.querySelector(`[data-item-index="${itemIdx}"]`);
-        if (item) {
-          item.remove();
-          updateFormsJSON();
-        }
-      };
-      
-      window.addDetailsSection = function() {
-        const container = document.getElementById('details-sections-container');
-        const newSection = {
-          'section-title': '',
-          'section-type': 'grid-items',
-          'section-items': []
-        };
-        container.appendChild(createDetailsSectionElement(newSection, container.children.length));
-        updateDetailsJSON();
-      };
-      
-      window.removeDetailsSection = function(idx) {
-        if (!confirm('このセクションを削除してもよろしいですか？')) return;
-        const container = document.getElementById('details-sections-container');
-        const section = container.querySelector(`[data-index="${idx}"]`);
-        if (section) {
-          section.remove();
-          renderDetailsSections(Array.from(container.children).map((el, i) => {
-            const title = el.querySelector('.section-title-input')?.value || '';
-            const type = el.querySelector('.section-type-select')?.value || 'grid-items';
-            if (type === 'textarea') {
-              const placeholder = el.querySelector('.textarea-placeholder-input')?.value || '';
-              const maxLength = parseInt(el.querySelector('.textarea-maxlength-input')?.value || '500', 10);
-              const key = el.querySelector('.textarea-key-input')?.value || '';
-              return { 'section-title': title, 'section-type': 'textarea', placeholder, maxLength, key: key || undefined };
-            } else {
-              const itemsEl = el.querySelector('.modal-items-list');
-              const items = Array.from(itemsEl?.children || []).map(itemEl => {
-                const text = itemEl.querySelector('.item-text-input')?.value || '';
-                const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
-                const countable = itemEl.querySelector('.item-countable-checkbox')?.checked || false;
-                const unit = itemEl.querySelector('.item-unit-input')?.value || '';
-                return { text, 'img-url': imgUrl, countable, unit: countable ? unit : undefined, count: 0 };
-              });
-              return { 'section-title': title, 'section-type': 'grid-items', 'section-items': items };
-            }
-          }));
-        }
-      };
-      
-      window.addDetailsItem = function(sectionIdx) {
-        const container = document.getElementById('details-sections-container');
-        const section = container.querySelector(`[data-index="${sectionIdx}"]`);
-        if (!section) return;
-        const itemsList = section.querySelector('.modal-items-list');
-        if (!itemsList) return;
-        const itemIdx = itemsList.children.length;
-        const itemHTML = createDetailsItemHTML({ text: '', 'img-url': '', countable: false, unit: '' }, sectionIdx, itemIdx);
-        itemsList.insertAdjacentHTML('beforeend', itemHTML);
-        
-        // Add event listeners for inputs
-        const newItem = itemsList.lastElementChild;
-        newItem.querySelectorAll('.item-text-input, .item-image-input, .item-countable-checkbox, .item-unit-input').forEach(el => {
-          el.addEventListener('change', function() {
-            if (el.classList.contains('item-countable-checkbox')) {
-              const group = el.closest('.modal-item-editor').querySelector('[data-countable-group]');
-              if (group) group.style.display = el.checked ? '' : 'none';
-            }
-            updateDetailsJSON();
-          });
-        });
-        
-        // Add event listener for remove button
-        newItem.querySelector('.btn-remove-item')?.addEventListener('click', function() {
-          const sectionIdx = parseInt(this.dataset.sectionIndex);
-          const itemIdx = parseInt(this.dataset.itemIndex);
-          window.removeDetailsItem(sectionIdx, itemIdx);
-        });
-        
-        // Add event listener for image select button
-        newItem.querySelector('.btn-select-image[data-type="details"]')?.addEventListener('click', function() {
-          const sectionIdx = parseInt(this.dataset.sectionIndex);
-          const itemIdx = parseInt(this.dataset.itemIndex);
-          window.openImageSelectForDetailsItem(sectionIdx, itemIdx);
-        });
-        
-        updateDetailsJSON();
-      };
-      
-      window.removeDetailsItem = function(sectionIdx, itemIdx) {
-        const container = document.getElementById('details-sections-container');
-        const section = container.querySelector(`[data-index="${sectionIdx}"]`);
-        if (!section) return;
-        const item = section.querySelector(`[data-item-index="${itemIdx}"]`);
-        if (item) {
-          item.remove();
-          updateDetailsJSON();
-        }
-      };
-      
-      window.openImageSelectForItem = function(sectionIdx, itemIdx) {
-        currentImageTarget = { type: 'forms', sectionIdx, itemIdx };
-        openImageSelectModal();
-      };
-      
-      window.openImageSelectForDetailsItem = function(sectionIdx, itemIdx) {
-        currentImageTarget = { type: 'details', sectionIdx, itemIdx };
-        openImageSelectModal();
-      };
-      
-      function openImageSelectModal() {
-        // Use existing image select modal from image selection feature
-        // This will be implemented using the existing image selection modal
-        alert('画像選択機能は実装中です。手動で画像パスを入力してください。');
-      }
-      
-      // Preview section function
-      window.previewSection = function(sectionIdx, sectionType) {
-        let sectionData = null;
-        
-        if (sectionType === 'forms') {
-          const container = document.getElementById('forms-sections-container');
-          const sectionEl = container.querySelector(`[data-index="${sectionIdx}"]`);
-          if (!sectionEl) return;
-          
-          const title = sectionEl.querySelector('.section-title-input')?.value || '';
-          const type = sectionEl.querySelector('.section-type-select')?.value || 'radio-text';
-          const required = sectionEl.querySelector('.section-required-checkbox')?.checked || false;
-          const itemsEl = sectionEl.querySelector('.modal-items-list');
-          const items = Array.from(itemsEl?.children || []).map(itemEl => {
-            const text = itemEl.querySelector('.item-text-input')?.value || '';
-            const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
-            if (type === 'radio-image' && imgUrl) {
-              return { text, 'img-url': imgUrl };
-            }
-            return text || { text };
-          });
-          
-          sectionData = {
-            'section-title': title,
-            'section-type': type,
-            'section-items': items,
-            required: required
-          };
-          
-          // Show forms modal
-          showFormsPreview([sectionData]);
-        } else if (sectionType === 'details') {
-          const container = document.getElementById('details-sections-container');
-          const sectionEl = container.querySelector(`[data-index="${sectionIdx}"]`);
-          if (!sectionEl) return;
-          
-          const title = sectionEl.querySelector('.section-title-input')?.value || '';
-          const type = sectionEl.querySelector('.details-section-type-select')?.value || 'grid-items';
-          
-          if (type === 'textarea') {
-            const placeholder = sectionEl.querySelector('.textarea-placeholder-input')?.value || '';
-            const maxLength = parseInt(sectionEl.querySelector('.textarea-maxlength-input')?.value || '500', 10);
-            const key = sectionEl.querySelector('.textarea-key-input')?.value || '';
-            sectionData = {
-              'section-title': title,
-              'section-type': 'textarea',
-              placeholder,
-              maxLength,
-              key: key || undefined
-            };
-          } else {
-            const itemsEl = sectionEl.querySelector('.modal-items-list');
-            const items = Array.from(itemsEl?.children || []).map(itemEl => {
-              const text = itemEl.querySelector('.item-text-input')?.value || '';
-              const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
-              const countable = itemEl.querySelector('.item-countable-checkbox')?.checked || false;
-              const unit = itemEl.querySelector('.item-unit-input')?.value || '';
-              return { text, 'img-url': imgUrl, countable, unit: countable ? unit : undefined, count: 0 };
-            });
-            sectionData = {
-              'section-title': title,
-              'section-type': 'grid-items',
-              'section-items': items
-            };
-          }
-          
-          // Show details modal
-          showDetailsPreview([sectionData]);
-        }
-      };
-      
-      // Show forms preview modal
-      function showFormsPreview(sections) {
-        const modal = document.getElementById('service-modal');
-        if (!modal) return;
-        
-        const title = document.getElementById('modal-title');
-        const formBox = document.getElementById('modal-form');
-        const img = document.getElementById('modal-image');
-        
-        // Get service image
-        const imageInput = document.getElementById('image');
-        const detailImageInput = document.getElementById('detail_image');
-        const imagePath = (detailImageInput?.value || imageInput?.value || '/images/service-300x200.svg').trim();
-        if (img) {
-          img.src = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
-        }
-        
-        // Get service title
-        const titleInput = document.querySelector('input[name="title"]');
-        if (title) title.textContent = titleInput?.value || 'プレビュー';
-        
-        // Render sections
-        if (formBox) {
-          renderPreviewSections(formBox, sections, 'form');
-        }
-        
-        modal.classList.add('open');
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        
-        // Close button handlers
-        const closeBtn = document.getElementById('close-modal-btn');
-        const backBtn = document.getElementById('back-modal-btn');
-        if (closeBtn) {
-          closeBtn.onclick = function() {
-            modal.classList.remove('open');
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
-          };
-        }
-        if (backBtn) {
-          backBtn.onclick = function() {
-            modal.classList.remove('open');
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
-          };
-        }
-      }
-      
-      // Show details preview modal
-      function showDetailsPreview(sections) {
-        const modal = document.getElementById('details-modal');
-        if (!modal) return;
-        
-        const title = document.getElementById('details-modal-title');
-        const formBox = document.getElementById('details-form');
-        const img = document.getElementById('details-modal-image');
-        
-        // Get service image
-        const imageInput = document.getElementById('image');
-        const detailImageInput = document.getElementById('detail_image');
-        const imagePath = (detailImageInput?.value || imageInput?.value || '/images/service-300x200.svg').trim();
-        if (img) {
-          img.src = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
-        }
-        
-        // Get service title
-        const titleInput = document.querySelector('input[name="title"]');
-        if (title) title.textContent = titleInput?.value || 'プレビュー';
-        
-        // Render sections
-        if (formBox) {
-          renderPreviewSections(formBox, sections, 'detail');
-        }
-        
-        modal.classList.add('open');
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        
-        // Close button handlers
-        const closeBtn = document.getElementById('close-details-modal-btn');
-        const backBtn = document.getElementById('back-to-service-modal-btn');
-        if (closeBtn) {
-          closeBtn.onclick = function() {
-            modal.classList.remove('open');
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
-          };
-        }
-        if (backBtn) {
-          backBtn.onclick = function() {
-            modal.classList.remove('open');
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
-          };
-        }
-      }
-      
-      // Render preview sections (simplified version of app.js renderSections)
-      function renderPreviewSections(container, sections, namePrefix) {
-        if (!container) return;
-        container.innerHTML = '';
-        
-        sections.forEach((sec, idx) => {
-          const wrap = document.createElement('div');
-          const h = document.createElement('h3');
-          h.className = 'section-title';
-          h.textContent = sec['section-title'] || '';
-          wrap.appendChild(h);
-          
-          const type = (sec['section-type'] || 'radio-text').toLowerCase();
-          const body = document.createElement('div');
-          body.className = (type === 'grid' || type === 'grid-items' || type === 'items') ? 'grid grid-2-4 gap-16' : 'stack sm';
-          const name = `${namePrefix}_${idx+1}`;
-          const items = sec['section-items'] || [];
-          
-          if (type === 'textarea') {
-            const textarea = document.createElement('textarea');
-            textarea.className = 'textarea';
-            textarea.rows = 3;
-            textarea.placeholder = sec.placeholder || '自由入力';
-            textarea.maxLength = sec.maxLength || 500;
-            body.appendChild(textarea);
-          } else {
-            items.forEach((it) => {
-              const hasImg = !!(it && (it['img-url'] || it['img']));
-              if (type === 'grid' || type === 'grid-items' || type === 'items') {
-                const card = document.createElement('div');
-                card.className = 'item-card text-center';
-                if (hasImg) {
-                  const img = document.createElement('img');
-                  img.className = 'avatar-round';
-                  const imgPath = it['img-url'] || it['img'] || 'https://placehold.co/150x150/e2e8f0/666';
-                  img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') ? imgPath : (imgPath.startsWith('/') ? imgPath : '/' + imgPath);
-                  img.alt = (it['text'] || '');
-                  card.appendChild(img);
-                }
-                const p = document.createElement('p');
-                p.className = 'item-name';
-                p.textContent = it['text'] || (typeof it === 'string' ? it : '');
-                card.appendChild(p);
-                
-                if (it['countable']) {
-                  const qty = document.createElement('div');
-                  qty.className = 'qty';
-                  const dec = document.createElement('button');
-                  dec.className = 'btn btn-ghost btn-qty';
-                  dec.textContent = '-';
-                  const span = document.createElement('span');
-                  span.className = 'qty-val';
-                  span.textContent = '0';
-                  const inc = document.createElement('button');
-                  inc.className = 'btn btn-ghost btn-qty';
-                  inc.textContent = '+';
-                  const unit = document.createElement('span');
-                  unit.className = 'muted unit';
-                  unit.textContent = it['unit'] || '';
-                  qty.appendChild(dec);
-                  qty.appendChild(span);
-                  qty.appendChild(inc);
-                  qty.appendChild(unit);
-                  card.appendChild(qty);
-                }
-                body.appendChild(card);
-              } else if (type === 'radio-image' || hasImg) {
-                const label = document.createElement('label');
-                label.className = 'choice-card';
-                const input = document.createElement('input');
-                input.type = 'radio';
-                input.name = name;
-                input.className = 'radio';
-                const img = document.createElement('img');
-                img.className = 'thumb-211';
-                const imgPath = it['img-url'] || it['img'] || '/images/service-300x200.svg';
-                img.src = imgPath.startsWith('/') ? imgPath : '/' + imgPath;
-                img.alt = (it['text'] || '');
-                const span = document.createElement('span');
-                span.textContent = it['text'] || (typeof it === 'string' ? it : '');
-                label.appendChild(input);
-                label.appendChild(img);
-                label.appendChild(span);
-                body.appendChild(label);
-              } else {
-                const label = document.createElement('label');
-                label.className = 'choice-row';
-                const input = document.createElement('input');
-                input.type = 'radio';
-                input.name = name;
-                input.className = 'radio';
-                const span = document.createElement('span');
-                span.textContent = (typeof it === 'string') ? it : (it['text'] || '');
-                label.appendChild(input);
-                label.appendChild(span);
-                body.appendChild(label);
-              }
-            });
-          }
-          
-          wrap.appendChild(body);
-          container.appendChild(wrap);
-        });
-      }
+      // Preview section functions removed - preview buttons are no longer used
       
       // Event listeners
-      document.getElementById('add-forms-section-btn')?.addEventListener('click', window.addFormsSection);
-      document.getElementById('add-details-section-btn')?.addEventListener('click', window.addDetailsSection);
+      document.getElementById('add-section-btn')?.addEventListener('click', window.addSection);
       
       // Load initial data
       loadServiceData();
@@ -1592,36 +1081,9 @@
     (function() {
       let imageSelectModal = null;
       
-      // 画像選択ボタンのイベント
-      document.querySelectorAll('.btn-select-image').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const targetInputId = this.dataset.target;
-          const previewId = this.dataset.preview;
-          openImageSelectModal(targetInputId, previewId);
-        });
-      });
-      
-      // 画像入力欄の変更時にプレビューを更新
-      document.getElementById('image')?.addEventListener('input', function() {
-        updateImagePreview('image_preview', this.value);
-      });
-      
-      document.getElementById('detail_image')?.addEventListener('input', function() {
-        updateImagePreview('detail_image_preview', this.value);
-      });
-      
-      // 初期値がある場合はプレビューを表示
-      const imageValue = document.getElementById('image')?.value;
-      const detailImageValue = document.getElementById('detail_image')?.value;
-      if (imageValue) {
-        updateImagePreview('image_preview', imageValue);
-      }
-      if (detailImageValue) {
-        updateImagePreview('detail_image_preview', detailImageValue);
-      }
-      
-      // 画像プレビューを更新
-      function updateImagePreview(previewId, imagePath) {
+      // 画像プレビューを更新（グローバルスコープで使用可能にする）
+      // 最初に定義することで、後続のコードで使用可能にする
+      window.updateImagePreview = function(previewId, imagePath) {
         const preview = document.getElementById(previewId);
         if (!preview) return;
         
@@ -1636,6 +1098,30 @@
         } else {
           preview.style.display = 'none';
         }
+      };
+      
+      // 後方互換性のため、ローカルスコープでも使用可能にする
+      const updateImagePreview = window.updateImagePreview;
+      
+      // 画像選択ボタンのイベント（イベント委譲を使用）
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-select-image')) {
+          const btn = e.target.closest('.btn-select-image');
+          const targetInputId = btn.dataset.target;
+          const previewId = btn.dataset.preview || null; // プレビューIDはオプション（編集ページでは使用しない）
+          openImageSelectModal(targetInputId, previewId);
+        }
+      });
+      
+      // 画像入力欄の変更時にプレビューを更新
+      document.getElementById('image')?.addEventListener('input', function() {
+        updateImagePreview('image_preview', this.value);
+      });
+      
+      // 初期値がある場合はプレビューを表示
+      const imageValue = document.getElementById('image')?.value;
+      if (imageValue) {
+        updateImagePreview('image_preview', imageValue);
       }
       
       // 画像選択モーダルを開く
@@ -1770,8 +1256,16 @@
                 // 入力欄にパスを設定（先頭の / を削除）
                 const input = document.getElementById(targetInputId);
                 if (input) {
-                  input.value = path.startsWith('/') ? path.substring(1) : path;
-                  updateImagePreview(previewId, input.value);
+                  const imagePath = path.startsWith('/') ? path.substring(1) : path;
+                  input.value = imagePath;
+                  input.dispatchEvent(new Event('input', { bubbles: true }));
+                  input.dispatchEvent(new Event('change', { bubbles: true }));
+                  // プレビューIDが指定されている場合のみプレビューを更新（編集ページでは使用しない）
+                  if (previewId && window.updateImagePreview) {
+                    window.updateImagePreview(previewId, imagePath);
+                  }
+                } else {
+                  console.error('Input field not found:', targetInputId);
                 }
                 
                 closeImageSelectModal();
@@ -1806,30 +1300,16 @@
             const problemsText = formData.get('problems') || '';
             const problems = problemsText.split('\n').filter(p => p.trim());
             
-            // Parse forms and details from hidden inputs
-            let forms = [];
-            let details = [];
+            // Parse sections from hidden input
+            let sections = [];
             try {
-              const formsText = document.getElementById('forms-json-input')?.value || '[]';
-              forms = JSON.parse(formsText);
-              if (!Array.isArray(forms)) {
-                throw new Error('formsは配列である必要があります');
+              const sectionsText = document.getElementById('sections-json-input')?.value || '[]';
+              sections = JSON.parse(sectionsText);
+              if (!Array.isArray(sections)) {
+                throw new Error('sectionsは配列である必要があります');
               }
             } catch (e) {
-              alert(`formsのデータが無効です: ${e.message}`);
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = originalText;
-              return;
-            }
-            
-            try {
-              const detailsText = document.getElementById('details-json-input')?.value || '[]';
-              details = JSON.parse(detailsText);
-              if (!Array.isArray(details)) {
-                throw new Error('detailsは配列である必要があります');
-              }
-            } catch (e) {
-              alert(`detailsのデータが無効です: ${e.message}`);
+              alert(`sectionsのデータが無効です: ${e.message}`);
               submitBtn.disabled = false;
               submitBtn.innerHTML = originalText;
               return;
@@ -1841,16 +1321,18 @@
               category: formData.get('category'),
               price: formData.get('price'),
               image: formData.get('image') || '',
-              "detail-image": formData.get('detail_image') || undefined,
               description: formData.get('description') || '',
               problems: problems.length > 0 ? problems : undefined,
               solution: formData.get('solution') || undefined,
-              forms: forms,
-              details: details
+              sections: sections.length > 0 ? sections : []  // sectionsは常に配列として送信
             };
             
-            // Remove undefined fields
+            // Remove undefined fields (but keep empty arrays for sections)
             Object.keys(serviceData).forEach(key => {
+              if (key === 'sections') {
+                // sectionsは常に配列として保持
+                return;
+              }
               if (serviceData[key] === undefined || serviceData[key] === '') {
                 delete serviceData[key];
               }

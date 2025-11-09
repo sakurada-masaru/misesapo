@@ -5,8 +5,15 @@
     "category": "厨房設備",
     "price": "¥ 21,000〜",
     "image": "images/gurisuto.png",
-    "detail-image": "images/service01.jpg",
-    "description": "ｃ",
+    "detail-image": "images/gurisuto.png",
+    "description": "グリストラップ（油脂分離槽）は、厨房の排水に含まれる油分を分離・回収する設備です。日々の使用で油分や食材カスが蓄積しやすく、定期的なメンテナンスを怠ると様々なトラブルを引き起こします。",
+    "problems": [
+      "強い悪臭の発生",
+      "排水詰まりによる逆流や床の冠水",
+      "ゴキブリ・チョウバエなど害虫の発生源",
+      "油脂の蓄積による火災リスク"
+    ],
+    "solution": "専門清掃では、グリストラップを分解・高圧洗浄・除菌仕上げで徹底的にクリーニングいたします。",
     "forms": [],
     "details": []
   },
@@ -16,7 +23,6 @@
     "category": "厨房設備",
     "price": "¥ 7,000〜",
     "image": "images/gure-chingu.png",
-    "detail-image": "images/service12.jpeg",
     "description": "U字溝（排水溝）は、油分や食材カスで汚れやすく、放置すると様々なトラブルを引き起こします。厨房やホールの床に設置されたグレーチング（排水溝の金属カバー）も、油汚れや食材カスが溜まりやすく、放置すると問題を引き起こします。",
     "problems": [
       "強い悪臭の発生",
@@ -25,23 +31,23 @@
       "排水溝の詰まり → 水が逆流して床が水浸しに"
     ],
     "solution": "定期的な専門清掃による分解・高圧洗浄が効果的です。",
-    "forms": [
+    "sections": [
       {
         "section-title": "日頃のお掃除の状況について教えてください",
         "section-type": "radio-text",
-        "required": true,
         "section-items": [
           "毎日清掃している",
           "毎週清掃している",
           "月に1回程度",
           "半年〜1年に1回",
           "1度もしていない"
-        ]
+        ],
+        "required": true,
+        "section-image": "images/about02.jpg"
       },
       {
         "section-title": "清掃の仕上がりイメージを教えてください",
         "section-type": "radio-image",
-        "required": false,
         "section-items": [
           {
             "text": "表面がきれいになれば十分",
@@ -55,10 +61,9 @@
             "text": "徹底的にお願いしたい",
             "img-url": "images/gure-chingu_100.png"
           }
-        ]
-      }
-    ],
-    "details": [
+        ],
+        "required": false
+      },
       {
         "section-title": "種類",
         "section-type": "grid-items",
@@ -116,7 +121,8 @@
           "問題なく流れている",
           "少し流れが悪い",
           "完全に詰まっている"
-        ]
+        ],
+        "section-image": "images/TOP2.png"
       },
       {
         "section-title": "グリストラップの清掃頻度を教えてください",
@@ -163,8 +169,7 @@
         "maxLength": 500,
         "key": "note"
       }
-    ],
-    "detail-image": "images/service42.jpg"
+    ]
   },
   {
     "id": 4,
@@ -262,7 +267,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service03.jpg"
+    "detail-image": "images/ミセサポ2025/レンジフード.png"
   },
   {
     "id": 5,
@@ -343,7 +348,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service04.jpg"
+    "detail-image": "images/ミセサポ2025/ダクト内清掃.png"
   },
   {
     "id": 6,
@@ -422,7 +427,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service17.jpeg"
+    "detail-image": "images/ミセサポ2025/防火シャッター清掃.png"
   },
   {
     "id": 7,
@@ -506,15 +511,14 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service05.jpg"
+    "detail-image": "images/ミセサポ2025/換気扇洗浄.png"
   },
   {
     "id": 8,
     "title": "排気ファン清掃",
     "category": "厨房設備",
-    "price": "¥ 3,500〜",
+    "price": "¥ 35,00〜",
     "image": "images/haikifan.png",
-    "detail-image": "images/service18.jpeg",
     "description": "排気ファンは、油煙・ホコリ・水蒸気を直接吸い込むため、汚れが蓄積しやすい設備です。放置すると問題を引き起こします。",
     "problems": [
       "油汚れで羽根が重くなり回転効率が低下、火災のリスク",
@@ -571,8 +575,13 @@
       },
       {
         "section-title": "現在の状況を教えてください",
-        "section-type": "grid-items",
-        "section-items": []
+        "section-type": "radio-text",
+        "required": true,
+        "section-items": [
+          "問題なく吸えている",
+          "少し弱い",
+          "吸えていない"
+        ]
       },
       {
         "section-title": "備考欄（任意）",
@@ -581,7 +590,8 @@
         "maxLength": 500,
         "key": "note"
       }
-    ]
+    ],
+    "detail-image": "images/ミセサポ2025/換気ファン清掃.png"
   },
   {
     "id": 9,
@@ -628,7 +638,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service19.jpeg"
+    "detail-image": "images/ミセサポ2025/ファンベルト交換調整.png"
   },
   {
     "id": 10,
@@ -817,14 +827,14 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service06.jpg"
+    "detail-image": "images/ミセサポ2025/厨房機器洗浄.png"
   },
   {
     "id": 11,
     "title": "壁清掃",
     "category": "厨房設備",
     "price": "¥ 10,000",
-    "image": "images/kabe_kabe.png",
+    "image": "images/kabe.png",
     "description": "壁紙(クロス)は、油ハネやタバコのヤニ、傷や剥がれなどで劣化しやすく、放置すると店舗の印象を大きく損ねます。",
     "problems": [
       "シミ・汚れ・黄ばみによる不衛生な印象、カビや害虫が発生",
@@ -887,7 +897,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service33.jpg"
+    "detail-image": "images/ミセサポ2025/壁紙修繕.png"
   },
   {
     "id": 12,
@@ -957,7 +967,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service07.jpg"
+    "detail-image": "images/ミセサポ2025/シンク洗浄.png"
   },
   {
     "id": 13,
@@ -965,6 +975,14 @@
     "category": "空調設備",
     "price": "¥ 5,250〜",
     "image": "images/eakonfiruta.png",
+    "description": "エアコンのフィルターは、空気中のホコリや汚れを捕集する重要な役割を果たします。定期的な清掃を怠ると、エアコンの性能低下や空気の質の悪化につながります。",
+    "problems": [
+      "エアコンの冷房・暖房効率の低下",
+      "空気の質の悪化による健康への影響",
+      "フィルターの目詰まりによる電気代の増加",
+      "カビや細菌の繁殖による悪臭の発生"
+    ],
+    "solution": "専門清掃では、フィルターを専用洗剤で洗浄・除菌し、エアコンの性能と空気の質を回復させます。",
     "forms": [],
     "details": [
       {
@@ -988,7 +1006,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service02.jpg"
+    "detail-image": "images/eakonfiruta.png"
   },
   {
     "id": 14,
@@ -1105,7 +1123,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service02.jpg"
+    "detail-image": "images/ミセサポ2025/エアコン分解洗浄.png"
   },
   {
     "id": 15,
@@ -1172,7 +1190,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service21.jpg"
+    "detail-image": "images/ミセサポ2025/窓清掃.png"
   },
   {
     "id": 16,
@@ -1210,7 +1228,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service15.jpeg"
+    "detail-image": "images/ミセサポ2025/シール剥がし.png"
   },
   {
     "id": 17,
@@ -1218,6 +1236,14 @@
     "category": "フロア",
     "price": "¥ 8,750〜",
     "image": "images/te-burufuki.png",
+    "description": "飲食店のテーブルは、お客様が直接触れる重要な接客スペースです。日々の使用で汚れや指紋が付着しやすく、清潔感を保つためには定期的な清掃が必要です。",
+    "problems": [
+      "汚れや指紋による清潔感の低下",
+      "油汚れやシミによる見た目の悪化",
+      "細菌の繁殖による衛生面のリスク",
+      "お客様への印象悪化による集客力の低下"
+    ],
+    "solution": "専門清掃では、専用洗剤と工具を使用して、テーブル表面の汚れやシミを徹底的に除去し、清潔感と美観を回復させます。",
     "forms": [],
     "details": [
       {
@@ -1241,7 +1267,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service14.jpg"
+    "detail-image": "images/te-burufuki.png"
   },
   {
     "id": 18,
@@ -1316,7 +1342,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service22.jpg"
+    "detail-image": "images/ミセサポ2025/トイレ.png"
   },
   {
     "id": 19,
@@ -1464,7 +1490,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service40.jpg"
+    "detail-image": "images/ミセサポ2025/床洗浄.png"
   },
   {
     "id": 20,
@@ -1516,7 +1542,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service10.jpeg"
+    "detail-image": "images/ミセサポ2025/ワックス.png"
   },
   {
     "id": 21,
@@ -1599,7 +1625,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service39.jpg"
+    "detail-image": "images/ミセサポ2025/可燃ゴミ.png"
   },
   {
     "id": 22,
@@ -1637,7 +1663,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service25.jpeg"
+    "detail-image": "images/ミセサポ2025/整理整頓.png"
   },
   {
     "id": 23,
@@ -1675,7 +1701,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service26.jpeg"
+    "detail-image": "images/ミセサポ2025/配線整理.png"
   },
   {
     "id": 24,
@@ -1683,6 +1709,14 @@
     "category": "フロア",
     "price": "¥ 35,500〜",
     "image": "images/sofa.png",
+    "description": "飲食店のソファや椅子は、お客様が長時間座る接客スペースです。日々の使用で汚れや臭いが蓄積しやすく、清潔感を保つためには定期的な専門クリーニングが必要です。",
+    "problems": [
+      "汚れや臭いによる清潔感の低下",
+      "シミやカビによる見た目の悪化",
+      "細菌やダニの繁殖による衛生面のリスク",
+      "お客様への印象悪化による集客力の低下"
+    ],
+    "solution": "専門クリーニングでは、専用洗剤と工具を使用して、ソファや椅子の汚れや臭いを徹底的に除去し、清潔感と美観を回復させます。",
     "forms": [],
     "details": [
       {
@@ -1706,7 +1740,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service27.jpg"
+    "detail-image": "images/sofa.png"
   },
   {
     "id": 25,
@@ -1789,7 +1823,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service28.jpeg"
+    "detail-image": "images/ミセサポ2025/スタッフルーム.png"
   },
   {
     "id": 26,
@@ -2172,7 +2206,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service29.jpg"
+    "detail-image": "images/ミセサポ2025/玄関マット交換.png"
   },
   {
     "id": 27,
@@ -2217,7 +2251,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service31.jpg"
+    "detail-image": "images/ミセサポ2025/エアコン定期点検.png"
   },
   {
     "id": 28,
@@ -2255,7 +2289,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service32.jpeg"
+    "detail-image": "images/ミセサポ2025/FC店舗.png"
   },
   {
     "id": 29,
@@ -2283,7 +2317,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service16.jpg"
+    "detail-image": "images/ミセサポ2025/5s.png"
   },
   {
     "id": 30,
@@ -2321,7 +2355,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service30.jpeg"
+    "detail-image": "images/kousho.png"
   },
   {
     "id": 31,
@@ -2378,7 +2412,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service09.jpg"
+    "detail-image": "images/ミセサポ2025/ネズミ駆除.png"
   },
   {
     "id": 32,
@@ -2437,7 +2471,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service08.jpg"
+    "detail-image": "images/ミセサポ2025/害虫駆除.png"
   },
   {
     "id": 33,
@@ -2465,7 +2499,7 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service11.jpeg"
+    "detail-image": "images/ミセサポ2025/HACCAP.png"
   },
   {
     "id": 34,
@@ -2558,6 +2592,6 @@
         "key": "note"
       }
     ],
-    "detail-image": "images/service20.jpeg"
+    "detail-image": "images/ミセサポ2025/汚水槽.png"
   }
 ]

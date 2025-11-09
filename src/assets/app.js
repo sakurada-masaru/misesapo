@@ -11,6 +11,29 @@
     const forms = sections || [];
     forms.forEach((sec, idx) => {
       const wrap = document.createElement('div');
+      
+      // セクション画像がある場合は表示
+      const sectionImage = sec['section-image'] || sec['section-image-url'] || '';
+      if (sectionImage.trim()) {
+        const img = document.createElement('img');
+        img.className = 'section-image';
+        img.style.cssText = 'width: 100%; max-width: 400px; height: auto; border-radius: 8px; margin-bottom: 12px; object-fit: cover;';
+        const imgPath = sectionImage.trim();
+        // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
+        if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+          img.src = imgPath;
+        } else if (imgPath.startsWith('/')) {
+          img.src = imgPath;
+        } else {
+          img.src = '/' + imgPath;
+        }
+        img.alt = sec['section-title'] || 'セクション画像';
+        img.onerror = function() {
+          this.style.display = 'none';
+        };
+        wrap.appendChild(img);
+      }
+      
       const h = document.createElement('h3');
       h.className = 'section-title';
       h.textContent = sec['section-title'] || '';
@@ -158,8 +181,9 @@
     if (title) title.textContent = data.title || 'サービス詳細（ダミー）';
 
     // render dynamic form sections if provided
-    // サービス詳細ページで編集した forms を使用
-    if (formBox) renderSections(formBox, data.forms || [], 'form');
+    // サービス詳細ページで編集した sections を使用（後方互換性のため forms もサポート）
+    const sections = data.sections || data.forms || [];
+    if (formBox) renderSections(formBox, sections, 'form');
 
     modal.classList.add('open');
     modal.classList.remove('hidden');
@@ -196,8 +220,11 @@
       };
     }
     if (title) title.textContent = data.title || 'サービス詳細（ダミー）';
-    // サービス詳細ページで編集した details を使用
-    if (box) renderSections(box, data.details || [], 'detail');
+    // サービス詳細ページで編集した sections を使用（後方互換性のため details もサポート）
+    // 注意: sections 配列の2番目以降のセクションを表示（1番目は service-modal で表示済み）
+    const allSections = data.sections || [];
+    const detailsSections = allSections.length > 1 ? allSections.slice(1) : (data.details || []);
+    if (box) renderSections(box, detailsSections, 'detail');
     modal.classList.add('open');
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -380,28 +407,9 @@
       };
     } catch (_) { /* no-op */ }
 
-    // Open on any service card click (dummy OK)
-    // If card has a link, let it navigate; otherwise open modal
-    $all('.card-service').forEach((card) => {
-      const link = card.querySelector('.card-service-link');
-      if (link) {
-        // Card has a link, let it navigate to the service page
-        return;
-      }
-      // No link, open modal (for backward compatibility)
-      card.addEventListener('click', () => {
-        const id = card.getAttribute('data-id');
-        const match = id ? byId.get(String(id)) : null;
-        // Derive fallback data
-        const titleEl = card.querySelector('h3');
-        const imgEl = card.querySelector('img');
-        const fallback = {
-          title: titleEl ? titleEl.textContent.trim() : 'サービス詳細（ダミー）',
-          image: imgEl ? imgEl.getAttribute('src') : '/images/service-300x200.svg',
-        };
-        openModal(match || fallback);
-      });
-    });
+    // Service cards: let links navigate to detail pages (simpler approach)
+    // Modal will be opened from the detail page if needed
+    // No need to intercept card clicks - just let the links work naturally
 
     // Close buttons
     const closeBtn = $('#close-modal-btn', modal);

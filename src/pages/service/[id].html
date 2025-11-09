@@ -12,7 +12,7 @@
 
   <div class="service-detail-card">
     <div class="service-hero-image">
-      <img id="service-hero-img" src="/{{ detail_image }}" alt="{{ title }}" data-fallback="/{{ image }}" />
+      <img id="service-hero-img" src="/{{ image }}" alt="{{ title }}" data-fallback="/{{ image }}" />
     </div>
     <div class="service-detail-card-content">
       <div class="service-detail-header">
@@ -20,9 +20,10 @@
           <h2 class="service-name">{{ title }}</h2>
           <div class="service-meta">
             <span class="service-category">{{ category }}</span>
-            <span class="service-price-large">{{ price }}</span>
+            <span class="service-id">サービスID: {{ id }}</span>
           </div>
         </div>
+        <div class="service-price-large">{{ price }}</div>
       </div>
 
       <div class="service-detail-content">
@@ -43,13 +44,6 @@
         <section class="detail-section">
           <h3 class="section-title">解決策・サービス内容</h3>
           <p class="section-content solution-text">{{ solution }}</p>
-        </section>
-
-        <section class="detail-section">
-          <h3 class="section-title">サービス画像</h3>
-          <div class="service-image">
-            <img id="service-detail-img" src="/{{ image }}" alt="{{ title }}" data-fallback="/{{ detail_image }}" />
-          </div>
         </section>
       </div>
 
@@ -93,27 +87,6 @@
       });
     }
 
-    const detailImg = document.getElementById('service-detail-img');
-    if (detailImg) {
-      const fallback = detailImg.dataset.fallback;
-      const defaultImg = '/images/service-300x200.svg';
-      
-      if (!detailImg.src || detailImg.src.endsWith('/') || detailImg.src.includes('undefined')) {
-        if (fallback && fallback !== '/' && !fallback.includes('undefined')) {
-          detailImg.src = fallback;
-        } else {
-          detailImg.src = defaultImg;
-        }
-      }
-      
-      detailImg.addEventListener('error', function() {
-        if (this.src !== fallback && fallback && fallback !== '/' && !fallback.includes('undefined')) {
-          this.src = fallback;
-        } else if (this.src !== defaultImg) {
-          this.src = defaultImg;
-        }
-      });
-    }
 
     // Order button click handler
     const orderBtn = document.getElementById('order-service-btn');
@@ -135,11 +108,25 @@
           })
           .catch(error => {
             console.error('Failed to load service data:', error);
-            // Fallback: use page data
+            // Fallback: use page data from template variables
             const problemsList = [];
             @foreach $problems
             problemsList.push('{{ value }}');
             @endforeach
+            // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            let sections = @jsonvar $sections;
+            const forms = @jsonvar $forms;
+            const details = @jsonvar $details;
+            // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
+            if (!sections || sections.length === 0) {
+              sections = [];
+              if (forms && forms.length > 0) {
+                sections = sections.concat(forms);
+              }
+              if (details && details.length > 0) {
+                sections = sections.concat(details);
+              }
+            }
             const serviceData = {
               id: {{ id }},
               title: '{{ title }}',
@@ -150,8 +137,9 @@
               description: '{{ description }}',
               problems: problemsList,
               solution: '{{ solution }}',
-              forms: @jsonvar $forms,
-              details: @jsonvar $details
+              sections: sections,  // 新しいsections配列構造を優先
+              forms: forms,
+              details: details
             };
             if (window.ModalManager) {
               window.ModalManager.open('service-modal', serviceData);
@@ -175,6 +163,12 @@
     align-items: center;
     gap: 16px;
     margin-bottom: 24px;
+  }
+  .page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
   }
   .back-link {
     display: inline-flex;
@@ -207,9 +201,12 @@
     padding: 32px;
   }
   .service-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 32px;
     padding-bottom: 24px;
-    border-bottom: 2px solid #f3f4f6;
+    border-bottom: 2px solid #e5e7eb;
   }
   .service-name {
     font-size: 1.75rem;
@@ -219,19 +216,27 @@
   }
   .service-meta {
     display: flex;
+    gap: 12px;
     align-items: center;
-    gap: 16px;
     flex-wrap: wrap;
   }
   .service-category {
-    padding: 4px 12px;
-    background: #f3f4f6;
-    color: #6b7280;
+    display: inline-block;
+    padding: 6px 12px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
     border-radius: 6px;
     font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+  .service-id {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
   .service-price-large {
-    font-size: 1.5rem;
+    font-size: 2rem;
     font-weight: 700;
     color: var(--primary);
   }
@@ -278,20 +283,12 @@
     margin-right: 8px;
   }
   .solution-text {
-    background: #f9fafb;
     padding: 16px;
+    background: #d1fae5;
     border-radius: 8px;
-    border-left: 4px solid var(--primary);
-  }
-  .service-image {
-    margin-top: 16px;
-  }
-  .service-image img {
-    width: 100%;
-    max-width: 600px;
-    height: auto;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    border-left: 4px solid #059669;
+    color: #065f46;
+    font-weight: 500;
   }
   .service-actions {
     padding-top: 24px;
@@ -308,10 +305,17 @@
       padding: 16px;
     }
     .service-detail-card-content {
-      padding: 24px;
+      padding: 20px;
     }
     .service-hero-image {
-      height: 200px;
+      height: 250px;
+    }
+    .service-detail-header {
+      flex-direction: column;
+      gap: 16px;
+    }
+    .service-price-large {
+      font-size: 1.5rem;
     }
     .service-name {
       font-size: 1.5rem;

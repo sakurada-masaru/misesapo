@@ -667,20 +667,33 @@ def _build_service_pages(template: Path, outputs: List[str]) -> None:
 
         # Prepare context with all service fields
         problems = service.get("problems") or []
-        detail_image = service.get("detail-image") or service.get("detail_image") or ""
+        # service_items.jsonのimageフィールドをメイン画像として使用（すべての画面で統一）
+        image = service.get("image") or ""
+        # detail_imageが空の場合はimageを使用
+        detail_image = service.get("detail-image") or service.get("detail_image") or image
+        # 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+        sections = service.get("sections") or []
         forms = service.get("forms") or []
         details = service.get("details") or []
+        # sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
+        if not sections and (forms or details):
+            sections = []
+            if forms:
+                sections.extend(forms)
+            if details:
+                sections.extend(details)
         
         ctx = {
             "id": str(sid),
             "title": service.get("title", ""),
             "category": service.get("category", ""),
             "price": service.get("price", ""),
-            "image": service.get("image", ""),
+            "image": image,
             "detail_image": detail_image,
             "description": service.get("description", ""),
             "problems": [{"value": p} for p in problems],  # list for foreach blocks
             "solution": service.get("solution", ""),
+            "sections": sections,  # 新しいsections配列構造
             "forms": forms,
             "details": details,
         }
@@ -715,16 +728,32 @@ def _build_service_detail_pages(template: Path, outputs: List[str]) -> None:
         # Prepare context with all service fields
         problems = service.get("problems") or []
         detail_image = service.get("detail-image") or service.get("detail_image") or ""
+        image = service.get("image") or ""
+        # 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+        sections = service.get("sections") or []
+        forms = service.get("forms") or []
+        details = service.get("details") or []
+        # sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
+        if not sections and (forms or details):
+            sections = []
+            if forms:
+                sections.extend(forms)
+            if details:
+                sections.extend(details)
         
         ctx = {
             "id": str(sid),
             "title": service.get("title", ""),
             "category": service.get("category", ""),
             "price": service.get("price", ""),
+            "image": image,
+            "detail_image": detail_image,
             "description": service.get("description", ""),
             "problems": problems,  # list for foreach blocks
+            "sections": sections,  # 新しいsections配列構造
             "solution": service.get("solution", ""),
-            "detail_image": detail_image,
+            "forms": forms,
+            "details": details,
         }
 
         out_path = PUBLIC / "admin" / "services" / f"{sid}.html"

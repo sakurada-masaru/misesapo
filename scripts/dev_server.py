@@ -430,10 +430,8 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 return
             
             # 変更をステージング
-            # public/ は .gitignore で無視されているため、src/data/service_items.json のみをステージング
-            # public/ 内のファイルはビルド出力なので、通常はコミットしない
             add_result = subprocess.run(
-                ['git', 'add', 'src/data/service_items.json'],
+                ['git', 'add', 'src/data/service_items.json', 'public/'],
                 cwd=str(ROOT),
                 capture_output=True,
                 text=True,
@@ -444,7 +442,7 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({
                     'status': 'error',
                     'message': 'ファイルのステージングに失敗しました',
-                    'error': add_result.stderr or add_result.stdout
+                    'error': add_result.stderr
                 })
                 return
             

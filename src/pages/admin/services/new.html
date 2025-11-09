@@ -39,7 +39,7 @@
           <p class="form-hint">価格表示形式で入力してください</p>
         </div>
         <div class="form-group full-width">
-          <label class="form-label">サービス画像URL <span class="required">必須</span></label>
+          <label class="form-label">サービスメイン画像 <span class="required">必須</span></label>
           <div class="image-input-group">
             <input type="text" class="form-input" name="image_url" id="image_url" placeholder="例: images/gurisuto.png" required />
             <button type="button" class="btn btn-outline btn-select-image" data-target="image_url" data-preview="image_preview">
@@ -49,7 +49,7 @@
           <div class="image-preview" id="image_preview" style="display: none;">
             <img src="" alt="プレビュー" />
           </div>
-          <p class="form-hint">画像のパスを入力するか、「画像を選択」ボタンから選択してください</p>
+          <p class="form-hint">この画像はサービスカードの上部（TOPイメージ）に表示されます。画像のパスを入力するか、「画像を選択」ボタンから選択してください</p>
         </div>
       </div>
     </div>
@@ -75,19 +75,6 @@
           <label class="form-label">解決策・サービス内容</label>
           <textarea class="form-textarea" name="solution" rows="4" placeholder="解決策やサービス内容を入力してください"></textarea>
           <p class="form-hint">この内容は詳細ページで強調表示されます</p>
-        </div>
-        <div class="form-group full-width">
-          <label class="form-label">詳細画像URL</label>
-          <div class="image-input-group">
-            <input type="text" class="form-input" name="detail_image" id="detail_image" placeholder="例: images/ミセサポ2025/グレーチング洗浄.png" />
-            <button type="button" class="btn btn-outline btn-select-image" data-target="detail_image" data-preview="detail_image_preview">
-              <i class="fas fa-images"></i> 画像を選択
-            </button>
-          </div>
-          <div class="image-preview" id="detail_image_preview" style="display: none;">
-            <img src="" alt="プレビュー" />
-          </div>
-          <p class="form-hint">詳細ページで表示する画像のパスを入力するか、「画像を選択」ボタンから選択してください</p>
         </div>
       </div>
     </div>
@@ -413,7 +400,6 @@
               description: formData.get('description') || '',
               problems: problems.length > 0 ? problems : undefined,
               solution: formData.get('solution') || undefined,
-              "detail-image": formData.get('detail_image') || undefined,
               forms: [],
               details: []
             };
