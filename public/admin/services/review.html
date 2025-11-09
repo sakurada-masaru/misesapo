@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <title></title>
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+  </head>
+  <body class="theme-pink page-admin-services">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+<header class="site-header">
+  <div class="inner wide">
+    <div class="nav-left">
+      <a class="brand brand-logo" href="/index.html" aria-label="ミセサポ ホーム">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+      </a>
+      <nav class="nav-left hide-sm" aria-label="Primary">
+        <a class="nav-link" href="/index.html">発注</a>
+        <a class="nav-link" href="/report.html">レポート</a>
+        <a class="nav-link" href="/mypage.html">マイページ</a>
+        <a class="nav-link" href="/concierge.html">コンシェルジュ</a>
+      </nav>
+    </div>
+    <div class="spacer"></div>
+    <!-- 開発用ナビゲーション（完成状況チェック用） -->
+    <nav class="nav-dev hide-sm" aria-label="開発用ナビゲーション">
+      <a class="nav-link dev-link" href="/admin/dashboard.html" title="管理者向けページ">
+        <i class="fas fa-user-shield"></i>
+        管理者
+      </a>
+      <a class="nav-link dev-link" href="/mypage.html" title="ユーザー向けページ">
+        <i class="fas fa-user"></i>
+        ユーザー
+      </a>
+      <a class="nav-link dev-link" href="/concierge.html" title="コンシェルジュ向けページ">
+        <i class="fas fa-concierge-bell"></i>
+        コンシェルジュ
+      </a>
+      <a class="nav-link dev-link" href="/admin/sitemap.html" title="サイトマップ">
+        <i class="fas fa-sitemap"></i>
+        サイトマップ
+      </a>
+    </nav>
+    <nav class="nav-right hide-sm" aria-label="User">
+      <a class="nav-link" href="/signin.html">ログイン</a>
+      <a class="nav-link primary" href="/signup.html">新規登録</a>
+      <button class="icon-btn" aria-label="通知">
+        <i class="fas fa-bell"></i>
+      </button>
+    </nav>
+    <button class="icon-btn nav-toggle show-sm" aria-label="メニュー" aria-expanded="false" aria-controls="offcanvas">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+</header>
+
+    <!-- リリース前チェックボックス -->
+    <div id="release-check-section" class="release-check-section">
+      <div class="release-check-container">
+        <div class="release-check-label">リリース前チェック</div>
+        <div class="release-check-boxes">
+          <label class="release-check-item">
+            <input type="checkbox" id="check-admin" class="release-checkbox" data-check-type="admin" />
+            <span>管理者</span>
+          </label>
+          <label class="release-check-item">
+            <input type="checkbox" id="check-developer" class="release-checkbox" data-check-type="developer" />
+            <span>開発者</span>
+          </label>
+          <label class="release-check-item">
+            <input type="checkbox" id="check-other" class="release-checkbox" data-check-type="other" />
+            <span>その他</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <main>
+      
+
+
+
+<main id="main" class="container admin-services-review">
+  <div class="page-header">
+    <h1 class="page-title">
+      <i class="fas fa-code-branch"></i>
+      変更内容レビュー（開発者専用）
+    </h1>
+    <div class="header-actions">
+      <button type="button" class="btn btn-outline btn-sm" id="btn-refresh">
+        <i class="fas fa-sync-alt"></i> 更新
+      </button>
+      <a href="/admin/services.html" class="btn btn-outline btn-sm">
+        <i class="fas fa-arrow-left"></i> サービス管理に戻る
+      </a>
+    </div>
+  </div>
+
+  <!-- 認証フォーム（初回アクセス時のみ表示） -->
+  <div class="auth-form" id="auth-form" style="display: none;">
+    <div class="auth-card">
+      <h2>開発者認証</h2>
+      <p class="auth-description">このページは開発者専用です。パスワードを入力してください。</p>
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label">パスワード</label>
+          <input type="password" class="form-input" id="password-input" placeholder="パスワードを入力" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fas fa-lock"></i> 認証
+        </button>
+      </form>
+      <p class="auth-error" id="auth-error" style="display: none;"></p>
+    </div>
+  </div>
+
+  <!-- メインコンテンツ（認証後表示） -->
+  <div class="review-content" id="review-content" style="display: none;">
+    <!-- 変更状況サマリー -->
+    <div class="status-summary" id="status-summary">
+      <div class="status-card">
+        <i class="fas fa-info-circle"></i>
+        <div class="status-text">
+          <strong>変更状況を確認中...</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- 変更内容一覧 -->
+    <div class="changes-section" id="changes-section" style="display: none;">
+      <h2 class="section-title">
+        <i class="fas fa-list"></i>
+        変更内容
+      </h2>
+      <div class="changes-list" id="changes-list"></div>
+    </div>
+
+    <!-- 操作パネル -->
+    <div class="action-panel" id="action-panel" style="display: none;">
+      <h2 class="section-title">
+        <i class="fas fa-tools"></i>
+        操作
+      </h2>
+      <div class="action-buttons">
+        <button type="button" class="btn btn-outline" id="btn-pull-from-github">
+          <i class="fas fa-download"></i> GitHubから最新データを取得
+        </button>
+        <button type="button" class="btn btn-outline btn-danger" id="btn-discard-changes">
+          <i class="fas fa-undo"></i> ローカルの変更を破棄
+        </button>
+        <button type="button" class="btn btn-primary" id="btn-commit-and-push">
+          <i class="fas fa-cloud-upload-alt"></i> Gitにコミット・プッシュ
+        </button>
+      </div>
+    </div>
+
+    <!-- Git状態表示 -->
+    <div class="git-status" id="git-status" style="display: none;">
+      <h2 class="section-title">
+        <i class="fas fa-code-branch"></i>
+        Git状態
+      </h2>
+      <div class="git-info" id="git-info"></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // 認証管理
+      const AUTH_KEY = 'dev_review_authenticated';
+      const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8時間
+      // パスワード（本番環境では環境変数や設定ファイルから取得することを推奨）
+      const DEV_PASSWORD = 'misesapo1234'; // 開発用パスワード
+      
+      const authForm = document.getElementById('auth-form');
+      const reviewContent = document.getElementById('review-content');
+      const loginForm = document.getElementById('login-form');
+      const passwordInput = document.getElementById('password-input');
+      const authError = document.getElementById('auth-error');
+      
+      function checkAuthentication() {
+        const authData = sessionStorage.getItem(AUTH_KEY);
+        if (!authData) return false;
+        
+        try {
+          const { timestamp } = JSON.parse(authData);
+          const now = Date.now();
+          if (now - timestamp > SESSION_DURATION) {
+            sessionStorage.removeItem(AUTH_KEY);
+            return false;
+          }
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+      
+      function setAuthentication() {
+        sessionStorage.setItem(AUTH_KEY, JSON.stringify({
+          timestamp: Date.now()
+        }));
+      }
+      
+      function showAuthForm() {
+        authForm.style.display = 'block';
+        reviewContent.style.display = 'none';
+      }
+      
+      function showReviewContent() {
+        authForm.style.display = 'none';
+        reviewContent.style.display = 'block';
+        loadChanges();
+      }
+      
+      // 認証チェック
+      if (checkAuthentication()) {
+        showReviewContent();
+      } else {
+        showAuthForm();
+      }
+      
+      // ログインフォーム
+      if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const password = passwordInput.value;
+          
+          if (password === DEV_PASSWORD) {
+            setAuthentication();
+            authError.style.display = 'none';
+            showReviewContent();
+          } else {
+            authError.textContent = 'パスワードが正しくありません';
+            authError.style.display = 'block';
+            passwordInput.value = '';
+          }
+        });
+      }
+      
+      // 変更内容の読み込み
+      async function loadChanges() {
+        const statusSummary = document.getElementById('status-summary');
+        const changesSection = document.getElementById('changes-section');
+        const actionPanel = document.getElementById('action-panel');
+        const changesList = document.getElementById('changes-list');
+        
+        try {
+          // 未反映の変更を取得
+          const response = await fetch('/api/pending-changes');
+          const data = await response.ok ? await response.json() : { hasChanges: false, changes: [] };
+          
+          if (data.hasChanges && data.changes && data.changes.length > 0) {
+            statusSummary.innerHTML = `
+              <div class="status-card status-warning">
+                <i class="fas fa-exclamation-circle"></i>
+                <div class="status-text">
+                  <strong>${data.changes.length}件の未反映の変更があります</strong>
+                  <p>変更内容を確認してから、コミット・プッシュしてください。</p>
+                </div>
+              </div>
+            `;
+            
+            changesSection.style.display = 'block';
+            actionPanel.style.display = 'block';
+            
+            // 変更内容を表示
+            changesList.innerHTML = data.changes.map(change => {
+              const serviceName = change.serviceName || `サービスID ${change.serviceId}`;
+              const changeType = change.type === 'created' ? '新規作成' : '編集';
+              const icon = change.type === 'created' ? 'plus-circle' : 'edit';
+              const link = `/admin/services/${change.serviceId}.html`;
+              return `
+                <div class="change-item">
+                  <i class="fas fa-${icon}"></i>
+                  <div class="change-details">
+                    <a href="${link}" target="_blank" class="change-link">
+                      <strong>${serviceName}</strong>
+                    </a>
+                    <span class="change-type">${changeType}</span>
+                    <span class="change-time">${change.timestamp}</span>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          } else {
+            statusSummary.innerHTML = `
+              <div class="status-card status-success">
+                <i class="fas fa-check-circle"></i>
+                <div class="status-text">
+                  <strong>未反映の変更はありません</strong>
+                  <p>すべての変更がGitHubに反映されています。</p>
+                </div>
+              </div>
+            `;
+            changesSection.style.display = 'none';
+            actionPanel.style.display = 'block';
+          }
+          
+          // Git状態を取得
+          loadGitStatus();
+        } catch (err) {
+          statusSummary.innerHTML = `
+            <div class="status-card status-error">
+              <i class="fas fa-exclamation-triangle"></i>
+              <div class="status-text">
+                <strong>エラーが発生しました</strong>
+                <p>${err.message}</p>
+              </div>
+            </div>
+          `;
+        }
+      }
+      
+      // Git状態の読み込み
+      async function loadGitStatus() {
+        const gitStatus = document.getElementById('git-status');
+        const gitInfo = document.getElementById('git-info');
+        
+        try {
+          // Git状態を取得（簡易版）
+          gitStatus.style.display = 'block';
+          gitInfo.innerHTML = '<p>Git状態を確認中...</p>';
+          
+          // 実際のGit状態取得はサーバー側で実装が必要
+          gitInfo.innerHTML = `
+            <div class="git-status-item">
+              <i class="fas fa-code-branch"></i>
+              <span>ブランチ: main</span>
+            </div>
+            <div class="git-status-item">
+              <i class="fas fa-info-circle"></i>
+              <span>詳細なGit状態はサーバー側で確認してください</span>
+            </div>
+          `;
+        } catch (err) {
+          gitInfo.innerHTML = `<p class="error">Git状態の取得に失敗しました: ${err.message}</p>`;
+        }
+      }
+      
+      // 更新ボタン
+      const btnRefresh = document.getElementById('btn-refresh');
+      if (btnRefresh) {
+        btnRefresh.addEventListener('click', function() {
+          loadChanges();
+        });
+      }
+      
+      // GitHubから最新データを取得
+      const btnPull = document.getElementById('btn-pull-from-github');
+      if (btnPull) {
+        btnPull.addEventListener('click', async function() {
+          if (!confirm('GitHubから最新データを取得しますか？\nローカルの変更が上書きされる可能性があります。')) {
+            return;
+          }
+          
+          btnPull.disabled = true;
+          btnPull.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 取得中...';
+          
+          try {
+            const response = await fetch('/api/pull', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+              alert('GitHubから最新データを取得しました。\nページを再読み込みします。');
+              window.location.reload();
+            } else {
+              alert(`エラー: ${data.message}`);
+              btnPull.disabled = false;
+              btnPull.innerHTML = '<i class="fas fa-download"></i> GitHubから最新データを取得';
+            }
+          } catch (err) {
+            alert(`エラーが発生しました: ${err.message}`);
+            btnPull.disabled = false;
+            btnPull.innerHTML = '<i class="fas fa-download"></i> GitHubから最新データを取得';
+          }
+        });
+      }
+      
+      // ローカルの変更を破棄
+      const btnDiscard = document.getElementById('btn-discard-changes');
+      if (btnDiscard) {
+        btnDiscard.addEventListener('click', async function() {
+          if (!confirm('ローカルの変更を破棄しますか？\nこの操作は取り消せません。')) {
+            return;
+          }
+          
+          if (!confirm('本当に変更を破棄しますか？')) {
+            return;
+          }
+          
+          btnDiscard.disabled = true;
+          btnDiscard.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 破棄中...';
+          
+          try {
+            const response = await fetch('/api/discard-changes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+              alert('ローカルの変更を破棄しました。\nページを再読み込みします。');
+              window.location.reload();
+            } else {
+              alert(`エラー: ${data.message}`);
+              btnDiscard.disabled = false;
+              btnDiscard.innerHTML = '<i class="fas fa-undo"></i> ローカルの変更を破棄';
+            }
+          } catch (err) {
+            alert(`エラーが発生しました: ${err.message}`);
+            btnDiscard.disabled = false;
+            btnDiscard.innerHTML = '<i class="fas fa-undo"></i> ローカルの変更を破棄';
+          }
+        });
+      }
+      
+      // Gitにコミット・プッシュ
+      const btnCommitPush = document.getElementById('btn-commit-and-push');
+      if (btnCommitPush) {
+        btnCommitPush.addEventListener('click', async function() {
+          if (!confirm('変更をGitHubにコミット・プッシュしますか？\n数分後にGitHub Pagesに反映されます。')) {
+            return;
+          }
+          
+          btnCommitPush.disabled = true;
+          btnCommitPush.innerHTML = '<i class="fas fa-spinner fa-spin"></i> プッシュ中...';
+          
+          try {
+            const response = await fetch('/api/commit-and-push', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+              alert('GitHubにプッシュしました。\n数分後にGitHub Pagesに反映されます。\nページを再読み込みします。');
+              window.location.reload();
+            } else if (data.status === 'info') {
+              alert(data.message);
+              btnCommitPush.disabled = false;
+              btnCommitPush.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Gitにコミット・プッシュ';
+            } else {
+              alert(`エラー: ${data.message}`);
+              btnCommitPush.disabled = false;
+              btnCommitPush.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Gitにコミット・プッシュ';
+            }
+          } catch (err) {
+            alert(`エラーが発生しました: ${err.message}`);
+            btnCommitPush.disabled = false;
+            btnCommitPush.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Gitにコミット・プッシュ';
+          }
+        });
+      }
+    })();
+  </script>
+
+  <style>
+    .admin-services-review {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    /* 認証フォーム */
+    .auth-form {
+      max-width: 400px;
+      margin: 80px auto;
+    }
+    
+    .auth-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .auth-card h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 8px 0;
+    }
+    
+    .auth-description {
+      color: #6b7280;
+      margin: 0 0 24px 0;
+      font-size: 0.875rem;
+    }
+    
+    .auth-error {
+      color: #dc2626;
+      font-size: 0.875rem;
+      margin-top: 16px;
+      padding: 12px;
+      background: #fee2e2;
+      border-radius: 4px;
+    }
+    
+    /* ステータスサマリー */
+    .status-summary {
+      margin-bottom: 32px;
+    }
+    
+    .status-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+    
+    .status-card i {
+      font-size: 1.5rem;
+      margin-top: 2px;
+    }
+    
+    .status-card.status-warning {
+      background: #fef3c7;
+      border-color: #fbbf24;
+    }
+    
+    .status-card.status-warning i {
+      color: #f59e0b;
+    }
+    
+    .status-card.status-success {
+      background: #d1fae5;
+      border-color: #10b981;
+    }
+    
+    .status-card.status-success i {
+      color: #10b981;
+    }
+    
+    .status-card.status-error {
+      background: #fee2e2;
+      border-color: #f87171;
+    }
+    
+    .status-card.status-error i {
+      color: #dc2626;
+    }
+    
+    .status-text {
+      flex: 1;
+    }
+    
+    .status-text strong {
+      display: block;
+      font-size: 1.125rem;
+      margin-bottom: 4px;
+      color: #111827;
+    }
+    
+    .status-text p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    
+    /* セクション */
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .changes-section,
+    .action-panel,
+    .git-status {
+      margin-bottom: 32px;
+    }
+    
+    /* 変更内容リスト */
+    .changes-list {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .change-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .change-item:last-child {
+      border-bottom: none;
+    }
+    
+    .change-item i {
+      font-size: 1.25rem;
+      color: #6b7280;
+    }
+    
+    .change-details {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .change-link {
+      color: #111827;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    .change-link:hover {
+      color: #3b82f6;
+      text-decoration: underline;
+    }
+    
+    .change-type {
+      padding: 4px 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    
+    .change-time {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    
+    /* 操作ボタン */
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    /* Git状態 */
+    .git-info {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    
+    .git-status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      color: #6b7280;
+    }
+    
+    .git-status-item i {
+      color: #3b82f6;
+    }
+    
+    /* ボタン */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      color: #374151;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    
+    .btn:hover:not(:disabled) {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn-primary {
+      background: #3b82f6;
+      color: #fff;
+      border-color: #3b82f6;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+    
+    .btn-outline {
+      background: #fff;
+      color: #374151;
+      border-color: #d1d5db;
+    }
+    
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fca5a5;
+    }
+    
+    .btn-danger:hover:not(:disabled) {
+      background: #fecaca;
+      color: #7f1d1d;
+    }
+    
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8125rem;
+    }
+    
+    .btn-block {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    /* フォーム */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+  </style>
+</main>
+
+
+    </main>
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- Off-canvas (left) -->
+    <div id="offcanvas-overlay" class="offcanvas-overlay" aria-hidden="true"></div>
+    <aside id="offcanvas" class="offcanvas" aria-hidden="true" aria-label="メニュー">
+      <h2 class="offcanvas-title">サイトマップ</h2>
+      <nav class="offcanvas-nav" aria-label="サイトマップ">
+        <!-- 1. パブリックサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">1. パブリックサイト</h3>
+          <ul class="offcanvas-sitemap-list">
+            <li><a href="/index.html" class="offcanvas-sitemap-link">トップページ（発注）</a></li>
+            <li><a href="/signin.html" class="offcanvas-sitemap-link">ログイン</a></li>
+            <li><a href="/signup.html" class="offcanvas-sitemap-link">新規登録</a></li>
+            <li><a href="/reset-password.html" class="offcanvas-sitemap-link">パスワードリセット</a></li>
+          </ul>
+        </div>
+        
+        <!-- 2. ユーザー（顧客）向けサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">2. 顧客向けサイト</h3>
+          <ul class="offcanvas-sitemap-list">
+            <li><a href="/mypage.html" class="offcanvas-sitemap-link">マイページ</a></li>
+            <li><a href="/mypage/info.html" class="offcanvas-sitemap-link">アカウント情報</a></li>
+            <li><a href="/mypage/company/edit.html" class="offcanvas-sitemap-link">会社基本情報編集</a></li>
+            <li><a href="/mypage/store/edit.html" class="offcanvas-sitemap-link">店舗情報編集</a></li>
+            <li><a href="/cart.html" class="offcanvas-sitemap-link">カート</a></li>
+            <li><a href="/report.html" class="offcanvas-sitemap-link">レポート一覧</a></li>
+          </ul>
+        </div>
+        
+        <!-- 3. 清掃員向けサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">3. 清掃員向けサイト</h3>
+          <ul class="offcanvas-sitemap-list">
+            <li><a href="/staff/dashboard.html" class="offcanvas-sitemap-link">ダッシュボード</a></li>
+            <li><a href="/staff/assignments.html" class="offcanvas-sitemap-link">作業割り当て</a></li>
+            <li><a href="/staff/training.html" class="offcanvas-sitemap-link">研修動画アーカイブ</a></li>
+          </ul>
+        </div>
+        
+        <!-- 4. 営業マン向けサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">4. 営業マン向けサイト</h3>
+          <ul class="offcanvas-sitemap-list">
+            <li><a href="/concierge.html" class="offcanvas-sitemap-link">コンシェルジュ</a></li>
+            <li><a href="/sales/dashboard.html" class="offcanvas-sitemap-link">ダッシュボード</a></li>
+            <li><a href="/sales/clients.html" class="offcanvas-sitemap-link">顧客一覧</a></li>
+            <li><a href="/sales/estimates.html" class="offcanvas-sitemap-link">見積もり一覧</a></li>
+            <li><a href="/sales/estimates/new.html" class="offcanvas-sitemap-link">見積もり作成</a></li>
+            <li><a href="/sales/schedule.html" class="offcanvas-sitemap-link">スケジュール管理</a></li>
+          </ul>
+        </div>
+        
+        <!-- 5. 管理者向けサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">5. 管理者向けサイト</h3>
+          <ul class="offcanvas-sitemap-list">
+            <li><a href="/admin/dashboard.html" class="offcanvas-sitemap-link">管理ダッシュボード</a></li>
+            <li><a href="/admin/sitemap.html" class="offcanvas-sitemap-link">サイトマップ（管理）</a></li>
+            <li><a href="/admin/services.html" class="offcanvas-sitemap-link">サービス管理</a></li>
+            <li><a href="/admin/users/customers.html" class="offcanvas-sitemap-link">顧客管理</a></li>
+            <li><a href="/admin/users/staff.html" class="offcanvas-sitemap-link">清掃員管理</a></li>
+            <li><a href="/admin/users/sales.html" class="offcanvas-sitemap-link">営業管理</a></li>
+          </ul>
+        </div>
+      </nav>
+    </aside>
+    <!-- Edge swipe hint (mobile only) -->
+    <div class="edge-swipe-hint" aria-hidden="true">
+      <i class="fas fa-chevron-right"></i>
+    </div>
+    <!-- フィードバックボタン（ドラッグ可能） -->
+<div id="feedback-button" class="feedback-button" draggable="true">
+  <i class="fas fa-arrow-down"></i>
+</div>
+
+<!-- フィードバックフォーム（ドラッグ可能・独立） -->
+<div id="feedback-form" class="feedback-form" style="display: none;" draggable="true">
+  <div class="feedback-form-header">
+    <span class="feedback-form-title">フィードバック</span>
+    <button class="feedback-form-close" id="feedback-close-btn">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div class="feedback-form-body">
+    <textarea 
+      id="feedback-text" 
+      class="feedback-text-input" 
+      placeholder="修正箇所やコメントを入力してください..."
+      rows="4"
+    ></textarea>
+    <div class="feedback-form-actions">
+      <button class="feedback-screenshot-btn" id="feedback-screenshot-btn">
+        <i class="fas fa-camera"></i>
+        スクリーンショット
+      </button>
+      <button class="feedback-send-btn" id="feedback-send-btn" disabled>
+        <i class="fas fa-paper-plane"></i>
+        送信
+      </button>
+    </div>
+    <div id="feedback-screenshot-preview" class="feedback-screenshot-preview" style="display: none;">
+      <img id="feedback-screenshot-img" alt="スクリーンショット" />
+      <button class="feedback-screenshot-remove" id="feedback-screenshot-remove">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .feedback-button {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: #dc2626;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: move;
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .feedback-button:hover {
+    background: #b91c1c;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .feedback-button:active {
+    transform: scale(0.95);
+  }
+
+  .feedback-button i {
+    font-size: 24px;
+  }
+
+  .feedback-button.dragging {
+    opacity: 0.7;
+    cursor: grabbing;
+  }
+
+  .feedback-form {
+    position: fixed;
+    top: 160px;
+    right: 20px;
+    width: 350px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 10001;
+    overflow: hidden;
+    cursor: move;
+  }
+
+  .feedback-form.dragging {
+    opacity: 0.8;
+    cursor: grabbing;
+  }
+
+  .feedback-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #dc2626;
+    color: #ffffff;
+    cursor: move;
+    user-select: none;
+  }
+
+  .feedback-form-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .feedback-form-close {
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+
+  .feedback-form-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .feedback-form-body {
+    padding: 16px;
+  }
+
+  .feedback-text-input {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+
+  .feedback-text-input:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  }
+
+  .feedback-form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .feedback-screenshot-btn,
+  .feedback-send-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+
+  .feedback-screenshot-btn {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  .feedback-screenshot-btn:hover {
+    background: #e5e7eb;
+  }
+
+  .feedback-send-btn {
+    background: #dc2626;
+    color: #ffffff;
+  }
+
+  .feedback-send-btn:hover:not(:disabled) {
+    background: #b91c1c;
+  }
+
+  .feedback-send-btn:disabled {
+    background: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+
+  .feedback-screenshot-preview {
+    margin-top: 12px;
+    position: relative;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .feedback-screenshot-preview img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .feedback-screenshot-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+
+  .feedback-screenshot-remove:hover {
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  @media (max-width: 768px) {
+    .feedback-form {
+      width: calc(100vw - 40px);
+      max-width: 350px;
+    }
+  }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  (function() {
+    let screenshotData = null;
+    let isDraggingButton = false;
+    let isDraggingForm = false;
+    let buttonDragOffset = { x: 0, y: 0 };
+    let formDragOffset = { x: 0, y: 0 };
+
+    function init() {
+      const feedbackButton = document.getElementById('feedback-button');
+      const feedbackForm = document.getElementById('feedback-form');
+      const feedbackFormHeader = feedbackForm ? feedbackForm.querySelector('.feedback-form-header') : null;
+      const feedbackText = document.getElementById('feedback-text');
+      const feedbackCloseBtn = document.getElementById('feedback-close-btn');
+      const feedbackScreenshotBtn = document.getElementById('feedback-screenshot-btn');
+      const feedbackSendBtn = document.getElementById('feedback-send-btn');
+      const feedbackScreenshotPreview = document.getElementById('feedback-screenshot-preview');
+      const feedbackScreenshotImg = document.getElementById('feedback-screenshot-img');
+      const feedbackScreenshotRemove = document.getElementById('feedback-screenshot-remove');
+
+      if (!feedbackButton || !feedbackForm) return;
+
+      // 矢印ボタンのドラッグ機能
+      feedbackButton.addEventListener('mousedown', function(e) {
+        if (e.target === feedbackButton || e.target.closest('.feedback-button')) {
+          isDraggingButton = true;
+          feedbackButton.classList.add('dragging');
+          const rect = feedbackButton.getBoundingClientRect();
+          buttonDragOffset.x = e.clientX - rect.left;
+          buttonDragOffset.y = e.clientY - rect.top;
+          e.preventDefault();
+        }
+      });
+
+      // フォームのドラッグ機能（ヘッダー部分をドラッグ）
+      if (feedbackFormHeader) {
+        feedbackFormHeader.addEventListener('mousedown', function(e) {
+          if (e.target !== feedbackCloseBtn && !e.target.closest('.feedback-form-close')) {
+            isDraggingForm = true;
+            feedbackForm.classList.add('dragging');
+            const rect = feedbackForm.getBoundingClientRect();
+            formDragOffset.x = e.clientX - rect.left;
+            formDragOffset.y = e.clientY - rect.top;
+            e.preventDefault();
+          }
+        });
+      }
+
+      document.addEventListener('mousemove', function(e) {
+        // 矢印ボタンのドラッグ
+        if (isDraggingButton && feedbackButton) {
+          const x = e.clientX - buttonDragOffset.x;
+          const y = e.clientY - buttonDragOffset.y;
+          feedbackButton.style.left = x + 'px';
+          feedbackButton.style.top = y + 'px';
+          feedbackButton.style.right = 'auto';
+          feedbackButton.style.bottom = 'auto';
+        }
+        
+        // フォームのドラッグ
+        if (isDraggingForm && feedbackForm) {
+          const x = e.clientX - formDragOffset.x;
+          const y = e.clientY - formDragOffset.y;
+          feedbackForm.style.left = x + 'px';
+          feedbackForm.style.top = y + 'px';
+          feedbackForm.style.right = 'auto';
+        }
+      });
+
+      document.addEventListener('mouseup', function() {
+        if (isDraggingButton) {
+          isDraggingButton = false;
+          if (feedbackButton) {
+            feedbackButton.classList.remove('dragging');
+          }
+        }
+        if (isDraggingForm) {
+          isDraggingForm = false;
+          if (feedbackForm) {
+            feedbackForm.classList.remove('dragging');
+          }
+        }
+      });
+
+      // タッチデバイス対応 - 矢印ボタン
+      feedbackButton.addEventListener('touchstart', function(e) {
+        if (e.target === feedbackButton || e.target.closest('.feedback-button')) {
+          isDraggingButton = true;
+          feedbackButton.classList.add('dragging');
+          const touch = e.touches[0];
+          const rect = feedbackButton.getBoundingClientRect();
+          buttonDragOffset.x = touch.clientX - rect.left;
+          buttonDragOffset.y = touch.clientY - rect.top;
+          e.preventDefault();
+        }
+      });
+
+      // タッチデバイス対応 - フォーム
+      if (feedbackFormHeader) {
+        feedbackFormHeader.addEventListener('touchstart', function(e) {
+          if (e.target !== feedbackCloseBtn && !e.target.closest('.feedback-form-close')) {
+            isDraggingForm = true;
+            feedbackForm.classList.add('dragging');
+            const touch = e.touches[0];
+            const rect = feedbackForm.getBoundingClientRect();
+            formDragOffset.x = touch.clientX - rect.left;
+            formDragOffset.y = touch.clientY - rect.top;
+            e.preventDefault();
+          }
+        });
+      }
+
+      document.addEventListener('touchmove', function(e) {
+        const touch = e.touches[0];
+        
+        // 矢印ボタンのドラッグ
+        if (isDraggingButton && feedbackButton) {
+          const x = touch.clientX - buttonDragOffset.x;
+          const y = touch.clientY - buttonDragOffset.y;
+          feedbackButton.style.left = x + 'px';
+          feedbackButton.style.top = y + 'px';
+          feedbackButton.style.right = 'auto';
+          feedbackButton.style.bottom = 'auto';
+          e.preventDefault();
+        }
+        
+        // フォームのドラッグ
+        if (isDraggingForm && feedbackForm) {
+          const x = touch.clientX - formDragOffset.x;
+          const y = touch.clientY - formDragOffset.y;
+          feedbackForm.style.left = x + 'px';
+          feedbackForm.style.top = y + 'px';
+          feedbackForm.style.right = 'auto';
+          e.preventDefault();
+        }
+      });
+
+      document.addEventListener('touchend', function() {
+        if (isDraggingButton) {
+          isDraggingButton = false;
+          if (feedbackButton) {
+            feedbackButton.classList.remove('dragging');
+          }
+        }
+        if (isDraggingForm) {
+          isDraggingForm = false;
+          if (feedbackForm) {
+            feedbackForm.classList.remove('dragging');
+          }
+        }
+      });
+
+      // ボタンクリックでフォーム表示
+      feedbackButton.addEventListener('click', function(e) {
+        if (!isDraggingButton && !isDraggingForm) {
+          e.stopPropagation();
+          // フォームが非表示の場合は表示、既に表示されている場合は非表示
+          if (feedbackForm.style.display === 'none') {
+            const buttonRect = feedbackButton.getBoundingClientRect();
+            feedbackForm.style.display = 'block';
+            feedbackForm.style.top = (buttonRect.bottom + 10) + 'px';
+            feedbackForm.style.left = (buttonRect.left - 330) + 'px';
+            feedbackForm.style.right = 'auto';
+            if (feedbackText) feedbackText.focus();
+          } else {
+            feedbackForm.style.display = 'none';
+          }
+        }
+      });
+
+      // フォームを閉じる
+      if (feedbackCloseBtn) {
+        feedbackCloseBtn.addEventListener('click', function() {
+          feedbackForm.style.display = 'none';
+          screenshotData = null;
+          if (feedbackScreenshotPreview) feedbackScreenshotPreview.style.display = 'none';
+          if (feedbackText) feedbackText.value = '';
+          if (feedbackSendBtn) feedbackSendBtn.disabled = true;
+        });
+      }
+
+      // テキスト入力で送信ボタンを有効化
+      if (feedbackText && feedbackSendBtn) {
+        feedbackText.addEventListener('input', function() {
+          feedbackSendBtn.disabled = !feedbackText.value.trim() && !screenshotData;
+        });
+      }
+
+      // スクリーンショット機能
+      if (feedbackScreenshotBtn) {
+        feedbackScreenshotBtn.addEventListener('click', function() {
+          if (typeof html2canvas === 'undefined') {
+            alert('スクリーンショット機能が利用できません。');
+            return;
+          }
+
+          feedbackScreenshotBtn.disabled = true;
+          feedbackScreenshotBtn.innerHTML = '<i class="fas fa-camera"></i> 撮影中...';
+
+          html2canvas(document.body, {
+            useCORS: true,
+            logging: false,
+            scale: 1
+          }).then(function(canvas) {
+            screenshotData = canvas.toDataURL('image/png');
+            if (feedbackScreenshotImg) feedbackScreenshotImg.src = screenshotData;
+            if (feedbackScreenshotPreview) feedbackScreenshotPreview.style.display = 'block';
+            feedbackScreenshotBtn.disabled = false;
+            feedbackScreenshotBtn.innerHTML = '<i class="fas fa-camera"></i> スクリーンショット';
+            if (feedbackSendBtn) {
+              feedbackSendBtn.disabled = !feedbackText.value.trim() && !screenshotData;
+            }
+          }).catch(function(error) {
+            console.error('スクリーンショットエラー:', error);
+            alert('スクリーンショットの取得に失敗しました。');
+            feedbackScreenshotBtn.disabled = false;
+            feedbackScreenshotBtn.innerHTML = '<i class="fas fa-camera"></i> スクリーンショット';
+          });
+        });
+      }
+
+      // スクリーンショット削除
+      if (feedbackScreenshotRemove && feedbackSendBtn && feedbackText) {
+        feedbackScreenshotRemove.addEventListener('click', function() {
+          screenshotData = null;
+          if (feedbackScreenshotPreview) feedbackScreenshotPreview.style.display = 'none';
+          feedbackSendBtn.disabled = !feedbackText.value.trim();
+        });
+      }
+
+      // メール送信機能（EmailJS使用）
+      if (feedbackSendBtn) {
+        feedbackSendBtn.addEventListener('click', function() {
+          const text = feedbackText ? feedbackText.value.trim() : '';
+          if (!text && !screenshotData) {
+            alert('テキストまたはスクリーンショットを入力してください。');
+            return;
+          }
+
+          const pageUrl = window.location.href;
+          const pageTitle = document.title;
+          const timestamp = new Date().toLocaleString('ja-JP');
+
+          // EmailJSの設定
+          const EMAILJS_SERVICE_ID = 'service_hx88k5s';
+          const EMAILJS_TEMPLATE_ID = 'template_alkj896';
+          const EMAILJS_PUBLIC_KEY = 'pLD_aLYcX2lhiCSRl';
+
+          // EmailJSが利用可能かチェック
+          if (typeof emailjs === 'undefined') {
+            // EmailJSが利用できない場合は、従来のmailto方式にフォールバック
+            const emailTo = 'misesapofeedback@gmail.com';
+            const emailSubject = encodeURIComponent(`フィードバック: ${pageTitle}`);
+            let emailBody = `フィードバック\n\n`;
+            emailBody += `ページ: ${pageTitle}\n`;
+            emailBody += `URL: ${pageUrl}\n`;
+            emailBody += `日時: ${timestamp}\n\n`;
+            emailBody += `コメント:\n${text}\n`;
+            const emailBodyEncoded = encodeURIComponent(emailBody);
+
+            if (screenshotData) {
+              const link = document.createElement('a');
+              link.download = `screenshot-${Date.now()}.png`;
+              link.href = screenshotData;
+              link.click();
+              alert('スクリーンショットをダウンロードしました。\nメール作成画面で手動で添付してください。');
+            }
+            window.location.href = `mailto:${emailTo}?subject=${emailSubject}&body=${emailBodyEncoded}`;
+            return;
+          }
+
+          // EmailJSでメール送信
+          feedbackSendBtn.disabled = true;
+          feedbackSendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
+
+          // テンプレートパラメータを準備
+          const templateParams = {
+            to_email: 'misesapofeedback@gmail.com',
+            page_title: pageTitle,
+            page_url: pageUrl,
+            timestamp: timestamp,
+            comment: text,
+            has_screenshot: screenshotData ? 'あり' : 'なし'
+          };
+
+          // スクリーンショットがある場合は、HTML画像として埋め込む
+          if (screenshotData) {
+            // base64画像をHTMLのimgタグとして埋め込む
+            // EmailJSのテンプレートでHTMLメールとして表示される
+            templateParams.screenshot_image = `<img src="${screenshotData}" alt="スクリーンショット" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; margin: 10px 0;" />`;
+            templateParams.screenshot_base64 = screenshotData; // テンプレートで直接使用する場合
+          }
+
+          // EmailJSで送信
+          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+            .then(function(response) {
+              console.log('送信成功:', response.status, response.text);
+
+              alert('フィードバックを送信しました！');
+              
+              // フォームをリセット
+              feedbackForm.style.display = 'none';
+              screenshotData = null;
+              if (feedbackScreenshotPreview) feedbackScreenshotPreview.style.display = 'none';
+              if (feedbackText) feedbackText.value = '';
+              feedbackSendBtn.disabled = true;
+              feedbackSendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送信';
+            }, function(error) {
+              console.error('送信エラー:', error);
+              alert('送信に失敗しました。\nエラー: ' + (error.text || error.message || '不明なエラー'));
+              feedbackSendBtn.disabled = false;
+              feedbackSendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送信';
+            });
+        });
+      }
+    }
+
+    // EmailJSの初期化（公開キーを設定）
+    const EMAILJS_PUBLIC_KEY = 'pLD_aLYcX2lhiCSRl';
+    if (typeof emailjs !== 'undefined') {
+      emailjs.init(EMAILJS_PUBLIC_KEY);
+    }
+
+    // 初期化
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
+
+
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+  </body>
+  </html>
+
+

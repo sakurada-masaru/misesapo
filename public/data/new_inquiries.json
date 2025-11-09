@@ -1,0 +1,41 @@
+{
+  "inquiries": [
+    {
+      "id": "inquiry-001",
+      "date": "2025年3月28日",
+      "time": "09:30",
+      "company_name": "株式会社 ABC",
+      "contact_person": "田中太郎",
+      "phone": "03-1111-2222",
+      "email": "tanaka@abc.co.jp",
+      "message": "レンジフード洗浄についてお問い合わせです。",
+      "status": "pending",
+      "priority": "high"
+    },
+    {
+      "id": "inquiry-002",
+      "date": "2025年3月27日",
+      "time": "15:20",
+      "company_name": "XYZ 合同会社",
+      "contact_person": "佐藤花子",
+      "phone": "03-3333-4444",
+      "email": "sato@xyz-llc.co.jp",
+      "message": "グリストラップ清掃の見積もりをお願いします。",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "id": "inquiry-003",
+      "date": "2025年3月26日",
+      "time": "10:15",
+      "company_name": "株式会社 SSG",
+      "contact_person": "山田次郎",
+      "phone": "03-5555-6666",
+      "email": "yamada@ssg.co.jp",
+      "message": "定期清掃サービスについて相談したいです。",
+      "status": "pending",
+      "priority": "medium"
+    }
+  ]
+}
+

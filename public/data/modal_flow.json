@@ -1,0 +1,89 @@
+{
+  "modals": [
+    {
+      "id": "service-modal",
+      "name": "最初の選択画面",
+      "title": "サービス選択",
+      "imageId": "modal-image",
+      "titleId": "modal-title",
+      "formContainerId": "modal-form",
+      "formDataKey": "forms",
+      "buttons": [
+        {
+          "id": "next-btn",
+          "text": "次へ",
+          "type": "primary",
+          "action": "navigate",
+          "target": "details-modal"
+        },
+        {
+          "id": "back-modal-btn",
+          "text": "戻る",
+          "type": "default",
+          "action": "close"
+        }
+      ]
+    },
+    {
+      "id": "details-modal",
+      "name": "詳細選択画面",
+      "title": "サービス詳細",
+      "imageId": "details-modal-image",
+      "titleId": "details-modal-title",
+      "formContainerId": "details-form",
+      "formDataKey": "details",
+      "hasPrice": true,
+      "hasRemarks": true,
+      "buttons": [
+        {
+          "id": "next-btn",
+          "text": "次へ",
+          "type": "primary",
+          "action": "navigate",
+          "target": "order-modal"
+        },
+        {
+          "id": "back-to-service-modal-btn",
+          "text": "戻る",
+          "type": "default",
+          "action": "navigate",
+          "target": "service-modal"
+        }
+      ]
+    },
+    {
+      "id": "order-modal",
+      "name": "最終セクション：発注画面",
+      "title": "発注確認",
+      "imageId": "order-modal-image",
+      "titleId": "order-modal-title",
+      "formContainerId": null,
+      "formDataKey": null,
+      "hasOrderSection": true,
+      "buttons": [
+        {
+          "id": "set-regular-order-btn",
+          "text": "定期発注にする",
+          "type": "default",
+          "action": "custom",
+          "handler": "setRegularOrder"
+        },
+        {
+          "id": "add-to-cart-btn",
+          "text": "カートに入れる",
+          "type": "primary",
+          "action": "navigate",
+          "target": "cart-added-modal"
+        },
+        {
+          "id": "back-to-details-modal-btn",
+          "text": "戻る",
+          "type": "default",
+          "action": "navigate",
+          "target": "details-modal"
+        }
+      ]
+    }
+  ]
+}
+

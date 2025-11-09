@@ -1,0 +1,117 @@
+{
+  "categories": [
+    {
+      "id": "basic",
+      "name": "基礎研修",
+      "videos": [
+        {
+          "id": "training-001",
+          "title": "グリストラップ清掃の基本",
+          "description": "グリストラップ清掃の基本的な手順と注意点を解説します。",
+          "duration": "15分",
+          "thumbnail": "/images/training-thumb-001.jpg",
+          "video_url": "https://example.com/videos/training-001.mp4",
+          "upload_date": "2025年1月15日",
+          "views": 145,
+          "required": true
+        },
+        {
+          "id": "training-002",
+          "title": "レンジフード洗浄の基本",
+          "description": "レンジフードの分解方法と洗浄手順を詳しく説明します。",
+          "duration": "20分",
+          "thumbnail": "https://via.placeholder.com/320x180?text=Training+Video",
+          "video_url": "https://example.com/videos/training-002.mp4",
+          "upload_date": "2025年1月20日",
+          "views": 132,
+          "required": true
+        },
+        {
+          "id": "training-003",
+          "title": "エアコン分解洗浄の基本",
+          "description": "エアコンの安全な分解と洗浄方法を学びます。",
+          "duration": "25分",
+          "thumbnail": "https://via.placeholder.com/320x180?text=Training+Video",
+          "video_url": "https://example.com/videos/training-003.mp4",
+          "upload_date": "2025年2月1日",
+          "views": 98,
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "advanced",
+      "name": "応用研修",
+      "videos": [
+        {
+          "id": "training-004",
+          "title": "特殊な汚れの対処法",
+          "description": "頑固な油汚れや特殊な汚れへの対処方法を解説します。",
+          "duration": "18分",
+          "thumbnail": "https://via.placeholder.com/320x180?text=Training+Video",
+          "video_url": "https://example.com/videos/training-004.mp4",
+          "upload_date": "2025年2月10日",
+          "views": 87,
+          "required": false
+        },
+        {
+          "id": "training-005",
+          "title": "効率的な作業の進め方",
+          "description": "時間を短縮しながら品質を保つ作業のコツを紹介します。",
+          "duration": "22分",
+          "thumbnail": "https://via.placeholder.com/320x180?text=Training+Video",
+          "video_url": "https://example.com/videos/training-005.mp4",
+          "upload_date": "2025年2月15日",
+          "views": 76,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "safety",
+      "name": "安全・衛生",
+      "videos": [
+        {
+          "id": "training-006",
+          "title": "安全作業の基本",
+          "description": "清掃作業における安全対策と注意事項を説明します。",
+          "duration": "12分",
+          "thumbnail": "https://via.placeholder.com/320x180?text=Training+Video",
+          "video_url": "https://example.com/videos/training-006.mp4",
+          "upload_date": "2025年1月10日",
+          "views": 156,
+          "required": true
+        },
+        {
+          "id": "training-007",
+          "title": "衛生管理の重要性",
+          "description": "食品衛生法に基づく適切な衛生管理方法を学びます。",
+          "duration": "16分",
+          "thumbnail": "https://via.placeholder.com/320x180?text=Training+Video",
+          "video_url": "https://example.com/videos/training-007.mp4",
+          "upload_date": "2025年1月25日",
+          "views": 124,
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "equipment",
+      "name": "設備・工具",
+      "videos": [
+        {
+          "id": "training-008",
+          "title": "清掃機器の正しい使い方",
+          "description": "高圧洗浄機や各種清掃機器の安全な使用方法を解説します。",
+          "duration": "14分",
+          "thumbnail": "https://via.placeholder.com/320x180?text=Training+Video",
+          "video_url": "https://example.com/videos/training-008.mp4",
+          "upload_date": "2025年2月5日",
+          "views": 95,
+          "required": false
+        }
+      ]
+    }
+  ]
+}
+

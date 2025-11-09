@@ -1,0 +1,2207 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <title>ゴミ回収</title>
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+  </head>
+  <body class="theme-pink page-admin-services">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+<header class="site-header">
+  <div class="inner wide">
+    <div class="nav-left">
+      <a class="brand brand-logo" href="/index.html" aria-label="ミセサポ ホーム">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+      </a>
+      <nav class="nav-left hide-sm" aria-label="Primary">
+        <a class="nav-link" href="/index.html">発注</a>
+        <a class="nav-link" href="/report.html">レポート</a>
+        <a class="nav-link" href="/mypage.html">マイページ</a>
+        <a class="nav-link" href="/concierge.html">コンシェルジュ</a>
+      </nav>
+    </div>
+    <div class="spacer"></div>
+    <!-- 開発用ナビゲーション（完成状況チェック用） -->
+    <nav class="nav-dev hide-sm" aria-label="開発用ナビゲーション">
+      <a class="nav-link dev-link" href="/admin/dashboard.html" title="管理者向けページ">
+        <i class="fas fa-user-shield"></i>
+        管理者
+      </a>
+      <a class="nav-link dev-link" href="/mypage.html" title="ユーザー向けページ">
+        <i class="fas fa-user"></i>
+        ユーザー
+      </a>
+      <a class="nav-link dev-link" href="/concierge.html" title="コンシェルジュ向けページ">
+        <i class="fas fa-concierge-bell"></i>
+        コンシェルジュ
+      </a>
+      <a class="nav-link dev-link" href="/admin/sitemap.html" title="サイトマップ">
+        <i class="fas fa-sitemap"></i>
+        サイトマップ
+      </a>
+    </nav>
+    <nav class="nav-right hide-sm" aria-label="User">
+      <a class="nav-link" href="/signin.html">ログイン</a>
+      <a class="nav-link primary" href="/signup.html">新規登録</a>
+      <button class="icon-btn" aria-label="通知">
+        <i class="fas fa-bell"></i>
+      </button>
+    </nav>
+    <button class="icon-btn nav-toggle show-sm" aria-label="メニュー" aria-expanded="false" aria-controls="offcanvas">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+</header>
+
+    <!-- リリース前チェックボックス -->
+    <div id="release-check-section" class="release-check-section">
+      <div class="release-check-container">
+        <div class="release-check-label">リリース前チェック</div>
+        <div class="release-check-boxes">
+          <label class="release-check-item">
+            <input type="checkbox" id="check-admin" class="release-checkbox" data-check-type="admin" />
+            <span>管理者</span>
+          </label>
+          <label class="release-check-item">
+            <input type="checkbox" id="check-developer" class="release-checkbox" data-check-type="developer" />
+            <span>開発者</span>
+          </label>
+          <label class="release-check-item">
+            <input type="checkbox" id="check-other" class="release-checkbox" data-check-type="other" />
+            <span>その他</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <main>
+      
+
+
+
+<main id="main" class="container admin-services-edit">
+  <div class="page-header">
+    <a href="/admin/services/21.html" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">サービス編集</h1>
+  </div>
+
+  <form id="service-form" class="service-form">
+    <input type="hidden" name="id" value="21" />
+    
+    <!-- 基本情報 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-info-circle"></i>
+        基本情報
+      </h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label class="form-label">サービス名 <span class="required">必須</span></label>
+          <input type="text" class="form-input" name="title" value="ゴミ回収" placeholder="例: グリストラップ" required />
+          <p class="form-hint">サービス名を入力してください</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">カテゴリ <span class="required">必須</span></label>
+          <select class="form-select" name="category" id="category-select" required>
+            <option value="">選択してください</option>
+            <option value="厨房設備">厨房設備</option>
+            <option value="空調設備">空調設備</option>
+            <option value="フロア">フロア</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">価格 <span class="required">必須</span></label>
+          <input type="text" class="form-input" name="price" value="¥ 5,250〜" placeholder="例: ¥ 21,000〜" required />
+          <p class="form-hint">価格表示形式で入力してください</p>
+        </div>
+        <div class="form-group full-width">
+          <label class="form-label">サービスメイン画像</label>
+          <div class="image-input-group">
+            <input type="text" class="form-input" name="image" id="image" value="images/gomi_kaishu.png" placeholder="例: images/gurisuto.png" />
+            <button type="button" class="btn btn-outline btn-select-image" data-target="image" data-preview="image_preview">
+              <i class="fas fa-images"></i> 画像を選択
+            </button>
+          </div>
+          <div class="image-preview" id="image_preview" style="display: none;">
+            <img src="" alt="プレビュー" />
+          </div>
+          <p class="form-hint">この画像はサービスカードの上部（TOPイメージ）に表示されます。画像のパスを入力するか、「画像を選択」ボタンから選択してください</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 説明情報 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-align-left"></i>
+        説明情報
+      </h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label class="form-label">サービス説明</label>
+          <textarea class="form-textarea" name="description" rows="5" placeholder="サービスの詳細説明を入力してください">日々の営業で大量のゴミ(可燃・不燃)が発生します。古くなった厨房機器・テーブル・椅子・什器類など、大型の粗大ゴミをそのまま放置すると…</textarea>
+          <p class="form-hint">この説明はサービス管理画面と詳細ページに表示されます</p>
+        </div>
+        <div class="form-group full-width">
+          <label class="form-label">問題点（1行に1つずつ入力）</label>
+          <textarea class="form-textarea" name="problems" rows="5" placeholder="例:&#10;強い悪臭の発生&#10;排水詰まりによる逆流や床の冠水&#10;ゴキブリ・チョウバエなど害虫の発生源">ゴミの散乱や悪臭によるゴキブリ・害虫・害獣の発生源となる
+不適切な分別による行政指導や罰則のリスク
+店舗スタッフの負担が増加し、本業の時間が削られる
+店舗スペースを圧迫し作業効率が低下し衛生環境の悪化
+不法投棄や処理不備で行政指導や罰則リスク
+お客様から見える場所にあると店舗イメージの低下</textarea>
+          <p class="form-hint">各問題点を1行ずつ入力してください</p>
+        </div>
+        <div class="form-group full-width">
+          <label class="form-label">解決策・サービス内容</label>
+          <textarea class="form-textarea" name="solution" rows="4" placeholder="解決策やサービス内容を入力してください">定期回収・臨時回収の両方に対応。可燃・不燃ゴミをルールに従って分別し、効率的で衛生的なゴミ管理を実現します。厨房機器から什器まで大型ゴミを迅速に回収・処分。リサイクル・産廃ルールに基づき適切に処理するため、安心・安全・手間のない廃棄管理を実現します。</textarea>
+          <p class="form-hint">この内容は詳細ページで強調表示されます</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- モーダル表示内容 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-window-maximize"></i>
+        モーダル表示内容（セクション設定）
+      </h2>
+      
+      <div class="modal-edit-section">
+        <div class="modal-edit-header">
+          <h3 class="modal-edit-title">モーダルセクション一覧</h3>
+          <button type="button" class="btn btn-outline btn-sm" id="add-section-btn">
+            <i class="fas fa-plus"></i> セクションを追加
+          </button>
+        </div>
+        <div id="sections-container" class="modal-sections-container"></div>
+        <p class="form-hint" style="margin-top: 16px;">
+          <i class="fas fa-info-circle"></i> セクションは順番に表示されます。最後のセクションの後は自動的にエンドセクション（発注確認画面）が表示されます。
+        </p>
+      </div>
+      
+      <!-- Hidden input for JSON data -->
+      <input type="hidden" name="sections" id="sections-json-input" />
+    </div>
+
+    <!-- フォームアクション -->
+    <div class="form-actions">
+      <a href="/admin/services/21.html" class="btn btn-outline">
+        <i class="fas fa-times"></i>
+        キャンセル
+      </a>
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i>
+        保存する
+      </button>
+    </div>
+  </form>
+
+  <!-- Preview Modals -->
+  <!-- Service Item Modal (no Tailwind dependency) -->
+<div id="service-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-dialog">
+    <!-- Header image -->
+    <div class="modal-hero">
+      <img id="modal-image" src="" alt="Service Image" class="modal-hero-img" />
+      <button id="close-modal-btn" class="modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <h2 id="modal-title" class="modal-title"></h2>
+      <hr class="divider" />
+
+      <div id="modal-form" class="stack lg"></div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button class="btn btn-primary btn-fixed btn-round">次へ</button>
+        <button id="back-modal-btn" class="btn btn-fixed btn-round">戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Details Modal -->
+<div id="details-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="details-modal-title">
+  <div class="modal-dialog">
+    <!-- Header image -->
+    <div class="modal-hero">
+      <img id="details-modal-image" src="" alt="Service Image" class="modal-hero-img" />
+      <button id="close-details-modal-btn" class="modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body modal-scroll">
+      <div class="modal-headline">
+        <h2 id="details-modal-title" class="modal-title"></h2>
+        <div class="price-line">
+          <span class="muted"><i class="fas fa-shopping-cart"></i> 清掃料金は</span>
+          <span class="price-strong">¥0</span>
+          <span class="muted">です。</span>
+        </div>
+      </div>
+      <p class="small muted">設備の詳細を選択してください。選択内容に応じて金額が自動計算されます。</p>
+      <hr class="divider" />
+
+      <div id="details-form" class="stack lg"></div>
+
+      <!-- Remarks / options -->
+        <div>
+          <h3 class="section-title">グリスフィルターをレンタルしますか？</h3>
+          <div class="stack sm">
+            <label class="choice-row"><input type="radio" name="rental" class="radio" /><span>はい</span></label>
+            <label class="choice-row"><input type="radio" name="rental" class="radio" /><span>いいえ</span></label>
+          </div>
+          <h3 class="section-title">備考欄(任意)</h3>
+          <textarea class="textarea" rows="3" placeholder="自由入力"></textarea>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button class="btn btn-primary btn-fixed btn-round">次へ</button>
+        <button id="back-to-service-modal-btn" class="btn btn-fixed btn-round">戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <style>
+    .admin-services-edit {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f9fafb;
+      min-height: 100vh;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #6b7280;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .service-form {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .form-section {
+      margin-bottom: 32px;
+      padding: 24px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 2px solid #fce7f3; /* Pink border */
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .form-section:last-of-type {
+      margin-bottom: 0;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 24px 0;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+    .section-title i {
+      color: var(--primary);
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .required {
+      color: #ef4444;
+      font-size: 0.75rem;
+      margin-left: 4px;
+    }
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    .form-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    .form-hint code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .form-error {
+      color: #dc2626;
+      font-size: 0.875rem;
+      margin-top: 8px;
+      padding: 8px;
+      background: #fee2e2;
+      border-radius: 4px;
+      border: 1px solid #fecaca;
+    }
+    .modal-edit-section {
+      margin-bottom: 32px;
+      padding: 24px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-edit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+    .modal-edit-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+    .modal-sections-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .modal-section-editor {
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 2px solid var(--primary);
+    }
+    .modal-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .modal-section-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+    .modal-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .modal-item-editor {
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .modal-item-number {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #6b7280;
+    }
+    .btn-xs {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+    }
+    .image-preview-small {
+      margin-top: 8px;
+    }
+    .image-preview-small img {
+      max-width: 100px;
+      max-height: 100px;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .image-input-group {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    
+    .image-input-group .form-input {
+      flex: 1;
+    }
+    
+    .btn-select-image {
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    
+    .image-preview {
+      margin-top: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .image-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+    
+    /* 画像選択モーダル */
+    .image-select-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    
+    .image-select-modal.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .image-select-modal.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .image-select-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+    }
+    
+    .image-select-dialog {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      max-width: 90vw;
+      max-height: 90vh;
+      width: 100%;
+      max-width: 1000px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      z-index: 2001;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    
+    .image-select-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .image-select-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .image-select-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #6b7280;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    
+    .image-select-close:hover {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    
+    .image-select-search {
+      padding: 16px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    
+    .image-select-search .search-box {
+      flex: 1;
+      position: relative;
+    }
+    
+    .image-select-search .search-box i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+    }
+    
+    .image-select-search .search-input {
+      width: 100%;
+      padding: 8px 12px 8px 36px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+    
+    .image-select-search .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      background: #fff;
+    }
+    
+    .image-select-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      max-height: 60vh;
+    }
+    
+    .image-select-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+    }
+    
+    .image-select-card {
+      background: #fff;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .image-select-card:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .image-select-thumb {
+      position: relative;
+      width: 100%;
+      padding-top: 75%;
+      background: #f9fafb;
+      overflow: hidden;
+    }
+    
+    .image-select-thumb img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .image-select-info {
+      padding: 8px;
+    }
+    
+    .image-select-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .image-select-path {
+      font-size: 0.625rem;
+      color: #6b7280;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .loading-spinner {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+    
+    .loading-spinner i {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    
+    .empty-message,
+    .error-message {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid #f3f4f6;
+    }
+    .form-actions .btn {
+      min-width: 140px;
+    }
+    .btn-preview {
+      border: 2px solid var(--primary);
+      background: #ffffff;
+      color: var(--primary);
+      margin-top: 12px;
+    }
+    .btn-preview:hover {
+      background: #fff5f8;
+      color: var(--primary-600);
+    }
+    @media (max-width: 768px) {
+      .admin-services-edit {
+        padding: 16px;
+      }
+      .service-form {
+        padding: 24px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-actions {
+        flex-direction: column-reverse;
+      }
+      .form-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+
+  <script>
+    // Set selected category
+    (function() {
+      const categorySelect = document.getElementById('category-select');
+      const currentCategory = 'その他';
+      if (categorySelect && currentCategory) {
+        categorySelect.value = currentCategory;
+      }
+    })();
+
+    // Modal content editor (forms/details)
+    (function() {
+      let imageSelectModal = null;
+      let currentImageTarget = null;
+      
+      async function loadServiceData() {
+        try {
+          const response = await fetch('/api/services');
+          const services = await response.json();
+          const serviceId = 21;
+          const service = services.find(s => s.id === serviceId);
+          
+          if (service) {
+            // 既存のforms/detailsをsectionsに変換（後方互換性）
+            let sections = service.sections || [];
+            if (!sections.length && (service.forms || service.details)) {
+              // formsとdetailsを統合してsectionsに変換
+              sections = [];
+              if (service.forms && service.forms.length > 0) {
+                sections = sections.concat(service.forms.map(s => ({ ...s, sectionIndex: sections.length })));
+              }
+              if (service.details && service.details.length > 0) {
+                sections = sections.concat(service.details.map(s => ({ ...s, sectionIndex: sections.length })));
+              }
+            }
+            renderSections(sections);
+          }
+        } catch (error) {
+          console.error('Failed to load service data:', error);
+        }
+      }
+      
+      // Render sections
+      function renderSections(sections) {
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        container.innerHTML = '';
+        
+        sections.forEach((section, idx) => {
+          container.appendChild(createSectionElement(section, idx));
+        });
+        
+        updateSectionsJSON();
+      }
+      
+      // Create section element (unified for all section types)
+      function createSectionElement(section, idx) {
+        const div = document.createElement('div');
+        div.className = 'modal-section-editor';
+        div.dataset.index = idx;
+        
+        const sectionType = section['section-type'] || 'radio-text';
+        const sectionImage = section['section-image'] || section['section-image-url'] || '';
+        const requiredChecked = section.required ? 'checked' : '';
+        
+        // タイプ別の選択肢
+        const radioTextSelected = sectionType === 'radio-text' ? 'selected' : '';
+        const radioImageSelected = sectionType === 'radio-image' ? 'selected' : '';
+        const gridItemsSelected = sectionType === 'grid-items' ? 'selected' : '';
+        const textareaSelected = sectionType === 'textarea' ? 'selected' : '';
+        
+        div.innerHTML = `
+          <div class="modal-section-header">
+            <h4 class="modal-section-label">モーダル ${idx + 1}</h4>
+            <button type="button" class="btn btn-danger btn-sm btn-remove-section" data-section-index="${idx}">
+              <i class="fas fa-trash"></i> 削除
+            </button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">セクションタイトル <span class="required">必須</span></label>
+            <input type="text" class="form-input section-title-input" value="${escapeHtml(section['section-title'] || '')}" placeholder="例: 日頃のお掃除の状況について教えてください" required />
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label">モーダルTOP画像</label>
+            <div class="image-input-group">
+              <input type="text" class="form-input section-image-input" id="section-image-${idx}" value="${escapeHtml(sectionImage)}" placeholder="例: images/gure-chingu.png" />
+              <button type="button" class="btn btn-outline btn-select-image btn-sm" data-target="section-image-${idx}">
+                <i class="fas fa-images"></i> 画像を選択
+              </button>
+            </div>
+            <p class="form-hint">この画像はモーダルの上部（TOPイメージ）に表示されます（任意）</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">セクションの目的（タイプ） <span class="required">必須</span></label>
+            <select class="form-select section-type-select" required>
+              <option value="radio-text" ${radioTextSelected}>テキスト選択</option>
+              <option value="radio-image" ${radioImageSelected}>画像選択</option>
+              <option value="grid-items" ${gridItemsSelected}>項目選択（数量入力可能）</option>
+              <option value="textarea" ${textareaSelected}>テキストエリア（自由入力）</option>
+            </select>
+            <p class="form-hint">タイプによって選択肢の形式が変わります</p>
+          </div>
+          ${sectionType === 'radio-text' || sectionType === 'radio-image' ? `
+          <div class="form-group">
+            <label class="form-label">
+              <input type="checkbox" class="section-required-checkbox" ${requiredChecked} />
+              必須項目
+            </label>
+          </div>
+          ` : ''}
+          ${sectionType === 'textarea' ? createTextareaSectionFields(section) : createItemsSectionFields(section, idx, sectionType)}
+        `;
+        
+        // Add event listeners
+        div.querySelectorAll('.section-title-input, .section-type-select, .section-required-checkbox, .section-image-input, .textarea-placeholder-input, .textarea-maxlength-input, .textarea-key-input, .item-text-input, .item-image-input, .item-countable-checkbox, .item-unit-input').forEach(el => {
+          el.addEventListener('change', updateSectionsJSON);
+          el.addEventListener('input', updateSectionsJSON);
+        });
+        
+        // タイプ変更時の再レンダリング
+        div.querySelector('.section-type-select')?.addEventListener('change', function() {
+          const idx = parseInt(div.dataset.index);
+          const container = document.getElementById('sections-container');
+          const sections = Array.from(container.children).map((el, i) => {
+            return getSectionDataFromElement(el);
+          });
+          renderSections(sections);
+        });
+        
+        // 数量入力可能チェックボックスの変更時に単位フィールドを表示/非表示
+        div.querySelectorAll('.item-countable-checkbox').forEach(checkbox => {
+          checkbox.addEventListener('change', function() {
+            const itemEl = this.closest('.modal-item-editor');
+            const unitGroup = itemEl?.querySelector('[data-countable-group]');
+            if (unitGroup) {
+              unitGroup.style.display = this.checked ? 'block' : 'none';
+            }
+            updateSectionsJSON();
+          });
+        });
+        
+        // Add event listeners for buttons
+        div.querySelector('.btn-remove-section')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          window.removeSection(sectionIdx);
+        });
+        
+        div.querySelector('.btn-add-item')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          window.addItem(sectionIdx);
+        });
+        
+        // Add event listeners for remove item buttons
+        div.querySelectorAll('.btn-remove-item').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const sectionIdx = parseInt(this.dataset.sectionIndex);
+            const itemIdx = parseInt(this.dataset.itemIndex);
+            window.removeItem(sectionIdx, itemIdx);
+          });
+        });
+        
+        return div;
+      }
+      
+      // Helper function to get section data from element
+      function getSectionDataFromElement(el) {
+        const title = el.querySelector('.section-title-input')?.value || '';
+        const type = el.querySelector('.section-type-select')?.value || 'radio-text';
+        const sectionImage = el.querySelector('.section-image-input')?.value || '';
+        const required = el.querySelector('.section-required-checkbox')?.checked || false;
+        
+        if (type === 'textarea') {
+          const placeholder = el.querySelector('.textarea-placeholder-input')?.value || '';
+          const maxLength = parseInt(el.querySelector('.textarea-maxlength-input')?.value || '500', 10);
+          const key = el.querySelector('.textarea-key-input')?.value || '';
+          const sectionData = {
+            'section-title': title,
+            'section-type': 'textarea',
+            placeholder,
+            maxLength,
+            key: key || undefined
+          };
+          if (sectionImage.trim()) {
+            sectionData['section-image'] = sectionImage.trim();
+          }
+          return sectionData;
+        } else {
+          const itemsEl = el.querySelector('.modal-items-list');
+          const items = Array.from(itemsEl?.children || []).map(itemEl => {
+            const text = itemEl.querySelector('.item-text-input')?.value || '';
+            if (type === 'radio-text') {
+              return text;
+            } else if (type === 'radio-image') {
+              const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+              return { text, 'img-url': imgUrl };
+            } else if (type === 'grid-items') {
+              const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+              const countable = itemEl.querySelector('.item-countable-checkbox')?.checked || false;
+              const unit = itemEl.querySelector('.item-unit-input')?.value || '';
+              return { text, 'img-url': imgUrl, countable, unit: countable ? unit : undefined, count: 0 };
+            }
+            return text;
+          }).filter(item => {
+            if (typeof item === 'string') {
+              return item.trim();
+            } else {
+              return item.text && item.text.trim();
+            }
+          });
+          
+          const sectionData = {
+            'section-title': title,
+            'section-type': type,
+            'section-items': items
+          };
+          if (type === 'radio-text' || type === 'radio-image') {
+            sectionData.required = required;
+          }
+          if (sectionImage.trim()) {
+            sectionData['section-image'] = sectionImage.trim();
+          }
+          return sectionData;
+        }
+      }
+      
+      // Helper function for textarea section fields
+      function createTextareaSectionFields(section) {
+        return `
+          <div class="form-group">
+            <label class="form-label">プレースホルダー</label>
+            <input type="text" class="form-input textarea-placeholder-input" value="${escapeHtml(section.placeholder || '')}" placeholder="例: 設置場所、使用時間帯、臭気の有無など" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">最大文字数</label>
+            <input type="number" class="form-input textarea-maxlength-input" value="${section.maxLength || 500}" min="1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">キー</label>
+            <input type="text" class="form-input textarea-key-input" value="${escapeHtml(section.key || '')}" placeholder="例: note" />
+          </div>
+        `;
+      }
+      
+      // Helper function for items section fields
+      function createItemsSectionFields(section, idx, sectionType) {
+        const items = section['section-items'] || [];
+        return `
+          <div class="form-group">
+            <label class="form-label">選択肢</label>
+            <div class="modal-items-list" data-section-index="${idx}">
+              ${items.map((item, itemIdx) => createItemHTML(item, idx, itemIdx, sectionType)).join('')}
+            </div>
+            <button type="button" class="btn btn-outline btn-sm btn-add-item" data-section-index="${idx}">
+              <i class="fas fa-plus"></i> 選択肢を追加
+            </button>
+          </div>
+        `;
+      }
+      
+      // Create item HTML (unified for all types)
+      function createItemHTML(item, sectionIdx, itemIdx, sectionType) {
+        if (sectionType === 'radio-text') {
+          const text = typeof item === 'string' ? item : (item.text || '');
+          return `
+            <div class="modal-item-editor" data-item-index="${itemIdx}">
+              <div class="modal-item-header">
+                <span class="modal-item-number">選択肢 ${itemIdx + 1}</span>
+                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="form-group">
+                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: 毎日清掃している" />
+              </div>
+            </div>
+          `;
+        } else if (sectionType === 'radio-image') {
+          const text = typeof item === 'string' ? item : (item.text || '');
+          const imgUrl = typeof item === 'object' ? (item['img-url'] || item.img || '') : '';
+          return `
+            <div class="modal-item-editor" data-item-index="${itemIdx}">
+              <div class="modal-item-header">
+                <span class="modal-item-number">選択肢 ${itemIdx + 1}</span>
+                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="form-group">
+                <label class="form-label">テキスト</label>
+                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: 表面がきれいになれば十分" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">画像</label>
+                <div class="image-input-group">
+                  <input type="text" class="form-input item-image-input" value="${escapeHtml(imgUrl)}" placeholder="例: images/example.png" />
+                  <button type="button" class="btn btn-outline btn-sm btn-select-image" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                    <i class="fas fa-images"></i> 画像を選択
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (sectionType === 'grid-items') {
+          const text = typeof item === 'string' ? item : (item.text || '');
+          const imgUrl = typeof item === 'object' ? (item['img-url'] || item.img || '') : '';
+          const countable = typeof item === 'object' ? (item.countable || false) : false;
+          const unit = typeof item === 'object' ? (item.unit || '') : '';
+          const countableChecked = countable ? 'checked' : '';
+          return `
+            <div class="modal-item-editor" data-item-index="${itemIdx}">
+              <div class="modal-item-header">
+                <span class="modal-item-number">項目 ${itemIdx + 1}</span>
+                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="form-group">
+                <label class="form-label">項目名</label>
+                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: U字溝" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">画像</label>
+                <div class="image-input-group">
+                  <input type="text" class="form-input item-image-input" value="${escapeHtml(imgUrl)}" placeholder="例: images/example.png" />
+                  <button type="button" class="btn btn-outline btn-sm btn-select-image" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                    <i class="fas fa-images"></i> 画像を選択
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <input type="checkbox" class="item-countable-checkbox" ${countableChecked} />
+                  数量入力可能
+                </label>
+              </div>
+              <div class="form-group" style="${countable ? '' : 'display: none;'}" data-countable-group>
+                <label class="form-label">単位</label>
+                <input type="text" class="form-input item-unit-input" value="${escapeHtml(unit)}" placeholder="例: m, 本, ㎡" />
+              </div>
+            </div>
+          `;
+        }
+        return '';
+      }
+      
+      // Deprecated functions removed - use createSectionElement instead
+      // Update sections JSON
+      function updateSectionsJSON() {
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        
+        const sections = Array.from(container.children).map(sectionEl => {
+          return getSectionDataFromElement(sectionEl);
+        }).filter(section => section['section-title'] && section['section-title'].trim());
+        
+        document.getElementById('sections-json-input').value = JSON.stringify(sections);
+      }
+      
+      // Add section
+      window.addSection = function() {
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        
+        const sections = Array.from(container.children).map(el => getSectionDataFromElement(el));
+        sections.push({
+          'section-title': '',
+          'section-type': 'radio-text',
+          'section-items': [],
+          required: false
+        });
+        renderSections(sections);
+      };
+      
+      // Remove section
+      window.removeSection = function(idx) {
+        if (!confirm('このセクションを削除してもよろしいですか？')) return;
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        
+        const sections = Array.from(container.children).map(el => getSectionDataFromElement(el));
+        sections.splice(idx, 1);
+        renderSections(sections);
+      };
+      
+      // Add item to section
+      window.addItem = function(sectionIdx) {
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        
+        const sectionEl = container.children[sectionIdx];
+        if (!sectionEl) return;
+        
+        const section = getSectionDataFromElement(sectionEl);
+        const sectionType = section['section-type'] || 'radio-text';
+        const items = section['section-items'] || [];
+        
+        if (sectionType === 'radio-text') {
+          items.push('');
+        } else if (sectionType === 'radio-image') {
+          items.push({ text: '', 'img-url': '' });
+        } else if (sectionType === 'grid-items') {
+          items.push({ text: '', 'img-url': '', countable: false, unit: '', count: 0 });
+        }
+        
+        section['section-items'] = items;
+        
+        const sections = Array.from(container.children).map((el, i) => {
+          if (i === sectionIdx) {
+            return section;
+          }
+          return getSectionDataFromElement(el);
+        });
+        renderSections(sections);
+      };
+      
+      // Remove item from section
+      window.removeItem = function(sectionIdx, itemIdx) {
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        
+        const sectionEl = container.children[sectionIdx];
+        if (!sectionEl) return;
+        
+        const section = getSectionDataFromElement(sectionEl);
+        const items = section['section-items'] || [];
+        items.splice(itemIdx, 1);
+        section['section-items'] = items;
+        
+        const sections = Array.from(container.children).map((el, i) => {
+          if (i === sectionIdx) {
+            return section;
+          }
+          return getSectionDataFromElement(el);
+        });
+        renderSections(sections);
+      };
+      
+      // Helper functions
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+      
+      // Deprecated global functions removed - use window.addSection, window.removeSection, window.addItem, window.removeItem instead
+      
+      // Preview section functions removed - preview buttons are no longer used
+      
+      // Event listeners
+      document.getElementById('add-section-btn')?.addEventListener('click', window.addSection);
+      
+      // Load initial data
+      loadServiceData();
+    })();
+
+    // 画像選択機能
+    (function() {
+      let imageSelectModal = null;
+      
+      // 画像プレビューを更新（グローバルスコープで使用可能にする）
+      // 最初に定義することで、後続のコードで使用可能にする
+      window.updateImagePreview = function(previewId, imagePath) {
+        const preview = document.getElementById(previewId);
+        if (!preview) return;
+        
+        if (imagePath && imagePath.trim()) {
+          const img = preview.querySelector('img');
+          if (img) {
+            // パスが / で始まっていない場合は / を追加
+            const path = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+            img.src = path;
+            preview.style.display = 'block';
+          }
+        } else {
+          preview.style.display = 'none';
+        }
+      };
+      
+      // 後方互換性のため、ローカルスコープでも使用可能にする
+      const updateImagePreview = window.updateImagePreview;
+      
+      // 画像選択ボタンのイベント（イベント委譲を使用）
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-select-image')) {
+          const btn = e.target.closest('.btn-select-image');
+          const targetInputId = btn.dataset.target;
+          const previewId = btn.dataset.preview || null; // プレビューIDはオプション（編集ページでは使用しない）
+          openImageSelectModal(targetInputId, previewId);
+        }
+      });
+      
+      // 画像入力欄の変更時にプレビューを更新
+      document.getElementById('image')?.addEventListener('input', function() {
+        updateImagePreview('image_preview', this.value);
+      });
+      
+      // 初期値がある場合はプレビューを表示
+      const imageValue = document.getElementById('image')?.value;
+      if (imageValue) {
+        updateImagePreview('image_preview', imageValue);
+      }
+      
+      // 画像選択モーダルを開く
+      function openImageSelectModal(targetInputId, previewId) {
+        if (!imageSelectModal) {
+          createImageSelectModal();
+        }
+        
+        imageSelectModal.dataset.targetInput = targetInputId;
+        imageSelectModal.dataset.previewId = previewId;
+        imageSelectModal.classList.remove('hidden');
+        imageSelectModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        
+        // 画像一覧を読み込む
+        loadImagesForSelect();
+      }
+      
+      // 画像選択モーダルを作成
+      function createImageSelectModal() {
+        imageSelectModal = document.createElement('div');
+        imageSelectModal.id = 'image-select-modal';
+        imageSelectModal.className = 'image-select-modal hidden';
+        imageSelectModal.innerHTML = `
+          <div class="image-select-overlay"></div>
+          <div class="image-select-dialog">
+            <div class="image-select-header">
+              <h3 class="image-select-title">
+                <i class="fas fa-images"></i> 画像を選択
+              </h3>
+              <button class="image-select-close" aria-label="閉じる">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="image-select-search">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" class="search-input" id="image-select-search" placeholder="画像名で検索..." />
+              </div>
+              <select class="filter-select" id="image-select-filter">
+                <option value="">すべての形式</option>
+                <option value="png">PNG</option>
+                <option value="jpg">JPG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="svg">SVG</option>
+              </select>
+            </div>
+            <div class="image-select-body">
+              <div class="image-select-grid" id="image-select-grid">
+                <div class="loading-spinner">
+                  <i class="fas fa-spinner fa-spin"></i> 画像を読み込み中...
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(imageSelectModal);
+        
+        // 閉じるボタン
+        imageSelectModal.querySelector('.image-select-close')?.addEventListener('click', closeImageSelectModal);
+        imageSelectModal.querySelector('.image-select-overlay')?.addEventListener('click', closeImageSelectModal);
+        
+        // ESCキーで閉じる
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && imageSelectModal.classList.contains('open')) {
+            closeImageSelectModal();
+          }
+        });
+        
+        // 検索・フィルタ
+        imageSelectModal.querySelector('#image-select-search')?.addEventListener('input', loadImagesForSelect);
+        imageSelectModal.querySelector('#image-select-filter')?.addEventListener('change', loadImagesForSelect);
+      }
+      
+      // 画像選択モーダルを閉じる
+      function closeImageSelectModal() {
+        if (imageSelectModal) {
+          imageSelectModal.classList.add('hidden');
+          imageSelectModal.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+      }
+      
+      // 画像一覧を読み込む
+      async function loadImagesForSelect() {
+        const grid = document.getElementById('image-select-grid');
+        if (!grid) return;
+        
+        try {
+          const response = await fetch('/api/images');
+          const data = await response.ok ? await response.json() : { images: [] };
+          
+          if (data.images && data.images.length > 0) {
+            const searchQuery = (document.getElementById('image-select-search')?.value || '').toLowerCase();
+            const filterType = document.getElementById('image-select-filter')?.value || '';
+            
+            // フィルタリング
+            let filteredImages = data.images;
+            if (searchQuery) {
+              filteredImages = filteredImages.filter(img => 
+                img.name.toLowerCase().includes(searchQuery) || img.path.toLowerCase().includes(searchQuery)
+              );
+            }
+            if (filterType) {
+              filteredImages = filteredImages.filter(img => 
+                img.extension === '.' + filterType
+              );
+            }
+            
+            // グリッドを生成
+            grid.innerHTML = filteredImages.map(img => {
+              return `
+                <div class="image-select-card" data-path="${img.path}">
+                  <div class="image-select-thumb">
+                    <img src="${img.path}" alt="${img.name}" loading="lazy" onerror="this.src='/images/service-300x200.svg'" />
+                  </div>
+                  <div class="image-select-info">
+                    <div class="image-select-name" title="${img.name}">${img.name}</div>
+                    <div class="image-select-path" title="${img.path}">${img.path}</div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+            
+            // クリックイベント
+            grid.querySelectorAll('.image-select-card').forEach(card => {
+              card.addEventListener('click', function() {
+                const path = this.dataset.path;
+                const targetInputId = imageSelectModal.dataset.targetInput;
+                const previewId = imageSelectModal.dataset.previewId;
+                
+                // 入力欄にパスを設定（先頭の / を削除）
+                const input = document.getElementById(targetInputId);
+                if (input) {
+                  const imagePath = path.startsWith('/') ? path.substring(1) : path;
+                  input.value = imagePath;
+                  input.dispatchEvent(new Event('input', { bubbles: true }));
+                  input.dispatchEvent(new Event('change', { bubbles: true }));
+                  // プレビューIDが指定されている場合のみプレビューを更新（編集ページでは使用しない）
+                  if (previewId && window.updateImagePreview) {
+                    window.updateImagePreview(previewId, imagePath);
+                  }
+                } else {
+                  console.error('Input field not found:', targetInputId);
+                }
+                
+                closeImageSelectModal();
+              });
+            });
+          } else {
+            grid.innerHTML = '<div class="empty-message">画像が見つかりませんでした</div>';
+          }
+        } catch (err) {
+          console.error('画像の読み込みに失敗しました:', err);
+          grid.innerHTML = '<div class="error-message">画像の読み込みに失敗しました</div>';
+        }
+      }
+    })();
+    
+    // Form submission
+    (function() {
+      const form = document.getElementById('service-form');
+      if (form) {
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          // 送信ボタンを無効化
+          const submitBtn = form.querySelector('button[type="submit"]');
+          const originalText = submitBtn.innerHTML;
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
+          
+          try {
+            // Get form data
+            const formData = new FormData(form);
+            const problemsText = formData.get('problems') || '';
+            const problems = problemsText.split('\n').filter(p => p.trim());
+            
+            // Parse sections from hidden input
+            let sections = [];
+            try {
+              const sectionsText = document.getElementById('sections-json-input')?.value || '[]';
+              sections = JSON.parse(sectionsText);
+              if (!Array.isArray(sections)) {
+                throw new Error('sectionsは配列である必要があります');
+              }
+            } catch (e) {
+              alert(`sectionsのデータが無効です: ${e.message}`);
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalText;
+              return;
+            }
+            
+            const serviceData = {
+              id: parseInt(formData.get('id')),
+              title: formData.get('title'),
+              category: formData.get('category'),
+              price: formData.get('price'),
+              image: formData.get('image') || '',
+              description: formData.get('description') || '',
+              problems: problems.length > 0 ? problems : undefined,
+              solution: formData.get('solution') || undefined,
+              sections: sections.length > 0 ? sections : []  // sectionsは常に配列として送信
+            };
+            
+            // Remove undefined fields (but keep empty arrays for sections)
+            Object.keys(serviceData).forEach(key => {
+              if (key === 'sections') {
+                // sectionsは常に配列として保持
+                return;
+              }
+              if (serviceData[key] === undefined || serviceData[key] === '') {
+                delete serviceData[key];
+              }
+            });
+            
+            // APIに送信
+            const response = await fetch(`/api/services/${serviceData.id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(serviceData)
+            });
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            // 成功メッセージ
+            alert(`サービスID ${result.id} を更新しました！\n\nページを自動生成しています。数秒後に詳細ページに移動します。`);
+            
+            // 少し待ってからリダイレクト（ビルドが完了するまで）
+            setTimeout(() => {
+              window.location.href = `/admin/services/${serviceData.id}.html`;
+            }, 2000);
+            
+          } catch (error) {
+            console.error('Error:', error);
+            alert('エラーが発生しました: ' + error.message + '\n\n開発サーバーが起動しているか確認してください。');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+          }
+        });
+      }
+    })();
+  </script>
+</main>
+
+
+    </main>
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- Off-canvas (left) -->
+    <div id="offcanvas-overlay" class="offcanvas-overlay" aria-hidden="true"></div>
+    <aside id="offcanvas" class="offcanvas" aria-hidden="true" aria-label="メニュー">
+      <h2 class="offcanvas-title">サイトマップ</h2>
+      <nav class="offcanvas-nav" aria-label="サイトマップ">
+        <!-- 1. パブリックサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">1. パブリックサイト</h3>
+          <ul class="offcanvas-sitemap-list">
+            <li><a href="/index.html" class="offcanvas-sitemap-link">トップページ（発注）</a></li>
+            <li><a href="/signin.html" class="offcanvas-sitemap-link">ログイン</a></li>
+            <li><a href="/signup.html" class="offcanvas-sitemap-link">新規登録</a></li>
+            <li><a href="/reset-password.html" class="offcanvas-sitemap-link">パスワードリセット</a></li>
+          </ul>
+        </div>
+        
+        <!-- 2. ユーザー（顧客）向けサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">2. 顧客向けサイト</h3>
+          <ul class="offcanvas-sitemap-list">
+            <li><a href="/mypage.html" class="offcanvas-sitemap-link">マイページ</a></li>
+            <li><a href="/mypage/info.html" class="offcanvas-sitemap-link">アカウント情報</a></li>
+            <li><a href="/mypage/company/edit.html" class="offcanvas-sitemap-link">会社基本情報編集</a></li>
+            <li><a href="/mypage/store/edit.html" class="offcanvas-sitemap-link">店舗情報編集</a></li>
+            <li><a href="/cart.html" class="offcanvas-sitemap-link">カート</a></li>
+            <li><a href="/report.html" class="offcanvas-sitemap-link">レポート一覧</a></li>
+          </ul>
+        </div>
+        
+        <!-- 3. 清掃員向けサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">3. 清掃員向けサイト</h3>
+          <ul class="offcanvas-sitemap-list">
+            <li><a href="/staff/dashboard.html" class="offcanvas-sitemap-link">ダッシュボード</a></li>
+            <li><a href="/staff/assignments.html" class="offcanvas-sitemap-link">作業割り当て</a></li>
+            <li><a href="/staff/training.html" class="offcanvas-sitemap-link">研修動画アーカイブ</a></li>
+          </ul>
+        </div>
+        
+        <!-- 4. 営業マン向けサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">4. 営業マン向けサイト</h3>
+          <ul class="offcanvas-sitemap-list">
+            <li><a href="/concierge.html" class="offcanvas-sitemap-link">コンシェルジュ</a></li>
+            <li><a href="/sales/dashboard.html" class="offcanvas-sitemap-link">ダッシュボード</a></li>
+            <li><a href="/sales/clients.html" class="offcanvas-sitemap-link">顧客一覧</a></li>
+            <li><a href="/sales/estimates.html" class="offcanvas-sitemap-link">見積もり一覧</a></li>
+            <li><a href="/sales/estimates/new.html" class="offcanvas-sitemap-link">見積もり作成</a></li>
+            <li><a href="/sales/schedule.html" class="offcanvas-sitemap-link">スケジュール管理</a></li>
+          </ul>
+        </div>
+        
+        <!-- 5. 管理者向けサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">5. 管理者向けサイト</h3>
+          <ul class="offcanvas-sitemap-list">
+            <li><a href="/admin/dashboard.html" class="offcanvas-sitemap-link">管理ダッシュボード</a></li>
+            <li><a href="/admin/sitemap.html" class="offcanvas-sitemap-link">サイトマップ（管理）</a></li>
+            <li><a href="/admin/services.html" class="offcanvas-sitemap-link">サービス管理</a></li>
+            <li><a href="/admin/users/customers.html" class="offcanvas-sitemap-link">顧客管理</a></li>
+            <li><a href="/admin/users/staff.html" class="offcanvas-sitemap-link">清掃員管理</a></li>
+            <li><a href="/admin/users/sales.html" class="offcanvas-sitemap-link">営業管理</a></li>
+          </ul>
+        </div>
+      </nav>
+    </aside>
+    <!-- Edge swipe hint (mobile only) -->
+    <div class="edge-swipe-hint" aria-hidden="true">
+      <i class="fas fa-chevron-right"></i>
+    </div>
+    <!-- フィードバックボタン（ドラッグ可能） -->
+<div id="feedback-button" class="feedback-button" draggable="true">
+  <i class="fas fa-arrow-down"></i>
+</div>
+
+<!-- フィードバックフォーム（ドラッグ可能・独立） -->
+<div id="feedback-form" class="feedback-form" style="display: none;" draggable="true">
+  <div class="feedback-form-header">
+    <span class="feedback-form-title">フィードバック</span>
+    <button class="feedback-form-close" id="feedback-close-btn">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div class="feedback-form-body">
+    <textarea 
+      id="feedback-text" 
+      class="feedback-text-input" 
+      placeholder="修正箇所やコメントを入力してください..."
+      rows="4"
+    ></textarea>
+    <div class="feedback-form-actions">
+      <button class="feedback-screenshot-btn" id="feedback-screenshot-btn">
+        <i class="fas fa-camera"></i>
+        スクリーンショット
+      </button>
+      <button class="feedback-send-btn" id="feedback-send-btn" disabled>
+        <i class="fas fa-paper-plane"></i>
+        送信
+      </button>
+    </div>
+    <div id="feedback-screenshot-preview" class="feedback-screenshot-preview" style="display: none;">
+      <img id="feedback-screenshot-img" alt="スクリーンショット" />
+      <button class="feedback-screenshot-remove" id="feedback-screenshot-remove">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .feedback-button {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: #dc2626;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: move;
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .feedback-button:hover {
+    background: #b91c1c;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .feedback-button:active {
+    transform: scale(0.95);
+  }
+
+  .feedback-button i {
+    font-size: 24px;
+  }
+
+  .feedback-button.dragging {
+    opacity: 0.7;
+    cursor: grabbing;
+  }
+
+  .feedback-form {
+    position: fixed;
+    top: 160px;
+    right: 20px;
+    width: 350px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 10001;
+    overflow: hidden;
+    cursor: move;
+  }
+
+  .feedback-form.dragging {
+    opacity: 0.8;
+    cursor: grabbing;
+  }
+
+  .feedback-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #dc2626;
+    color: #ffffff;
+    cursor: move;
+    user-select: none;
+  }
+
+  .feedback-form-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .feedback-form-close {
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+
+  .feedback-form-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .feedback-form-body {
+    padding: 16px;
+  }
+
+  .feedback-text-input {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+
+  .feedback-text-input:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  }
+
+  .feedback-form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .feedback-screenshot-btn,
+  .feedback-send-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+
+  .feedback-screenshot-btn {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  .feedback-screenshot-btn:hover {
+    background: #e5e7eb;
+  }
+
+  .feedback-send-btn {
+    background: #dc2626;
+    color: #ffffff;
+  }
+
+  .feedback-send-btn:hover:not(:disabled) {
+    background: #b91c1c;
+  }
+
+  .feedback-send-btn:disabled {
+    background: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+
+  .feedback-screenshot-preview {
+    margin-top: 12px;
+    position: relative;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .feedback-screenshot-preview img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .feedback-screenshot-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+
+  .feedback-screenshot-remove:hover {
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  @media (max-width: 768px) {
+    .feedback-form {
+      width: calc(100vw - 40px);
+      max-width: 350px;
+    }
+  }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  (function() {
+    let screenshotData = null;
+    let isDraggingButton = false;
+    let isDraggingForm = false;
+    let buttonDragOffset = { x: 0, y: 0 };
+    let formDragOffset = { x: 0, y: 0 };
+
+    function init() {
+      const feedbackButton = document.getElementById('feedback-button');
+      const feedbackForm = document.getElementById('feedback-form');
+      const feedbackFormHeader = feedbackForm ? feedbackForm.querySelector('.feedback-form-header') : null;
+      const feedbackText = document.getElementById('feedback-text');
+      const feedbackCloseBtn = document.getElementById('feedback-close-btn');
+      const feedbackScreenshotBtn = document.getElementById('feedback-screenshot-btn');
+      const feedbackSendBtn = document.getElementById('feedback-send-btn');
+      const feedbackScreenshotPreview = document.getElementById('feedback-screenshot-preview');
+      const feedbackScreenshotImg = document.getElementById('feedback-screenshot-img');
+      const feedbackScreenshotRemove = document.getElementById('feedback-screenshot-remove');
+
+      if (!feedbackButton || !feedbackForm) return;
+
+      // 矢印ボタンのドラッグ機能
+      feedbackButton.addEventListener('mousedown', function(e) {
+        if (e.target === feedbackButton || e.target.closest('.feedback-button')) {
+          isDraggingButton = true;
+          feedbackButton.classList.add('dragging');
+          const rect = feedbackButton.getBoundingClientRect();
+          buttonDragOffset.x = e.clientX - rect.left;
+          buttonDragOffset.y = e.clientY - rect.top;
+          e.preventDefault();
+        }
+      });
+
+      // フォームのドラッグ機能（ヘッダー部分をドラッグ）
+      if (feedbackFormHeader) {
+        feedbackFormHeader.addEventListener('mousedown', function(e) {
+          if (e.target !== feedbackCloseBtn && !e.target.closest('.feedback-form-close')) {
+            isDraggingForm = true;
+            feedbackForm.classList.add('dragging');
+            const rect = feedbackForm.getBoundingClientRect();
+            formDragOffset.x = e.clientX - rect.left;
+            formDragOffset.y = e.clientY - rect.top;
+            e.preventDefault();
+          }
+        });
+      }
+
+      document.addEventListener('mousemove', function(e) {
+        // 矢印ボタンのドラッグ
+        if (isDraggingButton && feedbackButton) {
+          const x = e.clientX - buttonDragOffset.x;
+          const y = e.clientY - buttonDragOffset.y;
+          feedbackButton.style.left = x + 'px';
+          feedbackButton.style.top = y + 'px';
+          feedbackButton.style.right = 'auto';
+          feedbackButton.style.bottom = 'auto';
+        }
+        
+        // フォームのドラッグ
+        if (isDraggingForm && feedbackForm) {
+          const x = e.clientX - formDragOffset.x;
+          const y = e.clientY - formDragOffset.y;
+          feedbackForm.style.left = x + 'px';
+          feedbackForm.style.top = y + 'px';
+          feedbackForm.style.right = 'auto';
+        }
+      });
+
+      document.addEventListener('mouseup', function() {
+        if (isDraggingButton) {
+          isDraggingButton = false;
+          if (feedbackButton) {
+            feedbackButton.classList.remove('dragging');
+          }
+        }
+        if (isDraggingForm) {
+          isDraggingForm = false;
+          if (feedbackForm) {
+            feedbackForm.classList.remove('dragging');
+          }
+        }
+      });
+
+      // タッチデバイス対応 - 矢印ボタン
+      feedbackButton.addEventListener('touchstart', function(e) {
+        if (e.target === feedbackButton || e.target.closest('.feedback-button')) {
+          isDraggingButton = true;
+          feedbackButton.classList.add('dragging');
+          const touch = e.touches[0];
+          const rect = feedbackButton.getBoundingClientRect();
+          buttonDragOffset.x = touch.clientX - rect.left;
+          buttonDragOffset.y = touch.clientY - rect.top;
+          e.preventDefault();
+        }
+      });
+
+      // タッチデバイス対応 - フォーム
+      if (feedbackFormHeader) {
+        feedbackFormHeader.addEventListener('touchstart', function(e) {
+          if (e.target !== feedbackCloseBtn && !e.target.closest('.feedback-form-close')) {
+            isDraggingForm = true;
+            feedbackForm.classList.add('dragging');
+            const touch = e.touches[0];
+            const rect = feedbackForm.getBoundingClientRect();
+            formDragOffset.x = touch.clientX - rect.left;
+            formDragOffset.y = touch.clientY - rect.top;
+            e.preventDefault();
+          }
+        });
+      }
+
+      document.addEventListener('touchmove', function(e) {
+        const touch = e.touches[0];
+        
+        // 矢印ボタンのドラッグ
+        if (isDraggingButton && feedbackButton) {
+          const x = touch.clientX - buttonDragOffset.x;
+          const y = touch.clientY - buttonDragOffset.y;
+          feedbackButton.style.left = x + 'px';
+          feedbackButton.style.top = y + 'px';
+          feedbackButton.style.right = 'auto';
+          feedbackButton.style.bottom = 'auto';
+          e.preventDefault();
+        }
+        
+        // フォームのドラッグ
+        if (isDraggingForm && feedbackForm) {
+          const x = touch.clientX - formDragOffset.x;
+          const y = touch.clientY - formDragOffset.y;
+          feedbackForm.style.left = x + 'px';
+          feedbackForm.style.top = y + 'px';
+          feedbackForm.style.right = 'auto';
+          e.preventDefault();
+        }
+      });
+
+      document.addEventListener('touchend', function() {
+        if (isDraggingButton) {
+          isDraggingButton = false;
+          if (feedbackButton) {
+            feedbackButton.classList.remove('dragging');
+          }
+        }
+        if (isDraggingForm) {
+          isDraggingForm = false;
+          if (feedbackForm) {
+            feedbackForm.classList.remove('dragging');
+          }
+        }
+      });
+
+      // ボタンクリックでフォーム表示
+      feedbackButton.addEventListener('click', function(e) {
+        if (!isDraggingButton && !isDraggingForm) {
+          e.stopPropagation();
+          // フォームが非表示の場合は表示、既に表示されている場合は非表示
+          if (feedbackForm.style.display === 'none') {
+            const buttonRect = feedbackButton.getBoundingClientRect();
+            feedbackForm.style.display = 'block';
+            feedbackForm.style.top = (buttonRect.bottom + 10) + 'px';
+            feedbackForm.style.left = (buttonRect.left - 330) + 'px';
+            feedbackForm.style.right = 'auto';
+            if (feedbackText) feedbackText.focus();
+          } else {
+            feedbackForm.style.display = 'none';
+          }
+        }
+      });
+
+      // フォームを閉じる
+      if (feedbackCloseBtn) {
+        feedbackCloseBtn.addEventListener('click', function() {
+          feedbackForm.style.display = 'none';
+          screenshotData = null;
+          if (feedbackScreenshotPreview) feedbackScreenshotPreview.style.display = 'none';
+          if (feedbackText) feedbackText.value = '';
+          if (feedbackSendBtn) feedbackSendBtn.disabled = true;
+        });
+      }
+
+      // テキスト入力で送信ボタンを有効化
+      if (feedbackText && feedbackSendBtn) {
+        feedbackText.addEventListener('input', function() {
+          feedbackSendBtn.disabled = !feedbackText.value.trim() && !screenshotData;
+        });
+      }
+
+      // スクリーンショット機能
+      if (feedbackScreenshotBtn) {
+        feedbackScreenshotBtn.addEventListener('click', function() {
+          if (typeof html2canvas === 'undefined') {
+            alert('スクリーンショット機能が利用できません。');
+            return;
+          }
+
+          feedbackScreenshotBtn.disabled = true;
+          feedbackScreenshotBtn.innerHTML = '<i class="fas fa-camera"></i> 撮影中...';
+
+          html2canvas(document.body, {
+            useCORS: true,
+            logging: false,
+            scale: 1
+          }).then(function(canvas) {
+            screenshotData = canvas.toDataURL('image/png');
+            if (feedbackScreenshotImg) feedbackScreenshotImg.src = screenshotData;
+            if (feedbackScreenshotPreview) feedbackScreenshotPreview.style.display = 'block';
+            feedbackScreenshotBtn.disabled = false;
+            feedbackScreenshotBtn.innerHTML = '<i class="fas fa-camera"></i> スクリーンショット';
+            if (feedbackSendBtn) {
+              feedbackSendBtn.disabled = !feedbackText.value.trim() && !screenshotData;
+            }
+          }).catch(function(error) {
+            console.error('スクリーンショットエラー:', error);
+            alert('スクリーンショットの取得に失敗しました。');
+            feedbackScreenshotBtn.disabled = false;
+            feedbackScreenshotBtn.innerHTML = '<i class="fas fa-camera"></i> スクリーンショット';
+          });
+        });
+      }
+
+      // スクリーンショット削除
+      if (feedbackScreenshotRemove && feedbackSendBtn && feedbackText) {
+        feedbackScreenshotRemove.addEventListener('click', function() {
+          screenshotData = null;
+          if (feedbackScreenshotPreview) feedbackScreenshotPreview.style.display = 'none';
+          feedbackSendBtn.disabled = !feedbackText.value.trim();
+        });
+      }
+
+      // メール送信機能（EmailJS使用）
+      if (feedbackSendBtn) {
+        feedbackSendBtn.addEventListener('click', function() {
+          const text = feedbackText ? feedbackText.value.trim() : '';
+          if (!text && !screenshotData) {
+            alert('テキストまたはスクリーンショットを入力してください。');
+            return;
+          }
+
+          const pageUrl = window.location.href;
+          const pageTitle = document.title;
+          const timestamp = new Date().toLocaleString('ja-JP');
+
+          // EmailJSの設定
+          const EMAILJS_SERVICE_ID = 'service_hx88k5s';
+          const EMAILJS_TEMPLATE_ID = 'template_alkj896';
+          const EMAILJS_PUBLIC_KEY = 'pLD_aLYcX2lhiCSRl';
+
+          // EmailJSが利用可能かチェック
+          if (typeof emailjs === 'undefined') {
+            // EmailJSが利用できない場合は、従来のmailto方式にフォールバック
+            const emailTo = 'misesapofeedback@gmail.com';
+            const emailSubject = encodeURIComponent(`フィードバック: ${pageTitle}`);
+            let emailBody = `フィードバック\n\n`;
+            emailBody += `ページ: ${pageTitle}\n`;
+            emailBody += `URL: ${pageUrl}\n`;
+            emailBody += `日時: ${timestamp}\n\n`;
+            emailBody += `コメント:\n${text}\n`;
+            const emailBodyEncoded = encodeURIComponent(emailBody);
+
+            if (screenshotData) {
+              const link = document.createElement('a');
+              link.download = `screenshot-${Date.now()}.png`;
+              link.href = screenshotData;
+              link.click();
+              alert('スクリーンショットをダウンロードしました。\nメール作成画面で手動で添付してください。');
+            }
+            window.location.href = `mailto:${emailTo}?subject=${emailSubject}&body=${emailBodyEncoded}`;
+            return;
+          }
+
+          // EmailJSでメール送信
+          feedbackSendBtn.disabled = true;
+          feedbackSendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
+
+          // テンプレートパラメータを準備
+          const templateParams = {
+            to_email: 'misesapofeedback@gmail.com',
+            page_title: pageTitle,
+            page_url: pageUrl,
+            timestamp: timestamp,
+            comment: text,
+            has_screenshot: screenshotData ? 'あり' : 'なし'
+          };
+
+          // スクリーンショットがある場合は、HTML画像として埋め込む
+          if (screenshotData) {
+            // base64画像をHTMLのimgタグとして埋め込む
+            // EmailJSのテンプレートでHTMLメールとして表示される
+            templateParams.screenshot_image = `<img src="${screenshotData}" alt="スクリーンショット" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; margin: 10px 0;" />`;
+            templateParams.screenshot_base64 = screenshotData; // テンプレートで直接使用する場合
+          }
+
+          // EmailJSで送信
+          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+            .then(function(response) {
+              console.log('送信成功:', response.status, response.text);
+
+              alert('フィードバックを送信しました！');
+              
+              // フォームをリセット
+              feedbackForm.style.display = 'none';
+              screenshotData = null;
+              if (feedbackScreenshotPreview) feedbackScreenshotPreview.style.display = 'none';
+              if (feedbackText) feedbackText.value = '';
+              feedbackSendBtn.disabled = true;
+              feedbackSendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送信';
+            }, function(error) {
+              console.error('送信エラー:', error);
+              alert('送信に失敗しました。\nエラー: ' + (error.text || error.message || '不明なエラー'));
+              feedbackSendBtn.disabled = false;
+              feedbackSendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送信';
+            });
+        });
+      }
+    }
+
+    // EmailJSの初期化（公開キーを設定）
+    const EMAILJS_PUBLIC_KEY = 'pLD_aLYcX2lhiCSRl';
+    if (typeof emailjs !== 'undefined') {
+      emailjs.init(EMAILJS_PUBLIC_KEY);
+    }
+
+    // 初期化
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
+
+
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+  </body>
+  </html>
+
+

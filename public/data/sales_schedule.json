@@ -1,0 +1,47 @@
+{
+  "schedules": [
+    {
+      "id": "schedule-001",
+      "date": "2025-03-28",
+      "time": "10:00",
+      "client_id": "2167ccb6",
+      "client_name": "株式会社 Dart Ace",
+      "store_name": "日本橋茅場町店",
+      "purpose": "見積もり提出",
+      "address": "東京都中央区日本橋茅場町1-10-8",
+      "phone": "03-1234-5678",
+      "email": "info@dart-ace.com",
+      "status": "upcoming",
+      "notes": "レンジフード洗浄の見積もりを提出"
+    },
+    {
+      "id": "schedule-002",
+      "date": "2025-03-28",
+      "time": "14:00",
+      "client_id": "bf9f6bcc",
+      "client_name": "株式会社 Dart Ace",
+      "store_name": "大塚店",
+      "purpose": "定期訪問",
+      "address": "東京都豊島区大塚1-1-1",
+      "phone": "03-1234-5678",
+      "email": "info@dart-ace.com",
+      "status": "upcoming",
+      "notes": "清掃状況の確認"
+    },
+    {
+      "id": "schedule-003",
+      "date": "2025-03-29",
+      "time": "11:00",
+      "client_id": "703bafc0",
+      "client_name": "株式会社 Dart Ace",
+      "store_name": "高円寺店",
+      "purpose": "商談",
+      "address": "東京都杉並区高円寺南2-1-1",
+      "phone": "03-1234-5678",
+      "email": "info@dart-ace.com",
+      "status": "upcoming",
+      "notes": "新規サービス提案"
+    }
+  ]
+}
+

@@ -1,0 +1,1064 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>サイトマップ（管理） | ミセサポ</title>
+    <style>
+      :root { color-scheme: light; }
+      body { 
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans JP', sans-serif; 
+        margin: 24px; 
+        line-height: 1.6; 
+        background: #ffffff;
+        color: #1f2937;
+      }
+      h1 { 
+        font-size: 1.5rem; 
+        margin: 0 0 16px; 
+        color: #111827;
+        font-weight: 700;
+      }
+      .muted { 
+        color: #6b7280; 
+        font-size: .9rem; 
+        margin-bottom: 24px; 
+      }
+      .sitemap-container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      .sitemap-section {
+        margin-bottom: 48px;
+      }
+      .sitemap-section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #d1d5db;
+      }
+      .sitemap-tree {
+        position: relative;
+        padding-left: 0;
+      }
+      .sitemap-node {
+        margin: 8px 0;
+        position: relative;
+      }
+      .sitemap-node::before {
+        content: '';
+        position: absolute;
+        left: -20px;
+        top: 12px;
+        width: 12px;
+        height: 1px;
+        background: #9ca3af;
+      }
+      .sitemap-node::after {
+        content: '';
+        position: absolute;
+        left: -20px;
+        top: 0;
+        width: 1px;
+        height: 100%;
+        background: #9ca3af;
+      }
+      .sitemap-node:first-child::after {
+        top: 12px;
+      }
+      .sitemap-node:last-child::after {
+        height: 12px;
+      }
+      .sitemap-node:only-child::after {
+        display: none;
+      }
+      .sitemap-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 12px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        transition: all 0.2s;
+      }
+      .sitemap-item:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+      .sitemap-item-name {
+        font-weight: 500;
+        color: #111827;
+        flex: 1;
+      }
+      .sitemap-item-name a {
+        color: #2563eb;
+        text-decoration: none;
+      }
+      .sitemap-item-name a:hover {
+        text-decoration: underline;
+      }
+      .sitemap-item-path {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.85rem;
+        color: #6b7280;
+        background: #f3f4f6;
+        padding: 4px 8px;
+        border-radius: 4px;
+      }
+      .sitemap-item-badges {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .role-badge { 
+        display: inline-block; 
+        padding: 4px 10px; 
+        border-radius: 6px; 
+        font-size: 0.75rem; 
+        font-weight: 600; 
+      }
+      .role-customer { 
+        background: #dbeafe; 
+        color: #1e40af; 
+        border: 1px solid #93c5fd;
+      }
+      .role-staff { 
+        background: #d1fae5; 
+        color: #065f46; 
+        border: 1px solid #6ee7b7;
+      }
+      .role-sales { 
+        background: #fef3c7; 
+        color: #92400e; 
+        border: 1px solid #fde68a;
+      }
+      .role-admin { 
+        background: #fce7f3; 
+        color: #9f1239; 
+        border: 1px solid #fbcfe8;
+      }
+      .role-developer { 
+        background: #dbeafe; 
+        color: #1e40af; 
+        border: 1px solid #93c5fd; 
+      }
+      .role-public { 
+        background: #f3f4f6; 
+        color: #374151; 
+        border: 1px solid #d1d5db;
+      }
+      .status-badge { 
+        font-weight: 600;
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+      .status.implemented { 
+        color: #059669; 
+        background: #d1fae5;
+      }
+      .status.partial { 
+        color: #d97706; 
+        background: #fef3c7;
+      }
+      .status.pending {
+        color: #dc2626; 
+        background: #fee2e2;
+      }
+      .new-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        background: #3b82f6;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 8px;
+      }
+      .new-badge i {
+        font-size: 0.65rem;
+      }
+      .release-check-badges {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        margin-left: 8px;
+      }
+      .release-check-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+      .release-check-badge.checked {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #6ee7b7;
+      }
+      .release-check-badge.unchecked {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+      }
+      .release-check-badge i {
+        font-size: 0.7rem;
+      }
+      .sitemap-children {
+        margin-left: 32px;
+        margin-top: 8px;
+        position: relative;
+      }
+      .sitemap-children::before {
+        content: '';
+        position: absolute;
+        left: -20px;
+        top: 0;
+        width: 1px;
+        height: 100%;
+        background: #e5e7eb;
+      }
+      .legend {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 32px;
+      }
+      .legend-title {
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: #111827;
+      }
+      .legend-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.875rem;
+      }
+      @media (max-width: 768px) {
+        body {
+          margin: 16px;
+        }
+        .sitemap-item {
+          flex-wrap: wrap;
+        }
+        .sitemap-item-badges {
+          width: 100%;
+        }
+        .sitemap-children {
+          margin-left: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      // リリース前チェック状況をサイトマップに表示
+      (function() {
+        // getAllReleaseChecks関数を直接定義（app.jsが読み込まれていない場合に備えて）
+        function getAllReleaseChecks() {
+          try {
+            const stored = localStorage.getItem('releaseChecks');
+            return stored ? JSON.parse(stored) : {};
+          } catch (e) {
+            console.error('Failed to get release checks:', e);
+            return {};
+          }
+        }
+        
+        // パスを正規化（先頭の/を統一）
+        function normalizePath(path) {
+          if (!path) return '';
+          // 先頭の/を保証
+          return path.startsWith('/') ? path : '/' + path;
+        }
+        
+        function updateReleaseCheckBadges() {
+          const allChecks = getAllReleaseChecks();
+          
+          // 全てのsitemap-itemを取得
+          const items = document.querySelectorAll('.sitemap-item');
+          
+          items.forEach(item => {
+            const pathElement = item.querySelector('.sitemap-item-path');
+            if (!pathElement) return;
+            
+            const pagePath = normalizePath(pathElement.textContent.trim());
+            
+            // パスの複数の形式をチェック（/index.html と /index.html の両方）
+            const pathVariations = [
+              pagePath,
+              pagePath.replace(/^\/+/, '/'), // 先頭の/を統一
+              pagePath.replace(/^\/+/, ''), // 先頭の/を削除
+              '/' + pagePath.replace(/^\/+/, '') // 先頭に/を追加
+            ];
+            
+            let checks = { admin: false, developer: false, other: false };
+            for (const path of pathVariations) {
+              if (allChecks[path]) {
+                checks = allChecks[path];
+                break;
+              }
+            }
+            
+            // 既存のチェックバッジを削除
+            const existingBadges = item.querySelector('.release-check-badges');
+            if (existingBadges) {
+              existingBadges.remove();
+            }
+            
+            // チェックバッジコンテナを作成
+            const badgesContainer = document.createElement('div');
+            badgesContainer.className = 'release-check-badges';
+            
+            // 各チェックのバッジを追加
+            const checkTypes = [
+              { key: 'admin', label: '管理者', icon: 'fa-user-shield' },
+              { key: 'developer', label: '開発者', icon: 'fa-code' },
+              { key: 'other', label: 'その他', icon: 'fa-check-circle' }
+            ];
+            
+            checkTypes.forEach(checkType => {
+              const isChecked = checks[checkType.key];
+              const badge = document.createElement('span');
+              badge.className = `release-check-badge ${isChecked ? 'checked' : 'unchecked'}`;
+              badge.title = `${checkType.label}: ${isChecked ? 'チェック済み' : '未チェック'}`;
+              badge.innerHTML = `<i class="fas ${checkType.icon}"></i><span>${checkType.label}</span>`;
+              badgesContainer.appendChild(badge);
+            });
+            
+            // バッジをsitemap-item-badgesに追加
+            const badgesElement = item.querySelector('.sitemap-item-badges');
+            if (badgesElement) {
+              badgesElement.appendChild(badgesContainer);
+            }
+          });
+        }
+        
+        // ページ読み込み時に実行
+        function init() {
+          // 少し遅延して実行（DOMが完全に構築されるまで待つ）
+          setTimeout(function() {
+            updateReleaseCheckBadges();
+          }, 500);
+        }
+        
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+        } else {
+          init();
+        }
+        
+        // localStorageの変更を監視（別タブで更新された場合に対応）
+        window.addEventListener('storage', function(e) {
+          if (e.key === 'releaseChecks') {
+            updateReleaseCheckBadges();
+          }
+        });
+        
+        // 定期的に更新（同じタブでの更新にも対応）
+        setInterval(updateReleaseCheckBadges, 2000);
+        
+        // 手動で更新するための関数をグローバルに公開（デバッグ用）
+        window.updateReleaseCheckBadges = updateReleaseCheckBadges;
+      })();
+    </script>
+    <div class="sitemap-container">
+      <h1>ミセサポ サイトマップ図</h1>
+      <p class="muted">最終更新: 2025年3月 - ロール別サイトマップ構成（サポートデスク要素含む）</p>
+      <p class="muted">詳細な提案は <code>docs/SITEMAP_PROPOSAL.md</code> を参照してください。</p>
+
+      <div class="legend">
+        <div class="legend-title">凡例</div>
+        <div class="legend-items">
+          <div class="legend-item">
+            <span class="status-badge status implemented">実装済み</span>
+            <span>実装済み</span>
+          </div>
+          <div class="legend-item">
+            <span class="status-badge status partial">部分実装</span>
+            <span>部分実装</span>
+          </div>
+          <div class="legend-item">
+            <span class="status-badge status pending">未実装</span>
+            <span>未実装</span>
+          </div>
+          <div class="legend-item">
+            <span class="role-badge role-public">公開</span>
+            <span>パブリック</span>
+          </div>
+          <div class="legend-item">
+            <span class="role-badge role-customer">顧客</span>
+            <span>顧客</span>
+          </div>
+          <div class="legend-item">
+            <span class="role-badge role-staff">清掃員</span>
+            <span>清掃員</span>
+          </div>
+          <div class="legend-item">
+            <span class="role-badge role-sales">営業</span>
+            <span>営業</span>
+          </div>
+          <div class="legend-item">
+            <span class="role-badge role-admin">管理者</span>
+            <span>管理者</span>
+          </div>
+          <div class="legend-item">
+            <span class="role-badge role-developer">開発者</span>
+            <span>開発者</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. パブリックサイト -->
+      <div class="sitemap-section">
+        <div class="sitemap-section-title">1. パブリックサイト（未認証ユーザー向け）</div>
+        <div class="sitemap-tree">
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name">
+                <a href="/index.html">トップページ（ランディングページ）</a>
+                <span class="new-badge">
+                  <i class="fas fa-star"></i>
+                  NEW
+                </span>
+              </span>
+              <code class="sitemap-item-path">/index.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-public">公開</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/service.html">サービスページ（発注）</a></span>
+              <code class="sitemap-item-path">/service.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-public">公開</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/contact.html">お問い合わせ</a></span>
+              <code class="sitemap-item-path">/contact.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-public">公開</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/signin.html">ログイン</a></span>
+              <code class="sitemap-item-path">/signin.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-public">公開</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/signup.html">新規登録</a></span>
+              <code class="sitemap-item-path">/signup.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-public">公開</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name">パスワードリセット</span>
+              <code class="sitemap-item-path">/reset-password.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-public">公開</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. ユーザー（顧客）向けサイト -->
+      <div class="sitemap-section">
+        <div class="sitemap-section-title">2. ユーザー（顧客）向けサイト（SPメイン、PCもあり）</div>
+        <div class="sitemap-tree">
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/mypage.html">マイページ（ダッシュボード）</a></span>
+              <code class="sitemap-item-path">/mypage.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-customer">顧客</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+            <div class="sitemap-children">
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/mypage/info.html">アカウント情報</a></span>
+                  <code class="sitemap-item-path">/mypage/info.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-customer">顧客</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+                <div class="sitemap-children">
+                  <div class="sitemap-node">
+                    <div class="sitemap-item">
+                      <span class="sitemap-item-name"><a href="/mypage/company/edit.html">会社基本情報編集</a></span>
+                      <code class="sitemap-item-path">/mypage/company/edit.html</code>
+                      <div class="sitemap-item-badges">
+                        <span class="role-badge role-customer">顧客</span>
+                        <span class="status-badge status implemented">実装済み</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="sitemap-node">
+                    <div class="sitemap-item">
+                      <span class="sitemap-item-name"><a href="/mypage/store/edit.html">店舗情報編集</a></span>
+                      <code class="sitemap-item-path">/mypage/store/edit.html</code>
+                      <div class="sitemap-item-badges">
+                        <span class="role-badge role-customer">顧客</span>
+                        <span class="status-badge status implemented">実装済み</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name">お問い合わせ</span>
+                  <code class="sitemap-item-path">/mypage/inquiry.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-customer">顧客</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name">
+                    <a href="/mypage/settings.html">アカウント設定</a>
+                    <span class="new-badge">
+                      <i class="fas fa-star"></i>
+                      NEW
+                    </span>
+                  </span>
+                  <code class="sitemap-item-path">/mypage/settings.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-customer">顧客</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/mypage/support.html">サポートセンター</a></span>
+                  <code class="sitemap-item-path">/mypage/support.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-customer">顧客</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+                <div class="sitemap-children">
+                  <div class="sitemap-node">
+                    <div class="sitemap-item">
+                      <span class="sitemap-item-name"><a href="/mypage/support/faq.html">よくある質問（FAQ）</a></span>
+                      <code class="sitemap-item-path">/mypage/support/faq.html</code>
+                      <div class="sitemap-item-badges">
+                        <span class="role-badge role-customer">顧客</span>
+                        <span class="status-badge status implemented">実装済み</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="sitemap-node">
+                    <div class="sitemap-item">
+                      <span class="sitemap-item-name"><a href="/mypage/support/tickets.html">お問い合わせ履歴</a></span>
+                      <code class="sitemap-item-path">/mypage/support/tickets.html</code>
+                      <div class="sitemap-item-badges">
+                        <span class="role-badge role-customer">顧客</span>
+                        <span class="status-badge status implemented">実装済み</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="sitemap-node">
+                    <div class="sitemap-item">
+                      <span class="sitemap-item-name"><a href="/mypage/support/inquiry/new.html">新規お問い合わせ</a></span>
+                      <code class="sitemap-item-path">/mypage/support/inquiry/new.html</code>
+                      <div class="sitemap-item-badges">
+                        <span class="role-badge role-customer">顧客</span>
+                        <span class="status-badge status implemented">実装済み</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="sitemap-node">
+                    <div class="sitemap-item">
+                      <span class="sitemap-item-name"><a href="/mypage/support/contact.html">お問い合わせ・連絡先</a></span>
+                      <code class="sitemap-item-path">/mypage/support/contact.html</code>
+                      <div class="sitemap-item-badges">
+                        <span class="role-badge role-customer">顧客</span>
+                        <span class="status-badge status implemented">実装済み</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/cart.html">カート</a></span>
+              <code class="sitemap-item-path">/cart.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-customer">顧客</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name">決済確認</span>
+              <code class="sitemap-item-path">/checkout.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-customer">顧客</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name">発注完了</span>
+              <code class="sitemap-item-path">/order-complete.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-customer">顧客</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/report.html">レポート一覧</a></span>
+              <code class="sitemap-item-path">/report.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-customer">顧客</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+            <div class="sitemap-children">
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name">レポート詳細（レポート一覧からレポートを選択）</span>
+                  <code class="sitemap-item-path">/reports/[id].html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-customer">顧客</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/order/history.html">発注履歴</a></span>
+              <code class="sitemap-item-path">/order/history.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-customer">顧客</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/schedule.html">スケジュール一覧</a></span>
+              <code class="sitemap-item-path">/schedule.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-customer">顧客</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 清掃員向けサイト -->
+      <div class="sitemap-section">
+        <div class="sitemap-section-title">3. 清掃員向けサイト（SPのみ）</div>
+        <div class="sitemap-tree">
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/staff/dashboard.html">ダッシュボード</a></span>
+              <code class="sitemap-item-path">/staff/dashboard.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-staff">清掃員</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/staff/assignments.html">作業割り当て一覧</a></span>
+              <code class="sitemap-item-path">/staff/assignments.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-staff">清掃員</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+            <div class="sitemap-children">
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name">
+                    作業詳細（作業一覧から作業を選択）
+                    <span class="new-badge">
+                      <i class="fas fa-star"></i>
+                      NEW
+                    </span>
+                  </span>
+                  <code class="sitemap-item-path">/staff/assignments/[id].html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-staff">清掃員</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/staff/reports/new.html">レポート作成</a></span>
+              <code class="sitemap-item-path">/staff/reports/new.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-staff">清掃員</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/staff/schedule.html">スケジュール</a></span>
+                  <code class="sitemap-item-path">/staff/schedule.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-staff">清掃員</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/staff/training.html">研修動画アーカイブ</a></span>
+                  <code class="sitemap-item-path">/staff/training.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-staff">清掃員</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+        </div>
+      </div>
+
+      <!-- 4. 営業マン向けサイト -->
+      <div class="sitemap-section">
+        <div class="sitemap-section-title">4. 営業マン向けサイト（SPメイン）</div>
+        <div class="sitemap-tree">
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/concierge.html">コンシェルジュ</a></span>
+              <code class="sitemap-item-path">/concierge.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-sales">営業</span>
+                <span class="status-badge status partial">部分実装</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/sales/dashboard.html">営業ダッシュボード</a></span>
+              <code class="sitemap-item-path">/sales/dashboard.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-sales">営業</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/sales/clients.html">顧客一覧</a></span>
+              <code class="sitemap-item-path">/sales/clients.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-sales">営業</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+            <div class="sitemap-children">
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name">顧客詳細（顧客一覧から顧客を選択）</span>
+                  <code class="sitemap-item-path">/sales/clients/[id].html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-sales">営業</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+                <div class="sitemap-children">
+                  <div class="sitemap-node">
+                    <div class="sitemap-item">
+                      <span class="sitemap-item-name">顧客情報編集（顧客詳細から編集）</span>
+                      <code class="sitemap-item-path">/sales/clients/[id]/edit.html</code>
+                      <div class="sitemap-item-badges">
+                        <span class="role-badge role-sales">営業</span>
+                        <span class="status-badge status implemented">実装済み</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name">新規顧客登録</span>
+                  <code class="sitemap-item-path">/sales/clients/new.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-sales">営業</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/sales/estimates.html">見積もり一覧</a></span>
+              <code class="sitemap-item-path">/sales/estimates.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-sales">営業</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+            <div class="sitemap-children">
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/sales/estimates/new.html">新規見積もり作成</a></span>
+                  <code class="sitemap-item-path">/sales/estimates/new.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-sales">営業</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/sales/estimates/[id].html">見積もり詳細（見積もり一覧から見積もりを選択）</a></span>
+                  <code class="sitemap-item-path">/sales/estimates/[id].html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-sales">営業</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name">下書き一覧</span>
+                  <code class="sitemap-item-path">/sales/estimates/draft</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-sales">営業</span>
+                    <span class="status-badge status pending">未実装</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name">送付済み見積もり</span>
+                  <code class="sitemap-item-path">/sales/estimates/sent</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-sales">営業</span>
+                    <span class="status-badge status pending">未実装</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name">承認済み見積もり</span>
+                  <code class="sitemap-item-path">/sales/estimates/approved</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-sales">営業</span>
+                    <span class="status-badge status pending">未実装</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/sales/orders.html">発注管理</a></span>
+              <code class="sitemap-item-path">/sales/orders.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-sales">営業</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/sales/schedule.html">スケジュール管理</a></span>
+              <code class="sitemap-item-path">/sales/schedule.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-sales">営業</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. 管理者向けサイト -->
+      <div class="sitemap-section">
+        <div class="sitemap-section-title">5. 管理者向けサイト（PCメイン）</div>
+        <div class="sitemap-tree">
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/admin/sitemap.html">サイトマップ（管理）</a></span>
+              <code class="sitemap-item-path">/admin/sitemap.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-admin">管理者</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/admin/dashboard.html">管理ダッシュボード</a></span>
+              <code class="sitemap-item-path">/admin/dashboard.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-admin">管理者</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/admin/clients.html">顧客一覧</a></span>
+              <code class="sitemap-item-path">/admin/clients.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-admin">管理者</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/admin/users.html">ユーザー管理</a></span>
+              <code class="sitemap-item-path">/admin/users.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-admin">管理者</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+            <div class="sitemap-children">
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/admin/users/customers.html">顧客一覧（ユーザー管理内）</a></span>
+                  <code class="sitemap-item-path">/admin/users/customers.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-admin">管理者</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/admin/users/staff.html">清掃員一覧</a></span>
+                  <code class="sitemap-item-path">/admin/users/staff.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-admin">管理者</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/admin/users/sales.html">営業マン一覧</a></span>
+                  <code class="sitemap-item-path">/admin/users/sales.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-admin">管理者</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/admin/orders.html">発注管理</a></span>
+              <code class="sitemap-item-path">/admin/orders.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-admin">管理者</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/admin/services.html">サービス管理</a></span>
+              <code class="sitemap-item-path">/admin/services.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-admin">管理者</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+            <div class="sitemap-children">
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/admin/services/review.html">変更内容レビュー（開発者専用）</a></span>
+                  <code class="sitemap-item-path">/admin/services/review.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-developer">開発者</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/admin/images.html">画像一覧</a></span>
+              <code class="sitemap-item-path">/admin/images.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-admin">管理者</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 48px; padding: 16px; background: #f9fafb; border-radius: 8px;">
+        <h3 style="margin-top: 0; font-size: 1rem; font-weight: 600;">実装状況サマリー</h3>
+        <p style="margin: 8px 0;"><strong>✅ Phase 1（必須）: 完了</strong> 認証機能、ユーザー向け発注機能、レポート閲覧、営業マン向け顧客管理、サポートデスク要素</p>
+        <p style="margin: 8px 0;"><strong>✅ Phase 2（業務機能）: 完了</strong> 清掃員向け作業管理・レポート作成、スケジュール管理、発注管理</p>
+        <p style="margin: 8px 0;"><strong>📝 Phase 3（高度な機能）: 未実装</strong> 分析・レポート機能、マスタ管理、API 公開</p>
+        <p style="margin: 16px 0 8px 0; font-weight: 600; color: #059669;">📊 サポートデスク要素（Phase 1）</p>
+        <p style="margin: 8px 0; font-size: 0.875rem;">FAQ、お問い合わせ履歴（チケット管理）、新規お問い合わせ、緊急連絡先ページを実装済み</p>
+      </div>
+    </div>
+  </body>
+</html>
