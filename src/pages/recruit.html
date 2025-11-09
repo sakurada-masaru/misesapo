@@ -1,0 +1,567 @@
+@layout('layouts.base')
+@json('data/meta/recruit_title.json', $title)
+@json('data/meta/recruit_body_class.json', $body_class)
+
+<main id="main" class="recruit-page">
+  <!-- Hero Section -->
+  <section class="recruit-hero">
+    <div class="recruit-hero-container">
+      <div class="recruit-hero-content">
+        <div class="recruit-logo">
+          <div class="recruit-logo-square">ミセサポ</div>
+          <div class="recruit-logo-text">求人サイト</div>
+        </div>
+        <h1 class="recruit-hero-title">私たちと一緒に"現場"から未来をつくる。</h1>
+        <p class="recruit-hero-subtitle">現在一緒に働く仲間を募集中! 未経験でも高収入のミセサポで夢は叶う。</p>
+      </div>
+      <div class="recruit-hero-visual">
+        <img src="/images/recruit/mainimage.png" alt="ミセサポ求人サイト" class="recruit-hero-image" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Recruitment Banner -->
+  <section class="recruit-banner">
+    <div class="recruit-banner-container">
+      <div class="recruit-banner-content">
+        <h2 class="recruit-banner-title">清掃員 積極採用中!!</h2>
+        <div class="recruit-banner-badges">
+          <span class="recruit-badge">未経験OK</span>
+          <span class="recruit-badge">週1日～</span>
+          <span class="recruit-badge">高収入</span>
+        </div>
+      </div>
+      <div class="recruit-banner-image">
+        <img src="/images/recruit/banner.png" alt="清掃員 積極採用中" />
+      </div>
+      <a href="/recruit/apply/cleaning.html" class="recruit-banner-button">詳しく見る &gt;&gt;</a>
+    </div>
+  </section>
+
+  <!-- ABOUT Section -->
+  <section class="recruit-about">
+    <div class="recruit-about-container">
+      <h2 class="recruit-section-title">ABOUT</h2>
+      <p class="recruit-section-subtitle">―ミセサポは店舗を支えるプロ集団</p>
+      <div class="recruit-about-content">
+        <div class="recruit-about-text">
+          <p>ミセサポは、全国1,000店舗以上をサポートする清掃・設備管理のプロフェッショナル集団です。</p>
+          <p>私たちは、飲食店や小売店などの店舗を清潔に保ち、快適な環境を提供することで、お客様のビジネスを支えています。</p>
+          <p>清掃、設備メンテナンス、インフラ支援など、店舗運営に欠かせない様々なサービスを提供しています。</p>
+          <p>未経験からでも、プロフェッショナルを目指せる環境が整っています。一緒に"現場"から未来をつくりませんか？</p>
+        </div>
+        <div class="recruit-about-image">
+          <img src="/images/recruit/about.png" alt="ミセサポについて" />
+        </div>
+      </div>
+      <div class="recruit-divider">
+        <span>ミセサポで働く魅力 | 未経験からプロを目指せる環境</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORK Section -->
+  <section class="recruit-work">
+    <div class="recruit-work-container">
+      <h2 class="recruit-section-title">WORK</h2>
+      <p class="recruit-section-subtitle">―店舗の清潔を保つのがミセサポの仕事</p>
+      <div class="recruit-work-image">
+        <img src="/images/recruit/work.png" alt="ミセサポの仕事" />
+      </div>
+      <div class="recruit-divider">
+        <span>現在募集中の職種一覧 | 清掃・設備・営業スタッフ</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOB Section -->
+  <section class="recruit-job">
+    <div class="recruit-job-container">
+      <h2 class="recruit-section-title">JOB</h2>
+      <p class="recruit-section-subtitle">―ミセサポでは、現在以下の職種を募集しております。</p>
+      <div class="recruit-job-list">
+        <!-- 清掃スタッフ -->
+        <div class="recruit-job-card">
+          <div class="job-card-content">
+            <h3 class="job-card-title">清掃スタッフ</h3>
+            <p class="job-card-description">グリストラップ清掃、厨房清掃、フィルター清掃など</p>
+            <p class="job-card-requirements">未経験 / 週1日～ / 直行直帰</p>
+          </div>
+          <div class="job-card-image">
+            <img src="/images/recruit/job-cleaning.png" alt="清掃スタッフ" />
+          </div>
+          <a href="/recruit/apply/cleaning.html" class="job-card-button">清掃員の応募ページへ &gt;&gt;</a>
+        </div>
+
+        <!-- 設備メンテナンススタッフ -->
+        <div class="recruit-job-card">
+          <div class="job-card-content">
+            <h3 class="job-card-title">設備メンテナンススタッフ</h3>
+            <p class="job-card-description">エアコン洗浄、排気ファン清掃、電気設備点検、排水管の簡易清掃、電気工事士、給水装置工事主任技術者優遇</p>
+            <p class="job-card-requirements">未経験 / 週1回～ / 直行直帰可</p>
+          </div>
+          <div class="job-card-image">
+            <img src="/images/recruit/job-equipment.png" alt="設備メンテナンススタッフ" />
+          </div>
+          <a href="/recruit/apply/equipment.html" class="job-card-button">設備メンテナンススタッフの応募ページへ &gt;&gt;</a>
+        </div>
+
+        <!-- インサイドセールス -->
+        <div class="recruit-job-card">
+          <div class="job-card-content">
+            <h3 class="job-card-title">インサイドセールス</h3>
+            <p class="job-card-description">店舗オーナー様へのご案内・問い合わせ対応、飛び込みなし / 未経験 / 経験者優遇</p>
+            <p class="job-card-requirements">正社員 / 契約社員 / パート / リモート併用可</p>
+          </div>
+          <div class="job-card-image">
+            <img src="/images/recruit/job-inside-sales.png" alt="インサイドセールス" />
+          </div>
+          <a href="/recruit/apply/inside-sales.html" class="job-card-button">インサイドセールススタッフの応募ページへ &gt;&gt;</a>
+        </div>
+
+        <!-- フィールドセールス -->
+        <div class="recruit-job-card">
+          <div class="job-card-content">
+            <h3 class="job-card-title">フィールドセールス</h3>
+            <p class="job-card-description">新規契約・受発注サポート、既存顧客のヒアリング・提案や契約後のフォロー</p>
+            <p class="job-card-requirements">正社員 / 契約社員 / 経験者優遇</p>
+          </div>
+          <div class="job-card-image">
+            <img src="/images/recruit/job-field-sales.png" alt="フィールドセールス" />
+          </div>
+          <a href="/recruit/apply/field-sales.html" class="job-card-button">フィールドセールススタッフの応募ページへ &gt;&gt;</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="recruit-faq">
+    <div class="recruit-faq-container">
+      <h2 class="recruit-faq-title">よくあるご質問 (FAQ)</h2>
+      <div class="recruit-faq-list">
+        <div class="recruit-faq-item">
+          <div class="faq-question">Q: 未経験でも応募できますか？</div>
+          <div class="faq-answer">A: はい。研修制度が充実しておりますので、未経験からでも安心してスタートできます。</div>
+        </div>
+        <div class="recruit-faq-item">
+          <div class="faq-question">Q: 勤務地はどこですか？</div>
+          <div class="faq-answer">A: 現在は東京都と埼玉県でのスタッフを募集中です。</div>
+        </div>
+        <div class="recruit-faq-item">
+          <div class="faq-question">Q: 正社員登用はありますか？</div>
+          <div class="faq-answer">A: はい。頑張り次第では正社員登用もご用意しています。</div>
+        </div>
+        <div class="recruit-faq-item">
+          <div class="faq-question">Q: どんな人が向いていますか？</div>
+          <div class="faq-answer">A: チームワークを大切にできる方、成長したい方、専門スキルを身につけたい方に向いています。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scroll to Top Button -->
+  <button class="scroll-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <style>
+    .recruit-page {
+      background: #ffffff;
+      color: #111827;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+    body.page-recruit {
+      padding: 0 !important;
+      margin: 0 !important;
+      display: block !important;
+    }
+    body.page-recruit main {
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      display: block !important;
+    }
+    html {
+      padding: 0;
+      margin: 0;
+    }
+    /* Hero Section */
+    .recruit-hero {
+      background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+      padding: 0;
+      min-height: 500px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    .recruit-hero-container {
+      width: 100%;
+      margin: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .recruit-logo {
+      margin-bottom: 32px;
+    }
+    .recruit-logo-square {
+      width: 60px;
+      height: 60px;
+      background: var(--primary);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .recruit-logo-text {
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .recruit-hero-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 16px;
+      color: #111827;
+    }
+    .recruit-hero-subtitle {
+      font-size: 1.125rem;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+    .recruit-hero-visual {
+      position: relative;
+    }
+    .recruit-hero-image {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    /* Recruitment Banner */
+    .recruit-banner {
+      background: #ffffff;
+      border-top: 4px solid var(--primary);
+      border-bottom: 4px solid var(--primary);
+      padding: 0;
+    }
+    .recruit-banner-container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .recruit-banner-content {
+      flex: 1;
+    }
+    .recruit-banner-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 24px;
+    }
+    .recruit-banner-badges {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .recruit-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .recruit-banner-image {
+      width: 200px;
+      height: 200px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .recruit-banner-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .recruit-banner-button {
+      padding: 12px 24px;
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .recruit-banner-button:hover {
+      background: #ff6b9d;
+      transform: translateY(-2px);
+    }
+    /* Section Styles */
+    .recruit-about,
+    .recruit-work,
+    .recruit-job {
+      padding: 0;
+    }
+    .recruit-about-container,
+    .recruit-work-container,
+    .recruit-job-container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .recruit-section-title {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .recruit-section-subtitle {
+      font-size: 1.25rem;
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .recruit-work-image {
+      width: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+    .recruit-work-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    /* ABOUT Section */
+    .recruit-about-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      margin-bottom: 48px;
+    }
+    .recruit-about-text p {
+      font-size: 1rem;
+      line-height: 1.8;
+      color: #374151;
+      margin-bottom: 16px;
+    }
+    .recruit-about-image {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 4px solid var(--primary);
+      border-right: none;
+      border-bottom: none;
+    }
+    .recruit-about-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .recruit-divider {
+      text-align: center;
+      padding: 24px 0;
+      border-top: 2px solid var(--primary);
+      border-bottom: 2px solid var(--primary);
+      margin-top: 48px;
+    }
+    .recruit-divider span {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    /* WORK Section */
+    .recruit-work-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .recruit-work-item {
+      text-align: center;
+      padding: 24px;
+      background: #f9fafb;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .recruit-work-item:hover {
+      background: #fff5f9;
+      transform: translateY(-4px);
+    }
+    .work-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+    .work-label {
+      font-size: 0.875rem;
+      color: #374151;
+      font-weight: 500;
+    }
+    /* JOB Section */
+    .recruit-job-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+    }
+    .recruit-job-card {
+      background: #ffffff;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .recruit-job-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    .job-card-content {
+      padding: 24px;
+    }
+    .job-card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+    .job-card-description {
+      font-size: 0.95rem;
+      color: #6b7280;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .job-card-requirements {
+      font-size: 0.875rem;
+      color: #9ca3af;
+      margin-bottom: 16px;
+    }
+    .job-card-image {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+    }
+    .job-card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .job-card-button {
+      display: block;
+      padding: 16px;
+      background: var(--primary);
+      color: #ffffff;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .job-card-button:hover {
+      background: #ff6b9d;
+    }
+    /* FAQ Section */
+    .recruit-faq {
+      background: #f9fafb;
+      padding: 0;
+    }
+    .recruit-faq-container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .recruit-faq-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .recruit-faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .recruit-faq-item {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .faq-question {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+    .faq-answer {
+      font-size: 0.95rem;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+    /* Scroll to Top Button */
+    .scroll-to-top {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: all 0.2s;
+      z-index: 1000;
+    }
+    .scroll-to-top:hover {
+      background: #ff6b9d;
+      transform: translateY(-4px);
+    }
+    /* Responsive */
+    @media (max-width: 768px) {
+      .recruit-hero-container {
+        grid-template-columns: 1fr;
+      }
+      .recruit-hero-title {
+        font-size: 1.75rem;
+      }
+      .recruit-banner-container {
+        flex-direction: column;
+        text-align: center;
+      }
+      .recruit-about-content {
+        grid-template-columns: 1fr;
+      }
+      .recruit-work-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .recruit-job-list {
+        grid-template-columns: 1fr;
+      }
+      .recruit-section-title {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</main>
+

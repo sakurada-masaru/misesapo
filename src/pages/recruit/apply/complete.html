@@ -1,0 +1,143 @@
+@layout('layouts.base')
+@json('data/meta/recruit_complete_title.json', $title)
+@json('data/meta/recruit_complete_body_class.json', $body_class)
+
+<main id="main" class="recruit-complete-page">
+  <div class="recruit-complete-container">
+    <!-- Header -->
+    <div class="recruit-complete-header">
+      <div class="recruit-apply-logo">
+        <div class="recruit-logo-square">ミセサポ</div>
+        <div class="recruit-logo-text">RECRUIT</div>
+      </div>
+      <div class="recruit-breadcrumb">
+        <span>シート記入</span>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span>内容確認</span>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span class="breadcrumb-current">応募完了</span>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="recruit-complete-content">
+      <h1 class="recruit-complete-title">送信が完了しました。</h1>
+      <p class="recruit-complete-message">ご応募いただきありがとうございます。</p>
+      
+      <div class="recruit-complete-info">
+        <p>採用担当が確認次第、順次ご連絡を差し上げます。早ければ当日中、遅くとも5営業日以内にご連絡いたします。</p>
+        <p>ご連絡まで今しばらくお待ちください。</p>
+        <p>また、一週間以上連絡がない場合はお手数ですがメールでお問い合わせください。</p>
+        <p>ミセサポー同お会いできるのを楽しみにしております。</p>
+        <p>メールアドレス: <a href="mailto:info@misesapo.app">info@misesapo.app</a></p>
+      </div>
+
+      <a href="/recruit.html" class="recruit-complete-button">TOPへ戻る</a>
+    </div>
+  </div>
+
+  <style>
+    .recruit-complete-page {
+      background: #ffffff;
+      min-height: 100vh;
+      padding: 40px 24px;
+    }
+    .recruit-complete-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .recruit-complete-header {
+      margin-bottom: 48px;
+    }
+    .recruit-apply-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .recruit-logo-square {
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+      border-radius: 8px;
+    }
+    .recruit-logo-text {
+      font-size: 1rem;
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .recruit-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .breadcrumb-separator {
+      color: var(--primary);
+    }
+    .breadcrumb-current {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .recruit-complete-content {
+      text-align: center;
+    }
+    .recruit-complete-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 16px;
+    }
+    .recruit-complete-message {
+      font-size: 1.125rem;
+      color: #374151;
+      margin-bottom: 32px;
+    }
+    .recruit-complete-info {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 32px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+    .recruit-complete-info p {
+      font-size: 0.95rem;
+      color: #374151;
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+    .recruit-complete-info p:last-child {
+      margin-bottom: 0;
+    }
+    .recruit-complete-info a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .recruit-complete-info a:hover {
+      text-decoration: underline;
+    }
+    .recruit-complete-button {
+      display: inline-block;
+      padding: 16px 32px;
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .recruit-complete-button:hover {
+      background: #ff6b9d;
+      transform: translateY(-2px);
+    }
+  </style>
+</main>
+

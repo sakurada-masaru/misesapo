@@ -1,0 +1,288 @@
+@layout('layouts.base')
+@json('data/meta/recruit_apply_field_sales_title.json', $title)
+@json('data/meta/recruit_apply_field_sales_body_class.json', $body_class)
+
+<main id="main" class="recruit-apply-page">
+  <div class="recruit-apply-container">
+    <!-- Header -->
+    <div class="recruit-apply-header">
+      <div class="recruit-apply-logo">
+        <div class="recruit-logo-square">ミセサポ</div>
+        <div class="recruit-logo-text">RECRUIT</div>
+      </div>
+      <div class="recruit-breadcrumb">
+        <span>シート記入</span>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span>内容確認</span>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span>応募完了</span>
+      </div>
+    </div>
+
+    <!-- Main Title -->
+    <h1 class="recruit-apply-title">フィールドセールス 募集要項_応募シート</h1>
+
+    <!-- Main Content -->
+    <div class="recruit-apply-content">
+      <!-- Left: Job Details -->
+      <div class="recruit-apply-details">
+        <table class="recruit-details-table">
+          <tr>
+            <th>項目</th>
+            <th>内容</th>
+          </tr>
+          <tr>
+            <td>雇用形態</td>
+            <td>
+              正社員<br>
+              契約社員（正社員登用あり）
+            </td>
+          </tr>
+          <tr>
+            <td>勤務先</td>
+            <td>東京都中央区日本橋茅場町1-8-1茅場町一丁目</td>
+          </tr>
+          <tr>
+            <td>勤務地(エリア)</td>
+            <td>不定</td>
+          </tr>
+          <tr>
+            <td>職種</td>
+            <td>フィールドセールス（法人向けインフラ支援サービスの案内・提案）</td>
+          </tr>
+          <tr>
+            <td>勤務時間</td>
+            <td>
+              10:00～11:30<br>
+              14:00～17:30<br>
+              20:00～23:00<br>
+              現場・訪問先によって多少の前後あり
+            </td>
+          </tr>
+          <tr>
+            <td>給与</td>
+            <td>
+              月給:280,000円～450,000円＋インセンティブ<br>
+              経験者優遇（マネージャー候補含む）<br>
+              昇給:年1回<br>
+              賞与:年2回（評価・業績連動）
+            </td>
+          </tr>
+          <tr>
+            <td>福利厚生</td>
+            <td>
+              各種社会保険完備<br>
+              営業交通費全額支給<br>
+              ガソリン代支給（社用車/自家用車利用時）<br>
+              営業スキル研修/マネジメント研修あり<br>
+              制服貸与（現場同行時）<br>
+              タブレット・スマホ貸与<br>
+              表彰制度（四半期・年間）<br>
+              社員旅行（業績に応じて実施）
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Right: Application Form -->
+      <div class="recruit-apply-form">
+        <h2 class="recruit-form-title">必須項目の記入をお願いします。</h2>
+        <form id="recruit-apply-form" action="/recruit/apply/confirm.html" method="get">
+          <div class="recruit-form-group">
+            <label class="recruit-form-label">
+              お名前
+              <span class="recruit-required-badge">必須</span>
+            </label>
+            <input type="text" name="name" class="recruit-form-input" required />
+          </div>
+          <div class="recruit-form-group">
+            <label class="recruit-form-label">
+              ふりがな
+              <span class="recruit-required-badge">必須</span>
+            </label>
+            <input type="text" name="furigana" class="recruit-form-input" required />
+          </div>
+          <div class="recruit-form-group">
+            <label class="recruit-form-label">
+              電話番号
+              <span class="recruit-required-badge">必須</span>
+            </label>
+            <input type="tel" name="phone" class="recruit-form-input" required />
+          </div>
+          <div class="recruit-form-group">
+            <label class="recruit-form-label">
+              メールアドレス
+              <span class="recruit-required-badge">必須</span>
+            </label>
+            <input type="email" name="email" class="recruit-form-input" required />
+          </div>
+          <input type="hidden" name="job_type" value="field-sales" />
+          <button type="submit" class="recruit-form-submit">入力内容の確認</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .recruit-apply-page {
+      background: #ffffff;
+      min-height: 100vh;
+      padding: 40px 24px;
+    }
+    .recruit-apply-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .recruit-apply-header {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .recruit-apply-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .recruit-logo-square {
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+      border-radius: 8px;
+    }
+    .recruit-logo-text {
+      font-size: 1rem;
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .recruit-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .breadcrumb-separator {
+      color: var(--primary);
+    }
+    .recruit-apply-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .recruit-apply-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    .recruit-apply-details {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 24px;
+    }
+    .recruit-details-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .recruit-details-table th,
+    .recruit-details-table td {
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      text-align: left;
+      vertical-align: top;
+    }
+    .recruit-details-table th {
+      background: #ffffff;
+      font-weight: 600;
+      color: #111827;
+      width: 30%;
+    }
+    .recruit-details-table td {
+      background: #ffffff;
+      color: #374151;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+    .recruit-apply-form {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 32px;
+    }
+    .recruit-form-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 24px;
+    }
+    .recruit-form-group {
+      margin-bottom: 24px;
+    }
+    .recruit-form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    .recruit-required-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .recruit-form-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .recruit-form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .recruit-form-submit {
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+    .recruit-form-submit:hover {
+      background: #ff6b9d;
+      transform: translateY(-2px);
+    }
+    @media (max-width: 768px) {
+      .recruit-apply-content {
+        grid-template-columns: 1fr;
+      }
+      .recruit-apply-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</main>
+
