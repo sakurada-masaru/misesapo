@@ -533,6 +533,26 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 })
                 return
             
+            # ブラウザ経由の変更ログをクリア
+            if BROWSER_CHANGES_LOG.exists():
+                with open(BROWSER_CHANGES_LOG, 'w', encoding='utf-8') as f:
+                    json.dump([], f, ensure_ascii=False, indent=2)
+                # ログファイルもコミット
+                subprocess.run(
+                    ['git', 'add', str(BROWSER_CHANGES_LOG.relative_to(ROOT))],
+                    cwd=str(ROOT),
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                subprocess.run(
+                    ['git', 'commit', '-m', 'chore: ブラウザ変更ログをクリア'],
+                    cwd=str(ROOT),
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+            
             # プッシュ（リモートが設定されている場合のみ）
             remote_result = subprocess.run(
                 ['git', 'remote', '-v'],
