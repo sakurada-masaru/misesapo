@@ -9,7 +9,11 @@
   'use strict';
   
   // role_config.jsから関数と設定を取得（グローバルスコープから）
-  const ROLE_CONFIG = window.RoleConfig?.ROLE_CONFIG;
+  // 注意: この時点でrole_config.jsが読み込まれている必要がある
+  function getRoleConfig() {
+    return window.RoleConfig?.ROLE_CONFIG;
+  }
+  
   const checkPageAccess = window.RoleConfig?.checkPageAccess || function() { return false; };
   const getRoleDisplayName = window.RoleConfig?.getRoleDisplayName || function(role) { return role; };
   const getNavigationForRole = window.RoleConfig?.getNavigationForRole || function(role) { return []; };
@@ -72,12 +76,23 @@
    * ログイン
    */
   function login(role, password, email = null) {
+    // 実行時にROLE_CONFIGを取得（読み込みタイミングの問題を回避）
+    const ROLE_CONFIG = getRoleConfig();
+    
     if (!ROLE_CONFIG) {
-      return { success: false, message: 'ロール設定が読み込まれていません' };
+      console.error('[Auth] ROLE_CONFIG not found:', {
+        RoleConfig: window.RoleConfig,
+        role: role
+      });
+      return { success: false, message: 'ロール設定が読み込まれていません。ページを再読み込みしてください。' };
     }
     
     const roleConfig = ROLE_CONFIG.roles[role];
     if (!roleConfig) {
+      console.error('[Auth] Invalid role:', {
+        role: role,
+        availableRoles: Object.keys(ROLE_CONFIG.roles)
+      });
       return { success: false, message: '無効なロールです' };
     }
     
