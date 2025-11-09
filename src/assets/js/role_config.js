@@ -57,9 +57,9 @@ const ROLE_CONFIG = {
   // ページ別アクセス制御（パスパターン）
   pageAccess: {
     // パブリックページ（全員アクセス可能）
-    '/index.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
-    '/service.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
-    '/service/': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
+    '/index.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer', 'master'],
+    '/service.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer', 'master'],
+    '/service/': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer', 'master'],
     '/signin.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
     '/signup.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
     '/signup2.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
