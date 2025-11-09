@@ -357,16 +357,6 @@
       }
     }
     
-    // 開発用ナビゲーション（管理者、開発者、マスターのみ表示）
-    const navDev = document.querySelector('.nav-dev');
-    if (navDev) {
-      if (currentRole === 'master' || currentRole === 'admin' || currentRole === 'developer') {
-        navDev.style.display = '';
-      } else {
-        navDev.style.display = 'none';
-      }
-    }
-    
     // ログイン状態に応じてヘッダーを更新
     const navRight = document.querySelector('.nav-right');
     if (navRight) {
