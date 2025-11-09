@@ -2,46 +2,13 @@
 @json('data/meta/service_title.json', $title)
 @json('data/meta/service_body_class.json', $body_class)
 
-<!-- Password Protection Modal -->
-<div id="password-protection-modal" class="password-protection-modal">
-  <div class="password-protection-overlay"></div>
-  <div class="password-protection-dialog">
-    <div class="password-protection-content">
-      <img src="/images/logo_144x144.png" alt="ミセサポ" class="password-protection-logo" />
-      <h2 class="password-protection-title">アクセス保護</h2>
-      <p class="password-protection-message">このページはパスワード保護されています。<br />パスワードを入力してください。</p>
-      <form id="password-protection-form" class="password-protection-form">
-        <div class="password-protection-field">
-          <input 
-            type="password" 
-            id="password-input" 
-            class="password-protection-input" 
-            placeholder="パスワードを入力" 
-            autocomplete="off"
-            required 
-          />
-          <button type="button" class="password-protection-toggle" aria-label="パスワードを表示" onclick="togglePasswordVisibility('password-input')">
-            <i class="fas fa-eye"></i>
-          </button>
-        </div>
-        <div id="password-error" class="password-protection-error" style="display: none;">
-          パスワードが正しくありません。
-        </div>
-        <button type="submit" class="btn btn-primary btn-round btn-full btn-lg fw-700 password-protection-submit">
-          認証
-        </button>
-      </form>
-    </div>
-  </div>
-</div>
-
 <!-- Splash Screen -->
 <div id="splash-screen" class="splash-screen">
   <img src="/images/logo_144x144.png" alt="ミセサポ" class="splash-logo" />
 </div>
 
-<!-- Main Content (hidden during splash) -->
-<div id="page-content" class="page-content-hidden">
+<!-- Main Content -->
+<div id="page-content">
 <!-- Hero (full-bleed) -->
 <section class="hero">
   <img class="hero-img"
@@ -112,128 +79,6 @@
 @include('partials.order_modal')
 @include('partials.cart_added_modal')
 <script>
-  // Password protection
-  (function() {
-    const PASSWORD_KEY = 'index_page_authenticated';
-    const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-    // パスワード（本番環境では環境変数や設定ファイルから取得することを推奨）
-    // デフォルトパスワード: misesapo2024
-    const PASSWORD_HASH = 'd41d8cd98f00b204e9800998ecf8427e'; // MD5 hash of default password
-    
-    function checkAuthentication() {
-      const authData = sessionStorage.getItem(PASSWORD_KEY);
-      if (!authData) return false;
-      
-      try {
-        const { timestamp } = JSON.parse(authData);
-        const now = Date.now();
-        // セッション期限をチェック
-        if (now - timestamp > SESSION_DURATION) {
-          sessionStorage.removeItem(PASSWORD_KEY);
-          return false;
-        }
-        return true;
-      } catch (e) {
-        return false;
-      }
-    }
-    
-    function setAuthentication() {
-      sessionStorage.setItem(PASSWORD_KEY, JSON.stringify({
-        timestamp: Date.now()
-      }));
-    }
-    
-    function hashPassword(password) {
-      // Simple hash function (for demo purposes)
-      // In production, use a proper hashing library
-      let hash = 0;
-      for (let i = 0; i < password.length; i++) {
-        const char = password.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-      }
-      return hash.toString(16);
-    }
-    
-    function verifyPassword(password) {
-      // Simple verification - in production, use proper password hashing
-      const hashed = hashPassword(password);
-      // For demo, accept multiple passwords
-      const validPasswords = [
-        'misesapo2024',
-        'misesapo',
-        'password'
-      ];
-      return validPasswords.includes(password);
-    }
-    
-    function togglePasswordVisibility(inputId) {
-      const input = document.getElementById(inputId);
-      const toggle = input.nextElementSibling;
-      if (input.type === 'password') {
-        input.type = 'text';
-        toggle.querySelector('i').classList.remove('fa-eye');
-        toggle.querySelector('i').classList.add('fa-eye-slash');
-      } else {
-        input.type = 'password';
-        toggle.querySelector('i').classList.remove('fa-eye-slash');
-        toggle.querySelector('i').classList.add('fa-eye');
-      }
-    }
-    
-    // Check authentication on page load
-    if (!checkAuthentication()) {
-      // Show password protection modal
-      const modal = document.getElementById('password-protection-modal');
-      const form = document.getElementById('password-protection-form');
-      const input = document.getElementById('password-input');
-      const error = document.getElementById('password-error');
-      
-      modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-      
-      // Focus on input
-      setTimeout(() => input.focus(), 100);
-      
-      // Handle form submission
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const password = input.value.trim();
-        
-        if (verifyPassword(password)) {
-          setAuthentication();
-          modal.style.display = 'none';
-          document.body.style.overflow = '';
-          error.style.display = 'none';
-          // Show page content (splash screen will handle the animation)
-          const pageContent = document.getElementById('page-content');
-          if (pageContent) {
-            pageContent.classList.remove('page-content-hidden');
-          }
-        } else {
-          error.style.display = 'block';
-          input.value = '';
-          input.focus();
-        }
-      });
-      
-      // Hide page content until authenticated
-      const pageContent = document.getElementById('page-content');
-      if (pageContent) {
-        pageContent.classList.add('page-content-hidden');
-      }
-    } else {
-      // Already authenticated, hide modal
-      document.getElementById('password-protection-modal').style.display = 'none';
-      // Show page content (splash screen will handle the animation)
-      const pageContent = document.getElementById('page-content');
-      if (pageContent) {
-        pageContent.classList.remove('page-content-hidden');
-      }
-    }
-  })();
-  
   window.SERVICE_ITEMS = @jsonvar $service_items;
   // body_class と title は JSON で供給
 </script>
