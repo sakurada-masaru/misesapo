@@ -1,0 +1,336 @@
+@layout('layouts.base')
+@json('data/meta/admin_partners_new_title.json', $title)
+@json('data/meta/admin_partners_new_body_class.json', $body_class)
+
+<main id="main" class="container admin-partners-new">
+  <div class="page-header">
+    <a href="/admin/partners.html" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">新規パートナー企業登録</h1>
+  </div>
+
+  <form id="partner-form" class="partner-form">
+    <!-- 基本情報 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-building"></i>
+        基本情報
+      </h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label class="form-label">企業名 <span class="required">必須</span></label>
+          <input type="text" class="form-input" name="company_name" placeholder="例: 株式会社グリエコ" required />
+          <p class="form-hint">パートナー企業の正式名称を入力してください</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">業種 <span class="required">必須</span></label>
+          <select class="form-select" name="category" required>
+            <option value="">選択してください</option>
+            <option value="cleaning">清掃業</option>
+            <option value="equipment">設備管理</option>
+            <option value="supply">資材供給</option>
+            <option value="other">その他</option>
+          </select>
+          <p class="form-hint">パートナー企業の主な業種を選択してください</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ステータス</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="status" value="active" checked />
+              <span>有効</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="status" value="inactive" />
+              <span>無効</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 担当者情報 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-user"></i>
+        担当者情報
+      </h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label class="form-label">担当者名</label>
+          <input type="text" class="form-input" name="contact_person" placeholder="例: 田中 太郎" />
+          <p class="form-hint">担当者の氏名を入力してください</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 連絡先情報 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-address-book"></i>
+        連絡先情報
+      </h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label class="form-label">所在地</label>
+          <input type="text" class="form-input" name="location" placeholder="例: 東京都中央区日本橋1-13-1 日鉄日本橋ビル3階" />
+          <p class="form-hint">企業の所在地を入力してください</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">電話番号</label>
+          <input type="tel" class="form-input" name="phone" placeholder="例: 03-1234-5678" />
+          <p class="form-hint">電話番号を入力してください</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">メールアドレス</label>
+          <input type="email" class="form-input" name="email" placeholder="例: info@example.com" />
+          <p class="form-hint">メールアドレスを入力してください（任意）</p>
+        </div>
+        <div class="form-group full-width">
+          <label class="form-label">URL</label>
+          <input type="url" class="form-input" name="url" placeholder="例: https://example.com" />
+          <p class="form-hint">企業のWebサイトURLを入力してください（任意）</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 業務内容 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-briefcase"></i>
+        業務内容
+      </h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label class="form-label">業務内容</label>
+          <textarea class="form-textarea" name="business_content" rows="6" placeholder="例: グリストラップの石鹸化、高圧洗浄"></textarea>
+          <p class="form-hint">パートナー企業の業務内容や提供サービスを詳しく入力してください</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- フォームアクション -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" onclick="window.location.href='/admin/partners.html'">
+        <i class="fas fa-times"></i>
+        キャンセル
+      </button>
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i>
+        登録する
+      </button>
+    </div>
+  </form>
+
+  <style>
+    .admin-partners-new.container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f9fafb;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #6b7280;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .partner-form {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .form-section {
+      margin-bottom: 32px;
+      padding: 24px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 2px solid #fce7f3;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .form-section:last-of-type {
+      margin-bottom: 0;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 24px 0;
+    }
+    .section-title i {
+      color: var(--primary);
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .required {
+      color: #ef4444;
+      font-size: 0.75rem;
+      margin-left: 4px;
+    }
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .form-textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+    .form-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    .radio-group {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      color: #374151;
+    }
+    .radio-label input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid #f3f4f6;
+    }
+    .form-actions .btn {
+      min-width: 140px;
+    }
+    @media (max-width: 768px) {
+      .admin-partners-new.container {
+        padding: 16px;
+      }
+      .partner-form {
+        padding: 24px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-actions {
+        flex-direction: column-reverse;
+      }
+      .form-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+
+  <script>
+    // フォーム送信処理
+    (function() {
+      const form = document.getElementById('partner-form');
+      
+      if (!form) return;
+      
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // フォームデータを取得
+        const formData = new FormData(form);
+        const partnerData = {
+          id: 'partner_' + Date.now().toString().slice(-6),
+          company_name: formData.get('company_name'),
+          category: formData.get('category'),
+          status: formData.get('status') || 'active',
+          contact_person: formData.get('contact_person') || '',
+          location: formData.get('location') || '',
+          phone: formData.get('phone') || '',
+          email: formData.get('email') || '',
+          url: formData.get('url') || '',
+          business_content: formData.get('business_content') || '',
+          registered_at: new Date().toISOString().split('T')[0]
+        };
+        
+        // バリデーション
+        if (!partnerData.company_name || !partnerData.category) {
+          alert('企業名と業種は必須項目です。');
+          return;
+        }
+        
+        // 登録処理（将来的にはAPIを呼び出す）
+        console.log('Partner data:', partnerData);
+        
+        // 成功メッセージ
+        if (confirm('パートナー企業を登録しますか？\n\n（現在はモック実装です。実際の登録は今後実装予定です）')) {
+          alert('パートナー企業の登録が完了しました。\n\n（現在はモック実装です）');
+          // 一覧ページに戻る
+          window.location.href = '/admin/partners.html';
+        }
+      });
+    })();
+  </script>
+</main>
+

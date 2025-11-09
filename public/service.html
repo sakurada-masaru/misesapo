@@ -26,22 +26,26 @@
   </head>
   <body class="theme-pink ">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
-<header class="site-header">
+<header id="header-guest" class="site-header" data-role="guest">
   <div class="inner wide">
     <div class="nav-left">
       <a class="brand brand-logo" href="/index.html" aria-label="ミセサポ ホーム">
         <img src="/images/logo_144x144.png" alt="ミセサポ" />
       </a>
-      <nav class="nav-left hide-sm" aria-label="Primary">
+      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
         <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
       </nav>
     </div>
     <div class="spacer"></div>
     <nav class="nav-right hide-sm" aria-label="User">
+      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
       <a class="nav-link" href="/signin.html">ログイン</a>
       <a class="nav-link primary" href="/signup.html">新規登録</a>
       <button class="icon-btn" aria-label="通知">
         <i class="fas fa-bell"></i>
+      </button>
+      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
       </button>
     </nav>
     <button class="icon-btn nav-toggle show-sm" aria-label="メニュー" aria-expanded="false" aria-controls="offcanvas">
@@ -1345,6 +1349,7 @@
 
     <script src="/js/role_config.js"></script>
     <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
   </body>

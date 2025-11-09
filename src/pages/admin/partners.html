@@ -1,0 +1,346 @@
+@layout('layouts.base')
+@json('data/meta/admin_partners_title.json', $title)
+@json('data/meta/admin_partners_body_class.json', $body_class)
+@json('data/partners.json', partners_data)
+
+<main id="main" class="container admin-partners">
+  <div class="page-header">
+    <h1 class="page-title">パートナー企業一覧</h1>
+    <div class="header-actions">
+      <a href="/admin/partners/new.html" class="btn btn-primary">
+        <i class="fas fa-plus"></i> 新規パートナー企業登録
+      </a>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="企業名、担当者名で検索..." class="search-input" id="partner-search" />
+    </div>
+    <div class="filter-options">
+      <select class="filter-select" id="category-filter">
+        <option value="">すべてのカテゴリ</option>
+        <option value="cleaning">清掃業</option>
+        <option value="equipment">設備管理</option>
+        <option value="supply">資材供給</option>
+        <option value="other">その他</option>
+      </select>
+      <select class="filter-select" id="status-filter">
+        <option value="">すべてのステータス</option>
+        <option value="active">有効</option>
+        <option value="inactive">無効</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="partners-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>企業名</th>
+          <th>担当者名</th>
+          <th>メールアドレス</th>
+          <th>電話番号</th>
+          <th>カテゴリ</th>
+          <th>ステータス</th>
+          <th>登録日</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="partners-tbody">
+        <!-- Partners will be rendered by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <style>
+    .admin-partners.container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f9fafb;
+    }
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .filter-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      flex-wrap: wrap;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 300px;
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #f9fafb;
+    }
+    .search-box i {
+      color: #6b7280;
+    }
+    .search-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 0.875rem;
+      outline: none;
+    }
+    .filter-options {
+      display: flex;
+      gap: 12px;
+    }
+    .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #ffffff;
+      font-size: 0.875rem;
+      color: #374151;
+      cursor: pointer;
+    }
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .table-container {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow-x: auto;
+    }
+    .partners-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .partners-table thead {
+      background: #f9fafb;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .partners-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      white-space: nowrap;
+    }
+    .partners-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 0.875rem;
+      color: #111827;
+    }
+    .partners-table tbody tr:hover {
+      background: #f9fafb;
+    }
+    .category-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-badge.status-active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-badge.status-inactive {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .btn-icon {
+      padding: 6px 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      background: #ffffff;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: 4px;
+    }
+    .btn-icon:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .btn-icon i {
+      font-size: 0.875rem;
+    }
+    @media (max-width: 768px) {
+      .admin-partners.container {
+        padding: 16px;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .filter-bar {
+        flex-direction: column;
+      }
+      .search-box {
+        min-width: 100%;
+      }
+      .table-container {
+        overflow-x: auto;
+      }
+    }
+  </style>
+
+  <script type="application/json" id="partners-data">
+    @jsonvar $partners_data
+  </script>
+
+  <script>
+    // パートナー企業データの読み込みと表示
+    (function() {
+      const partnersDataEl = document.getElementById('partners-data');
+      const tbody = document.getElementById('partners-tbody');
+      const searchInput = document.getElementById('partner-search');
+      const categoryFilter = document.getElementById('category-filter');
+      const statusFilter = document.getElementById('status-filter');
+      
+      if (!partnersDataEl || !tbody) return;
+      
+      const partnersData = JSON.parse(partnersDataEl.textContent);
+      const partners = partnersData.partners || [];
+      
+      // カテゴリ名のマッピング
+      const categoryMap = {
+        'cleaning': '清掃業',
+        'equipment': '設備管理',
+        'supply': '資材供給',
+        'other': 'その他'
+      };
+      
+      // パートナー企業をレンダリング
+      function renderPartners(partnersToRender) {
+        tbody.innerHTML = partnersToRender.map((partner, index) => {
+          const categoryName = categoryMap[partner.category] || 'その他';
+          const statusName = partner.status === 'active' ? '有効' : '無効';
+          const statusClass = partner.status === 'active' ? 'status-active' : 'status-inactive';
+          
+          return `
+            <tr data-id="${partner.id}" data-category="${partner.category}" data-status="${partner.status}">
+              <td>${index + 1}</td>
+              <td>${partner.company_name || ''}</td>
+              <td>${partner.contact_person || ''}</td>
+              <td>${partner.email || '-'}</td>
+              <td>${partner.phone || '-'}</td>
+              <td><span class="category-badge">${categoryName}</span></td>
+              <td><span class="status-badge ${statusClass}">${statusName}</span></td>
+              <td>${partner.registered_at || ''}</td>
+              <td>
+                <button class="btn-icon" title="編集" onclick="editPartner('${partner.id}')">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-icon" title="削除" onclick="deletePartner('${partner.id}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+      
+      // 初期表示
+      renderPartners(partners);
+      
+      // 検索・フィルター機能
+      function applyFilters() {
+        const searchValue = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const categoryValue = categoryFilter ? categoryFilter.value : '';
+        const statusValue = statusFilter ? statusFilter.value : '';
+        
+        const filtered = partners.filter(partner => {
+          // 検索フィルター
+          if (searchValue) {
+            const searchText = (
+              (partner.company_name || '') +
+              (partner.contact_person || '') +
+              (partner.email || '') +
+              (partner.phone || '')
+            ).toLowerCase();
+            if (!searchText.includes(searchValue)) {
+              return false;
+            }
+          }
+          
+          // カテゴリフィルター
+          if (categoryValue && partner.category !== categoryValue) {
+            return false;
+          }
+          
+          // ステータスフィルター
+          if (statusValue && partner.status !== statusValue) {
+            return false;
+          }
+          
+          return true;
+        });
+        
+        renderPartners(filtered);
+      }
+      
+      if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+      }
+      if (categoryFilter) {
+        categoryFilter.addEventListener('change', applyFilters);
+      }
+      if (statusFilter) {
+        statusFilter.addEventListener('change', applyFilters);
+      }
+      
+      // 編集・削除関数（将来の実装用）
+      window.editPartner = function(id) {
+        console.log('Edit partner:', id);
+        // TODO: 編集モーダルを開く
+      };
+      
+      window.deletePartner = function(id) {
+        if (confirm('このパートナー企業を削除しますか？')) {
+          console.log('Delete partner:', id);
+          // TODO: 削除APIを呼び出す
+        }
+      };
+    })();
+  </script>
+</main>
+

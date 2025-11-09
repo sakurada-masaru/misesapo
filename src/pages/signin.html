@@ -11,32 +11,16 @@
 
       <section class="card p-24">
         <p class="small text-center mb-16">
-          ロールを選択してパスワードを入力してください。
+          メールアドレスとパスワードを入力してください。
         </p>
 
         <form id="login-form" action="#" method="post" class="stack lg mt-8">
           <div>
-            <label for="role" class="label">
-              ロール
-              <span class="pill pill-required" style="margin-left: 8px;">必須</span>
-            </label>
-            <select id="role" name="role" class="input" required>
-              <option value="">選択してください</option>
-              <option value="customer">ユーザー（顧客）</option>
-              <option value="staff">清掃員</option>
-              <option value="sales">コンシェルジュ（営業マン）</option>
-              <option value="admin">管理者</option>
-              <option value="developer">開発者</option>
-              <option value="master">マスター</option>
-            </select>
-          </div>
-
-          <div>
             <label for="email" class="label">
               メールアドレス
-              <span class="pill" style="margin-left: 8px; background: #e5e7eb; color: #6b7280;">任意</span>
+              <span class="pill pill-required" style="margin-left: 8px;">必須</span>
             </label>
-            <input type="email" id="email" name="email" class="input" placeholder="name@example.com" autocomplete="username" />
+            <input type="email" id="email" name="email" class="input" placeholder="name@example.com" autocomplete="username" required />
           </div>
 
           <div>
@@ -92,15 +76,14 @@
         const errorDiv = document.getElementById('login-error');
         
         if (loginForm) {
-          loginForm.addEventListener('submit', function(e) {
+          loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const role = document.getElementById('role').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            const email = document.getElementById('email').value || null;
             
-            if (!role) {
-              errorDiv.textContent = 'ロールを選択してください';
+            if (!email) {
+              errorDiv.textContent = 'メールアドレスを入力してください';
               errorDiv.style.display = 'block';
               return;
             }
@@ -111,38 +94,65 @@
               return;
             }
             
-            // 認証処理
-            const result = window.Auth.login(role, password, email);
+            // ログインボタンを無効化
+            const submitButton = loginForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+              submitButton.disabled = true;
+              submitButton.textContent = 'ログイン中...';
+            }
             
-            if (result.success) {
-              errorDiv.style.display = 'none';
+            try {
+              // 認証処理（API呼び出し）
+              const result = await window.Auth.login(email, password);
               
-              // リダイレクト先を取得
-              const urlParams = new URLSearchParams(window.location.search);
-              const redirect = urlParams.get('redirect');
-              
-              if (redirect) {
-                window.location.href = decodeURIComponent(redirect);
-              } else {
-                // ロールごとのデフォルトページにリダイレクト
-                const defaultPage = window.Auth.getDefaultPageForRole(role);
-                const basePath = document.querySelector('base')?.getAttribute('href') || '/';
+              if (result.success) {
+                errorDiv.style.display = 'none';
                 
-                // ベースパスを考慮したパス解決
-                let redirectPath = defaultPage;
-                if (basePath !== '/' && !defaultPage.startsWith('http')) {
-                  if (defaultPage.startsWith('/')) {
-                    redirectPath = basePath.slice(0, -1) + defaultPage;
-                  } else {
-                    redirectPath = basePath + defaultPage;
+                // リダイレクト先を取得
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirect = urlParams.get('redirect');
+                
+                if (redirect) {
+                  window.location.href = decodeURIComponent(redirect);
+                } else {
+                  // ロールごとのデフォルトページにリダイレクト
+                  const defaultPage = window.Auth.getDefaultPageForRole(result.user.role);
+                  const basePath = document.querySelector('base')?.getAttribute('href') || '/';
+                  
+                  // ベースパスを考慮したパス解決
+                  let redirectPath = defaultPage;
+                  if (basePath !== '/' && !defaultPage.startsWith('http')) {
+                    if (defaultPage.startsWith('/')) {
+                      redirectPath = basePath.slice(0, -1) + defaultPage;
+                    } else {
+                      redirectPath = basePath + defaultPage;
+                    }
                   }
+                  
+                  window.location.href = redirectPath;
                 }
+              } else {
+                // エラーメッセージを表示
+                const errorMessage = result.message || 'ログインに失敗しました';
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
                 
-                window.location.href = redirectPath;
+                // ログインボタンを再有効化
+                if (submitButton) {
+                  submitButton.disabled = false;
+                  submitButton.textContent = 'ログイン';
+                }
               }
-            } else {
-              errorDiv.textContent = result.message || 'ログインに失敗しました';
+            } catch (error) {
+              console.error('ログインエラー:', error);
+              errorDiv.textContent = 'ログイン処理でエラーが発生しました。ページを再読み込みしてください。';
               errorDiv.style.display = 'block';
+              
+              // ログインボタンを再有効化
+              if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'ログイン';
+              }
             }
           });
         }

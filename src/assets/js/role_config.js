@@ -20,9 +20,9 @@ const ROLE_CONFIG = {
       password: 'staff1234',
       displayName: '清掃員'
     },
-    sales: { 
-      name: 'コンシェルジュ（営業マン）', 
-      password: 'sales1234',
+    concierge: { 
+      name: 'コンシェルジュ', 
+      password: null,
       displayName: 'コンシェルジュ'
     },
     admin: { 
@@ -43,22 +43,22 @@ const ROLE_CONFIG = {
   },
   
   // ロール階層（上位ロールは下位ロールの権限も持つ）
-  // 階層: 管理者 > コンシェルジュ（営業マン） > 清掃員・ユーザー（同レベル）
+  // 階層: マスター > 開発者 > 管理者 > コンシェルジュ > 清掃員・ユーザー（同レベル）
   roleHierarchy: {
     guest: ['guest'],
     customer: ['guest', 'customer'],  // ユーザー（顧客）
     staff: ['guest', 'staff'],        // 清掃員
-    sales: ['guest', 'customer', 'staff', 'sales'],  // コンシェルジュ（営業マン）: 清掃員とユーザーの権限も持つ
-    admin: ['guest', 'customer', 'staff', 'sales', 'admin'],  // 管理者: すべての権限
-    developer: ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],  // 開発者: すべての権限
-    master: ['guest', 'customer', 'staff', 'sales', 'admin', 'developer', 'master']  // マスター: すべての権限（最上位）
+    concierge: ['guest', 'customer', 'staff', 'concierge'],  // コンシェルジュ: 清掃員とユーザーの権限も持つ
+    admin: ['guest', 'customer', 'staff', 'concierge', 'admin'],  // 管理者: すべての権限
+    developer: ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],  // 開発者: すべての権限
+    master: ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master']  // マスター: すべての権限（最上位）
   },
   
   // ロールごとのログイン後リダイレクト先
   defaultPages: {
     'customer': '/mypage.html',
     'staff': '/staff/dashboard.html',
-    'sales': '/sales/dashboard.html',
+    'concierge': '/sales/dashboard.html',
     'admin': '/admin/dashboard.html',
     'developer': '/admin/dashboard.html',
     'master': '/admin/sitemap.html',
@@ -68,54 +68,60 @@ const ROLE_CONFIG = {
   // ページ別アクセス制御（パスパターン）
   pageAccess: {
     // パブリックページ（全員アクセス可能）
-    '/index.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer', 'master'],
-    '/service.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer', 'master'],
-    '/service/': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer', 'master'],
-    '/signin.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
-    '/signup.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
-    '/signup2.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
-    '/signup3.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
-    '/reset-password.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
-    '/contact.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
-    '/concierge.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
+    '/index.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/service.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/service/': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/signin.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/signup.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/signup2.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/signup3.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/reset-password.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/contact.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/concierge.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
     
     // 顧客向けページ（ユーザーと清掃員がアクセス可能、コンシェルジュと管理者も可）
-    '/mypage.html': ['customer', 'staff', 'sales', 'admin', 'developer'],
-    '/mypage/': ['customer', 'staff', 'sales', 'admin', 'developer'],
-    '/cart.html': ['customer', 'staff', 'sales', 'admin', 'developer'],
-    '/checkout.html': ['customer', 'staff', 'sales', 'admin', 'developer'],
-    '/order/': ['customer', 'staff', 'sales', 'admin', 'developer'],
-    '/order-complete.html': ['customer', 'staff', 'sales', 'admin', 'developer'],
-    '/order-confirm.html': ['customer', 'staff', 'sales', 'admin', 'developer'],
+    '/mypage.html': ['customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/mypage/': ['customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/cart.html': ['customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/checkout.html': ['customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/order/': ['customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/order-complete.html': ['customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/order-confirm.html': ['customer', 'staff', 'concierge', 'admin', 'developer'],
     
     // 清掃員向けページ（清掃員とユーザーがアクセス可能、コンシェルジュと管理者も可）
-    '/staff/': ['staff', 'customer', 'sales', 'admin', 'developer'],
-    '/schedule.html': ['staff', 'customer', 'sales', 'admin', 'developer'],
-    '/report.html': ['staff', 'customer', 'sales', 'admin', 'developer'],
-    '/reports/': ['staff', 'customer', 'sales', 'admin', 'developer'],
+    '/staff/': ['staff', 'customer', 'concierge', 'admin', 'developer'],
+    '/schedule.html': ['staff', 'customer', 'concierge', 'admin', 'developer'],
+    '/report.html': ['staff', 'customer', 'concierge', 'admin', 'developer'],
+    '/reports/': ['staff', 'customer', 'concierge', 'admin', 'developer'],
     
-    // 営業マン向けページ（コンシェルジュと管理者のみ）
-    '/sales/': ['sales', 'admin', 'developer'],
+    // コンシェルジュ向けページ（コンシェルジュと管理者のみ）
+    '/sales/': ['concierge', 'admin', 'developer'],
     
     // 管理者向けページ（管理者と開発者のみ）
     '/admin/': ['admin', 'developer'],
+    '/admin/partners.html': ['admin', 'developer'],
+    '/admin/partners/': ['admin', 'developer'],
+    '/admin/partners/new.html': ['admin', 'developer'],
     
     // 開発者向けページ（開発者のみ）
     '/admin/services/review.html': ['developer']
   },
   
-  // ロールごとのナビゲーション項目
+  // ロールごとのナビゲーション項目（推奨ナビゲーション）
   navigation: {
     guest: [
       { href: '/index.html', label: '発注', icon: 'fa-shopping-cart' },
-      { href: '/service.html', label: 'サービス一覧', icon: 'fa-list' }
+      { href: '/service.html', label: 'サービス一覧', icon: 'fa-list' },
+      { href: '/contact.html', label: 'お問い合わせ', icon: 'fa-envelope' }
     ],
     customer: [
+      { href: '/mypage.html', label: 'マイページ', icon: 'fa-user' },
       { href: '/index.html', label: '発注', icon: 'fa-shopping-cart' },
       { href: '/service.html', label: 'サービス一覧', icon: 'fa-list' },
-      { href: '/mypage.html', label: 'マイページ', icon: 'fa-user' },
       { href: '/cart.html', label: 'カート', icon: 'fa-shopping-bag' },
-      { href: '/order/history.html', label: '注文履歴', icon: 'fa-history' }
+      { href: '/order/history.html', label: '注文履歴', icon: 'fa-history' },
+      { href: '/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
+      { href: '/report.html', label: 'レポート一覧', icon: 'fa-file-alt' }
     ],
     staff: [
       { href: '/staff/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
@@ -124,32 +130,37 @@ const ROLE_CONFIG = {
       { href: '/staff/reports/new.html', label: 'レポート作成', icon: 'fa-file-alt' },
       { href: '/staff/training.html', label: 'トレーニング', icon: 'fa-graduation-cap' }
     ],
-    sales: [
+    concierge: [
       { href: '/sales/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
       { href: '/sales/clients.html', label: '顧客管理', icon: 'fa-users' },
-      { href: '/sales/estimates.html', label: '見積もり', icon: 'fa-file-invoice' },
+      { href: '/sales/clients/new.html', label: '新規顧客登録', icon: 'fa-user-plus' },
+      { href: '/sales/estimates.html', label: '見積もり一覧', icon: 'fa-file-invoice' },
+      { href: '/sales/estimates/new.html', label: '見積もり作成', icon: 'fa-file-invoice-dollar' },
       { href: '/sales/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
       { href: '/sales/orders.html', label: '発注管理', icon: 'fa-shopping-cart' }
     ],
     admin: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
       { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' },
+      { href: '/admin/services/new.html', label: '新規サービス登録', icon: 'fa-plus-circle' },
       { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
       { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
-      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
-      { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
+      { href: '/admin/users.html', label: 'ユーザーID管理', icon: 'fa-user-shield' },
+      { href: '/admin/partners.html', label: 'パートナー企業一覧', icon: 'fa-handshake' }
     ],
     developer: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
       { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' },
       { href: '/admin/services/review.html', label: '変更レビュー', icon: 'fa-code-branch' },
+      { href: '/admin/images.html', label: '画像管理', icon: 'fa-images' },
       { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
       { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
-      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
+      { href: '/admin/users.html', label: 'ユーザーID管理', icon: 'fa-user-shield' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     master: [
       // マスター権限はドロップダウンリストを使用するため、通常のナビゲーション項目は最小限
+      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap', special: 'dropdown' }
     ]
   },
@@ -197,10 +208,11 @@ const ROLE_CONFIG = {
       { href: '/admin/services/new.html', label: '新規サービス登録', icon: 'fa-plus-circle' },
       { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
       { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
-      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
+      { href: '/admin/users.html', label: 'ユーザーID管理', icon: 'fa-user-shield' },
       { href: '/admin/users/customers.html', label: '顧客一覧', icon: 'fa-users' },
-      { href: '/admin/users/sales.html', label: '営業マン一覧', icon: 'fa-user-tie' },
+      { href: '/admin/users/sales.html', label: 'コンシェルジュ一覧', icon: 'fa-user-tie' },
       { href: '/admin/users/staff.html', label: '清掃員一覧', icon: 'fa-user-cog' },
+      { href: '/admin/partners.html', label: 'パートナー企業一覧', icon: 'fa-handshake' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     '開発者': [

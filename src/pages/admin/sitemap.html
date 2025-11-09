@@ -1,386 +1,8 @@
-<!doctype html>
-<html lang="ja">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>サイトマップ（管理） | ミセサポ</title>
-    <style>
-      :root { color-scheme: light; }
-      body { 
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans JP', sans-serif; 
-        margin: 24px; 
-        line-height: 1.6; 
-        background: #ffffff;
-        color: #1f2937;
-      }
-      h1 { 
-        font-size: 1.5rem; 
-        margin: 0 0 16px; 
-        color: #111827;
-        font-weight: 700;
-      }
-      .muted { 
-        color: #6b7280; 
-        font-size: .9rem; 
-        margin-bottom: 24px; 
-      }
-      .sitemap-container {
-        max-width: 1400px;
-        margin: 0 auto;
-      }
-      .sitemap-section {
-        margin-bottom: 48px;
-      }
-      .sitemap-section-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #111827;
-        margin-bottom: 16px;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #d1d5db;
-      }
-      .sitemap-tree {
-        position: relative;
-        padding-left: 0;
-      }
-      .sitemap-node {
-        margin: 8px 0;
-        position: relative;
-      }
-      .sitemap-node::before {
-        content: '';
-        position: absolute;
-        left: -20px;
-        top: 12px;
-        width: 12px;
-        height: 1px;
-        background: #9ca3af;
-      }
-      .sitemap-node::after {
-        content: '';
-        position: absolute;
-        left: -20px;
-        top: 0;
-        width: 1px;
-        height: 100%;
-        background: #9ca3af;
-      }
-      .sitemap-node:first-child::after {
-        top: 12px;
-      }
-      .sitemap-node:last-child::after {
-        height: 12px;
-      }
-      .sitemap-node:only-child::after {
-        display: none;
-      }
-      .sitemap-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 8px 12px;
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        transition: all 0.2s;
-      }
-      .sitemap-item:hover {
-        background: #f9fafb;
-        border-color: #d1d5db;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      }
-      .sitemap-item-name {
-        font-weight: 500;
-        color: #111827;
-        flex: 1;
-      }
-      .sitemap-item-name a {
-        color: #2563eb;
-        text-decoration: none;
-      }
-      .sitemap-item-name a:hover {
-        text-decoration: underline;
-      }
-      .sitemap-item-path {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 0.85rem;
-        color: #6b7280;
-        background: #f3f4f6;
-        padding: 4px 8px;
-        border-radius: 4px;
-      }
-      .sitemap-item-badges {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        flex-wrap: wrap;
-      }
-      .role-badge { 
-        display: inline-block; 
-        padding: 4px 10px; 
-        border-radius: 6px; 
-        font-size: 0.75rem; 
-        font-weight: 600; 
-      }
-      .role-customer { 
-        background: #dbeafe; 
-        color: #1e40af; 
-        border: 1px solid #93c5fd;
-      }
-      .role-staff { 
-        background: #d1fae5; 
-        color: #065f46; 
-        border: 1px solid #6ee7b7;
-      }
-      .role-sales { 
-        background: #fef3c7; 
-        color: #92400e; 
-        border: 1px solid #fde68a;
-      }
-      .role-admin { 
-        background: #fce7f3; 
-        color: #9f1239; 
-        border: 1px solid #fbcfe8;
-      }
-      .role-developer { 
-        background: #dbeafe; 
-        color: #1e40af; 
-        border: 1px solid #93c5fd; 
-      }
-      .role-public { 
-        background: #f3f4f6; 
-        color: #374151; 
-        border: 1px solid #d1d5db;
-      }
-      .status-badge { 
-        font-weight: 600;
-        font-size: 0.75rem;
-        padding: 4px 10px;
-        border-radius: 4px;
-        display: inline-block;
-      }
-      .status.implemented { 
-        color: #059669; 
-        background: #d1fae5;
-      }
-      .status.partial { 
-        color: #d97706; 
-        background: #fef3c7;
-      }
-      .status.pending {
-        color: #dc2626; 
-        background: #fee2e2;
-      }
-      .new-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        background: #3b82f6;
-        color: #ffffff;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-left: 8px;
-      }
-      .new-badge i {
-        font-size: 0.65rem;
-      }
-      .release-check-badges {
-        display: flex;
-        gap: 4px;
-        align-items: center;
-        margin-left: 8px;
-      }
-      .release-check-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 600;
-      }
-      .release-check-badge.checked {
-        background: #d1fae5;
-        color: #065f46;
-        border: 1px solid #6ee7b7;
-      }
-      .release-check-badge.unchecked {
-        background: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fca5a5;
-      }
-      .release-check-badge i {
-        font-size: 0.7rem;
-      }
-      .sitemap-children {
-        margin-left: 32px;
-        margin-top: 8px;
-        position: relative;
-      }
-      .sitemap-children::before {
-        content: '';
-        position: absolute;
-        left: -20px;
-        top: 0;
-        width: 1px;
-        height: 100%;
-        background: #e5e7eb;
-      }
-      .legend {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 32px;
-      }
-      .legend-title {
-        font-weight: 600;
-        margin-bottom: 12px;
-        color: #111827;
-      }
-      .legend-items {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16px;
-      }
-      .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.875rem;
-      }
-      @media (max-width: 768px) {
-        body {
-          margin: 16px;
-        }
-        .sitemap-item {
-          flex-wrap: wrap;
-        }
-        .sitemap-item-badges {
-          width: 100%;
-        }
-        .sitemap-children {
-          margin-left: 16px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <script>
-      // リリース前チェック状況をサイトマップに表示
-      (function() {
-        // getAllReleaseChecks関数を直接定義（app.jsが読み込まれていない場合に備えて）
-        function getAllReleaseChecks() {
-          try {
-            const stored = localStorage.getItem('releaseChecks');
-            return stored ? JSON.parse(stored) : {};
-          } catch (e) {
-            console.error('Failed to get release checks:', e);
-            return {};
-          }
-        }
-        
-        // パスを正規化（先頭の/を統一）
-        function normalizePath(path) {
-          if (!path) return '';
-          // 先頭の/を保証
-          return path.startsWith('/') ? path : '/' + path;
-        }
-        
-        function updateReleaseCheckBadges() {
-          const allChecks = getAllReleaseChecks();
-          
-          // 全てのsitemap-itemを取得
-          const items = document.querySelectorAll('.sitemap-item');
-          
-          items.forEach(item => {
-            const pathElement = item.querySelector('.sitemap-item-path');
-            if (!pathElement) return;
-            
-            const pagePath = normalizePath(pathElement.textContent.trim());
-            
-            // パスの複数の形式をチェック（/index.html と /index.html の両方）
-            const pathVariations = [
-              pagePath,
-              pagePath.replace(/^\/+/, '/'), // 先頭の/を統一
-              pagePath.replace(/^\/+/, ''), // 先頭の/を削除
-              '/' + pagePath.replace(/^\/+/, '') // 先頭に/を追加
-            ];
-            
-            let checks = { admin: false, developer: false, other: false };
-            for (const path of pathVariations) {
-              if (allChecks[path]) {
-                checks = allChecks[path];
-                break;
-              }
-            }
-            
-            // 既存のチェックバッジを削除
-            const existingBadges = item.querySelector('.release-check-badges');
-            if (existingBadges) {
-              existingBadges.remove();
-            }
-            
-            // チェックバッジコンテナを作成
-            const badgesContainer = document.createElement('div');
-            badgesContainer.className = 'release-check-badges';
-            
-            // 各チェックのバッジを追加
-            const checkTypes = [
-              { key: 'admin', label: '管理者', icon: 'fa-user-shield' },
-              { key: 'developer', label: '開発者', icon: 'fa-code' },
-              { key: 'other', label: 'その他', icon: 'fa-check-circle' }
-            ];
-            
-            checkTypes.forEach(checkType => {
-              const isChecked = checks[checkType.key];
-              const badge = document.createElement('span');
-              badge.className = `release-check-badge ${isChecked ? 'checked' : 'unchecked'}`;
-              badge.title = `${checkType.label}: ${isChecked ? 'チェック済み' : '未チェック'}`;
-              badge.innerHTML = `<i class="fas ${checkType.icon}"></i><span>${checkType.label}</span>`;
-              badgesContainer.appendChild(badge);
-            });
-            
-            // バッジをsitemap-item-badgesに追加
-            const badgesElement = item.querySelector('.sitemap-item-badges');
-            if (badgesElement) {
-              badgesElement.appendChild(badgesContainer);
-            }
-          });
-        }
-        
-        // ページ読み込み時に実行
-        function init() {
-          // 少し遅延して実行（DOMが完全に構築されるまで待つ）
-          setTimeout(function() {
-            updateReleaseCheckBadges();
-          }, 500);
-        }
-        
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', init);
-        } else {
-          init();
-        }
-        
-        // localStorageの変更を監視（別タブで更新された場合に対応）
-        window.addEventListener('storage', function(e) {
-          if (e.key === 'releaseChecks') {
-            updateReleaseCheckBadges();
-          }
-        });
-        
-        // 定期的に更新（同じタブでの更新にも対応）
-        setInterval(updateReleaseCheckBadges, 2000);
-        
-        // 手動で更新するための関数をグローバルに公開（デバッグ用）
-        window.updateReleaseCheckBadges = updateReleaseCheckBadges;
-      })();
-    </script>
+@layout('layouts.base')
+@json('data/meta/admin_sitemap_title.json', $title)
+@json('data/meta/admin_sitemap_body_class.json', $body_class)
+
+<main id="main" class="container admin-sitemap">
     <div class="sitemap-container">
       <h1>ミセサポ サイトマップ図</h1>
       <p class="muted">最終更新: 2025年3月 - ロール別サイトマップ構成（サポートデスク要素含む）</p>
@@ -966,7 +588,7 @@
           </div>
           <div class="sitemap-node">
             <div class="sitemap-item">
-              <span class="sitemap-item-name"><a href="/admin/users.html">ユーザー管理</a></span>
+            <span class="sitemap-item-name"><a href="/admin/users.html">ユーザーID管理</a></span>
               <code class="sitemap-item-path">/admin/users.html</code>
               <div class="sitemap-item-badges">
                 <span class="role-badge role-admin">管理者</span>
@@ -976,7 +598,7 @@
             <div class="sitemap-children">
               <div class="sitemap-node">
                 <div class="sitemap-item">
-                  <span class="sitemap-item-name"><a href="/admin/users/customers.html">顧客一覧（ユーザー管理内）</a></span>
+                <span class="sitemap-item-name"><a href="/admin/users/customers.html">顧客一覧（ユーザーID管理内）</a></span>
                   <code class="sitemap-item-path">/admin/users/customers.html</code>
                   <div class="sitemap-item-badges">
                     <span class="role-badge role-admin">管理者</span>
@@ -996,7 +618,7 @@
               </div>
               <div class="sitemap-node">
                 <div class="sitemap-item">
-                  <span class="sitemap-item-name"><a href="/admin/users/sales.html">営業マン一覧</a></span>
+                <span class="sitemap-item-name"><a href="/admin/users/sales.html">コンシェルジュ一覧</a></span>
                   <code class="sitemap-item-path">/admin/users/sales.html</code>
                   <div class="sitemap-item-badges">
                     <span class="role-badge role-admin">管理者</span>
@@ -1040,6 +662,28 @@
           </div>
           <div class="sitemap-node">
             <div class="sitemap-item">
+              <span class="sitemap-item-name"><a href="/admin/partners.html">パートナー企業一覧</a></span>
+              <code class="sitemap-item-path">/admin/partners.html</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-admin">管理者</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+            <div class="sitemap-children">
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/admin/partners/new.html">新規パートナー企業登録</a></span>
+                  <code class="sitemap-item-path">/admin/partners/new.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-admin">管理者</span>
+                    <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
               <span class="sitemap-item-name"><a href="/admin/images.html">画像一覧</a></span>
               <code class="sitemap-item-path">/admin/images.html</code>
               <div class="sitemap-item-badges">
@@ -1060,5 +704,369 @@
         <p style="margin: 8px 0; font-size: 0.875rem;">FAQ、お問い合わせ履歴（チケット管理）、新規お問い合わせ、緊急連絡先ページを実装済み</p>
       </div>
     </div>
-  </body>
-</html>
+
+  <style>
+    .admin-sitemap.container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f9fafb;
+    }
+    .sitemap-container {
+      max-width: 100%;
+    }
+    .muted { 
+      color: #6b7280; 
+      font-size: .9rem; 
+      margin-bottom: 24px; 
+    }
+    .sitemap-section {
+      margin-bottom: 48px;
+    }
+    .sitemap-section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #d1d5db;
+    }
+    .sitemap-tree {
+      position: relative;
+      padding-left: 0;
+    }
+    .sitemap-node {
+      margin: 8px 0;
+      position: relative;
+    }
+    .sitemap-node::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 12px;
+      width: 12px;
+      height: 1px;
+      background: #9ca3af;
+    }
+    .sitemap-node::after {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 0;
+      width: 1px;
+      height: 100%;
+      background: #9ca3af;
+    }
+    .sitemap-node:first-child::after {
+      top: 12px;
+    }
+    .sitemap-node:last-child::after {
+      height: 12px;
+    }
+    .sitemap-node:only-child::after {
+      display: none;
+    }
+    .sitemap-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .sitemap-item:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .sitemap-item-name {
+      font-weight: 500;
+      color: #111827;
+      flex: 1;
+    }
+    .sitemap-item-name a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    .sitemap-item-name a:hover {
+      text-decoration: underline;
+    }
+    .sitemap-item-path {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.85rem;
+      color: #6b7280;
+      background: #f3f4f6;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .sitemap-item-badges {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .role-badge { 
+      display: inline-block; 
+      padding: 4px 10px; 
+      border-radius: 6px; 
+      font-size: 0.75rem; 
+      font-weight: 600; 
+    }
+    .role-customer { 
+      background: #dbeafe; 
+      color: #1e40af; 
+      border: 1px solid #93c5fd;
+    }
+    .role-staff { 
+      background: #d1fae5; 
+      color: #065f46; 
+      border: 1px solid #6ee7b7;
+    }
+    .role-sales { 
+      background: #fef3c7; 
+      color: #92400e; 
+      border: 1px solid #fde68a;
+    }
+    .role-admin { 
+      background: #fce7f3; 
+      color: #9f1239; 
+      border: 1px solid #fbcfe8;
+    }
+    .role-developer { 
+      background: #dbeafe; 
+      color: #1e40af; 
+      border: 1px solid #93c5fd; 
+    }
+    .role-public { 
+      background: #f3f4f6; 
+      color: #374151; 
+      border: 1px solid #d1d5db;
+    }
+    .status-badge { 
+      font-weight: 600;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .status.implemented { 
+      color: #059669; 
+      background: #d1fae5;
+    }
+    .status.partial { 
+      color: #d97706; 
+      background: #fef3c7;
+    }
+    .status.pending {
+      color: #dc2626; 
+      background: #fee2e2;
+    }
+    .new-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: #3b82f6;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 8px;
+    }
+    .new-badge i {
+      font-size: 0.65rem;
+    }
+    .release-check-badges {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin-left: 8px;
+    }
+    .release-check-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .release-check-badge.checked {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+    .release-check-badge.unchecked {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    .release-check-badge i {
+      font-size: 0.7rem;
+    }
+    .sitemap-children {
+      margin-left: 32px;
+      margin-top: 8px;
+      position: relative;
+    }
+    .sitemap-children::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 0;
+      width: 1px;
+      height: 100%;
+      background: #e5e7eb;
+    }
+    .legend {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 32px;
+    }
+    .legend-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #111827;
+    }
+    .legend-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+    }
+    @media (max-width: 768px) {
+      .sitemap-item {
+        flex-wrap: wrap;
+      }
+      .sitemap-item-badges {
+        width: 100%;
+      }
+      .sitemap-children {
+        margin-left: 16px;
+      }
+    }
+  </style>
+
+  <script>
+    // リリース前チェック状況をサイトマップに表示
+    (function() {
+      // getAllReleaseChecks関数を直接定義（app.jsが読み込まれていない場合に備えて）
+      function getAllReleaseChecks() {
+        try {
+          const stored = localStorage.getItem('releaseChecks');
+          return stored ? JSON.parse(stored) : {};
+        } catch (e) {
+          console.error('Failed to get release checks:', e);
+          return {};
+        }
+      }
+      
+      // パスを正規化（先頭の/を統一）
+      function normalizePath(path) {
+        if (!path) return '';
+        // 先頭の/を保証
+        return path.startsWith('/') ? path : '/' + path;
+      }
+      
+      function updateReleaseCheckBadges() {
+        const allChecks = getAllReleaseChecks();
+        
+        // 全てのsitemap-itemを取得
+        const items = document.querySelectorAll('.sitemap-item');
+        
+        items.forEach(item => {
+          const pathElement = item.querySelector('.sitemap-item-path');
+          if (!pathElement) return;
+          
+          const pagePath = normalizePath(pathElement.textContent.trim());
+          
+          // パスの複数の形式をチェック（/index.html と /index.html の両方）
+          const pathVariations = [
+            pagePath,
+            pagePath.replace(/^\/+/, '/'), // 先頭の/を統一
+            pagePath.replace(/^\/+/, ''), // 先頭の/を削除
+            '/' + pagePath.replace(/^\/+/, '') // 先頭に/を追加
+          ];
+          
+          let checks = { admin: false, developer: false, other: false };
+          for (const path of pathVariations) {
+            if (allChecks[path]) {
+              checks = allChecks[path];
+              break;
+            }
+          }
+          
+          // 既存のチェックバッジを削除
+          const existingBadges = item.querySelector('.release-check-badges');
+          if (existingBadges) {
+            existingBadges.remove();
+          }
+          
+          // チェックバッジコンテナを作成
+          const badgesContainer = document.createElement('div');
+          badgesContainer.className = 'release-check-badges';
+          
+          // 各チェックのバッジを追加
+          const checkTypes = [
+            { key: 'admin', label: '管理者', icon: 'fa-user-shield' },
+            { key: 'developer', label: '開発者', icon: 'fa-code' },
+            { key: 'other', label: 'その他', icon: 'fa-check-circle' }
+          ];
+          
+          checkTypes.forEach(checkType => {
+            const isChecked = checks[checkType.key];
+            const badge = document.createElement('span');
+            badge.className = `release-check-badge ${isChecked ? 'checked' : 'unchecked'}`;
+            badge.title = `${checkType.label}: ${isChecked ? 'チェック済み' : '未チェック'}`;
+            badge.innerHTML = `<i class="fas ${checkType.icon}"></i><span>${checkType.label}</span>`;
+            badgesContainer.appendChild(badge);
+          });
+          
+          // バッジをsitemap-item-badgesに追加
+          const badgesElement = item.querySelector('.sitemap-item-badges');
+          if (badgesElement) {
+            badgesElement.appendChild(badgesContainer);
+          }
+        });
+      }
+      
+      // ページ読み込み時に実行
+      function init() {
+        // 少し遅延して実行（DOMが完全に構築されるまで待つ）
+        setTimeout(function() {
+          updateReleaseCheckBadges();
+        }, 500);
+      }
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+      
+      // localStorageの変更を監視（別タブで更新された場合に対応）
+      window.addEventListener('storage', function(e) {
+        if (e.key === 'releaseChecks') {
+          updateReleaseCheckBadges();
+        }
+      });
+      
+      // 定期的に更新（同じタブでの更新にも対応）
+      setInterval(updateReleaseCheckBadges, 2000);
+      
+      // 手動で更新するための関数をグローバルに公開（デバッグ用）
+      window.updateReleaseCheckBadges = updateReleaseCheckBadges;
+    })();
+  </script>
+</main>

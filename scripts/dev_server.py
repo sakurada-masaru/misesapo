@@ -20,6 +20,7 @@ PUBLIC = ROOT / "public"
 DATA_DIR = SRC / "data"
 SERVICE_ITEMS_JSON = DATA_DIR / "service_items.json"
 BROWSER_CHANGES_LOG = DATA_DIR / "browser_changes.json"
+STAFF_USERS_JSON = DATA_DIR / "staff_users.json"
 BUILD_SCRIPT = ROOT / "scripts" / "build.py"
 
 PORT = 5173
@@ -41,7 +42,10 @@ class DevServerHandler(SimpleHTTPRequestHandler):
     
     def handle_api_get(self):
         """API GET処理"""
-        if self.path == '/api/services':
+        # パスを正規化（クエリパラメータと末尾のスラッシュを除去）
+        path = self.path.split('?')[0].rstrip('/')
+        
+        if path == '/api/services':
             # サービス一覧を返す
             try:
                 with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
@@ -49,31 +53,43 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 self.send_json_response(services)
             except Exception as e:
                 self.send_error(500, f"Failed to load services: {e}")
-        elif self.path == '/api/pending-changes':
+        elif path == '/api/pending-changes':
             # 未反映の変更を確認
             self.handle_pending_changes()
-        elif self.path == '/api/images':
+        elif path == '/api/images':
             # 画像一覧を返す
             self.handle_images_list()
+        elif path == '/api/auth/me':
+            # 現在のユーザー情報を取得
+            self.handle_auth_me()
         else:
-            self.send_error(404, "API endpoint not found")
+            self.send_error(404, f"API endpoint not found: {path}")
     
     def handle_api_post(self):
         """API POST処理"""
-        if self.path == '/api/services':
+        # パスを正規化（クエリパラメータと末尾のスラッシュを除去）
+        path = self.path.split('?')[0].rstrip('/')
+        
+        if path == '/api/services':
             # 新規サービス作成
             self.handle_create_service()
-        elif self.path == '/api/pull':
+        elif path == '/api/pull':
             # GitHubから最新データを取得
             self.handle_git_pull()
-        elif self.path == '/api/discard-changes':
+        elif path == '/api/discard-changes':
             # ローカルの変更を破棄
             self.handle_discard_changes()
-        elif self.path == '/api/commit-and-push':
+        elif path == '/api/commit-and-push':
             # Gitにコミット・プッシュ
             self.handle_commit_and_push()
+        elif path == '/api/auth/login':
+            # ログイン
+            self.handle_auth_login()
+        elif path == '/api/auth/logout':
+            # ログアウト
+            self.handle_auth_logout()
         else:
-            self.send_error(404, "API endpoint not found")
+            self.send_error(404, f"API endpoint not found: {path}")
     
     def do_POST(self):
         """POSTリクエスト: API処理"""
@@ -95,6 +111,15 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             self.handle_api_delete()
         else:
             self.send_error(404, "Not Found")
+    
+    def do_OPTIONS(self):
+        """OPTIONSリクエスト: CORS preflight対応"""
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        self.send_header('Access-Control-Max-Age', '3600')
+        self.end_headers()
     
     def handle_pending_changes(self):
         """未反映の変更（ブラウザ経由の変更のみ）を確認"""
@@ -683,11 +708,183 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         else:
             self.send_error(404, "API endpoint not found")
     
+    def handle_auth_login(self):
+        """ログイン処理"""
+        try:
+            # リクエストボディを読み込む
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            login_data = json.loads(body.decode('utf-8'))
+            
+            email = login_data.get('email', '').strip()
+            password = login_data.get('password', '').strip()
+            
+            if not email or not password:
+                self.send_json_response({
+                    'success': False,
+                    'message': 'メールアドレスとパスワードを入力してください'
+                }, status=400)
+                return
+            
+            # ユーザーデータを読み込む
+            if not STAFF_USERS_JSON.exists():
+                self.send_json_response({
+                    'success': False,
+                    'message': 'ユーザーデータが見つかりません'
+                }, status=500)
+                return
+            
+            with open(STAFF_USERS_JSON, 'r', encoding='utf-8') as f:
+                users = json.load(f)
+            
+            # メールアドレスでユーザーを検索
+            user = None
+            for u in users:
+                if u.get('email', '').lower() == email.lower():
+                    user = u
+                    break
+            
+            if not user:
+                self.send_json_response({
+                    'success': False,
+                    'message': 'メールアドレスまたはパスワードが正しくありません'
+                }, status=401)
+                return
+            
+            # ステータスチェック
+            if user.get('status') != 'active':
+                self.send_json_response({
+                    'success': False,
+                    'message': 'このアカウントは無効化されています'
+                }, status=403)
+                return
+            
+            # パスワードチェック（現在は平文、後でハッシュ化）
+            if user.get('password') != password:
+                self.send_json_response({
+                    'success': False,
+                    'message': 'メールアドレスまたはパスワードが正しくありません'
+                }, status=401)
+                return
+            
+            # ログイン成功
+            # トークン生成（簡易版、後でJWTに変更）
+            import hashlib
+            import datetime
+            token_data = f"{user['id']}:{email}:{datetime.datetime.now().isoformat()}"
+            token = hashlib.sha256(token_data.encode()).hexdigest()
+            
+            # 最終ログイン時刻を更新
+            user['last_login_at'] = datetime.datetime.now().isoformat()
+            with open(STAFF_USERS_JSON, 'w', encoding='utf-8') as f:
+                json.dump(users, f, ensure_ascii=False, indent=2)
+            
+            # レスポンス（パスワードは含めない）
+            user_response = {
+                'id': user.get('id'),
+                'email': user.get('email'),
+                'role': user.get('role'),
+                'name': user.get('name'),
+                'employee_id': user.get('employee_id')
+            }
+            
+            self.send_json_response({
+                'success': True,
+                'token': token,
+                'user': user_response
+            })
+        except Exception as e:
+            self.send_json_response({
+                'success': False,
+                'message': f'ログイン処理でエラーが発生しました: {str(e)}'
+            }, status=500)
+    
+    def handle_auth_logout(self):
+        """ログアウト処理"""
+        # 現在はトークンベースのセッション管理がないため、単純に成功を返す
+        self.send_json_response({
+            'success': True,
+            'message': 'ログアウトしました'
+        })
+    
+    def handle_auth_me(self):
+        """現在のユーザー情報を取得"""
+        try:
+            # トークンをヘッダーから取得
+            auth_header = self.headers.get('Authorization', '')
+            if not auth_header.startswith('Bearer '):
+                self.send_json_response({
+                    'success': False,
+                    'message': '認証トークンが提供されていません'
+                }, status=401)
+                return
+            
+            token = auth_header.replace('Bearer ', '').strip()
+            
+            # ユーザーデータを読み込む
+            if not STAFF_USERS_JSON.exists():
+                self.send_json_response({
+                    'success': False,
+                    'message': 'ユーザーデータが見つかりません'
+                }, status=500)
+                return
+            
+            with open(STAFF_USERS_JSON, 'r', encoding='utf-8') as f:
+                users = json.load(f)
+            
+            # 暫定実装: クエリパラメータからメールアドレスを取得
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(self.path)
+            query_params = parse_qs(parsed.query)
+            email = query_params.get('email', [None])[0]
+            
+            if not email:
+                self.send_json_response({
+                    'success': False,
+                    'message': 'ユーザー情報を取得できませんでした'
+                }, status=401)
+                return
+            
+            # メールアドレスでユーザーを検索
+            user = None
+            for u in users:
+                if u.get('email', '').lower() == email.lower():
+                    user = u
+                    break
+            
+            if not user:
+                self.send_json_response({
+                    'success': False,
+                    'message': 'ユーザーが見つかりません'
+                }, status=404)
+                return
+            
+            # レスポンス（パスワードは含めない）
+            user_response = {
+                'id': user.get('id'),
+                'email': user.get('email'),
+                'role': user.get('role'),
+                'name': user.get('name'),
+                'employee_id': user.get('employee_id')
+            }
+            
+            self.send_json_response({
+                'success': True,
+                'user': user_response
+            })
+        except Exception as e:
+            self.send_json_response({
+                'success': False,
+                'message': f'ユーザー情報の取得でエラーが発生しました: {str(e)}'
+            }, status=500)
+    
     def send_json_response(self, data, status=200):
         """JSONレスポンスを送信"""
         self.send_response(status)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         self.end_headers()
         response = json.dumps(data, ensure_ascii=False)
         self.wfile.write(response.encode('utf-8'))

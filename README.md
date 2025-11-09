@@ -116,6 +116,15 @@ gcloud run services describe "${SERVICE}" \
 - ページからの読み込み: `@include('partials.header')` のように `@include` を使用
 - データ注入: `@json('path/to.json', $var)` → 簡易 `@foreach $var ... @endforeach` で展開
 
+### ヘッダー管理（ロール毎のヘッダー）
+- ロール毎に異なるヘッダーを表示（IDベースで管理）
+- 詳細仕様: `docs/HEADER_ROLE_MANAGEMENT.md` を参照
+- 実装ファイル:
+  - `src/partials/header-{role}.html` - 各ロール用ヘッダー
+  - `src/assets/js/navigation.js` - ヘッダー切り替えロジック
+  - `src/assets/js/role_config.js` - ロール設定とナビゲーション定義
+- **注意**: `index.html` は対象外（独自のヘッダー構造を維持）
+
 ### 画像最適化ポリシー
 - 可能な箇所で `srcset`/`sizes` を付与（例: ヒーロー画像）。
 - 将来的に WebP/AVIF を追加（フォールバックPNG/JPEGを併用）。
