@@ -19,6 +19,7 @@ SRC = ROOT / "src"
 PUBLIC = ROOT / "public"
 DATA_DIR = SRC / "data"
 SERVICE_ITEMS_JSON = DATA_DIR / "service_items.json"
+BROWSER_CHANGES_LOG = DATA_DIR / "browser_changes.json"
 BUILD_SCRIPT = ROOT / "scripts" / "build.py"
 
 PORT = 5173
@@ -96,161 +97,75 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             self.send_error(404, "Not Found")
     
     def handle_pending_changes(self):
-        """未反映の変更（Gitの未コミット変更）を確認"""
+        """未反映の変更（ブラウザ経由の変更のみ）を確認"""
         try:
-            # Gitリポジトリか確認
-            git_dir = ROOT / ".git"
-            if not git_dir.exists():
+            # ブラウザ経由の変更ログを読み込む
+            if not BROWSER_CHANGES_LOG.exists():
                 self.send_json_response({'hasChanges': False, 'changes': []})
                 return
             
-            # service_items.jsonの変更のみを確認（public/内のビルド生成ファイルは無視）
-            # まず、git statusで変更があるか確認
-            status_result = subprocess.run(
-                ['git', 'status', '--porcelain', '--', str(SERVICE_ITEMS_JSON.relative_to(ROOT))],
-                cwd=str(ROOT),
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
+            with open(BROWSER_CHANGES_LOG, 'r', encoding='utf-8') as f:
+                browser_changes = json.load(f)
             
-            # 次に、実際に差分があるか確認（git diffでHEADとの差分を確認）
-            diff_result = subprocess.run(
-                ['git', 'diff', 'HEAD', '--', str(SERVICE_ITEMS_JSON.relative_to(ROOT))],
-                cwd=str(ROOT),
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-            
-            # ステージング済みの変更も確認
-            staged_diff_result = subprocess.run(
-                ['git', 'diff', '--cached', 'HEAD', '--', str(SERVICE_ITEMS_JSON.relative_to(ROOT))],
-                cwd=str(ROOT),
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-            
-            # 実際に差分がない場合は、変更なしとして返す
-            has_actual_diff = bool(diff_result.stdout.strip()) or bool(staged_diff_result.stdout.strip())
-            
-            if not has_actual_diff:
+            if not browser_changes:
                 self.send_json_response({'hasChanges': False, 'changes': []})
                 return
             
-            # service_items.jsonの変更を確認
+            # 現在のサービスデータを読み込む（変更内容の詳細を取得するため）
+            if not SERVICE_ITEMS_JSON.exists():
+                self.send_json_response({'hasChanges': False, 'changes': []})
+                return
+            
+            with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
+                services = json.load(f)
+            
+            # HEADのサービスデータを読み込む（変更前の値を取得するため）
+            head_services = []
+            try:
+                git_dir = ROOT / ".git"
+                if git_dir.exists():
+                    head_result = subprocess.run(
+                        ['git', 'show', f'HEAD:{SERVICE_ITEMS_JSON.relative_to(ROOT)}'],
+                        cwd=str(ROOT),
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    if head_result.returncode == 0 and head_result.stdout:
+                        head_services = json.loads(head_result.stdout)
+            except:
+                # HEADにファイルがない場合（新規ファイル）は空リスト
+                pass
+            
+            # ブラウザ経由の変更を処理
             changes = []
-            has_service_json_change = True
-            modified_service_ids = set()
-            new_service_ids = set()
-            
-            # service_items.jsonの変更がある場合、詳細情報を取得
-            if has_service_json_change:
-                if SERVICE_ITEMS_JSON.exists():
-                    with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
-                        services = json.load(f)
-                    
-                    # Gitの差分を確認して、編集されたサービスIDと新規サービスIDを特定
-                    try:
-                        # HEADとの差分を確認（新規ファイルの場合はHEADが存在しない可能性がある）
-                        diff_result = subprocess.run(
-                            ['git', 'diff', 'HEAD', '--', str(SERVICE_ITEMS_JSON.relative_to(ROOT))],
-                            cwd=str(ROOT),
-                            capture_output=True,
-                            text=True,
-                            timeout=5
-                        )
-                        
-                        # 現在のHEADのサービス一覧を取得（比較用）
-                        head_services = []
-                        try:
-                            head_result = subprocess.run(
-                                ['git', 'show', f'HEAD:{SERVICE_ITEMS_JSON.relative_to(ROOT)}'],
-                                cwd=str(ROOT),
-                                capture_output=True,
-                                text=True,
-                                timeout=5
-                            )
-                            if head_result.returncode == 0 and head_result.stdout:
-                                head_services = json.loads(head_result.stdout)
-                        except:
-                            # HEADにファイルがない場合（新規ファイル）は空リスト
-                            pass
-                        
-                        # 現在のサービスIDセット
-                        current_ids = {s.get('id') for s in services if s.get('id')}
-                        # HEADのサービスIDセット
-                        head_ids = {s.get('id') for s in head_services if s.get('id')}
-                        
-                        # 新規追加されたサービスID
-                        new_service_ids = current_ids - head_ids
-                        # 編集されたサービスID（差分から抽出）
-                        if diff_result.stdout:
-                            import re
-                            # 差分からサービスIDを抽出
-                            id_matches = re.findall(r'"id"\s*:\s*(\d+)', diff_result.stdout)
-                            for service_id_str in id_matches:
-                                service_id = int(service_id_str)
-                                # 新規でない場合は編集として扱う
-                                if service_id not in new_service_ids:
-                                    modified_service_ids.add(service_id)
-                    except Exception as e:
-                        # エラーが発生した場合、最新のサービスを変更として表示
-                        if services:
-                            max_id = max([s.get('id', 0) for s in services], default=0)
-                            modified_service_ids.add(max_id)
-                    
-                    # 変更されたサービスをリストアップ
-                    processed_ids = set()
-                    
-                    # 新規作成されたサービス
-                    for service_id in new_service_ids:
-                        if service_id not in processed_ids:
-                            service = next((s for s in services if s.get('id') == service_id), None)
-                            if service:
-                                # 新規サービスの場合は、すべてのフィールドを変更内容として表示
-                                changed_fields = self.get_changed_fields(None, service)
-                                changes.append({
-                                    'serviceId': service_id,
-                                    'serviceName': service.get('title', f'サービスID {service_id}'),
-                                    'type': 'created',
-                                    'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON),
-                                    'changedFields': changed_fields
-                                })
-                                processed_ids.add(service_id)
-                    
-                    # 編集されたサービス
-                    for service_id in modified_service_ids:
-                        if service_id not in processed_ids:
-                            service = next((s for s in services if s.get('id') == service_id), None)
-                            head_service = next((s for s in head_services if s.get('id') == service_id), None)
-                            if service:
-                                # 変更されたフィールドを特定
-                                changed_fields = self.get_changed_fields(head_service, service)
-                                changes.append({
-                                    'serviceId': service_id,
-                                    'serviceName': service.get('title', f'サービスID {service_id}'),
-                                    'type': 'modified',
-                                    'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON),
-                                    'changedFields': changed_fields
-                                })
-                                processed_ids.add(service_id)
-                    
-                    # 変更が検出できない場合（新規ファイルなど）、最新のサービスを表示
-                    if not changes and services:
-                        max_id = max([s.get('id', 0) for s in services], default=0)
-                        max_service = next((s for s in services if s.get('id') == max_id), None)
-                        if max_service:
-                            head_service = next((s for s in head_services if s.get('id') == max_id), None) if head_services else None
-                            changed_fields = self.get_changed_fields(head_service, max_service)
-                            changes.append({
-                                'serviceId': max_id,
-                                'serviceName': max_service.get('title', f'サービスID {max_id}'),
-                                'type': 'modified',
-                                'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON),
-                                'changedFields': changed_fields
-                            })
+            for change_log in browser_changes:
+                service_id = change_log.get('serviceId')
+                change_type = change_log.get('type')  # 'created' or 'modified'
+                service_name = change_log.get('serviceName', f'サービスID {service_id}')
+                timestamp = change_log.get('timestamp', self.get_file_timestamp(SERVICE_ITEMS_JSON))
+                
+                # 現在のサービスデータを取得
+                service = next((s for s in services if s.get('id') == service_id), None)
+                if not service:
+                    continue
+                
+                # 変更内容の詳細を取得
+                if change_type == 'created':
+                    # 新規作成の場合
+                    changed_fields = self.get_changed_fields(None, service)
+                else:
+                    # 編集の場合
+                    head_service = next((s for s in head_services if s.get('id') == service_id), None)
+                    changed_fields = self.get_changed_fields(head_service, service)
+                
+                changes.append({
+                    'serviceId': service_id,
+                    'serviceName': service_name,
+                    'type': change_type,
+                    'timestamp': timestamp,
+                    'changedFields': changed_fields
+                })
             
             self.send_json_response({
                 'hasChanges': len(changes) > 0,
@@ -371,6 +286,36 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         except:
             return '不明'
     
+    def log_browser_change(self, service_id, change_type, service_data):
+        """ブラウザ経由の変更をログに記録"""
+        try:
+            # 変更ログを読み込む
+            if BROWSER_CHANGES_LOG.exists():
+                with open(BROWSER_CHANGES_LOG, 'r', encoding='utf-8') as f:
+                    changes = json.load(f)
+            else:
+                changes = []
+            
+            # 既存の同じサービスIDのログを削除（重複防止）
+            changes = [c for c in changes if c.get('serviceId') != service_id]
+            
+            # 新しい変更を追加
+            import datetime
+            changes.append({
+                'serviceId': service_id,
+                'serviceName': service_data.get('title', f'サービスID {service_id}'),
+                'type': change_type,  # 'created' or 'modified'
+                'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
+                'serviceData': service_data  # 変更時のサービスデータを保存
+            })
+            
+            # ログを保存
+            with open(BROWSER_CHANGES_LOG, 'w', encoding='utf-8') as f:
+                json.dump(changes, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            # ログ記録の失敗は無視（メイン処理には影響しない）
+            pass
+    
     def handle_create_service(self):
         """新規サービス作成処理"""
         try:
@@ -397,6 +342,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             # JSONファイルを保存
             with open(SERVICE_ITEMS_JSON, 'w', encoding='utf-8') as f:
                 json.dump(services, f, ensure_ascii=False, indent=2)
+            
+            # ブラウザ経由の変更をログに記録
+            self.log_browser_change(new_id, 'created', service_data)
             
             # ビルドを実行（非同期）
             self.run_build_async()
@@ -497,6 +445,11 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 capture_output=True,
                 timeout=10
             )
+            
+            # ブラウザ経由の変更ログもクリア
+            if BROWSER_CHANGES_LOG.exists():
+                with open(BROWSER_CHANGES_LOG, 'w', encoding='utf-8') as f:
+                    json.dump([], f, ensure_ascii=False, indent=2)
             
             # ビルドを実行（非同期）
             self.run_build_async()
@@ -660,6 +613,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 # JSONファイルを保存
                 with open(SERVICE_ITEMS_JSON, 'w', encoding='utf-8') as f:
                     json.dump(services, f, ensure_ascii=False, indent=2)
+                
+                # ブラウザ経由の変更をログに記録
+                self.log_browser_change(service_id, 'modified', service_data)
                 
                 # ビルドを実行（非同期）
                 self.run_build_async()
@@ -828,6 +784,12 @@ def main():
         print("Creating empty service_items.json...")
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         with open(SERVICE_ITEMS_JSON, 'w', encoding='utf-8') as f:
+            json.dump([], f, ensure_ascii=False, indent=2)
+    
+    # ブラウザ変更ログファイルが存在しない場合は作成
+    if not BROWSER_CHANGES_LOG.exists():
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        with open(BROWSER_CHANGES_LOG, 'w', encoding='utf-8') as f:
             json.dump([], f, ensure_ascii=False, indent=2)
     
     server = HTTPServer(('', PORT), DevServerHandler)
