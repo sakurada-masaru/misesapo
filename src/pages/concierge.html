@@ -1613,8 +1613,8 @@
         }).join('');
         
         // サービスカードにダブルクリックイベントを追加
-        const serviceItems = document.querySelectorAll('.service-item[data-service-id]');
-        serviceItems.forEach(item => {
+        const serviceItemElements = document.querySelectorAll('.service-item[data-service-id]');
+        serviceItemElements.forEach(item => {
           let clickTimer = null;
           
           // シングルクリック（タップ）: 何もしない（または詳細表示など）
