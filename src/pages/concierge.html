@@ -138,33 +138,7 @@
         </div>
       </div>
 
-      <!-- 画面5: 地図画面 -->
-      <div class="concierge-screen" data-screen="map">
-        <div class="screen-header">
-          <h1 class="screen-title">地図</h1>
-    </div>
-        <div class="map-container" id="map-container">
-          <div class="map-placeholder" id="map-placeholder">
-            <i class="fas fa-map-marked-alt"></i>
-            <p>地図を読み込んでいます...</p>
-          </div>
-        </div>
-        <div class="map-schedule-list" id="map-schedule-list">
-          <!-- Schedule items will be rendered by JavaScript -->
-        </div>
-      </div>
-
-      <!-- 画面6: スケジュール画面 -->
-      <div class="concierge-screen" data-screen="schedule">
-        <div class="screen-header">
-          <h1 class="screen-title">スケジュール</h1>
-        </div>
-        <div class="schedule-container" id="schedule-container">
-          <!-- Schedule will be rendered by JavaScript -->
-        </div>
-      </div>
-
-      <!-- 画面7: TODOリスト画面 -->
+      <!-- 画面6: TODOリスト画面 -->
       <div class="concierge-screen" data-screen="todo">
         <div class="screen-header">
           <h1 class="screen-title">TODOリスト</h1>
@@ -2147,10 +2121,14 @@
           const visibleScreenElements = Array.from(screens).filter(s => visibleScreens.includes(s.dataset.screen));
           
           if (index >= 0 && index < visibleScreenElements.length) {
-            slider.scrollTo({
-              left: index * window.innerWidth,
-              behavior: 'smooth'
-            });
+            // スライダーのスクロール位置をリセットしてから新しい位置に移動
+            slider.scrollLeft = 0;
+            setTimeout(() => {
+              slider.scrollTo({
+                left: index * window.innerWidth,
+                behavior: 'smooth'
+              });
+            }, 10);
           }
         } else {
           // PC版: 直接表示（横スライドなし）
@@ -2845,15 +2823,21 @@
           // イベントリスナーを再設定
           setupMenuEventListeners();
 
-          // デフォルト画面を表示
+          // デフォルト画面を表示（必ずリセット）
           // 一段目メニューの場合は「アクティビティ」、二段目メニューの場合は「TODO」
           const defaultScreenName = currentMenuTier === 'first' ? 'activity' : 'todo';
           const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
           const screenIndex = visibleScreens.indexOf(defaultScreenName);
           
           if (screenIndex !== -1) {
+            // スライダーのスクロール位置をリセット
+            if (slider) {
+              slider.scrollLeft = 0;
+            }
             // 表示中の画面の中でのインデックスを使用して画面を切り替え
-            switchScreen(screenIndex);
+            setTimeout(() => {
+              switchScreen(screenIndex);
+            }, 50);
           }
         }, 500); // アニメーション時間（0.5s）
       }
