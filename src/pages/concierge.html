@@ -1388,11 +1388,10 @@
           `;
         }).join('');
 
-        // 地図プレースホルダーにGoogle Mapsを埋め込む（簡易版）
+        // 地図プレースホルダーに地図リンクを表示
         const mapPlaceholder = document.getElementById('map-placeholder');
         if (mapPlaceholder && todaySchedules.length > 0) {
           const firstSchedule = todaySchedules[0];
-          const mapUrl = `https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(firstSchedule.address)}`;
           // 実際の実装ではGoogle Maps APIキーが必要
           // 現在は地図リンクのみ表示
           mapPlaceholder.innerHTML = `
