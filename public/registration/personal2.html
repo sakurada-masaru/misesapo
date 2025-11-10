@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>登録情報確認（個人・店舗） | ミセサポ</title>
-    <link rel="icon" type="image/png" href="/misesapo/images/logo_144x144.png" />
-<link rel="shortcut icon" href="/misesapo/favicon.ico" />
-<link rel="apple-touch-icon" href="/misesapo/images/logo_144x144.png" />
-<link rel="stylesheet" href="/misesapo/styles.css" />
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <!-- 
@@ -28,7 +28,7 @@
   <body class="theme-pink registration bg-white">
     <main class="container">
       <div class="text-center reg-logo-block">
-        <img src="/misesapo/images/logo_144x144.png" alt="ミセサポ" class="reg-logo" />
+        <img src="/images/logo_144x144.png" alt="ミセサポ" class="reg-logo" />
         <div class="small caption-strong">新規登録</div>
       </div>
       <div class="hr"></div>
@@ -107,7 +107,7 @@
       if (!btn) return;
       btn.addEventListener('click', function(){
         // 実装時はPOST送信。モックでは完了ページに遷移。
-        location.href="/misesapo/registration/complete.html";
+        location.href = '/registration/complete.html';
       });
     }
     if (document.readyState === 'loading') {
@@ -120,7 +120,7 @@
 
 
       <div class="actions actions-y-md">
-        <a class="btn btn-outline-primary btn-fixed btn-round" href="/misesapo/registration/personal.html">修正する</a>
+        <a class="btn btn-outline-primary btn-fixed btn-round" href="/registration/personal.html">修正する</a>
         <button id="final-submit" class="btn btn-primary btn-fixed btn-round">登録</button>
       </div>
     </main>
