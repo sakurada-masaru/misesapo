@@ -466,6 +466,13 @@ def copy_assets(outputs: List[str]) -> None:
         else:
             shutil.copy2(src_path, dst_path)
         outputs.append(str(dst_path))
+    
+    # Copy logo_144x144.png to public/favicon.ico for browser auto-detection
+    logo_path = ASSETS_DIR / "images" / "logo_144x144.png"
+    if logo_path.exists():
+        favicon_path = PUBLIC / "favicon.ico"
+        shutil.copy2(logo_path, favicon_path)
+        outputs.append(str(favicon_path))
 
 
 def copy_data_files(outputs: List[str]) -> None:
