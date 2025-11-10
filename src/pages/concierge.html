@@ -3123,16 +3123,40 @@
       renderTodo();
       renderNotes();
 
+      // 初期表示する画面を設定（一段目メニューに対応する画面のみ）
+      updateVisibleScreens();
+
       // PC版の初期表示設定
       const isMobile = window.innerWidth <= 767.98;
       if (!isMobile) {
-        screens.forEach((s, i) => {
-          if (i === 0) {
-            s.style.display = 'block';
+        // PC版: 現在の画面のみ表示
+        screens.forEach((s) => {
+          const screenName = s.dataset.screen;
+          const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
+          if (visibleScreens.includes(screenName)) {
+            // 最初の画面のみ表示
+            const firstScreenName = visibleScreens[0];
+            if (screenName === firstScreenName) {
+              s.style.display = 'block';
+            } else {
+              s.style.display = 'none';
+            }
           } else {
             s.style.display = 'none';
           }
         });
+      }
+
+      // 最初の画面をアクティブに（表示中の画面の中でのインデックスを使用）
+      const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
+      const firstScreenName = visibleScreens[0];
+      const firstScreenIndex = Array.from(screens).findIndex(s => s.dataset.screen === firstScreenName);
+      if (firstScreenIndex !== -1) {
+        const visibleScreenElements = Array.from(screens).filter(s => visibleScreens.includes(s.dataset.screen));
+        const visibleIndex = visibleScreenElements.indexOf(screens[firstScreenIndex]);
+        if (visibleIndex !== -1) {
+          switchScreen(visibleIndex);
+        }
       }
 
       // スケジュール画面のレンダリング
