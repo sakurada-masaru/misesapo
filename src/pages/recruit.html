@@ -6,6 +6,9 @@
   <!-- Splash Screen -->
   <div id="recruit-splash" class="recruit-splash">
     <img src="images/recruitlogo.png" alt="ミセサポ求人" class="recruit-splash-logo" />
+    <audio id="recruit-splash-se" preload="auto">
+      <source src="eyecatch_se1.mp3" type="audio/mpeg">
+    </audio>
   </div>
 
   <!-- Hero Section -->
@@ -666,6 +669,19 @@
     (function() {
       const splash = document.getElementById('recruit-splash');
       if (!splash) return;
+
+      const audio = document.getElementById('recruit-splash-se');
+      
+      // ページ読み込み時にSEを再生（フェードインアップと同時）
+      if (audio) {
+        // ユーザーインタラクション後に再生可能にするため、少し遅延
+        setTimeout(function() {
+          audio.play().catch(function(error) {
+            // 自動再生がブロックされた場合でもエラーを出さない
+            console.log('Audio play failed:', error);
+          });
+        }, 100);
+      }
 
       // フェードインアップはCSSアニメーションで自動実行
       // 3秒後にフェードアウト開始
