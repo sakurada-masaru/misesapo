@@ -1,8 +1,11 @@
 name: Cloud Run deploy (build → image)
 
+# Cloud Runデプロイを無効化（GitHub Pagesのみを使用する場合）
+# 有効化する場合は、GitHubリポジトリ変数を設定してください
 on:
-  push:
-    branches: [ "main" ]
+  workflow_dispatch:  # 手動実行のみに変更
+  # push:
+  #   branches: [ "main" ]
 
 jobs:
   deploy:
