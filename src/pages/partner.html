@@ -22,6 +22,42 @@
     </div>
   </section>
 
+  <!-- Features Section -->
+  <section class="partner-features scroll-fade-in">
+    <div class="partner-features-container">
+      <div class="partner-features-grid">
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-broom"></i>
+          </div>
+          <h3 class="feature-title">清掃の道具などは不要</h3>
+          <p class="feature-description">必要なものは、ミセサポでお貸しいたします。</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-car"></i>
+          </div>
+          <h3 class="feature-title">直行直帰</h3>
+          <p class="feature-description">通勤なしで効率よく働けます。</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <h3 class="feature-title">時間を選んで働く</h3>
+          <p class="feature-description">スキマ時間でお仕事可能。Wワークや副業にもぴったり。</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-money-bill-wave"></i>
+          </div>
+          <h3 class="feature-title">支払いは週単位</h3>
+          <p class="feature-description">すぐに収入を得られます。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- How it Works Section -->
   <section class="partner-how-it-works scroll-fade-in">
     <div class="partner-how-it-works-container">
@@ -101,13 +137,16 @@
         </div>
         <div class="partner-video-thumbnail">
           <div class="video-thumbnail-wrapper">
-            <img src="images/partner/video-thumbnail.png" alt="ミセサポ動画" class="video-thumbnail-image" />
-            <button class="video-play-btn">
-              <i class="fas fa-play"></i>
-            </button>
-          </div>
-          <div class="video-side-image">
-            <img src="images/partner/video-side.png" alt="パートナー清掃員" />
+            <div class="video-thumbnail-content">
+              <h3 class="video-thumbnail-title">
+                <span class="video-title-bullet">●</span>
+                ミセサポ 始めました
+              </h3>
+              <img src="images/partner/video-thumbnail.png" alt="ミセサポ動画" class="video-thumbnail-image" />
+              <button class="video-play-btn">
+                <i class="fas fa-play"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -179,17 +218,17 @@
 </div>
 
 <style>
-  /* Partner Page Styles - Dark Theme with Pink Accents */
+  /* Partner Page Styles - White Theme with Pink Accents */
   .partner-page {
-    background: #1a1a1a;
-    color: #ffffff;
+    background: #ffffff;
+    color: #111827;
     min-height: 100vh;
   }
 
   /* Hero Section */
   .partner-hero {
     padding: 80px 20px;
-    background: #1a1a1a;
+    background: #ffffff;
   }
 
   .partner-hero-container {
@@ -212,14 +251,14 @@
   .partner-hero-title {
     font-size: 3rem;
     font-weight: 700;
-    color: #ffffff;
+    color: #111827;
     margin: 0 0 24px 0;
     line-height: 1.2;
   }
 
   .partner-hero-description {
     font-size: 1.25rem;
-    color: #ffffff;
+    color: #374151;
     margin: 0 0 32px 0;
     line-height: 1.6;
   }
@@ -246,7 +285,7 @@
   }
 
   .partner-already-registered a {
-    color: #ffffff;
+    color: #374151;
     text-decoration: underline;
   }
 
@@ -261,10 +300,68 @@
     border-radius: 8px;
   }
 
+  /* Features Section */
+  .partner-features {
+    padding: 80px 20px;
+    background: #f9fafb;
+  }
+
+  .partner-features-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .partner-features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+  }
+
+  .feature-item {
+    text-align: center;
+    padding: 32px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .feature-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .feature-icon {
+    width: 80px;
+    height: 80px;
+    background: #ff6b9d;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    color: #ffffff;
+    font-size: 2rem;
+  }
+
+  .feature-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 12px 0;
+  }
+
+  .feature-description {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.6;
+  }
+
   /* How it Works Section */
   .partner-how-it-works {
     padding: 80px 20px;
-    background: #1a1a1a;
+    background: #ffffff;
   }
 
   .partner-how-it-works-container {
@@ -275,7 +372,7 @@
   .partner-section-title {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #ffffff;
+    color: #111827;
     text-align: center;
     margin: 0 0 60px 0;
   }
@@ -328,13 +425,13 @@
   .workflow-step-title {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #ffffff;
+    color: #111827;
     margin: 0 0 12px 0;
   }
 
   .workflow-step-description {
     font-size: 1.125rem;
-    color: #cccccc;
+    color: #6b7280;
     margin: 0;
     line-height: 1.6;
   }
@@ -348,13 +445,13 @@
 
   .workflow-icons i {
     font-size: 2rem;
-    color: #ffffff;
+    color: #ff6b9d;
   }
 
   /* Registration Steps Section */
   .partner-registration-steps {
     padding: 80px 20px;
-    background: #1a1a1a;
+    background: #f9fafb;
   }
 
   .partner-registration-steps-container {
@@ -366,12 +463,13 @@
   }
 
   .registration-step-card {
-    background: #2a2a2a;
+    background: #ffffff;
     border-radius: 12px;
     padding: 40px;
     display: flex;
     gap: 24px;
     align-items: flex-start;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
 
   .registration-step-number {
@@ -395,13 +493,13 @@
   .registration-step-title {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #ffffff;
+    color: #111827;
     margin: 0 0 16px 0;
   }
 
   .registration-step-text {
     font-size: 1rem;
-    color: #cccccc;
+    color: #6b7280;
     margin: 0 0 20px 0;
     line-height: 1.6;
   }
@@ -425,7 +523,7 @@
   /* FAQ Section */
   .partner-faq {
     padding: 80px 20px;
-    background: #1a1a1a;
+    background: #ffffff;
   }
 
   .partner-faq-container {
@@ -436,27 +534,29 @@
   .partner-faq-search {
     display: flex;
     gap: 12px;
-    background: #2a2a2a;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
     padding: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
 
   .faq-search-input {
     flex: 1;
     background: transparent;
     border: none;
-    color: #ffffff;
+    color: #111827;
     font-size: 1rem;
     padding: 12px;
     outline: none;
   }
 
   .faq-search-input::placeholder {
-    color: #888888;
+    color: #9ca3af;
   }
 
   .faq-search-btn {
-    background: #ff6b9d;
+    background: #111827;
     color: #ffffff;
     border: none;
     border-radius: 8px;
@@ -467,13 +567,13 @@
   }
 
   .faq-search-btn:hover {
-    background: #ff5a8a;
+    background: #374151;
   }
 
   /* Video Section */
   .partner-video {
     padding: 80px 20px;
-    background: #1a1a1a;
+    background: #f9fafb;
   }
 
   .partner-video-container {
@@ -495,7 +595,7 @@
 
   .partner-video-description {
     font-size: 1.25rem;
-    color: #ffffff;
+    color: #374151;
     line-height: 1.6;
     margin: 0;
   }
@@ -503,20 +603,42 @@
   .partner-video-thumbnail {
     flex: 1;
     min-width: 300px;
-    display: flex;
-    gap: 20px;
-    align-items: center;
   }
 
   .video-thumbnail-wrapper {
     position: relative;
-    flex: 1;
+    width: 100%;
+  }
+
+  .video-thumbnail-content {
+    position: relative;
+    border: 2px solid #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .video-thumbnail-title {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0;
+    z-index: 2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .video-title-bullet {
+    color: #ff6b9d;
+    margin-right: 8px;
   }
 
   .video-thumbnail-image {
     width: 100%;
     height: auto;
-    border-radius: 8px;
+    display: block;
   }
 
   .video-play-btn {
@@ -526,7 +648,7 @@
     transform: translate(-50%, -50%);
     width: 80px;
     height: 80px;
-    background: #ff6b9d;
+    background: #dc2626;
     color: #ffffff;
     border: none;
     border-radius: 50%;
@@ -536,26 +658,17 @@
     align-items: center;
     justify-content: center;
     transition: background 0.3s ease;
+    z-index: 2;
   }
 
   .video-play-btn:hover {
-    background: #ff5a8a;
-  }
-
-  .video-side-image {
-    flex: 0 0 200px;
-  }
-
-  .video-side-image img {
-    width: 100%;
-    height: auto;
-    border-radius: 8px;
+    background: #b91c1c;
   }
 
   /* Partner Companies Section */
   .partner-companies {
     padding: 80px 20px;
-    background: #1a1a1a;
+    background: #ffffff;
   }
 
   .partner-companies-container {
