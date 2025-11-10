@@ -2569,8 +2569,7 @@
         // 既に同じサービスが追加されているかチェック
         const existingItem = selectedServices.querySelector(`.selected-service-item[data-service-id="${id}"]`);
         if (existingItem) {
-          // 既に追加されている場合は、その項目を開く
-          toggleServiceMemo(existingItem.querySelector('.btn-service-memo'));
+          // 既に追加されている場合は、何もしない（画面遷移もしない、メモも開かない）
           return;
         }
 
@@ -2579,7 +2578,7 @@
         const priceValue = priceMatch ? parseInt(priceMatch[1].replace(/,/g, ''), 10) : 0;
 
         const serviceItem = document.createElement('div');
-        serviceItem.className = 'selected-service-item';
+        serviceItem.className = 'selected-service-item'; // expandedクラスは付けない（メモは閉じた状態）
         serviceItem.dataset.serviceId = id;
         serviceItem.dataset.priceValue = priceValue;
         serviceItem.dataset.multiplier = '1'; // デフォルト倍率は1
@@ -2616,6 +2615,7 @@
         updateEstimateTotal();
         
         // サービス画面にとどまる（見積もり画面に遷移しない）
+        // メモは閉じた状態のまま（expandedクラスは付けない）
       };
 
       // サービスメモの開閉
