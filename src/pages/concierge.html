@@ -1852,24 +1852,29 @@
         });
 
         photoInput.addEventListener('change', (e) => {
-        const files = Array.from(e.target.files);
-        files.forEach(file => {
-          if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-              const photoItem = document.createElement('div');
-              photoItem.className = 'photo-item';
-              photoItem.innerHTML = `
-                <img src="${event.target.result}" alt="写真">
-                <button class="btn-remove-photo" onclick="removePhoto(this)"><i class="fas fa-times"></i></button>
-              `;
-              photosGrid.appendChild(photoItem);
-            };
-            reader.readAsDataURL(file);
-          }
+          const files = Array.from(e.target.files);
+          files.forEach(file => {
+            if (file.type.startsWith('image/')) {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'photo-item';
+                photoItem.innerHTML = `
+                  <img src="${event.target.result}" alt="写真">
+                  <button class="btn-remove-photo" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                  </button>
+                `;
+                if (photosGrid) {
+                  photosGrid.appendChild(photoItem);
+                }
+              };
+              reader.readAsDataURL(file);
+            }
+          });
+          // ファイル選択をリセット（同じファイルを再度選択できるように）
+          photoInput.value = '';
         });
-        e.target.value = ''; // 同じファイルを再度選択できるように
-      });
 
       window.removePhoto = function(btn) {
         btn.closest('.photo-item').remove();
