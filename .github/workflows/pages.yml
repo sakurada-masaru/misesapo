@@ -27,10 +27,14 @@ jobs:
           python-version: '3.11'
       
       - name: Build static files
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           python3 scripts/build.py
           echo "Build completed. Files in public/:"
           ls -la public/ | head -20
+          echo "Checking base_path in index.html:"
+          head -10 public/index.html | grep -E "(base href|href=|src=)" || echo "No base tag found"
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
