@@ -81,7 +81,116 @@
       
       container.appendChild(link);
     });
+    
+    // スマホ版ナビゲーションにも同じ項目を生成
+    const mobileNavPrimary = document.getElementById('mobile-nav-primary');
+    if (mobileNavPrimary) {
+      mobileNavPrimary.innerHTML = '';
+      navItems.forEach(item => {
+        const link = document.createElement('a');
+        link.href = resolvePath(item.href);
+        link.className = 'mobile-nav-link';
+        link.textContent = item.label;
+        link.setAttribute('aria-label', item.label);
+        
+        // アイコンがある場合は追加
+        if (item.icon) {
+          const icon = document.createElement('i');
+          icon.className = `fas ${item.icon}`;
+          icon.setAttribute('aria-hidden', 'true');
+          link.insertBefore(icon, link.firstChild);
+          link.insertBefore(document.createTextNode(' '), icon.nextSibling);
+        }
+        
+        // 現在のページかチェック
+        const currentPath = window.location.pathname;
+        const basePath = getBasePath();
+        let normalizedPath = currentPath;
+        if (basePath !== '/' && currentPath.startsWith(basePath)) {
+          normalizedPath = currentPath.substring(basePath.length - 1);
+        }
+        
+        if (normalizedPath === item.href || normalizedPath === item.href.replace('.html', '')) {
+          link.classList.add('active');
+          link.setAttribute('aria-current', 'page');
+        }
+        
+        // クリックでメニューを閉じる
+        link.addEventListener('click', () => {
+          closeMobileNav();
+        });
+        
+        mobileNavPrimary.appendChild(link);
+      });
+    }
   }
+  
+  /**
+   * ハンバーガーメニューの開閉
+   */
+  function toggleMobileNav() {
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const mobileNav = document.getElementById('mobile-nav');
+    
+    if (!hamburgerBtn || !mobileNav) return;
+    
+    const isActive = mobileNav.classList.contains('active');
+    
+    if (isActive) {
+      closeMobileNav();
+    } else {
+      openMobileNav();
+    }
+  }
+  
+  function openMobileNav() {
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const mobileNav = document.getElementById('mobile-nav');
+    
+    if (!hamburgerBtn || !mobileNav) return;
+    
+    hamburgerBtn.classList.add('active');
+    hamburgerBtn.setAttribute('aria-expanded', 'true');
+    mobileNav.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  
+  function closeMobileNav() {
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const mobileNav = document.getElementById('mobile-nav');
+    
+    if (!hamburgerBtn || !mobileNav) return;
+    
+    hamburgerBtn.classList.remove('active');
+    hamburgerBtn.setAttribute('aria-expanded', 'false');
+    mobileNav.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  
+  // ハンバーガーボタンのクリックイベント
+  document.addEventListener('DOMContentLoaded', () => {
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    if (hamburgerBtn) {
+      hamburgerBtn.addEventListener('click', toggleMobileNav);
+    }
+    
+    // メニュー外をクリックで閉じる
+    const mobileNav = document.getElementById('mobile-nav');
+    if (mobileNav) {
+      mobileNav.addEventListener('click', (e) => {
+        if (e.target === mobileNav) {
+          closeMobileNav();
+        }
+      });
+    }
+    
+    // ESCキーで閉じる
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeMobileNav();
+      }
+    });
+  });
   
   /**
    * ヘッダーをロールに応じて切り替え
@@ -193,7 +302,10 @@
   window.Navigation = {
     renderNavigation: renderNavigation,
     switchHeaderByRole: switchHeaderByRole,
-    init: init
+    init: init,
+    toggleMobileNav: toggleMobileNav,
+    openMobileNav: openMobileNav,
+    closeMobileNav: closeMobileNav
   };
 })();
 

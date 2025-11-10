@@ -33,12 +33,12 @@
       <a class="brand brand-logo" href="/index.html" aria-label="ミセサポ ホーム">
         <img src="/images/logo_144x144.png" alt="ミセサポ" />
       </a>
-      <nav id="nav-guest" class="nav-left" aria-label="Primary">
+      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
         <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
       </nav>
     </div>
     <div class="spacer"></div>
-    <nav class="nav-right" aria-label="User">
+    <nav class="nav-right hide-sm" aria-label="User">
       <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
       <a class="nav-link" href="/signin.html">ログイン</a>
       <a class="nav-link primary" href="/signup.html">新規登録</a>
@@ -49,7 +49,25 @@
         <i class="fas fa-sign-out-alt"></i>
       </button>
     </nav>
+    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
   </div>
+  <!-- スマホ版ナビゲーションメニュー -->
+  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
+    <div class="mobile-nav-content">
+      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+      <nav class="mobile-nav-user" aria-label="User">
+        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+        <a class="mobile-nav-link" href="/signin.html">ログイン</a>
+        <a class="mobile-nav-link primary" href="/signup.html">新規登録</a>
+      </nav>
+    </div>
+  </nav>
 </header>
 
     <main class="container complete-container">
