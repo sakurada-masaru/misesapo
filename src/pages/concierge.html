@@ -1394,15 +1394,12 @@
           const firstSchedule = todaySchedules[0];
           const mapUrl = `https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(firstSchedule.address)}`;
           // 実際の実装ではGoogle Maps APIキーが必要
+          // 現在は地図リンクのみ表示
           mapPlaceholder.innerHTML = `
-            <iframe
-              width="100%"
-              height="100%"
-              style="border:0"
-              loading="lazy"
-              allowfullscreen
-              src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6d-s6U4uYZ9u9k&q=${encodeURIComponent(firstSchedule.address)}">
-            </iframe>
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(firstSchedule.address)}" target="_blank" style="text-decoration: none; color: inherit;">
+              <i class="fas fa-map-marked-alt"></i>
+              <p>地図を開く</p>
+            </a>
           `;
         }
       }
