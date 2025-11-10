@@ -128,24 +128,6 @@
         </div>
       </div>
 
-      <!-- 画面4.5: 仮見積もり概算画面 -->
-      <div class="concierge-screen" data-screen="estimate-preview" id="estimate-preview-screen" style="display: none;">
-        <div class="screen-header">
-          <h1 class="screen-title">仮見積もり（概算）</h1>
-        </div>
-        <div class="estimate-preview-container" id="estimate-preview-container">
-          <!-- 概算内容はJavaScriptで動的に生成 -->
-        </div>
-        <div class="estimate-preview-actions">
-          <button class="btn-save-screenshot" id="btn-save-screenshot">
-            <i class="fas fa-camera"></i> 保存
-          </button>
-          <button class="btn-send-to-headquarters" id="btn-send-to-headquarters">
-            <i class="fas fa-paper-plane"></i> 送信
-          </button>
-        </div>
-      </div>
-
       <!-- 画面5: 地図画面 -->
       <div class="concierge-screen" data-screen="map">
         <div class="screen-header">
@@ -236,7 +218,27 @@
         </div>
       </div>
 
-      <!-- 画面10: ログアウト画面 -->
+      <!-- 画面10: 仮見積もり概算画面 -->
+      <div class="concierge-screen" data-screen="estimate-preview">
+        <div class="screen-header">
+          <h1 class="screen-title">仮見積もり（概算）</h1>
+        </div>
+        <div class="estimate-preview-container" id="estimate-preview-container">
+          <div class="estimate-preview-content" id="estimate-preview-content">
+            <!-- 概算内容はJavaScriptで動的に生成されます -->
+          </div>
+          <div class="estimate-preview-actions">
+            <button class="btn-save" id="btn-save-preview">
+              <i class="fas fa-save"></i> 保存
+            </button>
+            <button class="btn-send" id="btn-send-preview">
+              <i class="fas fa-paper-plane"></i> 送信
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 画面11: ログアウト画面 -->
       <div class="concierge-screen" data-screen="logout">
         <div class="screen-header">
           <h1 class="screen-title">ログアウト</h1>
@@ -326,9 +328,6 @@
   <script type="application/json" id="service-items-data">
     @jsonvar $service_items_data
   </script>
-  
-  <!-- html2canvasライブラリ（スクリーンショット機能用） -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     /* 基本レイアウト */
@@ -1874,6 +1873,157 @@
       background: #dc2626;
     }
 
+    /* 仮見積もり概算画面 */
+    .estimate-preview-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 16px;
+      gap: 16px;
+    }
+
+    .estimate-preview-content {
+      flex: 1;
+      overflow-y: auto;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .estimate-preview-header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .estimate-preview-header h2 {
+      margin: 0 0 8px 0;
+      font-size: 1.5rem;
+      color: #111827;
+    }
+
+    .estimate-date {
+      margin: 0;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .estimate-preview-services {
+      margin-bottom: 24px;
+    }
+
+    .estimate-preview-services h3 {
+      margin: 0 0 12px 0;
+      font-size: 1.125rem;
+      color: #111827;
+    }
+
+    .estimate-services-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .estimate-services-table th,
+    .estimate-services-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .estimate-services-table th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .estimate-services-table tfoot {
+      font-weight: 600;
+    }
+
+    .estimate-services-table .total-label {
+      text-align: right;
+      padding-right: 16px;
+    }
+
+    .estimate-services-table .total-value {
+      color: var(--primary);
+      font-size: 1.125rem;
+    }
+
+    .estimate-preview-photos {
+      margin-bottom: 24px;
+    }
+
+    .estimate-preview-photos h3 {
+      margin: 0 0 12px 0;
+      font-size: 1.125rem;
+      color: #111827;
+    }
+
+    .estimate-preview-photos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .preview-photo {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      object-fit: cover;
+      aspect-ratio: 1;
+    }
+
+    .estimate-preview-notes {
+      margin-bottom: 24px;
+    }
+
+    .estimate-preview-notes h3 {
+      margin: 0 0 12px 0;
+      font-size: 1.125rem;
+      color: #111827;
+    }
+
+    .estimate-preview-notes p {
+      margin: 0;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .estimate-preview-actions {
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+      background: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      position: sticky;
+      bottom: 0;
+    }
+
+    .btn-create {
+      padding: 12px 24px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-create:hover {
+      background: #ff6b9d;
+    }
+
     /* SP版のヘッダーとロゴを非表示 */
     @media (max-width: 767.98px) {
       body:has(.concierge-page) header.site-header,
@@ -2017,6 +2167,8 @@
           renderNotes();
         } else if (screenName === 'camera') {
           initCamera();
+        } else if (screenName === 'estimate-preview') {
+          // 概算画面は既にレンダリング済み
         } else if (screenName === 'logout') {
           // ログアウト画面は静的表示
         }
@@ -2571,6 +2723,7 @@
       const firstTierScreens = ['activity', 'schedule', 'client', 'services', 'estimate'];
       // 二段目メニューに対応する画面
       const secondTierScreens = ['todo', 'notes', 'camera', 'map', 'logout'];
+      // 概算画面は独立した画面（メニューには表示されない）
       
       // 現在表示中のメニュータイプ（'first' または 'second'）
       let currentMenuTier = 'first';
@@ -2788,7 +2941,7 @@
         });
       }
 
-      // 見積もり保存・送信
+      // 見積もり保存
       document.getElementById('btn-save-estimate').addEventListener('click', () => {
         const selectedItems = document.querySelectorAll('.selected-service-item');
         const photos = Array.from(photosGrid.querySelectorAll('img')).map(img => img.src);
@@ -2798,7 +2951,7 @@
         alert('仮見積もりを保存しました');
       });
 
-      // 仮見積もり作成ボタン
+      // 見積もり作成（概算画面を表示）
       document.getElementById('btn-create-estimate').addEventListener('click', () => {
         const selectedItems = document.querySelectorAll('.selected-service-item');
         if (selectedItems.length === 0) {
@@ -2806,8 +2959,17 @@
           return;
         }
         
-        // 仮見積もり概算画面を表示
-        showEstimatePreview();
+        // 概算画面をレンダリング
+        renderEstimatePreview();
+        
+        // 概算画面に切り替え
+        const previewScreen = document.querySelector('.concierge-screen[data-screen="estimate-preview"]');
+        if (previewScreen) {
+          const previewIndex = Array.from(screens).indexOf(previewScreen);
+          if (previewIndex !== -1) {
+            switchScreen(previewIndex);
+          }
+        }
       });
 
       // 地図画面のレンダリング
@@ -2852,6 +3014,86 @@
             </a>
           `;
         }
+      }
+
+      // 仮見積もり概算画面のレンダリング
+      function renderEstimatePreview() {
+        const previewContainer = document.getElementById('estimate-preview-content');
+        if (!previewContainer) return;
+
+        const selectedItems = document.querySelectorAll('.selected-service-item');
+        const photos = Array.from(photosGrid.querySelectorAll('img')).map(img => img.src);
+        const notes = document.getElementById('estimate-notes-input').value;
+        const total = document.getElementById('estimate-total').textContent;
+
+        // 選択されたサービス一覧を取得
+        const services = Array.from(selectedItems).map(item => {
+          const name = item.querySelector('.selected-service-name').textContent;
+          const price = item.querySelector('.selected-service-price').textContent;
+          const multiplier = item.dataset.multiplier || '1';
+          const memo = item.querySelector('.service-memo-input')?.value || '';
+          return { name, price, multiplier, memo };
+        });
+
+        // 現在の日時を取得
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        // 概算画面のHTMLを生成
+        previewContainer.innerHTML = `
+          <div class="estimate-preview-header">
+            <h2>仮見積もり（概算）</h2>
+            <p class="estimate-date">作成日時: ${dateStr}</p>
+          </div>
+          <div class="estimate-preview-services">
+            <h3>サービス一覧</h3>
+            <table class="estimate-services-table">
+              <thead>
+                <tr>
+                  <th>サービス名</th>
+                  <th>単価</th>
+                  <th>倍率</th>
+                  <th>金額</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${services.map(service => {
+                  const basePrice = parseInt(service.price.replace(/[¥,\s〜]/g, ''), 10) || 0;
+                  const multiplier = parseFloat(service.multiplier);
+                  const finalPrice = basePrice * multiplier;
+                  return `
+                    <tr>
+                      <td>${service.name}${service.memo ? `<br><small>${service.memo}</small>` : ''}</td>
+                      <td>${service.price}</td>
+                      <td>x${service.multiplier}</td>
+                      <td>¥${finalPrice.toLocaleString()}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="total-label">合計見積もり</td>
+                  <td class="total-value">${total}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          ${photos.length > 0 ? `
+            <div class="estimate-preview-photos">
+              <h3>写真</h3>
+              <div class="estimate-preview-photos-grid">
+                ${photos.map(photo => `<img src="${photo}" alt="写真" class="preview-photo">`).join('')}
+              </div>
+            </div>
+          ` : ''}
+          ${notes ? `
+            <div class="estimate-preview-notes">
+              <h3>メモ</h3>
+              <p>${notes}</p>
+            </div>
+          ` : ''}
+        `;
       }
 
       // 初期レンダリング
@@ -3097,6 +3339,83 @@
           }
         });
         observer.observe(cameraScreen, { attributes: true, attributeFilter: ['class'] });
+      }
+
+      // 仮見積もり概算画面の処理
+      const btnSavePreview = document.getElementById('btn-save-preview');
+      const btnSendPreview = document.getElementById('btn-send-preview');
+
+      if (btnSavePreview) {
+        btnSavePreview.addEventListener('click', () => {
+          // 確認ダイアログを表示
+          if (confirm('画面を保存しますか？')) {
+            // スクリーンショットを撮影
+            captureScreenshot('estimate-preview-content', '仮見積もり概算');
+          }
+        });
+      }
+
+      if (btnSendPreview) {
+        btnSendPreview.addEventListener('click', () => {
+          // PDF化またはスクリーンショットを取得
+          const previewContent = document.getElementById('estimate-preview-content');
+          if (previewContent) {
+            // スクリーンショットを撮影してから送信
+            captureScreenshot('estimate-preview-content', '仮見積もり概算', () => {
+              // TODO: 本社に送信する処理を実装（本社情報は別途提供予定）
+              alert('仮見積もりを本社に送信しました');
+            });
+          }
+        });
+      }
+
+      // スクリーンショット撮影関数
+      function captureScreenshot(elementId, filename, callback) {
+        const element = document.getElementById(elementId);
+        if (!element) {
+          alert('スクリーンショットを撮影する要素が見つかりません');
+          return;
+        }
+
+        // html2canvasライブラリを使用
+        if (typeof html2canvas === 'undefined') {
+          alert('スクリーンショット機能を利用するには、html2canvasライブラリが必要です。\nページを再読み込みしてください。');
+          return;
+        }
+
+        // ローディング表示（オプション）
+        const loadingMsg = document.createElement('div');
+        loadingMsg.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 8px; z-index: 10000;';
+        loadingMsg.textContent = 'スクリーンショットを撮影中...';
+        document.body.appendChild(loadingMsg);
+
+        html2canvas(element, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          allowTaint: true
+        }).then(canvas => {
+          // ローディング表示を削除
+          document.body.removeChild(loadingMsg);
+
+          // 画像としてダウンロード
+          const link = document.createElement('a');
+          link.download = `${filename}_${new Date().getTime()}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+
+          if (callback) {
+            callback();
+          }
+        }).catch(err => {
+          // ローディング表示を削除
+          if (document.body.contains(loadingMsg)) {
+            document.body.removeChild(loadingMsg);
+          }
+          console.error('スクリーンショット撮影エラー:', err);
+          alert('スクリーンショットの撮影に失敗しました');
+        });
       }
 
       // ログアウト画面の処理
