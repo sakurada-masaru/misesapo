@@ -233,10 +233,6 @@ main { width: 100%; max-width: var(--container-lg); margin: 24px auto; padding: 
 .brand img { display: block; height: 32px; width: auto; }
 
 /* Mobile nav */
-.nav-toggle { display: none; }
-@media (max-width: 767.98px) {
-  .nav-toggle { display: inline-flex; }
-}
 
 
 /* Splash Screen */
