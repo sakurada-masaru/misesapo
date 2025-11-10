@@ -12,20 +12,9 @@
 
   <!-- Recruitment Banner -->
   <section class="recruit-banner">
-    <div class="recruit-banner-container">
-      <div class="recruit-banner-content">
-        <h2 class="recruit-banner-title">清掃員 積極採用中!!</h2>
-        <div class="recruit-banner-badges">
-          <span class="recruit-badge">未経験歓迎</span>
-          <span class="recruit-badge">女性活躍中</span>
-          <span class="recruit-badge">経験者優遇</span>
-        </div>
-      </div>
-      <div class="recruit-banner-image">
-        <img src="images/recruit/banner.png" alt="清掃員 積極採用中" />
-      </div>
-      <a href="/recruit/apply/cleaning.html" class="recruit-banner-button">清掃員の応募ページへ &gt;&gt;</a>
-    </div>
+    <a href="/recruit/apply/cleaning.html" class="recruit-banner-link">
+      <img src="images/recruit/banner.png" alt="清掃員 積極採用中" class="recruit-banner-image" />
+    </a>
   </section>
 
   <!-- ABOUT Section -->
@@ -198,68 +187,22 @@
     }
     /* Recruitment Banner */
     .recruit-banner {
-      background: #ffffff;
-      border-top: 4px solid var(--primary);
-      border-bottom: 4px solid var(--primary);
-      padding: 40px 0;
+      padding: 0;
       margin-bottom: 0;
     }
-    .recruit-banner-container {
-      max-width: 1200px;
+    .recruit-banner-link {
+      display: block;
       width: 100%;
-      margin: 0 auto;
-      padding: 0 24px;
-      display: flex;
-      align-items: center;
-      gap: 32px;
+      cursor: pointer;
+      transition: opacity 0.2s;
     }
-    .recruit-banner-content {
-      flex: 1;
-    }
-    .recruit-banner-title {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 24px;
-    }
-    .recruit-banner-badges {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .recruit-badge {
-      display: inline-block;
-      padding: 8px 16px;
-      background: var(--primary);
-      color: #ffffff;
-      border-radius: 6px;
-      font-size: 0.875rem;
-      font-weight: 600;
+    .recruit-banner-link:hover {
+      opacity: 0.9;
     }
     .recruit-banner-image {
-      width: 200px;
-      height: 200px;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .recruit-banner-image img {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .recruit-banner-button {
-      padding: 12px 24px;
-      background: var(--primary);
-      color: #ffffff;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 600;
-      white-space: nowrap;
-      transition: all 0.2s;
-    }
-    .recruit-banner-button:hover {
-      background: #ff6b9d;
-      transform: translateY(-2px);
+      height: auto;
+      display: block;
     }
     /* Section Styles */
     .recruit-about,
@@ -500,19 +443,6 @@
       .recruit-job-container,
       .recruit-faq-container {
         padding: 0 16px;
-      }
-      .recruit-banner {
-        padding: 32px 0;
-      }
-      .recruit-banner-container {
-        flex-direction: column;
-        text-align: center;
-        gap: 24px;
-        padding: 0 16px;
-      }
-      .recruit-banner-image {
-        width: 150px;
-        height: 150px;
       }
       .recruit-about-content {
         grid-template-columns: 1fr;
