@@ -2631,19 +2631,15 @@
           // イベントリスナーを再設定
           setupMenuEventListeners();
 
-          // 新しい一段目メニューの最初の項目に対応した画面を表示
-          const newFirstTierFirstItem = quickMenu.querySelector('[data-screen]');
-          if (newFirstTierFirstItem) {
-            const screenName = newFirstTierFirstItem.dataset.screen;
-            const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
-            const screenIndex = visibleScreens.indexOf(screenName);
-            if (screenIndex !== -1) {
-              // 表示中の画面の中でのインデックスを計算
-              const actualScreenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
-              if (actualScreenIndex !== -1) {
-                switchScreen(actualScreenIndex);
-              }
-            }
+          // デフォルト画面を表示
+          // 一段目メニューの場合は「アクティビティ」、二段目メニューの場合は「TODO」
+          const defaultScreenName = currentMenuTier === 'first' ? 'activity' : 'todo';
+          const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
+          const screenIndex = visibleScreens.indexOf(defaultScreenName);
+          
+          if (screenIndex !== -1) {
+            // 表示中の画面の中でのインデックスを使用して画面を切り替え
+            switchScreen(screenIndex);
           }
         }, 500); // アニメーション時間（0.5s）
       }
