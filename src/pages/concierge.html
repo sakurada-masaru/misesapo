@@ -16,101 +16,101 @@
       <div class="concierge-screen active" data-screen="activity">
         <div class="screen-header">
           <h1 class="screen-title">アクティビティ</h1>
-        </div>
-        
+  </div>
+
         <!-- 緊急対応が必要な顧客 -->
         <section class="activity-section urgent-section">
-          <div class="section-header">
-            <h2 class="section-title">
-              <i class="fas fa-exclamation-triangle"></i>
-              緊急対応が必要な顧客
-            </h2>
-            <span class="urgent-badge" id="urgent-count">0</span>
-          </div>
-          <div class="urgent-list" id="urgent-list">
-            <!-- Urgent items will be rendered by JavaScript -->
-          </div>
-        </section>
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="fas fa-exclamation-triangle"></i>
+        緊急対応が必要な顧客
+      </h2>
+      <span class="urgent-badge" id="urgent-count">0</span>
+    </div>
+    <div class="urgent-list" id="urgent-list">
+      <!-- Urgent items will be rendered by JavaScript -->
+    </div>
+  </section>
 
         <!-- 本日のスケジュール -->
         <section class="activity-section">
-          <div class="section-header">
-            <h2 class="section-title">
-              <i class="fas fa-calendar-day"></i>
-              本日のスケジュール
-            </h2>
-          </div>
-          <div class="schedule-list" id="schedule-list">
-            <!-- Schedules will be rendered by JavaScript -->
-          </div>
-        </section>
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="fas fa-calendar-day"></i>
+        本日のスケジュール
+      </h2>
+    </div>
+    <div class="schedule-list" id="schedule-list">
+      <!-- Schedules will be rendered by JavaScript -->
+    </div>
+  </section>
 
         <!-- 新規問い合わせ -->
         <section class="activity-section">
-          <div class="section-header">
-            <h2 class="section-title">
-              <i class="fas fa-bell"></i>
-              新規問い合わせ
-              <span class="notification-badge" id="inquiry-count">0</span>
-            </h2>
-          </div>
-          <div class="inquiry-list" id="inquiry-list">
-            <!-- Inquiries will be rendered by JavaScript -->
-          </div>
-        </section>
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="fas fa-bell"></i>
+        新規問い合わせ
+        <span class="notification-badge" id="inquiry-count">0</span>
+      </h2>
+    </div>
+    <div class="inquiry-list" id="inquiry-list">
+      <!-- Inquiries will be rendered by JavaScript -->
+    </div>
+  </section>
       </div>
 
       <!-- 画面2: 顧客情報画面 -->
       <div class="concierge-screen" data-screen="client">
         <div class="screen-header">
           <h1 class="screen-title">顧客情報</h1>
-        </div>
+    </div>
         <div class="client-info-container" id="client-info-container">
           <!-- Client info will be rendered by JavaScript -->
         </div>
-      </div>
+        </div>
 
       <!-- 画面3: サービス・価格画面 -->
       <div class="concierge-screen" data-screen="services">
         <div class="screen-header">
           <h1 class="screen-title">サービス・価格</h1>
-        </div>
+      </div>
         <div class="services-container" id="services-container">
           <!-- Services will be rendered by JavaScript -->
         </div>
-      </div>
+        </div>
 
       <!-- 画面4: 仮見積もり作成画面 -->
       <div class="concierge-screen" data-screen="estimate">
         <div class="screen-header">
           <h1 class="screen-title">仮見積もり作成</h1>
-        </div>
+      </div>
         <div class="estimate-form-container" id="estimate-form-container">
           <div class="selected-services" id="selected-services">
             <div class="empty-state">
               <i class="fas fa-shopping-cart"></i>
               <p>サービスを選択してください</p>
-            </div>
-          </div>
+        </div>
+        </div>
           <div class="estimate-total">
             <span class="total-label">合計</span>
             <span class="total-value" id="estimate-total">¥0</span>
-          </div>
+      </div>
           <div class="estimate-photos" id="estimate-photos">
             <div class="photos-header">
               <h3>写真</h3>
               <button class="btn-photo-add" id="btn-photo-add">
                 <i class="fas fa-camera"></i> 追加
               </button>
-            </div>
+        </div>
             <div class="photos-grid" id="photos-grid">
               <!-- Photos will be added here -->
-            </div>
-          </div>
+        </div>
+      </div>
           <div class="estimate-notes">
             <label for="estimate-notes-input">メモ</label>
             <textarea id="estimate-notes-input" class="notes-input" placeholder="メモを入力してください"></textarea>
-          </div>
+    </div>
           <div class="estimate-actions">
             <button class="btn-save" id="btn-save-estimate">
               <i class="fas fa-save"></i> 保存
@@ -118,7 +118,7 @@
             <button class="btn-send" id="btn-send-estimate">
               <i class="fas fa-paper-plane"></i> 送信
             </button>
-          </div>
+    </div>
         </div>
       </div>
 
@@ -126,7 +126,7 @@
       <div class="concierge-screen" data-screen="map">
         <div class="screen-header">
           <h1 class="screen-title">地図</h1>
-        </div>
+    </div>
         <div class="map-container" id="map-container">
           <div class="map-placeholder" id="map-placeholder">
             <i class="fas fa-map-marked-alt"></i>
@@ -156,14 +156,14 @@
       <span>写真</span>
     </button>
     <button class="quick-menu-btn" data-screen="estimate" title="仮見積もり">
-      <i class="fas fa-file-invoice"></i>
+        <i class="fas fa-file-invoice"></i>
       <span>見積</span>
     </button>
     <button class="quick-menu-btn" data-screen="map" title="地図">
       <i class="fas fa-map-marked-alt"></i>
       <span>地図</span>
     </button>
-  </div>
+    </div>
 
   <!-- 隠しカメラ入力 -->
   <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" multiple>
@@ -570,21 +570,34 @@
       color: var(--primary);
       margin: 0;
       text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     @media (max-width: 767.98px) {
       .service-grid {
         grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
+        gap: 6px;
       }
       .service-item {
-        padding: 8px;
+        padding: 6px 4px;
+      }
+      .service-item-image {
+        margin-bottom: 4px;
       }
       .service-item-name {
-        font-size: 0.75rem;
+        font-size: 0.625rem;
+        line-height: 1.2;
+        margin: 0 0 2px 0;
+        -webkit-line-clamp: 2;
       }
       .service-item-price {
-        font-size: 0.875rem;
+        font-size: 0.6875rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
       }
     }
 
@@ -1127,58 +1140,58 @@
       function renderActivity() {
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
-        const todaySchedules = schedules.filter(s => s.date === todayStr);
-
+      const todaySchedules = schedules.filter(s => s.date === todayStr);
+      
         // 緊急対応
-        const urgentItems = [];
-        const threeDaysAgo = new Date();
-        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-        threeDaysAgo.setHours(0, 0, 0, 0);
-
-        estimates.filter(e => e.status === 'sent' && e.sent_date).forEach(estimate => {
-          try {
-            const dateStr = estimate.sent_date.replace(/年/g, '-').replace(/月/g, '-').replace(/日/g, '');
-            const parts = dateStr.split('-');
-            if (parts.length === 3) {
-              const year = parseInt(parts[0], 10);
-              const month = parseInt(parts[1], 10);
-              const day = parseInt(parts[2], 10);
-              const sentDate = new Date(year, month - 1, day);
-              sentDate.setHours(0, 0, 0, 0);
-              
-              if (sentDate < threeDaysAgo) {
-                urgentItems.push({
-                  type: 'estimate',
-                  title: `見積もり承認待ち: ${estimate.client_name} ${estimate.store_name}`,
-                  description: `${estimate.sent_date}送付済み（${estimate.total}）`,
+      const urgentItems = [];
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      threeDaysAgo.setHours(0, 0, 0, 0);
+      
+      estimates.filter(e => e.status === 'sent' && e.sent_date).forEach(estimate => {
+        try {
+          const dateStr = estimate.sent_date.replace(/年/g, '-').replace(/月/g, '-').replace(/日/g, '');
+          const parts = dateStr.split('-');
+          if (parts.length === 3) {
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10);
+            const day = parseInt(parts[2], 10);
+            const sentDate = new Date(year, month - 1, day);
+            sentDate.setHours(0, 0, 0, 0);
+            
+            if (sentDate < threeDaysAgo) {
+              urgentItems.push({
+                type: 'estimate',
+                title: `見積もり承認待ち: ${estimate.client_name} ${estimate.store_name}`,
+                description: `${estimate.sent_date}送付済み（${estimate.total}）`,
                   link: `/sales/estimates/${estimate.id}.html`
-                });
-              }
+              });
             }
-          } catch (e) {
-            console.error('Error parsing date:', estimate.sent_date, e);
           }
-        });
-
-        inquiries.filter(i => i.status === 'pending').forEach(inquiry => {
-          urgentItems.push({
-            type: 'inquiry',
-            title: `新規問い合わせ: ${inquiry.company_name}`,
-            description: `${inquiry.date} ${inquiry.time} - ${inquiry.message}`,
+        } catch (e) {
+          console.error('Error parsing date:', estimate.sent_date, e);
+        }
+      });
+      
+      inquiries.filter(i => i.status === 'pending').forEach(inquiry => {
+        urgentItems.push({
+          type: 'inquiry',
+          title: `新規問い合わせ: ${inquiry.company_name}`,
+          description: `${inquiry.date} ${inquiry.time} - ${inquiry.message}`,
             link: `/sales/clients/new.html?inquiry=${inquiry.id}`
-          });
         });
-
+      });
+      
         // 緊急対応レンダリング
         const urgentListEl = document.getElementById('urgent-list');
         const urgentCountEl = document.getElementById('urgent-count');
         if (urgentListEl) {
-          urgentCountEl.textContent = urgentItems.length;
-          if (urgentItems.length === 0) {
+        urgentCountEl.textContent = urgentItems.length;
+        if (urgentItems.length === 0) {
             urgentListEl.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>緊急対応が必要な項目はありません</p></div>';
           } else {
             urgentListEl.innerHTML = urgentItems.map(item => `
-              <div class="urgent-item" onclick="window.location.href='${item.link}'">
+            <div class="urgent-item" onclick="window.location.href='${item.link}'">
                 <div class="urgent-title">${item.title}</div>
                 <div class="urgent-description">${item.description}</div>
               </div>
@@ -1189,43 +1202,43 @@
         // スケジュールレンダリング
         const scheduleListEl = document.getElementById('schedule-list');
         if (scheduleListEl) {
-          if (todaySchedules.length === 0) {
+        if (todaySchedules.length === 0) {
             scheduleListEl.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-times"></i><p>本日の予定はありません</p></div>';
           } else {
-            scheduleListEl.innerHTML = todaySchedules.map(schedule => {
-              const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(schedule.address)}`;
-              return `
-                <div class="schedule-card">
-                  <div class="schedule-time">
+        scheduleListEl.innerHTML = todaySchedules.map(schedule => {
+          const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(schedule.address)}`;
+          return `
+            <div class="schedule-card">
+              <div class="schedule-time">
                     <span class="schedule-time-hour">${schedule.time}</span>
-                  </div>
-                  <div class="schedule-client">${schedule.client_name}</div>
+              </div>
+                <div class="schedule-client">${schedule.client_name}</div>
                   <div class="schedule-store">${schedule.store_name} - ${schedule.purpose}</div>
-                  <div class="schedule-actions">
+              <div class="schedule-actions">
                     ${schedule.phone ? `<a href="tel:${schedule.phone}" class="schedule-action-btn"><i class="fas fa-phone"></i> 電話</a>` : ''}
                     ${schedule.email ? `<a href="mailto:${schedule.email}" class="schedule-action-btn"><i class="fas fa-envelope"></i> メール</a>` : ''}
                     <a href="${mapUrl}" target="_blank" class="schedule-action-btn"><i class="fas fa-map-marker-alt"></i> 地図</a>
-                  </div>
-                </div>
-              `;
-            }).join('');
+              </div>
+            </div>
+          `;
+        }).join('');
           }
-        }
-
+      }
+      
         // 問い合わせレンダリング
         const inquiryListEl = document.getElementById('inquiry-list');
         const inquiryCountEl = document.getElementById('inquiry-count');
         if (inquiryListEl) {
-          const pendingInquiries = inquiries.filter(i => i.status === 'pending');
-          inquiryCountEl.textContent = pendingInquiries.length;
-          if (pendingInquiries.length === 0) {
+        const pendingInquiries = inquiries.filter(i => i.status === 'pending');
+        inquiryCountEl.textContent = pendingInquiries.length;
+        if (pendingInquiries.length === 0) {
             inquiryListEl.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>新規問い合わせはありません</p></div>';
           } else {
             inquiryListEl.innerHTML = pendingInquiries.slice(0, 5).map(inquiry => `
               <div class="inquiry-card" onclick="window.location.href='/sales/clients/new.html?inquiry=${inquiry.id}'">
                 <div class="inquiry-company">${inquiry.company_name}</div>
                 <div class="inquiry-meta">${inquiry.date} ${inquiry.time} - ${inquiry.message}</div>
-              </div>
+            </div>
             `).join('');
           }
         }
@@ -1245,7 +1258,7 @@
           clientInfoContainer.innerHTML = '<div class="empty-state"><i class="fas fa-user"></i><p>本日のスケジュールがありません</p></div>';
           return;
         }
-
+        
         const firstSchedule = todaySchedules[0];
         const client = clients.find(c => c.id === firstSchedule.client_id);
 
@@ -1261,15 +1274,15 @@
           <div class="client-header">
             <h2 class="client-name">${client.company_name || client.name}</h2>
             <p class="client-store">${client.store_name || firstSchedule.store_name}</p>
-          </div>
+                </div>
           <div class="client-contact">
             ${client.phone ? `<a href="tel:${client.phone}" class="contact-item"><i class="fas fa-phone"></i><span>${client.phone}</span></a>` : ''}
             ${client.email ? `<a href="mailto:${client.email}" class="contact-item"><i class="fas fa-envelope"></i><span>${client.email}</span></a>` : ''}
-          </div>
+              </div>
           <div class="client-address">
             <p class="address-text">${client.address || firstSchedule.address}</p>
             <a href="${mapUrl}" target="_blank" class="btn-map"><i class="fas fa-map-marker-alt"></i> 地図で開く</a>
-          </div>
+            </div>
           ${clientEstimates.length > 0 ? `
             <div class="client-estimates">
               <h3 class="estimates-title">過去の見積もり</h3>
@@ -1327,7 +1340,7 @@
           `).join('');
         }).join('');
       }
-
+      
       // 仮見積もりにサービスを追加
       window.addServiceToEstimate = function(id, name, price) {
         const selectedServices = document.getElementById('selected-services');
