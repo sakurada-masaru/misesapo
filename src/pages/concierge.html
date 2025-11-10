@@ -127,9 +127,6 @@
             <textarea id="estimate-notes-input" class="notes-input" placeholder="メモを入力してください"></textarea>
     </div>
           <div class="estimate-actions">
-            <button class="btn-create" id="btn-create-estimate">
-              <i class="fas fa-file-invoice"></i> 作成
-            </button>
             <button class="btn-send" id="btn-send-estimate">
               <i class="fas fa-paper-plane"></i> 送信
             </button>
@@ -2960,27 +2957,6 @@
           photoInput.value = '';
         });
       }
-
-      // 見積もり作成（概算画面を表示）
-      document.getElementById('btn-create-estimate').addEventListener('click', () => {
-        const selectedItems = document.querySelectorAll('.selected-service-item');
-        if (selectedItems.length === 0) {
-          alert('サービスを選択してください');
-          return;
-        }
-        
-        // 概算画面をレンダリング
-        renderEstimatePreview();
-        
-        // 概算画面に切り替え
-        const previewScreen = document.querySelector('.concierge-screen[data-screen="estimate-preview"]');
-        if (previewScreen) {
-          const previewIndex = Array.from(screens).indexOf(previewScreen);
-          if (previewIndex !== -1) {
-            switchScreen(previewIndex);
-          }
-        }
-      });
 
       // 見積もり送信（作成画面から直接送信）
       document.getElementById('btn-send-estimate').addEventListener('click', () => {
