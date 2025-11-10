@@ -121,10 +121,28 @@
             <button class="btn-save" id="btn-save-estimate">
               <i class="fas fa-save"></i> 保存
             </button>
-            <button class="btn-send" id="btn-send-estimate">
-              <i class="fas fa-paper-plane"></i> 送信
+            <button class="btn-create" id="btn-create-estimate">
+              <i class="fas fa-file-invoice"></i> 作成
             </button>
     </div>
+        </div>
+      </div>
+
+      <!-- 画面4.5: 仮見積もり概算画面 -->
+      <div class="concierge-screen" data-screen="estimate-preview" id="estimate-preview-screen" style="display: none;">
+        <div class="screen-header">
+          <h1 class="screen-title">仮見積もり（概算）</h1>
+        </div>
+        <div class="estimate-preview-container" id="estimate-preview-container">
+          <!-- 概算内容はJavaScriptで動的に生成 -->
+        </div>
+        <div class="estimate-preview-actions">
+          <button class="btn-save-screenshot" id="btn-save-screenshot">
+            <i class="fas fa-camera"></i> 保存
+          </button>
+          <button class="btn-send-to-headquarters" id="btn-send-to-headquarters">
+            <i class="fas fa-paper-plane"></i> 送信
+          </button>
         </div>
       </div>
 
@@ -308,6 +326,9 @@
   <script type="application/json" id="service-items-data">
     @jsonvar $service_items_data
   </script>
+  
+  <!-- html2canvasライブラリ（スクリーンショット機能用） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     /* 基本レイアウト */
@@ -2777,15 +2798,16 @@
         alert('仮見積もりを保存しました');
       });
 
-      document.getElementById('btn-send-estimate').addEventListener('click', () => {
+      // 仮見積もり作成ボタン
+      document.getElementById('btn-create-estimate').addEventListener('click', () => {
         const selectedItems = document.querySelectorAll('.selected-service-item');
         if (selectedItems.length === 0) {
           alert('サービスを選択してください');
           return;
         }
         
-        // TODO: 実際の送信処理を実装
-        alert('仮見積もりを送信しました');
+        // 仮見積もり概算画面を表示
+        showEstimatePreview();
       });
 
       // 地図画面のレンダリング
