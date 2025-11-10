@@ -58,13 +58,13 @@
   </section>
 
   <!-- JOB Section -->
-  <section class="recruit-job scroll-fade-in">
+  <section class="recruit-job">
     <div class="recruit-job-container">
       <h2 class="recruit-section-title">JOB</h2>
       <p class="recruit-section-subtitle">―ミセサポでは、現在以下の職種を募集しております。</p>
       <div class="recruit-job-list">
         <!-- 清掃スタッフ -->
-        <div class="recruit-job-card">
+        <div class="recruit-job-card scroll-fade-in">
           <div class="job-card-content">
             <h3 class="job-card-title">清掃スタッフ</h3>
             <p class="job-card-description">グリストラップ清掃、厨房清掃、フィルター清掃など</p>
@@ -77,7 +77,7 @@
         </div>
 
         <!-- 設備メンテナンススタッフ -->
-        <div class="recruit-job-card">
+        <div class="recruit-job-card scroll-fade-in">
           <div class="job-card-content">
             <h3 class="job-card-title">設備メンテナンススタッフ</h3>
             <p class="job-card-description">エアコン洗浄、排気ファン清掃、電気設備点検、排水管の簡易清掃、電気工事士、給水装置工事主任技術者優遇</p>
@@ -90,7 +90,7 @@
         </div>
 
         <!-- インサイドセールス -->
-        <div class="recruit-job-card">
+        <div class="recruit-job-card scroll-fade-in">
           <div class="job-card-content">
             <h3 class="job-card-title">インサイドセールス</h3>
             <p class="job-card-description">店舗オーナー様へのご案内・問い合わせ対応、飛び込みなし / 未経験 / 経験者優遇</p>
@@ -103,7 +103,7 @@
         </div>
 
         <!-- フィールドセールス -->
-        <div class="recruit-job-card">
+        <div class="recruit-job-card scroll-fade-in">
           <div class="job-card-content">
             <h3 class="job-card-title">フィールドセールス</h3>
             <p class="job-card-description">新規契約・受発注サポート、既存顧客のヒアリング・提案や契約後のフォロー</p>
@@ -716,9 +716,16 @@
         });
       }, observerOptions);
 
-      // 各要素を監視
-      fadeElements.forEach(function(element) {
-        observer.observe(element);
+      // 各要素を監視（JOBカードは順次表示のため、少し遅延を追加）
+      fadeElements.forEach(function(element, index) {
+        // JOBカードの場合は、少しずつ遅延を追加して順次表示
+        if (element.classList.contains('recruit-job-card')) {
+          setTimeout(function() {
+            observer.observe(element);
+          }, index * 100); // 各カードに100msずつ遅延
+        } else {
+          observer.observe(element);
+        }
       });
     }
   </script>
