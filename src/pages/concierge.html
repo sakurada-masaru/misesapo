@@ -3099,6 +3099,10 @@
         `;
       }
 
+      // TODOリストとメモ帳のデータを初期化（関数定義より前に宣言）
+      let todos = JSON.parse(localStorage.getItem('concierge-todos') || '[]');
+      let notes = JSON.parse(localStorage.getItem('concierge-notes') || '[]');
+
       // 初期レンダリング
       renderActivity();
       renderClientInfo();
@@ -3158,8 +3162,6 @@
       }
       
       // TODOリスト画面のレンダリング
-      let todos = JSON.parse(localStorage.getItem('concierge-todos') || '[]');
-      
       function renderTodo() {
         const todoList = document.getElementById('todo-list');
         if (!todoList) return;
@@ -3214,8 +3216,6 @@
       }
 
       // メモ帳画面のレンダリング
-      let notes = JSON.parse(localStorage.getItem('concierge-notes') || '[]');
-      
       function renderNotes() {
         const notesList = document.getElementById('notes-list');
         if (!notesList) return;
