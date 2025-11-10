@@ -935,18 +935,30 @@
       margin: 0;
     }
 
-    /* PC対応（横並び表示） */
+    /* PC対応（縦並び表示） */
     @media (min-width: 768px) {
       .concierge-slider {
         width: 100vw;
+        flex-direction: column;
       }
 
       .concierge-screen {
         width: 100%;
+        height: auto;
+        min-height: calc(100vh - 80px);
+        overflow-y: auto;
+        overflow-x: hidden;
       }
 
       .concierge-slider-container {
         scroll-snap-type: none;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      
+      /* PC版では最初の画面のみ表示 */
+      .concierge-screen:not(.active) {
+        display: none;
       }
     }
   </style>
@@ -980,11 +992,26 @@
         const screen = screens[index];
         const screenName = screen.dataset.screen;
         
-        // スクロール位置を更新
-        slider.scrollTo({
-          left: index * window.innerWidth,
-          behavior: 'smooth'
-        });
+        // PC版とSP版で異なる処理
+        const isMobile = window.innerWidth <= 767.98;
+        
+        if (isMobile) {
+          // SP版: 横スライドで切り替え
+          slider.scrollTo({
+            left: index * window.innerWidth,
+            behavior: 'smooth'
+          });
+        } else {
+          // PC版: 直接表示（横スライドなし）
+          // 各画面を縦に並べて表示
+          screens.forEach((s, i) => {
+            if (i === index) {
+              s.style.display = 'block';
+            } else {
+              s.style.display = 'none';
+            }
+          });
+        }
 
         // アクティブ状態を更新
         screens.forEach(s => s.classList.remove('active'));
@@ -1007,14 +1034,40 @@
           renderMap();
         }
       }
+      
+      // リサイズ時に画面表示を調整
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const isMobile = window.innerWidth <= 767.98;
+          if (!isMobile) {
+            // PC版: 現在の画面のみ表示
+            screens.forEach((s, i) => {
+              if (i === currentScreen) {
+                s.style.display = 'block';
+              } else {
+                s.style.display = 'none';
+              }
+            });
+          } else {
+            // SP版: すべて表示して横スライド可能に
+            screens.forEach(s => {
+              s.style.display = 'block';
+            });
+          }
+        }, 100);
+      });
 
       // クイックメニューボタンクリック
-      quickMenuBtns.forEach((btn, index) => {
+      quickMenuBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
           const screenName = btn.dataset.screen;
-          const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
-          if (screenIndex !== -1) {
-            switchScreen(screenIndex);
+          if (screenName) {
+            const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
+            if (screenIndex !== -1) {
+              switchScreen(screenIndex);
+            }
           }
         });
       });
@@ -1429,6 +1482,18 @@
       renderClientInfo();
       renderServices();
       renderMap();
+
+      // PC版の初期表示設定
+      const isMobile = window.innerWidth <= 767.98;
+      if (!isMobile) {
+        screens.forEach((s, i) => {
+          if (i === 0) {
+            s.style.display = 'block';
+          } else {
+            s.style.display = 'none';
+          }
+        });
+      }
 
       // 最初の画面をアクティブに
       switchScreen(0);
