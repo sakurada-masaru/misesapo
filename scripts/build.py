@@ -495,41 +495,32 @@ def copy_data_files(outputs: List[str]) -> None:
 def generate_images_list(outputs: List[str]) -> None:
     """Generate images list JSON file for client-side access (GitHub Pages compatible)
     
-    Only scans the following directories:
-    - images-admin/ (管理画面用画像)
-    - images-customer/ (顧客用画像)
-    - images-service/ (サービス用画像)
-    - images-material/ (素材用画像)
+    Scans only images-public/ directory for the image list page.
+    Other directories (images-admin/, images-customer/, images-service/, images-material/) 
+    are excluded from the list.
     
-    The base images/ directory is excluded to avoid showing unnecessary images.
+    Note: images/ directory is excluded as it's the source directory.
     """
-    # スキャン対象のディレクトリリスト
-    target_dirs = [
-        "images-admin",
-        "images-customer",
-        "images-service",
-        "images-material"
-    ]
+    # 画像一覧ページに表示するディレクトリ（images-public/のみ）
+    images_dir = PUBLIC / "images-public"
     
     image_extensions = {'.png', '.jpg', '.jpeg', '.svg', '.gif', '.webp'}
     images = []
     
-    # 各対象ディレクトリをスキャン
-    for dir_name in target_dirs:
-        images_dir = PUBLIC / dir_name
-        if images_dir.exists() and images_dir.is_dir():
-            for img_path in images_dir.rglob('*'):
-                if img_path.is_file() and img_path.suffix.lower() in image_extensions:
-                    # Get relative path from public/
-                    rel_path = img_path.relative_to(PUBLIC)
-                    # Convert to /images-xxx/... format
-                    image_path = '/' + str(rel_path).replace('\\', '/')
-                    images.append({
-                        'path': image_path,
-                        'name': img_path.name,
-                        'size': img_path.stat().st_size,
-                        'extension': img_path.suffix.lower()
-                    })
+    if images_dir.exists():
+        # Scan images-public directory recursively
+        for img_path in images_dir.rglob('*'):
+            if img_path.is_file() and img_path.suffix.lower() in image_extensions:
+                # Get relative path from public/
+                rel_path = img_path.relative_to(PUBLIC)
+                # Convert to /images-public/... format
+                image_path = '/' + str(rel_path).replace('\\', '/')
+                images.append({
+                    'path': image_path,
+                    'name': img_path.name,
+                    'size': img_path.stat().st_size,
+                    'extension': img_path.suffix.lower()
+                })
     
     # Sort by path
     images.sort(key=lambda x: x['path'])
