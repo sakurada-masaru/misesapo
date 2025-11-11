@@ -158,10 +158,45 @@
 
   <script>
     (function() {
+      // ベースパスを取得（GitHub Pages対応）
+      function getBasePath() {
+        const base = document.querySelector('base');
+        if (base && base.href) {
+          try {
+            const url = new URL(base.href);
+            return url.pathname;
+          } catch (e) {
+            return base.getAttribute('href') || '/';
+          }
+        }
+        const path = window.location.pathname;
+        if (path.includes('/misesapo/')) {
+          return '/misesapo/';
+        }
+        return '/';
+      }
+      
+      // パスを解決（ベースパス付き）
+      function resolvePath(path) {
+        if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+          return path;
+        }
+        const basePath = getBasePath();
+        if (path.startsWith('/')) {
+          return basePath === '/' ? path : basePath.slice(0, -1) + path;
+        }
+        return basePath === '/' ? '/' + path : basePath + path;
+      }
+      
       // 画像一覧を取得
       async function loadImages() {
         try {
-          const response = await fetch('/api/images');
+          // Try to load from static JSON file first (GitHub Pages compatible)
+          let response = await fetch(resolvePath('/data/images.json'));
+          if (!response.ok) {
+            // Fallback to API endpoint (for local development)
+            response = await fetch(resolvePath('/api/images'));
+          }
           const data = await response.ok ? await response.json() : { images: [] };
           
           if (data.images && data.images.length > 0) {
@@ -212,10 +247,11 @@
         grid.innerHTML = filteredImages.map(path => {
           const fileName = path.split('/').pop();
           const fileExt = fileName.split('.').pop().toLowerCase();
+          const resolvedPath = resolvePath(path);
           return `
             <div class="image-card" data-path="${path}">
               <div class="image-card-thumb">
-                <img src="${path}" alt="${fileName}" loading="lazy" onerror="this.src='/images/service-300x200.svg'" />
+                <img src="${resolvedPath}" alt="${fileName}" loading="lazy" onerror="this.src='${resolvePath('/images/service-300x200.svg')}'" />
                 <div class="image-card-overlay">
                   <i class="fas fa-eye"></i>
                 </div>
@@ -247,11 +283,12 @@
         const pathEl = document.getElementById('image-modal-path');
         const downloadLink = document.getElementById('image-download-link');
         
-        img.src = path;
+        const resolvedPath = resolvePath(path);
+        img.src = resolvedPath;
         img.alt = fileName;
         title.textContent = fileName;
         pathEl.textContent = path;
-        downloadLink.href = path;
+        downloadLink.href = resolvedPath;
         downloadLink.download = fileName;
         
         modal.classList.remove('hidden');

@@ -493,32 +493,47 @@ def copy_data_files(outputs: List[str]) -> None:
 
 
 def generate_images_list(outputs: List[str]) -> None:
-    """Generate images list JSON file for client-side access (GitHub Pages compatible)"""
-    images_dir = PUBLIC / "images"
-    if not images_dir.exists():
-        # Create empty images list if images directory doesn't exist
-        images_data = {"images": []}
-    else:
-        # Scan images directory recursively
-        image_extensions = {'.png', '.jpg', '.jpeg', '.svg', '.gif', '.webp'}
-        images = []
-        
-        for img_path in images_dir.rglob('*'):
-            if img_path.is_file() and img_path.suffix.lower() in image_extensions:
-                # Get relative path from public/
-                rel_path = img_path.relative_to(PUBLIC)
-                # Convert to /images/... format
-                image_path = '/' + str(rel_path).replace('\\', '/')
-                images.append({
-                    'path': image_path,
-                    'name': img_path.name,
-                    'size': img_path.stat().st_size,
-                    'extension': img_path.suffix.lower()
-                })
-        
-        # Sort by path
-        images.sort(key=lambda x: x['path'])
-        images_data = {"images": images}
+    """Generate images list JSON file for client-side access (GitHub Pages compatible)
+    
+    Only scans the following directories:
+    - images-admin/ (管理画面用画像)
+    - images-customer/ (顧客用画像)
+    - images-service/ (サービス用画像)
+    - images-material/ (素材用画像)
+    
+    The base images/ directory is excluded to avoid showing unnecessary images.
+    """
+    # スキャン対象のディレクトリリスト
+    target_dirs = [
+        "images-admin",
+        "images-customer",
+        "images-service",
+        "images-material"
+    ]
+    
+    image_extensions = {'.png', '.jpg', '.jpeg', '.svg', '.gif', '.webp'}
+    images = []
+    
+    # 各対象ディレクトリをスキャン
+    for dir_name in target_dirs:
+        images_dir = PUBLIC / dir_name
+        if images_dir.exists() and images_dir.is_dir():
+            for img_path in images_dir.rglob('*'):
+                if img_path.is_file() and img_path.suffix.lower() in image_extensions:
+                    # Get relative path from public/
+                    rel_path = img_path.relative_to(PUBLIC)
+                    # Convert to /images-xxx/... format
+                    image_path = '/' + str(rel_path).replace('\\', '/')
+                    images.append({
+                        'path': image_path,
+                        'name': img_path.name,
+                        'size': img_path.stat().st_size,
+                        'extension': img_path.suffix.lower()
+                    })
+    
+    # Sort by path
+    images.sort(key=lambda x: x['path'])
+    images_data = {"images": images}
     
     # Write to public/data/images.json
     images_json_path = PUBLIC / "data" / "images.json"
