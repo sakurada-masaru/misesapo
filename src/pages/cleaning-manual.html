@@ -151,6 +151,8 @@
             border-radius: 6px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             display: block;
+            pointer-events: none; /* 画像のクリックを無効化 */
+            user-select: none; /* 画像の選択を無効化 */
         }
         .example-image-container {
             text-align: center;
@@ -794,14 +796,14 @@
                         <div class="example-box bad-example">
                             <strong>リスクを残す行為</strong>
                             ${data.bad}
-                            ${data.badImage ? `<div class="example-image-container"><img src="${data.badImage}" alt="ダメな例" class="example-image" /></div>` : ''}
+                            ${data.badImage ? `<div class="example-image-container"><img src="${data.badImage}" alt="ダメな例" class="example-image" onclick="return false;" /></div>` : ''}
                         </div>
                         
                         <div class="section-title good-example-title">✅ 模範例（リスク対策行為：MISESAPO基準）</div>
                         <div class="example-box good-example">
                             <strong>リスクを排除し価値を提供する行為</strong>
                             ${data.good}
-                            ${data.goodImage ? `<div class="example-image-container"><img src="${data.goodImage}" alt="模範例" class="example-image" /></div>` : ''}
+                            ${data.goodImage ? `<div class="example-image-container"><img src="${data.goodImage}" alt="模範例" class="example-image" onclick="return false;" /></div>` : ''}
                         </div>
 
                         <div class="qa-section">
