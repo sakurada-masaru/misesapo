@@ -282,11 +282,11 @@
     </header>
     
     <div class="category-tabs">
-        <button class="category-tab active" onclick="filterByCategory('all')">すべて</button>
-        <button class="category-tab" onclick="filterByCategory('厨房設備')">厨房設備 (12)</button>
-        <button class="category-tab" onclick="filterByCategory('空調設備')">空調設備 (2)</button>
-        <button class="category-tab" onclick="filterByCategory('フロア')">フロア (8)</button>
-        <button class="category-tab" onclick="filterByCategory('その他')">その他 (12)</button>
+        <button class="category-tab active" onclick="filterByCategory('all', event)">すべて</button>
+        <button class="category-tab" onclick="filterByCategory('厨房設備', event)">厨房設備 (12)</button>
+        <button class="category-tab" onclick="filterByCategory('空調設備', event)">空調設備 (2)</button>
+        <button class="category-tab" onclick="filterByCategory('フロア', event)">フロア (8)</button>
+        <button class="category-tab" onclick="filterByCategory('その他', event)">その他 (12)</button>
     </div>
 
     <div id="content">
@@ -829,7 +829,14 @@
                     lastCategory = data.category;
                 }
                 const listItemAll = document.createElement('li');
-                listItemAll.innerHTML = `<a href="#" onclick="showPage('page-${pageIndex}')">${data.title}</a>`;
+                const linkAll = document.createElement('a');
+                linkAll.href = '#';
+                linkAll.textContent = data.title;
+                linkAll.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showPage(`page-${pageIndex}`);
+                });
+                listItemAll.appendChild(linkAll);
                 indexListAll.appendChild(listItemAll);
 
                 // カテゴリ別の目次リストを生成
@@ -846,7 +853,14 @@
 
                 if (targetList) {
                     const listItem = document.createElement('li');
-                    listItem.innerHTML = `<a href="#" onclick="showPage('page-${pageIndex}')">${data.title}</a>`;
+                    const link = document.createElement('a');
+                    link.href = '#';
+                    link.textContent = data.title;
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        showPage(`page-${pageIndex}`);
+                    });
+                    listItem.appendChild(link);
                     targetList.appendChild(listItem);
                 }
             });
@@ -855,14 +869,30 @@
         }
 
         // カテゴリでフィルタリング
-        function filterByCategory(category) {
+        function filterByCategory(category, event) {
+            if (event) {
+                event.preventDefault();
+            }
             currentCategory = category;
             
             // タブのアクティブ状態を更新
             document.querySelectorAll('.category-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else {
+                // eventがない場合は、テキストで検索
+                document.querySelectorAll('.category-tab').forEach(tab => {
+                    if ((category === 'all' && tab.textContent.includes('すべて')) ||
+                        (category === '厨房設備' && tab.textContent.includes('厨房設備')) ||
+                        (category === '空調設備' && tab.textContent.includes('空調設備')) ||
+                        (category === 'フロア' && tab.textContent.includes('フロア')) ||
+                        (category === 'その他' && tab.textContent.includes('その他'))) {
+                        tab.classList.add('active');
+                    }
+                });
+            }
             
             // 該当カテゴリのリストページを表示
             const listPageId = categoryListPageMap[category];
