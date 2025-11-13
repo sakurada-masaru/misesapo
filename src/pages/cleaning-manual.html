@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/misesapo/" />
     <title>MISESAPO 清掃基準マニュアル</title>
     <!--GoogleFonts(Noto Sans JP)-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +14,34 @@
     <link rel="stylesheet" href="/css/swiper-bundle.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <script src="/js/swiper-bundle.min.js"></script>
-    <script src="/js/script.js" defer></script>
+    <!-- ハンバーガーメニューのみ読み込み（script.jsはpagetop要素が必要なため読み込まない） -->
+    <script>
+        // ハンバーガーメニューのみ実装
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.querySelector('.btn');
+            const g_nav = document.querySelector('#g-nav');
+            const html = document.querySelector('html');
+            const body = document.querySelector('body');
+            const g_nav_links = document.querySelectorAll('#g-nav ul li a');
+
+            if (btn && g_nav) {
+                btn.addEventListener('click', () => {
+                    btn.classList.toggle('active');
+                    g_nav.classList.toggle('active');
+                    html.classList.toggle('active');
+                    body.classList.toggle('active');
+                });
+                g_nav_links.forEach((g_nav_link) => {
+                    g_nav_link.addEventListener('click', () => {
+                        btn.classList.remove('active');
+                        g_nav.classList.remove('active');
+                        html.classList.remove('active');
+                        body.classList.remove('active');
+                    });
+                });
+            }
+        });
+    </script>
     <style>
         /* ベーススタイル */
         body {
