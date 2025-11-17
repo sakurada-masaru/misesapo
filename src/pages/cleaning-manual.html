@@ -28,6 +28,27 @@
             } else {
                 console.log('[CleaningManual] Local development environment detected, base tag not set');
             }
+            
+            // ヘッダーロゴのパスを即座に設定（DOMContentLoadedを待たない）
+            // これにより、HTMLパース時に正しいパスが設定される
+            const logoPath = isLocalDev ? '/images/header-logo.jpg' : '/misesapo/images/header-logo.jpg';
+            // DOMが利用可能になったら設定
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    const logoImg = document.getElementById('header-logo-img');
+                    if (logoImg) {
+                        logoImg.src = logoPath;
+                        console.log('[CleaningManual] Header logo path set immediately:', logoPath);
+                    }
+                });
+            } else {
+                // DOMが既に読み込まれている場合
+                const logoImg = document.getElementById('header-logo-img');
+                if (logoImg) {
+                    logoImg.src = logoPath;
+                    console.log('[CleaningManual] Header logo path set immediately (DOM ready):', logoPath);
+                }
+            }
         })();
     </script>
     <!-- Firebase SDK -->
