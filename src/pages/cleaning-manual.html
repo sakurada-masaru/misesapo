@@ -453,6 +453,17 @@
                 'フロア': 'page-0-floor',
                 'その他': 'page-0-other'
             };
+            
+            // カテゴリ名をキーに変換
+            function getCategoryKey(categoryName) {
+                const categoryMap = {
+                    '厨房設備': 'kitchen',
+                    '空調設備': 'aircon',
+                    'フロア': 'floor',
+                    'その他': 'other'
+                };
+                return categoryMap[categoryName] || 'other';
+            }
 
             // マニュアルページを生成しDOMに追加
             function createManualPages() {

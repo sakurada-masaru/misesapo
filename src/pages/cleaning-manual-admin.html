@@ -1049,11 +1049,39 @@
         window.importInitialData = importInitialData;
         window.openEditModal = openEditModal;
 
+        // URLパラメータからカテゴリとインデックスを取得して編集モーダルを開く
+        function openEditModalFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const category = urlParams.get('category');
+            const index = urlParams.get('index');
+            
+            if (category && index !== null) {
+                // データ読み込み後に編集モーダルを開く
+                const checkInterval = setInterval(() => {
+                    if (manualData && manualData[category] && manualData[category][parseInt(index)]) {
+                        clearInterval(checkInterval);
+                        openEditModal(category, parseInt(index));
+                        // URLパラメータを削除
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                }, 100);
+                
+                // タイムアウト（5秒）
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                }, 5000);
+            }
+        }
+
         // 初期化
         (async function() {
             const authOk = await initAuth();
             if (authOk) {
                 await loadData();
+                // データ読み込み後にURLパラメータをチェック
+                setTimeout(() => {
+                    openEditModalFromURL();
+                }, 500);
             }
         })();
     </script>
