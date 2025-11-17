@@ -6,8 +6,10 @@
 
 import json
 import os
+import socket
 import subprocess
 import sys
+import datetime
 from pathlib import Path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
@@ -1029,12 +1031,19 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             with open(CLEANING_MANUAL_JSON, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             
+            # 変更ログを記録
+            self.log_browser_change('cleaning-manual', 'modified', {
+                'type': 'cleaning-manual',
+                'timestamp': str(datetime.datetime.now()),
+                'total_items': sum(len(data.get(cat, [])) for cat in ['kitchen', 'aircon', 'floor', 'other'])
+            })
+            
             # ビルドを実行（非同期）
             self.run_build_async()
             
             self.send_json_response({
                 'status': 'success',
-                'message': '清掃マニュアルデータを保存しました'
+                'message': '清掃マニュアルデータを保存しました。変更を確認してからGitにコミット・プッシュしてください。'
             })
         except Exception as e:
             self.send_error(500, f"Failed to save cleaning manual: {e}")
@@ -1138,6 +1147,19 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             super().log_message(format, *args)
 
 
+def get_local_ip():
+    """ローカルネットワークのIPアドレスを取得"""
+    try:
+        # 外部ホストに接続してローカルIPを取得
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return None
+
+
 def main():
     """メイン関数: サーバーを起動"""
     if not PUBLIC.exists():
@@ -1159,9 +1181,29 @@ def main():
             json.dump([], f, ensure_ascii=False, indent=2)
     
     server = HTTPServer(('', PORT), DevServerHandler)
-    print(f"開発サーバーを起動しました: http://localhost:{PORT}")
-    print(f"APIエンドポイント: http://localhost:{PORT}/api/services")
+    
+    # ローカルIPアドレスを取得
+    local_ip = get_local_ip()
+    
+    print("=" * 60)
+    print("🚀 開発サーバーを起動しました")
+    print("=" * 60)
+    print(f"📱 ローカルアクセス: http://localhost:{PORT}")
+    if local_ip:
+        print(f"🌐 ネットワークアクセス: http://{local_ip}:{PORT}")
+        print(f"   事務員の方はこのURLでアクセスできます")
+    print("=" * 60)
+    print(f"📝 清掃マニュアル管理: http://localhost:{PORT}/cleaning-manual-admin.html")
+    print(f"📋 APIエンドポイント: http://localhost:{PORT}/api/services")
+    print("=" * 60)
+    print("💡 編集後は、変更を確認してからGitにコミット・プッシュしてください")
+    print("   git add -A")
+    print("   git commit -m '清掃マニュアルを更新'")
+    print("   git push origin main")
+    print("=" * 60)
     print("Ctrl+C で停止")
+    print("")
+    
     try:
         server.serve_forever()
     except KeyboardInterrupt:

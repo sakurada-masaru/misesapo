@@ -246,6 +246,11 @@
         </div>
 
         <div id="message" class="message"></div>
+        
+        <div id="dev-server-warning" style="display: none; background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 4px; margin-bottom: 20px; color: #856404;">
+            <strong>⚠️ 注意:</strong> この管理画面の編集機能は開発サーバー（<code>python3 scripts/dev_server.py</code>）でのみ利用できます。
+            <br>GitHub Pagesでは閲覧のみ可能です。編集する場合は、ローカルで開発サーバーを起動して <code>http://localhost:5173/cleaning-manual-admin.html</code> にアクセスしてください。
+        </div>
 
         <div class="category-tabs">
             <button class="category-tab active" data-category="all">すべて</button>
@@ -382,16 +387,38 @@
         };
         let currentCategory = 'all';
 
+        // 開発サーバーかどうかをチェック
+        function isDevelopmentServer() {
+            return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        }
+        
         // データ読み込み
         async function loadData() {
             try {
-                let response = await fetch(resolvePath('/api/cleaning-manual'));
-                if (!response.ok) {
+                // 開発サーバーの場合はAPIを試す
+                let response = null;
+                if (isDevelopmentServer()) {
+                    try {
+                        response = await fetch(resolvePath('/api/cleaning-manual'));
+                    } catch (e) {
+                        // APIが利用できない場合は静的ファイルにフォールバック
+                        response = null;
+                    }
+                }
+                
+                // APIが利用できない場合、またはGitHub Pagesの場合は静的ファイルを読み込む
+                if (!response || !response.ok) {
                     response = await fetch(resolvePath('/data/cleaning-manual.json'));
                 }
-                if (response.ok) {
+                
+                if (response && response.ok) {
                     manualData = await response.json();
                     renderItems();
+                    
+                    // GitHub Pagesの場合は警告を表示
+                    if (!isDevelopmentServer()) {
+                        showMessage('⚠️ この管理画面は開発サーバーでのみ編集機能が利用できます。GitHub Pagesでは閲覧のみ可能です。編集する場合は、ローカルで開発サーバーを起動してください。', 'error');
+                    }
                 } else {
                     showMessage('データの読み込みに失敗しました', 'error');
                 }
@@ -499,6 +526,12 @@
 
         // 画像アップロード
         function uploadImage(field) {
+            // 開発サーバーでない場合は警告を表示
+            if (!isDevelopmentServer()) {
+                showMessage('⚠️ 画像のアップロードは開発サーバーでのみ利用できます。ローカルで開発サーバーを起動してください。', 'error');
+                return;
+            }
+            
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'image/*';
@@ -535,6 +568,12 @@
         document.getElementById('edit-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            // 開発サーバーでない場合は警告を表示
+            if (!isDevelopmentServer()) {
+                showMessage('⚠️ データの保存は開発サーバーでのみ利用できます。ローカルで開発サーバーを起動してください。', 'error');
+                return;
+            }
+
             const category = document.getElementById('edit-category').value;
             const index = parseInt(document.getElementById('edit-index').value);
 
@@ -564,7 +603,8 @@
                 });
 
                 if (response.ok) {
-                    showMessage('保存しました', 'success');
+                    const result = await response.json();
+                    showMessage(result.message || '保存しました。変更を確認してからGitにコミット・プッシュしてください。', 'success');
                     closeEditModal();
                     renderItems();
                 } else {
@@ -586,6 +626,11 @@
             }, 3000);
         }
 
+        // 開発サーバーでない場合は警告を表示
+        if (!isDevelopmentServer()) {
+            document.getElementById('dev-server-warning').style.display = 'block';
+        }
+        
         // 初期化
         loadData();
     </script>

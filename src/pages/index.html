@@ -548,7 +548,7 @@
             flex-direction: row;
             align-items: center;
             gap: 15px;
-        }
+            }
 
         .swipe-hint-center {
             right: 120px;
@@ -744,7 +744,7 @@
             align-items: center;
             justify-content: center;
         }
-
+        
         .service-section-item:first-of-type .service-section-item__content {
             flex: 0.4;
         }
@@ -1281,7 +1281,7 @@
             transition: opacity 0.8s ease-out;
             margin: 0 !important;
             padding: 0 !important;
-        }
+            }
 
         .splash-screen.fade-out {
             opacity: 0 !important;
@@ -1290,7 +1290,7 @@
 
         .splash-screen.hidden {
             display: none !important;
-        }
+            }
 
         .splash-logo {
             width: auto;
@@ -1505,43 +1505,43 @@
                         <div class="plan-card__period-label">月1回</div>
                         <div class="plan-card__description">
                             定期的な清掃で常に清潔な環境を維持
-                        </div>
-                    </div>
+        </div>
+        </div>
                     <div class="plan-card">
                         <div class="plan-card__period">2ヶ月毎</div>
                         <div class="plan-card__period-label">2ヶ月に1回</div>
                         <div class="plan-card__description">
                             適切な間隔で清掃を実施
-                        </div>
-                    </div>
+    </div>
+  </div>
                     <div class="plan-card">
                         <div class="plan-card__period">3ヶ月毎</div>
                         <div class="plan-card__period-label">3ヶ月に1回</div>
                         <div class="plan-card__description">
                             季節ごとの徹底清掃
-                        </div>
-                    </div>
+</div>
+            </div>
                     <div class="plan-card">
                         <div class="plan-card__period">半年毎</div>
                         <div class="plan-card__period-label">6ヶ月に1回</div>
                         <div class="plan-card__description">
                             年2回の定期メンテナンス
-                        </div>
-                    </div>
+        </div>
+    </div>
                     <div class="plan-card">
                         <div class="plan-card__period">一年毎</div>
                         <div class="plan-card__period-label">1年に1回</div>
                         <div class="plan-card__description">
                             年次大規模清掃
+</div>
+                            </div>
                         </div>
-                    </div>
-                </div>
                 <a href="/teikiseisou.html" class="service-section-item__link">詳細を見る</a>
-            </div>
+                            </div>
             <div class="service-section-item__image">
                 <img src="/images-admin/teikiseisounaramisesapo.png" alt="定期清掃プラン">
-            </div>
-    </div>
+                        </div>
+                            </div>
 
         <!-- ハウスクリーニング -->
         <div class="service-section-item">
@@ -1980,12 +1980,12 @@
                     
                     const slides = document.querySelectorAll('.service-carousel .single');
                     if (slides.length === 0) return;
-                    
+                
                     slides.forEach((slide) => {
                         try {
                             const rect = slide.getBoundingClientRect();
                             if (!rect || rect.width === 0 || rect.height === 0) return;
-                            
+                
                             const r = window.innerWidth * 0.5 - (rect.x + rect.width * 0.5);
                             let ty = Math.abs(r) * multiplier.translate - rect.width * multiplier.translate;
                             if (ty < 0) {
@@ -2025,8 +2025,8 @@
                     itemsToShow = serviceItems.filter(item => 
                         item.category === 'その他'
                     );
-                }
-                
+                    }
+                    
                 console.log('カテゴリ:', category, 'アイテム数:', itemsToShow.length);
                 
                 // スライドを作成
