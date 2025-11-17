@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base id="base-tag" href="/misesapo/" />
     <title>MISESAPO 清掃基準マニュアル</title>
+    <script>
+        // baseタグをローカル開発環境で無効化（即座に実行）
+        (function() {
+            const isLocalDev = window.location.hostname === 'localhost' || 
+                              window.location.hostname === '127.0.0.1' ||
+                              window.location.hostname === '';
+            
+            if (isLocalDev) {
+                const baseTag = document.getElementById('base-tag');
+                if (baseTag) {
+                    baseTag.href = '/';
+                    console.log('[CleaningManual] Base tag set to / for local development (immediate)');
+                }
+            }
+        })();
+    </script>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
