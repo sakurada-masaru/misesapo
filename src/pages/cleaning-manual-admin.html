@@ -958,13 +958,6 @@
             }, 3000);
         }
 
-        // グローバルに公開（HTMLから呼び出せるように）
-        window.loadDraft = loadDraft;
-        window.applyDraft = applyDraft;
-        window.discardDraft = discardDraft;
-        window.importInitialData = importInitialData;
-        window.openEditModal = openEditModal;
-        
         // 初期データをインポート
         async function importInitialData() {
             if (!confirm('初期データをインポートしますか？既存のデータは上書きされます。')) {
@@ -1012,6 +1005,13 @@
                 showMessage('初期データのインポートエラー: ' + error.message, 'error');
             }
         }
+
+        // グローバルに公開（HTMLから呼び出せるように）
+        window.loadDraft = loadDraft;
+        window.applyDraft = applyDraft;
+        window.discardDraft = discardDraft;
+        window.importInitialData = importInitialData;
+        window.openEditModal = openEditModal;
 
         // 初期化
         (async function() {
