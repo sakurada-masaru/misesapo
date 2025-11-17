@@ -13,3 +13,6 @@ node_modules/
 
 # Firebase
 scripts/firebase-service-account.json
+
+# Environment variables (機密情報を含む)
+.env
