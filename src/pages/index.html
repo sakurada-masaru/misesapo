@@ -4,6 +4,23 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>ミセサポ</title>
+        <script>
+            // baseタグを条件付きで設定（ローカル開発環境では設定しない）
+            (function() {
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                if (!isLocalDev) {
+                    // GitHub Pagesなどの本番環境でのみbaseタグを設定
+                    const baseTag = document.createElement('base');
+                    baseTag.id = 'base-tag';
+                    baseTag.href = '/misesapo/';
+                    document.head.insertBefore(baseTag, document.head.firstChild);
+                }
+            })();
+        </script>
         <!--GoogleFonts(Noto Sans JP)-->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1830,6 +1847,56 @@
         (function() {
             'use strict';
             
+            // ベースパスを取得（GitHub Pages対応）
+            function getBasePath() {
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                if (isLocalDev) {
+                    return '/';
+                }
+                
+                const base = document.querySelector('base');
+                if (base && base.href) {
+                    try {
+                        const url = new URL(base.href);
+                        return url.pathname;
+                    } catch (e) {
+                        return base.getAttribute('href') || '/';
+                    }
+                }
+                
+                const path = window.location.pathname;
+                if (path.includes('/misesapo/')) {
+                    return '/misesapo/';
+                }
+                return '/';
+            }
+            
+            // パスを解決（ベースパス付き）
+            function resolvePath(path) {
+                if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                    return path;
+                }
+                
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                if (isLocalDev) {
+                    return path.startsWith('/') ? path : '/' + path;
+                }
+                
+                const basePath = getBasePath();
+                if (path.startsWith('/')) {
+                    return basePath === '/' ? path : basePath.slice(0, -1) + path;
+                }
+                return basePath === '/' ? '/' + path : basePath + path;
+            }
+            
             const wrapper = document.querySelector('.misesapo-flow-wrapper');
             const swiperWrapper = document.querySelector('#service-carousel-wrapper');
             if (!wrapper || !swiperWrapper) return;
@@ -1899,7 +1966,7 @@
             
             async function loadServiceItems() {
                 try {
-                    const response = await fetch('/data/service_items.json');
+                    const response = await fetch(resolvePath('/data/service_items.json'));
                     if (!response.ok) throw new Error('JSONファイルが見つかりません');
                     const data = await response.json();
                     
@@ -1913,6 +1980,8 @@
                         if (imagePath.startsWith('images/')) {
                             imagePath = '/' + imagePath;
                         }
+                        // パスを解決（GitHub Pages対応）
+                        imagePath = resolvePath(imagePath);
                         
                         return { id: item.id, title: item.title, category: category, image: imagePath };
                     });
@@ -1921,8 +1990,8 @@
                 } catch (error) {
                     console.error('サービスデータの読み込みに失敗しました:', error);
                     serviceItems = [
-                        { id: 1, title: 'グリストラップ', category: '厨房設備', image: '/images/gurisuto.png' },
-                        { id: 2, title: 'U字溝・グレーチング清掃', category: '厨房設備', image: '/images/gure-chingu.png' }
+                        { id: 1, title: 'グリストラップ', category: '厨房設備', image: resolvePath('/images/gurisuto.png') },
+                        { id: 2, title: 'U字溝・グレーチング清掃', category: '厨房設備', image: resolvePath('/images/gure-chingu.png') }
                     ];
                 }
             }
@@ -1943,7 +2012,7 @@
                 link.setAttribute('data-service-id', item.id);
                 
                 const img = document.createElement('img');
-                img.src = item.image || '/images/service-300x200.svg';
+                img.src = item.image ? resolvePath(item.image) : resolvePath('/images/service-300x200.svg');
                 img.alt = item.title || '';
                 img.loading = 'lazy';
                 img.decoding = 'async';
