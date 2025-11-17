@@ -482,10 +482,10 @@ able_options.forEach((able_option) => {
 (function() {
     'use strict';
     
-    // DOM要素の取得
-    const yearSelect = document.getElementById('year');
-    const monthSelect = document.getElementById('month');
-    const daySelect = document.getElementById('day');
+// DOM要素の取得
+        const yearSelect = document.getElementById('year');
+        const monthSelect = document.getElementById('month');
+        const daySelect = document.getElementById('day');
 
     // 要素が存在しない場合は処理をスキップ
     if (!yearSelect || !monthSelect || !daySelect) {
@@ -493,104 +493,104 @@ able_options.forEach((able_option) => {
         return;
     }
 
-    // 年のオプションを生成 (例: 当年から5年先まで)
-    const currentYear = new Date().getFullYear();
-    const startYear = currentYear; 
-    const endYear = currentYear + 5;
+        // 年のオプションを生成 (例: 当年から5年先まで)
+        const currentYear = new Date().getFullYear();
+        const startYear = currentYear; 
+        const endYear = currentYear + 5;
 
-    for (let i = startYear; i <= endYear; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = i;
-        yearSelect.appendChild(option);
-    }
+        for (let i = startYear; i <= endYear; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            yearSelect.appendChild(option);
+        }
 
-    // 月のオプションを生成
-    for (let i = 1; i <= 12; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = String(i).padStart(2, '0'); // 01, 02 ...
-        monthSelect.appendChild(option);
-    }
-
-    // 日のオプションを更新する関数
-    function updateDays() {
-        const selectedYear = parseInt(yearSelect.value);
-        const selectedMonth = parseInt(monthSelect.value);
-        const currentDayValue = daySelect.value; // 文字列として現在の値を取得
-        const currentDay = currentDayValue ? parseInt(currentDayValue) : null; // 現在選択されている日を数値として保持 (存在する場合)
-
-        daySelect.innerHTML = ''; // 日のオプションをクリア
-
-        // 特定の月の日数を取得 (閏年を考慮)
-        // 月は0から始まるため、selectedMonth - 1 する
-        const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-
-        for (let i = 1; i <= daysInMonth; i++) {
+        // 月のオプションを生成
+        for (let i = 1; i <= 12; i++) {
             const option = document.createElement('option');
             option.value = i;
             option.textContent = String(i).padStart(2, '0'); // 01, 02 ...
-            daySelect.appendChild(option);
-        }
-        
-        // 以前選択されていた日が存在し、新しい日数範囲内であれば再選択
-        if (currentDay && currentDay <= daysInMonth) {
-            daySelect.value = currentDay;
-        } else if (daySelect.options.length > 0) {
-            // 範囲外になった場合、もしくは初期選択時でcurrentDayがnullの場合、最初の日を選択
-            daySelect.value = daySelect.options[0].value;
-        }
-    }
-
-    // 初期値を設定 (画像に合わせて 2025年7月1日)
-    function setInitialDate() {
-        const initialYear = 2025;
-        const initialMonth = 7; // July
-        const initialDay = 1;   // 1st
-
-        // 年のオプションが存在するか確認し設定
-        let yearExists = Array.from(yearSelect.options).some(opt => parseInt(opt.value) === initialYear);
-        if(yearExists) {
-            yearSelect.value = initialYear;
-        } else if (yearSelect.options.length > 0) {
-            yearSelect.value = yearSelect.options[0].value; // 初期年が存在しない場合、最初のオプションを選択
+            monthSelect.appendChild(option);
         }
 
-        // 月のオプションが存在するか確認し設定
-        let monthExists = Array.from(monthSelect.options).some(opt => parseInt(opt.value) === initialMonth);
-        if(monthExists) {
-            monthSelect.value = initialMonth;
-        } else if (monthSelect.options.length > 0) {
-            monthSelect.value = monthSelect.options[0].value; // 初期月が存在しない場合、最初のオプションを選択
+        // 日のオプションを更新する関数
+        function updateDays() {
+            const selectedYear = parseInt(yearSelect.value);
+            const selectedMonth = parseInt(monthSelect.value);
+            const currentDayValue = daySelect.value; // 文字列として現在の値を取得
+            const currentDay = currentDayValue ? parseInt(currentDayValue) : null; // 現在選択されている日を数値として保持 (存在する場合)
+
+            daySelect.innerHTML = ''; // 日のオプションをクリア
+
+            // 特定の月の日数を取得 (閏年を考慮)
+            // 月は0から始まるため、selectedMonth - 1 する
+            const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = String(i).padStart(2, '0'); // 01, 02 ...
+                daySelect.appendChild(option);
+            }
+            
+            // 以前選択されていた日が存在し、新しい日数範囲内であれば再選択
+            if (currentDay && currentDay <= daysInMonth) {
+                daySelect.value = currentDay;
+            } else if (daySelect.options.length > 0) {
+                 // 範囲外になった場合、もしくは初期選択時でcurrentDayがnullの場合、最初の日を選択
+                daySelect.value = daySelect.options[0].value;
+            }
         }
-        
-        updateDays(); // 日のオプションを更新 (年と月が設定された後)
 
-        // 日のオプションが存在するか確認し設定
-        let dayExists = Array.from(daySelect.options).some(opt => parseInt(opt.value) === initialDay);
-        if(dayExists) {
-            daySelect.value = initialDay;
-        } else if (daySelect.options.length > 0) {
-            // updateDays後なので、daySelect.options[0]は常に存在するはず (月が1日以上ある限り)
-            daySelect.value = daySelect.options[0].value; // 初期日が存在しない/無効な場合、最初の有効な日を選択
+        // 初期値を設定 (画像に合わせて 2025年7月1日)
+        function setInitialDate() {
+            const initialYear = 2025;
+            const initialMonth = 7; // July
+            const initialDay = 1;   // 1st
+
+            // 年のオプションが存在するか確認し設定
+            let yearExists = Array.from(yearSelect.options).some(opt => parseInt(opt.value) === initialYear);
+            if(yearExists) {
+                 yearSelect.value = initialYear;
+            } else if (yearSelect.options.length > 0) {
+                yearSelect.value = yearSelect.options[0].value; // 初期年が存在しない場合、最初のオプションを選択
+            }
+
+            // 月のオプションが存在するか確認し設定
+            let monthExists = Array.from(monthSelect.options).some(opt => parseInt(opt.value) === initialMonth);
+            if(monthExists) {
+                 monthSelect.value = initialMonth;
+            } else if (monthSelect.options.length > 0) {
+                monthSelect.value = monthSelect.options[0].value; // 初期月が存在しない場合、最初のオプションを選択
+            }
+            
+            updateDays(); // 日のオプションを更新 (年と月が設定された後)
+
+            // 日のオプションが存在するか確認し設定
+            let dayExists = Array.from(daySelect.options).some(opt => parseInt(opt.value) === initialDay);
+            if(dayExists) {
+                daySelect.value = initialDay;
+            } else if (daySelect.options.length > 0) {
+                 // updateDays後なので、daySelect.options[0]は常に存在するはず (月が1日以上ある限り)
+                daySelect.value = daySelect.options[0].value; // 初期日が存在しない/無効な場合、最初の有効な日を選択
+            }
         }
-    }
 
-    // イベントリスナーを設定
-    yearSelect.addEventListener('change', updateDays);
-    monthSelect.addEventListener('change', updateDays);
+        // イベントリスナーを設定
+        yearSelect.addEventListener('change', updateDays);
+        monthSelect.addEventListener('change', updateDays);
 
-    // 初期の日付を設定し、日のオプションを生成
-    setInitialDate(); // これがupdateDaysを呼び出し、最終的にdaySelectも設定する
+        // 初期の日付を設定し、日のオプションを生成
+        setInitialDate(); // これがupdateDaysを呼び出し、最終的にdaySelectも設定する
 
-    // コンソールに選択された日付を出力する例 (デバッグ用)
-    /*function logSelectedDate() {
-        if (yearSelect.value && monthSelect.value && daySelect.value) {
-            console.log(`選択された日付: ${yearSelect.value}年${monthSelect.value}月${daySelect.value}日`);
-        } else {
-            console.log("日付が完全に選択されていません。");
-        }
-    }*/
+        // コンソールに選択された日付を出力する例 (デバッグ用)
+        /*function logSelectedDate() {
+            if (yearSelect.value && monthSelect.value && daySelect.value) {
+                console.log(`選択された日付: ${yearSelect.value}年${monthSelect.value}月${daySelect.value}日`);
+            } else {
+                console.log("日付が完全に選択されていません。");
+            }
+        }*/
 })();
 
         /*yearSelect.addEventListener('change', logSelectedDate);
