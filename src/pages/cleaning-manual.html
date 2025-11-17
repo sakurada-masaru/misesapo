@@ -274,7 +274,7 @@
     <header>
         <div class="header-flex wrapper">
             <h1 class="header-logo">
-                <a href="staff/dashboard.html"><img src="images/header-logo.jpg" alt="ミセサポ"></a>
+                <a href="staff/dashboard.html"><img src="/images/header-logo.jpg" alt="ミセサポ"></a>
             </h1>
             <button class="btn"><span></span><span></span><span></span></button>
             <nav id="g-nav">
@@ -373,10 +373,18 @@
                 return path;
             }
             const basePath = getBasePath();
+            console.log('[CleaningManual] resolvePath:', { path, basePath });
+            
             if (path.startsWith('/')) {
-                return basePath === '/' ? path : basePath.slice(0, -1) + path;
+                // 絶対パスの場合
+                const resolved = basePath === '/' ? path : basePath.slice(0, -1) + path;
+                console.log('[CleaningManual] resolved absolute path:', resolved);
+                return resolved;
             }
-            return basePath === '/' ? '/' + path : basePath + path;
+            // 相対パスの場合
+            const resolved = basePath === '/' ? '/' + path : basePath + path;
+            console.log('[CleaningManual] resolved relative path:', resolved);
+            return resolved;
         }
         
         // データをJSONファイルから読み込む（GitHub Pages対応）
@@ -393,45 +401,104 @@
                 if (window.CleaningManualFirebase && window.FirebaseFirestore) {
                     try {
                         const data = await window.CleaningManualFirebase.loadDataFromFirestore();
+                        console.log('[CleaningManual] Firestore data loaded:', data);
+                        
                         kitchenData = data.kitchen || [];
                         airconData = data.aircon || [];
                         floorData = data.floor || [];
                         otherData = data.other || [];
                         manualData = [...kitchenData, ...airconData, ...floorData, ...otherData];
+                        
+                        console.log('[CleaningManual] Data counts:', {
+                            kitchen: kitchenData.length,
+                            aircon: airconData.length,
+                            floor: floorData.length,
+                            other: otherData.length,
+                            total: manualData.length
+                        });
+                        
+                        // データが空の場合はフォールバック
+                        if (manualData.length === 0) {
+                            console.warn('[CleaningManual] Firestore data is empty, trying fallback...');
+                            throw new Error('Firestore data is empty');
+                        }
+                        
                         initializeManual();
                         return;
                     } catch (error) {
-                        console.error('Firestore load error:', error);
+                        console.error('[CleaningManual] Firestore load error:', error);
                         // フォールバックを試行
                     }
                 }
                 
                 // まずAPIエンドポイントを試す（開発環境）
-                let response = await fetch(resolvePath('/api/cleaning-manual'));
-                if (!response.ok) {
+                let response = null;
+                try {
+                    response = await fetch(resolvePath('/api/cleaning-manual'));
+                } catch (e) {
+                    console.log('[CleaningManual] API not available, trying static file...');
+                }
+                
+                if (!response || !response.ok) {
                     // APIが利用できない場合（GitHub Pagesなど）、静的ファイルを読み込む
                     response = await fetch(resolvePath('/data/cleaning-manual.json'));
                 }
                 
-                if (response.ok) {
+                if (response && response.ok) {
                     const data = await response.json();
+                    console.log('[CleaningManual] JSON data loaded:', data);
+                    
                     kitchenData = data.kitchen || [];
                     airconData = data.aircon || [];
                     floorData = data.floor || [];
                     otherData = data.other || [];
                     manualData = [...kitchenData, ...airconData, ...floorData, ...otherData];
                     
+                    console.log('[CleaningManual] Data counts:', {
+                        kitchen: kitchenData.length,
+                        aircon: airconData.length,
+                        floor: floorData.length,
+                        other: otherData.length,
+                        total: manualData.length
+                    });
+                    
                     // データ読み込み後に初期化
                     initializeManual();
                 } else {
-                    console.error('データの読み込みに失敗しました');
-                    // フォールバック: 空のデータで初期化
-                    initializeManual();
+                    console.error('[CleaningManual] データの読み込みに失敗しました');
+                    // エラーメッセージを表示
+                    const contentDiv = document.getElementById('content');
+                    if (contentDiv) {
+                        contentDiv.innerHTML = `
+                            <div style="text-align: center; padding: 40px;">
+                                <h2>データの読み込みに失敗しました</h2>
+                                <p>Firestoreにデータが登録されていない可能性があります。</p>
+                                <p style="margin-top: 20px;">
+                                    <a href="cleaning-manual-admin.html" style="color: #ff008c; text-decoration: underline;">
+                                        管理画面で初期データをインポートしてください
+                                    </a>
+                                </p>
+                            </div>
+                        `;
+                    }
                 }
             } catch (error) {
-                console.error('データの読み込みエラー:', error);
-                // フォールバック: 空のデータで初期化
-                initializeManual();
+                console.error('[CleaningManual] データの読み込みエラー:', error);
+                // エラーメッセージを表示
+                const contentDiv = document.getElementById('content');
+                if (contentDiv) {
+                    contentDiv.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <h2>データの読み込みエラー</h2>
+                            <p>${error.message}</p>
+                            <p style="margin-top: 20px;">
+                                <a href="cleaning-manual-admin.html" style="color: #ff008c; text-decoration: underline;">
+                                    管理画面で初期データをインポートしてください
+                                </a>
+                            </p>
+                        </div>
+                    `;
+                }
             }
         }
         
