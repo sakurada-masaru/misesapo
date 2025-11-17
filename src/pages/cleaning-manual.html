@@ -960,21 +960,6 @@
             window.location.href = `cleaning-manual-admin.html?category=${categoryKey}&index=${index}`;
         }
         
-        // baseタグをローカル開発環境で無効化
-        function setupBaseTag() {
-            const isLocalDev = window.location.hostname === 'localhost' || 
-                              window.location.hostname === '127.0.0.1' ||
-                              window.location.hostname === '';
-            
-            if (isLocalDev) {
-                const baseTag = document.getElementById('base-tag');
-                if (baseTag) {
-                    baseTag.href = '/';
-                    console.log('[CleaningManual] Base tag set to / for local development');
-                }
-            }
-        }
-        
         // ヘッダーロゴのパスを設定
         function setHeaderLogoPath() {
             const logoImg = document.getElementById('header-logo-img');
@@ -987,7 +972,6 @@
         
         // ページ読み込み時にデータを読み込む
         document.addEventListener('DOMContentLoaded', () => {
-            setupBaseTag();
             setHeaderLogoPath();
             loadManualData();
         });
