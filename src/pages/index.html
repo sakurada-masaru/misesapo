@@ -2192,6 +2192,34 @@
                 }
             }
             
+            // HTML内の静的なリンクを解決（GitHub Pages対応）
+            function resolveStaticLinks() {
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                if (isLocalDev) {
+                    return; // ローカル開発環境では不要
+                }
+                
+                // すべてのaタグのhref属性を解決
+                document.querySelectorAll('a[href^="/"]').forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                        link.href = resolvePath(href);
+                    }
+                });
+                
+                // すべてのlinkタグのhref属性を解決
+                document.querySelectorAll('link[href^="/"]').forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                        link.href = resolvePath(href);
+                    }
+                });
+            }
+            
             function init() {
                 // カテゴリボタンのイベントリスナー
                 wrapper.querySelectorAll('.misesapo-category-btn').forEach(btn => {
@@ -2202,6 +2230,9 @@
                 
                 // 画像パスを設定
                 setImagePaths();
+                
+                // 静的なリンクを解決
+                resolveStaticLinks();
                 
                 // データを読み込んで初期表示
                 loadServiceItems().then(() => {
