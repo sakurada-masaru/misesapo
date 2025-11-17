@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清掃マニュアル管理画面 - MISESAPO</title>
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans JP', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .page-header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .page-header h1 {
+            margin: 0;
+            color: #ff008c;
+            font-size: 24px;
+        }
+        .page-header .back-link {
+            display: inline-block;
+            margin-bottom: 10px;
+            color: #666;
+            text-decoration: none;
+        }
+        .page-header .back-link:hover {
+            color: #ff008c;
+        }
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .category-tab {
+            background: white;
+            border: 2px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .category-tab:hover {
+            border-color: #ff008c;
+        }
+        .category-tab.active {
+            background: #ff008c;
+            color: white;
+            border-color: #ff008c;
+        }
+        .items-list {
+            display: grid;
+            gap: 15px;
+        }
+        .item-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .item-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        .item-card h3 {
+            margin: 0 0 10px 0;
+            color: #ff008c;
+        }
+        .item-card .item-preview {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .edit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .edit-modal.active {
+            display: block;
+        }
+        .edit-modal-content {
+            background: white;
+            margin: 20px auto;
+            max-width: 800px;
+            padding: 30px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .edit-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        .edit-modal-header h2 {
+            margin: 0;
+            color: #ff008c;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        .close-btn:hover {
+            color: #ff008c;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-group .image-preview {
+            margin-top: 10px;
+            max-width: 300px;
+        }
+        .form-group .image-preview img {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .image-upload-btn {
+            background: #ff008c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .image-upload-btn:hover {
+            background: #e6007a;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #ff008c;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #e6007a;
+        }
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #555;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .message.active {
+            display: block;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <a href="/cleaning-manual.html" class="back-link">
+                <i class="fas fa-arrow-left"></i> 清掃マニュアルに戻る
+            </a>
+            <h1><i class="fas fa-edit"></i> 清掃マニュアル管理画面</h1>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="category-tabs">
+            <button class="category-tab active" data-category="all">すべて</button>
+            <button class="category-tab" data-category="kitchen">厨房設備</button>
+            <button class="category-tab" data-category="aircon">空調設備</button>
+            <button class="category-tab" data-category="floor">フロア</button>
+            <button class="category-tab" data-category="other">その他</button>
+        </div>
+
+        <div id="items-list" class="items-list">
+            <div class="loading">読み込み中...</div>
+        </div>
+    </div>
+
+    <!-- 編集モーダル -->
+    <div id="edit-modal" class="edit-modal">
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h2>項目を編集</h2>
+                <button class="close-btn" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="edit-form">
+                <input type="hidden" id="edit-category" />
+                <input type="hidden" id="edit-index" />
+                
+                <div class="form-group">
+                    <label>タイトル</label>
+                    <input type="text" id="edit-title" required />
+                </div>
+
+                <div class="form-group">
+                    <label>リスク</label>
+                    <input type="text" id="edit-risk" required />
+                </div>
+
+                <div class="form-group">
+                    <label>ダメな例（テキスト）</label>
+                    <textarea id="edit-bad" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>ダメな例（画像パス）</label>
+                    <input type="text" id="edit-badImage" />
+                    <button type="button" class="image-upload-btn" onclick="uploadImage('badImage')">
+                        <i class="fas fa-upload"></i> 画像をアップロード
+                    </button>
+                    <div class="image-preview" id="preview-badImage"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>模範例（テキスト）</label>
+                    <textarea id="edit-good" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>模範例（画像パス）</label>
+                    <input type="text" id="edit-goodImage" />
+                    <button type="button" class="image-upload-btn" onclick="uploadImage('goodImage')">
+                        <i class="fas fa-upload"></i> 画像をアップロード
+                    </button>
+                    <div class="image-preview" id="preview-goodImage"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Q&A 質問1</label>
+                    <input type="text" id="edit-qa1q" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Q&A 回答1</label>
+                    <textarea id="edit-qa1a" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Q&A 質問2</label>
+                    <input type="text" id="edit-qa2q" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Q&A 回答2</label>
+                    <textarea id="edit-qa2a" required></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">
+                        キャンセル
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let manualData = {
+            kitchen: [],
+            aircon: [],
+            floor: [],
+            other: []
+        };
+        let currentCategory = 'all';
+
+        // データ読み込み
+        async function loadData() {
+            try {
+                let response = await fetch('/api/cleaning-manual');
+                if (!response.ok) {
+                    response = await fetch('/data/cleaning-manual.json');
+                }
+                if (response.ok) {
+                    manualData = await response.json();
+                    renderItems();
+                } else {
+                    showMessage('データの読み込みに失敗しました', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showMessage('データの読み込みエラー: ' + error.message, 'error');
+            }
+        }
+
+        // 項目を表示
+        function renderItems() {
+            const container = document.getElementById('items-list');
+            let items = [];
+
+            if (currentCategory === 'all') {
+                items = [
+                    ...manualData.kitchen.map((item, idx) => ({ ...item, category: 'kitchen', index: idx })),
+                    ...manualData.aircon.map((item, idx) => ({ ...item, category: 'aircon', index: idx })),
+                    ...manualData.floor.map((item, idx) => ({ ...item, category: 'floor', index: idx })),
+                    ...manualData.other.map((item, idx) => ({ ...item, category: 'other', index: idx }))
+                ];
+            } else {
+                items = manualData[currentCategory].map((item, idx) => ({
+                    ...item,
+                    category: currentCategory,
+                    index: idx
+                }));
+            }
+
+            if (items.length === 0) {
+                container.innerHTML = '<div class="loading">項目がありません</div>';
+                return;
+            }
+
+            container.innerHTML = items.map(item => `
+                <div class="item-card" onclick="openEditModal('${item.category}', ${item.index})">
+                    <h3>${item.title}</h3>
+                    <div class="item-preview">
+                        <strong>カテゴリ:</strong> ${getCategoryName(item.category)}<br>
+                        <strong>リスク:</strong> ${item.risk}<br>
+                        <strong>ダメな例:</strong> ${item.bad.substring(0, 50)}...
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getCategoryName(category) {
+            const names = {
+                kitchen: '厨房設備',
+                aircon: '空調設備',
+                floor: 'フロア',
+                other: 'その他'
+            };
+            return names[category] || category;
+        }
+
+        // カテゴリタブの切り替え
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentCategory = tab.dataset.category;
+                renderItems();
+            });
+        });
+
+        // 編集モーダルを開く
+        function openEditModal(category, index) {
+            const item = manualData[category][index];
+            if (!item) return;
+
+            document.getElementById('edit-category').value = category;
+            document.getElementById('edit-index').value = index;
+            document.getElementById('edit-title').value = item.title || '';
+            document.getElementById('edit-risk').value = item.risk || '';
+            document.getElementById('edit-bad').value = item.bad || '';
+            document.getElementById('edit-badImage').value = item.badImage || '';
+            document.getElementById('edit-good').value = item.good || '';
+            document.getElementById('edit-goodImage').value = item.goodImage || '';
+            document.getElementById('edit-qa1q').value = item.qa1q || '';
+            document.getElementById('edit-qa1a').value = item.qa1a || '';
+            document.getElementById('edit-qa2q').value = item.qa2q || '';
+            document.getElementById('edit-qa2a').value = item.qa2a || '';
+
+            updateImagePreview('badImage', item.badImage);
+            updateImagePreview('goodImage', item.goodImage);
+
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        // 編集モーダルを閉じる
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+
+        // 画像プレビューを更新
+        function updateImagePreview(field, path) {
+            const preview = document.getElementById(`preview-${field}`);
+            if (path) {
+                preview.innerHTML = `<img src="/${path}" alt="プレビュー" onerror="this.style.display='none'" />`;
+            } else {
+                preview.innerHTML = '';
+            }
+        }
+
+        // 画像アップロード
+        function uploadImage(field) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const response = await fetch('/api/cleaning-manual/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        document.getElementById(`edit-${field}`).value = result.path;
+                        updateImagePreview(field, result.path);
+                        showMessage('画像をアップロードしました', 'success');
+                    } else {
+                        showMessage('画像のアップロードに失敗しました', 'error');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showMessage('画像のアップロードエラー: ' + error.message, 'error');
+                }
+            };
+            input.click();
+        }
+
+        // フォーム送信
+        document.getElementById('edit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const category = document.getElementById('edit-category').value;
+            const index = parseInt(document.getElementById('edit-index').value);
+
+            const updatedItem = {
+                title: document.getElementById('edit-title').value,
+                category: getCategoryName(category),
+                risk: document.getElementById('edit-risk').value,
+                bad: document.getElementById('edit-bad').value,
+                badImage: document.getElementById('edit-badImage').value || undefined,
+                good: document.getElementById('edit-good').value,
+                goodImage: document.getElementById('edit-goodImage').value || undefined,
+                qa1q: document.getElementById('edit-qa1q').value,
+                qa1a: document.getElementById('edit-qa1a').value,
+                qa2q: document.getElementById('edit-qa2q').value,
+                qa2a: document.getElementById('edit-qa2a').value
+            };
+
+            manualData[category][index] = updatedItem;
+
+            try {
+                const response = await fetch('/api/cleaning-manual', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(manualData)
+                });
+
+                if (response.ok) {
+                    showMessage('保存しました', 'success');
+                    closeEditModal();
+                    renderItems();
+                } else {
+                    showMessage('保存に失敗しました', 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showMessage('保存エラー: ' + error.message, 'error');
+            }
+        });
+
+        // メッセージ表示
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type} active`;
+            setTimeout(() => {
+                messageEl.classList.remove('active');
+            }, 3000);
+        }
+
+        // 初期化
+        loadData();
+    </script>
+</body>
+</html>
+

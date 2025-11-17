@@ -2,14 +2,29 @@
 @json('data/meta/recruit_apply_equipment_title.json', $title)
 @json('data/meta/recruit_apply_equipment_body_class.json', $body_class)
 
+<!-- 通常ヘッダー -->
+<header class="normal-header visible">
+  <div class="normal-header-inner">
+    <div class="normal-header-logo">
+      <a href="/">
+        <img src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+      </a>
+    </div>
+    <nav class="normal-header-nav">
+      <a href="/">TOP</a>
+      <a href="/recruit.html">求人情報</a>
+      <a href="/recruit/apply/cleaning.html">清掃スタッフ</a>
+      <a href="/recruit/apply/inside-sales.html">インサイドセールス</a>
+      <a href="/recruit/apply/field-sales.html">フィールドセールス</a>
+      <a href="/recruit/privacy.html">プライバシーポリシー</a>
+    </nav>
+  </div>
+</header>
+
 <main id="main" class="recruit-apply-page">
   <div class="recruit-apply-container">
     <!-- Header -->
     <div class="recruit-apply-header">
-      <div class="recruit-apply-logo">
-        <div class="recruit-logo-square">ミセサポ</div>
-        <div class="recruit-logo-text">RECRUIT</div>
-      </div>
       <div class="recruit-breadcrumb">
         <span>シート記入</span>
         <span class="breadcrumb-separator">&gt;</span>
@@ -135,28 +150,6 @@
       gap: 24px;
       margin-bottom: 32px;
     }
-    .recruit-apply-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .recruit-logo-square {
-      width: 48px;
-      height: 48px;
-      background: var(--primary);
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 0.875rem;
-      border-radius: 8px;
-    }
-    .recruit-logo-text {
-      font-size: 1rem;
-      color: var(--primary);
-      font-weight: 600;
-    }
     .recruit-breadcrumb {
       display: flex;
       align-items: center;
@@ -279,6 +272,45 @@
         align-items: flex-start;
       }
     }
+    /* コピーライトスタイル */
+    body.page-recruit-apply .site-footer,
+    body.page-recruit-privacy .site-footer {
+      background: #FF679C;
+      color: #ffffff;
+    }
+    body.page-recruit-apply .site-footer p,
+    body.page-recruit-privacy .site-footer p {
+      color: #ffffff;
+    }
   </style>
+  <link rel="stylesheet" href="/css/header.css">
+  <script>
+    // 求人ページではインクルードヘッダーを削除し、通常ヘッダーを常時表示
+    document.addEventListener('DOMContentLoaded', function() {
+      // インクルードヘッダーを削除
+      const defaultHeader = document.getElementById('default-header-wrapper');
+      if (defaultHeader) {
+        defaultHeader.remove();
+      }
+      const siteHeader = document.querySelector('.site-header');
+      if (siteHeader) {
+        siteHeader.remove();
+      }
+      
+      // 通常ヘッダーを常時表示
+      const normalHeader = document.querySelector('.normal-header');
+      if (normalHeader) {
+        normalHeader.classList.add('visible');
+        // スクロールイベントでクラスを削除しないようにする
+        const originalRemove = normalHeader.classList.remove;
+        normalHeader.classList.remove = function(...args) {
+          if (args[0] !== 'visible') {
+            originalRemove.apply(this, args);
+          }
+        };
+      }
+    });
+  </script>
+  <script src="/js/header.js"></script>
 </main>
 

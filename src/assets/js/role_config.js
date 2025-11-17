@@ -71,6 +71,8 @@ const ROLE_CONFIG = {
     '/index.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
     '/service.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
     '/service/': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/recruit.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/recruit/': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
     '/signin.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
     '/signup.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
     '/signup2.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],

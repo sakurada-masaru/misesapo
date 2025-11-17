@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
+from io import BytesIO
 import threading
 
 # プロジェクトのルートディレクトリ
@@ -21,7 +22,9 @@ DATA_DIR = SRC / "data"
 SERVICE_ITEMS_JSON = DATA_DIR / "service_items.json"
 BROWSER_CHANGES_LOG = DATA_DIR / "browser_changes.json"
 STAFF_USERS_JSON = DATA_DIR / "staff_users.json"
+CLEANING_MANUAL_JSON = DATA_DIR / "cleaning-manual.json"
 BUILD_SCRIPT = ROOT / "scripts" / "build.py"
+IMAGES_SERVICE_DIR = PUBLIC / "images-service"
 
 PORT = 5173
 
@@ -59,6 +62,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         elif path == '/api/images':
             # 画像一覧を返す
             self.handle_images_list()
+        elif path == '/api/cleaning-manual':
+            # 清掃マニュアルデータを返す
+            self.handle_cleaning_manual_get()
         elif path == '/api/auth/me':
             # 現在のユーザー情報を取得
             self.handle_auth_me()
@@ -88,6 +94,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         elif path == '/api/auth/logout':
             # ログアウト
             self.handle_auth_logout()
+        elif path == '/api/cleaning-manual/upload-image':
+            # 画像アップロード
+            self.handle_cleaning_manual_upload_image()
         else:
             self.send_error(404, f"API endpoint not found: {path}")
     
@@ -104,6 +113,7 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             self.handle_api_put()
         else:
             self.send_error(404, "Not Found")
+    
     
     def do_DELETE(self):
         """DELETEリクエスト: API処理（削除用）"""
@@ -627,52 +637,60 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             })
     
     def handle_api_put(self):
-        """API PUT処理: サービス更新"""
-        # /api/services/{id} の形式をパース
-        path_parts = self.path.split('/')
-        if len(path_parts) == 4 and path_parts[1] == 'api' and path_parts[2] == 'services':
-            service_id = int(path_parts[3])
-            try:
-                # リクエストボディを読み込む
-                content_length = int(self.headers.get('Content-Length', 0))
-                body = self.rfile.read(content_length)
-                service_data = json.loads(body.decode('utf-8'))
-                
-                # 既存のサービスを読み込む
-                with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
-                    services = json.load(f)
-                
-                # サービスを更新
-                updated = False
-                for i, service in enumerate(services):
-                    if service.get('id') == service_id:
-                        service_data['id'] = service_id
-                        services[i] = service_data
-                        updated = True
-                        break
-                
-                if not updated:
-                    self.send_error(404, f"Service {service_id} not found")
-                    return
-                
-                # JSONファイルを保存
-                with open(SERVICE_ITEMS_JSON, 'w', encoding='utf-8') as f:
-                    json.dump(services, f, ensure_ascii=False, indent=2)
-                
-                # ブラウザ経由の変更をログに記録
-                self.log_browser_change(service_id, 'modified', service_data)
-                
-                # ビルドを実行（非同期）
-                self.run_build_async()
-                
-                # 成功レスポンス
-                self.send_json_response({
-                    'status': 'success',
-                    'id': service_id,
-                    'message': 'サービスを更新しました'
-                })
-            except Exception as e:
-                self.send_error(500, f"Failed to update service: {e}")
+        """API PUT処理"""
+        path = self.path.split('?')[0].rstrip('/')
+        
+        if path == '/api/cleaning-manual':
+            # 清掃マニュアルデータを保存
+            self.handle_cleaning_manual_put()
+        elif path.startswith('/api/services/'):
+            # サービス更新（既存の処理）
+            path_parts = self.path.split('/')
+            if len(path_parts) == 4 and path_parts[1] == 'api' and path_parts[2] == 'services':
+                service_id = int(path_parts[3])
+                try:
+                    # リクエストボディを読み込む
+                    content_length = int(self.headers.get('Content-Length', 0))
+                    body = self.rfile.read(content_length)
+                    service_data = json.loads(body.decode('utf-8'))
+                    
+                    # 既存のサービスを読み込む
+                    with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
+                        services = json.load(f)
+                    
+                    # サービスを更新
+                    updated = False
+                    for i, service in enumerate(services):
+                        if service.get('id') == service_id:
+                            service_data['id'] = service_id
+                            services[i] = service_data
+                            updated = True
+                            break
+                    
+                    if not updated:
+                        self.send_error(404, f"Service {service_id} not found")
+                        return
+                    
+                    # JSONファイルを保存
+                    with open(SERVICE_ITEMS_JSON, 'w', encoding='utf-8') as f:
+                        json.dump(services, f, ensure_ascii=False, indent=2)
+                    
+                    # ブラウザ経由の変更をログに記録
+                    self.log_browser_change(service_id, 'modified', service_data)
+                    
+                    # ビルドを実行（非同期）
+                    self.run_build_async()
+                    
+                    # 成功レスポンス
+                    self.send_json_response({
+                        'status': 'success',
+                        'id': service_id,
+                        'message': 'サービスを更新しました'
+                    })
+                except Exception as e:
+                    self.send_error(500, f"Failed to update service: {e}")
+            else:
+                self.send_error(404, "API endpoint not found")
         else:
             self.send_error(404, "API endpoint not found")
     
@@ -981,6 +999,137 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             print("   git add src/data/service_items.json public/")
             print("   git commit -m 'chore: サービス管理の更新'")
             print("   git push origin main")
+    
+    def handle_cleaning_manual_get(self):
+        """清掃マニュアルデータを取得"""
+        try:
+            if CLEANING_MANUAL_JSON.exists():
+                with open(CLEANING_MANUAL_JSON, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                self.send_json_response(data)
+            else:
+                self.send_json_response({
+                    'kitchen': [],
+                    'aircon': [],
+                    'floor': [],
+                    'other': []
+                })
+        except Exception as e:
+            self.send_error(500, f"Failed to load cleaning manual: {e}")
+    
+    def handle_cleaning_manual_put(self):
+        """清掃マニュアルデータを保存"""
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            data = json.loads(body.decode('utf-8'))
+            
+            # JSONファイルを保存
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            with open(CLEANING_MANUAL_JSON, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            # ビルドを実行（非同期）
+            self.run_build_async()
+            
+            self.send_json_response({
+                'status': 'success',
+                'message': '清掃マニュアルデータを保存しました'
+            })
+        except Exception as e:
+            self.send_error(500, f"Failed to save cleaning manual: {e}")
+    
+    def handle_cleaning_manual_upload_image(self):
+        """画像をアップロード（multipart/form-data）"""
+        try:
+            import re
+            
+            # Content-Typeからboundaryを取得
+            content_type = self.headers.get('Content-Type', '')
+            if not content_type.startswith('multipart/form-data'):
+                self.send_error(400, "Content-Type must be multipart/form-data")
+                return
+            
+            # boundaryを抽出
+            if 'boundary=' not in content_type:
+                self.send_error(400, "No boundary in Content-Type")
+                return
+            
+            boundary = content_type.split('boundary=')[1].strip()
+            if boundary.startswith('"') and boundary.endswith('"'):
+                boundary = boundary[1:-1]
+            boundary_bytes = ('--' + boundary).encode()
+            
+            # リクエストボディを読み込む
+            content_length = int(self.headers.get('Content-Length', 0))
+            if content_length == 0:
+                self.send_error(400, "No content")
+                return
+            
+            body = self.rfile.read(content_length)
+            
+            # multipartデータをパース
+            parts = body.split(boundary_bytes)
+            
+            filename = None
+            file_data = None
+            
+            for part in parts:
+                if b'Content-Disposition: form-data' not in part:
+                    continue
+                
+                # ファイル名を抽出
+                if b'name="image"' in part:
+                    # ヘッダーとボディを分離
+                    header_end = part.find(b'\r\n\r\n')
+                    if header_end == -1:
+                        header_end = part.find(b'\n\n')
+                    
+                    if header_end != -1:
+                        header = part[:header_end]
+                        file_data = part[header_end+4:]  # \r\n\r\n をスキップ
+                        
+                        # 末尾の\r\nを削除
+                        if file_data.endswith(b'\r\n'):
+                            file_data = file_data[:-2]
+                        elif file_data.endswith(b'\n'):
+                            file_data = file_data[:-1]
+                        
+                        # ファイル名を抽出
+                        filename_match = re.search(rb'filename="([^"]+)"', header)
+                        if filename_match:
+                            filename = filename_match.group(1).decode('utf-8', errors='ignore')
+                            break
+            
+            if not filename or not file_data:
+                self.send_error(400, "No image file provided")
+                return
+            
+            # ファイル名を安全にする
+            safe_filename = re.sub(r'[^a-zA-Z0-9._-]', '_', filename)
+            
+            # 画像ディレクトリを作成
+            IMAGES_SERVICE_DIR.mkdir(parents=True, exist_ok=True)
+            
+            # ファイルを保存
+            file_path = IMAGES_SERVICE_DIR / safe_filename
+            with open(file_path, 'wb') as f:
+                f.write(file_data)
+            
+            # 相対パスを返す（public/からの相対パス）
+            relative_path = f"images-service/{safe_filename}"
+            
+            self.send_json_response({
+                'status': 'success',
+                'message': '画像をアップロードしました',
+                'path': relative_path,
+                'url': f'/{relative_path}'
+            })
+        except Exception as e:
+            import traceback
+            error_msg = f"Failed to upload image: {e}\n{traceback.format_exc()}"
+            print(f"ERROR: {error_msg}", file=sys.stderr)
+            self.send_error(500, error_msg)
     
     def log_message(self, format, *args):
         """ログメッセージをカスタマイズ"""

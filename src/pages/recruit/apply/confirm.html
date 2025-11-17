@@ -2,6 +2,22 @@
 @json('data/meta/recruit_confirm_title.json', $title)
 @json('data/meta/recruit_confirm_body_class.json', $body_class)
 
+<!-- 通常ヘッダー -->
+<header class="normal-header visible">
+  <div class="normal-header-inner">
+    <div class="normal-header-logo">
+      <a href="/">
+        <img src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+      </a>
+    </div>
+    <nav class="normal-header-nav">
+      <a href="/">TOP</a>
+      <a href="/recruit.html">求人情報</a>
+      <a href="/recruit/privacy.html">プライバシーポリシー</a>
+    </nav>
+  </div>
+</header>
+
 <main id="main" class="recruit-confirm-page">
   <div class="recruit-confirm-container">
     <!-- Header -->
@@ -173,7 +189,48 @@
       opacity: 1;
       transform: translateY(-2px);
     }
+    /* コピーライトスタイル */
+    body.page-recruit-confirm .site-footer,
+    body.page-recruit-complete .site-footer,
+    body.page-recruit-privacy .site-footer {
+      background: #FF679C;
+      color: #ffffff;
+    }
+    body.page-recruit-confirm .site-footer p,
+    body.page-recruit-complete .site-footer p,
+    body.page-recruit-privacy .site-footer p {
+      color: #ffffff;
+    }
   </style>
+  <link rel="stylesheet" href="/css/header.css">
+  <script>
+    // 求人ページではインクルードヘッダーを削除し、通常ヘッダーを常時表示
+    document.addEventListener('DOMContentLoaded', function() {
+      // インクルードヘッダーを削除
+      const defaultHeader = document.getElementById('default-header-wrapper');
+      if (defaultHeader) {
+        defaultHeader.remove();
+      }
+      const siteHeader = document.querySelector('.site-header');
+      if (siteHeader) {
+        siteHeader.remove();
+      }
+      
+      // 通常ヘッダーを常時表示
+      const normalHeader = document.querySelector('.normal-header');
+      if (normalHeader) {
+        normalHeader.classList.add('visible');
+        // スクロールイベントでクラスを削除しないようにする
+        const originalRemove = normalHeader.classList.remove;
+        normalHeader.classList.remove = function(...args) {
+          if (args[0] !== 'visible') {
+            originalRemove.apply(this, args);
+          }
+        };
+      }
+    });
+  </script>
+  <script src="/js/header.js"></script>
 
   <script>
     // URLパラメータからフォームデータを取得して表示

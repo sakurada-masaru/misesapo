@@ -1,0 +1,115 @@
+<style>
+/* ヒーローセクション CSS（アニメーションなし版） */
+.fullscreen-image-section.no-animation {
+    width: 100vw;
+    height: auto;
+    position: relative;
+    overflow: hidden;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    z-index: 1;
+}
+
+.fullscreen-image-section.no-animation .fullscreen-image-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.fullscreen-image-section.no-animation .fullscreen-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    opacity: 1;
+    animation: none;
+    transition: none;
+    z-index: 1;
+}
+
+.fullscreen-image-section.no-animation .fullscreen-image-static {
+    opacity: 1;
+    transform: scale(1);
+    animation: none;
+}
+
+.fullscreen-image-section.no-animation .hero-mask {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    z-index: 50;
+    pointer-events: none;
+    margin: 0 auto;
+}
+
+.fullscreen-image-section.no-animation .hero-mask-image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.fullscreen-image-section.no-animation .hero_scroll_down {
+    display: none;
+}
+</style>
+
+<!-- ヒーローセクション（アニメーションなし） -->
+<section class="fullscreen-image-section no-animation" id="hero">
+    <div class="fullscreen-image-wrapper">
+        <img src="/wp-content/themes/lightning-child/assets/images/images-admin/hero-image001.png" 
+             alt="ヒーロー画像" 
+             class="fullscreen-image fullscreen-image-static">
+    </div>
+    
+    <div class="hero-mask">
+        <img src="/wp-content/themes/lightning-child/assets/images/images-admin/mask-hero001.png" 
+             alt="マスク" 
+             class="hero-mask-image">
+    </div>
+</section>
+
+<script>
+(function() {
+    function setHeroSectionHeight() {
+        const maskImage = document.querySelector('.hero-mask-image');
+        const heroSection = document.querySelector('.fullscreen-image-section.no-animation');
+        const imageWrapper = document.querySelector('.fullscreen-image-wrapper');
+        
+        if (maskImage && heroSection && imageWrapper) {
+            const maskHeight = maskImage.offsetHeight;
+            heroSection.style.height = (maskHeight - 5) + 'px';
+            imageWrapper.style.height = maskHeight + 'px';
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setHeroSectionHeight);
+    } else {
+        setHeroSectionHeight();
+    }
+    
+    window.addEventListener('resize', setHeroSectionHeight);
+    
+    const maskImage = document.querySelector('.hero-mask-image');
+    if (maskImage) {
+        if (maskImage.complete) {
+            setHeroSectionHeight();
+        } else {
+            maskImage.addEventListener('load', setHeroSectionHeight);
+        }
+    }
+})();
+</script>
+

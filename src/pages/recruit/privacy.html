@@ -2,13 +2,34 @@
 @json('data/meta/recruit_privacy_title.json', $title)
 @json('data/meta/recruit_privacy_body_class.json', $body_class)
 
+<!-- 通常ヘッダー -->
+<header class="normal-header visible">
+  <div class="normal-header-inner">
+    <div class="normal-header-logo">
+      <a href="/">
+        <img src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+      </a>
+    </div>
+    <nav class="normal-header-nav">
+      <a href="/">TOP</a>
+      <a href="/recruit.html">求人情報</a>
+      <a href="/recruit/privacy.html">プライバシーポリシー</a>
+    </nav>
+  </div>
+</header>
+
 <main id="main" class="recruit-privacy-page">
   <div class="recruit-privacy-container">
-    <!-- Header -->
-    <div class="recruit-privacy-header">
-      <div class="recruit-apply-logo">
-        <div class="recruit-logo-square">ミセサポ</div>
-        <div class="recruit-logo-text">RECRUIT</div>
+    <!-- パンくずリスト -->
+    <div class="recruit-breadcrumb-wrapper">
+      <div class="recruit-breadcrumb">
+        <div class="recruit-breadcrumb-inner">
+          <a href="/">TOP</a>
+          <span>></span>
+          <a href="/recruit.html">求人情報</a>
+          <span>></span>
+          <span class="current">プライバシーポリシー</span>
+        </div>
       </div>
     </div>
 
@@ -104,54 +125,69 @@
       max-width: 900px;
       margin: 0 auto;
     }
-    .recruit-privacy-header {
-      margin-bottom: 48px;
+    /* パンくずリスト */
+    .recruit-breadcrumb-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 20px 0;
     }
-    .recruit-apply-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .recruit-breadcrumb {
+      font-size: 14px;
+      color: #666;
     }
-    .recruit-logo-square {
-      width: 48px;
-      height: 48px;
-      background: var(--primary);
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 0.875rem;
-      border-radius: 8px;
+    .recruit-breadcrumb-inner {
+      display: inline-block;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e5e5;
     }
-    .recruit-logo-text {
-      font-size: 1rem;
-      color: var(--primary);
-      font-weight: 600;
+    .recruit-breadcrumb a {
+      color: #666;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    .recruit-breadcrumb a:hover {
+      color: #FF679C;
+    }
+    .recruit-breadcrumb span {
+      margin: 0 8px;
+      color: #999;
+    }
+    .recruit-breadcrumb .current {
+      color: #333;
+      font-weight: 500;
     }
     .recruit-privacy-title {
-      font-size: 2rem;
+      font-size: 2.5rem;
       font-weight: 700;
       color: #111827;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
       text-align: center;
+      background: linear-gradient(135deg, #FF679C 0%, #FF008C 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     .recruit-privacy-subtitle {
-      font-size: 1.125rem;
+      font-size: 1.25rem;
       color: #6b7280;
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 32px;
+      font-weight: 500;
     }
     .recruit-privacy-meta {
       text-align: center;
       margin-bottom: 48px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid #e5e7eb;
+      padding: 24px;
+      background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
     .recruit-privacy-meta p {
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin-bottom: 4px;
+      font-size: 0.95rem;
+      color: #374151;
+      margin-bottom: 8px;
+      font-weight: 500;
     }
     .recruit-privacy-sections {
       display: flex;
@@ -159,15 +195,24 @@
       gap: 32px;
     }
     .privacy-section {
-      background: #f9fafb;
-      border-radius: 8px;
-      padding: 24px;
+      background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+      border-radius: 12px;
+      padding: 32px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .privacy-section:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     .privacy-section-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #111827;
-      margin-bottom: 16px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #FF679C;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid #FF679C;
     }
     .privacy-section p {
       font-size: 0.95rem;
@@ -197,6 +242,45 @@
     .privacy-section a:hover {
       text-decoration: underline;
     }
+    /* コピーライトスタイル */
+    body.page-recruit-apply .site-footer,
+    body.page-recruit-privacy .site-footer {
+      background: #FF679C;
+      color: #ffffff;
+    }
+    body.page-recruit-apply .site-footer p,
+    body.page-recruit-privacy .site-footer p {
+      color: #ffffff;
+    }
   </style>
+  <link rel="stylesheet" href="/css/header.css">
+  <script>
+    // 求人ページではインクルードヘッダーを削除し、通常ヘッダーを常時表示
+    document.addEventListener('DOMContentLoaded', function() {
+      // インクルードヘッダーを削除
+      const defaultHeader = document.getElementById('default-header-wrapper');
+      if (defaultHeader) {
+        defaultHeader.remove();
+      }
+      const siteHeader = document.querySelector('.site-header');
+      if (siteHeader) {
+        siteHeader.remove();
+      }
+      
+      // 通常ヘッダーを常時表示
+      const normalHeader = document.querySelector('.normal-header');
+      if (normalHeader) {
+        normalHeader.classList.add('visible');
+        // スクロールイベントでクラスを削除しないようにする
+        const originalRemove = normalHeader.classList.remove;
+        normalHeader.classList.remove = function(...args) {
+          if (args[0] !== 'visible') {
+            originalRemove.apply(this, args);
+          }
+        };
+      }
+    });
+  </script>
+  <script src="/js/header.js"></script>
 </main>
 

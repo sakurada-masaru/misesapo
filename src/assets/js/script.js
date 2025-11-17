@@ -7,20 +7,22 @@ const html = document.querySelector('html');
 const body = document.querySelector('body');
 const g_nav_links = document.querySelectorAll('#g-nav ul li a');
 
-btn.addEventListener('click', () => {
-    btn.classList.toggle('active');
-    g_nav.classList.toggle('active');
-    html.classList.toggle('active');
-    body.classList.toggle('active');
-});
-g_nav_links.forEach((g_nav_link) => {
-    g_nav_link.addEventListener('click', () => {
-        btn.classList.remove('active');
-        g_nav.classList.remove('active');
-        html.classList.remove('active');
-        body.classList.remove('active');
+if (btn && g_nav) {
+    btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        g_nav.classList.toggle('active');
+        if (html) html.classList.toggle('active');
+        if (body) body.classList.toggle('active');
     });
-});
+    g_nav_links.forEach((g_nav_link) => {
+        g_nav_link.addEventListener('click', () => {
+            btn.classList.remove('active');
+            g_nav.classList.remove('active');
+            if (html) html.classList.remove('active');
+            if (body) body.classList.remove('active');
+        });
+    });
+}
 
 
 /*=====================================================
@@ -57,32 +59,42 @@ key_title_inners.forEach((key_title_inner) => {
 /*=====================================================
     フェードアップ
 =====================================================*/
-const fadeUps = document.querySelectorAll('.fadeUp');
-const fadeUpAnime = (entries, obs) => {
-    entries.forEach((entry) => {
-        if(entry.isIntersecting) {
-            entry.target.animate(
-                {
-                    opacity: [0, 1],
-                    translate: ['0 100%', 0],
-                },
-                {
-                    duration: 1000,
-                    easing: 'ease',
-                    fill: 'forwards',
+// 重複実行を防ぐため、IIFEでラップ
+(function() {
+    'use strict';
+    // 既に実行済みかチェック
+    if (window.fadeUpsInitialized) return;
+    window.fadeUpsInitialized = true;
+    
+    const fadeUps = document.querySelectorAll('.fadeUp');
+    if (fadeUps.length > 0) {
+        const fadeUpAnime = (entries, obs) => {
+            entries.forEach((entry) => {
+                if(entry.isIntersecting) {
+                    entry.target.animate(
+                        {
+                            opacity: [0, 1],
+                            translate: ['0 100%', 0],
+                        },
+                        {
+                            duration: 1000,
+                            easing: 'ease',
+                            fill: 'forwards',
+                        }
+                    );
+                    obs.unobserve(entry.target);
                 }
-            );
-            obs.unobserve(entry.target);
+            });
         }
-    });
-}
-const fadeUp_options = {
-    rootMargin: '-20%',
-}
-const fadeUpsObserver = new IntersectionObserver(fadeUpAnime, fadeUp_options);
-fadeUps.forEach((fadeUp) => {
-    fadeUpsObserver.observe(fadeUp);
-});
+        const fadeUp_options = {
+            rootMargin: '-20%',
+        }
+        const fadeUpsObserver = new IntersectionObserver(fadeUpAnime, fadeUp_options);
+        fadeUps.forEach((fadeUp) => {
+            fadeUpsObserver.observe(fadeUp);
+        });
+    }
+})();
 
 
 /*=====================================================
@@ -330,31 +342,35 @@ const topBtnOptions = {
     threshold: 0.5
 };
 
-const pagetopAnime = (entries) => {
-    entries.forEach((entry) => {
-        if(entry.isIntersecting) {//kvImageBoxが画面上に現れたらTOPページへ戻るボタンを外す
-            pagetop.classList.remove('topActive');
-        } else {
-            pagetop.classList.add('topActive');
-        }
+if (pagetop) {
+    const pagetopAnime = (entries) => {
+        entries.forEach((entry) => {
+            if(entry.isIntersecting) {//kvImageBoxが画面上に現れたらTOPページへ戻るボタンを外す
+                pagetop.classList.remove('topActive');
+            } else {
+                pagetop.classList.add('topActive');
+            }
+        });
+    }
+    
+    pagetop.addEventListener('click', (e) => {
+        e.preventDefault();//aタグのデフォルトイベントをキャンセルする(一瞬でTOPに戻るのを防ぐ)
+        window.scroll({
+            top: 0,
+            behavior: "smooth"
+        });
     });
-}
-pagetop.addEventListener('click', (e) => {
-    e.preventDefault();//aタグのデフォルトイベントをキャンセルする(一瞬でTOPに戻るのを防ぐ)
-    window.scroll({
-        top: 0,
-        behavior: "smooth"
-    });
-});
-// footerの表示監視
-const footer_topbtn_Observer = new IntersectionObserver((entries) => {
+    
+    // footerの表示監視
+    if (footer_for_topbtn) {
+        const footer_topbtn_Observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                     // footerが表示されたら2rem
                     pagetop.style.bottom = "2rem";
                 } else {
                     // footerが非表示で、kvImageBoxも画面外の場合は12rem
-                    if (!kvImageBox.getBoundingClientRect().top < window.innerHeight) {
+                    if (kvImageBox && !kvImageBox.getBoundingClientRect().top < window.innerHeight) {
                         pagetop.style.bottom = "12rem";
                     }
                 }
@@ -362,10 +378,15 @@ const footer_topbtn_Observer = new IntersectionObserver((entries) => {
         }, {
             threshold: 0.1
         });
-
-const topBtnObserver = new IntersectionObserver(pagetopAnime, topBtnOptions);
-topBtnObserver.observe(kvImageBox);
-footer_topbtn_Observer.observe(footer_for_topbtn);
+        footer_topbtn_Observer.observe(footer_for_topbtn);
+    }
+    
+    // kvImageBoxの表示監視
+    if (kvImageBox) {
+        const topBtnObserver = new IntersectionObserver(pagetopAnime, topBtnOptions);
+        topBtnObserver.observe(kvImageBox);
+    }
+}
 
 
 /*=====================
@@ -377,10 +398,12 @@ const footer = document.querySelector('footer');
 
 // 初期表示時は確実に非表示にする
 document.addEventListener('DOMContentLoaded', () => {
-    order_bottom_box.classList.remove('bottom-box-active');
-    // スタイルを直接指定して確実に非表示に
-    order_bottom_box.style.opacity = '0';
-    order_bottom_box.style.visibility = 'hidden';
+    if (order_bottom_box) {
+        order_bottom_box.classList.remove('bottom-box-active');
+        // スタイルを直接指定して確実に非表示に
+        order_bottom_box.style.opacity = '0';
+        order_bottom_box.style.visibility = 'hidden';
+    }
 });
 
 
@@ -429,8 +452,12 @@ const order_bottom_boxOptions = {
 };
 
 const order_bottom_boxObserver = new IntersectionObserver(order_bottom_boxAnime, order_bottom_boxOptions);
-order_bottom_boxObserver.observe(kvImageBox);
-footerObserver.observe(footer);
+if (kvImageBox) {
+    order_bottom_boxObserver.observe(kvImageBox);
+}
+if (footer) {
+    footerObserver.observe(footer);
+}
 
 
 /*===================================

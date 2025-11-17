@@ -545,8 +545,9 @@
       normalizedPath = currentPath.substring(basePath.length - 1); // 先頭の/を残す
     }
     
-    // パブリックページ（index.html, service.html）は常にアクセス可能
-    if (normalizedPath === '/index.html' || normalizedPath === '/service.html' || normalizedPath.startsWith('/service/')) {
+    // パブリックページ（index.html, service.html, recruit.html）は常にアクセス可能
+    if (normalizedPath === '/index.html' || normalizedPath === '/service.html' || normalizedPath.startsWith('/service/') || 
+        normalizedPath === '/recruit.html' || normalizedPath.startsWith('/recruit/')) {
       return true;
     }
     

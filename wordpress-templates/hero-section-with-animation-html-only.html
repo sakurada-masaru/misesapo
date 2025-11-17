@@ -1,0 +1,239 @@
+<style>
+/* ヒーローセクション CSS（アニメーションあり版） */
+.fullscreen-image-section {
+    width: 100vw;
+    height: auto;
+    position: relative;
+    overflow: hidden;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    z-index: 1;
+}
+
+.fullscreen-image-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.fullscreen-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    opacity: 0;
+    animation: fullscreenFade 24s infinite, kenBurnsZoom 24s infinite;
+    transition: opacity 2s ease-in-out;
+    z-index: 1;
+}
+
+.fullscreen-image-1 {
+    animation-delay: 0s;
+    opacity: 1;
+}
+
+.fullscreen-image-2 {
+    animation-delay: 8s;
+}
+
+.fullscreen-image-3 {
+    animation-delay: 16s;
+}
+
+@keyframes fullscreenFade {
+    0% {
+        opacity: 0;
+    }
+    4% {
+        opacity: 1;
+    }
+    30% {
+        opacity: 1;
+    }
+    34% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes kenBurnsZoom {
+    0% {
+        transform: scale(1);
+    }
+    100% {
+        transform: scale(1.1);
+    }
+}
+
+.hero-mask {
+    position: relative;
+    width: 100%;
+    height: auto;
+    z-index: 50;
+    pointer-events: none;
+}
+
+.hero-mask-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.hero_scroll_down {
+    position: fixed !important;
+    top: 50% !important;
+    left: 0 !important;
+    transform: translateY(-50%) !important;
+    width: 50px !important;
+    z-index: 99999 !important;
+    color: #FF008C;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: center;
+    height: auto;
+    font-weight: 500;
+    gap: 25px;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.scroll-line {
+    position: relative;
+    width: 1px;
+    height: 80px;
+    background: rgba(255, 0, 140, 0.5);
+    margin: 0;
+    margin-top: 2px;
+}
+
+.scroll-circle {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: #FF008C;
+    border-radius: 50%;
+    animation: scroll-circle-move 3s infinite ease-in-out;
+}
+
+.hero_scroll_down p {
+    margin: 0;
+    padding: 0;
+    animation: scroll-down 3s infinite ease-in-out;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    position: relative;
+    transform: translateY(0);
+}
+
+@keyframes scroll-down {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    50% {
+        opacity: 0.3;
+        transform: translateY(15px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scroll-circle-move {
+    0% {
+        top: 0;
+        opacity: 1;
+    }
+    50% {
+        top: calc(100% - 6px);
+        opacity: 0.5;
+    }
+    100% {
+        top: 0;
+        opacity: 1;
+    }
+}
+</style>
+
+<!-- ヒーローセクション（アニメーションあり） -->
+<section class="fullscreen-image-section" id="hero">
+    <div class="fullscreen-image-wrapper">
+        <img src="/wp-content/themes/lightning-child/assets/images/images-admin/hero-image001.png" 
+             alt="ヒーロー画像1" 
+             class="fullscreen-image fullscreen-image-1">
+        <img src="/wp-content/themes/lightning-child/assets/images/images-admin/hero-image002.png" 
+             alt="ヒーロー画像2" 
+             class="fullscreen-image fullscreen-image-2">
+        <img src="/wp-content/themes/lightning-child/assets/images/images-admin/hero-image003.png" 
+             alt="ヒーロー画像3" 
+             class="fullscreen-image fullscreen-image-3">
+    </div>
+    
+    <div class="hero-mask">
+        <img src="/wp-content/themes/lightning-child/assets/images/images-admin/mask-hero001.png" 
+             alt="マスク" 
+             class="hero-mask-image">
+    </div>
+    
+    <div class="hero_scroll_down">
+        <p>↑  SCROLL  ↓</p>
+        <div class="scroll-line">
+            <div class="scroll-circle"></div>
+        </div>
+    </div>
+</section>
+
+<script>
+(function() {
+    function setHeroSectionHeight() {
+        const maskImage = document.querySelector('.hero-mask-image');
+        const heroSection = document.querySelector('.fullscreen-image-section');
+        const imageWrapper = document.querySelector('.fullscreen-image-wrapper');
+        
+        if (maskImage && heroSection && imageWrapper) {
+            const maskHeight = maskImage.offsetHeight;
+            heroSection.style.height = (maskHeight - 5) + 'px';
+            imageWrapper.style.height = maskHeight + 'px';
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setHeroSectionHeight);
+    } else {
+        setHeroSectionHeight();
+    }
+    
+    window.addEventListener('resize', setHeroSectionHeight);
+    
+    const maskImage = document.querySelector('.hero-mask-image');
+    if (maskImage) {
+        if (maskImage.complete) {
+            setHeroSectionHeight();
+        } else {
+            maskImage.addEventListener('load', setHeroSectionHeight);
+        }
+    }
+})();
+</script>
+

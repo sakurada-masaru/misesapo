@@ -8,7 +8,9 @@
     @include('partials.head-links')
   </head>
   <body class="theme-pink {{ body_class }}">
-    @include('partials.header')
+    <div id="default-header-wrapper">
+      @include('partials.header')
+    </div>
     <!-- リリース前チェックボックス -->
     <div id="release-check-section" class="release-check-section">
       <div class="release-check-container">

@@ -1,0 +1,794 @@
+<style>
+/* メガメニュー付きヘッダー切り替え CSS（亀田製菓風） */
+/* Font Awesome読み込み */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+/* ============================================
+   化粧ヘッダー（メガメニュー付き）
+   ============================================ */
+.cosmetic-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 180px;
+    background: transparent;
+    box-shadow: none;
+    z-index: 10000;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease-out;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.cosmetic-header.hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cosmetic-header-inner {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.cosmetic-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 20px 40px;
+    flex-shrink: 0;
+}
+
+.cosmetic-logo {
+    flex-shrink: 0;
+}
+
+.cosmetic-logo img {
+    height: 80px;
+    width: auto;
+}
+
+.cosmetic-login-btn {
+    padding: 10px 24px;
+    background-color: #FF679C;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.cosmetic-login-btn:hover {
+    background-color: #E35687;
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   メガメニュー（亀田製菓風デザイン）
+   ============================================ */
+.cosmetic-header .misesapo-mega-menu.ishikawa-style {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    z-index: 10001;
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", "MS PGothic", sans-serif;
+}
+
+.misesapo-mega-menu.ishikawa-style * {
+    box-sizing: border-box;
+}
+
+.cosmetic-header .misesapo-mega-menu.ishikawa-style .mega-menu-list {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    justify-content: center;
+    background: #fff;
+    width: 100%;
+    height: 100%;
+    min-height: 60px;
+    border-top: 1px solid #e5e5e5;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item {
+    position: relative;
+    margin: 0;
+}
+
+.cosmetic-header .misesapo-mega-menu.ishikawa-style .mega-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0 24px;
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 400;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    position: relative;
+    line-height: 1.6;
+    height: 100%;
+    min-height: 60px;
+    justify-content: center;
+    letter-spacing: 0.05em;
+}
+
+.cosmetic-header .misesapo-mega-menu.ishikawa-style .mega-menu-link:hover {
+    color: #333;
+    background-color: #f8f8f8;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-arrow {
+    font-size: 10px;
+    margin-left: 8px;
+    color: #666;
+    transition: transform 0.3s ease;
+    display: inline-block;
+    font-weight: normal;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:hover .mega-menu-arrow {
+    transform: rotate(180deg);
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-text {
+    display: inline-block;
+}
+
+/* メガメニューサブメニュー（亀田製菓風） */
+.misesapo-mega-menu.ishikawa-style .mega-menu-submenu {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    min-width: 600px;
+    max-width: 1200px;
+    background: #fff;
+    border-radius: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10002;
+    padding: 40px 60px;
+    margin-top: 0;
+    border: 1px solid #e5e5e5;
+    border-top: 2px solid #333;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:hover .mega-menu-submenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-submenu-inner {
+    display: flex;
+    gap: 60px;
+    flex-wrap: wrap;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column {
+    min-width: 200px;
+    margin-bottom: 0;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e5e5;
+    letter-spacing: 0.05em;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list li {
+    margin: 0 0 12px 0;
+    padding: 0;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list a {
+    display: block;
+    color: #666;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 0;
+    transition: all 0.2s ease;
+    position: relative;
+    line-height: 1.8;
+    letter-spacing: 0.05em;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list a:hover {
+    color: #333;
+    text-decoration: underline;
+    text-decoration-color: #333;
+    text-underline-offset: 4px;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list a span {
+    display: inline-block;
+}
+
+/* ============================================
+   通常ヘッダー
+   ============================================ */
+.normal-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 9998;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(-100%);
+    border-radius: 0 0 12px 12px;
+}
+
+.normal-header.visible {
+    transform: translateY(0);
+}
+
+.normal-header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 16px 40px;
+}
+
+.normal-header-logo img {
+    height: 50px;
+    width: auto;
+}
+
+.normal-header-nav {
+    display: flex;
+    gap: 8px;
+}
+
+.normal-header-nav a {
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.normal-header-nav a:hover {
+    color: #FF679C;
+    background-color: rgba(255, 103, 156, 0.08);
+}
+
+.normal-header-login {
+    padding: 10px 24px;
+    background-color: #FF679C;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.normal-header-login:hover {
+    background-color: #E35687;
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   レスポンシブ対応
+   ============================================ */
+@media screen and (max-width: 768px) {
+    .cosmetic-header {
+        height: auto;
+        min-height: 120px;
+    }
+    
+    .cosmetic-header-inner {
+        padding: 0;
+    }
+    
+    .cosmetic-header-top {
+        padding: 16px 20px;
+        margin-bottom: 0;
+    }
+    
+    .cosmetic-logo img {
+        height: 60px;
+    }
+    
+    .normal-header-inner {
+        padding: 16px 20px;
+    }
+    
+    .normal-header-nav {
+        display: none;
+    }
+    
+    .normal-header-logo img {
+        height: 40px;
+    }
+    
+    .misesapo-mega-menu.ishikawa-style .mega-menu-toggle {
+        display: flex;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-list {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: #fff;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 70px 0 40px;
+        gap: 0;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(-100%);
+        transition: all 0.3s ease;
+        overflow-y: auto;
+        z-index: 10001;
+        border-radius: 0;
+        border-top: none;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-list.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(0);
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-item {
+        width: 100%;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .cosmetic-header .misesapo-mega-menu.ishikawa-style .mega-menu-link {
+        width: 100%;
+        padding: 16px 20px;
+        font-size: 15px;
+        height: auto;
+        min-height: auto;
+        justify-content: flex-start;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-submenu {
+        position: static;
+        width: 100%;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+        background: #f9f9f9;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        border: none;
+        border-top: 1px solid #e0e0e0;
+        min-width: auto;
+        max-width: none;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-item.active .mega-menu-submenu {
+        max-height: 1000px;
+        padding: 8px 0;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-column-list a {
+        font-size: 14px;
+        padding: 12px 40px;
+    }
+
+    body.mega-menu-open {
+        overflow: hidden;
+    }
+}
+
+/* ハンバーガーボタン（スマホ用） */
+.misesapo-mega-menu.ishikawa-style .mega-menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 40px;
+    height: 40px;
+    background: #333;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    position: relative;
+    z-index: 10003;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: #fff;
+    border-radius: 1px;
+    transition: all 0.3s ease;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(7px, 7px);
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+}
+</style>
+
+<!-- 化粧ヘッダー（メガメニュー付き） -->
+<header class="cosmetic-header">
+    <div class="cosmetic-header-inner">
+        <div class="cosmetic-header-top">
+            <div class="cosmetic-logo">
+                <a href="/">
+                    <img src="/wp-content/themes/lightning-child/assets/images/images-material/logo_ver1-pk.png" alt="ロゴ" onerror="this.style.display='none'">
+                </a>
+            </div>
+            <a href="/signin" class="cosmetic-login-btn">ログイン</a>
+        </div>
+        
+        <!-- メガメニュー -->
+        <nav class="misesapo-mega-menu ishikawa-style" id="misesapo-mega-menu">
+            <ul class="mega-menu-list">
+                <!-- トップページ -->
+                <li class="mega-menu-item">
+                    <a href="/" class="mega-menu-link">
+                        <span class="mega-menu-text">トップページ</span>
+                    </a>
+                </li>
+
+                <!-- サービス -->
+                <li class="mega-menu-item mega-menu-has-submenu">
+                    <a href="/service" class="mega-menu-link">
+                        <span class="mega-menu-text">サービス</span>
+                        <i class="fas fa-chevron-down mega-menu-arrow"></i>
+                    </a>
+                    <div class="mega-menu-submenu">
+                        <div class="mega-menu-submenu-inner">
+                            <div class="mega-menu-column">
+                                <ul class="mega-menu-column-list">
+                                    <li>
+                                        <a href="/service">
+                                            <span>すべてのサービス</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/service/cleaning">
+                                            <span>清掃サービス</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/service/maintenance">
+                                            <span>メンテナンス</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/service/inspection">
+                                            <span>点検サービス</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="mega-menu-column">
+                                <ul class="mega-menu-column-list">
+                                    <li>
+                                        <a href="/service/about">
+                                            <span>サービス概要</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/service/flow">
+                                            <span>ご利用の流れ</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/service/price">
+                                            <span>料金プラン</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+
+                <!-- コンシェルジュ -->
+                <li class="mega-menu-item mega-menu-has-submenu">
+                    <a href="/concierge" class="mega-menu-link">
+                        <span class="mega-menu-text">コンシェルジュ</span>
+                        <i class="fas fa-chevron-down mega-menu-arrow"></i>
+                    </a>
+                    <div class="mega-menu-submenu">
+                        <div class="mega-menu-submenu-inner">
+                            <div class="mega-menu-column">
+                                <ul class="mega-menu-column-list">
+                                    <li>
+                                        <a href="/concierge">
+                                            <span>コンシェルジュとは</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/concierge/features">
+                                            <span>サービスの特徴</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/concierge/case">
+                                            <span>導入事例</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="mega-menu-column">
+                                <ul class="mega-menu-column-list">
+                                    <li>
+                                        <a href="/support">
+                                            <span>サポートセンター</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/support/faq">
+                                            <span>よくある質問</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/support/contact">
+                                            <span>お問い合わせ</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+
+                <!-- お問い合わせ -->
+                <li class="mega-menu-item">
+                    <a href="/contact" class="mega-menu-link">
+                        <span class="mega-menu-text">お問い合わせ</span>
+                    </a>
+                </li>
+
+                <!-- 求人 -->
+                <li class="mega-menu-item">
+                    <a href="/recruit" class="mega-menu-link">
+                        <span class="mega-menu-text">求人</span>
+                    </a>
+                </li>
+
+                <!-- 新規登録 -->
+                <li class="mega-menu-item">
+                    <a href="/signup" class="mega-menu-link">
+                        <span class="mega-menu-text">新規登録</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- スマホ用ハンバーガーボタン -->
+            <button class="mega-menu-toggle" id="mega-menu-toggle" aria-label="メニュー" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </div>
+</header>
+
+<!-- 通常ヘッダー -->
+<header class="normal-header">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img src="/wp-content/themes/lightning-child/assets/images/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+            </a>
+        </div>
+        <nav class="normal-header-nav">
+            <a href="/#about">ミセサポとは？</a>
+            <a href="/service">対応可能サービス</a>
+            <a href="/#voice">お客様の声</a>
+            <a href="/contact">カスタマーサポート</a>
+            <a href="/recruit">採用情報</a>
+        </nav>
+        <a href="/signin" class="normal-header-login">ログイン</a>
+    </div>
+</header>
+
+<script>
+(function() {
+    'use strict';
+    
+    // ============================================
+    // ヘッダー切り替え機能
+    // ============================================
+    const SCROLL_THRESHOLD = 150;
+    const cosmeticHeader = document.querySelector('.cosmetic-header');
+    const normalHeader = document.querySelector('.normal-header');
+    let ticking = false;
+
+    function updateHeaderState(scrollY) {
+        if (cosmeticHeader && normalHeader) {
+            if (scrollY > SCROLL_THRESHOLD) {
+                cosmeticHeader.classList.add('hidden');
+                normalHeader.classList.add('visible');
+            } else {
+                cosmeticHeader.classList.remove('hidden');
+                normalHeader.classList.remove('visible');
+            }
+        }
+    }
+
+    updateHeaderState(window.scrollY || window.pageYOffset);
+
+    window.addEventListener('scroll', function() {
+        if (!ticking) {
+            window.requestAnimationFrame(function() {
+                updateHeaderState(window.scrollY || window.pageYOffset);
+                ticking = false;
+            });
+            ticking = true;
+        }
+    }, { passive: true });
+
+    // ============================================
+    // メガメニュー機能
+    // ============================================
+    const megaMenu = document.getElementById('misesapo-mega-menu');
+    const toggleButton = document.getElementById('mega-menu-toggle');
+    const menuList = megaMenu?.querySelector('.mega-menu-list');
+    const menuItems = megaMenu?.querySelectorAll('.mega-menu-item');
+
+    if (!megaMenu || !toggleButton || !menuList) {
+        return;
+    }
+
+    // ハンバーガーメニューの開閉
+    toggleButton.addEventListener('click', function() {
+        const isActive = toggleButton.classList.contains('active');
+        
+        if (isActive) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    function openMenu() {
+        toggleButton.classList.add('active');
+        toggleButton.setAttribute('aria-expanded', 'true');
+        menuList.classList.add('active');
+        document.body.classList.add('mega-menu-open');
+    }
+
+    function closeMenu() {
+        toggleButton.classList.remove('active');
+        toggleButton.setAttribute('aria-expanded', 'false');
+        menuList.classList.remove('active');
+        document.body.classList.remove('mega-menu-open');
+        
+        if (menuItems) {
+            menuItems.forEach(item => {
+                item.classList.remove('active');
+            });
+        }
+    }
+
+    // スマホ用サブメニューの開閉
+    if (window.innerWidth <= 768 && menuItems) {
+        menuItems.forEach(item => {
+            const link = item.querySelector('.mega-menu-link');
+            const submenu = item.querySelector('.mega-menu-submenu');
+            
+            if (link && submenu) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const isActive = item.classList.contains('active');
+                    
+                    menuItems.forEach(otherItem => {
+                        if (otherItem !== item) {
+                            otherItem.classList.remove('active');
+                        }
+                    });
+                    
+                    if (isActive) {
+                        item.classList.remove('active');
+                    } else {
+                        item.classList.add('active');
+                    }
+                });
+            }
+        });
+    }
+
+    // ウィンドウリサイズ時の処理
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            if (window.innerWidth > 768) {
+                closeMenu();
+            }
+        }, 250);
+    });
+
+    // メニュー外クリックで閉じる
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768) {
+            if (!megaMenu.contains(e.target) && menuList.classList.contains('active')) {
+                closeMenu();
+            }
+        }
+    });
+
+    // ESCキーで閉じる
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && menuList.classList.contains('active')) {
+            closeMenu();
+        }
+    });
+
+    // 現在のページをハイライト
+    const currentUrl = window.location.href;
+    const menuLinks = megaMenu.querySelectorAll('.mega-menu-link');
+    
+    menuLinks.forEach(link => {
+        const linkUrl = link.getAttribute('href');
+        if (linkUrl && currentUrl.includes(linkUrl)) {
+            link.classList.add('current');
+            const parentItem = link.closest('.mega-menu-item');
+            if (parentItem) {
+                parentItem.classList.add('current');
+            }
+        }
+    });
+})();
+</script>
+
+

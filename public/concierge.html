@@ -27,7 +27,8 @@
 
   </head>
   <body class="theme-pink page-concierge">
-    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+    <div id="default-header-wrapper">
+      <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
 <header id="header-guest" class="site-header" data-role="guest">
   <div class="inner wide">
     <div class="nav-left">
@@ -71,6 +72,7 @@
   </nav>
 </header>
 
+    </div>
     <!-- リリース前チェックボックス -->
     <div id="release-check-section" class="release-check-section">
       <div class="release-check-container">
@@ -112,7 +114,7 @@
           <a href="/sales/dashboard.html" class="dashboard-link">
             <i class="fas fa-tachometer-alt"></i>
             <span>ダッシュボード</span>
-          </a>
+    </a>
           <h1 class="screen-title">アクティビティ</h1>
   </div>
 
@@ -1389,7 +1391,7 @@
       50% {
         transform: translateY(-20px);
         opacity: 0.3;
-      }
+    }
       100% {
         transform: translateY(0);
         opacity: 1;
@@ -1767,7 +1769,7 @@
       border-radius: 12px;
       overflow: hidden;
       position: relative;
-    }
+      }
 
     .camera-video {
       width: 100%;
@@ -1801,7 +1803,7 @@
       justify-content: center;
       align-items: center;
       gap: 24px;
-    }
+      }
 
     .btn-camera-capture {
       width: 64px;
@@ -1899,7 +1901,7 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       max-width: 400px;
       width: 100%;
-    }
+      }
 
     .logout-content i {
       font-size: 3rem;
@@ -2013,7 +2015,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 0.875rem;
-    }
+      }
 
     .estimate-services-table th,
     .estimate-services-table td {
@@ -2040,7 +2042,7 @@
     .estimate-services-table .total-value {
       color: var(--primary);
       font-size: 1.125rem;
-    }
+      }
 
     .estimate-preview-photos {
       margin-bottom: 24px;
@@ -2056,7 +2058,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 12px;
-    }
+      }
 
     .preview-photo {
       width: 100%;
@@ -3477,7 +3479,7 @@
                   </button>
                 `;
                 cameraGallery.appendChild(photoItem);
-              }
+            }
             }
           });
         }
