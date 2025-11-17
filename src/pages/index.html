@@ -1422,7 +1422,7 @@
                 }
             }
             
-            // 簡易版resolvePath関数を先に定義
+            // 簡易版resolvePath関数を先に定義（絶対URLを返す）
             window.resolvePathForSplash = function(path) {
                 if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
                     return path;
@@ -1437,16 +1437,19 @@
                     return path.startsWith('/') ? path : '/' + path;
                 }
                 
-                // 既に/misesapo/で始まるパスはそのまま返す
+                // 既に/misesapo/で始まるパスはそのまま絶対URLに変換
                 if (path.startsWith('/misesapo/')) {
-                    return path;
+                    return window.location.origin + path;
                 }
                 
-                // GitHub Pagesでは/misesapo/を追加
+                // GitHub Pagesでは/misesapo/を追加して絶対URLを返す
+                let resolvedPath;
                 if (path.startsWith('/')) {
-                    return '/misesapo' + path;
+                    resolvedPath = '/misesapo' + path;
+                } else {
+                    resolvedPath = '/misesapo/' + path;
                 }
-                return '/misesapo/' + path;
+                return window.location.origin + resolvedPath;
             };
             
             // DOMContentLoadedまたは即座に実行

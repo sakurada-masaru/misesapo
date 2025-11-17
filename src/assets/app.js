@@ -40,9 +40,9 @@
       return path.startsWith('/') ? path : '/' + path;
     }
     
-    // 既に/misesapo/で始まるパスはそのまま返す（二重適用を防ぐ）
+    // 既に/misesapo/で始まるパスはそのまま絶対URLに変換
     if (path.startsWith('/misesapo/')) {
-      return path;
+      return window.location.origin + path;
     }
     
     const basePath = getBasePath();
