@@ -2079,7 +2079,8 @@
                 
                 const img = document.createElement('img');
                 // item.imageは既にloadServiceItemsでresolvePathが適用されているので、そのまま使用
-                img.src = item.image || resolvePath('/images/service-300x200.svg');
+                // img.src用には相対パスを返す（baseタグが自動的に解決する）
+                img.src = item.image || resolvePath('/images/service-300x200.svg', false);
                 img.alt = item.title || '';
                 img.loading = 'lazy';
                 img.decoding = 'async';
@@ -2090,7 +2091,7 @@
                 img.style.display = 'block';
                 
                 img.onerror = function() {
-                    this.src = resolvePath('/images/service-300x200.svg');
+                    this.src = resolvePath('/images/service-300x200.svg', false);
                     this.onerror = null; // 無限ループを防ぐ
                 };
                 
