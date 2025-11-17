@@ -697,10 +697,20 @@
                                 ${data.bad}
                                 ${data.badImage ? (() => {
                                     let imagePath = data.badImage;
-                                    if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://')) {
-                                        // 既に/で始まる場合はそのまま、そうでなければ/を追加
-                                        imagePath = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+                                    // HTTP/HTTPSのURLの場合はそのまま使用
+                                    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+                                        return `<div class="example-image-container"><img src="${imagePath}" alt="ダメな例" class="example-image" onclick="return false;" /></div>`;
+                                    }
+                                    // 既に/misesapo/で始まる場合はそのまま使用（二重適用を防ぐ）
+                                    if (imagePath.startsWith('/misesapo/')) {
+                                        return `<div class="example-image-container"><img src="${imagePath}" alt="ダメな例" class="example-image" onclick="return false;" /></div>`;
+                                    }
+                                    // 既に/で始まる場合はresolvePathを使用
+                                    if (imagePath.startsWith('/')) {
                                         imagePath = resolvePath(imagePath);
+                                    } else {
+                                        // 相対パスの場合は/を追加してからresolvePathを使用
+                                        imagePath = resolvePath('/' + imagePath);
                                     }
                                     return `<div class="example-image-container"><img src="${imagePath}" alt="ダメな例" class="example-image" onclick="return false;" /></div>`;
                                 })() : ''}
@@ -712,10 +722,20 @@
                                 ${data.good}
                                 ${data.goodImage ? (() => {
                                     let imagePath = data.goodImage;
-                                    if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://')) {
-                                        // 既に/で始まる場合はそのまま、そうでなければ/を追加
-                                        imagePath = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+                                    // HTTP/HTTPSのURLの場合はそのまま使用
+                                    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+                                        return `<div class="example-image-container"><img src="${imagePath}" alt="模範例" class="example-image" onclick="return false;" /></div>`;
+                                    }
+                                    // 既に/misesapo/で始まる場合はそのまま使用（二重適用を防ぐ）
+                                    if (imagePath.startsWith('/misesapo/')) {
+                                        return `<div class="example-image-container"><img src="${imagePath}" alt="模範例" class="example-image" onclick="return false;" /></div>`;
+                                    }
+                                    // 既に/で始まる場合はresolvePathを使用
+                                    if (imagePath.startsWith('/')) {
                                         imagePath = resolvePath(imagePath);
+                                    } else {
+                                        // 相対パスの場合は/を追加してからresolvePathを使用
+                                        imagePath = resolvePath('/' + imagePath);
                                     }
                                     return `<div class="example-image-container"><img src="${imagePath}" alt="模範例" class="example-image" onclick="return false;" /></div>`;
                                 })() : ''}
