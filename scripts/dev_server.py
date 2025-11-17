@@ -1160,6 +1160,41 @@ def get_local_ip():
         return None
 
 
+def start_ngrok_tunnel(port):
+    """ngrokトンネルを起動（オプション）"""
+    try:
+        # ngrokがインストールされているか確認
+        result = subprocess.run(['which', 'ngrok'], capture_output=True, text=True)
+        if result.returncode != 0:
+            return None
+        
+        # ngrokをバックグラウンドで起動
+        ngrok_process = subprocess.Popen(
+            ['ngrok', 'http', str(port)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        
+        # ngrokのAPIから公開URLを取得（少し待つ）
+        import time
+        time.sleep(2)
+        
+        try:
+            import urllib.request
+            response = urllib.request.urlopen('http://localhost:4040/api/tunnels', timeout=3)
+            data = json.loads(response.read().decode())
+            if data.get('tunnels'):
+                public_url = data['tunnels'][0]['public_url']
+                return public_url, ngrok_process
+        except Exception:
+            pass
+        
+        return None, ngrok_process
+    except Exception as e:
+        print(f"ngrok起動エラー: {e}")
+        return None, None
+
+
 def main():
     """メイン関数: サーバーを起動"""
     if not PUBLIC.exists():
@@ -1185,13 +1220,30 @@ def main():
     # ローカルIPアドレスを取得
     local_ip = get_local_ip()
     
+    # ngrokトンネルを試行
+    ngrok_url = None
+    ngrok_process = None
+    try:
+        ngrok_url, ngrok_process = start_ngrok_tunnel(PORT)
+    except Exception as e:
+        pass
+    
     print("=" * 60)
     print("🚀 開発サーバーを起動しました")
     print("=" * 60)
     print(f"📱 ローカルアクセス: http://localhost:{PORT}")
     if local_ip:
-        print(f"🌐 ネットワークアクセス: http://{local_ip}:{PORT}")
+        print(f"🌐 ローカルネットワーク: http://{local_ip}:{PORT}")
+    if ngrok_url:
+        print(f"🌍 公開URL (ngrok): {ngrok_url}")
         print(f"   事務員の方はこのURLでアクセスできます")
+        print(f"   管理画面: {ngrok_url}/cleaning-manual-admin.html")
+    else:
+        print("")
+        print("💡 リモートアクセスが必要な場合:")
+        print("   1. ngrokをインストール: https://ngrok.com/download")
+        print("   2. 別ターミナルで実行: ngrok http 5173")
+        print("   3. 表示されたURLを事務員に共有")
     print("=" * 60)
     print(f"📝 清掃マニュアル管理: http://localhost:{PORT}/cleaning-manual-admin.html")
     print(f"📋 APIエンドポイント: http://localhost:{PORT}/api/services")
@@ -1202,12 +1254,17 @@ def main():
     print("   git push origin main")
     print("=" * 60)
     print("Ctrl+C で停止")
+    if ngrok_process:
+        print("⚠️  ngrokも同時に停止されます")
     print("")
     
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nサーバーを停止しました")
+        if ngrok_process:
+            ngrok_process.terminate()
+            print("ngrokも停止しました")
         server.shutdown()
 
 

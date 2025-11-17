@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="/misesapo/" />
     <title>MISESAPO 清掃基準マニュアル</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/cleaning-manual-firebase.js"></script>
     <!--GoogleFonts(Noto Sans JP)-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -379,6 +384,23 @@
         // データ読み込み関数
         async function loadManualData() {
             try {
+                // Firebaseが利用可能な場合はFirestoreから読み込む
+                if (window.CleaningManualFirebase && window.FirebaseFirestore) {
+                    try {
+                        const data = await window.CleaningManualFirebase.loadDataFromFirestore();
+                        kitchenData = data.kitchen || [];
+                        airconData = data.aircon || [];
+                        floorData = data.floor || [];
+                        otherData = data.other || [];
+                        manualData = [...kitchenData, ...airconData, ...floorData, ...otherData];
+                        initializeManual();
+                        return;
+                    } catch (error) {
+                        console.error('Firestore load error:', error);
+                        // フォールバックを試行
+                    }
+                }
+                
                 // まずAPIエンドポイントを試す（開発環境）
                 let response = await fetch(resolvePath('/api/cleaning-manual'));
                 if (!response.ok) {
@@ -452,14 +474,14 @@
                             <div class="example-box bad-example">
                                 <strong>リスクを残す行為</strong>
                                 ${data.bad}
-                                ${data.badImage ? `<div class="example-image-container"><img src="${resolvePath('/' + data.badImage)}" alt="ダメな例" class="example-image" onclick="return false;" /></div>` : ''}
+                                ${data.badImage ? `<div class="example-image-container"><img src="${data.badImage.startsWith('http://') || data.badImage.startsWith('https://') ? data.badImage : resolvePath('/' + data.badImage)}" alt="ダメな例" class="example-image" onclick="return false;" /></div>` : ''}
                             </div>
                             
                             <div class="section-title good-example-title">✅ 模範例（リスク対策行為：MISESAPO基準）</div>
                             <div class="example-box good-example">
                                 <strong>リスクを排除し価値を提供する行為</strong>
                                 ${data.good}
-                                ${data.goodImage ? `<div class="example-image-container"><img src="${resolvePath('/' + data.goodImage)}" alt="模範例" class="example-image" onclick="return false;" /></div>` : ''}
+                                ${data.goodImage ? `<div class="example-image-container"><img src="${data.goodImage.startsWith('http://') || data.goodImage.startsWith('https://') ? data.goodImage : resolvePath('/' + data.goodImage)}" alt="模範例" class="example-image" onclick="return false;" /></div>` : ''}
                             </div>
 
                             <div class="qa-section">

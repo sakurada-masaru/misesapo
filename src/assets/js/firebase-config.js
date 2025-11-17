@@ -30,6 +30,8 @@
     try {
       firebase.initializeApp(firebaseConfig);
       window.FirebaseAuth = firebase.auth();
+      window.FirebaseFirestore = firebase.firestore();
+      window.FirebaseStorage = firebase.storage();
       console.log('[Firebase] Initialized successfully');
     } catch (error) {
       console.error('[Firebase] Initialization error:', error);

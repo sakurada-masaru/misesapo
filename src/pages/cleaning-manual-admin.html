@@ -7,6 +7,16 @@
     <title>清掃マニュアル管理画面 - MISESAPO</title>
     <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/cleaning-manual-firebase.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -247,21 +257,63 @@
 
         <div id="message" class="message"></div>
         
-        <div id="dev-server-warning" style="display: none; background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 4px; margin-bottom: 20px; color: #856404;">
-            <strong>⚠️ 注意:</strong> この管理画面の編集機能は開発サーバー（<code>python3 scripts/dev_server.py</code>）でのみ利用できます。
-            <br>GitHub Pagesでは閲覧のみ可能です。編集する場合は、ローカルで開発サーバーを起動して <code>http://localhost:5173/cleaning-manual-admin.html</code> にアクセスしてください。
+        <div id="auth-required" style="display: none; background: #f8d7da; border: 1px solid #f5c6cb; padding: 20px; border-radius: 4px; margin-bottom: 20px; color: #721c24; text-align: center;">
+            <h2>ログインが必要です</h2>
+            <p>この管理画面にアクセスするには、管理者・清掃員・コンシェルジュ・開発者のいずれかの権限が必要です。</p>
+            <a href="signin.html" style="display: inline-block; margin-top: 10px; padding: 10px 20px; background: #ff008c; color: white; text-decoration: none; border-radius: 4px;">ログインページへ</a>
         </div>
-
-        <div class="category-tabs">
-            <button class="category-tab active" data-category="all">すべて</button>
-            <button class="category-tab" data-category="kitchen">厨房設備</button>
-            <button class="category-tab" data-category="aircon">空調設備</button>
-            <button class="category-tab" data-category="floor">フロア</button>
-            <button class="category-tab" data-category="other">その他</button>
+        
+        <div id="loading-screen" style="display: flex; justify-content: center; align-items: center; min-height: 400px;">
+            <div style="text-align: center;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #ff008c;"></i>
+                <p style="margin-top: 20px;">読み込み中...</p>
+            </div>
         </div>
+        
+        <div id="admin-content" style="display: none;">
+            <div class="category-tabs">
+                <button class="category-tab active" data-category="all">すべて</button>
+                <button class="category-tab" data-category="kitchen">厨房設備</button>
+                <button class="category-tab" data-category="aircon">空調設備</button>
+                <button class="category-tab" data-category="floor">フロア</button>
+                <button class="category-tab" data-category="other">その他</button>
+            </div>
 
-        <div id="items-list" class="items-list">
-            <div class="loading">読み込み中...</div>
+            <div id="items-list" class="items-list">
+                <div class="loading">読み込み中...</div>
+            </div>
+            
+            <div id="draft-section" style="display: none; margin-top: 30px; padding: 20px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                <h3 style="margin-top: 0; color: #856404;">
+                    <i class="fas fa-file-alt"></i> 下書きがあります
+                </h3>
+                <p style="margin-bottom: 15px;">
+                    下書き保存された内容があります。確認して確定してください。
+                </p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="loadDraft()" class="btn" style="background: #ffc107; color: #000;">
+                        <i class="fas fa-eye"></i> 下書きを確認
+                    </button>
+                    <button onclick="applyDraft()" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i> 下書きを確定
+                    </button>
+                    <button onclick="discardDraft()" class="btn btn-secondary">
+                        <i class="fas fa-trash"></i> 下書きを削除
+                    </button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 20px; background: #e7f3ff; border-left: 4px solid #2196F3; border-radius: 4px;">
+                <h3 style="margin-top: 0; color: #1976D2;">
+                    <i class="fas fa-info-circle"></i> 保存について
+                </h3>
+                <p style="margin-bottom: 10px;">
+                    <strong>下書き保存:</strong> 編集内容を一時保存します。後で確認・確定できます。
+                </p>
+                <p style="margin-bottom: 0;">
+                    <strong>確定保存:</strong> 編集内容を本番環境に反映します。一般ユーザーに表示されます。
+                </p>
+            </div>
         </div>
     </div>
 
@@ -337,8 +389,11 @@
                 </div>
 
                 <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="saveDraft()" style="background: #6c757d;">
+                        <i class="fas fa-file-alt"></i> 下書き保存
+                    </button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> 保存
+                        <i class="fas fa-check-circle"></i> 確定保存
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="closeEditModal()">
                         キャンセル
@@ -392,21 +447,157 @@
             return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         }
         
+        // Firebaseが利用可能かチェック
+        function isFirebaseAvailable() {
+            return window.CleaningManualFirebase && window.FirebaseFirestore && window.FirebaseStorage;
+        }
+        
+        // 認証チェックと初期化
+        async function initAuth() {
+            if (!isFirebaseAvailable()) {
+                // Firebaseが利用できない場合は開発サーバーを試す
+                document.getElementById('loading-screen').style.display = 'none';
+                if (isDevelopmentServer()) {
+                    document.getElementById('admin-content').style.display = 'block';
+                    return true;
+                } else {
+                    document.getElementById('auth-required').style.display = 'block';
+                    return false;
+                }
+            }
+            
+            const authResult = await window.CleaningManualFirebase.checkAuth();
+            
+            if (!authResult.authenticated) {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('auth-required').style.display = 'block';
+                return false;
+            }
+            
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('admin-content').style.display = 'block';
+            return true;
+        }
+        
+        // 下書きチェック
+        async function checkDraft() {
+            if (!isFirebaseAvailable()) return;
+            
+            try {
+                const draft = await window.CleaningManualFirebase.loadDraftFromFirestore();
+                if (draft) {
+                    document.getElementById('draft-section').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Draft check error:', error);
+            }
+        }
+        
+        // 下書きを読み込む
+        async function loadDraft() {
+            if (!isFirebaseAvailable()) {
+                showMessage('⚠️ 下書き機能はFirebaseが必要です。', 'error');
+                return;
+            }
+            
+            try {
+                const draft = await window.CleaningManualFirebase.loadDraftFromFirestore();
+                if (draft) {
+                    manualData = draft;
+                    renderItems();
+                    showMessage('下書きを読み込みました。確認して確定してください。', 'success');
+                } else {
+                    showMessage('下書きが見つかりませんでした。', 'error');
+                }
+            } catch (error) {
+                console.error('Load draft error:', error);
+                showMessage('下書きの読み込みエラー: ' + error.message, 'error');
+            }
+        }
+        
+        // 下書きを確定
+        async function applyDraft() {
+            if (!isFirebaseAvailable()) {
+                showMessage('⚠️ 下書き機能はFirebaseが必要です。', 'error');
+                return;
+            }
+            
+            if (!confirm('下書きを確定しますか？一般ユーザーに表示されます。')) {
+                return;
+            }
+            
+            try {
+                const draft = await window.CleaningManualFirebase.loadDraftFromFirestore();
+                if (draft) {
+                    // 下書きを確定版に保存
+                    await window.CleaningManualFirebase.saveDataToFirestore(draft, false);
+                    // 下書きを削除
+                    const db = window.FirebaseFirestore;
+                    await db.collection('cleaning-manual-drafts').doc('data').delete();
+                    
+                    manualData = draft;
+                    renderItems();
+                    document.getElementById('draft-section').style.display = 'none';
+                    showMessage('下書きを確定しました。一般ユーザーに表示されます。', 'success');
+                } else {
+                    showMessage('下書きが見つかりませんでした。', 'error');
+                }
+            } catch (error) {
+                console.error('Apply draft error:', error);
+                showMessage('下書きの確定エラー: ' + error.message, 'error');
+            }
+        }
+        
+        // 下書きを削除
+        async function discardDraft() {
+            if (!isFirebaseAvailable()) {
+                showMessage('⚠️ 下書き機能はFirebaseが必要です。', 'error');
+                return;
+            }
+            
+            if (!confirm('下書きを削除しますか？この操作は取り消せません。')) {
+                return;
+            }
+            
+            try {
+                const db = window.FirebaseFirestore;
+                await db.collection('cleaning-manual-drafts').doc('data').delete();
+                document.getElementById('draft-section').style.display = 'none';
+                showMessage('下書きを削除しました。', 'success');
+            } catch (error) {
+                console.error('Discard draft error:', error);
+                showMessage('下書きの削除エラー: ' + error.message, 'error');
+            }
+        }
+        
         // データ読み込み
         async function loadData() {
             try {
+                // Firebaseが利用可能な場合はFirestoreから読み込む
+                if (isFirebaseAvailable()) {
+                    try {
+                        manualData = await window.CleaningManualFirebase.loadDataFromFirestore();
+                        renderItems();
+                        // 下書きをチェック
+                        await checkDraft();
+                        return;
+                    } catch (error) {
+                        console.error('Firestore load error:', error);
+                        showMessage('Firestoreからの読み込みに失敗しました。フォールバックを試行します...', 'error');
+                    }
+                }
+                
                 // 開発サーバーの場合はAPIを試す
                 let response = null;
                 if (isDevelopmentServer()) {
                     try {
                         response = await fetch(resolvePath('/api/cleaning-manual'));
                     } catch (e) {
-                        // APIが利用できない場合は静的ファイルにフォールバック
                         response = null;
                     }
                 }
                 
-                // APIが利用できない場合、またはGitHub Pagesの場合は静的ファイルを読み込む
+                // APIが利用できない場合は静的ファイルを読み込む
                 if (!response || !response.ok) {
                     response = await fetch(resolvePath('/data/cleaning-manual.json'));
                 }
@@ -414,11 +605,6 @@
                 if (response && response.ok) {
                     manualData = await response.json();
                     renderItems();
-                    
-                    // GitHub Pagesの場合は警告を表示
-                    if (!isDevelopmentServer()) {
-                        showMessage('⚠️ この管理画面は開発サーバーでのみ編集機能が利用できます。GitHub Pagesでは閲覧のみ可能です。編集する場合は、ローカルで開発サーバーを起動してください。', 'error');
-                    }
                 } else {
                     showMessage('データの読み込みに失敗しました', 'error');
                 }
@@ -518,20 +704,18 @@
         function updateImagePreview(field, path) {
             const preview = document.getElementById(`preview-${field}`);
             if (path) {
-                preview.innerHTML = `<img src="${resolvePath('/' + path)}" alt="プレビュー" onerror="this.style.display='none'" />`;
+                // Firebase StorageのURLの場合はそのまま使用、それ以外はresolvePathを使用
+                const imageUrl = path.startsWith('http://') || path.startsWith('https://') 
+                    ? path 
+                    : resolvePath('/' + path);
+                preview.innerHTML = `<img src="${imageUrl}" alt="プレビュー" onerror="this.style.display='none'" />`;
             } else {
                 preview.innerHTML = '';
             }
         }
 
         // 画像アップロード
-        function uploadImage(field) {
-            // 開発サーバーでない場合は警告を表示
-            if (!isDevelopmentServer()) {
-                showMessage('⚠️ 画像のアップロードは開発サーバーでのみ利用できます。ローカルで開発サーバーを起動してください。', 'error');
-                return;
-            }
-            
+        async function uploadImage(field) {
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'image/*';
@@ -539,23 +723,41 @@
                 const file = e.target.files[0];
                 if (!file) return;
 
-                const formData = new FormData();
-                formData.append('image', file);
-
                 try {
-                    const response = await fetch(resolvePath('/api/cleaning-manual/upload-image'), {
-                        method: 'POST',
-                        body: formData
-                    });
+                    let imageUrl = null;
+                    let imagePath = null;
+                    
+                    // Firebase Storageが利用可能な場合はFirebase Storageにアップロード
+                    if (isFirebaseAvailable()) {
+                        showMessage('画像をアップロード中...', 'success');
+                        const result = await window.CleaningManualFirebase.uploadImageToStorage(file, field);
+                        imageUrl = result.url;
+                        imagePath = result.url; // Firebase StorageのURLを使用
+                    } else if (isDevelopmentServer()) {
+                        // 開発サーバーの場合はAPI経由でアップロード
+                        const formData = new FormData();
+                        formData.append('image', file);
+                        
+                        const response = await fetch(resolvePath('/api/cleaning-manual/upload-image'), {
+                            method: 'POST',
+                            body: formData
+                        });
 
-                    if (response.ok) {
-                        const result = await response.json();
-                        document.getElementById(`edit-${field}`).value = result.path;
-                        updateImagePreview(field, result.path);
-                        showMessage('画像をアップロードしました', 'success');
+                        if (response.ok) {
+                            const result = await response.json();
+                            imagePath = result.path;
+                        } else {
+                            showMessage('画像のアップロードに失敗しました', 'error');
+                            return;
+                        }
                     } else {
-                        showMessage('画像のアップロードに失敗しました', 'error');
+                        showMessage('⚠️ 画像のアップロードはFirebaseまたは開発サーバーが必要です。', 'error');
+                        return;
                     }
+
+                    document.getElementById(`edit-${field}`).value = imagePath;
+                    updateImagePreview(field, imagePath);
+                    showMessage('画像をアップロードしました', 'success');
                 } catch (error) {
                     console.error('Upload error:', error);
                     showMessage('画像のアップロードエラー: ' + error.message, 'error');
@@ -563,16 +765,47 @@
             };
             input.click();
         }
-
-        // フォーム送信
-        document.getElementById('edit-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            // 開発サーバーでない場合は警告を表示
-            if (!isDevelopmentServer()) {
-                showMessage('⚠️ データの保存は開発サーバーでのみ利用できます。ローカルで開発サーバーを起動してください。', 'error');
+        
+        // 下書き保存
+        async function saveDraft() {
+            if (!isFirebaseAvailable()) {
+                showMessage('⚠️ 下書き保存はFirebaseが必要です。', 'error');
                 return;
             }
+            
+            const category = document.getElementById('edit-category').value;
+            const index = parseInt(document.getElementById('edit-index').value);
+
+            const updatedItem = {
+                title: document.getElementById('edit-title').value,
+                category: getCategoryName(category),
+                risk: document.getElementById('edit-risk').value,
+                bad: document.getElementById('edit-bad').value,
+                badImage: document.getElementById('edit-badImage').value || undefined,
+                good: document.getElementById('edit-good').value,
+                goodImage: document.getElementById('edit-goodImage').value || undefined,
+                qa1q: document.getElementById('edit-qa1q').value,
+                qa1a: document.getElementById('edit-qa1a').value,
+                qa2q: document.getElementById('edit-qa2q').value,
+                qa2a: document.getElementById('edit-qa2a').value
+            };
+
+            manualData[category][index] = updatedItem;
+
+            try {
+                await window.CleaningManualFirebase.saveDataToFirestore(manualData, true);
+                showMessage('下書きを保存しました。後で確認して確定できます。', 'success');
+                closeEditModal();
+                renderItems();
+            } catch (error) {
+                console.error('Save draft error:', error);
+                showMessage('下書き保存エラー: ' + error.message, 'error');
+            }
+        }
+
+        // フォーム送信（確定保存）
+        document.getElementById('edit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
 
             const category = document.getElementById('edit-category').value;
             const index = parseInt(document.getElementById('edit-index').value);
@@ -594,21 +827,32 @@
             manualData[category][index] = updatedItem;
 
             try {
-                const response = await fetch(resolvePath('/api/cleaning-manual'), {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(manualData)
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    showMessage(result.message || '保存しました。変更を確認してからGitにコミット・プッシュしてください。', 'success');
+                // Firebaseが利用可能な場合はFirestoreに保存
+                if (isFirebaseAvailable()) {
+                    await window.CleaningManualFirebase.saveDataToFirestore(manualData, false);
+                    showMessage('確定保存しました。一般ユーザーに表示されます。', 'success');
                     closeEditModal();
                     renderItems();
+                } else if (isDevelopmentServer()) {
+                    // 開発サーバーの場合はAPI経由で保存
+                    const response = await fetch(resolvePath('/api/cleaning-manual'), {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(manualData)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        showMessage(result.message || '保存しました。変更を確認してからGitにコミット・プッシュしてください。', 'success');
+                        closeEditModal();
+                        renderItems();
+                    } else {
+                        showMessage('保存に失敗しました', 'error');
+                    }
                 } else {
-                    showMessage('保存に失敗しました', 'error');
+                    showMessage('⚠️ 保存にはFirebaseまたは開発サーバーが必要です。', 'error');
                 }
             } catch (error) {
                 console.error('Save error:', error);
@@ -626,13 +870,18 @@
             }, 3000);
         }
 
-        // 開発サーバーでない場合は警告を表示
-        if (!isDevelopmentServer()) {
-            document.getElementById('dev-server-warning').style.display = 'block';
-        }
+        // グローバルに公開（HTMLから呼び出せるように）
+        window.loadDraft = loadDraft;
+        window.applyDraft = applyDraft;
+        window.discardDraft = discardDraft;
         
         // 初期化
-        loadData();
+        (async function() {
+            const authOk = await initAuth();
+            if (authOk) {
+                await loadData();
+            }
+        })();
     </script>
 </body>
 </html>

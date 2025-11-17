@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 清掃マニュアル（確定版）- 誰でも読み取り可能、認証済みユーザーのみ書き込み可能
+    match /cleaning-manual/{document=**} {
+      allow read: if true; // 誰でも読み取り可能
+      allow write: if request.auth != null && 
+                     (request.auth.token.role == 'admin' || 
+                      request.auth.token.role == 'staff' || 
+                      request.auth.token.role == 'concierge' || 
+                      request.auth.token.role == 'developer' || 
+                      request.auth.token.role == 'master');
+    }
+    
+    // 清掃マニュアル（下書き版）- 認証済みユーザーのみ読み書き可能
+    match /cleaning-manual-drafts/{document=**} {
+      allow read, write: if request.auth != null && 
+                           (request.auth.token.role == 'admin' || 
+                            request.auth.token.role == 'staff' || 
+                            request.auth.token.role == 'concierge' || 
+                            request.auth.token.role == 'developer' || 
+                            request.auth.token.role == 'master');
+    }
+  }
+}
+
