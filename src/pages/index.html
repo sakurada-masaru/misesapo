@@ -1930,7 +1930,7 @@
             
             // パスを解決（ベースパス付き）
             // fetch用：baseタグの影響を受けないように絶対URLを返す
-            function resolvePath(path) {
+            function resolvePath(path, forFetch = true) {
                 if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
                     return path;
                 }
@@ -1946,7 +1946,7 @@
                 
                 // 既に/misesapo/で始まるパスはそのまま返す（二重適用を防ぐ）
                 if (path.startsWith('/misesapo/')) {
-                    return path;
+                    return forFetch ? window.location.origin + path : path;
                 }
                 
                 const basePath = getBasePath();
@@ -1958,7 +1958,8 @@
                 }
                 
                 // fetch用に絶対URLを返す（baseタグの影響を受けないようにする）
-                return window.location.origin + resolvedPath;
+                // img.src用には相対パスを返す（baseタグが自動的に解決する）
+                return forFetch ? window.location.origin + resolvedPath : resolvedPath;
             }
             
             const wrapper = document.querySelector('.misesapo-flow-wrapper');
@@ -2045,7 +2046,8 @@
                             imagePath = '/' + imagePath;
                         }
                         // パスを解決（GitHub Pages対応）
-                        imagePath = resolvePath(imagePath);
+                        // img.src用には相対パスを返す（baseタグが自動的に解決する）
+                        imagePath = resolvePath(imagePath, false);
                         
                         return { id: item.id, title: item.title, category: category, image: imagePath };
                     });
@@ -2054,8 +2056,8 @@
                 } catch (error) {
                     console.error('サービスデータの読み込みに失敗しました:', error);
                     serviceItems = [
-                        { id: 1, title: 'グリストラップ', category: '厨房設備', image: resolvePath('/images/gurisuto.png') },
-                        { id: 2, title: 'U字溝・グレーチング清掃', category: '厨房設備', image: resolvePath('/images/gure-chingu.png') }
+                        { id: 1, title: 'グリストラップ', category: '厨房設備', image: resolvePath('/images/gurisuto.png', false) },
+                        { id: 2, title: 'U字溝・グレーチング清掃', category: '厨房設備', image: resolvePath('/images/gure-chingu.png', false) }
                     ];
                 }
             }
@@ -2214,14 +2216,16 @@
                 const cosmeticLogo = document.getElementById('cosmetic-logo-img');
                 
                 if (normalHeaderLogo) {
-                    normalHeaderLogo.src = resolvePath('/images-material/logo_144x144.png');
+                    // img.src用には相対パスを返す（baseタグが自動的に解決する）
+                    normalHeaderLogo.src = resolvePath('/images-material/logo_144x144.png', false);
                     normalHeaderLogo.onerror = function() {
                         this.style.display = 'none';
                     };
                 }
                 
                 if (cosmeticLogo) {
-                    cosmeticLogo.src = resolvePath('/images-material/logo_ver1-pk.png');
+                    // img.src用には相対パスを返す（baseタグが自動的に解決する）
+                    cosmeticLogo.src = resolvePath('/images-material/logo_ver1-pk.png', false);
                     cosmeticLogo.onerror = function() {
                         this.style.display = 'none';
                     };
