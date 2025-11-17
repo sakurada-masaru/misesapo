@@ -484,6 +484,12 @@ able_options.forEach((able_option) => {
         const monthSelect = document.getElementById('month');
         const daySelect = document.getElementById('day');
 
+        // 要素が存在しない場合は処理をスキップ
+        if (!yearSelect || !monthSelect || !daySelect) {
+            console.warn('[script.js] Date select elements not found, skipping initialization');
+            return;
+        }
+
         // 年のオプションを生成 (例: 当年から5年先まで)
         const currentYear = new Date().getFullYear();
         const startYear = currentYear; 

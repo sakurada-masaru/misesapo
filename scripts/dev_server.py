@@ -681,50 +681,50 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             self.handle_cleaning_manual_put()
         elif path.startswith('/api/services/'):
             # サービス更新（既存の処理）
-            path_parts = self.path.split('/')
-            if len(path_parts) == 4 and path_parts[1] == 'api' and path_parts[2] == 'services':
-                service_id = int(path_parts[3])
-                try:
-                    # リクエストボディを読み込む
-                    content_length = int(self.headers.get('Content-Length', 0))
-                    body = self.rfile.read(content_length)
-                    service_data = json.loads(body.decode('utf-8'))
-                    
-                    # 既存のサービスを読み込む
-                    with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
-                        services = json.load(f)
-                    
-                    # サービスを更新
-                    updated = False
-                    for i, service in enumerate(services):
-                        if service.get('id') == service_id:
-                            service_data['id'] = service_id
-                            services[i] = service_data
-                            updated = True
-                            break
-                    
-                    if not updated:
-                        self.send_error(404, f"Service {service_id} not found")
-                        return
-                    
-                    # JSONファイルを保存
-                    with open(SERVICE_ITEMS_JSON, 'w', encoding='utf-8') as f:
-                        json.dump(services, f, ensure_ascii=False, indent=2)
-                    
-                    # ブラウザ経由の変更をログに記録
-                    self.log_browser_change(service_id, 'modified', service_data)
-                    
-                    # ビルドを実行（非同期）
-                    self.run_build_async()
-                    
-                    # 成功レスポンス
-                    self.send_json_response({
-                        'status': 'success',
-                        'id': service_id,
-                        'message': 'サービスを更新しました'
-                    })
-                except Exception as e:
-                    self.send_error(500, f"Failed to update service: {e}")
+        path_parts = self.path.split('/')
+        if len(path_parts) == 4 and path_parts[1] == 'api' and path_parts[2] == 'services':
+            service_id = int(path_parts[3])
+            try:
+                # リクエストボディを読み込む
+                content_length = int(self.headers.get('Content-Length', 0))
+                body = self.rfile.read(content_length)
+                service_data = json.loads(body.decode('utf-8'))
+                
+                # 既存のサービスを読み込む
+                with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
+                    services = json.load(f)
+                
+                # サービスを更新
+                updated = False
+                for i, service in enumerate(services):
+                    if service.get('id') == service_id:
+                        service_data['id'] = service_id
+                        services[i] = service_data
+                        updated = True
+                        break
+                
+                if not updated:
+                    self.send_error(404, f"Service {service_id} not found")
+                    return
+                
+                # JSONファイルを保存
+                with open(SERVICE_ITEMS_JSON, 'w', encoding='utf-8') as f:
+                    json.dump(services, f, ensure_ascii=False, indent=2)
+                
+                # ブラウザ経由の変更をログに記録
+                self.log_browser_change(service_id, 'modified', service_data)
+                
+                # ビルドを実行（非同期）
+                self.run_build_async()
+                
+                # 成功レスポンス
+                self.send_json_response({
+                    'status': 'success',
+                    'id': service_id,
+                    'message': 'サービスを更新しました'
+                })
+            except Exception as e:
+                self.send_error(500, f"Failed to update service: {e}")
             else:
                 self.send_error(404, "API endpoint not found")
         else:

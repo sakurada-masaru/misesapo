@@ -643,21 +643,21 @@
         // 初期化関数（データ読み込み後に呼ばれる）
         function initializeManual() {
             // 既存のコードをここに移動
-            let currentPage = 'page-0-all';
-            let currentCategory = 'all';
-            const totalPages = manualData.length;
-            const contentDiv = document.getElementById('content');
-            const prevButton = document.getElementById('prev-button');
-            const nextButton = document.getElementById('next-button');
+        let currentPage = 'page-0-all';
+        let currentCategory = 'all';
+        const totalPages = manualData.length;
+        const contentDiv = document.getElementById('content');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
 
-            // カテゴリごとのリストページIDマッピング
-            const categoryListPageMap = {
-                'all': 'page-0-all',
-                '厨房設備': 'page-0-kitchen',
-                '空調設備': 'page-0-aircon',
-                'フロア': 'page-0-floor',
-                'その他': 'page-0-other'
-            };
+        // カテゴリごとのリストページIDマッピング
+        const categoryListPageMap = {
+            'all': 'page-0-all',
+            '厨房設備': 'page-0-kitchen',
+            '空調設備': 'page-0-aircon',
+            'フロア': 'page-0-floor',
+            'その他': 'page-0-other'
+        };
             
             // カテゴリ名をキーに変換
             function getCategoryKey(categoryName) {
@@ -670,31 +670,31 @@
                 return categoryMap[categoryName] || 'other';
             }
 
-            // マニュアルページを生成しDOMに追加
-            function createManualPages() {
-                const fragment = document.createDocumentFragment();
-                const indexListAll = document.getElementById('index-list-all');
-                const indexListKitchen = document.getElementById('index-list-kitchen');
-                const indexListAircon = document.getElementById('index-list-aircon');
-                const indexListFloor = document.getElementById('index-list-floor');
-                const indexListOther = document.getElementById('index-list-other');
-                
-                let lastCategory = '';
-                
-                manualData.forEach((data, index) => {
-                    const pageIndex = index + 1; // ページ番号は1から開始
+        // マニュアルページを生成しDOMに追加
+        function createManualPages() {
+            const fragment = document.createDocumentFragment();
+            const indexListAll = document.getElementById('index-list-all');
+            const indexListKitchen = document.getElementById('index-list-kitchen');
+            const indexListAircon = document.getElementById('index-list-aircon');
+            const indexListFloor = document.getElementById('index-list-floor');
+            const indexListOther = document.getElementById('index-list-other');
+            
+            let lastCategory = '';
+            
+            manualData.forEach((data, index) => {
+                const pageIndex = index + 1; // ページ番号は1から開始
 
-                    // ページコンテンツのHTMLを生成
-                    const pageHtml = `
-                        <div id="page-${pageIndex}" class="manual-page" data-category="${data.category}">
-                            <h2 class="page-title">【${data.category}】${data.title}</h2>
-                            <div class="section-title">【MISESAPOの理念】リスク対策</div>
-                            <p><strong>${data.category}カテゴリ</strong>：${data.risk}</p>
-                            
-                            <div class="section-title bad-example-title">❌ ダメな例（リスク行為：減点対象）</div>
-                            <div class="example-box bad-example">
-                                <strong>リスクを残す行為</strong>
-                                ${data.bad}
+                // ページコンテンツのHTMLを生成
+                const pageHtml = `
+                    <div id="page-${pageIndex}" class="manual-page" data-category="${data.category}">
+                        <h2 class="page-title">【${data.category}】${data.title}</h2>
+                        <div class="section-title">【MISESAPOの理念】リスク対策</div>
+                        <p><strong>${data.category}カテゴリ</strong>：${data.risk}</p>
+                        
+                        <div class="section-title bad-example-title">❌ ダメな例（リスク行為：減点対象）</div>
+                        <div class="example-box bad-example">
+                            <strong>リスクを残す行為</strong>
+                            ${data.bad}
                                 ${data.badImage ? (() => {
                                     let imagePath = data.badImage;
                                     // HTTP/HTTPSのURLの場合はそのまま使用
@@ -714,12 +714,12 @@
                                     }
                                     return `<div class="example-image-container"><img src="${imagePath}" alt="ダメな例" class="example-image" onclick="return false;" /></div>`;
                                 })() : ''}
-                            </div>
-                            
-                            <div class="section-title good-example-title">✅ 模範例（リスク対策行為：MISESAPO基準）</div>
-                            <div class="example-box good-example">
-                                <strong>リスクを排除し価値を提供する行為</strong>
-                                ${data.good}
+                        </div>
+                        
+                        <div class="section-title good-example-title">✅ 模範例（リスク対策行為：MISESAPO基準）</div>
+                        <div class="example-box good-example">
+                            <strong>リスクを排除し価値を提供する行為</strong>
+                            ${data.good}
                                 ${data.goodImage ? (() => {
                                     let imagePath = data.goodImage;
                                     // HTTP/HTTPSのURLの場合はそのまま使用
@@ -739,227 +739,227 @@
                                     }
                                     return `<div class="example-image-container"><img src="${imagePath}" alt="模範例" class="example-image" onclick="return false;" /></div>`;
                                 })() : ''}
-                            </div>
+                        </div>
 
-                            <div class="qa-section">
-                                <div class="section-title">研修・営業用 Q&A</div>
-                                <p><span class="qa-question">${data.qa1q}</span></p>
-                                <p class="qa-answer">${data.qa1a}</p>
-                                <p><span class="qa-question">${data.qa2q}</span></p>
-                                <p class="qa-answer">${data.qa2a}</p>
-                            </div>
+                        <div class="qa-section">
+                            <div class="section-title">研修・営業用 Q&A</div>
+                            <p><span class="qa-question">${data.qa1q}</span></p>
+                            <p class="qa-answer">${data.qa1a}</p>
+                            <p><span class="qa-question">${data.qa2q}</span></p>
+                            <p class="qa-answer">${data.qa2a}</p>
+                        </div>
                             <div class="edit-button-container" data-category-key="${getCategoryKey(data.category)}" data-index="${index}" style="display: none; margin-top: 30px; text-align: center; padding: 20px; border-top: 2px solid #eee;">
                                 <button onclick="openEditModalInline('${getCategoryKey(data.category)}', ${index})" class="edit-button" style="background: #ff008c; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold;">
                                     <i class="fas fa-edit"></i> 編集
                                 </button>
                             </div>
-                        </div>
-                    `;
+                    </div>
+                `;
 
-                    const pageDiv = document.createElement('div');
-                    pageDiv.innerHTML = pageHtml.trim();
-                    fragment.appendChild(pageDiv.firstChild);
+                const pageDiv = document.createElement('div');
+                pageDiv.innerHTML = pageHtml.trim();
+                fragment.appendChild(pageDiv.firstChild);
 
-                    // 全カテゴリの目次リストを生成
-                    if (data.category !== lastCategory) {
-                        const separator = document.createElement('li');
-                        separator.className = 'category-separator';
-                        separator.textContent = `--- ${data.category} ---`;
-                        indexListAll.appendChild(separator);
-                        lastCategory = data.category;
-                    }
-                    const listItemAll = document.createElement('li');
-                    const linkAll = document.createElement('a');
-                    linkAll.href = '#';
-                    linkAll.textContent = data.title;
-                    linkAll.addEventListener('click', (e) => {
+                // 全カテゴリの目次リストを生成
+                if (data.category !== lastCategory) {
+                    const separator = document.createElement('li');
+                    separator.className = 'category-separator';
+                    separator.textContent = `--- ${data.category} ---`;
+                    indexListAll.appendChild(separator);
+                    lastCategory = data.category;
+                }
+                const listItemAll = document.createElement('li');
+                const linkAll = document.createElement('a');
+                linkAll.href = '#';
+                linkAll.textContent = data.title;
+                linkAll.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showPage(`page-${pageIndex}`);
+                });
+                listItemAll.appendChild(linkAll);
+                indexListAll.appendChild(listItemAll);
+
+                // カテゴリ別の目次リストを生成
+                let targetList = null;
+                if (data.category === '厨房設備') {
+                    targetList = indexListKitchen;
+                } else if (data.category === '空調設備') {
+                    targetList = indexListAircon;
+                } else if (data.category === 'フロア') {
+                    targetList = indexListFloor;
+                } else if (data.category === 'その他') {
+                    targetList = indexListOther;
+                }
+
+                if (targetList) {
+                    const listItem = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = '#';
+                    link.textContent = data.title;
+                    link.addEventListener('click', (e) => {
                         e.preventDefault();
                         showPage(`page-${pageIndex}`);
                     });
-                    listItemAll.appendChild(linkAll);
-                    indexListAll.appendChild(listItemAll);
-
-                    // カテゴリ別の目次リストを生成
-                    let targetList = null;
-                    if (data.category === '厨房設備') {
-                        targetList = indexListKitchen;
-                    } else if (data.category === '空調設備') {
-                        targetList = indexListAircon;
-                    } else if (data.category === 'フロア') {
-                        targetList = indexListFloor;
-                    } else if (data.category === 'その他') {
-                        targetList = indexListOther;
-                    }
-
-                    if (targetList) {
-                        const listItem = document.createElement('li');
-                        const link = document.createElement('a');
-                        link.href = '#';
-                        link.textContent = data.title;
-                        link.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            showPage(`page-${pageIndex}`);
-                        });
-                        listItem.appendChild(link);
-                        targetList.appendChild(listItem);
-                    }
-                });
-
-                contentDiv.appendChild(fragment);
-            }
-
-            // カテゴリでフィルタリング
-            function filterByCategory(category, event) {
-                if (event) {
-                    event.preventDefault();
+                    listItem.appendChild(link);
+                    targetList.appendChild(listItem);
                 }
-                currentCategory = category;
-                
-                // タブのアクティブ状態を更新
+            });
+
+            contentDiv.appendChild(fragment);
+        }
+
+        // カテゴリでフィルタリング
+        function filterByCategory(category, event) {
+            if (event) {
+                event.preventDefault();
+            }
+            currentCategory = category;
+            
+            // タブのアクティブ状態を更新
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            if (event && event.target) {
+            event.target.classList.add('active');
+            } else {
+                // eventがない場合は、テキストで検索
                 document.querySelectorAll('.category-tab').forEach(tab => {
-                    tab.classList.remove('active');
+                    if ((category === 'all' && tab.textContent.includes('すべて')) ||
+                        (category === '厨房設備' && tab.textContent.includes('厨房設備')) ||
+                        (category === '空調設備' && tab.textContent.includes('空調設備')) ||
+                        (category === 'フロア' && tab.textContent.includes('フロア')) ||
+                        (category === 'その他' && tab.textContent.includes('その他'))) {
+                        tab.classList.add('active');
+                    }
                 });
-                if (event && event.target) {
-                event.target.classList.add('active');
-                } else {
-                    // eventがない場合は、テキストで検索
+            }
+            
+            // 該当カテゴリのリストページを表示
+            const listPageId = categoryListPageMap[category];
+            if (listPageId) {
+                showPage(listPageId);
+            }
+        }
+
+        // ページを表示する関数
+        function showPage(pageId) {
+            const pages = document.querySelectorAll('.manual-page');
+            pages.forEach((page) => {
+                page.classList.remove('active');
+            });
+            
+            currentPage = pageId;
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+                // カテゴリを更新（リストページの場合）
+                const pageCategory = targetPage.getAttribute('data-category');
+                if (pageCategory) {
+                    currentCategory = pageCategory;
+                    // タブのアクティブ状態を更新
                     document.querySelectorAll('.category-tab').forEach(tab => {
-                        if ((category === 'all' && tab.textContent.includes('すべて')) ||
-                            (category === '厨房設備' && tab.textContent.includes('厨房設備')) ||
-                            (category === '空調設備' && tab.textContent.includes('空調設備')) ||
-                            (category === 'フロア' && tab.textContent.includes('フロア')) ||
-                            (category === 'その他' && tab.textContent.includes('その他'))) {
+                        tab.classList.remove('active');
+                        if ((pageCategory === 'all' && tab.textContent.includes('すべて')) ||
+                            (pageCategory === '厨房設備' && tab.textContent.includes('厨房設備')) ||
+                            (pageCategory === '空調設備' && tab.textContent.includes('空調設備')) ||
+                            (pageCategory === 'フロア' && tab.textContent.includes('フロア')) ||
+                            (pageCategory === 'その他' && tab.textContent.includes('その他'))) {
                             tab.classList.add('active');
                         }
                     });
-                }
-                
-                // 該当カテゴリのリストページを表示
-                const listPageId = categoryListPageMap[category];
-                if (listPageId) {
-                    showPage(listPageId);
-                }
-            }
-
-            // ページを表示する関数
-            function showPage(pageId) {
-                const pages = document.querySelectorAll('.manual-page');
-                pages.forEach((page) => {
-                    page.classList.remove('active');
-                });
-                
-                currentPage = pageId;
-                const targetPage = document.getElementById(pageId);
-                if (targetPage) {
-                    targetPage.classList.add('active');
-                    // カテゴリを更新（リストページの場合）
-                    const pageCategory = targetPage.getAttribute('data-category');
-                    if (pageCategory) {
-                        currentCategory = pageCategory;
+                } else {
+                    // 詳細ページの場合、カテゴリを取得
+                    const pageNum = parseInt(pageId.replace('page-', ''));
+                    const pageData = manualData[pageNum - 1];
+                    if (pageData) {
+                        currentCategory = pageData.category;
                         // タブのアクティブ状態を更新
                         document.querySelectorAll('.category-tab').forEach(tab => {
                             tab.classList.remove('active');
-                            if ((pageCategory === 'all' && tab.textContent.includes('すべて')) ||
-                                (pageCategory === '厨房設備' && tab.textContent.includes('厨房設備')) ||
-                                (pageCategory === '空調設備' && tab.textContent.includes('空調設備')) ||
-                                (pageCategory === 'フロア' && tab.textContent.includes('フロア')) ||
-                                (pageCategory === 'その他' && tab.textContent.includes('その他'))) {
+                            if ((pageData.category === '厨房設備' && tab.textContent.includes('厨房設備')) ||
+                                (pageData.category === '空調設備' && tab.textContent.includes('空調設備')) ||
+                                (pageData.category === 'フロア' && tab.textContent.includes('フロア')) ||
+                                (pageData.category === 'その他' && tab.textContent.includes('その他'))) {
                                 tab.classList.add('active');
                             }
                         });
-                    } else {
-                        // 詳細ページの場合、カテゴリを取得
-                        const pageNum = parseInt(pageId.replace('page-', ''));
-                        const pageData = manualData[pageNum - 1];
-                        if (pageData) {
-                            currentCategory = pageData.category;
-                            // タブのアクティブ状態を更新
-                            document.querySelectorAll('.category-tab').forEach(tab => {
-                                tab.classList.remove('active');
-                                if ((pageData.category === '厨房設備' && tab.textContent.includes('厨房設備')) ||
-                                    (pageData.category === '空調設備' && tab.textContent.includes('空調設備')) ||
-                                    (pageData.category === 'フロア' && tab.textContent.includes('フロア')) ||
-                                    (pageData.category === 'その他' && tab.textContent.includes('その他'))) {
-                                    tab.classList.add('active');
-                                }
-                            });
-                        }
                     }
                 }
-                
-                updateNavigation();
-                // ページタイトルを更新
-                const pageNum = parseInt(pageId.replace('page-', ''));
-                if (!pageId.startsWith('page-0-') && manualData[pageNum - 1]) {
-                    document.title = `${manualData[pageNum - 1].title} - MISESAPO 清掃基準マニュアル`;
-                } else {
-                    document.title = "MISESAPO 清掃基準マニュアル";
-                }
-                window.scrollTo(0, 0); // ページ切り替え時に最上部へスクロール
             }
+            
+            updateNavigation();
+            // ページタイトルを更新
+            const pageNum = parseInt(pageId.replace('page-', ''));
+            if (!pageId.startsWith('page-0-') && manualData[pageNum - 1]) {
+                document.title = `${manualData[pageNum - 1].title} - MISESAPO 清掃基準マニュアル`;
+            } else {
+                document.title = "MISESAPO 清掃基準マニュアル";
+            }
+            window.scrollTo(0, 0); // ページ切り替え時に最上部へスクロール
+        }
 
-            // 目次ページを表示する関数
-            function showIndex() {
-                const listPageId = categoryListPageMap[currentCategory];
-                if (listPageId) {
-                    showPage(listPageId);
-                }
+        // 目次ページを表示する関数
+        function showIndex() {
+            const listPageId = categoryListPageMap[currentCategory];
+            if (listPageId) {
+                showPage(listPageId);
             }
+        }
 
-            // ナビゲーションボタンの状態を更新
-            function updateNavigation() {
-                // リストページの場合は前後ボタンを無効化
-                if (currentPage.startsWith('page-0-')) {
-                    prevButton.disabled = true;
-                    nextButton.disabled = true;
-                    return;
-                }
-                
-                // 詳細ページの場合、同じカテゴリ内のページを取得
-                const currentPageNum = parseInt(currentPage.replace('page-', ''));
-                const currentPageData = manualData[currentPageNum - 1];
-                if (!currentPageData) {
-                    prevButton.disabled = true;
-                    nextButton.disabled = true;
-                    return;
-                }
-                
-                const category = currentPageData.category;
-                const categoryPages = manualData
-                    .map((data, index) => ({ data, index: index + 1 }))
-                    .filter(item => item.data.category === category);
-                
-                const currentIndex = categoryPages.findIndex(item => item.index === currentPageNum);
-                
-                prevButton.disabled = currentIndex <= 0;
-                nextButton.disabled = currentIndex >= categoryPages.length - 1;
+        // ナビゲーションボタンの状態を更新
+        function updateNavigation() {
+            // リストページの場合は前後ボタンを無効化
+            if (currentPage.startsWith('page-0-')) {
+                prevButton.disabled = true;
+                nextButton.disabled = true;
+                return;
             }
+            
+            // 詳細ページの場合、同じカテゴリ内のページを取得
+            const currentPageNum = parseInt(currentPage.replace('page-', ''));
+            const currentPageData = manualData[currentPageNum - 1];
+            if (!currentPageData) {
+                prevButton.disabled = true;
+                nextButton.disabled = true;
+                return;
+            }
+            
+            const category = currentPageData.category;
+            const categoryPages = manualData
+                .map((data, index) => ({ data, index: index + 1 }))
+                .filter(item => item.data.category === category);
+            
+            const currentIndex = categoryPages.findIndex(item => item.index === currentPageNum);
+            
+            prevButton.disabled = currentIndex <= 0;
+            nextButton.disabled = currentIndex >= categoryPages.length - 1;
+        }
 
-            // 前後へ移動する関数
-            function navigate(direction) {
-                // リストページの場合は何もしない
-                if (currentPage.startsWith('page-0-')) {
-                    return;
-                }
-                
-                const currentPageNum = parseInt(currentPage.replace('page-', ''));
-                const currentPageData = manualData[currentPageNum - 1];
-                if (!currentPageData) {
-                    return;
-                }
-                
-                const category = currentPageData.category;
-                const categoryPages = manualData
-                    .map((data, index) => ({ data, index: index + 1 }))
-                    .filter(item => item.data.category === category);
-                
-                const currentIndex = categoryPages.findIndex(item => item.index === currentPageNum);
-                const newIndex = currentIndex + direction;
-                
-                if (newIndex >= 0 && newIndex < categoryPages.length) {
-                    showPage(`page-${categoryPages[newIndex].index}`);
-                }
+        // 前後へ移動する関数
+        function navigate(direction) {
+            // リストページの場合は何もしない
+            if (currentPage.startsWith('page-0-')) {
+                return;
             }
+            
+            const currentPageNum = parseInt(currentPage.replace('page-', ''));
+            const currentPageData = manualData[currentPageNum - 1];
+            if (!currentPageData) {
+                return;
+            }
+            
+            const category = currentPageData.category;
+            const categoryPages = manualData
+                .map((data, index) => ({ data, index: index + 1 }))
+                .filter(item => item.data.category === category);
+            
+            const currentIndex = categoryPages.findIndex(item => item.index === currentPageNum);
+            const newIndex = currentIndex + direction;
+            
+            if (newIndex >= 0 && newIndex < categoryPages.length) {
+                showPage(`page-${categoryPages[newIndex].index}`);
+            }
+        }
             
             // グローバルスコープに公開
             window.filterByCategory = filterByCategory;
@@ -973,7 +973,7 @@
             window.prevButton = prevButton;
             window.nextButton = nextButton;
 
-            // 初期化
+        // 初期化
             createManualPages();
             showIndex();
             

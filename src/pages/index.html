@@ -1407,17 +1407,53 @@
     </div>
     <script>
         // スプラッシュロゴのパスを設定（GitHub Pages対応）
+        // resolvePath関数が定義されるまで待つ
         (function() {
-            const hostname = window.location.hostname;
-            const isLocalDev = hostname === 'localhost' || 
-                              hostname === '127.0.0.1' ||
-                              hostname === '';
-            
-            if (!isLocalDev) {
-                const logoImg = document.getElementById('splash-logo-img');
-                if (logoImg) {
-                    logoImg.src = '/misesapo/images-material/logo_144x144.png';
+            function setSplashLogoPath() {
+                // resolvePath関数が定義されているか確認
+                if (typeof window.resolvePathForSplash === 'function') {
+                    const logoImg = document.getElementById('splash-logo-img');
+                    if (logoImg) {
+                        logoImg.src = window.resolvePathForSplash('/images-material/logo_144x144.png');
+                    }
+                } else {
+                    // resolvePathがまだ定義されていない場合は少し待つ
+                    setTimeout(setSplashLogoPath, 100);
                 }
+            }
+            
+            // 簡易版resolvePath関数を先に定義
+            window.resolvePathForSplash = function(path) {
+                if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                    return path;
+                }
+                
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                if (isLocalDev) {
+                    return path.startsWith('/') ? path : '/' + path;
+                }
+                
+                // 既に/misesapo/で始まるパスはそのまま返す
+                if (path.startsWith('/misesapo/')) {
+                    return path;
+                }
+                
+                // GitHub Pagesでは/misesapo/を追加
+                if (path.startsWith('/')) {
+                    return '/misesapo' + path;
+                }
+                return '/misesapo/' + path;
+            };
+            
+            // DOMContentLoadedまたは即座に実行
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setSplashLogoPath);
+            } else {
+                setSplashLogoPath();
             }
         })();
     </script>
@@ -1624,7 +1660,7 @@
             <div class="cosmetic-header-logo">
                 <div class="cosmetic-logo">
                     <a href="/">
-                        <img src="/images-material/logo_ver1-pk.png" alt="ロゴ" onerror="this.style.display='none'">
+                        <img id="cosmetic-logo-img" src="/images-material/logo_ver1-pk.png" alt="ロゴ" onerror="this.style.display='none'">
                     </a>
                         </div>
                         </div>
@@ -1795,7 +1831,7 @@
         <div class="normal-header-inner">
             <div class="normal-header-logo">
                 <a href="/">
-                    <img src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+                    <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
                 </a>
                     </div>
             <nav class="normal-header-nav">
