@@ -656,11 +656,7 @@
                                     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
                                         return `<div class="example-image-container"><img src="${imagePath}" alt="模範例" class="example-image" onclick="return false;" /></div>`;
                                     }
-                                    // 既に/misesapo/で始まる場合はそのまま使用（二重適用を防ぐ）
-                                    if (imagePath.startsWith('/misesapo/')) {
-                                        return `<div class="example-image-container"><img src="${imagePath}" alt="模範例" class="example-image" onclick="return false;" /></div>`;
-                                    }
-                                    // 既に/で始まる場合はresolvePathを使用
+                                    // 絶対URLを返す（baseタグの影響を受けないようにする）
                                     if (imagePath.startsWith('/')) {
                                         imagePath = resolvePath(imagePath);
                                     } else {
