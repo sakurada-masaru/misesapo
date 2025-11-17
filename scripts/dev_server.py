@@ -1116,6 +1116,7 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             
             filename = None
             file_data = None
+            content_type = 'image/png'  # デフォルトのContent-Type
             
             for part in parts:
                 if b'Content-Disposition: form-data' not in part:
@@ -1142,6 +1143,22 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                         filename_match = re.search(rb'filename="([^"]+)"', header)
                         if filename_match:
                             filename = filename_match.group(1).decode('utf-8', errors='ignore')
+                            
+                            # Content-Typeを抽出（あれば）
+                            content_type_match = re.search(rb'Content-Type:\s*([^\r\n]+)', header)
+                            if content_type_match:
+                                content_type = content_type_match.group(1).decode('utf-8', errors='ignore').strip()
+                            else:
+                                # ファイル拡張子からContent-Typeを推測
+                                if filename.lower().endswith('.jpg') or filename.lower().endswith('.jpeg'):
+                                    content_type = 'image/jpeg'
+                                elif filename.lower().endswith('.png'):
+                                    content_type = 'image/png'
+                                elif filename.lower().endswith('.gif'):
+                                    content_type = 'image/gif'
+                                elif filename.lower().endswith('.webp'):
+                                    content_type = 'image/webp'
+                            
                             break
             
             if not filename or not file_data:
@@ -1164,7 +1181,7 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                         Bucket=AWS_S3_BUCKET_NAME,
                         Key=s3_key,
                         Body=file_data,
-                        ContentType=file.type if hasattr(file, 'type') else 'image/png',
+                        ContentType=content_type,
                         ACL='public-read'  # パブリック読み取りを許可
                     )
                     
