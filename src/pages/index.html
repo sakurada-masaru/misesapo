@@ -30,6 +30,7 @@
         <link rel="stylesheet" href="/css/swiper-bundle.min.css">
         <link rel="stylesheet" href="/css/style.css">
         <link rel="stylesheet" href="/css/header.css">
+        <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
     <style>
         * {
             margin: 0;
@@ -1402,8 +1403,24 @@
     <body>
     <!-- スプラッシュスクリーン（最上部に配置） -->
     <div class="splash-screen" id="splash-screen">
-        <img src="/images-material/logo_144x144.png" alt="ミセサポ" class="splash-logo" />
+        <img id="splash-logo-img" src="/images-material/logo_144x144.png" alt="ミセサポ" class="splash-logo" />
     </div>
+    <script>
+        // スプラッシュロゴのパスを設定（GitHub Pages対応）
+        (function() {
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' || 
+                              hostname === '127.0.0.1' ||
+                              hostname === '';
+            
+            if (!isLocalDev) {
+                const logoImg = document.getElementById('splash-logo-img');
+                if (logoImg) {
+                    logoImg.src = '/misesapo/images-material/logo_144x144.png';
+                }
+            }
+        })();
+    </script>
     
     <!-- デバッグ用グリッド -->
     <div class="debug-grid"></div>
@@ -2006,7 +2023,7 @@
                 single.setAttribute('data-service-id', item.id);
                 
                 const link = document.createElement('a');
-                link.href = `/service/${item.id}.html`;
+                link.href = resolvePath(`/service/${item.id}.html`);
                 link.style.textDecoration = 'none';
                 link.style.display = 'block';
                 link.setAttribute('data-service-id', item.id);
