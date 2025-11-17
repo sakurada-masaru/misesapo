@@ -885,14 +885,9 @@
                     let imageUrl = null;
                     let imagePath = null;
                     
-                    // Firebase Storageが利用可能な場合はFirebase Storageにアップロード
-                    if (isFirebaseAvailable()) {
+                    // 開発サーバーが利用可能な場合は優先（S3にアップロード）
+                    if (isDevelopmentServer()) {
                         showMessage('画像をアップロード中...', 'success');
-                        const result = await window.CleaningManualFirebase.uploadImageToStorage(file, field);
-                        imageUrl = result.url;
-                        imagePath = result.url; // Firebase StorageのURLを使用
-                    } else if (isDevelopmentServer()) {
-                        // 開発サーバーの場合はAPI経由でアップロード
                         const formData = new FormData();
                         formData.append('image', file);
                         
@@ -903,13 +898,23 @@
 
                         if (response.ok) {
                             const result = await response.json();
-                            imagePath = result.path;
+                            imagePath = result.path || result.url;
+                            imageUrl = result.url || result.path;
+                            showMessage('画像をS3にアップロードしました', 'success');
                         } else {
+                            const errorText = await response.text();
+                            console.error('Upload error:', errorText);
                             showMessage('画像のアップロードに失敗しました', 'error');
                             return;
                         }
+                    } else if (isFirebaseAvailable()) {
+                        // 開発サーバーが利用できない場合のみFirebase Storageにアップロード
+                        showMessage('画像をアップロード中...', 'success');
+                        const result = await window.CleaningManualFirebase.uploadImageToStorage(file, field);
+                        imageUrl = result.url;
+                        imagePath = result.url; // Firebase StorageのURLを使用
                     } else {
-                        showMessage('⚠️ 画像のアップロードはFirebaseまたは開発サーバーが必要です。', 'error');
+                        showMessage('⚠️ 画像のアップロードは開発サーバーまたはFirebaseが必要です。', 'error');
                         return;
                     }
 
