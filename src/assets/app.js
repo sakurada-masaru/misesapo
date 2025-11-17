@@ -24,6 +24,7 @@
   }
 
   // 絶対パスをベースパス付きに変換
+  // fetch用：baseタグの影響を受けないように絶対URLを返す
   function resolvePath(path) {
     if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
       return path;
@@ -45,10 +46,15 @@
     }
     
     const basePath = getBasePath();
+    let resolvedPath;
     if (path.startsWith('/')) {
-      return basePath === '/' ? path : basePath.slice(0, -1) + path;
+      resolvedPath = basePath === '/' ? path : basePath.slice(0, -1) + path;
+    } else {
+      resolvedPath = basePath === '/' ? '/' + path : basePath + path;
     }
-    return basePath === '/' ? '/' + path : basePath + path;
+    
+    // fetch用に絶対URLを返す（baseタグの影響を受けないようにする）
+    return window.location.origin + resolvedPath;
   }
 
   function renderSections(container, sections, namePrefix) {
