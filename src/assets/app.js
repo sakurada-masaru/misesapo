@@ -28,6 +28,22 @@
     if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
       return path;
     }
+    
+    // ローカル開発環境ではbaseタグを無視
+    const hostname = window.location.hostname;
+    const isLocalDev = hostname === 'localhost' || 
+                      hostname === '127.0.0.1' ||
+                      hostname === '';
+    
+    if (isLocalDev) {
+      return path.startsWith('/') ? path : '/' + path;
+    }
+    
+    // 既に/misesapo/で始まるパスはそのまま返す（二重適用を防ぐ）
+    if (path.startsWith('/misesapo/')) {
+      return path;
+    }
+    
     const basePath = getBasePath();
     if (path.startsWith('/')) {
       return basePath === '/' ? path : basePath.slice(0, -1) + path;
