@@ -433,15 +433,37 @@
                 
                 // まずAPIエンドポイントを試す（開発環境）
                 let response = null;
+                let apiUrl = resolvePath('/api/cleaning-manual');
+                console.log('[CleaningManual] Trying API endpoint:', apiUrl);
+                
                 try {
-                    response = await fetch(resolvePath('/api/cleaning-manual'));
+                    response = await fetch(apiUrl);
+                    console.log('[CleaningManual] API response:', {
+                        ok: response.ok,
+                        status: response.status,
+                        statusText: response.statusText,
+                        url: response.url
+                    });
                 } catch (e) {
-                    console.log('[CleaningManual] API not available, trying static file...');
+                    console.log('[CleaningManual] API fetch error:', e.message);
                 }
                 
                 if (!response || !response.ok) {
                     // APIが利用できない場合（GitHub Pagesなど）、静的ファイルを読み込む
-                    response = await fetch(resolvePath('/data/cleaning-manual.json'));
+                    const jsonUrl = resolvePath('/data/cleaning-manual.json');
+                    console.log('[CleaningManual] Trying JSON file:', jsonUrl);
+                    try {
+                        response = await fetch(jsonUrl);
+                        console.log('[CleaningManual] JSON response:', {
+                            ok: response.ok,
+                            status: response.status,
+                            statusText: response.statusText,
+                            url: response.url
+                        });
+                    } catch (e) {
+                        console.error('[CleaningManual] JSON fetch error:', e.message);
+                        throw new Error(`JSONファイルの読み込みに失敗しました: ${e.message}`);
+                    }
                 }
                 
                 if (response && response.ok) {
