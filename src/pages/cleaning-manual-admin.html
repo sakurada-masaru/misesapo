@@ -867,10 +867,13 @@
         function updateImagePreview(field, path) {
             const preview = document.getElementById(`preview-${field}`);
             if (path) {
-                // Firebase StorageのURLの場合はそのまま使用、それ以外はresolvePathを使用
-                const imageUrl = path.startsWith('http://') || path.startsWith('https://') 
-                    ? path 
-                    : resolvePath('/' + path);
+                let imageUrl = path;
+                // Firebase StorageのURLの場合はそのまま使用
+                if (!path.startsWith('http://') && !path.startsWith('https://')) {
+                    // 既に/で始まる場合はそのまま、そうでなければ/を追加
+                    const pathToResolve = path.startsWith('/') ? path : '/' + path;
+                    imageUrl = resolvePath(pathToResolve);
+                }
                 preview.innerHTML = `<img src="${imageUrl}" alt="プレビュー" onerror="this.style.display='none'" />`;
             } else {
                 preview.innerHTML = '';

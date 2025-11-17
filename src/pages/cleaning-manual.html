@@ -320,7 +320,7 @@
     <header>
         <div class="header-flex wrapper">
             <h1 class="header-logo">
-                <a href="staff/dashboard.html"><img id="header-logo-img" src="/images/header-logo.jpg" alt="ミセサポ" onerror="this.src='/images/header-logo.jpg';"></a>
+                <a href="staff/dashboard.html"><img id="header-logo-img" src="/images/header-logo.jpg" alt="ミセサポ"></a>
             </h1>
             <button class="btn"><span></span><span></span><span></span></button>
             <nav id="g-nav">
@@ -1035,6 +1035,11 @@
                 // ローカル開発環境では直接パスを使用、本番環境ではresolvePathを使用
                 const logoPath = isLocalDev ? '/images/header-logo.jpg' : resolvePath('/images/header-logo.jpg');
                 logoImg.src = logoPath;
+                // onerrorハンドラーも設定（GitHub Pages対応）
+                logoImg.onerror = function() {
+                    this.src = resolvePath('/images/header-logo.jpg');
+                    this.onerror = null; // 無限ループを防ぐ
+                };
                 console.log('[CleaningManual] Header logo path set to:', logoPath, '(isLocalDev:', isLocalDev, ')');
             }
         }
