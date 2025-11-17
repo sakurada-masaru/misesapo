@@ -5,30 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>清掃マニュアル管理画面 - MISESAPO</title>
     <script>
-        // baseタグを条件付きで設定（ローカル開発環境では設定しない）
-        (function() {
-            const hostname = window.location.hostname;
-            const isLocalDev = hostname === 'localhost' || 
-                              hostname === '127.0.0.1' ||
-                              hostname === '';
-            
-            console.log('[CleaningManualAdmin] Environment check:', {
-                hostname: hostname,
-                isLocalDev: isLocalDev,
-                href: window.location.href
-            });
-            
-            if (!isLocalDev) {
-                // GitHub Pagesなどの本番環境でのみbaseタグを設定
-                const baseTag = document.createElement('base');
-                baseTag.id = 'base-tag';
-                baseTag.href = '/misesapo/';
-                document.head.insertBefore(baseTag, document.head.firstChild);
-                console.log('[CleaningManualAdmin] Base tag set to /misesapo/ for production');
-            } else {
-                console.log('[CleaningManualAdmin] Local development environment detected, base tag not set');
-            }
-        })();
+        // baseタグは使用しない（すべてのパスを絶対URLで解決する）
+        // baseタグがあると、絶対URLも相対パスとして解釈される可能性があるため
     </script>
     <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -274,7 +252,7 @@
 <body>
     <div class="container">
         <div class="page-header">
-            <a href="cleaning-manual.html" class="back-link">
+            <a href="#" id="back-to-manual-link" class="back-link">
                 <i class="fas fa-arrow-left"></i> 清掃マニュアルに戻る
             </a>
             <h1><i class="fas fa-edit"></i> 清掃マニュアル管理画面</h1>
@@ -469,49 +447,45 @@
             return '/';
         }
         
-        // パスを解決（ベースパス付き）
+        // パスを解決（GitHub Pages対応）
+        // baseタグを使用しないため、常に絶対URLを返す
         function resolvePath(path) {
             if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
                 return path;
             }
             
-            // ローカル開発環境ではbaseタグを無視
             const hostname = window.location.hostname;
             const isLocalDev = hostname === 'localhost' || 
                               hostname === '127.0.0.1' ||
                               hostname === '';
             
             if (isLocalDev) {
-                // ローカル開発環境では絶対パスをそのまま返す
-                if (path.startsWith('/')) {
-                    console.log('[CleaningManualAdmin] resolvePath (local):', path);
-                    return path;
-                }
-                // 相対パスの場合は/を付ける
-                const resolved = '/' + path;
-                console.log('[CleaningManualAdmin] resolvePath (local, relative):', resolved);
-                return resolved;
+                return path.startsWith('/') ? path : '/' + path;
             }
             
-            // 既に/misesapo/で始まるパスはそのまま返す（二重適用を防ぐ）
+            // GitHub Pagesでは/misesapo/を追加
+            let resolvedPath;
             if (path.startsWith('/misesapo/')) {
-                return path;
+                // 既に/misesapo/で始まる場合はそのまま使用
+                resolvedPath = path;
+            } else if (path.startsWith('/')) {
+                // /で始まる場合は/misesapo/を追加
+                resolvedPath = '/misesapo' + path;
+            } else {
+                // 相対パスの場合は/misesapo/を追加
+                resolvedPath = '/misesapo/' + path;
             }
             
-            // GitHub Pagesなどの本番環境ではbaseタグを使用
-            const basePath = getBasePath();
-            console.log('[CleaningManualAdmin] resolvePath:', { path, basePath });
-            
-            if (path.startsWith('/')) {
-                // 絶対パスの場合
-                const resolved = basePath === '/' ? path : basePath.slice(0, -1) + path;
-                console.log('[CleaningManualAdmin] resolved absolute path:', resolved);
-                return resolved;
+            // 常に絶対URLを返す
+            return window.location.origin + resolvedPath;
+        }
+        
+        // 戻るボタンのリンクを設定
+        function setBackLink() {
+            const backLink = document.getElementById('back-to-manual-link');
+            if (backLink) {
+                backLink.href = resolvePath('/cleaning-manual.html');
             }
-            // 相対パスの場合
-            const resolved = basePath === '/' ? '/' + path : basePath + path;
-            console.log('[CleaningManualAdmin] resolved relative path:', resolved);
-            return resolved;
         }
         
         let manualData = {
@@ -534,6 +508,9 @@
         
         // 認証チェックと初期化
         async function initAuth() {
+            // 戻るボタンのリンクを設定
+            setBackLink();
+            
             if (!isFirebaseAvailable()) {
                 // Firebaseが利用できない場合は開発サーバーを試す
                 document.getElementById('loading-screen').style.display = 'none';
