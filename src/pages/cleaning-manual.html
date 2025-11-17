@@ -455,6 +455,11 @@
                 return resolved;
             }
             
+            // 既に/misesapo/で始まるパスはそのまま返す（二重適用を防ぐ）
+            if (path.startsWith('/misesapo/')) {
+                return path;
+            }
+            
             // GitHub Pagesなどの本番環境ではbaseタグを使用
             const basePath = getBasePath();
             console.log('[CleaningManual] resolvePath:', { path, basePath });
