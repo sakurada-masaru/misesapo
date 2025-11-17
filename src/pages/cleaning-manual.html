@@ -274,7 +274,7 @@
     <header>
         <div class="header-flex wrapper">
             <h1 class="header-logo">
-                <a href="staff/dashboard.html"><img src="images/header-logo.jpg" alt="ミセサポ"></a>
+                <a href="staff/dashboard.html"><img src="/images/header-logo.jpg" alt="ミセサポ"></a>
             </h1>
             <button class="btn"><span></span><span></span><span></span></button>
             <nav id="g-nav">
@@ -391,6 +391,25 @@
             if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
                 return path;
             }
+            
+            // ローカル開発環境ではbaseタグを無視
+            const isLocalDev = window.location.hostname === 'localhost' || 
+                              window.location.hostname === '127.0.0.1' ||
+                              window.location.hostname === '';
+            
+            if (isLocalDev) {
+                // ローカル開発環境では絶対パスをそのまま返す
+                if (path.startsWith('/')) {
+                    console.log('[CleaningManual] resolvePath (local):', path);
+                    return path;
+                }
+                // 相対パスの場合は/を付ける
+                const resolved = '/' + path;
+                console.log('[CleaningManual] resolvePath (local, relative):', resolved);
+                return resolved;
+            }
+            
+            // GitHub Pagesなどの本番環境ではbaseタグを使用
             const basePath = getBasePath();
             console.log('[CleaningManual] resolvePath:', { path, basePath });
             
