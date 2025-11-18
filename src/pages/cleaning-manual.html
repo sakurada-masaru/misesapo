@@ -36,6 +36,15 @@
     </script>
     <!-- AWS API -->
     <script src="/js/aws-cleaning-manual-api.js"></script>
+    <script>
+        // デバッグ: AWS APIの読み込みを確認
+        window.addEventListener('load', () => {
+            console.log('[CleaningManual] Page loaded');
+            console.log('[CleaningManual] AWSCleaningManualAPI:', window.AWSCleaningManualAPI);
+            console.log('[CleaningManual] isAvailable:', window.AWSCleaningManualAPI?.isAvailable());
+            console.log('[CleaningManual] CleaningManualFirebase:', window.CleaningManualFirebase);
+        });
+    </script>
     <!--GoogleFonts(Noto Sans JP)-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -444,9 +453,12 @@
                         console.error('[CleaningManual] AWS API load error:', error);
                         // フォールバックを試行
                     }
+                } else {
+                    console.log('[CleaningManual] AWS API not available, trying fallback');
                 }
                 
                 // まずAPIエンドポイントを試す（開発環境）
+                console.log('[CleaningManual] Trying development server API');
                 let response = null;
                 const hostname = window.location.hostname;
                 const isLocalDev = hostname === 'localhost' || 
@@ -621,42 +633,92 @@
                         <div class="example-box bad-example">
                             <strong>リスクを残す行為</strong>
                             ${data.bad}
-                                ${data.badImage ? (() => {
-                                    let imagePath = data.badImage;
-                                    // HTTP/HTTPSのURLの場合はそのまま使用
-                                    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-                                        return `<div class="example-image-container"><img src="${imagePath}" alt="ダメな例" class="example-image" onclick="return false;" /></div>`;
-                                    }
-                                    // 絶対URLを返す（baseタグの影響を受けないようにする）
-                                    if (imagePath.startsWith('/')) {
-                                        imagePath = resolvePath(imagePath);
-                                    } else {
-                                        // 相対パスの場合は/を追加してからresolvePathを使用
-                                        imagePath = resolvePath('/' + imagePath);
-                                    }
-                                    return `<div class="example-image-container"><img src="${imagePath}" alt="ダメな例" class="example-image" onclick="return false;" /></div>`;
-                                })() : ''}
+                                ${(() => {
+                                    // 画像を処理する関数（配列形式にも対応）
+                                    const processImages = (imageValue) => {
+                                        if (!imageValue || imageValue === 'undefined') return '';
+                                        
+                                        let images = [];
+                                        // 配列の場合はそのまま使用
+                                        if (Array.isArray(imageValue)) {
+                                            images = imageValue.filter(img => img && img !== 'undefined' && img.trim() !== '');
+                                        } else if (typeof imageValue === 'string' && imageValue.trim() !== '') {
+                                            // 文字列の場合は配列に変換
+                                            images = [imageValue];
+                                        }
+                                        
+                                        if (images.length === 0) return '';
+                                        
+                                        // 各画像のHTMLを生成
+                                        return images.map(imagePath => {
+                                            // HTTP/HTTPSのURLの場合はそのまま使用
+                                            if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+                                                return `<div class="example-image-container"><img src="${imagePath}" alt="ダメな例" class="example-image" onclick="return false;" onerror="this.style.display='none';" /></div>`;
+                                            }
+                                            // 絶対URLを返す（baseタグの影響を受けないようにする）
+                                            let resolvedPath = imagePath;
+                                            if (resolvedPath.startsWith('/')) {
+                                                resolvedPath = resolvePath(resolvedPath);
+                                            } else {
+                                                // 相対パスの場合は/を追加してからresolvePathを使用
+                                                resolvedPath = resolvePath('/' + resolvedPath);
+                                            }
+                                            // resolvedPathがundefinedの場合は空文字列を返す
+                                            if (!resolvedPath || resolvedPath === 'undefined') {
+                                                return '';
+                                            }
+                                            return `<div class="example-image-container"><img src="${resolvedPath}" alt="ダメな例" class="example-image" onclick="return false;" onerror="this.style.display='none';" /></div>`;
+                                        }).filter(html => html !== '').join('');
+                                    };
+                                    
+                                    return processImages(data.badImage);
+                                })()}
                         </div>
                         
                         <div class="section-title good-example-title">✅ 模範例（リスク対策行為：MISESAPO基準）</div>
                         <div class="example-box good-example">
                             <strong>リスクを排除し価値を提供する行為</strong>
                             ${data.good}
-                                ${data.goodImage ? (() => {
-                                    let imagePath = data.goodImage;
-                                    // HTTP/HTTPSのURLの場合はそのまま使用
-                                    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-                                        return `<div class="example-image-container"><img src="${imagePath}" alt="模範例" class="example-image" onclick="return false;" /></div>`;
-                                    }
-                                    // 絶対URLを返す（baseタグの影響を受けないようにする）
-                                    if (imagePath.startsWith('/')) {
-                                        imagePath = resolvePath(imagePath);
-                                    } else {
-                                        // 相対パスの場合は/を追加してからresolvePathを使用
-                                        imagePath = resolvePath('/' + imagePath);
-                                    }
-                                    return `<div class="example-image-container"><img src="${imagePath}" alt="模範例" class="example-image" onclick="return false;" /></div>`;
-                                })() : ''}
+                                ${(() => {
+                                    // 画像を処理する関数（配列形式にも対応）
+                                    const processImages = (imageValue) => {
+                                        if (!imageValue || imageValue === 'undefined') return '';
+                                        
+                                        let images = [];
+                                        // 配列の場合はそのまま使用
+                                        if (Array.isArray(imageValue)) {
+                                            images = imageValue.filter(img => img && img !== 'undefined' && img.trim() !== '');
+                                        } else if (typeof imageValue === 'string' && imageValue.trim() !== '') {
+                                            // 文字列の場合は配列に変換
+                                            images = [imageValue];
+                                        }
+                                        
+                                        if (images.length === 0) return '';
+                                        
+                                        // 各画像のHTMLを生成
+                                        return images.map(imagePath => {
+                                            // HTTP/HTTPSのURLの場合はそのまま使用
+                                            if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+                                                return `<div class="example-image-container"><img src="${imagePath}" alt="模範例" class="example-image" onclick="return false;" onerror="this.style.display='none';" /></div>`;
+                                            }
+                                            // 絶対URLを返す（baseタグの影響を受けないようにする）
+                                            let resolvedPath = imagePath;
+                                            if (resolvedPath.startsWith('/')) {
+                                                resolvedPath = resolvePath(resolvedPath);
+                                            } else {
+                                                // 相対パスの場合は/を追加してからresolvePathを使用
+                                                resolvedPath = resolvePath('/' + resolvedPath);
+                                            }
+                                            // resolvedPathがundefinedの場合は空文字列を返す
+                                            if (!resolvedPath || resolvedPath === 'undefined') {
+                                                return '';
+                                            }
+                                            return `<div class="example-image-container"><img src="${resolvedPath}" alt="模範例" class="example-image" onclick="return false;" onerror="this.style.display='none';" /></div>`;
+                                        }).filter(html => html !== '').join('');
+                                    };
+                                    
+                                    return processImages(data.goodImage);
+                                })()}
                         </div>
 
                         <div class="qa-section">

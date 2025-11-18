@@ -22,7 +22,7 @@
      */
     function getApiEndpoint(path = '') {
         if (isDevelopmentServer()) {
-            // 開発サーバーの場合はローカルAPIを試す
+            // 開発サーバーの場合はローカルAPIを使用（API Gatewayは使わない）
             return `/api/cleaning-manual${path}`;
         }
         // 本番環境ではAPI Gatewayを使用
@@ -35,6 +35,8 @@
     async function loadData(isDraft = false) {
         const path = isDraft ? '/draft' : '';
         const endpoint = getApiEndpoint(path);
+        
+        console.log('[AWSCleaningManualAPI] Loading data from:', endpoint, '(isDevelopmentServer:', isDevelopmentServer(), ')');
         
         try {
             const response = await fetch(endpoint, {
@@ -49,16 +51,20 @@
             }
             
             const data = await response.json();
+            console.log('[AWSCleaningManualAPI] Data loaded successfully:', data);
             return data;
         } catch (error) {
             console.error('[AWSCleaningManualAPI] Load error:', error);
             
             // 開発サーバーの場合、フォールバックを試す
             if (isDevelopmentServer()) {
+                console.log('[AWSCleaningManualAPI] Trying fallback to static JSON file...');
                 try {
                     const fallbackResponse = await fetch('/data/cleaning-manual.json');
                     if (fallbackResponse.ok) {
-                        return await fallbackResponse.json();
+                        const fallbackData = await fallbackResponse.json();
+                        console.log('[AWSCleaningManualAPI] Fallback data loaded:', fallbackData);
+                        return fallbackData;
                     }
                 } catch (fallbackError) {
                     console.error('[AWSCleaningManualAPI] Fallback error:', fallbackError);
@@ -66,6 +72,7 @@
             }
             
             // 初期データを返す
+            console.warn('[AWSCleaningManualAPI] Returning empty data');
             return {
                 kitchen: [],
                 aircon: [],

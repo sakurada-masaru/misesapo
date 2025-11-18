@@ -5,8 +5,11 @@
       "category": "厨房設備",
       "risk": "管詰まり/悪臭リスクの構造的排除",
       "bad": "上層の浮上油と残渣のみ回収し、壁面や底面の付着物（悪臭の根源）を残す。",
+      "badImage": [
+        "images-service/service01.jpg",
+        "images-service/1763484032172_asagata.png"
+      ],
       "good": "３層構造の完全除去: 浮上油、沈殿物、汚水全てを回収。壁面・底面を油脂分解剤で徹底洗浄し、根本リスクを排除する。",
-      "badImage": "images-service/service01.jpg",
       "goodImage": "images-service/service35.jpg",
       "qa1q": "Q: グリストラップ清掃の最重要リスクは？",
       "qa1a": "A: 壁面や底面に残る油脂による悪臭と、それが固着した際の管詰まり。",

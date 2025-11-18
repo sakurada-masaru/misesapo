@@ -36,32 +36,55 @@ def lambda_handler(event, context):
             'body': json.dumps({'message': 'OK'})
         }
     
-    # パスとメソッドを取得
-    path = event.get('path', '')
-    method = event.get('httpMethod', '')
+    # パスとメソッドを取得（複数の可能性を試す）
+    # API Gatewayのプロキシ統合の場合
+    path = event.get('path', '') or event.get('resourcePath', '') or event.get('resource', '')
+    method = event.get('httpMethod', '') or event.get('method', '')
+    
+    # リクエストパスを取得（リクエストパラメータから）
+    if not path:
+        request_context = event.get('requestContext', {})
+        path = request_context.get('path', '') or request_context.get('resourcePath', '')
+    
+    # デバッグ: パスとメソッドをログに出力（必ず実行される）
+    print(f"DEBUG: path={path}, method={method}")
+    print(f"DEBUG: full event keys={list(event.keys())}")
+    print(f"DEBUG: event={json.dumps(event, default=str)[:500]}")  # 最初の500文字のみ
+    
+    # パスを正規化（末尾のスラッシュを削除、先頭のスラッシュを保持）
+    normalized_path = path.rstrip('/') if path else ''
     
     try:
         # パスに応じて処理を分岐
-        if path == '/upload' or path == '/upload/':
+        if normalized_path == '/upload':
             # 画像アップロード
             return handle_image_upload(event, headers)
-        elif path == '/cleaning-manual' or path == '/cleaning-manual/':
+        elif normalized_path == '/cleaning-manual':
             # 清掃マニュアルデータの読み書き
             if method == 'GET':
                 return get_cleaning_manual_data(headers, False)
             elif method == 'PUT' or method == 'POST':
                 return save_cleaning_manual_data(event, headers, False)
-        elif path == '/cleaning-manual/draft' or path == '/cleaning-manual/draft/':
+        elif normalized_path == '/cleaning-manual/draft':
             # 下書きデータの読み書き
             if method == 'GET':
                 return get_cleaning_manual_data(headers, True)
             elif method == 'PUT' or method == 'POST':
                 return save_cleaning_manual_data(event, headers, True)
         else:
+            # デバッグ: パスが一致しなかった場合
+            print(f"DEBUG: Path not matched. normalized_path={normalized_path}, original_path={path}")
             return {
                 'statusCode': 404,
                 'headers': headers,
-                'body': json.dumps({'error': 'Not found'})
+                'body': json.dumps({
+                    'error': 'Not found',
+                    'debug': {
+                        'path': path,
+                        'normalized_path': normalized_path,
+                        'method': method
+                    }
+                })
             }
     except Exception as e:
         print(f"Error: {str(e)}")
@@ -109,12 +132,12 @@ def handle_image_upload(event, headers):
         s3_key = f"cleaning-manual-images/{timestamp}_{safe_file_name}"
         
         # S3にアップロード
+        # 注意: ACLは使用しない（バケットポリシーでパブリックアクセスを許可）
         s3_client.put_object(
             Bucket=S3_BUCKET_NAME,
             Key=s3_key,
             Body=image_data,
-            ContentType=content_type,
-            ACL='public-read'  # パブリック読み取りを許可
+            ContentType=content_type
         )
         
         # S3の公開URLを生成

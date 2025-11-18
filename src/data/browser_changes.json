@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "serviceId": "cleaning-manual",
+    "serviceName": "サービスID cleaning-manual",
+    "type": "modified",
+    "timestamp": "2025-11-19 01:40",
+    "serviceData": {
+      "type": "cleaning-manual",
+      "timestamp": "2025-11-19 01:40:44.176323",
+      "total_items": 34
+    }
+  }
+]

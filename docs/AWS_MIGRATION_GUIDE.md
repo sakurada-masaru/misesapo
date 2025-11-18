@@ -198,6 +198,13 @@ python3 scripts/dev_server.py
 
 **注意**: パブリックアクセスが有効になっている場合のみ、URLから直接画像を表示できます。無効の場合は、AWSコンソール内でのみ確認できます。
 
+## CORS設定
+
+GitHub PagesからAPI Gatewayにアクセスする場合、CORS設定が必要です。
+
+詳細は以下のドキュメントを参照してください：
+- [API Gateway CORS設定: 清掃マニュアルエンドポイント](AWS_API_GATEWAY_CORS_CLEANING_MANUAL.md)
+
 ## トラブルシューティング
 
 ### データが読み込めない
