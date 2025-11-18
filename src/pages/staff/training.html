@@ -2,8 +2,17 @@
 @json('data/meta/staff_training_title.json', $title)
 @json('data/meta/staff_training_body_class.json', $body_class)
 @json('data/training_videos.json', training_data)
+<script src="/js/aws-training-videos-api.js"></script>
 
 <main id="main" class="container staff-training">
+  <!-- パンくずリスト -->
+  <nav class="breadcrumb" aria-label="パンくずリスト">
+    <ol class="breadcrumb-list">
+      <li class="breadcrumb-item"><a href="/staff/dashboard.html">ダッシュボード</a></li>
+      <li class="breadcrumb-item" aria-current="page">研修動画アーカイブ</li>
+    </ol>
+  </nav>
+  
   <div class="page-header">
     <a href="/staff/dashboard.html" class="back-btn">
       <i class="fas fa-chevron-left"></i>
@@ -43,6 +52,44 @@
   </script>
 
   <style>
+    /* パンくずリスト */
+    .breadcrumb {
+      margin-bottom: 16px;
+      padding: 12px 0;
+    }
+    .breadcrumb-list {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      flex-wrap: wrap;
+    }
+    .breadcrumb-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .breadcrumb-item:not(:last-child)::after {
+      content: '›';
+      margin-left: 8px;
+      color: #9ca3af;
+    }
+    .breadcrumb-item a {
+      color: #6b7280;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .breadcrumb-item a:hover {
+      color: var(--primary);
+    }
+    .breadcrumb-item[aria-current="page"] {
+      color: #111827;
+      font-weight: 500;
+    }
+    
     .staff-training {
       max-width: 100%;
       margin: 0;
@@ -174,7 +221,8 @@
       background: #e5e7eb;
       overflow: hidden;
     }
-    .video-thumbnail img {
+    .video-thumbnail img,
+    .video-thumbnail video {
       position: absolute;
       top: 0;
       left: 0;
@@ -333,16 +381,34 @@
 
   <script>
     // Load and render training videos
-    (function() {
-      const trainingDataEl = document.getElementById('training-data');
+    (async function() {
       const categoriesEl = document.getElementById('video-categories');
       const searchInput = document.getElementById('video-search');
       const categoryFilter = document.getElementById('category-filter');
       const requiredFilter = document.getElementById('required-filter');
       
-      if (!trainingDataEl || !categoriesEl) return;
+      if (!categoriesEl) return;
       
-      const trainingData = JSON.parse(trainingDataEl.textContent);
+      // AWS APIからデータを取得（利用可能な場合）、フォールバックは静的JSON
+      let trainingData = null;
+      if (window.AWSTrainingVideosAPI) {
+        try {
+          trainingData = await window.AWSTrainingVideosAPI.loadData();
+        } catch (error) {
+          console.error('[TrainingVideos] Failed to load from AWS API:', error);
+        }
+      }
+      
+      // AWS APIから取得できなかった場合は、静的JSONから読み込む
+      if (!trainingData) {
+        const trainingDataEl = document.getElementById('training-data');
+        if (trainingDataEl) {
+          trainingData = JSON.parse(trainingDataEl.textContent);
+        } else {
+          trainingData = { categories: [] };
+        }
+      }
+      
       const categories = trainingData.categories || [];
       
       let filteredCategories = [...categories];
@@ -357,10 +423,25 @@
             const requiredBadge = video.required ? 
               '<span class="video-required-badge">必須</span>' : '';
             
+            // サムネイルが存在しない場合は、動画の最初のフレームを使用
+            // サムネイルが空文字列、placeholder、または存在しない可能性のあるローカルパスの場合は動画を使用
+            const hasValidThumbnail = video.thumbnail && 
+              video.thumbnail.trim() !== '' && 
+              !video.thumbnail.includes('placeholder') && 
+              !video.thumbnail.includes('via.placeholder') &&
+              !video.thumbnail.startsWith('/images/'); // ローカルの画像パスは存在しない可能性が高い
+            
+            const thumbnailHtml = hasValidThumbnail
+              ? `<img src="${video.thumbnail}" alt="${video.title}" onerror="this.parentElement.querySelector('video').style.display='block'; this.style.display='none';" />`
+              : '';
+            
             return `
               <div class="video-card" data-video-id="${video.id}" data-category="${category.id}" data-required="${video.required}">
                 <div class="video-thumbnail">
-                  <img src="${video.thumbnail}" alt="${video.title}" />
+                  ${thumbnailHtml}
+                  <video style="display: ${thumbnailHtml ? 'none' : 'block'}; width: 100%; height: 100%; object-fit: cover;" preload="metadata" muted>
+                    <source src="${video.video_url}" type="video/mp4">
+                  </video>
                   <div class="video-play-overlay">
                     <i class="fas fa-play"></i>
                   </div>

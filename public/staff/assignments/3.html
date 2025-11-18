@@ -73,8 +73,8 @@
 </header>
 
     </div>
-    <!-- リリース前チェックボックス -->
-    <div id="release-check-section" class="release-check-section">
+    <!-- リリース前チェックボックス（清掃員関連ページでは非表示） -->
+    <div id="release-check-section" class="release-check-section" data-hide-for-staff>
       <div class="release-check-container">
         <div class="release-check-label">リリース前チェック</div>
         <div class="release-check-boxes">
@@ -99,6 +99,15 @@
 
 
 <main id="main" class="container staff-assignment-detail">
+  <!-- パンくずリスト -->
+  <nav class="breadcrumb" aria-label="パンくずリスト">
+    <ol class="breadcrumb-list">
+      <li class="breadcrumb-item"><a href="/staff/dashboard.html">ダッシュボード</a></li>
+      <li class="breadcrumb-item"><a href="/staff/assignments.html">作業割り当て一覧</a></li>
+      <li class="breadcrumb-item" aria-current="page">作業詳細</li>
+    </ol>
+  </nav>
+  
   <div class="page-header">
     <a href="/staff/assignments.html" class="back-btn">
       <i class="fas fa-chevron-left"></i>
@@ -217,6 +226,44 @@
   </div>
 
   <style>
+    /* パンくずリスト */
+    .breadcrumb {
+      margin-bottom: 16px;
+      padding: 12px 0;
+    }
+    .breadcrumb-list {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      flex-wrap: wrap;
+    }
+    .breadcrumb-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .breadcrumb-item:not(:last-child)::after {
+      content: '›';
+      margin-left: 8px;
+      color: #9ca3af;
+    }
+    .breadcrumb-item a {
+      color: #6b7280;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .breadcrumb-item a:hover {
+      color: var(--primary);
+    }
+    .breadcrumb-item[aria-current="page"] {
+      color: #111827;
+      font-weight: 500;
+    }
+    
     .staff-assignment-detail {
       max-width: 100%;
       margin: 0;
@@ -527,7 +574,9 @@
 </footer>
 
 
-    <!-- フィードバックボタン（ドラッグ可能） -->
+    <!-- フィードバックボタン（清掃員関連ページでは非表示） -->
+    <div data-hide-for-staff>
+      <!-- フィードバックボタン（ドラッグ可能） -->
 <div id="feedback-button" class="feedback-button" draggable="true">
   <i class="fas fa-arrow-down"></i>
 </div>
@@ -1104,6 +1153,7 @@
 </script>
 
 
+    </div>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -1114,6 +1164,33 @@
     <script src="/js/navigation.js"></script>
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
+    <script>
+      // 清掃員関連ページではリリース前チェックとフィードバックボタンを非表示
+      (function() {
+        const bodyClass = document.body.className || '';
+        const path = window.location.pathname || '';
+        const isStaffPage = bodyClass.includes('staff') || path.includes('/staff/');
+        
+        if (isStaffPage) {
+          // リリース前チェックセクションを非表示
+          const releaseCheckSection = document.getElementById('release-check-section');
+          if (releaseCheckSection) {
+            releaseCheckSection.style.display = 'none';
+          }
+          
+          // フィードバックボタンを非表示
+          const feedbackButton = document.getElementById('feedback-button');
+          if (feedbackButton) {
+            feedbackButton.style.display = 'none';
+          }
+          
+          // data-hide-for-staff属性を持つ要素を非表示
+          document.querySelectorAll('[data-hide-for-staff]').forEach(el => {
+            el.style.display = 'none';
+          });
+        }
+      })();
+    </script>
   </body>
   </html>
 

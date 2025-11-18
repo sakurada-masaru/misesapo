@@ -15,6 +15,7 @@ ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*').split(',')
 # データファイルのS3キー
 DATA_KEY = 'cleaning-manual/data.json'
 DRAFT_KEY = 'cleaning-manual/draft.json'
+TRAINING_VIDEOS_KEY = 'training-videos/data.json'
 
 def lambda_handler(event, context):
     """
@@ -71,6 +72,12 @@ def lambda_handler(event, context):
                 return get_cleaning_manual_data(headers, True)
             elif method == 'PUT' or method == 'POST':
                 return save_cleaning_manual_data(event, headers, True)
+        elif normalized_path == '/training-videos':
+            # 研修動画データの読み書き
+            if method == 'GET':
+                return get_training_videos_data(headers)
+            elif method == 'PUT' or method == 'POST':
+                return save_training_videos_data(event, headers)
         else:
             # デバッグ: パスが一致しなかった場合
             print(f"DEBUG: Path not matched. normalized_path={normalized_path}, original_path={path}")
@@ -238,6 +245,86 @@ def save_cleaning_manual_data(event, headers, is_draft=False):
                 'status': 'success',
                 'message': 'データを保存しました',
                 'isDraft': is_draft
+            })
+        }
+    except json.JSONDecodeError as e:
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'Invalid JSON',
+                'message': str(e)
+            })
+        }
+    except Exception as e:
+        print(f"Error saving to S3: {str(e)}")
+        raise
+
+def get_training_videos_data(headers):
+    """
+    研修動画データを取得
+    """
+    try:
+        # S3からデータを取得
+        response = s3_client.get_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=TRAINING_VIDEOS_KEY
+        )
+        
+        data = json.loads(response['Body'].read().decode('utf-8'))
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(data, ensure_ascii=False)
+        }
+    except s3_client.exceptions.NoSuchKey:
+        # ファイルが存在しない場合は空のデータを返す
+        empty_data = {'categories': []}
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(empty_data, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error reading from S3: {str(e)}")
+        raise
+
+def save_training_videos_data(event, headers):
+    """
+    研修動画データを保存
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        # JSONをパース
+        if isinstance(body, str):
+            data = json.loads(body)
+        else:
+            data = json.loads(body.decode('utf-8'))
+        
+        # メタデータを追加
+        data['updatedAt'] = datetime.now().isoformat()
+        data['updatedBy'] = data.get('updatedBy', 'unknown')
+        
+        # S3に保存
+        s3_client.put_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=TRAINING_VIDEOS_KEY,
+            Body=json.dumps(data, ensure_ascii=False, indent=2),
+            ContentType='application/json'
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'データを保存しました'
             })
         }
     except json.JSONDecodeError as e:

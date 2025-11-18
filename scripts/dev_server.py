@@ -114,6 +114,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             # 下書きデータを返す（言語サフィックスに対応）
             lang_suffix = '-en' if path.endswith('-en') or path.endswith('-en/draft') else ''
             self.handle_cleaning_manual_draft_get(lang_suffix=lang_suffix)
+        elif path == '/api/training-videos':
+            # 研修動画データを返す
+            self.handle_training_videos_get()
         elif path == '/api/auth/me':
             # 現在のユーザー情報を取得
             self.handle_auth_me()
@@ -697,6 +700,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             # 下書きデータを保存（言語サフィックスに対応）
             lang_suffix = '-en' if path.endswith('-en') or path.endswith('-en/draft') else ''
             self.handle_cleaning_manual_draft_put(lang_suffix=lang_suffix)
+        elif path == '/api/training-videos':
+            # 研修動画データを保存
+            self.handle_training_videos_put()
         elif path.startswith('/api/services/'):
             # サービス更新（既存の処理）
             path_parts = self.path.split('/')
@@ -1155,6 +1161,47 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             })
         except Exception as e:
             self.send_error(500, f"Failed to save cleaning manual: {e}")
+    
+    def handle_training_videos_get(self):
+        """研修動画データを取得"""
+        try:
+            training_videos_file = DATA_DIR / "training_videos.json"
+            
+            if training_videos_file.exists():
+                with open(training_videos_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                self.send_json_response(data)
+            else:
+                # ファイルが存在しない場合は空のデータを返す
+                self.send_json_response({
+                    'categories': []
+                })
+        except Exception as e:
+            self.send_error(500, f"Failed to load training videos: {e}")
+    
+    def handle_training_videos_put(self):
+        """研修動画データを保存"""
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            data = json.loads(body.decode('utf-8'))
+            
+            # JSONファイルを保存
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            training_videos_file = DATA_DIR / "training_videos.json"
+            
+            with open(training_videos_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            # ビルドを実行（非同期）
+            self.run_build_async()
+            
+            self.send_json_response({
+                'status': 'success',
+                'message': '研修動画データを保存しました。変更を確認してからGitにコミット・プッシュしてください。'
+            })
+        except Exception as e:
+            self.send_error(500, f"Failed to save training videos: {e}")
     
     def handle_cleaning_manual_upload_image(self):
         """画像をアップロード（multipart/form-data）"""

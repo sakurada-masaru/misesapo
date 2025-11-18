@@ -73,8 +73,8 @@
 </header>
 
     </div>
-    <!-- リリース前チェックボックス -->
-    <div id="release-check-section" class="release-check-section">
+    <!-- リリース前チェックボックス（清掃員関連ページでは非表示） -->
+    <div id="release-check-section" class="release-check-section" data-hide-for-staff>
       <div class="release-check-container">
         <div class="release-check-label">リリース前チェック</div>
         <div class="release-check-boxes">
@@ -492,7 +492,9 @@
 </footer>
 
 
-    <!-- フィードバックボタン（ドラッグ可能） -->
+    <!-- フィードバックボタン（清掃員関連ページでは非表示） -->
+    <div data-hide-for-staff>
+      <!-- フィードバックボタン（ドラッグ可能） -->
 <div id="feedback-button" class="feedback-button" draggable="true">
   <i class="fas fa-arrow-down"></i>
 </div>
@@ -1069,6 +1071,7 @@
 </script>
 
 
+    </div>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -1079,6 +1082,33 @@
     <script src="/js/navigation.js"></script>
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
+    <script>
+      // 清掃員関連ページではリリース前チェックとフィードバックボタンを非表示
+      (function() {
+        const bodyClass = document.body.className || '';
+        const path = window.location.pathname || '';
+        const isStaffPage = bodyClass.includes('staff') || path.includes('/staff/');
+        
+        if (isStaffPage) {
+          // リリース前チェックセクションを非表示
+          const releaseCheckSection = document.getElementById('release-check-section');
+          if (releaseCheckSection) {
+            releaseCheckSection.style.display = 'none';
+          }
+          
+          // フィードバックボタンを非表示
+          const feedbackButton = document.getElementById('feedback-button');
+          if (feedbackButton) {
+            feedbackButton.style.display = 'none';
+          }
+          
+          // data-hide-for-staff属性を持つ要素を非表示
+          document.querySelectorAll('[data-hide-for-staff]').forEach(el => {
+            el.style.display = 'none';
+          });
+        }
+      })();
+    </script>
   </body>
   </html>
 

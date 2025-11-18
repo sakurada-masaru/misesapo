@@ -16,3 +16,6 @@ scripts/firebase-service-account.json
 
 # Environment variables (機密情報を含む)
 .env
+
+# 動画ファイル（AWS S3から読み込むため）
+src/assets/movie/*.mp4

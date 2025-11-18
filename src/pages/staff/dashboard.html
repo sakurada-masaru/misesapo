@@ -3,6 +3,13 @@
 @json('data/meta/staff_dashboard_body_class.json', $body_class)
 
 <main id="main" class="container staff-dashboard">
+  <!-- パンくずリスト -->
+  <nav class="breadcrumb" aria-label="パンくずリスト">
+    <ol class="breadcrumb-list">
+      <li class="breadcrumb-item"><a href="/staff/dashboard.html">ダッシュボード</a></li>
+    </ol>
+  </nav>
+  
   <div class="dashboard-header">
     <h1 class="page-title">清掃員ダッシュボード</h1>
     <div class="user-info">
@@ -117,6 +124,44 @@
   </section>
 
   <style>
+    /* パンくずリスト */
+    .breadcrumb {
+      margin-bottom: 16px;
+      padding: 12px 0;
+    }
+    .breadcrumb-list {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      flex-wrap: wrap;
+    }
+    .breadcrumb-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .breadcrumb-item:not(:last-child)::after {
+      content: '›';
+      margin-left: 8px;
+      color: #9ca3af;
+    }
+    .breadcrumb-item a {
+      color: #6b7280;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .breadcrumb-item a:hover {
+      color: var(--primary);
+    }
+    .breadcrumb-item[aria-current="page"] {
+      color: #111827;
+      font-weight: 500;
+    }
+    
     .staff-dashboard {
       max-width: 100%;
       margin: 0;
