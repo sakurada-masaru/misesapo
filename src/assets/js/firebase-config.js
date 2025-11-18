@@ -30,12 +30,25 @@
     try {
       firebase.initializeApp(firebaseConfig);
       window.FirebaseAuth = firebase.auth();
-      window.FirebaseFirestore = firebase.firestore();
-      window.FirebaseStorage = firebase.storage();
-      // FieldValueもグローバルに公開（compat版ではfirebase.firestore.FieldValueから直接取得）
-      if (firebase.firestore && firebase.firestore.FieldValue) {
-        window.FirebaseFieldValue = firebase.firestore.FieldValue;
+      
+      // Firestoreが読み込まれている場合のみ初期化
+      if (typeof firebase.firestore === 'function') {
+        window.FirebaseFirestore = firebase.firestore();
+        // FieldValueもグローバルに公開（compat版ではfirebase.firestore.FieldValueから直接取得）
+        if (firebase.firestore && firebase.firestore.FieldValue) {
+          window.FirebaseFieldValue = firebase.firestore.FieldValue;
+        }
+      } else {
+        console.warn('[Firebase] Firestore is not loaded. firebase-firestore-compat.js is required for Firestore features.');
       }
+      
+      // Storageが読み込まれている場合のみ初期化
+      if (typeof firebase.storage === 'function') {
+        window.FirebaseStorage = firebase.storage();
+      } else {
+        console.warn('[Firebase] Storage is not loaded. firebase-storage-compat.js is required for Storage features.');
+      }
+      
       console.log('[Firebase] Initialized successfully');
     } catch (error) {
       console.error('[Firebase] Initialization error:', error);

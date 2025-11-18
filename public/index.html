@@ -261,6 +261,167 @@
             transition: transform 0.3s ease;
         }
 
+        /* SP版：左下メニューボタン */
+        .fixed-menu-button {
+            display: none;
+            position: fixed;
+            bottom: 50px;
+            left: 50px;
+            width: 150px;
+            height: 150px;
+            z-index: 999998; /* スプラッシュスクリーン（999999）より下、他の要素より上 */
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .fixed-menu-button:hover {
+            transform: scale(1.1);
+        }
+
+        .fixed-menu-button__circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #FF008C;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(255, 0, 140, 0.4);
+        }
+
+        .fixed-menu-button__circle::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .fixed-menu-button__text {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* SP版：メニューパネル */
+        .sp-menu-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 85vw;
+            max-width: 400px;
+            height: 100vh;
+            background: #ffffff;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            z-index: 999997; /* スプラッシュスクリーンより下、メニューボタンより上 */
+            transition: right 0.3s ease;
+            overflow-y: auto;
+            padding: 80px 24px 32px;
+        }
+
+        .sp-menu-panel.open {
+            right: 0;
+        }
+
+        .sp-menu-panel-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999996; /* メニューパネルより下 */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sp-menu-panel-overlay.open {
+            display: block;
+            opacity: 1;
+        }
+
+        .sp-menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sp-menu-item {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .sp-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .sp-menu-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            color: #333;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .sp-menu-link:hover {
+            color: #FF008C;
+        }
+
+        .sp-menu-arrow {
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .sp-menu-item.active .sp-menu-arrow {
+            transform: rotate(180deg);
+        }
+
+        .sp-menu-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .sp-menu-item.active .sp-menu-submenu {
+            max-height: 2000px;
+        }
+
+        .sp-menu-submenu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            padding-left: 16px;
+        }
+
+        .sp-menu-submenu-item {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .sp-menu-submenu-link {
+            display: block;
+            padding: 12px 0;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .sp-menu-submenu-link:hover {
+            color: #FF008C;
+        }
+
         .fixed-order-button:hover {
             transform: scale(1.1);
         }
@@ -360,10 +521,267 @@
 
         @media (max-width: 768px) {
             .fixed-banner {
-                top: 390px;
-                right: 20px;
-                width: 280px;
-                max-width: 280px;
+                display: none;
+            }
+
+            .news-section-wrapper {
+                display: none;
+            }
+
+            .hero-headings {
+                display: none;
+            }
+
+            .cosmetic-header,
+            .normal-header {
+                display: none;
+            }
+
+            /* SP版：メニューパネルを表示 */
+            .sp-menu-panel {
+                display: block;
+            }
+
+            .hero-headings-sp {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+                margin: 0 auto 16px;
+                width: 100%;
+                pointer-events: none;
+                z-index: 200;
+            }
+
+            .hero-headings-sp .hero-heading {
+                opacity: 0;
+                transform: translateY(24px) scale(0.94);
+                animation: spHeroLabelIntro 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 0s forwards,
+                           spHeroLabelFloat 4s ease-in-out 0.9s infinite;
+                animation-delay: 0s, 0.9s;
+            }
+
+            .hero-headings-sp .hero-heading:nth-child(2) {
+                animation-delay: 0.2s, 1.1s;
+            }
+
+            .hero-headings-sp .hero-heading img {
+                width: auto;
+                height: 180px;
+                max-height: 40vh;
+                max-width: 60vw;
+            }
+
+            /* SP版専用：水平方向ラベルアニメーション（マスクの上に表示） */
+            .hero-labels-horizontal-sp {
+                display: flex !important; /* 確実に表示 */
+                flex-direction: row;
+                align-items: center;
+                gap: 12px;
+                position: absolute;
+                left: 60px; /* 100pxから40px左にずらした */
+                top: 200px;
+                z-index: 70; /* マスク（z-index: 60）より上に表示 */
+                pointer-events: none;
+                width: auto;
+            }
+
+            .hero-labels-horizontal-sp .hero-label-item {
+                opacity: 0;
+                transform: translateY(20px) scale(0.9);
+                animation: spLabelHorizontalFadeIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+                           spLabelHorizontalFloat 3.5s ease-in-out 1s infinite;
+            }
+
+            .hero-labels-horizontal-sp .hero-label-item:nth-child(1) {
+                animation-delay: 0s, 1s;
+            }
+
+            .hero-labels-horizontal-sp .hero-label-item:nth-child(2) {
+                animation-delay: 0.3s, 1.3s;
+            }
+
+            .hero-labels-horizontal-sp .hero-label-item img {
+                width: auto;
+                height: 300px;
+                max-height: 300px;
+                max-width: 45vw;
+                filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25)) drop-shadow(0 0 15px rgba(255, 103, 156, 0.35));
+            }
+
+            .fullscreen-image-section {
+                padding-top: 0;
+            }
+
+            .sp-hero-stage {
+                width: min(430px, 90vw);
+                margin: 0 auto;
+                position: relative;
+                height: auto; /* 高さは自動（画像の高さに合わせる） */
+            }
+
+            .fullscreen-image-wrapper {
+                position: relative;
+                width: 100%;
+                height: auto;
+                margin: 0 auto;
+                overflow: hidden;
+            }
+
+            .fullscreen-image-wrapper .fullscreen-image {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+                opacity: 0;
+                transition: opacity 2s ease-in-out;
+            }
+
+            .fullscreen-image-wrapper .fullscreen-image:first-child {
+                opacity: 1;
+            }
+
+            .fullscreen-image-wrapper .fullscreen-image.active {
+                opacity: 1;
+            }
+
+            .hero-mask {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                margin-top: 0;
+                z-index: 60;
+            }
+
+            .hero-carousel-sp {
+                display: none !important; /* SP版では非表示 */
+                visibility: hidden !important;
+                height: 0 !important;
+                overflow: hidden !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* SP版：サービスカルーセル関連を非表示 */
+            .service-section-title {
+                display: none !important;
+            }
+
+            .misesapo-flow-wrapper {
+                display: none !important;
+            }
+
+            .swipe-hint {
+                display: none !important;
+            }
+
+            .misesapo-category-buttons {
+                display: none !important;
+            }
+
+            .service-carousel {
+                display: none !important;
+            }
+
+            .hero-carousel-track {
+                display: flex;
+                gap: 12px;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; /* Firefox */
+                -ms-overflow-style: none; /* IE/Edge */
+                padding: 0 20px;
+                scroll-behavior: smooth;
+            }
+
+            .hero-carousel-track::-webkit-scrollbar {
+                display: none; /* Chrome/Safari */
+            }
+
+            .hero-carousel-track img {
+                width: 80px;
+                height: 80px;
+                flex-shrink: 0;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                scroll-snap-align: center;
+                object-fit: cover;
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+
+            .hero-carousel-track img:active {
+                transform: scale(0.95);
+            }
+
+            /* カルーセルインディケーター */
+            .hero-carousel-indicators {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 8px;
+                margin-top: 20px;
+                padding: 0 20px;
+            }
+
+            .hero-carousel-indicator {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.5);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+            }
+
+            .hero-carousel-indicator.active {
+                width: 24px;
+                height: 8px;
+                border-radius: 4px;
+                background: #FF008C;
+                border-color: #FF008C;
+            }
+
+            .fullscreen-image-wrapper {
+                height: auto;
+            }
+
+            /* SP版：発注ボタンのサイズを80pxに */
+            .fixed-order-button {
+                width: 80px;
+                height: 80px;
+                bottom: 30px;
+                right: 30px;
+            }
+
+            .fixed-order-button__text {
+                font-size: 10px;
+            }
+
+            .fixed-order-button__rotating-text {
+                width: 100px;
+                height: 100px;
+            }
+
+            .fixed-order-button__rotating-text text {
+                font-size: 8px;
+            }
+
+            /* SP版：左下メニューボタンを表示 */
+            .fixed-menu-button {
+                display: block;
+                width: 80px;
+                height: 80px;
+                bottom: 30px;
+                left: 30px;
+            }
+
+            .fixed-menu-button__text {
+                font-size: 10px;
             }
         }
 
@@ -377,8 +795,23 @@
             flex-direction: row;
             align-items: center;
             gap: 20px;
-            z-index: 10;
+            z-index: 200;
             pointer-events: none;
+        }
+
+        .hero-headings-sp {
+            display: none;
+        }
+
+        /* SP版専用：水平方向ラベルアニメーション（PC版では非表示） */
+        .hero-labels-horizontal-sp {
+            display: none;
+        }
+
+        .sp-hero-stage {
+            position: relative;
+            width: 100%;
+            height: 100%;
         }
 
         .hero-heading {
@@ -395,8 +828,9 @@
         }
 
         .hero-heading img {
-            max-width: 100%;
+            width: 100%;
             height: auto;
+            max-width: 100%;
             filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 20px rgba(255, 103, 156, 0.4));
             transition: transform 0.3s ease, filter 0.3s ease;
             animation: heroHeadingFloat 3s ease-in-out infinite;
@@ -446,22 +880,76 @@
             }
         }
 
+        @keyframes spHeroLabelIntro {
+            0% {
+                opacity: 0;
+                transform: translateY(24px) scale(0.92);
+            }
+            60% {
+                opacity: 1;
+                transform: translateY(-6px) scale(1.03);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes spHeroLabelFloat {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-6px) scale(1.01);
+            }
+        }
+
+        /* SP版専用：水平方向ラベルアニメーション */
+        @keyframes spLabelHorizontalFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.9);
+            }
+            60% {
+                opacity: 0.9;
+                transform: translateY(-5px) scale(1.02);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes spLabelHorizontalFloat {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-8px) scale(1.02);
+            }
+        }
+
         /* レスポンシブ対応 */
         @media (max-width: 768px) {
             .hero-headings {
-                left: 30%;
-                transform: translate(-50%, -50%);
+                display: none;
+            }
+
+            .hero-headings-sp {
+                display: flex;
+                justify-content: center;
+                align-items: center;
                 flex-direction: column;
                 gap: 15px;
             }
 
-            .hero-heading img {
+            .hero-headings-sp .hero-heading img {
                 max-width: 200px;
             }
         }
 
         @media (max-width: 480px) {
-            .hero-heading img {
+            .hero-headings-sp .hero-heading img {
                 max-width: 150px;
             }
         }
@@ -1101,6 +1589,10 @@
             display: block;
         }
 
+        .hero-carousel-sp {
+            display: none;
+        }
+
         /* こんなお悩みありませんか？セクション */
         .problem-bg {
             background: transparent;
@@ -1451,6 +1943,26 @@
 
     <!-- フルスクリーン画像セクション（ヒーローセクション） -->
     <section class="fullscreen-image-section">
+        <div class="sp-hero-stage">
+            <div class="fullscreen-image-wrapper">
+                <img src="/images-admin/hero-image001.png" data-desktop-src="/images-admin/hero-image001.png" data-sp-src="/images-admin/hero-slide-01-sp.png" alt="ミセサポ" class="fullscreen-image fullscreen-image-1">
+                <img src="/images-admin/hero-image002.png" data-desktop-src="/images-admin/hero-image002.png" data-sp-src="/images-admin/hero-slide-02-sp.png" alt="ミセサポ" class="fullscreen-image fullscreen-image-2">
+                <img src="/images-admin/hero-image003.png" data-desktop-src="/images-admin/hero-image003.png" data-sp-src="/images-admin/hero-slide-03-sp.png" alt="ミセサポ" class="fullscreen-image fullscreen-image-3">
+            </div>
+            <!-- マスク画像 -->
+            <div class="hero-mask">
+                <img src="/images-admin/mask01.png" alt="" class="hero-mask-image" data-desktop-src="/images-admin/mask01.png" data-sp-src="/images-admin/mask-sp.png">
+            </div>
+            <!-- SP版専用：水平方向ラベルアニメーション（マスクの上に表示） -->
+            <div class="hero-labels-horizontal-sp">
+                <div class="hero-label-item">
+                    <img src="/images-admin/label01.png" alt="店舗の清掃はミセサポへ！">
+                </div>
+                <div class="hero-label-item">
+                    <img src="/images-admin/label02.png" alt="清掃も設備もまとめて管理！">
+                </div>
+            </div>
+        </div>
         <!-- お知らせセクション -->
         <div class="news-section-wrapper">
             <div class="news-section">
@@ -1493,14 +2005,24 @@
                 <img src="/images-admin/label02.png" alt="清掃も設備もまとめて管理！">
             </div>
         </div>
-        <div class="fullscreen-image-wrapper">
-            <img src="/images-admin/hero-image001.png" alt="ミセサポ" class="fullscreen-image fullscreen-image-1">
-            <img src="/images-admin/hero-image002.png" alt="ミセサポ" class="fullscreen-image fullscreen-image-2">
-            <img src="/images-admin/hero-image003.png" alt="ミセサポ" class="fullscreen-image fullscreen-image-3">
+
+        <div class="hero-headings-sp">
+            <div class="hero-heading">
+                <img src="/images-admin/label01.png" alt="店舗の清掃はミセサポへ！">
         </div>
-        <!-- マスク画像 -->
-        <div class="hero-mask">
-            <img src="/images-admin/mask01.png" alt="" class="hero-mask-image">
+            <div class="hero-heading">
+                <img src="/images-admin/label02.png" alt="清掃も設備もまとめて管理！">
+            </div>
+        </div>
+        <div class="hero-carousel-sp">
+            <div class="hero-carousel-track" id="hero-carousel-track">
+                <img src="/images-admin/hero-slide-01-sp.png" alt="清掃スタッフ" loading="lazy">
+                <img src="/images-admin/hero-slide-02-sp.png" alt="作業の様子" loading="lazy">
+                <img src="/images-admin/hero-slide-03-sp.png" alt="笑顔のスタッフ" loading="lazy">
+            </div>
+            <div class="hero-carousel-indicators" id="hero-carousel-indicators">
+                <!-- インディケーターはJavaScriptで動的に生成 -->
+            </div>
         </div>
         <!-- スクロールヒント（左側、縦書き） -->
         <div class="hero_scroll_down">
@@ -1697,7 +2219,7 @@
                                         </ul>
                         </div>
                 </div>
-                            </div>
+                    </div>
                             </li>
                         <li class="mega-menu-item mega-menu-has-submenu">
                             <a href="/lp.html#voice" class="mega-menu-link">
@@ -1722,7 +2244,7 @@
                                             <li><a href="/lp.html#case-study"><span>導入事例</span></a></li>
                         </ul>
                     </div>
-                                </div>
+                            </div>
                             </div>
                             </li>
                         <li class="mega-menu-item mega-menu-has-submenu">
@@ -1736,12 +2258,32 @@
                                         <h3 class="mega-menu-column-title">企業情報</h3>
                                         <ul class="mega-menu-column-list">
                                             <li><a href="/about.html"><span>会社概要</span></a></li>
-                                            <li><a href="/privacy-policy.html"><span>個人情報保護方針</span></a></li>
                                         </ul>
-                                    </div>
-                                </div>
                             </div>
+                        </div>
+                    </div>
                         </li>
+                        <li class="mega-menu-item mega-menu-has-submenu">
+                            <a href="javascript:void(0);" class="mega-menu-link">
+                                <span class="mega-menu-text">規約とポリシー</span>
+                                <span class="mega-menu-arrow">▼</span>
+                            </a>
+                            <div class="mega-menu-submenu">
+                                <div class="mega-menu-submenu-inner">
+                                    <div class="mega-menu-column">
+                                        <h3 class="mega-menu-column-title">規約とポリシー</h3>
+                                        <ul class="mega-menu-column-list">
+                                            <li><a href="/privacy-policy.html"><span>個人情報保護方針</span></a></li>
+                                            <li><a href="javascript:void(0);"><span>特定商取引法に基づく表記</span></a></li>
+                                            <li><a href="javascript:void(0);"><span>職場環境改善に向けた方針</span></a></li>
+                                            <li><a href="javascript:void(0);"><span>情報セキュリティ基本方針</span></a></li>
+                                            <li><a href="javascript:void(0);"><span>反社会的勢力排除宣言</span></a></li>
+                                            <li><a href="javascript:void(0);"><span>サービス利用規約</span></a></li>
+                                            <li><a href="javascript:void(0);"><span>ウェブサイト・アプリ利用規約</span></a></li>
+                                        </ul>
+                </div>
+                                    </div>
+                            </div>
                         <li class="mega-menu-item mega-menu-has-submenu">
                             <a href="/recruit.html" class="mega-menu-link">
                                 <span class="mega-menu-text">求人情報</span>
@@ -1758,19 +2300,19 @@
                                             <li><a href="/recruit/apply/inside-sales.html"><span>インサイドセールス</span></a></li>
                                             <li><a href="/recruit/apply/field-sales.html"><span>フィールドセールス</span></a></li>
                         </ul>
-                    </div>
+                                            </div>
                                     <div class="mega-menu-column">
                                         <h3 class="mega-menu-column-title">その他</h3>
                                         <ul class="mega-menu-column-list">
-                                            <li><a href="/recruit/privacy.html"><span>プライバシーポリシー</span></a></li>
+                                            <li><a href="/recruit/privacy.html"><span>採用における個人情報の取り扱いについて</span></a></li>
                                     </ul>
-                            </div>
-                            </div>
-                            </div>
+                                    </div>
+                                            </div>
+                                    </div>
                         </li>
                     </ul>
                 </nav>
-                        </div>
+                                            </div>
             <div class="cosmetic-header-right">
                 <div class="cosmetic-actions">
                     <button class="cosmetic-action-btn" aria-label="お気に入り" id="cosmetic-favorite-btn">
@@ -1820,9 +2362,9 @@
                             </svg>
                             ログアウト
                         </a>
-                            </div>
-                                            </div>
-                                    </div>
+                                </div>
+                    </div>
+                </div>
                         </div>
     </header>
 
@@ -1840,7 +2382,7 @@
                 <a href="/lp.html#voice">お客様の声</a>
                 <a href="/contact.html">カスタマーサポート</a>
                 <a href="/recruit.html">求人情報</a>
-                <a href="/recruit/privacy.html">プライバシーポリシー</a>
+                <a href="/recruit/privacy.html">採用における個人情報の取り扱いについて</a>
             </nav>
                 </div>
     </header>
@@ -1863,6 +2405,102 @@
             <div class="fixed-order-button__text">発注は<br>こちらから</div>
 </div>
                                             </div>
+
+    <!-- SP版：左下メニューボタン -->
+    <div class="fixed-menu-button" id="fixed-menu-button">
+        <div class="fixed-menu-button__circle">
+            <div class="fixed-menu-button__text">メニュー</div>
+        </div>
+    </div>
+
+    <!-- SP版：メニューパネルオーバーレイ -->
+    <div class="sp-menu-panel-overlay" id="sp-menu-panel-overlay"></div>
+
+    <!-- SP版：メニューパネル -->
+    <div class="sp-menu-panel" id="sp-menu-panel">
+        <ul class="sp-menu-list">
+            <li class="sp-menu-item">
+                <a href="/lp.html#about" class="sp-menu-link">ミセサポとは？</a>
+            </li>
+            <li class="sp-menu-item sp-menu-item-has-submenu">
+                <a href="javascript:void(0);" class="sp-menu-link">
+                    <span>対応可能サービス</span>
+                    <span class="sp-menu-arrow">▼</span>
+                </a>
+                <div class="sp-menu-submenu">
+                    <ul class="sp-menu-submenu-list">
+                        <li class="sp-menu-submenu-item"><a href="/service.html" class="sp-menu-submenu-link">すべてのサービス</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service.html#cleaning" class="sp-menu-submenu-link">清掃サービス</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service.html#gristrap" class="sp-menu-submenu-link">グリストラップ清掃</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service.html#duct" class="sp-menu-submenu-link">ダクト清掃</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service.html#rangehood" class="sp-menu-submenu-link">レンジフード清掃</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service.html#ventilation" class="sp-menu-submenu-link">換気扇清掃</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service.html#floor" class="sp-menu-submenu-link">床清掃</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service.html#maintenance" class="sp-menu-submenu-link">メンテナンス</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service.html#filter" class="sp-menu-submenu-link">フィルター交換</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service.html#aircon" class="sp-menu-submenu-link">エアコンフィルター</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service.html#pest" class="sp-menu-submenu-link">害虫駆除</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service.html#inspection" class="sp-menu-submenu-link">定期点検</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="sp-menu-item sp-menu-item-has-submenu">
+                <a href="javascript:void(0);" class="sp-menu-link">
+                    <span>お客様の声</span>
+                    <span class="sp-menu-arrow">▼</span>
+                </a>
+                <div class="sp-menu-submenu">
+                    <ul class="sp-menu-submenu-list">
+                        <li class="sp-menu-submenu-item"><a href="/lp.html#voice" class="sp-menu-submenu-link">すべてのお客様の声</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/lp.html#voice-restaurant" class="sp-menu-submenu-link">レストラン・飲食店</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/lp.html#voice-bar" class="sp-menu-submenu-link">バー・居酒屋</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/lp.html#voice-cafe" class="sp-menu-submenu-link">カフェ・喫茶店</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/lp.html#customers" class="sp-menu-submenu-link">導入店舗一覧</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/lp.html#case-study" class="sp-menu-submenu-link">導入事例</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="sp-menu-item">
+                <a href="/contact.html" class="sp-menu-link">カスタマーサポート</a>
+            </li>
+            <li class="sp-menu-item sp-menu-item-has-submenu">
+                <a href="javascript:void(0);" class="sp-menu-link">
+                    <span>求人情報</span>
+                    <span class="sp-menu-arrow">▼</span>
+                </a>
+                <div class="sp-menu-submenu">
+                    <ul class="sp-menu-submenu-list">
+                        <li class="sp-menu-submenu-item"><a href="/recruit.html" class="sp-menu-submenu-link">すべての求人</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/recruit/apply/cleaning.html" class="sp-menu-submenu-link">清掃スタッフ</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/recruit/apply/equipment.html" class="sp-menu-submenu-link">設備メンテナンススタッフ</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/recruit/apply/inside-sales.html" class="sp-menu-submenu-link">インサイドセールス</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/recruit/apply/field-sales.html" class="sp-menu-submenu-link">フィールドセールス</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/recruit/privacy.html" class="sp-menu-submenu-link">採用における個人情報の取り扱いについて</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="sp-menu-item sp-menu-item-has-submenu">
+                <a href="javascript:void(0);" class="sp-menu-link">
+                    <span>規約とポリシー</span>
+                    <span class="sp-menu-arrow">▼</span>
+                </a>
+                <div class="sp-menu-submenu">
+                    <ul class="sp-menu-submenu-list">
+                        <li class="sp-menu-submenu-item"><a href="/privacy-policy.html" class="sp-menu-submenu-link">個人情報保護方針</a></li>
+                        <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">特定商取引法に基づく表記</a></li>
+                        <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">職場環境改善に向けた方針</a></li>
+                        <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">情報セキュリティ基本方針</a></li>
+                        <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">反社会的勢力排除宣言</a></li>
+                        <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">サービス利用規約</a></li>
+                        <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">ウェブサイト・アプリ利用規約</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="sp-menu-item">
+                <a href="/about.html" class="sp-menu-link">企業情報</a>
+            </li>
+        </ul>
+    </div>
 
     <script>
         // マスク画像の高さに合わせてヒーローセクションと画像の高さを設定
@@ -1895,6 +2533,174 @@
                 maskImage.addEventListener('load', setHeroSectionHeight);
             }
         }
+
+        // SP版：背景画像のディゾルブ切り替え
+        (function() {
+            if (window.innerWidth > 768) return; // PC版では実行しない
+            
+            const images = document.querySelectorAll('.fullscreen-image-wrapper .fullscreen-image');
+            if (images.length === 0) return;
+            
+            let currentIndex = 0;
+            
+            // 最初の画像をアクティブに
+            images[0].classList.add('active');
+            
+            // 画像を順番に切り替え
+            function switchImage() {
+                // 現在の画像からactiveクラスを削除
+                images[currentIndex].classList.remove('active');
+                
+                // 次の画像のインデックスを計算
+                currentIndex = (currentIndex + 1) % images.length;
+                
+                // 次の画像にactiveクラスを追加
+                images[currentIndex].classList.add('active');
+            }
+            
+            // 3秒ごとに画像を切り替え
+            setInterval(switchImage, 3000);
+        })();
+
+        // SP版：ヒーローカルーセルの自動スクロールとインディケーター
+        (function() {
+            if (window.innerWidth > 768) return; // PC版では実行しない
+            
+            const track = document.getElementById('hero-carousel-track');
+            const indicatorsContainer = document.getElementById('hero-carousel-indicators');
+            
+            if (!track || !indicatorsContainer) return;
+            
+            const images = track.querySelectorAll('img');
+            if (images.length === 0) return;
+            
+            let currentIndex = 0;
+            let autoScrollInterval = null;
+            let isUserScrolling = false;
+            let scrollTimeout = null;
+            
+            // インディケーターを生成
+            images.forEach((_, index) => {
+                const indicator = document.createElement('div');
+                indicator.className = 'hero-carousel-indicator';
+                if (index === 0) indicator.classList.add('active');
+                indicator.addEventListener('click', () => {
+                    scrollToIndex(index);
+                });
+                indicatorsContainer.appendChild(indicator);
+            });
+            
+            const indicators = indicatorsContainer.querySelectorAll('.hero-carousel-indicator');
+            
+            // 指定されたインデックスにスクロール
+            function scrollToIndex(index) {
+                if (index < 0 || index >= images.length) return;
+                
+                currentIndex = index;
+                const image = images[index];
+                const imageLeft = image.offsetLeft;
+                const imageWidth = image.offsetWidth;
+                const trackWidth = track.offsetWidth;
+                const scrollLeft = imageLeft - (trackWidth / 2) + (imageWidth / 2);
+                
+                track.scrollTo({
+                    left: scrollLeft,
+                    behavior: 'smooth'
+                });
+                
+                updateIndicators();
+            }
+            
+            // インディケーターを更新
+            function updateIndicators() {
+                indicators.forEach((indicator, index) => {
+                    if (index === currentIndex) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            }
+            
+            // 現在のインデックスを計算
+            function updateCurrentIndex() {
+                const trackScrollLeft = track.scrollLeft;
+                const trackWidth = track.offsetWidth;
+                
+                let closestIndex = 0;
+                let closestDistance = Infinity;
+                
+                images.forEach((image, index) => {
+                    const imageLeft = image.offsetLeft;
+                    const imageWidth = image.offsetWidth;
+                    const imageCenter = imageLeft + (imageWidth / 2);
+                    const trackCenter = trackScrollLeft + (trackWidth / 2);
+                    const distance = Math.abs(imageCenter - trackCenter);
+                    
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestIndex = index;
+                    }
+                });
+                
+                if (closestIndex !== currentIndex) {
+                    currentIndex = closestIndex;
+                    updateIndicators();
+                }
+            }
+            
+            // 自動スクロールを開始
+            function startAutoScroll() {
+                if (autoScrollInterval) return;
+                
+                autoScrollInterval = setInterval(() => {
+                    if (!isUserScrolling) {
+                        const nextIndex = (currentIndex + 1) % images.length;
+                        scrollToIndex(nextIndex);
+                    }
+                }, 4000); // 4秒ごとに自動スクロール
+            }
+            
+            // 自動スクロールを停止
+            function stopAutoScroll() {
+                if (autoScrollInterval) {
+                    clearInterval(autoScrollInterval);
+                    autoScrollInterval = null;
+                }
+            }
+            
+            // ユーザーがスクロールしているかどうかを検出
+            track.addEventListener('scroll', () => {
+                isUserScrolling = true;
+                stopAutoScroll();
+                
+                // スクロールが止まったら現在のインデックスを更新
+                if (scrollTimeout) {
+                    clearTimeout(scrollTimeout);
+                }
+                
+                scrollTimeout = setTimeout(() => {
+                    updateCurrentIndex();
+                    isUserScrolling = false;
+                    startAutoScroll();
+                }, 150);
+            });
+            
+            // タッチイベントで自動スクロールを一時停止
+            track.addEventListener('touchstart', () => {
+                stopAutoScroll();
+            });
+            
+            track.addEventListener('touchend', () => {
+                setTimeout(() => {
+                    updateCurrentIndex();
+                    startAutoScroll();
+                }, 500);
+            });
+            
+            // 初期化
+            startAutoScroll();
+        })();
 
         // Swiper.jsカルーセル
         (function() {
@@ -2108,7 +2914,7 @@
                     });
                 } catch (e) {
                     console.warn('calculateWheelエラー:', e);
-                }
+                    }
             }
             
             function createSlidesForCategory(category) {
@@ -2175,7 +2981,7 @@
                             }, 100);
                         }
                     }, 100);
-                } else {
+                        } else {
                     setTimeout(() => {
                         requestAnimationFrame(initSwiper);
                     }, 100);
@@ -2285,7 +3091,95 @@
         <script src="/app.js"></script>
         <script src="/js/swiper-bundle.min.js"></script>
         <script src="/js/script.js"></script>
+        <script>
+            (function() {
+                const heroMediaQuery = window.matchMedia('(max-width: 768px)');
+                const swapTargets = document.querySelectorAll('[data-sp-src]');
+                function updateHeroMediaAssets() {
+                    swapTargets.forEach(img => {
+                        const desktop = img.getAttribute('data-desktop-src') || img.getAttribute('src');
+                        const mobile = img.getAttribute('data-sp-src');
+                        if (!mobile) {
+                            return;
+                        }
+                        const targetSrc = heroMediaQuery.matches ? mobile : desktop;
+                        if (targetSrc && img.getAttribute('src') !== targetSrc) {
+                            img.setAttribute('src', targetSrc);
+                        }
+                    });
+                }
+                document.addEventListener('DOMContentLoaded', updateHeroMediaAssets);
+                if (typeof heroMediaQuery.addEventListener === 'function') {
+                    heroMediaQuery.addEventListener('change', updateHeroMediaAssets);
+                } else if (typeof heroMediaQuery.addListener === 'function') {
+                    heroMediaQuery.addListener(updateHeroMediaAssets);
+                }
+            })();
+        </script>
         <script src="/js/header.js"></script>
+        <script>
+            // SP版：メニューボタンとメニューパネルの制御
+            (function() {
+                const menuButton = document.getElementById('fixed-menu-button');
+                const menuPanel = document.getElementById('sp-menu-panel');
+                const menuOverlay = document.getElementById('sp-menu-panel-overlay');
+                
+                if (!menuButton || !menuPanel || !menuOverlay) return;
+                
+                // メニューの開閉
+                function toggleMenu() {
+                    const isOpen = menuPanel.classList.contains('open');
+                    if (isOpen) {
+                        closeMenu();
+                    } else {
+                        openMenu();
+                    }
+                }
+                
+                function openMenu() {
+                    menuPanel.classList.add('open');
+                    menuOverlay.classList.add('open');
+                    document.body.style.overflow = 'hidden';
+                }
+                
+                function closeMenu() {
+                    menuPanel.classList.remove('open');
+                    menuOverlay.classList.remove('open');
+                    document.body.style.overflow = '';
+                    // すべてのアコーディオンを閉じる
+                    document.querySelectorAll('.sp-menu-item.active').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                }
+                
+                // メニューボタンのクリックイベント
+                menuButton.addEventListener('click', toggleMenu);
+                
+                // オーバーレイのクリックイベント
+                menuOverlay.addEventListener('click', closeMenu);
+                
+                // アコーディオンメニューの展開
+                const menuItems = document.querySelectorAll('.sp-menu-item-has-submenu');
+                menuItems.forEach(item => {
+                    const link = item.querySelector('.sp-menu-link');
+                    if (link) {
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            item.classList.toggle('active');
+                        });
+                    }
+                });
+                
+                // メニュー内のリンクをクリックしたらメニューを閉じる
+                menuPanel.querySelectorAll('a[href^="/"]').forEach(link => {
+                    link.addEventListener('click', function() {
+                        if (this.getAttribute('href') !== 'javascript:void(0);') {
+                            closeMenu();
+                        }
+                    });
+                });
+            })();
+        </script>
         <script>
             // スプラッシュスクリーンの制御（最優先で実行）
             (function() {

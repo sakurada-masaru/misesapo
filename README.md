@@ -43,6 +43,7 @@ python3 scripts/dev_server.py
 - Python 簡易サーバ:
   - まずビルド: `python3 scripts/build.py`
   - 配信: `python3 -m http.server 5173 --directory public`
+  - 開発:`python3 scripts/dev_server.py`
   - ブラウザで `http://localhost:5173` を開く
 - Node のワンショット配信:
   - まずビルド: `python3 scripts/build.py`
