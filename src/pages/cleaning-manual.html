@@ -34,16 +34,8 @@
             }
         })();
     </script>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    <script src="/js/firebase-config.js"></script>
-    <script src="/js/role_config.js"></script>
-    <script src="/js/users.js"></script>
-    <script src="/js/auth.js"></script>
-    <script src="/js/cleaning-manual-firebase.js"></script>
+    <!-- AWS API -->
+    <script src="/js/aws-cleaning-manual-api.js"></script>
     <!--GoogleFonts(Noto Sans JP)-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -420,11 +412,11 @@
         // データ読み込み関数
         async function loadManualData() {
             try {
-                // Firebaseが利用可能な場合はFirestoreから読み込む
-                if (window.CleaningManualFirebase && window.FirebaseFirestore) {
+                // AWS APIが利用可能な場合はAWSから読み込む
+                if (window.AWSCleaningManualAPI && window.AWSCleaningManualAPI.isAvailable()) {
                     try {
-                        const data = await window.CleaningManualFirebase.loadDataFromFirestore();
-                        console.log('[CleaningManual] Firestore data loaded:', data);
+                        const data = await window.AWSCleaningManualAPI.loadData();
+                        console.log('[CleaningManual] AWS API data loaded:', data);
                         
                         kitchenData = data.kitchen || [];
                         airconData = data.aircon || [];
@@ -442,14 +434,14 @@
                         
                         // データが空の場合はフォールバック
                         if (manualData.length === 0) {
-                            console.warn('[CleaningManual] Firestore data is empty, trying fallback...');
-                            throw new Error('Firestore data is empty');
+                            console.warn('[CleaningManual] AWS API data is empty, trying fallback...');
+                            throw new Error('AWS API data is empty');
                         }
                         
                         initializeManual();
                         return;
                     } catch (error) {
-                        console.error('[CleaningManual] Firestore load error:', error);
+                        console.error('[CleaningManual] AWS API load error:', error);
                         // フォールバックを試行
                     }
                 }
@@ -907,39 +899,21 @@
             checkAuthAndShowEditButtons();
         }
         
-        // 認証チェックして編集ボタンを表示
+        // 認証チェックして編集ボタンを表示（AWS移行により認証は不要、編集ボタンは非表示）
         async function checkAuthAndShowEditButtons() {
-            if (!window.CleaningManualFirebase || !window.FirebaseAuth) {
-                return;
-            }
-            
-            try {
-                const authResult = await window.CleaningManualFirebase.checkAuth();
-                if (authResult.authenticated) {
-                    // 認証済みユーザーのみ編集ボタンを表示
-                    document.querySelectorAll('.edit-button-container').forEach(container => {
-                        container.style.display = 'block';
-                    });
-                }
-            } catch (error) {
-                console.error('Auth check error:', error);
-            }
+            // AWS移行により、一般ユーザー向けページでは編集ボタンを非表示
+            // 編集は管理画面（cleaning-manual-admin.html）から行う
+            document.querySelectorAll('.edit-button-container').forEach(container => {
+                container.style.display = 'none';
+            });
         }
         
-        // インライン編集モーダルを開く
+        // インライン編集モーダルを開く（AWS移行により管理画面にリダイレクト）
         async function openEditModalInline(categoryKey, index) {
-            // 認証チェック
-            if (!window.CleaningManualFirebase || !window.FirebaseAuth) {
-                alert('Firebaseが利用できません。管理画面から編集してください。');
-                return;
-            }
-            
-            const authResult = await window.CleaningManualFirebase.checkAuth();
-            if (!authResult.authenticated) {
-                alert('編集するにはログインが必要です。');
-                window.location.href = 'signin.html';
-                return;
-            }
+            // 管理画面にリダイレクト
+            alert('編集は管理画面から行ってください。');
+            window.location.href = 'cleaning-manual-admin.html';
+            return;
             
             // カテゴリ名を取得
             const categoryMap = {

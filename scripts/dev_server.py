@@ -109,6 +109,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         elif path == '/api/cleaning-manual':
             # 清掃マニュアルデータを返す
             self.handle_cleaning_manual_get()
+        elif path == '/api/cleaning-manual/draft':
+            # 下書きデータを返す
+            self.handle_cleaning_manual_draft_get()
         elif path == '/api/auth/me':
             # 現在のユーザー情報を取得
             self.handle_auth_me()
@@ -687,6 +690,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         if path == '/api/cleaning-manual':
             # 清掃マニュアルデータを保存
             self.handle_cleaning_manual_put()
+        elif path == '/api/cleaning-manual/draft':
+            # 下書きデータを保存
+            self.handle_cleaning_manual_draft_put()
         elif path.startswith('/api/services/'):
             # サービス更新（既存の処理）
             path_parts = self.path.split('/')
@@ -1060,6 +1066,44 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 })
         except Exception as e:
             self.send_error(500, f"Failed to load cleaning manual: {e}")
+    
+    def handle_cleaning_manual_draft_get(self):
+        """下書きデータを取得"""
+        try:
+            draft_file = DATA_DIR / "cleaning-manual-draft.json"
+            if draft_file.exists():
+                with open(draft_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                self.send_json_response(data)
+            else:
+                # 下書きが存在しない場合は空のデータを返す
+                self.send_json_response({
+                    'kitchen': [],
+                    'aircon': [],
+                    'floor': [],
+                    'other': []
+                })
+        except Exception as e:
+            self.send_error(500, f"Failed to load draft: {e}")
+    
+    def handle_cleaning_manual_draft_put(self):
+        """下書きデータを保存"""
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            data = json.loads(body.decode('utf-8'))
+            
+            draft_file = DATA_DIR / "cleaning-manual-draft.json"
+            with open(draft_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            self.send_json_response({
+                'status': 'success',
+                'message': '下書きを保存しました',
+                'isDraft': True
+            })
+        except Exception as e:
+            self.send_error(500, f"Failed to save draft: {e}")
     
     def handle_cleaning_manual_put(self):
         """清掃マニュアルデータを保存"""

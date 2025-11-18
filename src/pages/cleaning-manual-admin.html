@@ -10,17 +10,9 @@
     </script>
     <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    <script src="/js/firebase-config.js"></script>
-    <script src="/js/role_config.js"></script>
-    <script src="/js/users.js"></script>
-    <script src="/js/auth.js"></script>
-    <script src="/js/cleaning-manual-firebase.js"></script>
+    <!-- AWS API -->
     <script src="/js/aws-s3-upload.js"></script>
+    <script src="/js/aws-cleaning-manual-api.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -463,45 +455,31 @@
             return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         }
         
-        // Firebaseが利用可能かチェック
-        function isFirebaseAvailable() {
-            return window.CleaningManualFirebase && window.FirebaseFirestore && window.FirebaseStorage;
+        // AWS APIが利用可能かチェック
+        function isAWSAvailable() {
+            return window.AWSCleaningManualAPI && window.AWSCleaningManualAPI.isAvailable();
         }
         
-        // 認証チェックと初期化
+        // 認証チェックと初期化（AWS移行により認証は不要）
         async function initAuth() {
             // 戻るボタンのリンクを設定
             setBackLink();
             
-            if (!isFirebaseAvailable()) {
-                // Firebaseが利用できない場合は開発サーバーを試す
-                document.getElementById('loading-screen').style.display = 'none';
+            // AWS APIが利用可能かチェック
+            if (!isAWSAvailable()) {
+                console.warn('[CleaningManualAdmin] AWS API not available');
+                // 開発サーバーの場合は表示を許可
                 if (isDevelopmentServer()) {
+                    document.getElementById('loading-screen').style.display = 'none';
                     document.getElementById('admin-content').style.display = 'block';
                     return true;
                 } else {
+                    document.getElementById('loading-screen').style.display = 'none';
                     document.getElementById('auth-required').style.display = 'block';
+                    const debugInfo = document.getElementById('auth-debug-info');
+                    debugInfo.textContent = 'AWS APIが利用できません。';
                     return false;
                 }
-            }
-            
-            const authResult = await window.CleaningManualFirebase.checkAuth();
-            
-            if (!authResult.authenticated) {
-                document.getElementById('loading-screen').style.display = 'none';
-                const authRequiredDiv = document.getElementById('auth-required');
-                const debugInfo = document.getElementById('auth-debug-info');
-                
-                // デバッグ情報を表示
-                if (authResult.user) {
-                    debugInfo.textContent = `現在のロール: ${authResult.role || '未設定'} (メール: ${authResult.user.email})`;
-                } else {
-                    debugInfo.textContent = 'ログインしていません。';
-                }
-                
-                authRequiredDiv.style.display = 'block';
-                console.error('[CleaningManualAdmin] Authentication failed:', authResult);
-                return false;
             }
             
             document.getElementById('loading-screen').style.display = 'none';
@@ -511,11 +489,11 @@
         
         // 下書きチェック
         async function checkDraft() {
-            if (!isFirebaseAvailable()) return;
+            if (!isAWSAvailable()) return;
             
             try {
-                const draft = await window.CleaningManualFirebase.loadDraftFromFirestore();
-                if (draft) {
+                const draft = await window.AWSCleaningManualAPI.loadDraft();
+                if (draft && (draft.kitchen?.length > 0 || draft.aircon?.length > 0 || draft.floor?.length > 0 || draft.other?.length > 0)) {
                     document.getElementById('draft-section').style.display = 'block';
                 }
             } catch (error) {
@@ -525,14 +503,14 @@
         
         // 下書きを読み込む
         async function loadDraft() {
-            if (!isFirebaseAvailable()) {
-                showMessage('⚠️ 下書き機能はFirebaseが必要です。', 'error');
+            if (!isAWSAvailable()) {
+                showMessage('⚠️ AWS APIが利用できません。', 'error');
                 return;
             }
             
             try {
-                const draft = await window.CleaningManualFirebase.loadDraftFromFirestore();
-                if (draft) {
+                const draft = await window.AWSCleaningManualAPI.loadDraft();
+                if (draft && (draft.kitchen?.length > 0 || draft.aircon?.length > 0 || draft.floor?.length > 0 || draft.other?.length > 0)) {
                     manualData = draft;
                     renderItems();
                     showMessage('下書きを読み込みました。確認して確定してください。', 'success');
@@ -547,8 +525,8 @@
         
         // 下書きを確定
         async function applyDraft() {
-            if (!isFirebaseAvailable()) {
-                showMessage('⚠️ 下書き機能はFirebaseが必要です。', 'error');
+            if (!isAWSAvailable()) {
+                showMessage('⚠️ AWS APIが利用できません。', 'error');
                 return;
             }
             
@@ -557,13 +535,13 @@
             }
             
             try {
-                const draft = await window.CleaningManualFirebase.loadDraftFromFirestore();
-                if (draft) {
+                const draft = await window.AWSCleaningManualAPI.loadDraft();
+                if (draft && (draft.kitchen?.length > 0 || draft.aircon?.length > 0 || draft.floor?.length > 0 || draft.other?.length > 0)) {
                     // 下書きを確定版に保存
-                    await window.CleaningManualFirebase.saveDataToFirestore(draft, false);
-                    // 下書きを削除
-                    const db = window.FirebaseFirestore;
-                    await db.collection('cleaning-manual-drafts').doc('data').delete();
+                    await window.AWSCleaningManualAPI.publishDraft(draft);
+                    // 下書きを削除（空のデータで上書き）
+                    const emptyDraft = { kitchen: [], aircon: [], floor: [], other: [] };
+                    await window.AWSCleaningManualAPI.saveDraft(emptyDraft);
                     
                     manualData = draft;
                     renderItems();
@@ -580,8 +558,8 @@
         
         // 下書きを削除
         async function discardDraft() {
-            if (!isFirebaseAvailable()) {
-                showMessage('⚠️ 下書き機能はFirebaseが必要です。', 'error');
+            if (!isAWSAvailable()) {
+                showMessage('⚠️ AWS APIが利用できません。', 'error');
                 return;
             }
             
@@ -590,8 +568,8 @@
             }
             
             try {
-                const db = window.FirebaseFirestore;
-                await db.collection('cleaning-manual-drafts').doc('data').delete();
+                const emptyDraft = { kitchen: [], aircon: [], floor: [], other: [] };
+                await window.AWSCleaningManualAPI.saveDraft(emptyDraft);
                 document.getElementById('draft-section').style.display = 'none';
                 showMessage('下書きを削除しました。', 'success');
             } catch (error) {
@@ -603,17 +581,17 @@
         // データ読み込み
         async function loadData() {
             try {
-                // Firebaseが利用可能な場合はFirestoreから読み込む
-                if (isFirebaseAvailable()) {
+                // AWS APIが利用可能な場合はAWSから読み込む
+                if (isAWSAvailable()) {
                     try {
-                        manualData = await window.CleaningManualFirebase.loadDataFromFirestore();
+                        manualData = await window.AWSCleaningManualAPI.loadData();
                         renderItems();
                         // 下書きをチェック
                         await checkDraft();
                         return;
                     } catch (error) {
-                        console.error('Firestore load error:', error);
-                        showMessage('Firestoreからの読み込みに失敗しました。フォールバックを試行します...', 'error');
+                        console.error('AWS API load error:', error);
+                        showMessage('AWS APIからの読み込みに失敗しました。フォールバックを試行します...', 'error');
                     }
                 }
                 
@@ -783,16 +761,19 @@
             document.getElementById('edit-title').value = item ? (item.title || '') : '';
             document.getElementById('edit-risk').value = item ? (item.risk || '') : '';
             document.getElementById('edit-bad').value = item ? (item.bad || '') : '';
-            document.getElementById('edit-badImage').value = item ? (item.badImage || '') : '';
+            const badImageValue = item ? (item.badImage || '') : '';
+            document.getElementById('edit-badImage').value = badImageValue;
             document.getElementById('edit-good').value = item ? (item.good || '') : '';
-            document.getElementById('edit-goodImage').value = item ? (item.goodImage || '') : '';
+            const goodImageValue = item ? (item.goodImage || '') : '';
+            document.getElementById('edit-goodImage').value = goodImageValue;
             document.getElementById('edit-qa1q').value = item ? (item.qa1q || '') : '';
             document.getElementById('edit-qa1a').value = item ? (item.qa1a || '') : '';
             document.getElementById('edit-qa2q').value = item ? (item.qa2q || '') : '';
             document.getElementById('edit-qa2a').value = item ? (item.qa2a || '') : '';
 
-            updateImagePreview('badImage', item ? item.badImage : '');
-            updateImagePreview('goodImage', item ? item.goodImage : '');
+            // 画像プレビューを更新（undefined/nullチェックを追加）
+            updateImagePreview('badImage', badImageValue);
+            updateImagePreview('goodImage', goodImageValue);
 
             document.getElementById('edit-modal').classList.add('active');
         }
@@ -805,20 +786,22 @@
         // 画像プレビューを更新
         function updateImagePreview(field, path) {
             const preview = document.getElementById(`preview-${field}`);
-            if (path) {
-                let imageUrl = path;
-                // Firebase StorageのURLの場合はそのまま使用
-                if (!path.startsWith('http://') && !path.startsWith('https://')) {
-                    // 既に/で始まる場合はそのまま、そうでなければ/を追加
-                    const pathToResolve = path.startsWith('/') ? path : '/' + path;
-                    imageUrl = resolvePath(pathToResolve);
-                }
-                console.log('[ImagePreview] Updating preview for field:', field, 'URL:', imageUrl);
-                // エラーハンドリングを改善（画像が見つからない場合の処理）
-                preview.innerHTML = `<img src="${imageUrl}" alt="プレビュー" onerror="console.error('[ImagePreview] Failed to load image:', '${imageUrl}'); this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<span style=\\'color:#999;font-size:12px;\\'>画像が見つかりません: ${imageUrl}</span>';" />`;
-            } else {
+            // pathがundefined、null、空文字列の場合はプレビューをクリア
+            if (!path || path === 'undefined' || path === 'null' || path.trim() === '') {
                 preview.innerHTML = '';
+                return;
             }
+            
+            let imageUrl = path;
+            // Firebase StorageのURLまたはS3のURLの場合はそのまま使用
+            if (!path.startsWith('http://') && !path.startsWith('https://')) {
+                // 既に/で始まる場合はそのまま、そうでなければ/を追加
+                const pathToResolve = path.startsWith('/') ? path : '/' + path;
+                imageUrl = resolvePath(pathToResolve);
+            }
+            console.log('[ImagePreview] Updating preview for field:', field, 'Original path:', path, 'Resolved URL:', imageUrl);
+            // エラーハンドリングを改善（画像が見つからない場合の処理）
+            preview.innerHTML = `<img src="${imageUrl}" alt="プレビュー" onerror="console.error('[ImagePreview] Failed to load image:', '${imageUrl}'); this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<span style=\\'color:#999;font-size:12px;\\'>画像が見つかりません: ${imageUrl}</span>';" />`;
         }
 
         // 画像をリサイズ（スマホの大きな画像を圧縮）
@@ -991,9 +974,9 @@
                 category: getCategoryName(category),
                 risk: document.getElementById('edit-risk').value,
                 bad: document.getElementById('edit-bad').value,
-                badImage: document.getElementById('edit-badImage').value || undefined,
+                badImage: (document.getElementById('edit-badImage').value || '').trim() || undefined,
                 good: document.getElementById('edit-good').value,
-                goodImage: document.getElementById('edit-goodImage').value || undefined,
+                goodImage: (document.getElementById('edit-goodImage').value || '').trim() || undefined,
                 qa1q: document.getElementById('edit-qa1q').value,
                 qa1a: document.getElementById('edit-qa1a').value,
                 qa2q: document.getElementById('edit-qa2q').value,
@@ -1022,8 +1005,26 @@
             }
 
             try {
-                await window.CleaningManualFirebase.saveDataToFirestore(manualData, true);
-                showMessage('下書きを保存しました。後で確認して確定できます。', 'success');
+                if (isAWSAvailable()) {
+                    await window.AWSCleaningManualAPI.saveDraft(manualData);
+                    showMessage('下書きを保存しました。後で確認して確定できます。', 'success');
+                } else if (isDevelopmentServer()) {
+                    // 開発サーバーの場合はAPI経由で保存
+                    const response = await fetch(resolvePath('/api/cleaning-manual/draft'), {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(manualData)
+                    });
+                    if (!response.ok) {
+                        throw new Error('保存に失敗しました');
+                    }
+                    showMessage('下書きを保存しました。後で確認して確定できます。', 'success');
+                } else {
+                    showMessage('⚠️ 下書き保存にはAWS APIまたは開発サーバーが必要です。', 'error');
+                    return;
+                }
                 closeEditModal();
                 renderItems();
             } catch (error) {
@@ -1045,9 +1046,9 @@
                 category: getCategoryName(category),
                 risk: document.getElementById('edit-risk').value,
                 bad: document.getElementById('edit-bad').value,
-                badImage: document.getElementById('edit-badImage').value || undefined,
+                badImage: (document.getElementById('edit-badImage').value || '').trim() || undefined,
                 good: document.getElementById('edit-good').value,
-                goodImage: document.getElementById('edit-goodImage').value || undefined,
+                goodImage: (document.getElementById('edit-goodImage').value || '').trim() || undefined,
                 qa1q: document.getElementById('edit-qa1q').value,
                 qa1a: document.getElementById('edit-qa1a').value,
                 qa2q: document.getElementById('edit-qa2q').value,
@@ -1076,9 +1077,9 @@
             }
 
             try {
-                // Firebaseが利用可能な場合はFirestoreに保存
-                if (isFirebaseAvailable()) {
-                    await window.CleaningManualFirebase.saveDataToFirestore(manualData, false);
+                // AWS APIが利用可能な場合はAWSに保存
+                if (isAWSAvailable()) {
+                    await window.AWSCleaningManualAPI.saveData(manualData, false);
                     showMessage('確定保存しました。一般ユーザーに表示されます。', 'success');
                     closeEditModal();
                     renderItems();
@@ -1101,7 +1102,7 @@
                         showMessage('保存に失敗しました', 'error');
                     }
                 } else {
-                    showMessage('⚠️ 保存にはFirebaseまたは開発サーバーが必要です。', 'error');
+                    showMessage('⚠️ 保存にはAWS APIまたは開発サーバーが必要です。', 'error');
                 }
             } catch (error) {
                 console.error('Save error:', error);
@@ -1143,9 +1144,9 @@
 
                 const initialData = await response.json();
                 
-                // Firebaseが利用可能な場合はFirestoreに保存
-                if (isFirebaseAvailable()) {
-                    await window.CleaningManualFirebase.saveDataToFirestore(initialData, false);
+                // AWS APIが利用可能な場合はAWSに保存
+                if (isAWSAvailable()) {
+                    await window.AWSCleaningManualAPI.saveData(initialData, false);
                     showMessage('初期データをインポートしました（確定保存）', 'success');
                 } else if (isDevelopmentServer()) {
                     // 開発サーバーの場合はAPI経由で保存
@@ -1163,7 +1164,7 @@
                         throw new Error('保存に失敗しました');
                     }
                 } else {
-                    showMessage('⚠️ インポートにはFirebaseまたは開発サーバーが必要です。', 'error');
+                    showMessage('⚠️ インポートにはAWS APIまたは開発サーバーが必要です。', 'error');
                     return;
                 }
 

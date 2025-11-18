@@ -11,6 +11,7 @@
 
 ### よく使うドキュメント
 - **AWS設定**: [AWS Lambda + API Gateway セットアップ](docs/AWS_LAMBDA_API_GATEWAY_SETUP.md)
+- **AWS移行**: [FirebaseからAWSへの移行ガイド](docs/AWS_MIGRATION_GUIDE.md)
 - **GitHub認証**: [GitHub PAT セットアップ](docs/GITHUB_PAT_SETUP.md)
 - **プッシュ前確認**: [GitHub アップロードチェックリスト](docs/GITHUB_UPLOAD_CHECKLIST.md)
 

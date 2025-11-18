@@ -18,7 +18,7 @@ DRAFT_KEY = 'cleaning-manual/draft.json'
 
 def lambda_handler(event, context):
     """
-    S3に画像をアップロード、または清掃マニュアルデータの読み書きを行うLambda関数
+    清掃マニュアルデータの読み書きAPI
     """
     # CORSヘッダー
     headers = {
@@ -42,17 +42,12 @@ def lambda_handler(event, context):
     
     try:
         # パスに応じて処理を分岐
-        if path == '/upload' or path == '/upload/':
-            # 画像アップロード
-            return handle_image_upload(event, headers)
-        elif path == '/cleaning-manual' or path == '/cleaning-manual/':
-            # 清掃マニュアルデータの読み書き
+        if path == '/cleaning-manual' or path == '/cleaning-manual/':
             if method == 'GET':
                 return get_cleaning_manual_data(headers, False)
             elif method == 'PUT' or method == 'POST':
                 return save_cleaning_manual_data(event, headers, False)
         elif path == '/cleaning-manual/draft' or path == '/cleaning-manual/draft/':
-            # 下書きデータの読み書き
             if method == 'GET':
                 return get_cleaning_manual_data(headers, True)
             elif method == 'PUT' or method == 'POST':
@@ -70,73 +65,6 @@ def lambda_handler(event, context):
             'headers': headers,
             'body': json.dumps({
                 'error': '処理に失敗しました',
-                'message': str(e)
-            })
-        }
-
-def handle_image_upload(event, headers):
-    """
-    画像をS3にアップロード
-    """
-    try:
-        # リクエストボディを取得
-        if event.get('isBase64Encoded'):
-            body = base64.b64decode(event['body'])
-        else:
-            body = event.get('body', '')
-        
-        # リクエストボディがJSONの場合
-        if isinstance(body, str):
-            try:
-                body_json = json.loads(body)
-            except:
-                return {
-                    'statusCode': 400,
-                    'headers': headers,
-                    'body': json.dumps({'error': 'Invalid JSON'})
-                }
-        else:
-            body_json = json.loads(body.decode('utf-8'))
-        
-        # 画像データとメタデータを取得
-        image_data = base64.b64decode(body_json.get('image'))
-        file_name = body_json.get('fileName', 'image.jpg')
-        content_type = body_json.get('contentType', 'image/jpeg')
-        
-        # ファイル名を生成（タイムスタンプ + 元のファイル名）
-        timestamp = int(datetime.now().timestamp() * 1000)
-        safe_file_name = file_name.replace(' ', '_').replace('/', '_')
-        s3_key = f"cleaning-manual-images/{timestamp}_{safe_file_name}"
-        
-        # S3にアップロード
-        s3_client.put_object(
-            Bucket=S3_BUCKET_NAME,
-            Key=s3_key,
-            Body=image_data,
-            ContentType=content_type,
-            ACL='public-read'  # パブリック読み取りを許可
-        )
-        
-        # S3の公開URLを生成
-        s3_url = f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/{s3_key}"
-        
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'body': json.dumps({
-                'status': 'success',
-                'message': '画像をS3にアップロードしました',
-                'url': s3_url,
-                'path': s3_url
-            })
-        }
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return {
-            'statusCode': 500,
-            'headers': headers,
-            'body': json.dumps({
-                'error': 'アップロードに失敗しました',
                 'message': str(e)
             })
         }
