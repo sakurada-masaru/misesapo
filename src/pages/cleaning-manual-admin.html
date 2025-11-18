@@ -20,6 +20,7 @@
     <script src="/js/users.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/cleaning-manual-firebase.js"></script>
+    <script src="/js/aws-s3-upload.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -812,30 +813,124 @@
                     const pathToResolve = path.startsWith('/') ? path : '/' + path;
                     imageUrl = resolvePath(pathToResolve);
                 }
-                preview.innerHTML = `<img src="${imageUrl}" alt="プレビュー" onerror="this.style.display='none'" />`;
+                // エラーハンドリングを改善（画像が見つからない場合の処理）
+                preview.innerHTML = `<img src="${imageUrl}" alt="プレビュー" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<span style=\\'color:#999;font-size:12px;\\'>画像が見つかりません</span>';" />`;
             } else {
                 preview.innerHTML = '';
             }
+        }
+
+        // 画像をリサイズ（スマホの大きな画像を圧縮）
+        function resizeImage(file, maxWidth = 1920, maxHeight = 1920, quality = 0.8) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // リサイズが必要かチェック
+                        if (width > maxWidth || height > maxHeight) {
+                            if (width > height) {
+                                if (width > maxWidth) {
+                                    height = (height * maxWidth) / width;
+                                    width = maxWidth;
+                                }
+                            } else {
+                                if (height > maxHeight) {
+                                    width = (width * maxHeight) / height;
+                                    height = maxHeight;
+                                }
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                // 元のファイル名を保持
+                                const resizedFile = new File([blob], file.name, {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now()
+                                });
+                                resolve(resizedFile);
+                            } else {
+                                resolve(file); // リサイズ失敗時は元のファイルを返す
+                            }
+                        }, 'image/jpeg', quality);
+                    };
+                    img.onerror = () => {
+                        resolve(file); // エラー時は元のファイルを返す
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => {
+                    resolve(file); // エラー時は元のファイルを返す
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
         // 画像アップロード
         async function uploadImage(field) {
             const input = document.createElement('input');
             input.type = 'file';
-            input.accept = 'image/*';
+            input.accept = 'image/jpeg,image/png,image/webp,image/heic,image/heif';
+            // スマホでカメラを直接起動できるようにする
+            input.setAttribute('capture', 'environment');
             input.onchange = async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
 
                 try {
+                    // ファイルサイズチェック（10MB制限）
+                    const maxSize = 10 * 1024 * 1024; // 10MB
+                    if (file.size > maxSize) {
+                        showMessage('⚠️ 画像サイズが大きすぎます（最大10MB）。リサイズしてからアップロードします...', 'error');
+                    }
+
+                    showMessage('画像を処理中...', 'success');
+
+                    // 画像をリサイズ（スマホの大きな画像を圧縮）
+                    let fileToUpload = file;
+                    if (file.type.startsWith('image/')) {
+                        try {
+                            fileToUpload = await resizeImage(file, 1920, 1920, 0.85);
+                            console.log(`[ImageUpload] Resized: ${file.size} -> ${fileToUpload.size} bytes`);
+                        } catch (resizeError) {
+                            console.warn('[ImageUpload] Resize failed, using original:', resizeError);
+                            // リサイズ失敗時は元のファイルを使用
+                        }
+                    }
+
                     let imageUrl = null;
                     let imagePath = null;
                     
-                    // 開発サーバーが利用可能な場合は優先（S3にアップロード）
-                    if (isDevelopmentServer()) {
+                    // AWS S3へのアップロードを優先（開発サーバー経由）
+                    if (window.AWSS3Upload && window.AWSS3Upload.isAvailable()) {
+                        showMessage('画像をS3にアップロード中...', 'success');
+                        try {
+                            const result = await window.AWSS3Upload.uploadImage(fileToUpload, field);
+                            imagePath = result.path || result.url;
+                            imageUrl = result.url || result.path;
+                            showMessage('画像をS3にアップロードしました', 'success');
+                        } catch (s3Error) {
+                            console.error('S3 upload error:', s3Error);
+                            showMessage('S3へのアップロードに失敗しました: ' + s3Error.message, 'error');
+                            // S3アップロードに失敗した場合は、Firebase Storageにフォールバックしない
+                            // （Firebaseは使わない方針のため）
+                            return;
+                        }
+                    } else if (isDevelopmentServer()) {
+                        // 開発サーバーが利用可能な場合は、直接APIエンドポイントにリクエスト
                         showMessage('画像をアップロード中...', 'success');
                         const formData = new FormData();
-                        formData.append('image', file);
+                        formData.append('image', fileToUpload);
                         
                         const response = await fetch(resolvePath('/api/cleaning-manual/upload-image'), {
                             method: 'POST',
@@ -850,17 +945,11 @@
                         } else {
                             const errorText = await response.text();
                             console.error('Upload error:', errorText);
-                            showMessage('画像のアップロードに失敗しました', 'error');
+                            showMessage('画像のアップロードに失敗しました: ' + errorText, 'error');
                             return;
                         }
-                    } else if (isFirebaseAvailable()) {
-                        // 開発サーバーが利用できない場合のみFirebase Storageにアップロード
-                        showMessage('画像をアップロード中...', 'success');
-                        const result = await window.CleaningManualFirebase.uploadImageToStorage(file, field);
-                        imageUrl = result.url;
-                        imagePath = result.url; // Firebase StorageのURLを使用
                     } else {
-                        showMessage('⚠️ 画像のアップロードは開発サーバーまたはFirebaseが必要です。', 'error');
+                        showMessage('⚠️ 画像のアップロードには開発サーバーが必要です。localhostで開発サーバーを起動してください。', 'error');
                         return;
                     }
 
@@ -869,7 +958,7 @@
                     showMessage('画像をアップロードしました', 'success');
                 } catch (error) {
                     console.error('Upload error:', error);
-                    showMessage('画像のアップロードエラー: ' + error.message, 'error');
+                    showMessage('画像のアップロードエラー: ' + (error.message || error.toString()), 'error');
                 }
             };
             input.click();

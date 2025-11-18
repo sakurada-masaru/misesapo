@@ -175,10 +175,13 @@
         
         // 認証トークンを取得（リフレッシュ）
         const user = window.FirebaseAuth.currentUser;
+        let authToken = null;
         try {
-            await user.getIdToken(true); // 強制的にトークンをリフレッシュ
+            authToken = await user.getIdToken(true); // 強制的にトークンをリフレッシュ
+            console.log('[CleaningManualFirebase] Auth token refreshed');
         } catch (error) {
-            console.warn('[CleaningManualFirebase] Token refresh failed:', error);
+            console.error('[CleaningManualFirebase] Token refresh failed:', error);
+            throw new Error('認証トークンの取得に失敗しました。再度ログインしてください。');
         }
         
         const storage = window.FirebaseStorage;
@@ -200,13 +203,31 @@
         };
         
         // アップロード（メタデータ付き）
-        const snapshot = await imageRef.put(file, metadata);
-        const downloadURL = await snapshot.ref.getDownloadURL();
-        
-        return {
-            url: downloadURL,
-            path: downloadURL // Firebase StorageのURLを返す
-        };
+        try {
+            console.log('[CleaningManualFirebase] Starting upload:', fileName);
+            const snapshot = await imageRef.put(file, metadata);
+            console.log('[CleaningManualFirebase] Upload successful:', snapshot);
+            const downloadURL = await snapshot.ref.getDownloadURL();
+            console.log('[CleaningManualFirebase] Download URL:', downloadURL);
+            
+            return {
+                url: downloadURL,
+                path: downloadURL // Firebase StorageのURLを返す
+            };
+        } catch (error) {
+            console.error('[CleaningManualFirebase] Upload error:', error);
+            
+            // CORSエラーの場合の詳細なメッセージ
+            if (error.code === 'storage/unauthorized' || error.message.includes('CORS') || error.message.includes('cors')) {
+                throw new Error('CORSエラー: Firebase StorageのCORS設定が必要です。管理者に連絡してください。\n詳細: ' + error.message);
+            } else if (error.code === 'storage/quota-exceeded') {
+                throw new Error('ストレージの容量が不足しています。');
+            } else if (error.code === 'storage/unauthenticated') {
+                throw new Error('認証が必要です。再度ログインしてください。');
+            } else {
+                throw new Error('画像のアップロードに失敗しました: ' + (error.message || error.code || error.toString()));
+            }
+        }
     }
     
     // グローバルに公開
