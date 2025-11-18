@@ -187,3 +187,22 @@ gcloud run services describe "${SERVICE}" \
   - CSS/画像など静的アセットはこれまで通り `public/` 配下に配置。
 
 将来（テンプレート生成が安定後）に MVC 実装へ移行します。その際は、分割粒度・変数命名・スタイル変数（色/間隔/タイポ）を整理して移植性を高めます。
+
+## GitHub認証設定（PAT）
+
+GitHubへのプッシュ時に認証エラーが発生する場合は、PAT（Personal Access Token）を設定してください。
+
+### クイックセットアップ
+
+```bash
+# 設定スクリプトを実行
+./scripts/setup_github_pat.sh
+```
+
+### 詳細手順
+
+詳細な手順は `docs/GITHUB_PAT_SETUP.md` を参照してください。
+
+- PATの作成方法
+- キーチェーンへの保存方法
+- トラブルシューティング
