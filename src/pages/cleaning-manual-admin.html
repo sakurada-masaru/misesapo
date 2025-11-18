@@ -813,8 +813,9 @@
                     const pathToResolve = path.startsWith('/') ? path : '/' + path;
                     imageUrl = resolvePath(pathToResolve);
                 }
+                console.log('[ImagePreview] Updating preview for field:', field, 'URL:', imageUrl);
                 // エラーハンドリングを改善（画像が見つからない場合の処理）
-                preview.innerHTML = `<img src="${imageUrl}" alt="プレビュー" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<span style=\\'color:#999;font-size:12px;\\'>画像が見つかりません</span>';" />`;
+                preview.innerHTML = `<img src="${imageUrl}" alt="プレビュー" onerror="console.error('[ImagePreview] Failed to load image:', '${imageUrl}'); this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<span style=\\'color:#999;font-size:12px;\\'>画像が見つかりません: ${imageUrl}</span>';" />`;
             } else {
                 preview.innerHTML = '';
             }
@@ -911,13 +912,23 @@
                     let imageUrl = null;
                     let imagePath = null;
                     
+                    // デバッグ: アップロード方法を確認
+                    console.log('[ImageUpload] AWSS3Upload available:', window.AWSS3Upload && window.AWSS3Upload.isAvailable());
+                    console.log('[ImageUpload] isDevelopmentServer:', isDevelopmentServer());
+                    if (window.AWSS3Upload) {
+                        console.log('[ImageUpload] API Gateway endpoint:', window.AWSS3Upload.getApiGatewayEndpoint());
+                    }
+                    
                     // AWS S3へのアップロードを優先（開発サーバー経由）
                     if (window.AWSS3Upload && window.AWSS3Upload.isAvailable()) {
                         showMessage('画像をS3にアップロード中...', 'success');
                         try {
                             const result = await window.AWSS3Upload.uploadImage(fileToUpload, field);
+                            console.log('[ImageUpload] Upload result:', result);
                             imagePath = result.path || result.url;
                             imageUrl = result.url || result.path;
+                            console.log('[ImageUpload] Image path:', imagePath);
+                            console.log('[ImageUpload] Image URL:', imageUrl);
                             showMessage('画像をS3にアップロードしました', 'success');
                         } catch (s3Error) {
                             console.error('S3 upload error:', s3Error);
