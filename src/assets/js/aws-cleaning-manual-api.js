@@ -31,9 +31,11 @@
     
     /**
      * データを取得
+     * @param {string} langSuffix - 言語サフィックス（例: '-en'）空文字列の場合は日本語
+     * @param {boolean} isDraft - 下書きデータを取得するかどうか
      */
-    async function loadData(isDraft = false) {
-        const path = isDraft ? '/draft' : '';
+    async function loadData(langSuffix = '', isDraft = false) {
+        const path = isDraft ? `/draft${langSuffix}` : langSuffix;
         const endpoint = getApiEndpoint(path);
         
         console.log('[AWSCleaningManualAPI] Loading data from:', endpoint, '(isDevelopmentServer:', isDevelopmentServer(), ')');
@@ -60,7 +62,8 @@
             if (isDevelopmentServer()) {
                 console.log('[AWSCleaningManualAPI] Trying fallback to static JSON file...');
                 try {
-                    const fallbackResponse = await fetch('/data/cleaning-manual.json');
+                    const fallbackFile = langSuffix ? `/data/cleaning-manual${langSuffix}.json` : '/data/cleaning-manual.json';
+                    const fallbackResponse = await fetch(fallbackFile);
                     if (fallbackResponse.ok) {
                         const fallbackData = await fallbackResponse.json();
                         console.log('[AWSCleaningManualAPI] Fallback data loaded:', fallbackData);
@@ -113,9 +116,10 @@
     
     /**
      * 下書きデータを取得
+     * @param {string} langSuffix - 言語サフィックス（例: '-en'）空文字列の場合は日本語
      */
-    async function loadDraft() {
-        return await loadData(true);
+    async function loadDraft(langSuffix = '') {
+        return await loadData(langSuffix, true);
     }
     
     /**

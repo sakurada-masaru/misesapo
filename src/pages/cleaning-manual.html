@@ -92,19 +92,104 @@
             color: #333;
         }
         /* 標準ヘッダーの調整（標準CSSのposition: fixedを維持） */
+        /* ページタイトル */
+        .manual-title {
+            position: fixed;
+            top: 6.4rem; /* ヘッダーの高さ分 */
+            left: 0;
+            width: 100%;
+            background-color: #ff008c;
+            color: white;
+            text-align: center;
+            padding: 12px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 998;
+            box-sizing: border-box;
+        }
+        .manual-title h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            line-height: 1.2;
+            padding: 0;
+        }
+        /* 言語切り替えタブと編集ボタンのコンテナ */
+        .language-tabs-container {
+            position: fixed;
+            top: calc(6.4rem + 1.8rem + 24px); /* 標準ヘッダーの高さ（6.4rem）+ タイトルの高さ */
+            left: 0;
+            width: 100%;
+            background-color: #f8f8f8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            z-index: 999;
+            padding: 6px 20px;
+            box-sizing: border-box;
+        }
+        /* 言語切り替えタブ */
+        .language-tabs {
+            display: flex;
+            gap: 5px;
+        }
+        .language-tab {
+            background-color: white;
+            color: #666;
+            border: 1px solid #ddd;
+            padding: 6px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        .language-tab:hover {
+            border-color: #ff008c;
+            color: #ff008c;
+        }
+        .language-tab.active {
+            background-color: #ff008c;
+            color: white;
+            border-color: #ff008c;
+        }
+        /* 編集ボタン */
+        .edit-manual-btn {
+            background-color: #ff008c;
+            color: white;
+            border: none;
+            padding: 6px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .edit-manual-btn:hover {
+            background-color: #e6007a;
+        }
+        .edit-manual-btn i {
+            font-size: 0.9em;
+        }
         /* カテゴリタブ */
         .category-tabs {
             position: fixed;
-            top: 6.4rem; /* 標準ヘッダーの高さ（6.4rem）に合わせて調整 */
+            top: calc(6.4rem + 1.8rem + 24px + 60px); /* 標準ヘッダーの高さ（6.4rem）+ タイトルの高さ + 言語タブコンテナ（約60px） */
             left: 0;
             width: 100%;
             background-color: white;
             display: flex;
             justify-content: center;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            z-index: 999;
-            padding: 10px 0;
+            z-index: 998;
+            padding: 8px 0;
             flex-wrap: wrap;
+            box-sizing: border-box;
+            margin-top: 0;
         }
         .category-tab {
             background-color: #f0f0f0;
@@ -127,7 +212,7 @@
         }
         /* メインコンテンツエリア */
         #content {
-            padding: calc(6.4rem + 60px) 0 80px 0; /* ヘッダー（6.4rem）+ タブ（約60px）+ フッター（80px）の高さ分を確保 */
+            padding: calc(6.4rem + 1.8rem + 24px + 60px + 50px) 0 80px 0; /* ヘッダー（6.4rem）+ タイトル（1.8rem + 24px）+ 言語タブコンテナ（約60px）+ カテゴリタブ（約50px）+ フッター（80px）の高さ分を確保 */
         }
         /* 各マニュアルページ */
         .manual-page {
@@ -138,6 +223,8 @@
             background-color: white;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
             min-height: calc(100vh - 200px);
+            font-size: 1.05em; /* 文字を少し大きく */
+            line-height: 1.7; /* 行間も少し広げる */
         }
         .manual-page.active {
             display: block;
@@ -148,12 +235,12 @@
             border-bottom: 3px solid #ff008c; /* パーソナルカラー */
             padding-bottom: 5px;
             margin-top: 0;
-            font-size: 1.6em;
+            font-size: 1.75em; /* 1.6em → 1.75em に拡大 */
             font-weight: 700;
             margin-bottom: 20px;
         }
         .section-title {
-            font-size: 1.2em;
+            font-size: 1.3em; /* 1.2em → 1.3em に拡大 */
             font-weight: 600;
             margin-top: 25px;
             margin-bottom: 10px;
@@ -164,10 +251,11 @@
         
         /* 良い例・悪い例 */
         .example-box {
-            padding: 10px 15px;
+            padding: 12px 18px; /* パディングを少し増やす */
             margin-bottom: 15px;
             border-radius: 6px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            font-size: 1.05em; /* 文字を少し大きく */
         }
         .bad-example {
             background-color: #fbe5e6; /* 赤系 */
@@ -180,23 +268,65 @@
         .example-box strong {
             display: block;
             margin-bottom: 5px;
-            font-size: 1.1em;
+            font-size: 1.15em; /* 1.1em → 1.15em に拡大 */
         }
         /* 画像表示 */
         .example-image {
             width: 100%;
-            max-width: 500px;
+            max-width: 280px; /* 380px → 280px にさらに縮小 */
             height: auto;
-            margin: 10px 0;
+            margin: 10px auto; /* 中央配置 */
             border-radius: 6px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             display: block;
-            pointer-events: none; /* 画像のクリックを無効化 */
+            cursor: pointer; /* クリック可能であることを示す */
             user-select: none; /* 画像の選択を無効化 */
+            transition: transform 0.2s, box-shadow 0.2s; /* ホバー効果 */
+        }
+        .example-image:hover {
+            transform: scale(1.02); /* ホバー時に少し拡大 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
         .example-image-container {
             text-align: center;
             margin: 10px 0;
+        }
+        /* 画像拡大モーダル */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            cursor: pointer;
+        }
+        .image-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10001;
+        }
+        .image-modal-close:hover {
+            color: #ff008c;
         }
         /* Q&Aセクション */
         .qa-section {
@@ -206,11 +336,13 @@
         }
         .qa-section p {
             margin: 8px 0;
-            line-height: 1.4;
+            line-height: 1.6; /* 1.4 → 1.6 に拡大 */
+            font-size: 1.05em; /* 文字を少し大きく */
         }
         .qa-question {
             font-weight: bold;
             color: #ff008c; /* パーソナルカラー */
+            font-size: 1.1em; /* 質問の文字を少し大きく */
         }
         .qa-answer {
             padding-left: 10px;
@@ -316,26 +448,30 @@
                         <li><a href="staff/schedule.html">スケジュール</a></li>
                         <li><a href="staff/training.html">研修動画</a></li>
                         <li><a href="cleaning-manual.html">清掃基準マニュアル</a></li>
-                        <li><a id="nav-admin-link" href="cleaning-manual-admin.html" style="color: #ff008c; font-weight: bold;">📝 マニュアル編集</a></li>
-                        <li><a href="signin.html" class="login-button">ログイン</a></li>
                     </ul>
                 </div>
             </nav>
         </div>
     </header>
     
-    <div style="background: #fff3f8; padding: 10px 20px; margin: 10px 0; border-left: 4px solid #ff008c; border-radius: 4px;">
-        <a id="admin-link" href="cleaning-manual-admin.html" style="color: #ff008c; font-weight: bold; text-decoration: none;">
-            <i class="fas fa-edit"></i> 管理画面で編集する
-        </a>
+    <!-- ページタイトル -->
+    <div class="manual-title">
+        <h1>ミセサポ研修マニュアル</h1>
     </div>
     
-    <div class="category-tabs">
-        <button class="category-tab active" onclick="filterByCategory('all', event)">すべて</button>
-        <button class="category-tab" onclick="filterByCategory('厨房設備', event)">厨房設備 (12)</button>
-        <button class="category-tab" onclick="filterByCategory('空調設備', event)">空調設備 (2)</button>
-        <button class="category-tab" onclick="filterByCategory('フロア', event)">フロア (8)</button>
-        <button class="category-tab" onclick="filterByCategory('その他', event)">その他 (12)</button>
+    <!-- 言語切り替えタブと編集ボタン -->
+    <div class="language-tabs-container">
+        <div class="language-tabs">
+            <button class="language-tab active" data-lang="jp" onclick="switchLanguage('jp')">JP</button>
+            <button class="language-tab" data-lang="en" onclick="switchLanguage('en')">EN</button>
+        </div>
+        <button id="edit-manual-btn" class="edit-manual-btn" onclick="handleEditButtonClick()">
+            <i class="fas fa-edit"></i> 編集
+        </button>
+    </div>
+    
+    <div class="category-tabs" id="category-tabs">
+        <!-- カテゴリタブは動的に生成されます -->
     </div>
 
     <div id="content">
@@ -417,6 +553,212 @@
         let floorData = [];
         let otherData = [];
         let manualData = [];
+        let currentLanguage = localStorage.getItem('cleaning-manual-language') || 'jp'; // デフォルトは日本語
+        
+        // 言語に応じたテキストを取得
+        function getText(key) {
+            const texts = {
+                'jp': {
+                    'all': 'すべて',
+                    'kitchen': '厨房設備',
+                    'aircon': '空調設備',
+                    'floor': 'フロア',
+                    'other': 'その他',
+                    'philosophy': '【MISESAPOの理念】リスク対策',
+                    'badExample': '❌ 良くない例（リスク行為：減点対象）',
+                    'goodExample': '✅ 良い例（リスク対策行為：MISESAPO基準）',
+                    'badExampleDesc': 'リスクを残す行為',
+                    'goodExampleDesc': 'リスクを排除し価値を提供する行為',
+                    'qaSection': '研修・営業用 Q&A',
+                    'categoryLabel': 'カテゴリ',
+                    'allItems': '全カテゴリ項目',
+                    'items': '件',
+                    'prev': '◀ 前へ',
+                    'next': '次へ ▶',
+                    'index': '目次'
+                },
+                'en': {
+                    'all': 'All',
+                    'kitchen': 'Kitchen Equipment',
+                    'aircon': 'Air Conditioning Equipment',
+                    'floor': 'Floor',
+                    'other': 'Other',
+                    'philosophy': '[MISESAPO Philosophy] Risk Management',
+                    'badExample': '❌ Bad Example (Risk Behavior: Point Deduction)',
+                    'goodExample': '✅ Good Example (Risk Management Behavior: MISESAPO Standard)',
+                    'badExampleDesc': 'Behavior that leaves risks',
+                    'goodExampleDesc': 'Behavior that eliminates risks and provides value',
+                    'qaSection': 'Training & Sales Q&A',
+                    'categoryLabel': 'Category',
+                    'allItems': 'All Category Items',
+                    'items': ' items',
+                    'prev': '◀ Previous',
+                    'next': 'Next ▶',
+                    'index': 'Index'
+                }
+            };
+            return texts[currentLanguage]?.[key] || texts['jp'][key];
+        }
+        
+        // カテゴリ名の言語マッピング
+        function getCategoryDisplayName(categoryKey) {
+            const categoryMap = {
+                'jp': {
+                    'kitchen': '厨房設備',
+                    'aircon': '空調設備',
+                    'floor': 'フロア',
+                    'other': 'その他'
+                },
+                'en': {
+                    'kitchen': 'Kitchen Equipment',
+                    'aircon': 'Air Conditioning Equipment',
+                    'floor': 'Floor',
+                    'other': 'Other'
+                }
+            };
+            return categoryMap[currentLanguage]?.[categoryKey] || categoryMap['jp'][categoryKey];
+        }
+        
+        // カテゴリ名からキーを取得
+        function getCategoryKeyFromName(categoryName) {
+            // 日本語と英語の両方のカテゴリ名に対応
+            const categoryMap = {
+                '厨房設備': 'kitchen',
+                'Kitchen Equipment': 'kitchen',
+                '空調設備': 'aircon',
+                'Air Conditioning Equipment': 'aircon',
+                'フロア': 'floor',
+                'Floor': 'floor',
+                'その他': 'other',
+                'Other': 'other'
+            };
+            return categoryMap[categoryName] || 'other';
+        }
+        
+        // カテゴリタブを動的に生成
+        function renderCategoryTabs() {
+            const categoryTabsContainer = document.getElementById('category-tabs');
+            if (!categoryTabsContainer || manualData.length === 0) return;
+            
+            categoryTabsContainer.innerHTML = '';
+            
+            // 「すべて」タブ
+            const allTab = document.createElement('button');
+            allTab.className = 'category-tab active';
+            allTab.setAttribute('data-category-key', 'all');
+            allTab.textContent = getText('all');
+            allTab.onclick = (e) => filterByCategory('all', e);
+            categoryTabsContainer.appendChild(allTab);
+            
+            // 各カテゴリのタブ
+            const categories = ['kitchen', 'aircon', 'floor', 'other'];
+            categories.forEach(key => {
+                const categoryName = getCategoryDisplayName(key);
+                const count = manualData.filter(d => d.category === categoryName).length;
+                
+                if (count > 0) {
+                    const tab = document.createElement('button');
+                    tab.className = 'category-tab';
+                    tab.setAttribute('data-category-key', key);
+                    tab.textContent = `${getText(key)} (${count})`;
+                    tab.onclick = (e) => {
+                        // カテゴリ名を取得してフィルタリング
+                        const catName = getCategoryDisplayName(key);
+                        filterByCategory(catName, e);
+                    };
+                    categoryTabsContainer.appendChild(tab);
+                }
+            });
+        }
+        
+        // カテゴリタブを更新（動的に再生成）
+        function updateCategoryTabs() {
+            renderCategoryTabs();
+            // 現在のカテゴリに応じてアクティブ状態を復元
+            if (currentCategory) {
+                document.querySelectorAll('.category-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                    const categoryKey = tab.getAttribute('data-category-key');
+                    
+                    if (currentCategory === 'all' && categoryKey === 'all') {
+                        tab.classList.add('active');
+                    } else if (categoryKey) {
+                        const catName = getCategoryDisplayName(categoryKey);
+                        if (currentCategory === catName) {
+                            tab.classList.add('active');
+                        }
+                    }
+                });
+            }
+        }
+        
+        // 目次ページのタイトルを更新
+        function updateIndexPageTitles() {
+            if (manualData.length === 0) return;
+            
+            const totalCount = manualData.length;
+            const indexPages = {
+                'page-0-all': document.querySelector('#page-0-all h2'),
+                'page-0-kitchen': document.querySelector('#page-0-kitchen h2'),
+                'page-0-aircon': document.querySelector('#page-0-aircon h2'),
+                'page-0-floor': document.querySelector('#page-0-floor h2'),
+                'page-0-other': document.querySelector('#page-0-other h2')
+            };
+            
+            if (indexPages['page-0-all']) {
+                indexPages['page-0-all'].textContent = `${getText('allItems')}（${totalCount}${getText('items')}）`;
+            }
+            
+            ['kitchen', 'aircon', 'floor', 'other'].forEach(key => {
+                const pageId = `page-0-${key}`;
+                const h2 = indexPages[pageId];
+                if (h2) {
+                    const categoryName = getCategoryDisplayName(key);
+                    const count = manualData.filter(d => d.category === categoryName).length;
+                    h2.textContent = `${getText(key)}${getText('items')}（${count}${getText('items')}）`;
+                }
+            });
+        }
+        
+        // フッターボタンのテキストを更新
+        function updateFooterButtons() {
+            const prevBtn = document.getElementById('prev-button');
+            const nextBtn = document.getElementById('next-button');
+            const indexBtn = document.querySelector('.index-button');
+            
+            if (prevBtn) prevBtn.textContent = getText('prev');
+            if (nextBtn) nextBtn.textContent = getText('next');
+            if (indexBtn) indexBtn.textContent = getText('index');
+        }
+        
+        // 言語切り替え関数
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('cleaning-manual-language', lang);
+            
+            // タブの状態を更新
+            document.querySelectorAll('.language-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.lang === lang) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // データを再読み込み
+            loadManualData();
+        }
+        
+        // ページ読み込み時に言語を復元
+        function restoreLanguage() {
+            const savedLang = localStorage.getItem('cleaning-manual-language') || 'jp';
+            currentLanguage = savedLang;
+            document.querySelectorAll('.language-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.lang === savedLang) {
+                    tab.classList.add('active');
+                }
+            });
+        }
         
         // データ読み込み関数
         async function loadManualData() {
@@ -424,8 +766,10 @@
                 // AWS APIが利用可能な場合はAWSから読み込む
                 if (window.AWSCleaningManualAPI && window.AWSCleaningManualAPI.isAvailable()) {
                     try {
-                        const data = await window.AWSCleaningManualAPI.loadData();
-                        console.log('[CleaningManual] AWS API data loaded:', data);
+                        // 言語に応じたエンドポイントを使用
+                        const langSuffix = currentLanguage === 'en' ? '-en' : '';
+                        const data = await window.AWSCleaningManualAPI.loadData(langSuffix);
+                        console.log('[CleaningManual] AWS API data loaded:', data, '(language:', currentLanguage, ')');
                         
                         kitchenData = data.kitchen || [];
                         airconData = data.aircon || [];
@@ -448,6 +792,10 @@
                         }
                         
                         initializeManual();
+                        // UIを更新
+                        updateCategoryTabs();
+                        updateIndexPageTitles();
+                        updateFooterButtons();
                         return;
                     } catch (error) {
                         console.error('[CleaningManual] AWS API load error:', error);
@@ -471,9 +819,12 @@
                     href: window.location.href
                 });
                 
+                // 言語に応じたエンドポイントを使用
+                const langSuffix = currentLanguage === 'en' ? '-en' : '';
+                
                 // ローカル開発環境では直接パスを使用、本番環境ではresolvePathを使用
-                let apiUrl = isLocalDev ? '/api/cleaning-manual' : resolvePath('/api/cleaning-manual');
-                console.log('[CleaningManual] Trying API endpoint:', apiUrl, '(isLocalDev:', isLocalDev, ')');
+                let apiUrl = isLocalDev ? `/api/cleaning-manual${langSuffix}` : resolvePath(`/api/cleaning-manual${langSuffix}`);
+                console.log('[CleaningManual] Trying API endpoint:', apiUrl, '(isLocalDev:', isLocalDev, ', language:', currentLanguage, ')');
                 
                 try {
                     response = await fetch(apiUrl);
@@ -489,7 +840,8 @@
                 
                 if (!response || !response.ok) {
                     // APIが利用できない場合（GitHub Pagesなど）、静的ファイルを読み込む
-                    const jsonUrl = isLocalDev ? '/data/cleaning-manual.json' : resolvePath('/data/cleaning-manual.json');
+                    const jsonFile = langSuffix ? `cleaning-manual${langSuffix}.json` : 'cleaning-manual.json';
+                    const jsonUrl = isLocalDev ? `/data/${jsonFile}` : resolvePath(`/data/${jsonFile}`);
                     console.log('[CleaningManual] Trying JSON file:', jsonUrl, '(isLocalDev:', isLocalDev, ')');
                     try {
                         response = await fetch(jsonUrl);
@@ -530,6 +882,11 @@
                     
                     // データ読み込み後に初期化
                     initializeManual();
+                    // UIを更新
+                    updateCategoryTabs();
+                    updateIndexPageTitles();
+                    updateFooterButtons();
+                    return; // 成功時はここで終了
                 } else {
                     const status = response ? response.status : 'no response';
                     const statusText = response ? response.statusText : 'no response';
@@ -588,35 +945,65 @@
         const prevButton = document.getElementById('prev-button');
         const nextButton = document.getElementById('next-button');
 
-        // カテゴリごとのリストページIDマッピング
-        const categoryListPageMap = {
-            'all': 'page-0-all',
-            '厨房設備': 'page-0-kitchen',
-            '空調設備': 'page-0-aircon',
-            'フロア': 'page-0-floor',
-            'その他': 'page-0-other'
-        };
-            
-            // カテゴリ名をキーに変換
-            function getCategoryKey(categoryName) {
-                const categoryMap = {
-                    '厨房設備': 'kitchen',
-                    '空調設備': 'aircon',
-                    'フロア': 'floor',
-                    'その他': 'other'
-                };
-                return categoryMap[categoryName] || 'other';
+        // カテゴリごとのリストページIDマッピング（言語に応じて動的に更新）
+        function getCategoryListPageMap() {
+            const categoryKeyMap = {
+                'kitchen': 'page-0-kitchen',
+                'aircon': 'page-0-aircon',
+                'floor': 'page-0-floor',
+                'other': 'page-0-other'
+            };
+            const map = { 'all': 'page-0-all' };
+            // データから実際のカテゴリ名を取得してマッピング
+            if (manualData.length > 0) {
+                const categories = [...new Set(manualData.map(d => d.category))];
+                categories.forEach(cat => {
+                    const key = getCategoryKeyFromName(cat);
+                    if (categoryKeyMap[key]) {
+                        map[cat] = categoryKeyMap[key];
+                    }
+                });
+            } else {
+                // フォールバック: デフォルトのカテゴリ名を使用
+                const defaultCategories = currentLanguage === 'en' 
+                    ? ['Kitchen Equipment', 'Air Conditioning Equipment', 'Floor', 'Other']
+                    : ['厨房設備', '空調設備', 'フロア', 'その他'];
+                defaultCategories.forEach((cat, idx) => {
+                    const keys = ['kitchen', 'aircon', 'floor', 'other'];
+                    map[cat] = categoryKeyMap[keys[idx]];
+                });
             }
-
+            return map;
+        }
+        let categoryListPageMap = getCategoryListPageMap();
+        
+        // カテゴリ名をキーに変換（既存の関数を更新）
+        function getCategoryKey(categoryName) {
+            return getCategoryKeyFromName(categoryName);
+        }
+        
         // マニュアルページを生成しDOMに追加
         function createManualPages() {
-            const fragment = document.createDocumentFragment();
+            const contentDiv = document.getElementById('content');
+            
+            // 既存のページを削除（page-0-で始まるもの以外）
+            const existingPages = contentDiv.querySelectorAll('.manual-page:not([id^="page-0-"])');
+            existingPages.forEach(page => page.remove());
+            
+            // 目次リストをクリア
             const indexListAll = document.getElementById('index-list-all');
             const indexListKitchen = document.getElementById('index-list-kitchen');
             const indexListAircon = document.getElementById('index-list-aircon');
             const indexListFloor = document.getElementById('index-list-floor');
             const indexListOther = document.getElementById('index-list-other');
             
+            if (indexListAll) indexListAll.innerHTML = '';
+            if (indexListKitchen) indexListKitchen.innerHTML = '';
+            if (indexListAircon) indexListAircon.innerHTML = '';
+            if (indexListFloor) indexListFloor.innerHTML = '';
+            if (indexListOther) indexListOther.innerHTML = '';
+            
+            const fragment = document.createDocumentFragment();
             let lastCategory = '';
             
             manualData.forEach((data, index) => {
@@ -626,12 +1013,12 @@
                 const pageHtml = `
                     <div id="page-${pageIndex}" class="manual-page" data-category="${data.category}">
                         <h2 class="page-title">【${data.category}】${data.title}</h2>
-                        <div class="section-title">【MISESAPOの理念】リスク対策</div>
-                        <p><strong>${data.category}カテゴリ</strong>：${data.risk}</p>
+                        <div class="section-title">${getText('philosophy')}</div>
+                        <p><strong>${getText('categoryLabel')}: ${data.category}</strong>：${data.risk}</p>
                         
-                        <div class="section-title bad-example-title">❌ ダメな例（リスク行為：減点対象）</div>
+                        <div class="section-title bad-example-title">${getText('badExample')}</div>
                         <div class="example-box bad-example">
-                            <strong>リスクを残す行為</strong>
+                            <strong>${getText('badExampleDesc')}</strong>
                             ${data.bad}
                                 ${(() => {
                                     // 画像を処理する関数（配列形式にも対応）
@@ -653,7 +1040,7 @@
                                         return images.map(imagePath => {
                                             // HTTP/HTTPSのURLの場合はそのまま使用
                                             if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-                                                return `<div class="example-image-container"><img src="${imagePath}" alt="ダメな例" class="example-image" onclick="return false;" onerror="this.style.display='none';" /></div>`;
+                                                return `<div class="example-image-container"><img src="${imagePath}" alt="${getText('badExampleDesc')}" class="example-image" data-full-image="${imagePath}" onerror="this.style.display='none';" /></div>`;
                                             }
                                             // 絶対URLを返す（baseタグの影響を受けないようにする）
                                             let resolvedPath = imagePath;
@@ -667,7 +1054,7 @@
                                             if (!resolvedPath || resolvedPath === 'undefined') {
                                                 return '';
                                             }
-                                            return `<div class="example-image-container"><img src="${resolvedPath}" alt="ダメな例" class="example-image" onclick="return false;" onerror="this.style.display='none';" /></div>`;
+                                            return `<div class="example-image-container"><img src="${resolvedPath}" alt="${getText('badExampleDesc')}" class="example-image" data-full-image="${resolvedPath}" onerror="this.style.display='none';" /></div>`;
                                         }).filter(html => html !== '').join('');
                                     };
                                     
@@ -675,9 +1062,9 @@
                                 })()}
                         </div>
                         
-                        <div class="section-title good-example-title">✅ 模範例（リスク対策行為：MISESAPO基準）</div>
+                        <div class="section-title good-example-title">${getText('goodExample')}</div>
                         <div class="example-box good-example">
-                            <strong>リスクを排除し価値を提供する行為</strong>
+                            <strong>${getText('goodExampleDesc')}</strong>
                             ${data.good}
                                 ${(() => {
                                     // 画像を処理する関数（配列形式にも対応）
@@ -699,7 +1086,7 @@
                                         return images.map(imagePath => {
                                             // HTTP/HTTPSのURLの場合はそのまま使用
                                             if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-                                                return `<div class="example-image-container"><img src="${imagePath}" alt="模範例" class="example-image" onclick="return false;" onerror="this.style.display='none';" /></div>`;
+                                                return `<div class="example-image-container"><img src="${imagePath}" alt="${getText('goodExampleDesc')}" class="example-image" data-full-image="${imagePath}" onerror="this.style.display='none';" /></div>`;
                                             }
                                             // 絶対URLを返す（baseタグの影響を受けないようにする）
                                             let resolvedPath = imagePath;
@@ -713,7 +1100,7 @@
                                             if (!resolvedPath || resolvedPath === 'undefined') {
                                                 return '';
                                             }
-                                            return `<div class="example-image-container"><img src="${resolvedPath}" alt="模範例" class="example-image" onclick="return false;" onerror="this.style.display='none';" /></div>`;
+                                            return `<div class="example-image-container"><img src="${resolvedPath}" alt="${getText('goodExampleDesc')}" class="example-image" data-full-image="${resolvedPath}" onerror="this.style.display='none';" /></div>`;
                                         }).filter(html => html !== '').join('');
                                     };
                                     
@@ -722,7 +1109,7 @@
                         </div>
 
                         <div class="qa-section">
-                            <div class="section-title">研修・営業用 Q&A</div>
+                            <div class="section-title">${getText('qaSection')}</div>
                             <p><span class="qa-question">${data.qa1q}</span></p>
                             <p class="qa-answer">${data.qa1a}</p>
                             <p><span class="qa-question">${data.qa2q}</span></p>
@@ -759,15 +1146,16 @@
                 listItemAll.appendChild(linkAll);
                 indexListAll.appendChild(listItemAll);
 
-                // カテゴリ別の目次リストを生成
+                // カテゴリ別の目次リストを生成（言語に応じて動的に判定）
                 let targetList = null;
-                if (data.category === '厨房設備') {
+                const categoryKey = getCategoryKeyFromName(data.category);
+                if (categoryKey === 'kitchen') {
                     targetList = indexListKitchen;
-                } else if (data.category === '空調設備') {
+                } else if (categoryKey === 'aircon') {
                     targetList = indexListAircon;
-                } else if (data.category === 'フロア') {
+                } else if (categoryKey === 'floor') {
                     targetList = indexListFloor;
-                } else if (data.category === 'その他') {
+                } else if (categoryKey === 'other') {
                     targetList = indexListOther;
                 }
 
@@ -787,7 +1175,7 @@
 
             contentDiv.appendChild(fragment);
         }
-
+        
         // カテゴリでフィルタリング
         function filterByCategory(category, event) {
             if (event) {
@@ -798,26 +1186,28 @@
             // タブのアクティブ状態を更新
             document.querySelectorAll('.category-tab').forEach(tab => {
                 tab.classList.remove('active');
-            });
-            if (event && event.target) {
-            event.target.classList.add('active');
-            } else {
-                // eventがない場合は、テキストで検索
-                document.querySelectorAll('.category-tab').forEach(tab => {
-                    if ((category === 'all' && tab.textContent.includes('すべて')) ||
-                        (category === '厨房設備' && tab.textContent.includes('厨房設備')) ||
-                        (category === '空調設備' && tab.textContent.includes('空調設備')) ||
-                        (category === 'フロア' && tab.textContent.includes('フロア')) ||
-                        (category === 'その他' && tab.textContent.includes('その他'))) {
+                const categoryKey = tab.getAttribute('data-category-key');
+                
+                if (category === 'all' && categoryKey === 'all') {
+                    tab.classList.add('active');
+                } else if (categoryKey) {
+                    // カテゴリキーからカテゴリ名を取得して比較
+                    const catName = getCategoryDisplayName(categoryKey);
+                    if (category === catName) {
                         tab.classList.add('active');
                     }
-                });
-            }
+                } else if (event && event.target === tab) {
+                    tab.classList.add('active');
+                }
+            });
             
             // 該当カテゴリのリストページを表示
+            categoryListPageMap = getCategoryListPageMap();
             const listPageId = categoryListPageMap[category];
             if (listPageId) {
                 showPage(listPageId);
+            } else if (category === 'all') {
+                showPage('page-0-all');
             }
         }
 
@@ -839,12 +1229,16 @@
                     // タブのアクティブ状態を更新
                     document.querySelectorAll('.category-tab').forEach(tab => {
                         tab.classList.remove('active');
-                        if ((pageCategory === 'all' && tab.textContent.includes('すべて')) ||
-                            (pageCategory === '厨房設備' && tab.textContent.includes('厨房設備')) ||
-                            (pageCategory === '空調設備' && tab.textContent.includes('空調設備')) ||
-                            (pageCategory === 'フロア' && tab.textContent.includes('フロア')) ||
-                            (pageCategory === 'その他' && tab.textContent.includes('その他'))) {
+                        const categoryKey = tab.getAttribute('data-category-key');
+                        
+                        if (pageCategory === 'all' && categoryKey === 'all') {
                             tab.classList.add('active');
+                        } else if (categoryKey) {
+                            // カテゴリキーからカテゴリ名を取得して比較
+                            const catName = getCategoryDisplayName(categoryKey);
+                            if (pageCategory === catName) {
+                                tab.classList.add('active');
+                            }
                         }
                     });
                 } else {
@@ -856,11 +1250,14 @@
                         // タブのアクティブ状態を更新
                         document.querySelectorAll('.category-tab').forEach(tab => {
                             tab.classList.remove('active');
-                            if ((pageData.category === '厨房設備' && tab.textContent.includes('厨房設備')) ||
-                                (pageData.category === '空調設備' && tab.textContent.includes('空調設備')) ||
-                                (pageData.category === 'フロア' && tab.textContent.includes('フロア')) ||
-                                (pageData.category === 'その他' && tab.textContent.includes('その他'))) {
-                                tab.classList.add('active');
+                            const categoryKey = tab.getAttribute('data-category-key');
+                            
+                            if (categoryKey) {
+                                // カテゴリキーからカテゴリ名を取得して比較
+                                const catName = getCategoryDisplayName(categoryKey);
+                                if (pageData.category === catName) {
+                                    tab.classList.add('active');
+                                }
                             }
                         });
                     }
@@ -955,6 +1352,10 @@
 
         // 初期化
             createManualPages();
+            // UIを更新
+            renderCategoryTabs(); // カテゴリタブを生成
+            updateIndexPageTitles();
+            updateFooterButtons();
             showIndex();
             
             // 認証チェックして編集ボタンを表示
@@ -1030,17 +1431,65 @@
         // リンクのパスを設定（GitHub Pages対応）
         function setAdminLinks() {
             const adminLink = document.getElementById('admin-link');
-            const navAdminLink = document.getElementById('nav-admin-link');
             const importLink = document.getElementById('import-link');
             
             if (adminLink) {
                 adminLink.href = resolvePath('cleaning-manual-admin.html');
             }
-            if (navAdminLink) {
-                navAdminLink.href = resolvePath('cleaning-manual-admin.html');
-            }
             if (importLink) {
                 importLink.href = resolvePath('cleaning-manual-admin.html');
+            }
+        }
+        
+        // 編集ボタンのクリックハンドラー（認証チェック付き）
+        async function handleEditButtonClick() {
+            // 認証チェック
+            const isAuthenticated = await checkAdminAuth();
+            
+            if (isAuthenticated) {
+                // 認証済みの場合は管理画面に遷移
+                const adminUrl = resolvePath('cleaning-manual-admin.html');
+                window.location.href = adminUrl;
+            } else {
+                // 未認証の場合はログインページにリダイレクト
+                const loginUrl = resolvePath('signin.html');
+                // 管理画面へのリダイレクト情報をURLパラメータで渡す
+                window.location.href = `${loginUrl}?redirect=${encodeURIComponent(resolvePath('cleaning-manual-admin.html'))}`;
+            }
+        }
+        
+        // 管理者認証チェック
+        async function checkAdminAuth() {
+            try {
+                // 開発サーバーの場合は常に許可（開発用）
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                if (isLocalDev) {
+                    console.log('[CleaningManual] Development server: Auth check bypassed');
+                    return true;
+                }
+                
+                // 本番環境では、セッションストレージまたはローカルストレージで認証状態を確認
+                // 実際の認証システム（Firebase Authなど）と統合する場合はここを修正
+                const authToken = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+                const userRole = localStorage.getItem('userRole') || sessionStorage.getItem('userRole');
+                
+                // 管理者権限を持つロールをチェック（コンシェルジュと清掃員は除外）
+                const adminRoles = ['admin', 'master', 'developer'];
+                
+                if (authToken && userRole && adminRoles.includes(userRole)) {
+                    console.log('[CleaningManual] User authenticated with role:', userRole);
+                    return true;
+                }
+                
+                console.log('[CleaningManual] User not authenticated or insufficient permissions');
+                return false;
+            } catch (error) {
+                console.error('[CleaningManual] Auth check error:', error);
+                return false;
             }
         }
         
@@ -1048,9 +1497,64 @@
         document.addEventListener('DOMContentLoaded', () => {
             setHeaderLogoPath();
             setAdminLinks();
+            restoreLanguage(); // 言語を復元
             loadManualData();
         });
         
+        // グローバルスコープに公開
+        window.switchLanguage = switchLanguage;
+        window.handleEditButtonClick = handleEditButtonClick;
+        
+    </script>
+    
+    <!-- 画像拡大モーダル -->
+    <div id="imageModal" class="image-modal">
+        <span class="image-modal-close">&times;</span>
+        <img class="image-modal-content" id="modalImage" src="" alt="拡大画像">
+    </div>
+    
+    <script>
+        // 画像拡大モーダルの機能
+        (function() {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const closeBtn = document.querySelector('.image-modal-close');
+            
+            // 画像クリック時にモーダルを開く（イベント委譲を使用）
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('example-image')) {
+                    const fullImageSrc = e.target.getAttribute('data-full-image') || e.target.src;
+                    modalImg.src = fullImageSrc;
+                    modal.classList.add('active');
+                    document.body.style.overflow = 'hidden'; // 背景のスクロールを無効化
+                }
+            });
+            
+            // モーダルを閉じる
+            function closeModal() {
+                modal.classList.remove('active');
+                document.body.style.overflow = ''; // 背景のスクロールを有効化
+            }
+            
+            // 閉じるボタンクリック
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeModal);
+            }
+            
+            // モーダル背景クリックで閉じる
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            
+            // ESCキーで閉じる
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    closeModal();
+                }
+            });
+        })();
     </script>
 </body>
 </html>

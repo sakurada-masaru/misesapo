@@ -106,12 +106,14 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         elif path == '/api/images':
             # 画像一覧を返す
             self.handle_images_list()
-        elif path == '/api/cleaning-manual':
-            # 清掃マニュアルデータを返す
-            self.handle_cleaning_manual_get()
-        elif path == '/api/cleaning-manual/draft':
-            # 下書きデータを返す
-            self.handle_cleaning_manual_draft_get()
+        elif path == '/api/cleaning-manual' or path == '/api/cleaning-manual-en':
+            # 清掃マニュアルデータを返す（言語サフィックスに対応）
+            lang_suffix = '-en' if path.endswith('-en') else ''
+            self.handle_cleaning_manual_get(lang_suffix=lang_suffix)
+        elif path == '/api/cleaning-manual/draft' or path == '/api/cleaning-manual-en/draft':
+            # 下書きデータを返す（言語サフィックスに対応）
+            lang_suffix = '-en' if path.endswith('-en') or path.endswith('-en/draft') else ''
+            self.handle_cleaning_manual_draft_get(lang_suffix=lang_suffix)
         elif path == '/api/auth/me':
             # 現在のユーザー情報を取得
             self.handle_auth_me()
@@ -687,12 +689,14 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         """API PUT処理"""
         path = self.path.split('?')[0].rstrip('/')
         
-        if path == '/api/cleaning-manual':
-            # 清掃マニュアルデータを保存
-            self.handle_cleaning_manual_put()
-        elif path == '/api/cleaning-manual/draft':
-            # 下書きデータを保存
-            self.handle_cleaning_manual_draft_put()
+        if path == '/api/cleaning-manual' or path == '/api/cleaning-manual-en':
+            # 清掃マニュアルデータを保存（言語サフィックスに対応）
+            lang_suffix = '-en' if path.endswith('-en') else ''
+            self.handle_cleaning_manual_put(lang_suffix=lang_suffix)
+        elif path == '/api/cleaning-manual/draft' or path == '/api/cleaning-manual-en/draft':
+            # 下書きデータを保存（言語サフィックスに対応）
+            lang_suffix = '-en' if path.endswith('-en') or path.endswith('-en/draft') else ''
+            self.handle_cleaning_manual_draft_put(lang_suffix=lang_suffix)
         elif path.startswith('/api/services/'):
             # サービス更新（既存の処理）
             path_parts = self.path.split('/')
@@ -1050,11 +1054,16 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             print("   git commit -m 'chore: サービス管理の更新'")
             print("   git push origin main")
     
-    def handle_cleaning_manual_get(self):
+    def handle_cleaning_manual_get(self, lang_suffix=''):
         """清掃マニュアルデータを取得"""
         try:
-            if CLEANING_MANUAL_JSON.exists():
-                with open(CLEANING_MANUAL_JSON, 'r', encoding='utf-8') as f:
+            if lang_suffix:
+                json_file = DATA_DIR / f"cleaning-manual{lang_suffix}.json"
+            else:
+                json_file = CLEANING_MANUAL_JSON
+            
+            if json_file.exists():
+                with open(json_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                 self.send_json_response(data)
             else:
@@ -1067,10 +1076,14 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             self.send_error(500, f"Failed to load cleaning manual: {e}")
     
-    def handle_cleaning_manual_draft_get(self):
+    def handle_cleaning_manual_draft_get(self, lang_suffix=''):
         """下書きデータを取得"""
         try:
-            draft_file = DATA_DIR / "cleaning-manual-draft.json"
+            if lang_suffix:
+                draft_file = DATA_DIR / f"cleaning-manual{lang_suffix}-draft.json"
+            else:
+                draft_file = DATA_DIR / "cleaning-manual-draft.json"
+            
             if draft_file.exists():
                 with open(draft_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
@@ -1086,14 +1099,18 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             self.send_error(500, f"Failed to load draft: {e}")
     
-    def handle_cleaning_manual_draft_put(self):
+    def handle_cleaning_manual_draft_put(self, lang_suffix=''):
         """下書きデータを保存"""
         try:
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
             data = json.loads(body.decode('utf-8'))
             
-            draft_file = DATA_DIR / "cleaning-manual-draft.json"
+            if lang_suffix:
+                draft_file = DATA_DIR / f"cleaning-manual{lang_suffix}-draft.json"
+            else:
+                draft_file = DATA_DIR / "cleaning-manual-draft.json"
+            
             with open(draft_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             
@@ -1105,7 +1122,7 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             self.send_error(500, f"Failed to save draft: {e}")
     
-    def handle_cleaning_manual_put(self):
+    def handle_cleaning_manual_put(self, lang_suffix=''):
         """清掃マニュアルデータを保存"""
         try:
             content_length = int(self.headers.get('Content-Length', 0))
@@ -1114,7 +1131,12 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             
             # JSONファイルを保存
             DATA_DIR.mkdir(parents=True, exist_ok=True)
-            with open(CLEANING_MANUAL_JSON, 'w', encoding='utf-8') as f:
+            if lang_suffix:
+                json_file = DATA_DIR / f"cleaning-manual{lang_suffix}.json"
+            else:
+                json_file = CLEANING_MANUAL_JSON
+            
+            with open(json_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             
             # 変更ログを記録

@@ -51,18 +51,33 @@
         }
         .category-tabs {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 20px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .category-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+        .category-tabs::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .category-tabs::-webkit-scrollbar-thumb {
+            background: #ff008c;
+            border-radius: 2px;
         }
         .category-tab {
             background: white;
             border: 2px solid #ddd;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 14px;
             transition: all 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .category-tab:hover {
             border-color: #ff008c;
@@ -240,6 +255,82 @@
             padding: 40px;
             color: #666;
         }
+        .operation-guide {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .operation-guide h2 {
+            margin-top: 0;
+            color: #1976D2;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .operation-guide h2 i {
+            font-size: 20px;
+        }
+        .operation-guide ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .operation-guide li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        .operation-guide .guide-section {
+            margin-top: 15px;
+        }
+        .operation-guide .guide-section:first-child {
+            margin-top: 0;
+        }
+        .operation-guide strong {
+            color: #1976D2;
+        }
+        .operation-guide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .operation-guide-header h2 {
+            margin: 0;
+            flex: 1;
+        }
+        .operation-guide-toggle {
+            background: none;
+            border: none;
+            color: #1976D2;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+        .operation-guide-toggle:hover {
+            color: #1565C0;
+        }
+        .operation-guide.collapsed .operation-guide-toggle {
+            transform: rotate(-90deg);
+        }
+        .operation-guide-content {
+            margin-top: 15px;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            overflow: hidden;
+        }
+        .operation-guide.collapsed .operation-guide-content {
+            max-height: 0;
+            margin-top: 0;
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
@@ -249,6 +340,55 @@
                 <i class="fas fa-arrow-left"></i> 清掃マニュアルに戻る
             </a>
             <h1><i class="fas fa-edit"></i> 清掃マニュアル管理画面</h1>
+        </div>
+
+        <div class="operation-guide collapsed" id="operation-guide">
+            <div class="operation-guide-header" onclick="toggleOperationGuide()">
+                <h2><i class="fas fa-book"></i> 操作補則</h2>
+                <button class="operation-guide-toggle" type="button" aria-label="操作補則を開閉">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div class="operation-guide-content">
+            <div class="guide-section">
+                <strong>📝 項目の編集</strong>
+                <ul>
+                    <li>各項目カードをクリックすると編集モーダルが開きます</li>
+                    <li>タイトル、カテゴリ、リスク説明、良くない例、良い例、Q&Aを編集できます</li>
+                    <li>画像は複数枚アップロード可能です（スマホのライブラリから選択可）</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <strong>➕ 新規項目の追加</strong>
+                <ul>
+                    <li>各カテゴリタブの下にある「新規追加」ボタンから追加できます</li>
+                    <li>カテゴリを選択してから項目を追加してください</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <strong>💾 保存について</strong>
+                <ul>
+                    <li><strong>下書き保存:</strong> 編集内容を一時保存します。後で確認・確定できます</li>
+                    <li><strong>確定保存:</strong> 編集内容を本番環境に反映します。一般ユーザーに表示されます</li>
+                    <li>下書きがある場合は、画面上部に通知が表示されます</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <strong>🖼️ 画像のアップロード</strong>
+                <ul>
+                    <li>「画像を選択」ボタンから、スマホのライブラリまたはカメラで撮影した画像を選択できます</li>
+                    <li>複数の画像を一度に選択・アップロード可能です</li>
+                    <li>各画像には削除ボタンが表示されます</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <strong>📂 カテゴリの切り替え</strong>
+                <ul>
+                    <li>上部のカテゴリタブをクリックして、表示する項目をフィルタリングできます</li>
+                    <li>「すべて」を選択すると全カテゴリの項目が表示されます</li>
+                </ul>
+            </div>
+            </div>
         </div>
 
         <div id="message" class="message"></div>
@@ -1369,6 +1509,7 @@
         window.loadDraft = loadDraft;
         window.applyDraft = applyDraft;
         window.discardDraft = discardDraft;
+        window.toggleOperationGuide = toggleOperationGuide;
         window.importInitialData = importInitialData;
         window.openEditModal = openEditModal;
 
@@ -1396,6 +1537,14 @@
             }
         }
 
+        // 操作補則の開閉
+        function toggleOperationGuide() {
+            const guide = document.getElementById('operation-guide');
+            if (guide) {
+                guide.classList.toggle('collapsed');
+            }
+        }
+        
         // 初期化
         (async function() {
             const authOk = await initAuth();
