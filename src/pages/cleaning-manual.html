@@ -198,6 +198,24 @@
             box-sizing: border-box;
             margin-top: 0;
         }
+        /* 英語版の2段レイアウト */
+        .category-tabs.two-row-layout {
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            min-height: 100px; /* 2段レイアウト用の高さを確保 */
+        }
+        .category-tabs.two-row-layout .category-tab-row {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        /* 英語版の場合、コンテンツのパディングを調整 */
+        .category-tabs.two-row-layout + #content {
+            padding-top: calc(var(--manual-header-height) + var(--manual-title-height) + var(--manual-lang-tabs-height) + 100px);
+        }
         .category-tab {
             background-color: #f0f0f0;
             color: #333;
@@ -649,33 +667,122 @@
             
             categoryTabsContainer.innerHTML = '';
             
-            // 「すべて」タブ
-            const allTab = document.createElement('button');
-            allTab.className = 'category-tab active';
-            allTab.setAttribute('data-category-key', 'all');
-            allTab.textContent = getText('all');
-            allTab.onclick = (e) => filterByCategory('all', e);
-            categoryTabsContainer.appendChild(allTab);
-            
-            // 各カテゴリのタブ
-            const categories = ['kitchen', 'aircon', 'floor', 'other'];
-            categories.forEach(key => {
-                const categoryName = getCategoryDisplayName(key);
-                const count = manualData.filter(d => d.category === categoryName).length;
+            // 英語版の場合は2段レイアウト
+            const isEnglish = currentLanguage === 'en';
+            if (isEnglish) {
+                categoryTabsContainer.classList.add('two-row-layout');
                 
-                if (count > 0) {
-                    const tab = document.createElement('button');
-                    tab.className = 'category-tab';
-                    tab.setAttribute('data-category-key', key);
-                    tab.textContent = `${getText(key)} (${count})`;
-                    tab.onclick = (e) => {
-                        // カテゴリ名を取得してフィルタリング
-                        const catName = getCategoryDisplayName(key);
-                        filterByCategory(catName, e);
-                    };
-                    categoryTabsContainer.appendChild(tab);
+                // 上段: ALL、キッチン、エアコン
+                const topRow = document.createElement('div');
+                topRow.className = 'category-tab-row';
+                
+                // 「すべて」タブ
+                const allTab = document.createElement('button');
+                allTab.className = 'category-tab active';
+                allTab.setAttribute('data-category-key', 'all');
+                allTab.textContent = getText('all');
+                allTab.onclick = (e) => filterByCategory('all', e);
+                topRow.appendChild(allTab);
+                
+                // キッチン
+                const kitchenName = getCategoryDisplayName('kitchen');
+                const kitchenCount = manualData.filter(d => d.category === kitchenName).length;
+                if (kitchenCount > 0) {
+                    const kitchenTab = document.createElement('button');
+                    kitchenTab.className = 'category-tab';
+                    kitchenTab.setAttribute('data-category-key', 'kitchen');
+                    kitchenTab.textContent = `${getText('kitchen')} (${kitchenCount})`;
+                    kitchenTab.onclick = (e) => filterByCategory(kitchenName, e);
+                    topRow.appendChild(kitchenTab);
                 }
-            });
+                
+                // エアコン
+                const airconName = getCategoryDisplayName('aircon');
+                const airconCount = manualData.filter(d => d.category === airconName).length;
+                if (airconCount > 0) {
+                    const airconTab = document.createElement('button');
+                    airconTab.className = 'category-tab';
+                    airconTab.setAttribute('data-category-key', 'aircon');
+                    airconTab.textContent = `${getText('aircon')} (${airconCount})`;
+                    airconTab.onclick = (e) => filterByCategory(airconName, e);
+                    topRow.appendChild(airconTab);
+                }
+                
+                categoryTabsContainer.appendChild(topRow);
+                
+                // 下段: フロア、その他
+                const bottomRow = document.createElement('div');
+                bottomRow.className = 'category-tab-row';
+                
+                // フロア
+                const floorName = getCategoryDisplayName('floor');
+                const floorCount = manualData.filter(d => d.category === floorName).length;
+                if (floorCount > 0) {
+                    const floorTab = document.createElement('button');
+                    floorTab.className = 'category-tab';
+                    floorTab.setAttribute('data-category-key', 'floor');
+                    floorTab.textContent = `${getText('floor')} (${floorCount})`;
+                    floorTab.onclick = (e) => filterByCategory(floorName, e);
+                    bottomRow.appendChild(floorTab);
+                }
+                
+                // その他
+                const otherName = getCategoryDisplayName('other');
+                const otherCount = manualData.filter(d => d.category === otherName).length;
+                if (otherCount > 0) {
+                    const otherTab = document.createElement('button');
+                    otherTab.className = 'category-tab';
+                    otherTab.setAttribute('data-category-key', 'other');
+                    otherTab.textContent = `${getText('other')} (${otherCount})`;
+                    otherTab.onclick = (e) => filterByCategory(otherName, e);
+                    bottomRow.appendChild(otherTab);
+                }
+                
+                categoryTabsContainer.appendChild(bottomRow);
+                
+                // 英語版の場合、コンテンツのパディングを調整
+                const content = document.getElementById('content');
+                if (content) {
+                    content.style.paddingTop = `calc(var(--manual-header-height) + var(--manual-title-height) + var(--manual-lang-tabs-height) + 100px)`;
+                }
+            } else {
+                // 日本語版は従来通り1段レイアウト
+                categoryTabsContainer.classList.remove('two-row-layout');
+                
+                // 日本語版の場合、コンテンツのパディングを元に戻す
+                const content = document.getElementById('content');
+                if (content) {
+                    content.style.paddingTop = '';
+                }
+                
+                // 「すべて」タブ
+                const allTab = document.createElement('button');
+                allTab.className = 'category-tab active';
+                allTab.setAttribute('data-category-key', 'all');
+                allTab.textContent = getText('all');
+                allTab.onclick = (e) => filterByCategory('all', e);
+                categoryTabsContainer.appendChild(allTab);
+                
+                // 各カテゴリのタブ
+                const categories = ['kitchen', 'aircon', 'floor', 'other'];
+                categories.forEach(key => {
+                    const categoryName = getCategoryDisplayName(key);
+                    const count = manualData.filter(d => d.category === categoryName).length;
+                    
+                    if (count > 0) {
+                        const tab = document.createElement('button');
+                        tab.className = 'category-tab';
+                        tab.setAttribute('data-category-key', key);
+                        tab.textContent = `${getText(key)} (${count})`;
+                        tab.onclick = (e) => {
+                            // カテゴリ名を取得してフィルタリング
+                            const catName = getCategoryDisplayName(key);
+                            filterByCategory(catName, e);
+                        };
+                        categoryTabsContainer.appendChild(tab);
+                    }
+                });
+            }
         }
         
         // カテゴリタブを更新（動的に再生成）
