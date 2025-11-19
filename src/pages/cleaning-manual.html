@@ -120,13 +120,14 @@
             top: calc(6.4rem + 1.8rem + 24px); /* 標準ヘッダーの高さ（6.4rem）+ タイトルの高さ */
             left: 0;
             width: 100%;
-            background-color: #f8f8f8;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
             z-index: 999;
-            padding: 6px 20px;
+            padding: 12px 20px;
             box-sizing: border-box;
         }
         /* 言語切り替えタブ */
@@ -952,7 +953,7 @@
                 'aircon': 'page-0-aircon',
                 'floor': 'page-0-floor',
                 'other': 'page-0-other'
-            };
+        };
             const map = { 'all': 'page-0-all' };
             // データから実際のカテゴリ名を取得してマッピング
             if (manualData.length > 0) {
@@ -976,12 +977,12 @@
             return map;
         }
         let categoryListPageMap = getCategoryListPageMap();
-        
+            
         // カテゴリ名をキーに変換（既存の関数を更新）
-        function getCategoryKey(categoryName) {
+            function getCategoryKey(categoryName) {
             return getCategoryKeyFromName(categoryName);
-        }
-        
+            }
+
         // マニュアルページを生成しDOMに追加
         function createManualPages() {
             const contentDiv = document.getElementById('content');
@@ -1038,22 +1039,22 @@
                                         
                                         // 各画像のHTMLを生成
                                         return images.map(imagePath => {
-                                            // HTTP/HTTPSのURLの場合はそのまま使用
-                                            if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+                                    // HTTP/HTTPSのURLの場合はそのまま使用
+                                    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
                                                 return `<div class="example-image-container"><img src="${imagePath}" alt="${getText('badExampleDesc')}" class="example-image" data-full-image="${imagePath}" onerror="this.style.display='none';" /></div>`;
-                                            }
-                                            // 絶対URLを返す（baseタグの影響を受けないようにする）
+                                    }
+                                    // 絶対URLを返す（baseタグの影響を受けないようにする）
                                             let resolvedPath = imagePath;
                                             if (resolvedPath.startsWith('/')) {
                                                 resolvedPath = resolvePath(resolvedPath);
-                                            } else {
-                                                // 相対パスの場合は/を追加してからresolvePathを使用
+                                    } else {
+                                        // 相対パスの場合は/を追加してからresolvePathを使用
                                                 resolvedPath = resolvePath('/' + resolvedPath);
                                             }
                                             // resolvedPathがundefinedの場合は空文字列を返す
                                             if (!resolvedPath || resolvedPath === 'undefined') {
                                                 return '';
-                                            }
+                                    }
                                             return `<div class="example-image-container"><img src="${resolvedPath}" alt="${getText('badExampleDesc')}" class="example-image" data-full-image="${resolvedPath}" onerror="this.style.display='none';" /></div>`;
                                         }).filter(html => html !== '').join('');
                                     };
@@ -1084,22 +1085,22 @@
                                         
                                         // 各画像のHTMLを生成
                                         return images.map(imagePath => {
-                                            // HTTP/HTTPSのURLの場合はそのまま使用
-                                            if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+                                    // HTTP/HTTPSのURLの場合はそのまま使用
+                                    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
                                                 return `<div class="example-image-container"><img src="${imagePath}" alt="${getText('goodExampleDesc')}" class="example-image" data-full-image="${imagePath}" onerror="this.style.display='none';" /></div>`;
-                                            }
-                                            // 絶対URLを返す（baseタグの影響を受けないようにする）
+                                    }
+                                    // 絶対URLを返す（baseタグの影響を受けないようにする）
                                             let resolvedPath = imagePath;
                                             if (resolvedPath.startsWith('/')) {
                                                 resolvedPath = resolvePath(resolvedPath);
-                                            } else {
-                                                // 相対パスの場合は/を追加してからresolvePathを使用
+                                    } else {
+                                        // 相対パスの場合は/を追加してからresolvePathを使用
                                                 resolvedPath = resolvePath('/' + resolvedPath);
                                             }
                                             // resolvedPathがundefinedの場合は空文字列を返す
                                             if (!resolvedPath || resolvedPath === 'undefined') {
                                                 return '';
-                                            }
+                                    }
                                             return `<div class="example-image-container"><img src="${resolvedPath}" alt="${getText('goodExampleDesc')}" class="example-image" data-full-image="${resolvedPath}" onerror="this.style.display='none';" /></div>`;
                                         }).filter(html => html !== '').join('');
                                     };
@@ -1175,7 +1176,7 @@
 
             contentDiv.appendChild(fragment);
         }
-        
+
         // カテゴリでフィルタリング
         function filterByCategory(category, event) {
             if (event) {
@@ -1198,7 +1199,7 @@
                     }
                 } else if (event && event.target === tab) {
                     tab.classList.add('active');
-                }
+            }
             });
             
             // 該当カテゴリのリストページを表示
@@ -1237,7 +1238,7 @@
                             // カテゴリキーからカテゴリ名を取得して比較
                             const catName = getCategoryDisplayName(categoryKey);
                             if (pageCategory === catName) {
-                                tab.classList.add('active');
+                            tab.classList.add('active');
                             }
                         }
                     });
@@ -1256,7 +1257,7 @@
                                 // カテゴリキーからカテゴリ名を取得して比較
                                 const catName = getCategoryDisplayName(categoryKey);
                                 if (pageData.category === catName) {
-                                    tab.classList.add('active');
+                                tab.classList.add('active');
                                 }
                             }
                         });
@@ -1366,9 +1367,9 @@
         async function checkAuthAndShowEditButtons() {
             // AWS移行により、一般ユーザー向けページでは編集ボタンを非表示
             // 編集は管理画面（cleaning-manual-admin.html）から行う
-            document.querySelectorAll('.edit-button-container').forEach(container => {
+                    document.querySelectorAll('.edit-button-container').forEach(container => {
                 container.style.display = 'none';
-            });
+                    });
         }
         
         // インライン編集モーダルを開く（AWS移行により管理画面にリダイレクト）
@@ -1376,7 +1377,7 @@
             // 管理画面にリダイレクト
             alert('編集は管理画面から行ってください。');
             window.location.href = 'cleaning-manual-admin.html';
-            return;
+                return;
             
             // カテゴリ名を取得
             const categoryMap = {
