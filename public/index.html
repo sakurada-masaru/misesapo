@@ -272,6 +272,9 @@
             z-index: 999998; /* スプラッシュスクリーン（999999）より下、他の要素より上 */
             cursor: pointer;
             transition: transform 0.3s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .fixed-menu-button:hover {
@@ -289,6 +292,12 @@
             justify-content: center;
             position: relative;
             box-shadow: 0 4px 12px rgba(255, 0, 140, 0.4);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .fixed-menu-button * {
+            -webkit-tap-highlight-color: transparent;
         }
 
         .fixed-menu-button__circle::before {
@@ -2476,7 +2485,7 @@
                                             <li><a href="javascript:void(0);"><span>職場環境改善に向けた方針</span></a></li>
                                             <li><a href="/security-policy.html"><span>情報セキュリティ基本方針</span></a></li>
                                             <li><a href="/antisocial-declaration.html"><span>反社会的勢力排除宣言</span></a></li>
-                                            <li><a href="javascript:void(0);"><span>サービス利用規約</span></a></li>
+                                            <li><a href="/service-terms.html"><span>サービス利用規約</span></a></li>
                                             <li><a href="javascript:void(0);"><span>ウェブサイト・アプリ利用規約</span></a></li>
                                         </ul>
                 </div>
@@ -2699,7 +2708,7 @@
                         <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">職場環境改善に向けた方針</a></li>
                         <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">情報セキュリティ基本方針</a></li>
                         <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">反社会的勢力排除宣言</a></li>
-                        <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">サービス利用規約</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service-terms.html" class="sp-menu-submenu-link">サービス利用規約</a></li>
                         <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">ウェブサイト・アプリ利用規約</a></li>
                     </ul>
                 </div>
@@ -3442,6 +3451,18 @@
                             closeMenu();
                         }
                     });
+                });
+            })();
+        </script>
+        <script>
+            // 発注ボタンの制御
+            (function() {
+                const orderButton = document.querySelector('.fixed-order-button');
+                if (!orderButton) return;
+                
+                orderButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = '/service.html';
                 });
             })();
         </script>
