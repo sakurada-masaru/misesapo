@@ -100,161 +100,196 @@
 
 
     </div>
-    <!-- リリース前チェックボックス（清掃員関連ページでは非表示） -->
-    <div id="release-check-section" class="release-check-section" data-hide-for-staff>
-      <div class="release-check-container">
-        <div class="release-check-label">リリース前チェック</div>
-        <div class="release-check-boxes">
-          <label class="release-check-item">
-            <input type="checkbox" id="check-admin" class="release-checkbox" data-check-type="admin" />
-            <span>管理者</span>
-          </label>
-          <label class="release-check-item">
-            <input type="checkbox" id="check-developer" class="release-checkbox" data-check-type="developer" />
-            <span>開発者</span>
-          </label>
-          <label class="release-check-item">
-            <input type="checkbox" id="check-other" class="release-checkbox" data-check-type="other" />
-            <span>その他</span>
-          </label>
-        </div>
-      </div>
-    </div>
     <main id="main">
       
 
 
 
-<main id="main" class="container customers-support-desk">
-  <section class="support-hero" aria-label="カスタマーサポートのイメージ">
-    <img src="/images-admin/customer%20support1.jpeg" alt="ヘッドセットとPCのサポートデスク" class="support-hero__image">
-    <div class="support-hero__overlay">
-      <div class="support-hero__text">
-        <p class="support-hero__eyebrow">CUSTOMERS SUPPORT DESK</p>
-        <h1>いつでも頼れるサポート体制</h1>
-        <p>ミセサポのサポートチームが、お問い合わせから緊急連絡まで一括で対応します。</p>
+<main id="main" class="customers-support-desk">
+  <!-- パンくずリスト -->
+  <nav class="breadcrumb" aria-label="パンくずリスト">
+    <ol class="breadcrumb-list">
+      <li class="breadcrumb-item"><a href="/">ホーム</a></li>
+      <li class="breadcrumb-item" aria-current="page">カスタマーサポートデスク</li>
+    </ol>
+  </nav>
+
+  <!-- ヒーローセクション: ご相談窓口 -->
+  <section class="support-channels support-hero" aria-label="ご相談窓口">
+      <!-- 一段目: お客様とワーカーのカード（2分割） -->
+      <div class="channel-grid channel-grid-top">
+        <article class="channel-card" id="customer-support-channel">
+          <div class="channel-icon">
+            <i class="fas fa-user-friends"></i>
+          </div>
+          <h4>お客様相談窓口</h4>
+          <p>発注・請求・サービス品質など<br>ご利用者様からのお問い合わせに専任チームが対応します。</p>
+          <div class="channel-details">
+            <div class="channel-detail-item">
+              <i class="fas fa-phone"></i>
+              <span>070-3332-3939</span>
+            </div>
+            <div class="channel-detail-item">
+              <i class="fas fa-envelope"></i>
+              <span>support@misesapo.com</span>
+            </div>
+            <div class="channel-detail-item">
+              <i class="fas fa-clock"></i>
+              <span>平日 9:00-18:00（緊急時24時間）</span>
+            </div>
+          </div>
+          <a href="/mypage/support.html" class="channel-action">サポートセンターへ</a>
+        </article>
+        <article class="channel-card" id="worker-support-channel">
+          <div class="channel-icon">
+            <i class="fas fa-broom"></i>
+          </div>
+          <h4>ワーカー相談窓口</h4>
+          <p>現場スタッフの勤怠・研修・安全に関する相談窓口です。<br>匿名相談にも対応可能です。</p>
+          <div class="channel-details">
+            <div class="channel-detail-item">
+              <i class="fas fa-phone"></i>
+              <span>070-3332-3939</span>
+            </div>
+            <div class="channel-detail-item">
+              <i class="fas fa-envelope"></i>
+              <span>worker-support@misesapo.com</span>
+            </div>
+            <div class="channel-detail-item">
+              <i class="fas fa-shield-alt"></i>
+              <span>匿名相談可</span>
+            </div>
+          </div>
+          <a href="/staff/dashboard.html" class="channel-action">スタッフダッシュボードへ</a>
+        </article>
       </div>
-    </div>
-  </section>
+      <!-- 二段目: その他のお問い合わせカード（全幅） -->
+      <div class="channel-grid channel-grid-bottom">
+        <article class="channel-card channel-card-wide" id="other-inquiry-channel">
+          <div class="channel-icon">
+            <i class="fas fa-comments"></i>
+          </div>
+          <h4>その他のお問い合わせ</h4>
+          <p>上記以外のお問い合わせやご相談はこちらからお気軽にお問い合わせください。</p>
+          <a href="/mypage/support/inquiry/new.html" class="channel-action">お問い合わせフォームへ</a>
+        </article>
+      </div>
+    </section>
 
-  <div class="page-header">
-    <a href="/" class="back-btn">
-      <i class="fas fa-chevron-left"></i>
-      ホームへ戻る
-    </a>
-    <h2 class="page-title">カスタマーズサポートデスク</h2>
-    <p class="page-subtitle">ミセサポのサポート情報とお問い合わせチャネルをまとめたハブページです。</p>
+  <div class="container">
+    <!-- Quick Access Section -->
+    <section class="quick-access">
+      <h2 class="section-title">サポート機能へのクイックアクセス</h2>
+      <div class="quick-access-grid">
+        <a href="/mypage/support/faq.html" class="quick-access-card">
+          <div class="quick-access-icon">
+            <i class="fas fa-question-circle"></i>
+          </div>
+          <h3>よくある質問（FAQ）</h3>
+          <p>よくある質問をカテゴリ別に確認できます</p>
+        </a>
+        <a href="/mypage/support/inquiry/new.html" class="quick-access-card primary">
+          <div class="quick-access-icon">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <h3>お問い合わせ</h3>
+          <p>新しいお問い合わせを作成</p>
+        </a>
+        <a href="/mypage/support/tickets.html" class="quick-access-card">
+          <div class="quick-access-icon">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
+          <h3>お問い合わせ履歴</h3>
+          <p>過去のお問い合わせと回答を確認</p>
+        </a>
+        <a href="/mypage/support/contact.html" class="quick-access-card">
+          <div class="quick-access-icon">
+            <i class="fas fa-phone"></i>
+          </div>
+          <h3>連絡先・営業時間</h3>
+          <p>電話、メール、チャットでのサポート</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- Emergency Contact Section -->
+    <section class="emergency-contact">
+      <div class="emergency-banner">
+        <div class="emergency-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="emergency-content">
+          <h3>緊急時の連絡先</h3>
+          <p>緊急のご用件は24時間対応の電話サポートをご利用ください</p>
+          <a href="tel:070-3332-3939" class="emergency-phone">
+            <i class="fas fa-phone-alt"></i>
+            070-3332-3939
+          </a>
+        </div>
+      </div>
+    </section>
   </div>
-
-  <section class="coming-soon">
-    <div class="coming-soon__badge">準備中</div>
-    <h2>ヘルプセンターを順次公開予定です</h2>
-    <p>
-      現在、ヘルプセンター・FAQ・お問い合わせチャネルを統合したカスタマーズサポートデスクを構築しています。
-      次のステップでコンテンツを拡充し、ガイドや緊急連絡先の詳細を掲載する予定です。
-    </p>
-    <div class="coming-soon__links">
-      <a href="/mypage/support/faq.html" class="btn-link">
-        <i class="fas fa-question-circle"></i>
-        FAQを見る
-      </a>
-      <a href="/mypage/support/inquiry/new.html" class="btn-link">
-        <i class="fas fa-envelope"></i>
-        お問い合わせを送る
-      </a>
-    </div>
-  </section>
-
-  <section class="support-channels">
-    <div class="section-heading">
-      <p class="section-eyebrow">Support Channels</p>
-      <h3>ご相談窓口</h3>
-      <p>利用者・清掃スタッフ・パートナー企業、それぞれに専任の相談窓口を用意します。今後の正式公開に向けて準備を進めています。</p>
-    </div>
-    <div class="channel-grid">
-      <article class="channel-card" id="customer-support-channel">
-        <div class="channel-icon">
-          <i class="fas fa-user-friends"></i>
-        </div>
-        <h4>お客様相談窓口</h4>
-        <p>発注・請求・サービス品質など、ご利用者様からのお問い合わせに専任チームが対応します。</p>
-        <button class="channel-action" disabled>近日公開</button>
-      </article>
-      <article class="channel-card" id="worker-support-channel">
-        <div class="channel-icon">
-          <i class="fas fa-broom"></i>
-        </div>
-        <h4>ワーカー相談窓口</h4>
-        <p>現場スタッフの勤怠・研修・安全に関する相談窓口です。匿名相談にも対応予定です。</p>
-        <button class="channel-action" disabled>近日公開</button>
-      </article>
-      <article class="channel-card" id="partner-support-channel">
-        <div class="channel-icon">
-          <i class="fas fa-handshake"></i>
-        </div>
-        <h4>パートナーズ相談窓口</h4>
-        <p>協力会社・外部パートナー専用のサポートライン。契約・案件共有・請求フローをサポートします。</p>
-        <button class="channel-action" disabled>近日公開</button>
-      </article>
-    </div>
-  </section>
 </main>
 
 <style>
-  .customers-support-desk {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 32px 16px 64px;
-    min-height: 100vh;
+  /* グローバルカラー変数（new-page.htmlと同じ設定） */
+  :root {
+    --base-light: #FDEDED;
+    --primary: #FF008C;
+    --primary-dark: #E83C91;
+    --base-dark: #43334C;
+    --container-bg: #F9F8F6;
+    --surface: #ffffff;
   }
+  /* キャンバス（メインコンテンツ）: グローバルルール適用（new-page.htmlと同じ設定） */
+  main.customers-support-desk {
+    width: 100% !important;
+    max-width: 100% !important; /* キャンバスは画面幅を超えない */
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: calc(100vh - 110px); /* ヘッダー(60px) + フッター(50px) = 110px */
+    background: var(--base-light); /* キャンバスの背景色: #FDEDED */
+    overflow-x: hidden; /* 横スクロール防止 */
+    overflow-y: auto; /* 縦スクロールを許可 */
+    box-sizing: border-box;
+  }
+  /* コンテナ（皿）: グローバルルール適用（new-page.htmlと同じ設定） */
+  /* ルール: コンテナはセクションの大きさにかかわらず、常に最大幅（100%）でなくてはならない */
+  main.customers-support-desk > .container {
+    background: transparent; /* コンテナの背景色: 透明 */
+    min-height: 400px;
+    padding: 40px; /* new-page.htmlと同じパディング */
+    margin: 20px; /* new-page.htmlと同じマージン */
+    overflow: hidden; /* コンテナを超えてセクションが表示されないようにする */
+    box-sizing: border-box; /* パディングを含めた幅計算 */
+    width: calc(100% - 40px); /* 左右のマージン分を引いた幅に制限 */
+    max-width: calc(100% - 40px); /* 左右のマージン分を引いた幅に制限 */
+    min-width: calc(100% - 40px); /* 常に最大幅を維持 */
+    position: relative;
+    z-index: 1; /* コンテナのz-index */
+  }
+  /* ルール2適用: コンテナ内のすべての要素がはみ出さないようにする（new-page.htmlと同じ設定） */
+  main.customers-support-desk > .container * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  /* 例外: ヒーローセクション（テーブルの装飾）: キャンバスに直接設置 */
   .support-hero {
     position: relative;
-    border-radius: 24px;
+    width: 100vw; /* 例外: キャンバスに直接設置するため画面幅いっぱい */
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
     overflow: hidden;
-    margin-bottom: 40px;
-    min-height: 280px;
-  }
-  .support-hero__image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    min-height: 280px;
-    filter: brightness(0.75);
-  }
-  .support-hero__overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, rgba(15,23,42,0.75) 0%, rgba(38,38,38,0.35) 60%, rgba(255,255,255,0) 100%);
-    display: flex;
-    align-items: center;
-    padding: 48px;
-  }
-  .support-hero__text {
-    color: #ffffff;
-    max-width: 520px;
-  }
-  .support-hero__eyebrow {
-    letter-spacing: 0.2em;
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin: 0 0 12px;
-    color: rgba(255,255,255,0.8);
-  }
-  .support-hero__text h1 {
-    font-size: 2.5rem;
-    margin: 0 0 12px;
-    line-height: 1.2;
-  }
-  .support-hero__text p {
-    margin: 0;
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: rgba(255,255,255,0.85);
+    margin-bottom: 0;
+    min-height: 500px;
+    z-index: 2; /* ヒーローセクションのz-index: コンテナより上 */
+    padding: 0;
+    background: transparent;
   }
   .page-header {
     text-align: center;
-    margin-bottom: 48px;
+    margin-bottom: 24px; /* コンテナ間: 24px */
+    padding: 0;
   }
   .back-btn {
     display: inline-flex;
@@ -262,184 +297,569 @@
     gap: 8px;
     color: var(--primary);
     font-weight: 600;
-    margin-bottom: 12px;
+    font-size: 14px; /* small: 14px */
+    margin-bottom: 16px;
     text-decoration: none;
+    line-height: 1.6;
   }
   .page-title {
-    font-size: 2rem;
-    margin: 0 0 12px;
+    font-size: 32px; /* h1: 32px (PC) */
+    margin: 0 0 16px;
     color: #111827;
+    font-weight: 700;
+    line-height: 1.4;
   }
   .page-subtitle {
     color: #6b7280;
-    font-size: 1rem;
+    font-size: 16px; /* body: 16px (PC) */
     margin: 0;
+    line-height: 1.7;
+    font-weight: 400;
   }
-  .coming-soon {
-    background: #ffffff;
+  /* セクション（料理）: コンテナ内に配置、コンテナを超えない（new-page.htmlと同じ設定） */
+  .quick-access {
+    background: var(--surface); /* セクションの背景色: #ffffff */
+    min-height: 200px;
+    margin-bottom: 20px; /* new-page.htmlと同じマージン */
+    padding: 20px; /* new-page.htmlと同じパディング */
+    width: 100%;
+    max-width: 100%; /* コンテナの幅を超えない */
+    box-sizing: border-box;
+  }
+  .quick-access .section-title {
+    font-size: 24px; /* h2: 24px (PC) */
+    margin: 0 0 24px;
+    color: #111827;
+    text-align: center;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .quick-access-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px; /* グリッドギャップ: 16px */
+  }
+  .quick-access-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 16px; /* パディング: 24px上下, 16px左右 */
+    background: #f9fafb;
     border: 1px solid #e5e7eb;
     border-radius: 16px;
-    padding: 40px 32px;
+    text-decoration: none;
+    color: #111827;
+    transition: all 0.2s;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    min-height: 200px;
+    justify-content: center;
   }
-  .coming-soon__badge {
-    display: inline-flex;
+  .quick-access-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+  .quick-access-card.primary {
+    background: linear-gradient(135deg, var(--primary) 0%, #ff6b9d 100%);
+    color: #ffffff;
+    border-color: var(--primary);
+  }
+  .quick-access-card.primary:hover {
+    box-shadow: 0 4px 16px rgba(255, 103, 156, 0.3);
+  }
+  .quick-access-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 16px;
-    border-radius: 999px;
-    background: #fef3c7;
-    color: #92400e;
+    background: #ffffff;
+    border-radius: 16px;
+    font-size: 1.75rem;
+    color: var(--primary);
+  }
+  .quick-access-card.primary .quick-access-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+  }
+  .quick-access-card h3 {
+    font-size: 20px; /* h3: 20px (PC) */
+    margin: 0;
     font-weight: 600;
-    font-size: 0.85rem;
-    margin-bottom: 16px;
+    line-height: 1.5;
   }
-  .coming-soon h2 {
-    font-size: 1.5rem;
-    margin: 0 0 16px;
-    color: #111827;
+  .quick-access-card.primary h3 {
+    color: #ffffff;
   }
-  .coming-soon p {
-    color: #4b5563;
-    line-height: 1.8;
-    margin: 0 auto 24px;
-    max-width: 640px;
+  .quick-access-card p {
+    font-size: 14px; /* small: 14px (PC) */
+    margin: 0;
+    color: #6b7280;
+    line-height: 1.6;
+    font-weight: 400;
   }
-  .coming-soon__links {
+  .quick-access-card.primary p {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  /* セクション（料理）: コンテナ内に配置、コンテナを超えない（new-page.htmlと同じ設定） */
+  .emergency-contact {
+    background: var(--surface); /* セクションの背景色: #ffffff */
+    min-height: 200px;
+    margin-bottom: 20px; /* new-page.htmlと同じマージン */
+    padding: 20px; /* new-page.htmlと同じパディング */
+    width: 100%;
+    max-width: 100%; /* コンテナの幅を超えない */
+    box-sizing: border-box;
+  }
+  .emergency-banner {
     display: flex;
-    justify-content: center;
-    gap: 16px;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px; /* ギャップ: 16px */
+    padding: 24px; /* パディング: 24px */
+    background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%);
+    border: 2px solid #fca5a5;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
   }
-  .btn-link {
+  .emergency-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ef4444;
+    border-radius: 16px;
+    color: #ffffff;
+    font-size: 1.75rem;
+    flex-shrink: 0;
+  }
+  .emergency-content {
+    flex: 1;
+  }
+  .emergency-content h3 {
+    font-size: 20px; /* h3: 20px (PC) */
+    margin: 0 0 16px;
+    color: #991b1b;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .emergency-content p {
+    font-size: 16px; /* body: 16px (PC) */
+    margin: 0 0 16px;
+    color: #7f1d1d;
+    line-height: 1.7;
+    font-weight: 400;
+  }
+  .emergency-phone {
     display: inline-flex;
+    align-items: center;
+    gap: 8px; /* ギャップ: 8px */
+    padding: 16px 24px; /* パディング: 16px上下, 24px左右 */
+    background: #ef4444;
+    color: #ffffff;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 18px; /* h4: 18px (PC) */
+    transition: all 0.2s;
+    line-height: 1.5;
+  }
+  .emergency-phone:hover {
+    background: #dc2626;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    transform: translateY(-2px);
+  }
+  /* ヒーローセクションとしてのsupport-channels */
+  .support-channels.support-hero {
+    background: transparent;
+    min-height: 500px;
+    margin-bottom: 0;
+    margin-top: 0;
+    padding: 8px 24px 64px; /* ヒーローセクションのパディング（上を8pxに） */
+    width: 100vw;
+    max-width: 100vw;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+  /* パンくずリスト */
+  .breadcrumb {
+    width: 100%;
+    padding: 8px 24px;
+    background: transparent;
+    border: none;
+    margin-bottom: 0;
+  }
+  .breadcrumb-list {
+    display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 20px;
-    border-radius: 999px;
-    border: 1px solid #e5e7eb;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    justify-content: flex-start;
+  }
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #6b7280;
+  }
+  .breadcrumb-item:not(:last-child)::after {
+    content: '>';
+    margin-left: 8px;
+    color: #9ca3af;
+  }
+  .breadcrumb-item a {
+    color: #6b7280;
     text-decoration: none;
-    color: #374151;
+    transition: color 0.2s;
+  }
+  .breadcrumb-item a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+  .breadcrumb-item[aria-current="page"] {
+    color: #111827;
     font-weight: 600;
-    transition: all 0.2s;
-    background: #f9fafb;
-  }
-  .btn-link:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    box-shadow: 0 10px 20px rgba(255, 103, 156, 0.15);
-  }
-  .btn-link i {
-    color: var(--primary);
-  }
-  .support-channels {
-    margin-top: 48px;
-    padding: 32px;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
   }
   .section-heading {
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 24px; /* マージン: 24px */
   }
   .section-eyebrow {
-    font-size: 0.85rem;
+    font-size: 12px; /* caption: 12px */
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: #9ca3af;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
+    font-weight: 600;
+    line-height: 1.5;
   }
   .section-heading h3 {
-    font-size: 1.75rem;
-    margin: 0 0 12px;
+    font-size: 24px; /* h2: 24px (PC) */
+    margin: 0 0 16px;
     color: #111827;
+    font-weight: 700;
+    line-height: 1.5;
   }
   .section-heading p {
     margin: 0;
     color: #4b5563;
     line-height: 1.7;
+    font-size: 16px; /* body: 16px (PC) */
+    font-weight: 400;
   }
   .channel-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+  /* 一段目: 2分割 */
+  .channel-grid-top {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px; /* カード間の適切な間隔 */
+    margin-bottom: 24px;
+  }
+  /* 二段目: 全幅 */
+  .channel-grid-bottom {
+    grid-template-columns: 1fr;
+    gap: 0;
   }
   .channel-card {
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 24px;
-    background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
-    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+    border: none;
+    border-radius: 20px;
+    padding: 32px 24px; /* パディング: 32px上下, 24px左右 */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 16px; /* ギャップ: 16px */
+    transition: all 0.3s;
+    min-height: 650px; /* 550px + 100px = 650px */
+    position: relative;
+    overflow: hidden;
+    justify-content: flex-end; /* コンテンツを下に配置 */
+  }
+  /* 全幅カード（水平方向に長い） */
+  .channel-card-wide {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 48px;
+    gap: 32px;
+  }
+  .channel-card-wide .channel-icon {
+    flex-shrink: 0;
+  }
+  .channel-card-wide h4,
+  .channel-card-wide p {
+    flex: 1;
+  }
+  .channel-card-wide .channel-action {
+    flex-shrink: 0;
+    width: auto;
+    min-width: 200px;
+  }
+  .channel-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
+    z-index: 1;
+  }
+  .channel-card > * {
+    position: relative;
+    z-index: 2;
+  }
+  /* 各カードの背景画像 */
+  #customer-support-channel {
+    background-image: url('/images-admin/お客様相談窓口.jpg');
+  }
+  #worker-support-channel {
+    background-image: url('/images-admin/customer support3.png');
+  }
+  #other-inquiry-channel {
+    background-image: url('/images-admin/customer support2.jpeg');
+    height: 200px;
+    min-height: 200px;
+  }
+  /* 全幅カードのスタイル */
+  .channel-card-wide {
+    min-height: 200px;
+    height: 200px;
+  }
+  .channel-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
   }
   .channel-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    background: #fef2f8;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.9);
     color: var(--primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.75rem;
   }
   .channel-card h4 {
     margin: 0;
-    font-size: 1.25rem;
-    color: #111827;
+    font-size: 24px; /* h2: 24px (PC) */
+    color: #ffffff;
+    font-weight: 700;
+    line-height: 1.4;
   }
   .channel-card p {
     margin: 0;
-    color: #4b5563;
-    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.7;
     flex: 1;
+    font-size: 16px; /* body: 16px (PC) */
+    font-weight: 400;
+  }
+  .channel-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* ギャップ: 12px */
+    margin: 0;
+    padding: 16px; /* パディング: 16px */
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .channel-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* ギャップ: 8px */
+    font-size: 14px; /* small: 14px (PC) */
+    color: #ffffff;
+    font-weight: 500;
+    line-height: 1.6;
+  }
+  .channel-detail-item i {
+    color: #ffffff;
+    width: 16px;
   }
   .channel-action {
-    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
     border-radius: 999px;
-    padding: 10px 16px;
-    background: #e5e7eb;
-    color: #6b7280;
+    padding: 16px 24px; /* パディング: 16px上下, 24px左右 */
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    color: #ffffff;
     font-weight: 600;
-    cursor: not-allowed;
+    font-size: 16px; /* body: 16px (PC) */
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 100%;
+    line-height: 1.7;
   }
-  @media (max-width: 640px) {
-    .support-hero {
-      margin-left: -16px;
-      margin-right: -16px;
-      border-radius: 0;
+  .channel-action:hover {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--primary);
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+  /* SP版：ブレークポイント768px */
+  @media (max-width: 1023.98px) {
+    main.customers-support-desk {
+      max-width: none !important;
     }
-    .support-hero__overlay {
-      padding: 24px;
-      justify-content: flex-start;
+    main.customers-support-desk > .container {
+      max-width: none !important;
+    }
+  }
+  @media (max-width: 768px) {
+    /* SP版: キャンバス（メインコンテンツ） */
+    main.customers-support-desk {
+      min-height: calc(100vh - 50px);
+      max-width: 100% !important; /* キャンバスは画面幅を超えない */
+      overflow-x: hidden; /* 横スクロール防止 */
+    }
+    /* SP版: コンテナ（皿） */
+    main.customers-support-desk > .container {
+      padding: 24px; /* SP版: パディングを調整 */
+      margin: 16px; /* SP版: マージンを調整 */
+      width: calc(100% - 32px); /* 左右のマージン分を引いた幅 */
+      max-width: calc(100% - 32px);
+      min-width: calc(100% - 32px);
+      box-sizing: border-box;
+    }
+    /* ヒーローセクション：フルスクリーンサイズ */
+    .support-hero {
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
+      min-height: 400px;
+      margin-bottom: 40px;
+      padding: 40px 16px;
+    }
+    .channel-grid-top {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .channel-card {
+      min-height: 300px;
+      padding: 24px 16px;
+    }
+    .channel-card-wide {
+      flex-direction: column;
+      padding: 24px 16px;
+      gap: 16px;
+    }
+    .channel-card-wide .channel-action {
+      width: 100%;
+      min-width: auto;
+    }
+    .breadcrumb {
+      padding: 8px 16px;
+    }
+    .breadcrumb-list {
+      max-width: 100%;
+    }
+    .breadcrumb-item {
+      font-size: 12px;
     }
     .support-hero__text h1 {
-      font-size: 1.75rem;
+      font-size: 24px; /* h1: 24px (SP) */
     }
     .support-hero__text p {
-      font-size: 0.95rem;
+      font-size: 14px; /* body: 14px (SP) */
     }
+    .page-header {
+      margin-bottom: 16px; /* コンテナ間: 16px (SP) */
+      padding: 0;
+    }
+    .page-title {
+      font-size: 24px; /* h1: 24px (SP) */
+    }
+    .page-subtitle {
+      font-size: 14px; /* body: 14px (SP) */
+    }
+    /* SP版: セクションのパディング調整 */
+    .quick-access,
+    .emergency-contact,
     .support-channels {
-      padding: 24px 20px;
+      padding: 16px; /* SP版: パディングを調整 */
+    }
+    .quick-access .section-title {
+      font-size: 20px; /* h2: 20px (SP) */
+      margin-bottom: 16px;
+    }
+    .quick-access-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px; /* グリッドギャップ: 16px */
+    }
+    .quick-access-card {
+      padding: 16px; /* パディング: 16px */
+    }
+    .quick-access-card h3 {
+      font-size: 18px; /* h3: 18px (SP) */
+    }
+    .quick-access-card p {
+      font-size: 13px; /* small: 13px (SP) */
+    }
+    .emergency-banner {
+      padding: 16px; /* パディング: 16px */
+      gap: 16px;
+    }
+    .emergency-content h3 {
+      font-size: 18px; /* h3: 18px (SP) */
+    }
+    .emergency-content p {
+      font-size: 14px; /* body: 14px (SP) */
+    }
+    .emergency-phone {
+      font-size: 16px; /* h4: 16px (SP) */
+      padding: 16px 24px;
+    }
+    .section-heading h3 {
+      font-size: 20px; /* h2: 20px (SP) */
+    }
+    .section-heading p {
+      font-size: 14px; /* body: 14px (SP) */
     }
     .channel-grid {
       grid-template-columns: 1fr;
+      gap: 16px; /* グリッドギャップ: 16px */
     }
-    .page-title {
-      font-size: 1.75rem;
+    .channel-card {
+      padding: 16px; /* パディング: 16px */
     }
-    .coming-soon {
-      padding: 32px 20px;
+    .channel-card h4 {
+      font-size: 16px; /* h4: 16px (SP) */
     }
-    .coming-soon__links {
+    .channel-card p {
+      font-size: 14px; /* body: 14px (SP) */
+    }
+    .channel-details {
+      padding: 16px;
+      gap: 16px;
+    }
+    .channel-detail-item {
+      font-size: 13px; /* small: 13px (SP) */
+    }
+    .channel-action {
+      font-size: 14px; /* body: 14px (SP) */
+    }
+    .emergency-banner {
       flex-direction: column;
+      text-align: center;
     }
-    .btn-link {
+    .emergency-phone {
       width: 100%;
       justify-content: center;
     }
@@ -455,586 +875,6 @@
 </footer>
 
 
-    <!-- フィードバックボタン（清掃員関連ページでは非表示） -->
-    <div data-hide-for-staff>
-    <!-- フィードバックボタン（ドラッグ可能） -->
-<div id="feedback-button" class="feedback-button" draggable="true">
-  <i class="fas fa-arrow-down"></i>
-</div>
-
-<!-- フィードバックフォーム（ドラッグ可能・独立） -->
-<div id="feedback-form" class="feedback-form" style="display: none;" draggable="true">
-  <div class="feedback-form-header">
-    <span class="feedback-form-title">フィードバック</span>
-    <button class="feedback-form-close" id="feedback-close-btn">
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-  <div class="feedback-form-body">
-    <textarea 
-      id="feedback-text" 
-      class="feedback-text-input" 
-      placeholder="修正箇所やコメントを入力してください..."
-      rows="4"
-    ></textarea>
-    <div class="feedback-form-actions">
-      <button class="feedback-screenshot-btn" id="feedback-screenshot-btn">
-        <i class="fas fa-camera"></i>
-        スクリーンショット
-      </button>
-      <button class="feedback-send-btn" id="feedback-send-btn" disabled>
-        <i class="fas fa-paper-plane"></i>
-        送信
-      </button>
-    </div>
-    <div id="feedback-screenshot-preview" class="feedback-screenshot-preview" style="display: none;">
-      <img id="feedback-screenshot-img" alt="スクリーンショット" />
-      <button class="feedback-screenshot-remove" id="feedback-screenshot-remove">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-  </div>
-</div>
-
-<style>
-  .feedback-button {
-    position: fixed;
-    top: 100px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background: #dc2626;
-    color: #ffffff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: move;
-    z-index: 10000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    user-select: none;
-  }
-
-  .feedback-button:hover {
-    background: #b91c1c;
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-  }
-
-  .feedback-button:active {
-    transform: scale(0.95);
-  }
-
-  .feedback-button i {
-    font-size: 24px;
-  }
-
-  .feedback-button.dragging {
-    opacity: 0.7;
-    cursor: grabbing;
-  }
-
-  .feedback-form {
-    position: fixed;
-    top: 160px;
-    right: 20px;
-    width: 350px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    z-index: 10001;
-    overflow: hidden;
-    cursor: move;
-  }
-
-  .feedback-form.dragging {
-    opacity: 0.8;
-    cursor: grabbing;
-  }
-
-  .feedback-form-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: #dc2626;
-    color: #ffffff;
-    cursor: move;
-    user-select: none;
-  }
-
-  .feedback-form-title {
-    font-weight: 600;
-    font-size: 0.95rem;
-  }
-
-  .feedback-form-close {
-    background: none;
-    border: none;
-    color: #ffffff;
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    transition: background 0.2s;
-  }
-
-  .feedback-form-close:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
-
-  .feedback-form-body {
-    padding: 16px;
-  }
-
-  .feedback-text-input {
-    width: 100%;
-    min-height: 100px;
-    padding: 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-family: inherit;
-    resize: vertical;
-    box-sizing: border-box;
-  }
-
-  .feedback-text-input:focus {
-    outline: none;
-    border-color: #dc2626;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-  }
-
-  .feedback-form-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .feedback-screenshot-btn,
-  .feedback-send-btn {
-    flex: 1;
-    padding: 10px 16px;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    transition: all 0.2s;
-  }
-
-  .feedback-screenshot-btn {
-    background: #f3f4f6;
-    color: #374151;
-  }
-
-  .feedback-screenshot-btn:hover {
-    background: #e5e7eb;
-  }
-
-  .feedback-send-btn {
-    background: #dc2626;
-    color: #ffffff;
-  }
-
-  .feedback-send-btn:hover:not(:disabled) {
-    background: #b91c1c;
-  }
-
-  .feedback-send-btn:disabled {
-    background: #d1d5db;
-    color: #9ca3af;
-    cursor: not-allowed;
-  }
-
-  .feedback-screenshot-preview {
-    margin-top: 12px;
-    position: relative;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .feedback-screenshot-preview img {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-
-  .feedback-screenshot-remove {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 32px;
-    height: 32px;
-    background: rgba(0, 0, 0, 0.7);
-    color: #ffffff;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-  }
-
-  .feedback-screenshot-remove:hover {
-    background: rgba(0, 0, 0, 0.9);
-  }
-
-  @media (max-width: 768px) {
-    .feedback-form {
-      width: calc(100vw - 40px);
-      max-width: 350px;
-    }
-  }
-</style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>
-  (function() {
-    let screenshotData = null;
-    let isDraggingButton = false;
-    let isDraggingForm = false;
-    let buttonDragOffset = { x: 0, y: 0 };
-    let formDragOffset = { x: 0, y: 0 };
-
-    function init() {
-      const feedbackButton = document.getElementById('feedback-button');
-      const feedbackForm = document.getElementById('feedback-form');
-      const feedbackFormHeader = feedbackForm ? feedbackForm.querySelector('.feedback-form-header') : null;
-      const feedbackText = document.getElementById('feedback-text');
-      const feedbackCloseBtn = document.getElementById('feedback-close-btn');
-      const feedbackScreenshotBtn = document.getElementById('feedback-screenshot-btn');
-      const feedbackSendBtn = document.getElementById('feedback-send-btn');
-      const feedbackScreenshotPreview = document.getElementById('feedback-screenshot-preview');
-      const feedbackScreenshotImg = document.getElementById('feedback-screenshot-img');
-      const feedbackScreenshotRemove = document.getElementById('feedback-screenshot-remove');
-
-      if (!feedbackButton || !feedbackForm) return;
-
-      // 矢印ボタンのドラッグ機能
-      feedbackButton.addEventListener('mousedown', function(e) {
-        if (e.target === feedbackButton || e.target.closest('.feedback-button')) {
-          isDraggingButton = true;
-          feedbackButton.classList.add('dragging');
-          const rect = feedbackButton.getBoundingClientRect();
-          buttonDragOffset.x = e.clientX - rect.left;
-          buttonDragOffset.y = e.clientY - rect.top;
-          e.preventDefault();
-        }
-      });
-
-      // フォームのドラッグ機能（ヘッダー部分をドラッグ）
-      if (feedbackFormHeader) {
-        feedbackFormHeader.addEventListener('mousedown', function(e) {
-          if (e.target !== feedbackCloseBtn && !e.target.closest('.feedback-form-close')) {
-            isDraggingForm = true;
-            feedbackForm.classList.add('dragging');
-            const rect = feedbackForm.getBoundingClientRect();
-            formDragOffset.x = e.clientX - rect.left;
-            formDragOffset.y = e.clientY - rect.top;
-            e.preventDefault();
-          }
-        });
-      }
-
-      document.addEventListener('mousemove', function(e) {
-        // 矢印ボタンのドラッグ
-        if (isDraggingButton && feedbackButton) {
-          const x = e.clientX - buttonDragOffset.x;
-          const y = e.clientY - buttonDragOffset.y;
-          feedbackButton.style.left = x + 'px';
-          feedbackButton.style.top = y + 'px';
-          feedbackButton.style.right = 'auto';
-          feedbackButton.style.bottom = 'auto';
-        }
-        
-        // フォームのドラッグ
-        if (isDraggingForm && feedbackForm) {
-          const x = e.clientX - formDragOffset.x;
-          const y = e.clientY - formDragOffset.y;
-          feedbackForm.style.left = x + 'px';
-          feedbackForm.style.top = y + 'px';
-          feedbackForm.style.right = 'auto';
-        }
-      });
-
-      document.addEventListener('mouseup', function() {
-        if (isDraggingButton) {
-          isDraggingButton = false;
-          if (feedbackButton) {
-            feedbackButton.classList.remove('dragging');
-          }
-        }
-        if (isDraggingForm) {
-          isDraggingForm = false;
-          if (feedbackForm) {
-            feedbackForm.classList.remove('dragging');
-          }
-        }
-      });
-
-      // タッチデバイス対応 - 矢印ボタン
-      feedbackButton.addEventListener('touchstart', function(e) {
-        if (e.target === feedbackButton || e.target.closest('.feedback-button')) {
-          isDraggingButton = true;
-          feedbackButton.classList.add('dragging');
-          const touch = e.touches[0];
-          const rect = feedbackButton.getBoundingClientRect();
-          buttonDragOffset.x = touch.clientX - rect.left;
-          buttonDragOffset.y = touch.clientY - rect.top;
-          e.preventDefault();
-        }
-      });
-
-      // タッチデバイス対応 - フォーム
-      if (feedbackFormHeader) {
-        feedbackFormHeader.addEventListener('touchstart', function(e) {
-          if (e.target !== feedbackCloseBtn && !e.target.closest('.feedback-form-close')) {
-            isDraggingForm = true;
-            feedbackForm.classList.add('dragging');
-            const touch = e.touches[0];
-            const rect = feedbackForm.getBoundingClientRect();
-            formDragOffset.x = touch.clientX - rect.left;
-            formDragOffset.y = touch.clientY - rect.top;
-            e.preventDefault();
-          }
-        });
-      }
-
-      document.addEventListener('touchmove', function(e) {
-        const touch = e.touches[0];
-        
-        // 矢印ボタンのドラッグ
-        if (isDraggingButton && feedbackButton) {
-          const x = touch.clientX - buttonDragOffset.x;
-          const y = touch.clientY - buttonDragOffset.y;
-          feedbackButton.style.left = x + 'px';
-          feedbackButton.style.top = y + 'px';
-          feedbackButton.style.right = 'auto';
-          feedbackButton.style.bottom = 'auto';
-          e.preventDefault();
-        }
-        
-        // フォームのドラッグ
-        if (isDraggingForm && feedbackForm) {
-          const x = touch.clientX - formDragOffset.x;
-          const y = touch.clientY - formDragOffset.y;
-          feedbackForm.style.left = x + 'px';
-          feedbackForm.style.top = y + 'px';
-          feedbackForm.style.right = 'auto';
-          e.preventDefault();
-        }
-      });
-
-      document.addEventListener('touchend', function() {
-        if (isDraggingButton) {
-          isDraggingButton = false;
-          if (feedbackButton) {
-            feedbackButton.classList.remove('dragging');
-          }
-        }
-        if (isDraggingForm) {
-          isDraggingForm = false;
-          if (feedbackForm) {
-            feedbackForm.classList.remove('dragging');
-          }
-        }
-      });
-
-      // ボタンクリックでフォーム表示
-      feedbackButton.addEventListener('click', function(e) {
-        if (!isDraggingButton && !isDraggingForm) {
-          e.stopPropagation();
-          // フォームが非表示の場合は表示、既に表示されている場合は非表示
-          if (feedbackForm.style.display === 'none') {
-            const buttonRect = feedbackButton.getBoundingClientRect();
-            feedbackForm.style.display = 'block';
-            feedbackForm.style.top = (buttonRect.bottom + 10) + 'px';
-            feedbackForm.style.left = (buttonRect.left - 330) + 'px';
-            feedbackForm.style.right = 'auto';
-            if (feedbackText) feedbackText.focus();
-          } else {
-            feedbackForm.style.display = 'none';
-          }
-        }
-      });
-
-      // フォームを閉じる
-      if (feedbackCloseBtn) {
-        feedbackCloseBtn.addEventListener('click', function() {
-          feedbackForm.style.display = 'none';
-          screenshotData = null;
-          if (feedbackScreenshotPreview) feedbackScreenshotPreview.style.display = 'none';
-          if (feedbackText) feedbackText.value = '';
-          if (feedbackSendBtn) feedbackSendBtn.disabled = true;
-        });
-      }
-
-      // テキスト入力で送信ボタンを有効化
-      if (feedbackText && feedbackSendBtn) {
-        feedbackText.addEventListener('input', function() {
-          feedbackSendBtn.disabled = !feedbackText.value.trim() && !screenshotData;
-        });
-      }
-
-      // スクリーンショット機能
-      if (feedbackScreenshotBtn) {
-        feedbackScreenshotBtn.addEventListener('click', function() {
-          if (typeof html2canvas === 'undefined') {
-            alert('スクリーンショット機能が利用できません。');
-            return;
-          }
-
-          feedbackScreenshotBtn.disabled = true;
-          feedbackScreenshotBtn.innerHTML = '<i class="fas fa-camera"></i> 撮影中...';
-
-          html2canvas(document.body, {
-            useCORS: true,
-            logging: false,
-            scale: 1
-          }).then(function(canvas) {
-            screenshotData = canvas.toDataURL('image/png');
-            if (feedbackScreenshotImg) feedbackScreenshotImg.src = screenshotData;
-            if (feedbackScreenshotPreview) feedbackScreenshotPreview.style.display = 'block';
-            feedbackScreenshotBtn.disabled = false;
-            feedbackScreenshotBtn.innerHTML = '<i class="fas fa-camera"></i> スクリーンショット';
-            if (feedbackSendBtn) {
-              feedbackSendBtn.disabled = !feedbackText.value.trim() && !screenshotData;
-            }
-          }).catch(function(error) {
-            console.error('スクリーンショットエラー:', error);
-            alert('スクリーンショットの取得に失敗しました。');
-            feedbackScreenshotBtn.disabled = false;
-            feedbackScreenshotBtn.innerHTML = '<i class="fas fa-camera"></i> スクリーンショット';
-          });
-        });
-      }
-
-      // スクリーンショット削除
-      if (feedbackScreenshotRemove && feedbackSendBtn && feedbackText) {
-        feedbackScreenshotRemove.addEventListener('click', function() {
-          screenshotData = null;
-          if (feedbackScreenshotPreview) feedbackScreenshotPreview.style.display = 'none';
-          feedbackSendBtn.disabled = !feedbackText.value.trim();
-        });
-      }
-
-      // メール送信機能（EmailJS使用）
-      if (feedbackSendBtn) {
-        feedbackSendBtn.addEventListener('click', function() {
-          const text = feedbackText ? feedbackText.value.trim() : '';
-          if (!text && !screenshotData) {
-            alert('テキストまたはスクリーンショットを入力してください。');
-            return;
-          }
-
-          const pageUrl = window.location.href;
-          const pageTitle = document.title;
-          const timestamp = new Date().toLocaleString('ja-JP');
-
-          // EmailJSの設定
-          const EMAILJS_SERVICE_ID = 'service_hx88k5s';
-          const EMAILJS_TEMPLATE_ID = 'template_alkj896';
-          const EMAILJS_PUBLIC_KEY = 'pLD_aLYcX2lhiCSRl';
-
-          // EmailJSが利用可能かチェック
-          if (typeof emailjs === 'undefined') {
-            // EmailJSが利用できない場合は、従来のmailto方式にフォールバック
-            const emailTo = 'misesapofeedback@gmail.com';
-            const emailSubject = encodeURIComponent(`フィードバック: ${pageTitle}`);
-            let emailBody = `フィードバック\n\n`;
-            emailBody += `ページ: ${pageTitle}\n`;
-            emailBody += `URL: ${pageUrl}\n`;
-            emailBody += `日時: ${timestamp}\n\n`;
-            emailBody += `コメント:\n${text}\n`;
-            const emailBodyEncoded = encodeURIComponent(emailBody);
-
-            if (screenshotData) {
-              const link = document.createElement('a');
-              link.download = `screenshot-${Date.now()}.png`;
-              link.href = screenshotData;
-              link.click();
-              alert('スクリーンショットをダウンロードしました。\nメール作成画面で手動で添付してください。');
-            }
-            window.location.href = `mailto:${emailTo}?subject=${emailSubject}&body=${emailBodyEncoded}`;
-            return;
-          }
-
-          // EmailJSでメール送信
-          feedbackSendBtn.disabled = true;
-          feedbackSendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
-
-          // テンプレートパラメータを準備
-          const templateParams = {
-            to_email: 'misesapofeedback@gmail.com',
-            page_title: pageTitle,
-            page_url: pageUrl,
-            timestamp: timestamp,
-            comment: text,
-            has_screenshot: screenshotData ? 'あり' : 'なし'
-          };
-
-          // スクリーンショットがある場合は、HTML画像として埋め込む
-          if (screenshotData) {
-            // base64画像をHTMLのimgタグとして埋め込む
-            // EmailJSのテンプレートでHTMLメールとして表示される
-            templateParams.screenshot_image = `<img src="${screenshotData}" alt="スクリーンショット" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; margin: 10px 0;" />`;
-            templateParams.screenshot_base64 = screenshotData; // テンプレートで直接使用する場合
-          }
-
-          // EmailJSで送信
-          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-            .then(function(response) {
-              console.log('送信成功:', response.status, response.text);
-
-              alert('フィードバックを送信しました！');
-              
-              // フォームをリセット
-              feedbackForm.style.display = 'none';
-              screenshotData = null;
-              if (feedbackScreenshotPreview) feedbackScreenshotPreview.style.display = 'none';
-              if (feedbackText) feedbackText.value = '';
-              feedbackSendBtn.disabled = true;
-              feedbackSendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送信';
-            }, function(error) {
-              console.error('送信エラー:', error);
-              alert('送信に失敗しました。\nエラー: ' + (error.text || error.message || '不明なエラー'));
-              feedbackSendBtn.disabled = false;
-              feedbackSendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送信';
-            });
-        });
-      }
-    }
-
-    // EmailJSの初期化（公開キーを設定）
-    const EMAILJS_PUBLIC_KEY = 'pLD_aLYcX2lhiCSRl';
-    if (typeof emailjs !== 'undefined') {
-      emailjs.init(EMAILJS_PUBLIC_KEY);
-    }
-
-    // 初期化
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
-    }
-  })();
-</script>
-
-
-    </div>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -1046,12 +886,9 @@
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
     <script>
-      // 清掃員関連ページとログイン画面ではリリース前チェックとフィードバックボタンを非表示
       // ログイン画面では通常ヘッダーを表示
       (function() {
-        const bodyClass = document.body.className || '';
         const path = window.location.pathname || '';
-        const isStaffPage = bodyClass.includes('staff') || path.includes('/staff/');
         const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
         
         // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
@@ -1069,25 +906,6 @@
               normalHeader.classList.add('visible');
             }
           }
-        }
-        
-        if (isStaffPage || isSigninPage) {
-          // リリース前チェックセクションを非表示
-          const releaseCheckSection = document.getElementById('release-check-section');
-          if (releaseCheckSection) {
-            releaseCheckSection.style.display = 'none';
-          }
-          
-          // フィードバックボタンを非表示
-          const feedbackButton = document.getElementById('feedback-button');
-          if (feedbackButton) {
-            feedbackButton.style.display = 'none';
-          }
-          
-          // data-hide-for-staff属性を持つ要素を非表示
-          document.querySelectorAll('[data-hide-for-staff]').forEach(el => {
-            el.style.display = 'none';
-          });
         }
       })();
     </script>

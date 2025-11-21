@@ -1,6 +1,11 @@
 /* Base */
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+/* 全幅画面で表示される（グローバル設定） */
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden; /* 横スクロール防止 */
+}
 :root {
   --bg: #f8fafc;
   --text: #494949;
@@ -24,6 +29,73 @@ body {
   min-height: 100svh;
   display: flex;
   flex-direction: column;
+}
+
+/* タイポグラフィシステム（グローバル設定） */
+/* PC版 */
+h1 {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0;
+}
+h2 {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 0;
+}
+h3 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+}
+h4 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+}
+p, body {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.7;
+}
+small {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+.caption {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* SP版（768px以下） */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 24px;
+  }
+  h2 {
+    font-size: 20px;
+  }
+  h3 {
+    font-size: 18px;
+  }
+  h4 {
+    font-size: 16px;
+  }
+  p, body {
+    font-size: 14px;
+  }
+  small {
+    font-size: 13px;
+  }
+  .caption {
+    font-size: 12px;
+  }
 }
 a { color: #1f2937; text-decoration: none; }
 a:hover { color: #111827; }
@@ -204,7 +276,8 @@ img { max-width: 100%; height: auto; }
 }
 
 /* Layout */
-main { width: 100%; max-width: var(--container-lg); margin: 24px auto; padding: 0 16px; flex: 1 0 auto; }
+/* グローバル設定: メインコンテンツ（キャンバス）は全幅 */
+main { width: 100%; max-width: 100%; margin: 0; padding: 0; flex: 1 0 auto; }
 
 /* Registration scoped variables */
 .registration {
@@ -215,7 +288,7 @@ main { width: 100%; max-width: var(--container-lg); margin: 24px auto; padding: 
 }
 .registration main.container { max-width: var(--reg-max); padding: 0 var(--reg-pad); width: 100%; }
 .registration .kv { grid-template-columns: var(--kv-label) 1fr; gap: 8px var(--kv-gap); }
-.container { max-width: var(--container-lg); margin: 0 auto; padding: 0 16px; }
+.container { max-width: var(--container-lg); margin: 0 auto; padding: 0 16px; background: transparent; }
 .bg-white { --bg: #ffffff; }
 .reg-logo-block { margin: 40px 0 12px; }
 .reg-logo { height: 48px; width: auto; }
@@ -441,12 +514,21 @@ main { width: 100%; max-width: var(--container-lg); margin: 24px auto; padding: 
 .signup-options { padding: 16px 0 24px; }
 
 /* Mypage */
-.page-mypage main { max-width: 1200px; }
+.page-mypage main { max-width: 100%; }
 .breadcrumb { font-size: 12px; color: var(--muted); margin: 12px 0; display: flex; align-items: center; gap: 6px; }
 .breadcrumb a { color: var(--muted); }
 .breadcrumb a:hover { color: #374151; text-decoration: underline; }
 .breadcrumb .sep { color: #9ca3af; }
-.mypage { }
+.mypage {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0 24px 64px;
+}
+.mypage .section {
+  width: 100%;
+  padding: 24px;
+}
 .page-title { font-size: 22px; font-weight: 800; color:#1f2937; margin: 8px 0 16px; }
 .page-actions { text-align: center; margin-top: 32px; }
 .btn-lg { height: 44px; padding: 0 24px; font-size: 14px; }
@@ -454,6 +536,14 @@ main { width: 100%; max-width: var(--container-lg); margin: 24px auto; padding: 
 .mypage-main { flex: 2 1 640px; }
 .mypage-side { flex: 1 1 320px; }
 @media (max-width: 992px) { .mypage-grid { flex-direction: column; } }
+@media (max-width: 768px) {
+  .mypage {
+    padding: 0 16px 40px;
+  }
+  .mypage .section {
+    padding: 16px;
+  }
+}
 
 /* Submission prompt */
 .submission-card { background: #fff5f8; border: 1px solid #ffd9e6; border-radius: 8px; padding: 24px; }
@@ -584,7 +674,25 @@ main { width: 100%; max-width: var(--container-lg); margin: 24px auto; padding: 
 .card-service .price { margin: 6px 0; color: var(--primary); font-weight: 700; }
 
 /* Footer */
-.site-footer { background: #ffffff; border-top: 1px solid var(--border); margin-top: 24px; }
+/* グローバル設定：背景はグローバルカラーピンク（#FF679C）に白文字、高さ50px */
+.site-footer { 
+  background: var(--primary); 
+  color: #ffffff;
+  border-top: none;
+  margin-top: 24px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.site-footer .container {
+  color: #ffffff;
+  background: transparent;
+}
+.site-footer p {
+  color: #ffffff;
+  margin: 0;
+}
 
 /* -------- Utilities -------- */
 .wrap { max-width: 640px; margin: 0 auto; }

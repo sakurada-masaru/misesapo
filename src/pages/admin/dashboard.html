@@ -2,155 +2,167 @@
 @json('data/meta/admin_dashboard_title.json', $title)
 @json('data/meta/admin_dashboard_body_class.json', $body_class)
 
-<main id="main" class="container admin-dashboard">
-  <div class="dashboard-header">
-    <h1 class="page-title">管理ダッシュボード</h1>
-    <div class="user-info">
-      <span class="user-name">管理者</span>
+<main id="main" class="admin-dashboard">
+  <div class="container">
+    <div class="dashboard-header">
+      <h1 class="page-title">管理ダッシュボード</h1>
+      <div class="user-info">
+        <span class="user-name">管理者</span>
+      </div>
     </div>
   </div>
 
   <!-- Quick Links -->
-  <section class="dashboard-section quick-links-section">
-    <h2 class="section-title">
-      <i class="fas fa-link"></i>
-      クイックリンク
-    </h2>
-    <div class="quick-links">
-      <button type="button" class="quick-link" id="open-notice-modal">
-        <i class="fas fa-bullhorn"></i>
-        <span>お知らせ</span>
-      </button>
-      <a href="/admin/users.html" class="quick-link">
-        <i class="fas fa-users"></i>
-        <span>ユーザーID管理</span>
-      </a>
-      <a href="/admin/orders.html" class="quick-link">
-        <i class="fas fa-shopping-cart"></i>
-        <span>発注管理</span>
-      </a>
-      <a href="/admin/services.html" class="quick-link">
-        <i class="fas fa-tools"></i>
-        <span>サービス管理</span>
-      </a>
-      <a href="/admin/reports.html" class="quick-link">
-        <i class="fas fa-file-alt"></i>
-        <span>レポート管理</span>
-      </a>
+  <section class="quick-links-section">
+    <div class="container">
+      <h2 class="section-title">
+        <i class="fas fa-link"></i>
+        クイックリンク
+      </h2>
+      <div class="quick-links">
+        <button type="button" class="quick-link" id="open-notice-modal">
+          <i class="fas fa-bullhorn"></i>
+          <span>お知らせ</span>
+        </button>
+        <a href="/admin/users.html" class="quick-link">
+          <i class="fas fa-users"></i>
+          <span>ユーザーID管理</span>
+        </a>
+        <a href="/admin/orders.html" class="quick-link">
+          <i class="fas fa-shopping-cart"></i>
+          <span>発注管理</span>
+        </a>
+        <a href="/admin/services.html" class="quick-link">
+          <i class="fas fa-tools"></i>
+          <span>サービス管理</span>
+        </a>
+        <a href="/admin/reports.html" class="quick-link">
+          <i class="fas fa-file-alt"></i>
+          <span>レポート管理</span>
+        </a>
+      </div>
     </div>
   </section>
 
   <!-- Summary Stats -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="fas fa-users"></i>
-      </div>
-      <div class="stat-value">1,234</div>
-      <div class="stat-label">総顧客数</div>
-      <div class="stat-change positive">+12%</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="fas fa-shopping-cart"></i>
-      </div>
-      <div class="stat-value">156</div>
-      <div class="stat-label">今月発注数</div>
-      <div class="stat-change positive">+8%</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="fas fa-yen-sign"></i>
-      </div>
-      <div class="stat-value">¥12,450,000</div>
-      <div class="stat-label">今月売上</div>
-      <div class="stat-change positive">+15%</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="fas fa-user-tie"></i>
-      </div>
-      <div class="stat-value">24</div>
-      <div class="stat-label">営業担当者数</div>
-      <div class="stat-change">-</div>
-    </div>
-  </div>
-
-  <!-- Recent Activity -->
-  <div class="dashboard-grid">
-    <section class="dashboard-section">
-      <div class="section-header">
-        <h2 class="section-title">
-          <i class="fas fa-bell"></i>
-          最近のアクティビティ
-        </h2>
-        <a href="/admin/activities.html" class="btn btn-outline btn-sm">すべて見る</a>
-      </div>
-      <div class="activity-list">
-        <div class="activity-item">
-          <div class="activity-icon">
+  <section class="stats-grid">
+    <div class="container">
+      <div class="stats-grid-inner">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-value">1,234</div>
+          <div class="stat-label">総顧客数</div>
+          <div class="stat-change positive">+12%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
             <i class="fas fa-shopping-cart"></i>
           </div>
-          <div class="activity-content">
-            <div class="activity-text">新規発注が作成されました</div>
-            <div class="activity-meta">ORD-2025-001 | 2025年3月28日 10:30</div>
-          </div>
+          <div class="stat-value">156</div>
+          <div class="stat-label">今月発注数</div>
+          <div class="stat-change positive">+8%</div>
         </div>
-        <div class="activity-item">
-          <div class="activity-icon">
-            <i class="fas fa-file-alt"></i>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-yen-sign"></i>
           </div>
-          <div class="activity-content">
-            <div class="activity-text">レポートが提出されました</div>
-            <div class="activity-meta">REP-2025-001 | 2025年3月28日 09:15</div>
-          </div>
+          <div class="stat-value">¥12,450,000</div>
+          <div class="stat-label">今月売上</div>
+          <div class="stat-change positive">+15%</div>
         </div>
-        <div class="activity-item">
-          <div class="activity-icon">
-            <i class="fas fa-user-plus"></i>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-user-tie"></i>
           </div>
-          <div class="activity-content">
-            <div class="activity-text">新規顧客が登録されました</div>
-            <div class="activity-meta">株式会社 ABC | 2025年3月27日 16:45</div>
-          </div>
+          <div class="stat-value">24</div>
+          <div class="stat-label">営業担当者数</div>
+          <div class="stat-change">-</div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="dashboard-section">
-      <div class="section-header">
-        <h2 class="section-title">
-          <i class="fas fa-chart-line"></i>
-          売上推移
-        </h2>
-        <select class="period-select">
-          <option>今月</option>
-          <option>先月</option>
-          <option>今四半期</option>
-        </select>
+  <!-- Recent Activity -->
+  <section class="dashboard-grid">
+    <div class="container">
+      <div class="dashboard-grid-inner">
+        <section class="dashboard-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <i class="fas fa-bell"></i>
+              最近のアクティビティ
+            </h2>
+            <a href="/admin/activities.html" class="btn btn-outline btn-sm">すべて見る</a>
+          </div>
+          <div class="activity-list">
+            <div class="activity-item">
+              <div class="activity-icon">
+                <i class="fas fa-shopping-cart"></i>
+              </div>
+              <div class="activity-content">
+                <div class="activity-text">新規発注が作成されました</div>
+                <div class="activity-meta">ORD-2025-001 | 2025年3月28日 10:30</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon">
+                <i class="fas fa-file-alt"></i>
+              </div>
+              <div class="activity-content">
+                <div class="activity-text">レポートが提出されました</div>
+                <div class="activity-meta">REP-2025-001 | 2025年3月28日 09:15</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon">
+                <i class="fas fa-user-plus"></i>
+              </div>
+              <div class="activity-content">
+                <div class="activity-text">新規顧客が登録されました</div>
+                <div class="activity-meta">株式会社 ABC | 2025年3月27日 16:45</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <i class="fas fa-chart-line"></i>
+              売上推移
+            </h2>
+            <select class="period-select">
+              <option>今月</option>
+              <option>先月</option>
+              <option>今四半期</option>
+            </select>
+          </div>
+          <div class="chart-placeholder">
+            <div class="chart-bars">
+              <div class="chart-bar" style="height: 60%"></div>
+              <div class="chart-bar" style="height: 80%"></div>
+              <div class="chart-bar" style="height: 45%"></div>
+              <div class="chart-bar" style="height: 90%"></div>
+              <div class="chart-bar" style="height: 70%"></div>
+              <div class="chart-bar" style="height: 85%"></div>
+              <div class="chart-bar" style="height: 95%"></div>
+            </div>
+            <div class="chart-labels">
+              <span>月</span>
+              <span>火</span>
+              <span>水</span>
+              <span>木</span>
+              <span>金</span>
+              <span>土</span>
+              <span>日</span>
+            </div>
+          </div>
+        </section>
       </div>
-      <div class="chart-placeholder">
-        <div class="chart-bars">
-          <div class="chart-bar" style="height: 60%"></div>
-          <div class="chart-bar" style="height: 80%"></div>
-          <div class="chart-bar" style="height: 45%"></div>
-          <div class="chart-bar" style="height: 90%"></div>
-          <div class="chart-bar" style="height: 70%"></div>
-          <div class="chart-bar" style="height: 85%"></div>
-          <div class="chart-bar" style="height: 95%"></div>
-        </div>
-        <div class="chart-labels">
-          <span>月</span>
-          <span>火</span>
-          <span>水</span>
-          <span>木</span>
-          <span>金</span>
-          <span>土</span>
-          <span>日</span>
-        </div>
-      </div>
-    </section>
-  </div>
+    </div>
+  </section>
 
   <!-- Notice Modal -->
   <div class="notice-modal-backdrop" id="notice-modal-backdrop">
@@ -332,31 +344,39 @@
     body.page-admin-dashboard {
       background: #f4f5f7;
     }
-    body.page-admin-dashboard #release-check-section,
-    body.page-admin-dashboard #feedback-button {
-      display: none !important;
+    /* キャンバス（メインコンテンツ）: グローバルルール適用 */
+    main.admin-dashboard {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      min-height: calc(100vh - 110px); /* ヘッダー(60px) + フッター(50px) = 110px */
+      background: var(--base-light, #FDEDED); /* キャンバスの背景色 */
+      overflow-x: hidden; /* 横スクロール防止 */
+      overflow-y: auto; /* 縦スクロールを許可 */
+      box-sizing: border-box;
     }
-    body.page-admin-dashboard main {
+    /* コンテナ（皿）: グローバルルール適用 */
+    main.admin-dashboard > .container {
+      background: transparent; /* コンテナの背景色: 透明 */
       width: 100%;
-      max-width: none;
+      max-width: 100%;
+      min-width: 100%;
       margin: 0;
-      padding: 0;
+      padding: 48px 24px; /* PC版: 上下48px、左右24px */
+      box-sizing: border-box;
+    }
+    /* セクション内のコンテナ */
+    main.admin-dashboard section .container {
       background: transparent;
-    }
-    body.page-admin-dashboard .container {
       width: 100%;
-      max-width: none;
-      margin: 0;
-    }
-    .admin-dashboard.container {
-      width: 100%;
-      max-width: none;
-      margin: 0;
-      padding: 0 24px 64px;
-      background: transparent;
+      max-width: 100%;
+      min-width: 100%;
+      padding: 48px 24px; /* PC版: 上下48px、左右24px */
+      box-sizing: border-box;
     }
     .dashboard-header {
-      margin-bottom: 32px;
+      margin-bottom: 0;
       padding-bottom: 16px;
       border-bottom: 2px solid #e5e7eb;
     }
@@ -376,14 +396,16 @@
       font-size: 0.875rem;
     }
     .stats-grid {
+      width: 100%;
+      margin-bottom: 16px; /* セクション間のマージン: 16px */
+    }
+    .stats-grid-inner {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 20px;
-      width: 100%;
-      margin-bottom: 32px;
     }
     .stat-card {
-      background: #ffffff;
+      background: transparent;
       border-radius: 12px;
       padding: 24px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -415,14 +437,16 @@
       color: #dc2626;
     }
     .dashboard-grid {
+      width: 100%;
+      margin-bottom: 16px; /* セクション間のマージン: 16px */
+    }
+    .dashboard-grid-inner {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 24px;
-      width: 100%;
-      margin-bottom: 32px;
     }
     .dashboard-section {
-      background: #ffffff;
+      background: transparent;
       border-radius: 12px;
       padding: 24px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -514,7 +538,8 @@
       color: #6b7280;
     }
     .quick-links-section {
-      margin-bottom: 32px;
+      width: 100%;
+      margin-bottom: 16px; /* セクション間のマージン: 16px */
     }
     .quick-links {
       display: grid;
@@ -691,13 +716,16 @@
       font-weight: 500;
     }
     @media (max-width: 1200px) {
-      .admin-dashboard.container {
-        padding: 0 16px 48px;
+      main.admin-dashboard > .container {
+        padding: 24px 16px; /* SP版: 上下24px、左右16px */
       }
-      .stats-grid {
+      main.admin-dashboard section .container {
+        padding: 24px 16px; /* SP版: 上下24px、左右16px */
+      }
+      .stats-grid-inner {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      .dashboard-grid {
+      .dashboard-grid-inner {
         grid-template-columns: 1fr;
       }
       .quick-links {
@@ -705,10 +733,16 @@
       }
     }
     @media (max-width: 768px) {
-      .admin-dashboard.container {
-        padding: 0 16px 40px;
+      main.admin-dashboard > .container {
+        padding: 24px 16px; /* SP版: 上下24px、左右16px */
       }
-      .stats-grid {
+      main.admin-dashboard section .container {
+        padding: 24px 16px; /* SP版: 上下24px、左右16px */
+      }
+      .stats-grid-inner {
+        grid-template-columns: 1fr;
+      }
+      .dashboard-grid-inner {
         grid-template-columns: 1fr;
       }
       .dashboard-section {

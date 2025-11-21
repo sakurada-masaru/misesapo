@@ -15,34 +15,10 @@
     <div id="normal-header-wrapper" style="display: none;">
     @include('partials.normal-header')
     </div>
-    <!-- リリース前チェックボックス（清掃員関連ページでは非表示） -->
-    <div id="release-check-section" class="release-check-section" data-hide-for-staff>
-      <div class="release-check-container">
-        <div class="release-check-label">リリース前チェック</div>
-        <div class="release-check-boxes">
-          <label class="release-check-item">
-            <input type="checkbox" id="check-admin" class="release-checkbox" data-check-type="admin" />
-            <span>管理者</span>
-          </label>
-          <label class="release-check-item">
-            <input type="checkbox" id="check-developer" class="release-checkbox" data-check-type="developer" />
-            <span>開発者</span>
-          </label>
-          <label class="release-check-item">
-            <input type="checkbox" id="check-other" class="release-checkbox" data-check-type="other" />
-            <span>その他</span>
-          </label>
-        </div>
-      </div>
-    </div>
     <main id="main">
       {{ content }}
     </main>
     @include('partials.footer')
-    <!-- フィードバックボタン（清掃員関連ページでは非表示） -->
-    <div data-hide-for-staff>
-    @include('partials.feedback-button')
-    </div>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -54,12 +30,9 @@
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
     <script>
-      // 清掃員関連ページとログイン画面ではリリース前チェックとフィードバックボタンを非表示
       // ログイン画面では通常ヘッダーを表示
       (function() {
-        const bodyClass = document.body.className || '';
         const path = window.location.pathname || '';
-        const isStaffPage = bodyClass.includes('staff') || path.includes('/staff/');
         const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
         
         // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
@@ -77,25 +50,6 @@
               normalHeader.classList.add('visible');
             }
           }
-        }
-        
-        if (isStaffPage || isSigninPage) {
-          // リリース前チェックセクションを非表示
-          const releaseCheckSection = document.getElementById('release-check-section');
-          if (releaseCheckSection) {
-            releaseCheckSection.style.display = 'none';
-          }
-          
-          // フィードバックボタンを非表示
-          const feedbackButton = document.getElementById('feedback-button');
-          if (feedbackButton) {
-            feedbackButton.style.display = 'none';
-          }
-          
-          // data-hide-for-staff属性を持つ要素を非表示
-          document.querySelectorAll('[data-hide-for-staff]').forEach(el => {
-            el.style.display = 'none';
-          });
         }
       })();
     </script>
