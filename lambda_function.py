@@ -22,7 +22,7 @@ ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*').split(',')
 # データファイルのS3キー
 DATA_KEY = 'cleaning-manual/data.json'
 DRAFT_KEY = 'cleaning-manual/draft.json'
-TRAINING_VIDEOS_KEY = 'training-videos/data.json'
+SERVICES_KEY = 'services/service_items.json'
 
 def lambda_handler(event, context):
     """
@@ -89,6 +89,21 @@ def lambda_handler(event, context):
                 return get_cleaning_manual_data(headers, True)
             elif method == 'PUT' or method == 'POST':
                 return save_cleaning_manual_data(event, headers, True)
+        elif normalized_path == '/services':
+            # サービス一覧の取得・作成
+            if method == 'GET':
+                return get_services(headers)
+            elif method == 'POST':
+                return create_service(event, headers)
+        elif normalized_path.startswith('/services/'):
+            # サービス詳細の取得・更新・削除
+            service_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_service_detail(service_id, headers)
+            elif method == 'PUT':
+                return update_service(service_id, event, headers)
+            elif method == 'DELETE':
+                return delete_service(service_id, headers)
         elif normalized_path == '/training-videos':
             # 研修動画データの読み書き
             if method == 'GET':
@@ -116,6 +131,10 @@ def lambda_handler(event, context):
                 return get_report_detail(report_id, event, headers)
             elif method == 'DELETE':
                 return delete_report(report_id, event, headers)
+        elif normalized_path == '/admin/dashboard/stats':
+            # 管理ダッシュボードの統計データを取得
+            if method == 'GET':
+                return get_dashboard_stats(headers)
         else:
             # デバッグ: パスが一致しなかった場合
             print(f"DEBUG: Path not matched. normalized_path={normalized_path}, original_path={path}")
@@ -296,6 +315,329 @@ def save_cleaning_manual_data(event, headers, is_draft=False):
         }
     except Exception as e:
         print(f"Error saving to S3: {str(e)}")
+        raise
+
+# ==================== 管理ダッシュボード統計 ====================
+
+def get_dashboard_stats(headers):
+    """
+    管理ダッシュボードの統計データを取得
+    """
+    try:
+        stats = {
+            'pending_reports': 0,
+            'today_schedules': 0,
+            'urgent_tickets': 0,
+            'total_customers': 0,
+            'monthly_orders': 0,
+            'monthly_revenue': 0,
+            'active_staff': 0
+        }
+        
+        # 承認待ちレポート数を取得（status='draft'のレポート）
+        try:
+            # status-created_at-indexを使用してdraftステータスのレポートを取得
+            response = REPORTS_TABLE.query(
+                IndexName='status-created_at-index',
+                KeyConditionExpression=Key('status').eq('draft'),
+                Select='COUNT'
+            )
+            stats['pending_reports'] = response.get('Count', 0)
+        except Exception as e:
+            print(f"Error getting pending reports: {str(e)}")
+            # GSIが存在しない場合はスキャンで取得
+            try:
+                response = REPORTS_TABLE.scan(
+                    FilterExpression=Attr('status').eq('draft'),
+                    Select='COUNT'
+                )
+                stats['pending_reports'] = response.get('Count', 0)
+            except Exception as e2:
+                print(f"Error scanning pending reports: {str(e2)}")
+        
+        # TODO: 今日の清掃予定数を取得（スケジュールテーブルができたら実装）
+        # TODO: 緊急お問い合わせ数を取得（お問い合わせテーブルができたら実装）
+        # TODO: 総顧客数を取得（顧客テーブルができたら実装）
+        # TODO: 今月発注数を取得（発注テーブルができたら実装）
+        # TODO: 今月売上を取得（支払いテーブルができたら実装）
+        # TODO: 稼働中清掃員数を取得（清掃員テーブルができたら実装）
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(stats, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting dashboard stats: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '統計データの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+# ==================== サービス管理 ====================
+
+def get_services(headers):
+    """
+    サービス一覧を取得
+    """
+    try:
+        # S3からデータを取得
+        response = s3_client.get_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=SERVICES_KEY
+        )
+        data = json.loads(response['Body'].read().decode('utf-8'))
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(data, ensure_ascii=False)
+        }
+    except s3_client.exceptions.NoSuchKey:
+        # ファイルが存在しない場合は空の配列を返す
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps([], ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error reading services from S3: {str(e)}")
+        raise
+
+def get_service_detail(service_id, headers):
+    """
+    サービス詳細を取得
+    """
+    try:
+        # サービス一覧を取得
+        response = s3_client.get_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=SERVICES_KEY
+        )
+        services = json.loads(response['Body'].read().decode('utf-8'))
+        
+        # サービスIDで検索
+        service = None
+        for s in services:
+            if str(s.get('id')) == str(service_id):
+                service = s
+                break
+        
+        if not service:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'Service not found'}, ensure_ascii=False)
+            }
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(service, ensure_ascii=False)
+        }
+    except s3_client.exceptions.NoSuchKey:
+        return {
+            'statusCode': 404,
+            'headers': headers,
+            'body': json.dumps({'error': 'Service not found'}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error reading service from S3: {str(e)}")
+        raise
+
+def create_service(event, headers):
+    """
+    サービスを作成
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        # JSONをパース
+        if isinstance(body, str):
+            service_data = json.loads(body)
+        else:
+            service_data = json.loads(body.decode('utf-8'))
+        
+        # サービス一覧を取得
+        try:
+            response = s3_client.get_object(
+                Bucket=S3_BUCKET_NAME,
+                Key=SERVICES_KEY
+            )
+            services = json.loads(response['Body'].read().decode('utf-8'))
+        except s3_client.exceptions.NoSuchKey:
+            services = []
+        
+        # 新しいIDを生成
+        max_id = max([s.get('id', 0) for s in services], default=0)
+        new_id = max_id + 1
+        service_data['id'] = new_id
+        
+        # 新しいサービスを追加
+        services.append(service_data)
+        
+        # S3に保存
+        s3_client.put_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=SERVICES_KEY,
+            Body=json.dumps(services, ensure_ascii=False, indent=2),
+            ContentType='application/json'
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'id': new_id,
+                'message': 'サービスを登録しました'
+            }, ensure_ascii=False)
+        }
+    except json.JSONDecodeError as e:
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'Invalid JSON',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error creating service: {str(e)}")
+        raise
+
+def update_service(service_id, event, headers):
+    """
+    サービスを更新
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        # JSONをパース
+        if isinstance(body, str):
+            service_data = json.loads(body)
+        else:
+            service_data = json.loads(body.decode('utf-8'))
+        
+        # サービス一覧を取得
+        response = s3_client.get_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=SERVICES_KEY
+        )
+        services = json.loads(response['Body'].read().decode('utf-8'))
+        
+        # サービスを更新
+        updated = False
+        for i, service in enumerate(services):
+            if str(service.get('id')) == str(service_id):
+                service_data['id'] = int(service_id)
+                services[i] = service_data
+                updated = True
+                break
+        
+        if not updated:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'Service not found'}, ensure_ascii=False)
+            }
+        
+        # S3に保存
+        s3_client.put_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=SERVICES_KEY,
+            Body=json.dumps(services, ensure_ascii=False, indent=2),
+            ContentType='application/json'
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'id': int(service_id),
+                'message': 'サービスを更新しました'
+            }, ensure_ascii=False)
+        }
+    except s3_client.exceptions.NoSuchKey:
+        return {
+            'statusCode': 404,
+            'headers': headers,
+            'body': json.dumps({'error': 'Service not found'}, ensure_ascii=False)
+        }
+    except json.JSONDecodeError as e:
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'Invalid JSON',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error updating service: {str(e)}")
+        raise
+
+def delete_service(service_id, headers):
+    """
+    サービスを削除
+    """
+    try:
+        # サービス一覧を取得
+        response = s3_client.get_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=SERVICES_KEY
+        )
+        services = json.loads(response['Body'].read().decode('utf-8'))
+        
+        # サービスを削除
+        original_length = len(services)
+        services = [s for s in services if str(s.get('id')) != str(service_id)]
+        
+        if len(services) == original_length:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'Service not found'}, ensure_ascii=False)
+            }
+        
+        # S3に保存
+        s3_client.put_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=SERVICES_KEY,
+            Body=json.dumps(services, ensure_ascii=False, indent=2),
+            ContentType='application/json'
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'id': int(service_id),
+                'message': 'サービスを削除しました'
+            }, ensure_ascii=False)
+        }
+    except s3_client.exceptions.NoSuchKey:
+        return {
+            'statusCode': 404,
+            'headers': headers,
+            'body': json.dumps({'error': 'Service not found'}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting service: {str(e)}")
         raise
 
 def get_training_videos_data(headers):
@@ -1084,4 +1426,3 @@ def delete_report(report_id, event, headers):
                 'message': str(e)
             }, ensure_ascii=False)
         }
-

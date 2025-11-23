@@ -40,6 +40,14 @@
           <i class="fas fa-file-alt"></i>
           <span>レポート管理</span>
         </a>
+        <a href="/admin/cleaning-manual.html" class="quick-link">
+          <i class="fas fa-book"></i>
+          <span>清掃マニュアル</span>
+        </a>
+        <a href="/admin/schedule.html" class="quick-link">
+          <i class="fas fa-calendar-alt"></i>
+          <span>スケジュール管理</span>
+        </a>
       </div>
     </div>
   </section>
@@ -79,6 +87,30 @@
           <div class="stat-value">24</div>
           <div class="stat-label">営業担当者数</div>
           <div class="stat-change">-</div>
+        </div>
+        <div class="stat-card stat-card-urgent" id="pending-reports-card">
+          <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-value" id="pending-reports-count">-</div>
+          <div class="stat-label">承認待ちレポート</div>
+          <a href="/admin/reports.html?status=draft" class="stat-link">確認する</a>
+        </div>
+        <div class="stat-card stat-card-urgent" id="urgent-tickets-card">
+          <div class="stat-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-value" id="urgent-tickets-count">-</div>
+          <div class="stat-label">緊急お問い合わせ</div>
+          <a href="/admin/support/tickets.html?priority=high" class="stat-link">確認する</a>
+        </div>
+        <div class="stat-card" id="today-schedules-card">
+          <div class="stat-icon">
+            <i class="fas fa-calendar-day"></i>
+          </div>
+          <div class="stat-value" id="today-schedules-count">-</div>
+          <div class="stat-label">今日の清掃予定</div>
+          <a href="/admin/schedule.html?date=today" class="stat-link">確認する</a>
         </div>
       </div>
     </div>
@@ -404,8 +436,13 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 20px;
     }
+    @media (min-width: 1400px) {
+      .stats-grid-inner {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+      }
+    }
     .stat-card {
-      background: transparent;
+      background: #ffffff;
       border-radius: 12px;
       padding: 24px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -436,6 +473,58 @@
     .stat-change.negative {
       color: #dc2626;
     }
+    .stat-card-urgent {
+      border: 2px solid #f59e0b !important;
+      background: #fffbeb !important;
+    }
+    .stat-card-urgent .stat-icon {
+      color: #f59e0b;
+    }
+    .stat-card-urgent .stat-value {
+      color: #d97706;
+    }
+    .stat-link {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 12px;
+      background: var(--primary);
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .stat-link:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+    .stat-card-urgent {
+      border: 2px solid #f59e0b;
+      background: #fffbeb;
+    }
+    .stat-card-urgent .stat-icon {
+      color: #f59e0b;
+    }
+    .stat-card-urgent .stat-value {
+      color: #d97706;
+    }
+    .stat-link {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 12px;
+      background: var(--primary);
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .stat-link:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
     .dashboard-grid {
       width: 100%;
       margin-bottom: 16px; /* セクション間のマージン: 16px */
@@ -446,7 +535,7 @@
       gap: 24px;
     }
     .dashboard-section {
-      background: transparent;
+      background: #ffffff;
       border-radius: 12px;
       padding: 24px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -553,7 +642,7 @@
       align-items: center;
       gap: 12px;
       padding: 24px;
-      background: #f9fafb;
+      background: #ffffff;
       border: 1px solid #e5e7eb;
       border-radius: 12px;
       text-decoration: none;
@@ -729,7 +818,7 @@
         grid-template-columns: 1fr;
       }
       .quick-links {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
     }
     @media (max-width: 768px) {
@@ -757,6 +846,82 @@
 
 <script>
   (function() {
+    // ダッシュボード統計データを取得
+    async function loadDashboardStats() {
+      try {
+        // APIエンドポイントを決定
+        const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const apiUrl = isDev 
+          ? '/api/admin/dashboard/stats'
+          : 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod/admin/dashboard/stats';
+        
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const stats = await response.json();
+        
+        // 統計データを表示
+        const pendingReportsEl = document.getElementById('pending-reports-count');
+        const urgentTicketsEl = document.getElementById('urgent-tickets-count');
+        const todaySchedulesEl = document.getElementById('today-schedules-count');
+        
+        if (pendingReportsEl) {
+          pendingReportsEl.textContent = stats.pending_reports || 0;
+          // 承認待ちがある場合はカードを強調
+          if (stats.pending_reports > 0) {
+            const card = document.getElementById('pending-reports-card');
+            if (card) {
+              card.classList.add('stat-card-urgent');
+            }
+          }
+        }
+        
+        if (urgentTicketsEl) {
+          urgentTicketsEl.textContent = stats.urgent_tickets || 0;
+          // 緊急お問い合わせがある場合はカードを強調
+          if (stats.urgent_tickets > 0) {
+            const card = document.getElementById('urgent-tickets-card');
+            if (card) {
+              card.classList.add('stat-card-urgent');
+            }
+          }
+        }
+        
+        if (todaySchedulesEl) {
+          todaySchedulesEl.textContent = stats.today_schedules || 0;
+        }
+        
+      } catch (error) {
+        console.error('Failed to load dashboard stats:', error);
+        // エラー時はデフォルト値を表示
+        const pendingReportsEl = document.getElementById('pending-reports-count');
+        const urgentTicketsEl = document.getElementById('urgent-tickets-count');
+        const todaySchedulesEl = document.getElementById('today-schedules-count');
+        
+        if (pendingReportsEl) pendingReportsEl.textContent = '-';
+        if (urgentTicketsEl) urgentTicketsEl.textContent = '-';
+        if (todaySchedulesEl) todaySchedulesEl.textContent = '-';
+      }
+    }
+    
+    // ページ読み込み時に統計データを取得
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadDashboardStats);
+    } else {
+      loadDashboardStats();
+    }
+    
+    // 5分ごとに統計データを更新
+    setInterval(loadDashboardStats, 5 * 60 * 1000);
+    
     const noticeModalBackdrop = document.getElementById('notice-modal-backdrop');
     const openNoticeBtn = document.getElementById('open-notice-modal');
     const closeNoticeBtn = document.getElementById('close-notice-modal');

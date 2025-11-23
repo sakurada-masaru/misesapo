@@ -2,6 +2,9 @@
 @json('data/meta/admin_services_new_title.json', $title)
 @json('data/meta/admin_services_new_body_class.json', $body_class)
 
+<!-- AWS API -->
+<script src="/js/aws-services-api.js"></script>
+
 <main id="main" class="container admin-services-new">
   <div class="page-header">
     <a href="/admin/services.html" class="back-btn">
@@ -344,6 +347,43 @@
   </style>
 
   <script>
+    // 認証チェック（管理者権限が必要）
+    (function() {
+      async function checkAdminAuth() {
+        // 開発サーバーの場合は認証をバイパス
+        const hostname = window.location.hostname;
+        const isLocalDev = hostname === 'localhost' || 
+                          hostname === '127.0.0.1' ||
+                          hostname === '';
+        
+        if (isLocalDev) {
+          console.log('[AdminServicesNew] Development server: Auth check bypassed');
+          return true;
+        }
+        
+        // 本番環境では認証チェック
+        if (window.Auth && window.Auth.getCurrentRole) {
+          const role = window.Auth.getCurrentRole();
+          const adminRoles = ['admin', 'master', 'developer'];
+          
+          if (adminRoles.includes(role)) {
+            console.log('[AdminServicesNew] User authenticated with role:', role);
+            return true;
+          }
+        }
+        
+        // 認証されていない場合はログインページにリダイレクト
+        console.log('[AdminServicesNew] User not authenticated or insufficient permissions');
+        const loginUrl = '/signin.html';
+        const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `${loginUrl}?redirect=${redirectUrl}`;
+        return false;
+      }
+      
+      // ページ読み込み時に認証チェック
+      checkAdminAuth();
+    })();
+    
     // Image preview functionality
     (function() {
       const imageInput = document.getElementById('image-input');
@@ -410,20 +450,80 @@
               }
             });
             
-            // APIに送信
-            const response = await fetch('/api/services', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(serviceData)
-            });
-            
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
+            // AWS APIが利用可能な場合はAWS APIを使用
+            let result;
+            if (window.AWSServicesAPI && window.AWSServicesAPI.isAvailable()) {
+              result = await window.AWSServicesAPI.createService(serviceData);
+              console.log('[AdminServicesNew] Service created via AWS API:', result);
+            } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+              // 開発サーバーの場合はAPIを使用
+              const response = await fetch('/api/services', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(serviceData)
+              });
+              
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              
+              result = await response.json();
+              console.log('[AdminServicesNew] Service created via dev server API:', result);
+            } else {
+              throw new Error('AWS APIまたは開発サーバーが必要です。');
             }
             
-            const result = await response.json();
+            // 成功メッセージ
+            alert(`サービスID ${result.id} を登録しました！\n\nページを自動生成しています。数秒後に一覧ページに移動します。`);
+            
+            // 少し待ってからリダイレクト（ビルドが完了するまで）
+            setTimeout(() => {
+              window.location.href = '/admin/services.html';
+            }, 2000);
+            
+          } catch (error) {
+            console.error('Error:', error);
+            alert('エラーが発生しました: ' + error.message + '\n\n開発サーバーが起動しているか確認してください。');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+          }
+        });
+      }
+    })();
+  </script>
+</main>
+
+
+                delete serviceData[key];
+              }
+            });
+            
+            // AWS APIが利用可能な場合はAWS APIを使用
+            let result;
+            if (window.AWSServicesAPI && window.AWSServicesAPI.isAvailable()) {
+              result = await window.AWSServicesAPI.createService(serviceData);
+              console.log('[AdminServicesNew] Service created via AWS API:', result);
+            } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+              // 開発サーバーの場合はAPIを使用
+              const response = await fetch('/api/services', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(serviceData)
+              });
+              
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              
+              result = await response.json();
+              console.log('[AdminServicesNew] Service created via dev server API:', result);
+            } else {
+              throw new Error('AWS APIまたは開発サーバーが必要です。');
+            }
             
             // 成功メッセージ
             alert(`サービスID ${result.id} を登録しました！\n\nページを自動生成しています。数秒後に一覧ページに移動します。`);

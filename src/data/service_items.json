@@ -517,7 +517,7 @@
     "id": 8,
     "title": "排気ファン清掃",
     "category": "厨房設備",
-    "price": "¥ 35,00〜",
+    "price": "¥ 3,500〜",
     "image": "images/haikifan.png",
     "description": "排気ファンは、油煙・ホコリ・水蒸気を直接吸い込むため、汚れが蓄積しやすい設備です。放置すると問題を引き起こします。",
     "problems": [
@@ -526,23 +526,22 @@
       "強い悪臭や害虫の発生源に"
     ],
     "solution": "排気ファンを分解し、羽根・カバー・モーター部分を高圧洗浄・除菌仕上げいたします。",
-    "forms": [
+    "sections": [
       {
         "section-title": "日頃のお掃除の状況について教えてください",
         "section-type": "radio-text",
-        "required": true,
         "section-items": [
           "毎日清掃している",
           "週に1回程度",
           "月に1回程度",
           "半年〜1年に1回",
           "1度もしていない"
-        ]
+        ],
+        "required": true
       },
       {
         "section-title": "清掃の仕上がりイメージを教えてください",
         "section-type": "radio-image",
-        "required": false,
         "section-items": [
           {
             "text": "表面がきれいになれば十分",
@@ -556,10 +555,9 @@
             "text": "徹底的にお願いしたい",
             "img-url": "images/haikifan_100.png"
           }
-        ]
-      }
-    ],
-    "details": [
+        ],
+        "required": false
+      },
       {
         "section-title": "数量",
         "section-type": "grid-items",
@@ -576,12 +574,12 @@
       {
         "section-title": "現在の状況を教えてください",
         "section-type": "radio-text",
-        "required": true,
         "section-items": [
           "問題なく吸えている",
           "少し弱い",
           "吸えていない"
-        ]
+        ],
+        "required": true
       },
       {
         "section-title": "備考欄（任意）",
@@ -590,8 +588,7 @@
         "maxLength": 500,
         "key": "note"
       }
-    ],
-    "detail-image": "images/ミセサポ2025/換気ファン清掃.png"
+    ]
   },
   {
     "id": 9,

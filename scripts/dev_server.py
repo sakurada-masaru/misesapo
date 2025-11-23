@@ -101,6 +101,31 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             path = self.path.split('?')[0]
             print(f"[DEBUG] Processing path: {path}")
             
+            # /service/ へのアクセスを /service.html にリダイレクト
+            if path == '/service/' or path == '/service':
+                self.send_response(301)
+                self.send_header('Location', '/service.html')
+                self.end_headers()
+                return
+            
+            # /service.html へのアクセスを明示的に処理（/service/ ディレクトリへのリダイレクトを防ぐ）
+            if path == '/service.html':
+                service_html = PUBLIC / "service.html"
+                if service_html.exists() and service_html.is_file():
+                    try:
+                        with open(service_html, 'rb') as f:
+                            content = f.read()
+                        self.send_response(200)
+                        self.send_header('Content-type', 'text/html; charset=utf-8')
+                        self.send_header('Content-length', str(len(content)))
+                        self.end_headers()
+                        self.wfile.write(content)
+                        return
+                    except Exception as e:
+                        print(f"Error serving service.html: {e}")
+                        self.send_error(500, f"Internal Server Error: {e}")
+                        return
+            
             # 動的ルーティング: /reports/{report_id}.html を /reports/[id].html にマッピング
             if path.startswith('/reports/') and path.endswith('.html'):
                 # /reports/{report_id}.html の形式
@@ -170,6 +195,26 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 self.send_json_response(services)
             except Exception as e:
                 self.send_error(500, f"Failed to load services: {e}")
+        elif path.startswith('/api/services/'):
+            # サービス詳細を返す（ID指定）
+            try:
+                service_id = path.split('/')[-1]
+                with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
+                    services = json.load(f)
+                # サービスIDで検索
+                service = None
+                for s in services:
+                    if str(s.get('id')) == str(service_id):
+                        service = s
+                        break
+                if service:
+                    self.send_json_response(service)
+                else:
+                    self.send_json_response({'error': 'Service not found'}, status=404)
+            except FileNotFoundError:
+                self.send_json_response({'error': 'Service not found'}, status=404)
+            except Exception as e:
+                self.send_error(500, f"Failed to load service: {e}")
         elif path == '/api/pending-changes':
             # 未反映の変更を確認
             self.handle_pending_changes()
@@ -190,6 +235,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         elif path == '/api/auth/me':
             # 現在のユーザー情報を取得
             self.handle_auth_me()
+        elif path == '/api/admin/dashboard/stats':
+            # 管理ダッシュボードの統計データを取得
+            self.handle_dashboard_stats()
         else:
             self.send_error(404, f"API endpoint not found: {path}")
     
@@ -475,6 +523,16 @@ class DevServerHandler(SimpleHTTPRequestHandler):
     
     def handle_create_service(self):
         """新規サービス作成処理"""
+        # 認証チェック（管理者権限が必要）
+        auth_result = self.check_admin_auth()
+        if not auth_result['authenticated']:
+            self.send_json_response({
+                'success': False,
+                'error': 'Unauthorized',
+                'message': '管理者権限が必要です'
+            }, status=401)
+            return
+        
         try:
             # リクエストボディを読み込む
             content_length = int(self.headers.get('Content-Length', 0))
@@ -777,6 +835,16 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             # サービス更新（既存の処理）
             path_parts = self.path.split('/')
             if len(path_parts) == 4 and path_parts[1] == 'api' and path_parts[2] == 'services':
+                # 認証チェック（管理者権限が必要）
+                auth_result = self.check_admin_auth()
+                if not auth_result['authenticated']:
+                    self.send_json_response({
+                        'success': False,
+                        'error': 'Unauthorized',
+                        'message': '管理者権限が必要です'
+                    }, status=401)
+                    return
+                
                 service_id = int(path_parts[3])
                 try:
                     # リクエストボディを読み込む
@@ -829,6 +897,16 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         # /api/services/{id} の形式をパース
         path_parts = self.path.split('/')
         if len(path_parts) == 4 and path_parts[1] == 'api' and path_parts[2] == 'services':
+            # 認証チェック（管理者権限が必要）
+            auth_result = self.check_admin_auth()
+            if not auth_result['authenticated']:
+                self.send_json_response({
+                    'success': False,
+                    'error': 'Unauthorized',
+                    'message': '管理者権限が必要です'
+                }, status=401)
+                return
+            
             service_id = int(path_parts[3])
             try:
                 # 既存のサービスを読み込む
@@ -954,6 +1032,62 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             'success': True,
             'message': 'ログアウトしました'
         })
+    
+    def check_admin_auth(self):
+        """管理者権限の認証チェック（清掃員マニュアルと同様の実装）"""
+        # 開発サーバーの場合は認証をバイパス
+        hostname = self.headers.get('Host', '').split(':')[0]
+        is_local_dev = hostname in ['localhost', '127.0.0.1', '']
+        
+        if is_local_dev:
+            return {
+                'authenticated': True,
+                'role': 'admin',
+                'message': 'Development server: Auth check bypassed'
+            }
+        
+        # 本番環境では認証チェック
+        # トークンをヘッダーから取得
+        auth_header = self.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return {
+                'authenticated': False,
+                'role': None,
+                'message': '認証トークンが提供されていません'
+            }
+        
+        # 暫定実装: 開発サーバーでは常に許可
+        # 本番環境ではFirebase Admin SDKでトークンを検証する必要がある
+        return {
+            'authenticated': True,
+            'role': 'admin',
+            'message': 'Auth check passed (temporary)'
+        }
+    
+    def handle_dashboard_stats(self):
+        """管理ダッシュボードの統計データを返す"""
+        try:
+            stats = {
+                'pending_reports': 0,
+                'today_schedules': 0,
+                'urgent_tickets': 0,
+                'total_customers': 0,
+                'monthly_orders': 0,
+                'monthly_revenue': 0,
+                'active_staff': 0
+            }
+            
+            # 承認待ちレポート数を取得（ローカルJSONファイルから）
+            try:
+                # 開発サーバーでは、レポートデータがDynamoDBにない場合は0を返す
+                # 実際の実装では、DynamoDBから取得する必要がある
+                stats['pending_reports'] = 0  # TODO: DynamoDBから取得
+            except Exception as e:
+                print(f"Error getting pending reports: {e}")
+            
+            self.send_json_response(stats)
+        except Exception as e:
+            self.send_error(500, f"Failed to get dashboard stats: {e}")
     
     def handle_auth_me(self):
         """現在のユーザー情報を取得"""
@@ -1409,6 +1543,140 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             import traceback
             error_msg = f"Failed to upload image: {e}\n{traceback.format_exc()}"
             print(f"ERROR: {error_msg}", file=sys.stderr)
+            self.send_error(500, error_msg)
+    
+    def log_message(self, format, *args):
+        """ログメッセージをカスタマイズ"""
+        # ビルドログを抑制
+        if 'build.py' not in str(args):
+            super().log_message(format, *args)
+
+
+def get_local_ip():
+    """ローカルネットワークのIPアドレスを取得"""
+    try:
+        # 外部ホストに接続してローカルIPを取得
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return None
+
+
+def start_ngrok_tunnel(port):
+    """ngrokトンネルを起動（オプション）"""
+    try:
+        # ngrokがインストールされているか確認
+        result = subprocess.run(['which', 'ngrok'], capture_output=True, text=True)
+        if result.returncode != 0:
+            return None
+        
+        # ngrokをバックグラウンドで起動
+        ngrok_process = subprocess.Popen(
+            ['ngrok', 'http', str(port)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        
+        # ngrokのAPIから公開URLを取得（少し待つ）
+        import time
+        time.sleep(2)
+        
+        try:
+            import urllib.request
+            response = urllib.request.urlopen('http://localhost:4040/api/tunnels', timeout=3)
+            data = json.loads(response.read().decode())
+            if data.get('tunnels'):
+                public_url = data['tunnels'][0]['public_url']
+                return public_url, ngrok_process
+        except Exception:
+            pass
+        
+        return None, ngrok_process
+    except Exception as e:
+        print(f"ngrok起動エラー: {e}")
+        return None, None
+
+
+def main():
+    """メイン関数: サーバーを起動"""
+    if not PUBLIC.exists():
+        print(f"Error: {PUBLIC} directory not found")
+        print("Please run: python3 scripts/build.py")
+        sys.exit(1)
+    
+    if not SERVICE_ITEMS_JSON.exists():
+        print(f"Warning: {SERVICE_ITEMS_JSON} not found")
+        print("Creating empty service_items.json...")
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        with open(SERVICE_ITEMS_JSON, 'w', encoding='utf-8') as f:
+            json.dump([], f, ensure_ascii=False, indent=2)
+    
+    # ブラウザ変更ログファイルが存在しない場合は作成
+    if not BROWSER_CHANGES_LOG.exists():
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        with open(BROWSER_CHANGES_LOG, 'w', encoding='utf-8') as f:
+            json.dump([], f, ensure_ascii=False, indent=2)
+    
+    server = HTTPServer(('', PORT), DevServerHandler)
+    
+    # ローカルIPアドレスを取得
+    local_ip = get_local_ip()
+    
+    # ngrokトンネルを試行
+    ngrok_url = None
+    ngrok_process = None
+    try:
+        ngrok_url, ngrok_process = start_ngrok_tunnel(PORT)
+    except Exception as e:
+        pass
+    
+    print("=" * 60)
+    print("🚀 開発サーバーを起動しました")
+    print("=" * 60)
+    print(f"📱 ローカルアクセス: http://localhost:{PORT}")
+    if local_ip:
+        print(f"🌐 ローカルネットワーク: http://{local_ip}:{PORT}")
+    if ngrok_url:
+        print(f"🌍 公開URL (ngrok): {ngrok_url}")
+        print(f"   事務員の方はこのURLでアクセスできます")
+        print(f"   管理画面: {ngrok_url}/cleaning-manual-admin.html")
+    else:
+        print("")
+        print("💡 リモートアクセスが必要な場合:")
+        print("   1. ngrokをインストール: https://ngrok.com/download")
+        print("   2. 別ターミナルで実行: ngrok http 5173")
+        print("   3. 表示されたURLを事務員に共有")
+    print("=" * 60)
+    print(f"📝 清掃マニュアル管理: http://localhost:{PORT}/cleaning-manual-admin.html")
+    print(f"📋 APIエンドポイント: http://localhost:{PORT}/api/services")
+    print("=" * 60)
+    print("💡 編集後は、変更を確認してからGitにコミット・プッシュしてください")
+    print("   git add -A")
+    print("   git commit -m '清掃マニュアルを更新'")
+    print("   git push origin main")
+    print("=" * 60)
+    print("Ctrl+C で停止")
+    if ngrok_process:
+        print("⚠️  ngrokも同時に停止されます")
+    print("")
+    
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nサーバーを停止しました")
+        if ngrok_process:
+            ngrok_process.terminate()
+            print("ngrokも停止しました")
+        server.shutdown()
+
+
+if __name__ == '__main__':
+    main()
+
+
             self.send_error(500, error_msg)
     
     def log_message(self, format, *args):

@@ -105,6 +105,9 @@
 
 
 
+<!-- AWS API -->
+<script src="/js/aws-services-api.js"></script>
+
 <main id="main" class="container admin-services-edit">
   <div class="page-header">
     <a href="/admin/services/1.html" class="back-btn">
@@ -799,6 +802,38 @@
   </style>
 
   <script>
+    // 開発サーバーかどうかをチェック
+    function isDevelopmentServer() {
+      return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    }
+    
+    // AWS APIが利用可能かチェック
+    function isAWSAvailable() {
+      return window.AWSServicesAPI && window.AWSServicesAPI.isAvailable();
+    }
+    
+    // 認証チェックと初期化（AWS移行により認証は不要）
+    async function initAuth() {
+      // AWS APIが利用可能かチェック
+      if (!isAWSAvailable()) {
+        console.warn('[AdminServicesEdit] AWS API not available');
+        // 開発サーバーの場合は表示を許可
+        if (isDevelopmentServer()) {
+          return true;
+        } else {
+          console.error('[AdminServicesEdit] AWS APIが利用できません。');
+          return false;
+        }
+      }
+      
+      return true;
+    }
+    
+    // ページ読み込み時に認証チェックと初期化
+    (async function() {
+      await initAuth();
+    })();
+    
     // Set selected category
     (function() {
       const categorySelect = document.getElementById('category-select');
@@ -815,10 +850,36 @@
       
       async function loadServiceData() {
         try {
-          const response = await fetch('/api/services');
-          const services = await response.json();
           const serviceId = 1;
-          const service = services.find(s => s.id === serviceId);
+          let service = null;
+          
+          // AWS APIが利用可能な場合はAWSから読み込む
+          if (isAWSAvailable()) {
+            try {
+              service = await window.AWSServicesAPI.getService(serviceId);
+              console.log('[AdminServicesEdit] Service loaded from AWS API:', service);
+            } catch (error) {
+              console.error('[AdminServicesEdit] AWS API load error:', error);
+              // フォールバックを試す
+            }
+          }
+          
+          // AWS APIが利用できない、またはエラーが発生した場合
+          if (!service) {
+            // 開発サーバーの場合はAPIを試す
+            if (isDevelopmentServer()) {
+              try {
+                const response = await fetch('/api/services');
+                if (response.ok) {
+                  const services = await response.json();
+                  service = services.find(s => s.id === serviceId);
+                  console.log('[AdminServicesEdit] Service loaded from dev server API:', service);
+                }
+              } catch (e) {
+                console.error('[AdminServicesEdit] Dev server API error:', e);
+              }
+            }
+          }
           
           if (service) {
             // 既存のforms/detailsをsectionsに変換（後方互換性）
@@ -1514,20 +1575,101 @@
               }
             });
             
-            // APIに送信
-            const response = await fetch(`/api/services/${serviceData.id}`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(serviceData)
-            });
-            
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
+            // AWS APIが利用可能な場合はAWS APIを使用
+            let result;
+            if (isAWSAvailable()) {
+              result = await window.AWSServicesAPI.updateService(serviceData.id, serviceData);
+              console.log('[AdminServicesEdit] Service updated via AWS API:', result);
+            } else if (isDevelopmentServer()) {
+              // 開発サーバーの場合はAPIを使用
+              const response = await fetch(`/api/services/${serviceData.id}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(serviceData)
+              });
+              
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              
+              result = await response.json();
+              console.log('[AdminServicesEdit] Service updated via dev server API:', result);
+            } else {
+              throw new Error('AWS APIまたは開発サーバーが必要です。');
             }
             
-            const result = await response.json();
+            // 成功メッセージ
+            alert(`サービスID ${result.id} を更新しました！\n\nページを自動生成しています。数秒後に詳細ページに移動します。`);
+            
+            // 少し待ってからリダイレクト（ビルドが完了するまで）
+            setTimeout(() => {
+              window.location.href = `/admin/services/${serviceData.id}.html`;
+            }, 2000);
+            
+          } catch (error) {
+            console.error('Error:', error);
+            alert('エラーが発生しました: ' + error.message + '\n\n開発サーバーが起動しているか確認してください。');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+          }
+        });
+      }
+    })();
+  </script>
+</main>
+
+
+            }
+            
+            const serviceData = {
+              id: parseInt(formData.get('id')),
+              title: formData.get('title'),
+              category: formData.get('category'),
+              price: formData.get('price'),
+              image: formData.get('image') || '',
+              description: formData.get('description') || '',
+              problems: problems.length > 0 ? problems : undefined,
+              solution: formData.get('solution') || undefined,
+              sections: sections.length > 0 ? sections : []  // sectionsは常に配列として送信
+            };
+            
+            // Remove undefined fields (but keep empty arrays for sections)
+            Object.keys(serviceData).forEach(key => {
+              if (key === 'sections') {
+                // sectionsは常に配列として保持
+                return;
+              }
+              if (serviceData[key] === undefined || serviceData[key] === '') {
+                delete serviceData[key];
+              }
+            });
+            
+            // AWS APIが利用可能な場合はAWS APIを使用
+            let result;
+            if (isAWSAvailable()) {
+              result = await window.AWSServicesAPI.updateService(serviceData.id, serviceData);
+              console.log('[AdminServicesEdit] Service updated via AWS API:', result);
+            } else if (isDevelopmentServer()) {
+              // 開発サーバーの場合はAPIを使用
+              const response = await fetch(`/api/services/${serviceData.id}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(serviceData)
+              });
+              
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              
+              result = await response.json();
+              console.log('[AdminServicesEdit] Service updated via dev server API:', result);
+            } else {
+              throw new Error('AWS APIまたは開発サーバーが必要です。');
+            }
             
             // 成功メッセージ
             alert(`サービスID ${result.id} を更新しました！\n\nページを自動生成しています。数秒後に詳細ページに移動します。`);

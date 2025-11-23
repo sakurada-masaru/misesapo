@@ -2,14 +2,14 @@
 @json('data/meta/admin_services_title.json', $title)
 @json('data/meta/admin_services_body_class.json', $body_class)
 
-<main id="main" class="container admin-services">
-  <div class="page-header">
+<!-- AWS API -->
+<script src="/js/aws-services-api.js"></script>
+
+<main id="main" class="admin-services">
+  <div class="container">
+    <div class="page-header">
     <h1 class="page-title">サービス管理</h1>
     <div class="header-actions">
-      <div class="pending-changes-badge" id="pending-changes-badge" style="display: none;">
-        <i class="fas fa-exclamation-circle"></i>
-        <span id="pending-changes-count">0</span>件の未反映の変更があります
-      </div>
       <button type="button" class="btn btn-help" id="btn-help" title="使い方を確認">
         <i class="fas fa-question-circle"></i>
       </button>
@@ -40,30 +40,13 @@
     </div>
   </div>
 
-  <!-- Service Items Data (embedded) -->
-  @json('data/service_items.json', $service_items)
-  <script type="application/json" id="service-items-data">
-    @jsonvar $service_items
-  </script>
+    <!-- Service Items Data (embedded) -->
+    @json('data/service_items.json', $service_items)
+    <script type="application/json" id="service-items-data">
+      @jsonvar $service_items
+    </script>
 
-  <!-- 未反映の変更通知 -->
-  <div class="pending-changes-alert" id="pending-changes-alert" style="display: none;">
-    <div class="alert-content">
-      <i class="fas fa-info-circle"></i>
-      <div class="alert-text">
-        <strong>未反映の変更があります</strong>
-        <p>ローカルで編集・作成されたサービスがあります。ネット上に反映するには、技術者に公開作業を依頼してください。</p>
-        <div class="pending-changes-list" id="pending-changes-list"></div>
-        <div class="alert-actions">
-          <a href="/admin/services/review.html" class="btn btn-primary btn-sm">
-            <i class="fas fa-code-branch"></i> 変更内容をレビュー（開発者専用）
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="services-grid" id="services-grid">
+    <div class="services-grid" id="services-grid">
     <!-- Service cards will be rendered dynamically by JavaScript -->
   </div>
 
@@ -98,10 +81,6 @@
                 <strong>サービスの削除</strong>
                 <p>各サービスの「削除」ボタンから、サービスを削除できます。確認ダイアログで「OK」をクリックしてください。</p>
               </li>
-              <li>
-                <strong>変更内容の確認</strong>
-                <p>編集・作成した内容は、ページ上部に表示されます。変更されたサービス一覧を確認できます。</p>
-              </li>
             </ul>
           </div>
           
@@ -112,16 +91,12 @@
             </h3>
             <ul class="help-list">
               <li>
-                <strong>ローカルのみに保存されます</strong>
-                <p>編集・作成した内容は、ローカルのみに保存されます。ネット上に反映するには、技術者に公開作業を依頼してください。</p>
+                <strong>変更は即座に反映されます</strong>
+                <p>編集・作成・削除した内容は、AWS S3に直接保存され、即座に反映されます。技術者への依頼は不要です。</p>
               </li>
               <li>
-                <strong>未反映の変更がある場合</strong>
-                <p>ページ上部に「未反映の変更があります」というアラートが表示されます。技術者に「変更を公開してほしい」と依頼してください。</p>
-              </li>
-              <li>
-                <strong>公開作業はできません</strong>
-                <p>ネット上から最新データを取得したり、変更を破棄したり、公開作業を行ったりすることはできません。これらは技術者のみが実行できます。</p>
+                <strong>誤操作にご注意ください</strong>
+                <p>削除操作は取り消せません。削除前に必ず内容を確認してください。誤って削除した場合は、再度作成してください。</p>
               </li>
             </ul>
           </div>
@@ -133,16 +108,16 @@
             </h3>
             <ul class="help-list">
               <li>
-                <strong>Q: 編集した内容がすぐに反映されないのはなぜ？</strong>
-                <p>A: 編集した内容はローカルのみに保存されます。ネット上に反映するには、技術者が公開作業を行う必要があります。</p>
+                <strong>Q: 編集した内容はどこに保存される？</strong>
+                <p>A: 編集した内容はAWS S3に直接保存されます。変更は即座に反映されます。</p>
               </li>
               <li>
                 <strong>Q: 間違えて編集してしまった場合は？</strong>
-                <p>A: 技術者に連絡してください。技術者が変更を破棄することができます。</p>
+                <p>A: 再度編集ページから修正してください。変更は即座に反映されます。</p>
               </li>
               <li>
                 <strong>Q: 新しいサービスを追加したらどうなる？</strong>
-                <p>A: ローカルに保存され、新しいページが生成されます。技術者に公開作業を依頼すると、ネット上にも反映されます。</p>
+                <p>A: AWS S3に保存され、即座に反映されます。新しいサービスページも自動的に生成されます。</p>
               </li>
             </ul>
           </div>
@@ -157,17 +132,93 @@
   </div>
 
   <script>
+    // 開発サーバーかどうかをチェック
+    function isDevelopmentServer() {
+      return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    }
+    
+    // AWS APIが利用可能かチェック
+    function isAWSAvailable() {
+      return window.AWSServicesAPI && window.AWSServicesAPI.isAvailable();
+    }
+    
+    // 認証チェックと初期化（AWS移行により認証は不要）
+    async function initAuth() {
+      // AWS APIが利用可能かチェック
+      if (!isAWSAvailable()) {
+        console.warn('[AdminServices] AWS API not available');
+        // 開発サーバーの場合は表示を許可
+        if (isDevelopmentServer()) {
+          return true;
+        } else {
+          console.error('[AdminServices] AWS APIが利用できません。');
+          return false;
+        }
+      }
+      
+      return true;
+    }
+    
+    // ページ読み込み時に認証チェックと初期化
+    (async function() {
+      await initAuth();
+    })();
+    
     // Load and render services
-    (function() {
-      const servicesDataEl = document.getElementById('service-items-data');
+    (async function() {
       const servicesGridEl = document.getElementById('services-grid');
       const searchInput = document.querySelector('.search-input');
       const categorySelect = document.getElementById('category-filter');
       const statusSelect = document.getElementById('status-filter');
       
-      if (!servicesDataEl || !servicesGridEl) return;
+      if (!servicesGridEl) return;
       
-      const services = JSON.parse(servicesDataEl.textContent);
+      // データ読み込み
+      let services = [];
+      try {
+        // AWS APIが利用可能な場合はAWSから読み込む
+        if (isAWSAvailable()) {
+          try {
+            services = await window.AWSServicesAPI.loadServices();
+            console.log('[AdminServices] Services loaded from AWS API:', services);
+          } catch (error) {
+            console.error('[AdminServices] AWS API load error:', error);
+            // フォールバックを試す
+          }
+        }
+        
+        // AWS APIが利用できない、またはエラーが発生した場合
+        if (services.length === 0) {
+          // 開発サーバーの場合はAPIを試す
+          if (isDevelopmentServer()) {
+            try {
+              const response = await fetch('/api/services');
+              if (response.ok) {
+                services = await response.json();
+                console.log('[AdminServices] Services loaded from dev server API:', services);
+              }
+            } catch (e) {
+              console.error('[AdminServices] Dev server API error:', e);
+            }
+          }
+          
+          // APIが利用できない場合は静的ファイルを読み込む
+          if (services.length === 0) {
+            const servicesDataEl = document.getElementById('service-items-data');
+            if (servicesDataEl) {
+              services = JSON.parse(servicesDataEl.textContent);
+              console.log('[AdminServices] Services loaded from static JSON:', services);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('[AdminServices] Error loading services:', error);
+        // フォールバック: 静的JSONデータを使用
+        const servicesDataEl = document.getElementById('service-items-data');
+        if (servicesDataEl) {
+          services = JSON.parse(servicesDataEl.textContent);
+        }
+      }
       
       // Category mapping for filter
       const categoryMap = {
@@ -272,9 +323,6 @@
       // Initial render
       renderServices(services);
       
-      // Check for pending changes (uncommitted changes)
-      checkPendingChanges();
-      
       // Filter functionality
       function filterServices() {
         const searchQuery = searchInput.value.toLowerCase().trim();
@@ -326,10 +374,40 @@
         alert(`サービスID ${id} の編集機能は実装予定です。`);
       };
       
-      window.deleteService = function(id) {
-        if (confirm(`サービスID ${id} を削除してもよろしいですか？`)) {
-          // TODO: Implement delete functionality
-          alert(`サービスID ${id} の削除機能は実装予定です。`);
+      window.deleteService = async function(id) {
+        if (!confirm(`サービスID ${id} を削除してもよろしいですか？`)) {
+          return;
+        }
+        
+        try {
+          // AWS APIが利用可能な場合はAWS APIを使用
+          if (isAWSAvailable()) {
+            await window.AWSServicesAPI.deleteService(id);
+            alert(`サービスID ${id} を削除しました。`);
+            // ページを再読み込み
+            location.reload();
+          } else if (isDevelopmentServer()) {
+            // 開発サーバーの場合はAPIを使用
+            const response = await fetch(`/api/services/${id}`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            alert(`サービスID ${id} を削除しました。`);
+            // ページを再読み込み
+            location.reload();
+          } else {
+            alert('削除機能はAWS APIまたは開発サーバーが必要です。');
+          }
+        } catch (error) {
+          console.error('Delete service error:', error);
+          alert('削除エラー: ' + error.message);
         }
       };
       
@@ -363,101 +441,6 @@
         return basePath === '/' ? '/' + path : basePath + path;
       }
 
-      // Check for pending changes (uncommitted changes in git)
-      async function checkPendingChanges() {
-        try {
-          let data = { hasChanges: false, changes: [] };
-          
-          // まずAPIエンドポイントを試す（ローカル環境の場合）
-          try {
-            const apiResponse = await fetch(resolvePath('/api/pending-changes'));
-            if (apiResponse.ok) {
-              data = await apiResponse.json();
-            } else {
-              throw new Error('API not available');
-            }
-          } catch (apiError) {
-            // APIが利用できない場合（GitHub Pagesなど）、静的ファイルを読み込む
-            try {
-              const staticResponse = await fetch(resolvePath('/data/browser_changes.json'));
-              if (staticResponse.ok) {
-                const browserChanges = await staticResponse.json();
-                if (browserChanges && browserChanges.length > 0) {
-                  // 現在のサービスデータを読み込む
-                  const servicesResponse = await fetch(resolvePath('/data/service_items.json'));
-                  const services = servicesResponse.ok ? await servicesResponse.json() : [];
-                  
-                  // ブラウザ経由の変更を処理
-                  const changes = [];
-                  for (const changeLog of browserChanges) {
-                    const serviceId = changeLog.serviceId;
-                    const changeType = changeLog.type;
-                    const serviceName = changeLog.serviceName || `サービスID ${serviceId}`;
-                    const timestamp = changeLog.timestamp || '不明';
-                    
-                    const service = services.find(s => s.id === serviceId);
-                    if (!service) continue;
-                    
-                    changes.push({
-                      serviceId: serviceId,
-                      serviceName: serviceName,
-                      type: changeType,
-                      timestamp: timestamp,
-                      changedFields: [] // 簡易版では空配列
-                    });
-                  }
-                  
-                  data = {
-                    hasChanges: changes.length > 0,
-                    changes: changes
-                  };
-                }
-              }
-            } catch (staticError) {
-              // 静的ファイルも読み込めない場合は無視
-              console.log('Pending changes check failed:', staticError);
-            }
-          }
-          
-          if (data.hasChanges) {
-            displayPendingChanges(data);
-          }
-        } catch (err) {
-          // API not available or error - silently fail
-          console.log('Pending changes check failed:', err);
-        }
-      }
-      
-      function displayPendingChanges(data) {
-        const badge = document.getElementById('pending-changes-badge');
-        const alert = document.getElementById('pending-changes-alert');
-        const countEl = document.getElementById('pending-changes-count');
-        const listEl = document.getElementById('pending-changes-list');
-        
-        if (data.changes && data.changes.length > 0) {
-          countEl.textContent = data.changes.length;
-          badge.style.display = 'flex';
-          alert.style.display = 'block';
-          
-          // List changes
-          listEl.innerHTML = data.changes.map(change => {
-            const serviceName = change.serviceName || `サービスID ${change.serviceId}`;
-            const changeType = change.type === 'created' ? '新規作成' : '編集';
-            const icon = change.type === 'created' ? 'plus-circle' : 'edit';
-            const link = resolvePath(`/admin/services/${change.serviceId}.html`);
-            return `
-              <div class="pending-change-item">
-                <i class="fas fa-${icon}"></i>
-                <span>
-                  <a href="${link}" class="pending-change-link"><strong>${serviceName}</strong></a>
-                  - ${changeType} (${change.timestamp})
-                </span>
-              </div>
-            `;
-          }).join('');
-        }
-      }
-      
       // ヘルプモーダル
       const helpBtn = document.getElementById('btn-help');
       const helpModal = document.getElementById('help-modal');
@@ -504,11 +487,27 @@
   </script>
 
   <style>
-    .admin-services.container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 24px;
-      background: #f9fafb;
+    /* キャンバス（メインコンテンツ）: グローバルルール適用 */
+    main.admin-services {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      min-height: calc(100vh - 110px); /* ヘッダー(60px) + フッター(50px) = 110px */
+      background: var(--base-light, #FDEDED); /* キャンバスの背景色 */
+      overflow-x: hidden; /* 横スクロール防止 */
+      overflow-y: auto; /* 縦スクロールを許可 */
+      box-sizing: border-box;
+    }
+    /* コンテナ（皿）: グローバルルール適用 */
+    main.admin-services > .container {
+      background: transparent; /* コンテナの背景色: 透明 */
+      width: 100%;
+      max-width: 100%;
+      min-width: 100%;
+      margin: 0;
+      padding: 48px 24px; /* PC版: 上下48px、左右24px */
+      box-sizing: border-box;
     }
     .page-header {
       display: flex;
@@ -525,94 +524,6 @@
       align-items: center;
       gap: 12px;
       flex-wrap: wrap;
-    }
-    .pending-changes-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      background: #fef3c7;
-      border: 1px solid #fbbf24;
-      border-radius: 8px;
-      color: #92400e;
-      font-size: 0.875rem;
-      font-weight: 600;
-    }
-    .pending-changes-badge i {
-      color: #f59e0b;
-    }
-    .pending-changes-alert {
-      background: #fef3c7;
-      border: 1px solid #fbbf24;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 24px;
-    }
-    .alert-content {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-    }
-    .alert-content i {
-      color: #f59e0b;
-      font-size: 1.25rem;
-      margin-top: 2px;
-    }
-    .alert-text {
-      flex: 1;
-    }
-    .alert-text strong {
-      display: block;
-      color: #92400e;
-      margin-bottom: 8px;
-      font-size: 0.95rem;
-    }
-    .alert-text p {
-      color: #78350f;
-      font-size: 0.875rem;
-      margin: 0 0 12px 0;
-      line-height: 1.6;
-    }
-    .pending-changes-list {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid #fbbf24;
-    }
-    .pending-change-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 0;
-      color: #78350f;
-      font-size: 0.875rem;
-    }
-    .pending-change-item i {
-      color: #f59e0b;
-      font-size: 0.875rem;
-    }
-    .pending-change-link {
-      color: #78350f;
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .pending-change-link:hover {
-      color: #92400e;
-      text-decoration: underline;
-    }
-    .alert-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 16px;
-      flex-wrap: wrap;
-    }
-    .btn-danger {
-      background: #fee2e2;
-      color: #991b1b;
-      border-color: #fca5a5;
-    }
-    .btn-danger:hover {
-      background: #fecaca;
-      color: #7f1d1d;
     }
     .page-title {
       font-size: 2rem;
@@ -1061,8 +972,8 @@
       flex: 1;
     }
     @media (max-width: 768px) {
-      .admin-services {
-        padding: 16px;
+      main.admin-services > .container {
+        padding: 24px 16px; /* SP版: 上下24px、左右16px */
       }
       .page-header {
         flex-direction: column;

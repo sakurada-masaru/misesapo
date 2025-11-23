@@ -9,5 +9,88 @@
       "timestamp": "2025-11-19 01:40:44.176323",
       "total_items": 34
     }
+  },
+  {
+    "serviceId": 8,
+    "serviceName": "排気ファン清掃",
+    "type": "modified",
+    "timestamp": "2025-11-23 06:07",
+    "serviceData": {
+      "id": 8,
+      "title": "排気ファン清掃",
+      "category": "厨房設備",
+      "price": "¥ 3,500〜",
+      "image": "images/haikifan.png",
+      "description": "排気ファンは、油煙・ホコリ・水蒸気を直接吸い込むため、汚れが蓄積しやすい設備です。放置すると問題を引き起こします。",
+      "problems": [
+        "油汚れで羽根が重くなり回転効率が低下、火災のリスク",
+        "モーターに負担がかかり故障・異音の原因に",
+        "強い悪臭や害虫の発生源に"
+      ],
+      "solution": "排気ファンを分解し、羽根・カバー・モーター部分を高圧洗浄・除菌仕上げいたします。",
+      "sections": [
+        {
+          "section-title": "日頃のお掃除の状況について教えてください",
+          "section-type": "radio-text",
+          "section-items": [
+            "毎日清掃している",
+            "週に1回程度",
+            "月に1回程度",
+            "半年〜1年に1回",
+            "1度もしていない"
+          ],
+          "required": true
+        },
+        {
+          "section-title": "清掃の仕上がりイメージを教えてください",
+          "section-type": "radio-image",
+          "section-items": [
+            {
+              "text": "表面がきれいになれば十分",
+              "img-url": "images/haikifan_80.png"
+            },
+            {
+              "text": "ある程度きれいにしてほしい",
+              "img-url": "images/haikifan_90.png"
+            },
+            {
+              "text": "徹底的にお願いしたい",
+              "img-url": "images/haikifan_100.png"
+            }
+          ],
+          "required": false
+        },
+        {
+          "section-title": "数量",
+          "section-type": "grid-items",
+          "section-items": [
+            {
+              "text": "排気ファン",
+              "img-url": "images/chuuboukiki_haikifan.png",
+              "countable": true,
+              "unit": "式",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "section-title": "現在の状況を教えてください",
+          "section-type": "radio-text",
+          "section-items": [
+            "問題なく吸えている",
+            "少し弱い",
+            "吸えていない"
+          ],
+          "required": true
+        },
+        {
+          "section-title": "備考欄（任意）",
+          "section-type": "textarea",
+          "placeholder": "例：設置場所、使用時間帯、臭気の有無など",
+          "maxLength": 500,
+          "key": "note"
+        }
+      ]
+    }
   }
 ]
