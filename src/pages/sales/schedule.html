@@ -56,6 +56,31 @@
           <div class="center-schedule-count" id="month-schedule-count"></div>
       </div>
       </div>
+      <!-- Swipe hint for circular component -->
+      <div class="swipe-hint-circular">
+        <p>日付</p>
+        <div class="swipe-circle-arch">
+          <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrowhead-start-month" markerWidth="10" markerHeight="10" refX="1" refY="3" orient="auto">
+                <polygon points="10 0, 0 3, 10 6" fill="#FF008C" opacity="0.7"/>
+              </marker>
+              <marker id="arrowhead-end-month" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                <polygon points="0 0, 10 3, 0 6" fill="#FF008C" opacity="0.7"/>
+              </marker>
+            </defs>
+            <!-- サークルと同じ半径(80)のアーチで160°から200°の範囲 -->
+            <!-- 中心(100, 100)、半径80、160°から200°のアーチ -->
+            <!-- 160°: (24.82, 127.36)、200°: (24.82, 72.64) -->
+            <path id="circle-arch-path-month" d="M 24.82 127.36 A 80 80 0 0 1 24.82 72.64" stroke="rgba(255, 0, 140, 0.5)" stroke-width="1.5" fill="none" marker-start="url(#arrowhead-start-month)" marker-end="url(#arrowhead-end-month)"/>
+            <circle class="swipe-circle-dot" r="5" fill="#FF008C">
+              <animateMotion dur="3s" repeatCount="indefinite" calcMode="linear" keyPoints="0;1;0" keyTimes="0;0.5;1">
+                <mpath href="#circle-arch-path-month"/>
+              </animateMotion>
+            </circle>
+          </svg>
+        </div>
+      </div>
     </div>
 
     <!-- Schedule List for Selected Date -->
@@ -124,6 +149,31 @@
           <div class="center-period" id="day-period"></div>
           <div class="center-time-range" id="day-time-range"></div>
           <div class="center-schedule-count" id="day-schedule-count"></div>
+        </div>
+      </div>
+      <!-- Swipe hint for circular component -->
+      <div class="swipe-hint-circular">
+        <p>日付</p>
+        <div class="swipe-circle-arch">
+          <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrowhead-start-day" markerWidth="10" markerHeight="10" refX="1" refY="3" orient="auto">
+                <polygon points="10 0, 0 3, 10 6" fill="#FF008C" opacity="0.7"/>
+              </marker>
+              <marker id="arrowhead-end-day" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                <polygon points="0 0, 10 3, 0 6" fill="#FF008C" opacity="0.7"/>
+              </marker>
+            </defs>
+            <!-- サークルと同じ半径(80)のアーチで160°から200°の範囲 -->
+            <!-- 中心(100, 100)、半径80、160°から200°のアーチ -->
+            <!-- 160°: (24.82, 127.36)、200°: (24.82, 72.64) -->
+            <path id="circle-arch-path-day" d="M 24.82 127.36 A 80 80 0 0 1 24.82 72.64" stroke="rgba(255, 0, 140, 0.5)" stroke-width="1.5" fill="none" marker-start="url(#arrowhead-start-day)" marker-end="url(#arrowhead-end-day)"/>
+            <circle class="swipe-circle-dot" r="5" fill="#FF008C">
+              <animateMotion dur="3s" repeatCount="indefinite" calcMode="linear" keyPoints="0;1;0" keyTimes="0;0.5;1">
+                <mpath href="#circle-arch-path-day"/>
+              </animateMotion>
+            </circle>
+          </svg>
         </div>
       </div>
     </div>
@@ -468,10 +518,12 @@
     /* Circular Component Styles */
     .circular-component-wrapper {
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       margin: 24px 0;
       padding: 20px;
+      position: relative;
     }
     .circular-component {
       position: relative;
@@ -499,6 +551,48 @@
     }
     .circular-svg.dragging {
       transition: none;
+    }
+    /* Swipe hint for circular component */
+    .swipe-hint-circular {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      pointer-events: none;
+      color: #FF008C;
+      font-size: 12px;
+      letter-spacing: 0.15em;
+    }
+    .swipe-hint-circular p {
+      margin: 0;
+      padding: 0;
+      animation: swipeHintText 3s infinite ease-in-out;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .swipe-circle-arch {
+      width: 200px;
+      height: 200px;
+      position: relative;
+      filter: drop-shadow(0 2px 4px rgba(255, 0, 140, 0.3));
+      margin-top: -180px;
+    }
+    .swipe-circle-arch svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    .swipe-circle-dot {
+      filter: drop-shadow(0 1px 2px rgba(255, 0, 140, 0.5));
+    }
+    @keyframes swipeHintText {
+      0%, 100% {
+        opacity: 0.5;
+      }
+      50% {
+        opacity: 1;
+      }
     }
     /* Reference point indicator (0° position) */
     .reference-point {
@@ -1115,6 +1209,38 @@
       .circular-schedule-list {
         max-height: 300px;
       }
+      /* Swipe hint for circular component */
+      .swipe-hint-circular {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        pointer-events: none;
+        color: #FF008C;
+        font-size: 11px;
+        letter-spacing: 0.15em;
+      }
+      .swipe-hint-circular p {
+        margin: 0;
+        padding: 0;
+        animation: swipeHintText 3s infinite ease-in-out;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+      .swipe-circle-arch {
+        width: 160px;
+        height: 160px;
+        position: relative;
+        filter: drop-shadow(0 2px 4px rgba(255, 0, 140, 0.3));
+      }
+      .swipe-circle-arch svg {
+        width: 100%;
+        height: 100%;
+      }
+      .swipe-circle-dot {
+        filter: drop-shadow(0 1px 2px rgba(255, 0, 140, 0.5));
+      }
     }
   </style>
 
@@ -1148,6 +1274,7 @@
       let currentSvg = null; // Currently active SVG element
       let currentSegmentCount = 0; // Current segment count for the active SVG
       let rotationHandlersSetup = false; // Flag to prevent duplicate event listeners
+      let currentMonthInfo = null; // Store current month info to prevent crossing month boundaries
       
       // Swipe detection for calendar
       let touchStartX = 0;
@@ -1356,6 +1483,9 @@
         const lastDay = new Date(year, month + 1, 0);
         const daysInMonth = lastDay.getDate();
         
+        // Store current month info to prevent crossing boundaries
+        currentMonthInfo = { year, month, daysInMonth };
+        
         // Render circular component for month view
         renderMonthCircularComponent(year, month, daysInMonth);
         
@@ -1374,6 +1504,14 @@
             selectedDayOfMonth = 1;
             const segmentAngle = 360 / daysInMonth;
             rotationAngle = -(1 - 0.5) * segmentAngle; // First day (day 1) center at 0°
+            applyRotation(svg, rotationAngle);
+          } else {
+            // Ensure selected day is within current month bounds
+            if (selectedDayOfMonth > daysInMonth) {
+              selectedDayOfMonth = daysInMonth;
+            }
+            const segmentAngle = 360 / daysInMonth;
+            rotationAngle = -(selectedDayOfMonth - 0.5) * segmentAngle;
             applyRotation(svg, rotationAngle);
           }
           // Update center label and schedule list
@@ -2305,6 +2443,15 @@
         let segmentIndex = Math.round(-normalizedAngle / segmentAngle + 0.5);
         segmentIndex = ((segmentIndex % segmentCount) + segmentCount) % segmentCount;
         
+        // For month view, ensure segment index is within current month bounds (1 to daysInMonth)
+        if (currentView === 'month' && currentMonthInfo) {
+          // segmentIndex is 0-based, but we need 1-based day number
+          let dayNumber = segmentIndex + 1;
+          if (dayNumber < 1) dayNumber = 1;
+          if (dayNumber > currentMonthInfo.daysInMonth) dayNumber = currentMonthInfo.daysInMonth;
+          segmentIndex = dayNumber - 1; // Convert back to 0-based
+        }
+        
         const snappedAngle = -(segmentIndex - 0.5) * segmentAngle;
         
         // Only update if we've moved to a new segment (threshold to prevent jitter)
@@ -2343,6 +2490,15 @@
         // So: segmentIndex = -rotationAngle / segmentAngle + 0.5
         let segmentIndex = Math.round(-normalizedAngle / segmentAngle + 0.5);
         segmentIndex = ((segmentIndex % segmentCount) + segmentCount) % segmentCount;
+        
+        // For month view, ensure segment index is within current month bounds (1 to daysInMonth)
+        if (currentView === 'month' && currentMonthInfo) {
+          // segmentIndex is 0-based, but we need 1-based day number
+          let dayNumber = segmentIndex + 1;
+          if (dayNumber < 1) dayNumber = 1;
+          if (dayNumber > currentMonthInfo.daysInMonth) dayNumber = currentMonthInfo.daysInMonth;
+          segmentIndex = dayNumber - 1; // Convert back to 0-based
+        }
         
         const snappedAngle = -(segmentIndex - 0.5) * segmentAngle;
         
@@ -2411,8 +2567,11 @@
         // After rotation, day center at 0° means: rotationAngle = -(day - 0.5) * segmentAngle
         // So: day = -rotationAngle / segmentAngle + 0.5
         let dayAtReference = Math.round(-normalizedAngle / segmentAngle + 0.5);
-        if (dayAtReference < 1) dayAtReference += daysInMonth;
-        if (dayAtReference > daysInMonth) dayAtReference -= daysInMonth;
+        
+        // Ensure day is within current month bounds (1 to daysInMonth)
+        // Don't wrap around to other months
+        if (dayAtReference < 1) dayAtReference = 1;
+        if (dayAtReference > daysInMonth) dayAtReference = daysInMonth;
         
         // Update selected day and schedule list
         selectedDayOfMonth = dayAtReference;
