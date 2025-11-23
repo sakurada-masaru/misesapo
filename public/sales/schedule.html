@@ -1249,9 +1249,8 @@
       let startRotationAngle = 0; // Rotation angle when drag started
       let dragStartAngle = 0; // Mouse/touch angle when drag started
       let currentSvg = null; // Currently active SVG element
-      let rotationHandlersSetup = new Set(); // Track which SVGs have handlers set up
-      let minDragDistance = 5; // Minimum drag distance in pixels to start rotation
-      let dragStartPoint = null; // Starting point for drag distance calculation
+      let currentSegmentCount = 0; // Current segment count for the active SVG
+      let rotationHandlersSetup = false; // Flag to prevent duplicate event listeners
       
       // Swipe detection for calendar
       let touchStartX = 0;
@@ -1386,6 +1385,9 @@
           });
         }
         
+        // Setup rotation handlers once
+        setupRotationHandlers();
+        
         // Initial render
         renderMonthView();
       }
@@ -1489,9 +1491,6 @@
         // Reset rotation when view changes - set to first day's center at 0°
         const segmentAngle = 360 / daysInMonth;
         rotationAngle = -(1 - 0.5) * segmentAngle; // First day (day 1) center at 0°
-        // Normalize angle
-        while (rotationAngle < -360) rotationAngle += 360;
-        while (rotationAngle > 360) rotationAngle -= 360;
         applyRotation(svg, rotationAngle);
         
         svg.innerHTML = '';
@@ -1507,8 +1506,11 @@
         const scheduleRadius = radius - 18; // Inner circle for schedule indicators (4px gap)
         const anglePerDay = 360 / daysInMonth;
         
-        // Add rotation handlers
-        setupRotationHandlers(svg, centerX, centerY, daysInMonth);
+        // Store segment count in data attribute
+        svg.dataset.segmentCount = daysInMonth;
+        
+        // Setup rotation handlers (only once)
+        setupRotationHandlers();
         
         // Get schedules for this month
         const monthSchedules = schedules.filter(s => {
@@ -1803,9 +1805,6 @@
         
         // Reset rotation when view changes
         rotationAngle = 0;
-        // Normalize angle
-        while (rotationAngle < -360) rotationAngle += 360;
-        while (rotationAngle > 360) rotationAngle -= 360;
         applyRotation(svg, rotationAngle);
         
         svg.innerHTML = '';
@@ -1815,8 +1814,11 @@
         const indicatorRadius = radius; // Outer circle for time indicators
         const scheduleRadius = radius - 8; // Inner circle for schedule indicators (8px smaller)
         
-        // Add rotation handlers (12 segments for day view)
-        setupRotationHandlers(svg, centerX, centerY, 12);
+        // Store segment count in data attribute
+        svg.dataset.segmentCount = timeSlots.length;
+        
+        // Setup rotation handlers (only once)
+        setupRotationHandlers();
         
         // Define time slots for morning (0-12) and afternoon (12-24)
         // Each period has 12 one-hour slots
@@ -2272,70 +2274,68 @@
         return `${year}年${month}月${day}日`;
       }
       
-      // Rotation functions
-      function setupRotationHandlers(svg, centerX, centerY, segmentCount) {
-        // Prevent duplicate handler registration
-        if (rotationHandlersSetup.has(svg)) {
-          return;
-        }
-        rotationHandlersSetup.add(svg);
+      // Rotation functions - setup once for all SVGs
+      function setupRotationHandlers() {
+        if (rotationHandlersSetup) return;
+        rotationHandlersSetup = true;
         
-        // Mouse events
-        svg.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          handleDragStart(e, svg, centerX, centerY, segmentCount);
+        // Use event delegation on document, but check if target is within SVG
+        document.addEventListener('mousedown', (e) => {
+          const svg = e.target.closest('.circular-svg');
+          if (svg && !isDragging) {
+            const component = svg.closest('.circular-component');
+            if (component) {
+              const viewBox = svg.getAttribute('viewBox');
+              const centerX = 100; // viewBox is 200x200, center is 100,100
+              const centerY = 100;
+              // Get segment count from data attribute or calculate
+              const segmentCount = parseInt(svg.dataset.segmentCount) || 31;
+              handleDragStart(e, svg, centerX, centerY, segmentCount);
+            }
+          }
         });
-        
-        // Touch events
-        svg.addEventListener('touchstart', (e) => {
-          e.preventDefault();
-          handleDragStart(e, svg, centerX, centerY, segmentCount);
-        }, { passive: false });
-      }
-      
-      // Global mouse/touch move and end handlers (only one set needed)
-      if (!window.rotationGlobalHandlersSetup) {
-        window.rotationGlobalHandlersSetup = true;
         
         document.addEventListener('mousemove', (e) => {
           if (isDragging && currentSvg) {
-            e.preventDefault();
-            const segmentCount = currentView === 'month' 
-              ? new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
-              : 12;
-            handleDrag(e, currentSvg, 100, 100, segmentCount);
+            handleDrag(e, currentSvg);
           }
         });
         
         document.addEventListener('mouseup', (e) => {
           if (isDragging && currentSvg) {
-            e.preventDefault();
-            const segmentCount = currentView === 'month' 
-              ? new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
-              : 12;
-            handleDragEnd(currentSvg, segmentCount);
+            handleDragEnd(currentSvg);
           }
         });
+        
+        // Touch events
+        document.addEventListener('touchstart', (e) => {
+          const svg = e.target.closest('.circular-svg');
+          if (svg && !isDragging) {
+            const component = svg.closest('.circular-component');
+            if (component) {
+              e.preventDefault();
+              const viewBox = svg.getAttribute('viewBox');
+              const centerX = 100;
+              const centerY = 100;
+              const segmentCount = parseInt(svg.dataset.segmentCount) || 31;
+              handleDragStart(e, svg, centerX, centerY, segmentCount);
+            }
+          }
+        }, { passive: false });
         
         document.addEventListener('touchmove', (e) => {
           if (isDragging && currentSvg) {
             e.preventDefault();
-            const segmentCount = currentView === 'month' 
-              ? new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
-              : 12;
-            handleDrag(e, currentSvg, 100, 100, segmentCount);
+            handleDrag(e, currentSvg);
           }
         }, { passive: false });
         
         document.addEventListener('touchend', (e) => {
           if (isDragging && currentSvg) {
             e.preventDefault();
-            const segmentCount = currentView === 'month' 
-              ? new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
-              : 12;
-            handleDragEnd(currentSvg, segmentCount);
+            handleDragEnd(currentSvg);
           }
-        });
+        }, { passive: false });
       }
       
       function getEventPoint(e) {
@@ -2370,96 +2370,94 @@
       }
       
       function handleDragStart(e, svg, centerX, centerY, segmentCount) {
-        // Only start drag if clicking on the SVG itself, not on child elements
-        if (e.target !== svg && !svg.contains(e.target)) {
-          return;
-        }
+        // Stop event propagation to prevent conflicts
+        e.stopPropagation();
         
-        isDragging = false; // Will be set to true after minimum drag distance
+        isDragging = true;
         currentSvg = svg;
+        currentSegmentCount = segmentCount;
+        svg.classList.add('dragging');
         
         const point = getEventPoint(e);
-        dragStartPoint = point;
         dragStartAngle = getAngleFromCenter(point, centerX, centerY);
         startRotationAngle = rotationAngle;
       }
       
-      function handleDrag(e, svg, centerX, centerY, segmentCount) {
-        if (!currentSvg || currentSvg !== svg) return;
+      function handleDrag(e, svg) {
+        if (!isDragging || !currentSvg || svg !== currentSvg) return;
         
+        // Stop event propagation
+        e.stopPropagation();
+        
+        const centerX = 100;
+        const centerY = 100;
         const point = getEventPoint(e);
-        
-        // Check minimum drag distance before starting rotation
-        if (!isDragging) {
-          const dx = point.x - dragStartPoint.x;
-          const dy = point.y - dragStartPoint.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          if (distance < minDragDistance) {
-            return; // Not enough movement yet
-          }
-          
-          // Start dragging
-          isDragging = true;
-          svg.classList.add('dragging');
-        }
-        
         const currentAngle = getAngleFromCenter(point, centerX, centerY);
         const deltaAngle = currentAngle - dragStartAngle;
         
-        // Normalize deltaAngle to -180 to 180 range to prevent large jumps
-        let normalizedDelta = deltaAngle;
-        while (normalizedDelta > 180) normalizedDelta -= 360;
-        while (normalizedDelta < -180) normalizedDelta += 360;
+        let newRotationAngle = startRotationAngle + deltaAngle;
         
-        let newRotationAngle = startRotationAngle + normalizedDelta;
+        // Snap to nearest segment center during drag (dial-like "click" feeling)
+        const segmentCount = currentSegmentCount;
+        const segmentAngle = 360 / segmentCount;
         
-        // Normalize rotation angle to prevent accumulation
-        while (newRotationAngle > 360) newRotationAngle -= 360;
-        while (newRotationAngle < -360) newRotationAngle += 360;
+        // Calculate which segment we're closest to
+        let normalizedAngle = newRotationAngle % 360;
+        if (normalizedAngle < 0) normalizedAngle += 360;
         
-        // Apply rotation smoothly without snapping during drag
-        rotationAngle = newRotationAngle;
-        applyRotation(currentSvg, rotationAngle);
+        let segmentIndex = Math.round(-normalizedAngle / segmentAngle + 0.5);
+        segmentIndex = ((segmentIndex % segmentCount) + segmentCount) % segmentCount;
+        
+        const snappedAngle = -(segmentIndex - 0.5) * segmentAngle;
+        
+        // Only update if we've moved to a new segment (threshold to prevent jitter)
+        // Use smaller threshold for more responsive snapping
+        if (Math.abs(snappedAngle - rotationAngle) >= segmentAngle * 0.15) {
+          rotationAngle = snappedAngle;
+          applyRotation(currentSvg, rotationAngle);
+          
+          // Update schedule list and center label for the segment at reference point (0°)
+          updateScheduleForReferencePoint(currentSvg, segmentCount);
+          
+          // Haptic feedback (if available)
+          if (navigator.vibrate) {
+            navigator.vibrate(10);
+          }
+        }
       }
       
-      function handleDragEnd(svg, segmentCount) {
-        if (!isDragging && currentSvg !== svg) {
-          // Reset if drag didn't actually start
-          currentSvg = null;
-          return;
-        }
+      function handleDragEnd(svg) {
+        if (!isDragging || !currentSvg || svg !== currentSvg) return;
         
         isDragging = false;
         svg.classList.remove('dragging');
         
-        // Normalize rotation angle first
+        // Final snap to nearest segment center
+        const segmentCount = currentSegmentCount;
+        const segmentAngle = 360 / segmentCount;
+        
+        // Normalize rotation angle to 0-360 range
         let normalizedAngle = rotationAngle % 360;
         if (normalizedAngle < 0) normalizedAngle += 360;
         
-        // Final snap to nearest segment center
-        const segmentAngle = 360 / segmentCount;
-        // Calculate which segment's center should be at reference point (0°)
+        // Calculate which segment's center is closest to reference point (0°)
         // Segment center angles: (0.5, 1.5, 2.5, ...) * segmentAngle
         // After rotation, segment center at 0° means: rotationAngle = -(segmentIndex - 0.5) * segmentAngle
         // So: segmentIndex = -rotationAngle / segmentAngle + 0.5
-        const segmentIndex = Math.round(-normalizedAngle / segmentAngle + 0.5);
+        let segmentIndex = Math.round(-normalizedAngle / segmentAngle + 0.5);
+        segmentIndex = ((segmentIndex % segmentCount) + segmentCount) % segmentCount;
+        
         const snappedAngle = -(segmentIndex - 0.5) * segmentAngle;
         
-        // Normalize snapped angle
-        let normalizedSnapped = snappedAngle % 360;
-        if (normalizedSnapped < 0) normalizedSnapped += 360;
-        if (normalizedSnapped > 180) normalizedSnapped -= 360;
-        
         // Animate to snapped position
-        animateRotation(svg, normalizedSnapped, () => {
+        animateRotation(svg, snappedAngle, () => {
           // Update schedule list and center label after animation completes
           updateScheduleForReferencePoint(svg, segmentCount);
         });
-        rotationAngle = normalizedSnapped;
+        rotationAngle = snappedAngle;
         
         currentSvg = null;
-        dragStartPoint = null;
+        currentSegmentCount = 0;
       }
       
       function updateScheduleForReferencePoint(svg, segmentCount) {
