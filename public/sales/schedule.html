@@ -108,14 +108,12 @@
 
 
 <main id="main" class="google-calendar-wrapper">
-  <!-- Back Button -->
-  <a href="/sales/dashboard.html" class="back-btn-google">
-    <i class="fas fa-chevron-left"></i>
-  </a>
-
   <!-- Left Sidebar -->
   <aside class="calendar-sidebar">
     <div class="sidebar-header">
+      <a href="/sales/dashboard.html" class="back-btn-sidebar">
+        <i class="fas fa-chevron-left"></i>
+      </a>
       <button class="create-btn">
         <i class="fas fa-plus"></i> 作成
       </button>
@@ -334,28 +332,9 @@
       font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
-    /* Back Button */
+    /* Back Button (hidden on desktop, shown in sidebar) */
     .back-btn-google {
-      position: fixed;
-      top: 16px;
-      left: 16px;
-      z-index: 1001;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #fff;
-      border: 1px solid #dadce0;
-      border-radius: 50%;
-      color: #5f6368;
-      text-decoration: none;
-      box-shadow: 0 1px 2px rgba(60,64,67,0.3);
-      transition: all 0.2s;
-    }
-    .back-btn-google:hover {
-      background: #f8f9fa;
-      box-shadow: 0 2px 4px rgba(60,64,67,0.3);
+      display: none;
     }
 
     /* Sidebar */
@@ -371,6 +350,34 @@
     .sidebar-header {
       padding: 16px;
       border-bottom: 1px solid #dadce0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .back-btn-sidebar {
+      width: 100%;
+      padding: 8px 16px;
+      background: #f8f9fa;
+      color: #5f6368;
+      text-decoration: none;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .back-btn-sidebar:hover {
+      background: #e8eaed;
+      color: #202124;
+    }
+    @media (max-width: 768px) {
+      .back-btn-sidebar {
+        display: none;
+      }
     }
     .create-btn {
       width: 100%;
@@ -517,6 +524,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      position: relative;
     }
     .calendar-topbar {
       display: flex;
@@ -1079,6 +1087,31 @@
       }
       .calendar-main {
         width: 100%;
+        padding: 0;
+      }
+      .calendar-topbar {
+        padding: 8px 12px;
+      }
+      .calendar-view {
+        padding: 0;
+      }
+      .calendar-weekdays-month {
+        padding: 0;
+      }
+      .weekday-month {
+        padding: 8px 2px;
+      }
+      .calendar-days-month {
+        padding: 0;
+      }
+      .days-header {
+        padding: 0;
+      }
+      .day-header {
+        padding: 8px 2px;
+      }
+      .day-header-day {
+        padding: 8px 12px;
       }
       .current-date-title {
         font-size: 18px;
@@ -1086,6 +1119,18 @@
       }
       .form-row-google {
         grid-template-columns: 1fr;
+      }
+      .calendar-days-month {
+        padding: 0;
+      }
+      .calendar-day-month {
+        padding: 4px 2px;
+      }
+      .days-content {
+        padding: 0;
+      }
+      .day-content {
+        padding: 0;
       }
     }
   </style>
