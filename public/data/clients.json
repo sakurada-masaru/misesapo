@@ -1425,10 +1425,10 @@
       "id": "d5d6c028"
     },
     {
-      "company_name": "株式会社馬力　神田店",
+      "company_name": "株式会社馬力",
       "company_name_kana": "",
       "brand_name": "馬力",
-      "store_name": "馬力 神田南口店",
+      "store_name": "神田南口店",
       "contact_person": "渡邉",
       "email": "bariki.group@ezweb.ne.jp",
       "sales_rep": "沖 智弘",
@@ -1438,7 +1438,7 @@
       "next_date": "",
       "url": "",
       "cleaning_frequency": "",
-      "id": "4a310e3d"
+      "id": "0cd8fba7"
     },
     {
       "company_name": "株式会社名店館",
@@ -1505,25 +1505,25 @@
       "id": "668ca5b2"
     },
     {
-      "company_name": "御座敷天婦羅　神楽坂 天孝",
+      "company_name": "御座敷天婦羅天孝",
       "company_name_kana": "",
-      "brand_name": "御座敷天婦羅　神楽坂 天孝",
-      "store_name": "",
-      "contact_person": "新井　均",
-      "email": "h.arai@kagurasaka-tenko.jp",
-      "sales_rep": "遠藤虹輝",
-      "store_count": "",
-      "status": "稼働中",
-      "notes": "",
+      "brand_name": "御座敷天婦羅",
+      "store_name": "神楽坂 天孝",
+      "contact_person": "",
+      "email": "新井均",
+      "sales_rep": "",
+      "store_count": "遠藤虹輝",
+      "status": "",
+      "notes": "稼働中",
       "next_date": "",
       "url": "",
-      "cleaning_frequency": "スポット清掃",
-      "id": "afb44227"
+      "cleaning_frequency": "",
+      "id": "3ae6d6ce"
     },
     {
       "company_name": "合同会社FOOD GROOVE JAPAN",
       "company_name_kana": "",
-      "brand_name": "米と魚　さかなさま",
+      "brand_name": "米と魚さかなさま",
       "store_name": "",
       "contact_person": "酒井（鈴木基次）",
       "email": "info.foodgroovejapan@gmail.com",
@@ -1539,7 +1539,7 @@
     {
       "company_name": "合同会社FOOD GROOVE JAPAN",
       "company_name_kana": "",
-      "brand_name": "麺と肴　担々麺 ペン坊",
+      "brand_name": "麺と肴担々麺 ペン坊",
       "store_name": "",
       "contact_person": "青柳昇店長(さかなさまスタッフ)",
       "email": "noboru.ao@gmail.com",
@@ -1555,7 +1555,7 @@
     {
       "company_name": "合同会社SKTC",
       "company_name_kana": "",
-      "brand_name": "Aphrodite　アフロディーテ（ニューハーフバー）",
+      "brand_name": "Aphroditeアフロディーテ（ニューハーフバー）",
       "store_name": "",
       "contact_person": "岩下 弥樹",
       "email": "",
@@ -1731,7 +1731,7 @@
     {
       "company_name": "",
       "company_name_kana": "",
-      "brand_name": "リストランティアーノ　　ルベロ",
+      "brand_name": "リストランティアーノルベロ",
       "store_name": "",
       "contact_person": "長澤流（竹中社長）",
       "email": "",
@@ -1811,18 +1811,18 @@
     {
       "company_name": "",
       "company_name_kana": "",
-      "brand_name": "家庭料理居酒屋　焼肉Yakitaro",
-      "store_name": "水道橋店",
-      "contact_person": "秋元賢",
-      "email": "yakitaro5215@ezweb.ne.jp",
-      "sales_rep": "正田和輝",
-      "store_count": "",
-      "status": "稼働中",
-      "notes": "",
+      "brand_name": "家庭料理居酒屋",
+      "store_name": "焼肉Yakitaro",
+      "contact_person": "水道橋店",
+      "email": "秋元賢",
+      "sales_rep": "",
+      "store_count": "正田和輝",
+      "status": "",
+      "notes": "稼働中",
       "next_date": "",
       "url": "",
       "cleaning_frequency": "",
-      "id": "36010174"
+      "id": "68e03010"
     }
   ],
   "total": 114
