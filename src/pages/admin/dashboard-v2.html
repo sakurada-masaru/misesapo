@@ -1,0 +1,982 @@
+@layout('layouts.base')
+@json('data/meta/admin_dashboard_title.json', $title)
+@json('data/meta/admin_dashboard_body_class.json', $body_class)
+
+<main id="main" class="admin-dashboard-v2">
+  <!-- サイドバー -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">🧹</span>
+        <span class="logo-text">ミセサポ</span>
+      </div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="/admin/dashboard-v2.html" class="nav-item active">
+        <i class="fas fa-home"></i>
+        <span>ダッシュボード</span>
+      </a>
+      <a href="/admin/schedules/" class="nav-item">
+        <i class="fas fa-calendar-alt"></i>
+        <span>スケジュール</span>
+      </a>
+      <a href="/admin/customers/" class="nav-item">
+        <i class="fas fa-store"></i>
+        <span>顧客管理</span>
+      </a>
+      <a href="/admin/reports/" class="nav-item">
+        <i class="fas fa-file-alt"></i>
+        <span>レポート</span>
+      </a>
+      <a href="/admin/estimates/" class="nav-item">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>見積もり</span>
+      </a>
+      <a href="/admin/users/" class="nav-item">
+        <i class="fas fa-users"></i>
+        <span>ユーザー</span>
+      </a>
+      <a href="/admin/analytics/" class="nav-item">
+        <i class="fas fa-chart-bar"></i>
+        <span>分析</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="/admin/cleaning-manual.html" class="nav-item">
+        <i class="fas fa-book"></i>
+        <span>マニュアル</span>
+      </a>
+      <a href="/admin/images/" class="nav-item">
+        <i class="fas fa-images"></i>
+        <span>画像管理</span>
+      </a>
+      <a href="/admin/services/" class="nav-item">
+        <i class="fas fa-cog"></i>
+        <span>設定</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- メインコンテンツ -->
+  <div class="main-content">
+    <!-- トップバー -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>ダッシュボード</h1>
+        <span class="topbar-date" id="header-date"></span>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn" id="open-notice-modal">
+          <i class="fas fa-bell"></i>
+          <span class="notification-dot"></span>
+        </button>
+        <div class="user-menu">
+          <div class="user-avatar">管</div>
+          <span>管理者</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+      </div>
+    </header>
+
+    <!-- Bento Grid -->
+    <div class="bento-grid">
+      <!-- 大きな統計カード -->
+      <div class="bento-item bento-lg stat-hero">
+        <div class="stat-hero-content">
+          <div class="stat-hero-icon"><i class="fas fa-calendar-check"></i></div>
+          <div class="stat-hero-info">
+            <div class="stat-hero-value" id="stat-today">-</div>
+            <div class="stat-hero-label">今日の清掃予定</div>
+          </div>
+        </div>
+        <div class="stat-hero-chart" id="today-mini-chart"></div>
+      </div>
+
+      <!-- 統計カード群 -->
+      <div class="bento-item stat-card">
+        <div class="stat-icon blue"><i class="fas fa-store"></i></div>
+        <div class="stat-value" id="stat-customers">-</div>
+        <div class="stat-label">総顧客数</div>
+      </div>
+
+      <div class="bento-item stat-card">
+        <div class="stat-icon purple"><i class="fas fa-users"></i></div>
+        <div class="stat-value" id="stat-workers">-</div>
+        <div class="stat-label">清掃員</div>
+      </div>
+
+      <div class="bento-item stat-card">
+        <div class="stat-icon green"><i class="fas fa-chart-line"></i></div>
+        <div class="stat-value" id="stat-month">-</div>
+        <div class="stat-label">今月の清掃</div>
+      </div>
+
+      <!-- アラートカード -->
+      <div class="bento-item bento-wide alerts-card" id="alerts-card">
+        <div class="alerts-header">
+          <h3><i class="fas fa-bell"></i> 通知</h3>
+        </div>
+        <div class="alerts-list" id="alerts-list">
+          <div class="alert-empty">通知はありません</div>
+        </div>
+      </div>
+
+      <!-- 今日のスケジュール -->
+      <div class="bento-item bento-tall schedule-card">
+        <div class="card-header">
+          <h3><i class="fas fa-calendar-day"></i> 今日のスケジュール</h3>
+          <a href="/admin/schedules/" class="card-link">すべて</a>
+        </div>
+        <div class="card-body" id="today-schedules">
+          <div class="loading"><i class="fas fa-spinner fa-spin"></i></div>
+        </div>
+      </div>
+
+      <!-- クイックアクション -->
+      <div class="bento-item quick-actions-card">
+        <h3>クイックアクション</h3>
+        <div class="quick-actions-grid">
+          <a href="/admin/schedules/" class="quick-btn">
+            <i class="fas fa-plus"></i> 新規スケジュール
+          </a>
+          <a href="/admin/customers/" class="quick-btn">
+            <i class="fas fa-user-plus"></i> 顧客追加
+          </a>
+          <a href="/admin/reports/" class="quick-btn">
+            <i class="fas fa-file-alt"></i> レポート確認
+          </a>
+        </div>
+      </div>
+
+      <!-- 最近のアクティビティ -->
+      <div class="bento-item bento-wide activity-card">
+        <div class="card-header">
+          <h3><i class="fas fa-history"></i> 最近のアクティビティ</h3>
+        </div>
+        <div class="card-body" id="recent-activity">
+          <div class="loading"><i class="fas fa-spinner fa-spin"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- お知らせモーダル -->
+  <div class="modal-backdrop" id="notice-modal-backdrop">
+    <div class="modal">
+      <button class="modal-close" id="close-notice-modal"><i class="fas fa-times"></i></button>
+      <h3>お知らせを投稿</h3>
+      <form id="notice-form">
+        <div class="form-group">
+          <label>タイトル</label>
+          <input type="text" name="title" required placeholder="例：メンテナンスのお知らせ">
+        </div>
+        <div class="form-group">
+          <label>配信対象</label>
+          <select name="target">
+            <option value="all">全ユーザー</option>
+            <option value="customers">顧客</option>
+            <option value="staff">清掃スタッフ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>本文</label>
+          <textarea name="body" required rows="4" placeholder="お知らせの内容"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" id="cancel-notice">キャンセル</button>
+          <button type="submit" class="btn-primary">投稿する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    :root {
+      --sidebar-width: 240px;
+      --topbar-height: 64px;
+    }
+
+    .admin-dashboard-v2 {
+      display: flex;
+      min-height: 100vh;
+      background: #0f172a;
+    }
+
+    /* サイドバー */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: #1e293b;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-icon {
+      font-size: 1.5rem;
+    }
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: #94a3b8;
+      text-decoration: none;
+      border-radius: 10px;
+      transition: all 0.2s;
+    }
+    .nav-item:hover {
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+    }
+    .nav-item.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .nav-item i {
+      width: 20px;
+      text-align: center;
+    }
+    .sidebar-footer {
+      padding: 16px 12px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* メインコンテンツ */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 24px;
+    }
+
+    /* トップバー */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .topbar-left h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 0;
+    }
+    .topbar-date {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .topbar-btn {
+      width: 44px;
+      height: 44px;
+      background: #1e293b;
+      border: none;
+      border-radius: 12px;
+      color: #94a3b8;
+      font-size: 1.1rem;
+      cursor: pointer;
+      position: relative;
+    }
+    .topbar-btn:hover {
+      background: #334155;
+      color: #fff;
+    }
+    .notification-dot {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+    }
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      background: #1e293b;
+      border-radius: 30px;
+      color: #fff;
+      cursor: pointer;
+    }
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    .user-menu i {
+      color: #64748b;
+      font-size: 0.75rem;
+    }
+
+    /* Bento Grid */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: minmax(140px, auto);
+      gap: 20px;
+    }
+    .bento-item {
+      background: #1e293b;
+      border-radius: 20px;
+      padding: 24px;
+      overflow: hidden;
+    }
+    .bento-lg {
+      grid-column: span 2;
+      grid-row: span 1;
+    }
+    .bento-wide {
+      grid-column: span 2;
+    }
+    .bento-tall {
+      grid-row: span 2;
+    }
+
+    /* ヒーロー統計 */
+    .stat-hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #ff6b9d 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .stat-hero-content {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .stat-hero-icon {
+      width: 64px;
+      height: 64px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      color: #fff;
+    }
+    .stat-hero-value {
+      font-size: 3rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+    .stat-hero-label {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.8);
+      margin-top: 4px;
+    }
+    .stat-hero-chart {
+      height: 40px;
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .mini-bar {
+      flex: 1;
+      background: rgba(255,255,255,0.3);
+      border-radius: 4px;
+    }
+
+    /* 統計カード */
+    .stat-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 16px;
+    }
+    .stat-icon.blue { background: rgba(59,130,246,0.2); color: #60a5fa; }
+    .stat-icon.purple { background: rgba(147,51,234,0.2); color: #a78bfa; }
+    .stat-icon.green { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .stat-icon.orange { background: rgba(249,115,22,0.2); color: #fb923c; }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    /* アラートカード */
+    .alerts-card {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    }
+    .alerts-header h3 {
+      font-size: 1rem;
+      color: #fff;
+      margin: 0 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .alerts-header h3 i {
+      color: #fbbf24;
+    }
+    .alerts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .alert-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .alert-item:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .alert-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .alert-dot.warning { background: #fbbf24; }
+    .alert-dot.info { background: #3b82f6; }
+    .alert-dot.success { background: #22c55e; }
+    .alert-info {
+      flex: 1;
+    }
+    .alert-title {
+      font-size: 0.9rem;
+      color: #fff;
+      font-weight: 500;
+    }
+    .alert-count {
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+    .alert-empty {
+      text-align: center;
+      padding: 20px;
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+
+    /* カード共通 */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .card-header h3 {
+      font-size: 1rem;
+      color: #fff;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-header h3 i {
+      color: var(--primary);
+    }
+    .card-link {
+      font-size: 0.85rem;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .card-body {
+      flex: 1;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+
+    /* スケジュールカード */
+    .schedule-card {
+      display: flex;
+      flex-direction: column;
+    }
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .schedule-item:last-child {
+      border-bottom: none;
+    }
+    .schedule-time {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary);
+      width: 50px;
+    }
+    .schedule-info {
+      flex: 1;
+    }
+    .schedule-store {
+      font-size: 0.9rem;
+      color: #fff;
+      font-weight: 500;
+    }
+    .schedule-worker {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+    .schedule-status {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .schedule-status.draft { background: rgba(251,191,36,0.2); color: #fbbf24; }
+    .schedule-status.scheduled { background: rgba(59,130,246,0.2); color: #60a5fa; }
+    .schedule-status.completed { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #64748b;
+    }
+
+    /* クイックアクション */
+    .quick-actions-card h3 {
+      font-size: 1rem;
+      color: #fff;
+      margin: 0 0 16px;
+    }
+    .quick-actions-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .quick-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .quick-btn:hover {
+      background: var(--primary);
+    }
+    .quick-btn i {
+      width: 20px;
+      text-align: center;
+      color: var(--primary);
+    }
+    .quick-btn:hover i {
+      color: #fff;
+    }
+
+    /* アクティビティ */
+    .activity-card .card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+    }
+    .activity-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .activity-dot.green { background: #22c55e; }
+    .activity-dot.blue { background: #3b82f6; }
+    .activity-dot.orange { background: #f59e0b; }
+    .activity-text {
+      flex: 1;
+      font-size: 0.9rem;
+      color: #fff;
+    }
+    .activity-meta {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
+    /* モーダル */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-backdrop.active {
+      display: flex;
+    }
+    .modal {
+      background: #1e293b;
+      border-radius: 20px;
+      width: min(480px, 90vw);
+      padding: 32px;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .modal h3 {
+      font-size: 1.25rem;
+      color: #fff;
+      margin: 0 0 24px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .btn-cancel {
+      padding: 12px 24px;
+      background: #334155;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .btn-primary {
+      padding: 12px 24px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    /* レスポンシブ */
+    @media (max-width: 1200px) {
+      .bento-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .bento-lg { grid-column: span 2; }
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .main-content {
+        margin-left: 0;
+      }
+      .bento-grid {
+        grid-template-columns: 1fr;
+      }
+      .bento-lg, .bento-wide {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</main>
+
+<script>
+(function() {
+  const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+  
+  // 日付表示
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+  document.getElementById('header-date').textContent = dateStr;
+
+  // データ読み込み
+  async function loadDashboard() {
+    try {
+      const [storesRes, schedulesRes, workersRes, reportsRes] = await Promise.all([
+        fetch(`${API_BASE}/stores`),
+        fetch(`${API_BASE}/schedules`),
+        fetch(`${API_BASE}/workers`),
+        fetch(`${API_BASE}/reports`)
+      ]);
+
+      const stores = await storesRes.json();
+      const schedules = await schedulesRes.json();
+      const workers = await workersRes.json();
+      const reports = await reportsRes.json();
+
+      // 統計
+      document.getElementById('stat-customers').textContent = stores.length;
+      document.getElementById('stat-workers').textContent = workers.length;
+
+      const todayStr = today.toISOString().split('T')[0];
+      const todaySchedules = schedules.filter(s => s.scheduled_date === todayStr);
+      document.getElementById('stat-today').textContent = todaySchedules.length;
+
+      const thisMonth = today.toISOString().slice(0, 7);
+      const monthSchedules = schedules.filter(s => s.scheduled_date?.startsWith(thisMonth));
+      document.getElementById('stat-month').textContent = monthSchedules.length;
+
+      // ミニチャート
+      renderMiniChart(schedules);
+
+      // アラート
+      renderAlerts(schedules);
+
+      // 今日のスケジュール
+      renderTodaySchedules(todaySchedules, stores, workers);
+
+      // 最近のアクティビティ
+      renderRecentActivity(schedules, stores, workers, reports);
+
+    } catch (error) {
+      console.error('Dashboard load error:', error);
+    }
+  }
+
+  function renderMiniChart(schedules) {
+    const container = document.getElementById('today-mini-chart');
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const count = schedules.filter(s => s.scheduled_date === dateStr).length;
+      last7Days.push(count);
+    }
+    const max = Math.max(...last7Days, 1);
+    container.innerHTML = last7Days.map(count => {
+      const height = Math.max((count / max) * 100, 10);
+      return `<div class="mini-bar" style="height: ${height}%"></div>`;
+    }).join('');
+  }
+
+  function renderAlerts(schedules) {
+    const container = document.getElementById('alerts-list');
+    const alerts = [];
+
+    const draftCount = schedules.filter(s => s.status === 'draft').length;
+    if (draftCount > 0) {
+      alerts.push({
+        type: 'warning',
+        title: '仮押さえ申請',
+        count: `${draftCount}件の申請があります`,
+        href: '/admin/schedules/?status=draft'
+      });
+    }
+
+    if (alerts.length === 0) {
+      container.innerHTML = '<div class="alert-empty">通知はありません</div>';
+      return;
+    }
+
+    container.innerHTML = alerts.map(a => `
+      <a href="${a.href}" class="alert-item">
+        <div class="alert-dot ${a.type}"></div>
+        <div class="alert-info">
+          <div class="alert-title">${a.title}</div>
+          <div class="alert-count">${a.count}</div>
+        </div>
+        <i class="fas fa-chevron-right" style="color:#64748b"></i>
+      </a>
+    `).join('');
+  }
+
+  function renderTodaySchedules(schedules, stores, workers) {
+    const container = document.getElementById('today-schedules');
+    
+    if (schedules.length === 0) {
+      container.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-check" style="font-size:2rem;margin-bottom:12px;display:block;opacity:0.5;"></i>今日の予定はありません</div>';
+      return;
+    }
+
+    schedules.sort((a, b) => (a.scheduled_time || '').localeCompare(b.scheduled_time || ''));
+
+    container.innerHTML = schedules.slice(0, 6).map(s => {
+      const store = stores.find(st => st.id === s.store_id) || {};
+      const worker = workers.find(w => w.id === s.worker_id);
+      const statusLabel = s.status === 'draft' ? '仮押さえ' : (s.status === 'completed' ? '完了' : '確定');
+      
+      return `
+        <div class="schedule-item">
+          <div class="schedule-time">${s.scheduled_time || '-'}</div>
+          <div class="schedule-info">
+            <div class="schedule-store">${escapeHtml(store.name || '不明')}</div>
+            <div class="schedule-worker">${worker ? escapeHtml(worker.name) : '未割当'}</div>
+          </div>
+          <span class="schedule-status ${s.status || 'scheduled'}">${statusLabel}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function renderRecentActivity(schedules, stores, workers, reports) {
+    const container = document.getElementById('recent-activity');
+    const activities = [];
+
+    schedules.forEach(s => {
+      const store = stores.find(st => st.id === s.store_id) || {};
+      const worker = workers.find(w => w.id === s.worker_id);
+      const date = s.updated_at || s.created_at;
+      if (date) {
+        if (s.status === 'draft') {
+          activities.push({ text: '仮押さえ申請', meta: store.name || '店舗', date, color: 'orange' });
+        } else if (s.status === 'scheduled') {
+          activities.push({ text: 'スケジュール確定', meta: store.name || '店舗', date, color: 'blue' });
+        } else if (s.status === 'completed') {
+          activities.push({ text: '清掃完了', meta: store.name || '店舗', date, color: 'green' });
+        }
+      }
+    });
+
+    activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const recent = activities.slice(0, 5);
+
+    if (recent.length === 0) {
+      container.innerHTML = '<div class="empty-state">アクティビティはありません</div>';
+      return;
+    }
+
+    container.innerHTML = recent.map(a => `
+      <div class="activity-item">
+        <div class="activity-dot ${a.color}"></div>
+        <div class="activity-text">${a.text} - ${escapeHtml(a.meta)}</div>
+        <div class="activity-meta">${getTimeAgo(a.date)}</div>
+      </div>
+    `).join('');
+  }
+
+  function getTimeAgo(dateStr) {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHour = Math.floor(diffMs / 3600000);
+    const diffDay = Math.floor(diffMs / 86400000);
+
+    if (diffMin < 1) return 'たった今';
+    if (diffMin < 60) return `${diffMin}分前`;
+    if (diffHour < 24) return `${diffHour}時間前`;
+    if (diffDay < 7) return `${diffDay}日前`;
+    return date.toLocaleDateString('ja-JP');
+  }
+
+  // モーダル
+  const modalBackdrop = document.getElementById('notice-modal-backdrop');
+  document.getElementById('open-notice-modal').addEventListener('click', () => {
+    modalBackdrop.classList.add('active');
+  });
+  document.getElementById('close-notice-modal').addEventListener('click', () => {
+    modalBackdrop.classList.remove('active');
+  });
+  document.getElementById('cancel-notice').addEventListener('click', () => {
+    modalBackdrop.classList.remove('active');
+  });
+  modalBackdrop.addEventListener('click', (e) => {
+    if (e.target === modalBackdrop) modalBackdrop.classList.remove('active');
+  });
+
+  document.getElementById('notice-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    alert('お知らせを投稿しました');
+    modalBackdrop.classList.remove('active');
+    e.target.reset();
+  });
+
+  loadDashboard();
+})();
+</script>
