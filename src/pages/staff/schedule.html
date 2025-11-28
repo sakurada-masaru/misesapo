@@ -260,14 +260,19 @@
     }
     .schedule-item {
       display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 12px;
       padding: 12px;
       background: #f9fafb;
       border-radius: 8px;
       border-left: 4px solid var(--primary);
-      cursor: pointer;
       transition: all 0.2s;
+    }
+    .schedule-item-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
     }
     .schedule-item:hover {
       background: #f3f4f6;
@@ -278,6 +283,51 @@
     }
     .schedule-item.status-in_progress {
       border-left-color: #f59e0b;
+    }
+    .item-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    .action-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .action-btn.btn-accept {
+      background: #10b981;
+      color: white;
+    }
+    .action-btn.btn-accept:hover {
+      background: #059669;
+    }
+    .action-btn.btn-start {
+      background: #3b82f6;
+      color: white;
+    }
+    .action-btn.btn-start:hover {
+      background: #2563eb;
+    }
+    .action-btn.btn-report {
+      background: #6366f1;
+      color: white;
+    }
+    .action-btn.btn-report:hover {
+      background: #4f46e5;
+    }
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     .item-date {
       min-width: 50px;
@@ -380,7 +430,13 @@
         const response = await fetch(`${API_BASE}/schedules`);
         const data = await response.json();
         // 自分の担当分のみフィルター（TODO: worker_idで絞り込み）
-        allSchedules = data.filter(s => !s.worker_id || s.worker_id === CURRENT_WORKER_ID || s.worker_id === '');
+        // 現在は全スケジュールを表示（将来的にworker_idでフィルター）
+        allSchedules = data.filter(s => {
+          // ステータスが draft のものは除外（管理者がアサインする前）
+          if (s.status === 'draft') return false;
+          // 自分の担当分、または未割当のものを表示
+          return !s.worker_id || s.worker_id === CURRENT_WORKER_ID || s.worker_id === '';
+        });
       } catch (error) {
         console.error('Failed to load schedules:', error);
         allSchedules = [];
@@ -519,21 +575,46 @@
         const dow = weekdays[date.getDay()];
         const statusClass = schedule.status || 'scheduled';
         const statusLabel = getStatusLabel(schedule.status);
+        const isScheduled = schedule.status === 'scheduled';
+        const isInProgress = schedule.status === 'in_progress';
+        const isCompleted = schedule.status === 'completed';
         
         return `
           <div class="schedule-item status-${statusClass}">
-            <div class="item-date">
-              <span class="date-day">${day}</span>
-              <span class="date-dow">${dow}</span>
+            <div class="schedule-item-header">
+              <div class="item-date">
+                <span class="date-day">${day}</span>
+                <span class="date-dow">${dow}</span>
+              </div>
+              <div class="item-content">
+                <div class="item-time">${schedule.scheduled_time || '-'} (${schedule.duration_minutes || 60}分)</div>
+                <div class="item-location">${escapeHtml(getStoreName(schedule.store_id))}</div>
+                <div class="item-address">${escapeHtml(getStoreAddress(schedule.store_id))}</div>
+                ${schedule.notes ? `<div class="item-task">${escapeHtml(schedule.notes)}</div>` : ''}
+              </div>
+              <div class="item-status">
+                <span class="status-badge status-${statusClass}">${statusLabel}</span>
+              </div>
             </div>
-            <div class="item-content">
-              <div class="item-time">${schedule.scheduled_time || '-'} (${schedule.duration_minutes || 60}分)</div>
-              <div class="item-location">${escapeHtml(getStoreName(schedule.store_id))}</div>
-              <div class="item-address">${escapeHtml(getStoreAddress(schedule.store_id))}</div>
-              ${schedule.notes ? `<div class="item-task">${escapeHtml(schedule.notes)}</div>` : ''}
-            </div>
-            <div class="item-status">
-              <span class="status-badge status-${statusClass}">${statusLabel}</span>
+            <div class="item-actions">
+              ${isScheduled ? `
+                <button class="action-btn btn-accept" onclick="acceptSchedule('${schedule.id}')">
+                  <i class="fas fa-check-circle"></i> 受託
+                </button>
+              ` : ''}
+              ${isInProgress ? `
+                <button class="action-btn btn-start" onclick="startWork('${schedule.id}')">
+                  <i class="fas fa-play-circle"></i> 作業開始
+                </button>
+                <a href="/staff/reports/new.html?schedule=${schedule.id}" class="action-btn btn-report">
+                  <i class="fas fa-file-alt"></i> レポート作成
+                </a>
+              ` : ''}
+              ${isCompleted ? `
+                <a href="/staff/reports/new.html?schedule=${schedule.id}" class="action-btn btn-report">
+                  <i class="fas fa-file-alt"></i> レポート確認
+                </a>
+              ` : ''}
             </div>
           </div>
         `;
@@ -559,6 +640,96 @@
       div.textContent = str;
       return div.innerHTML;
     }
+
+    // 案件受託
+    window.acceptSchedule = async function(scheduleId) {
+      if (!confirm('この案件を受託しますか？')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'in_progress' })
+        });
+        
+        if (!response.ok) {
+          throw new Error('受託に失敗しました');
+        }
+        
+        // ローカルデータ更新
+        const schedule = allSchedules.find(s => s.id === scheduleId);
+        if (schedule) {
+          schedule.status = 'in_progress';
+        }
+        
+        renderScheduleList();
+        renderCalendar();
+        alert('案件を受託しました');
+      } catch (error) {
+        console.error('Accept schedule error:', error);
+        alert('受託に失敗しました: ' + error.message);
+      }
+    };
+
+    // 作業開始
+    window.startWork = async function(scheduleId) {
+      if (!confirm('作業を開始しますか？')) {
+        return;
+      }
+      
+      try {
+        // 位置情報を取得（オプション）
+        let location = null;
+        if (navigator.geolocation) {
+          try {
+            const position = await new Promise((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+            });
+            location = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            };
+          } catch (geoError) {
+            console.warn('位置情報の取得に失敗しました:', geoError);
+          }
+        }
+        
+        const updateData = {
+          status: 'in_progress',
+          started_at: new Date().toISOString()
+        };
+        
+        if (location) {
+          updateData.start_location = location;
+        }
+        
+        const response = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateData)
+        });
+        
+        if (!response.ok) {
+          throw new Error('作業開始に失敗しました');
+        }
+        
+        // ローカルデータ更新
+        const schedule = allSchedules.find(s => s.id === scheduleId);
+        if (schedule) {
+          schedule.status = 'in_progress';
+          schedule.started_at = updateData.started_at;
+        }
+        
+        renderScheduleList();
+        renderCalendar();
+        alert('作業を開始しました');
+      } catch (error) {
+        console.error('Start work error:', error);
+        alert('作業開始に失敗しました: ' + error.message);
+      }
+    };
 
     // 月移動
     document.getElementById('prev-month').addEventListener('click', () => {
