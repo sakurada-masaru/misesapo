@@ -1,9 +1,9 @@
 @layout('layouts.base')
 @json('data/meta/sales_dashboard_title.json', $title)
 @json('data/meta/sales_dashboard_body_class.json', $body_class)
-@json('data/service_items.json', service_items_data)
 
 <script src="/js/data_utils.js"></script>
+<script src="/js/aws-services-api.js"></script>
 
 <main id="main" class="sales-app">
   <!-- スワイプコンテナ -->
@@ -873,10 +873,6 @@
     }
   </style>
 
-  <script type="application/json" id="service-items-data">
-    @jsonvar $service_items_data
-  </script>
-
   <script>
     const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
     const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
@@ -1081,22 +1077,26 @@
 
     async function loadServiceItems() {
       try {
-        // 静的JSONファイルから読み込み
-        const basePath = document.querySelector('base')?.getAttribute('href') || '/';
-        const res = await fetch(`${basePath}data/service_items.json`);
-        if (res.ok) {
-          const data = await res.json();
-          // 見積もり用にシンプルな形式に変換
-          serviceItems = data.map(item => ({
-            id: String(item.id),
-            name: item.title,
-            price: parsePrice(item.price)
-          }));
-          renderServiceList();
+        // AWS APIからサービス一覧を取得
+        if (!window.AWSServicesAPI) {
+          throw new Error('AWS Services APIが読み込まれていません。');
         }
+        
+        const data = await window.AWSServicesAPI.loadServices();
+        
+        // 見積もり用にシンプルな形式に変換
+        serviceItems = data.map(item => ({
+          id: String(item.id),
+          name: item.title,
+          price: parsePrice(item.price)
+        }));
+        renderServiceList();
       } catch (e) {
         console.error('Failed to load service items:', e);
-        document.getElementById('service-list').innerHTML = '<div class="empty-state">サービスの読み込みに失敗しました</div>';
+        const serviceListEl = document.getElementById('service-list');
+        if (serviceListEl) {
+          serviceListEl.innerHTML = '<div class="empty-state">サービスの読み込みに失敗しました</div>';
+        }
       }
     }
 
