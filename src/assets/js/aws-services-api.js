@@ -66,6 +66,14 @@
             });
             
             if (!response.ok) {
+                if (response.status === 404) {
+                    // 404エラーの場合、より詳細なエラーメッセージを返す
+                    const errorData = await response.json().catch(() => ({}));
+                    const error = new Error(errorData.message || `サービスID ${serviceId} が見つかりません`);
+                    error.status = 404;
+                    error.serviceId = serviceId;
+                    throw error;
+                }
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             

@@ -856,6 +856,28 @@
           }
         } catch (error) {
           console.error('Failed to load service data:', error);
+          
+          // 404エラーの場合、適切なメッセージを表示して一覧ページにリダイレクト
+          if (error.status === 404 || error.message.includes('404') || error.message.includes('見つかりません')) {
+            const serviceId = 8;
+            const message = `サービスID ${serviceId} が見つかりませんでした。\n\nこのサービスは削除されたか、存在しない可能性があります。`;
+            alert(message);
+            window.location.href = '/admin/services/';
+            return;
+          }
+          
+          // その他のエラーの場合
+          const errorMessage = error.message || 'サービスの読み込みに失敗しました';
+          document.querySelector('.service-form')?.insertAdjacentHTML('afterbegin', `
+            <div class="error-banner" style="background: #fee2e2; border: 2px solid #dc2626; border-radius: 8px; padding: 16px; margin-bottom: 24px; color: #991b1b;">
+              <h3 style="margin: 0 0 8px 0; font-size: 1.125rem;">
+                <i class="fas fa-exclamation-triangle"></i> エラー
+              </h3>
+              <p style="margin: 0 0 12px 0;">${errorMessage}</p>
+              <button onclick="location.reload()" class="btn btn-primary" style="margin-right: 8px;">再読み込み</button>
+              <a href="/admin/services/" class="btn btn-outline">一覧に戻る</a>
+            </div>
+          `);
         }
       }
       
