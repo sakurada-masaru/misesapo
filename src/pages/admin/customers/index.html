@@ -4,21 +4,87 @@
 
 <script src="/js/data_utils.js"></script>
 
-<main id="main" class="admin-stores">
-  <div class="container">
-    <div class="page-header">
-      <div class="header-left">
-        <a href="/admin/dashboard.html" class="back-link">
-          <i class="fas fa-arrow-left"></i>
-        </a>
-        <h1 class="page-title">顧客管理</h1>
-        <span class="store-count" id="store-count">読み込み中...</span>
+<main id="main" class="admin-stores-v2">
+  <!-- サイドバー -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">🧹</span>
+        <span class="logo-text">ミセサポ</span>
       </div>
-      <button type="button" class="btn btn-primary" id="add-store-btn" onclick="document.getElementById('store-dialog').showModal()">
-        <i class="fas fa-plus"></i>
-        新規追加
-      </button>
     </div>
+    
+    <nav class="sidebar-nav">
+      <a href="/admin/dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i>
+        <span>ダッシュボード</span>
+      </a>
+      <a href="/admin/schedules/" class="nav-item">
+        <i class="fas fa-calendar-alt"></i>
+        <span>スケジュール</span>
+      </a>
+      <a href="/admin/customers/" class="nav-item active">
+        <i class="fas fa-store"></i>
+        <span>顧客管理</span>
+      </a>
+      <a href="/admin/reports/" class="nav-item">
+        <i class="fas fa-file-alt"></i>
+        <span>レポート</span>
+      </a>
+      <a href="/admin/estimates/" class="nav-item">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>見積もり</span>
+      </a>
+      <a href="/admin/orders.html" class="nav-item">
+        <i class="fas fa-shopping-cart"></i>
+        <span>発注管理</span>
+      </a>
+      <a href="/admin/partners.html" class="nav-item">
+        <i class="fas fa-handshake"></i>
+        <span>パートナー企業</span>
+      </a>
+      <a href="/admin/users/" class="nav-item">
+        <i class="fas fa-users"></i>
+        <span>ユーザー</span>
+      </a>
+      <a href="/admin/analytics/" class="nav-item">
+        <i class="fas fa-chart-bar"></i>
+        <span>分析</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="/admin/cleaning-manual.html" class="nav-item">
+        <i class="fas fa-book"></i>
+        <span>マニュアル</span>
+      </a>
+      <a href="/admin/images/" class="nav-item">
+        <i class="fas fa-images"></i>
+        <span>画像管理</span>
+      </a>
+      <a href="/admin/services/" class="nav-item">
+        <i class="fas fa-cog"></i>
+        <span>設定</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- メインコンテンツ -->
+  <div class="main-content">
+    <div class="container">
+      <!-- トップバー -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1>顧客管理</h1>
+          <span class="store-count" id="store-count">読み込み中...</span>
+        </div>
+        <div class="topbar-right">
+          <button type="button" class="btn btn-primary" id="add-store-btn" onclick="document.getElementById('store-dialog').showModal()">
+            <i class="fas fa-plus"></i>
+            新規追加
+          </button>
+        </div>
+      </header>
 
     <!-- 検索・フィルター -->
     <div class="search-section">
@@ -90,6 +156,7 @@
 
     <!-- ページネーション -->
     <div class="pagination" id="pagination"></div>
+    </div>
   </div>
 </main>
 
@@ -108,13 +175,13 @@
         <div class="hierarchy-header">
           <i class="fas fa-building"></i> 法人名
         </div>
-        <div class="form-row">
+      <div class="form-row">
           <div class="form-field">
             <label for="store-client">既存法人から選択</label>
             <select id="store-client" name="client_id">
               <option value="">-- 新規法人または選択 --</option>
             </select>
-          </div>
+        </div>
         </div>
         <div class="form-row">
           <div class="form-field">
@@ -157,48 +224,48 @@
           </div>
         </div>
         <div class="form-row">
-          <div class="form-field half">
-            <label for="store-contact">担当者名</label>
-            <input type="text" id="store-contact" name="contact_person" placeholder="山田太郎">
-          </div>
+        <div class="form-field half">
+          <label for="store-contact">担当者名</label>
+          <input type="text" id="store-contact" name="contact_person" placeholder="山田太郎">
+        </div>
           <div class="form-field half">
             <label for="store-phone">電話番号</label>
             <input type="tel" id="store-phone" name="phone" placeholder="03-1234-5678">
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-field">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
             <label for="store-email">メールアドレス <span class="required" id="email-required" style="display:none">*</span></label>
             <input type="email" id="store-email" name="email" placeholder="info@example.com">
-          </div>
         </div>
-        <div class="form-row">
-          <div class="form-field half">
-            <label for="store-postcode">郵便番号</label>
-            <input type="text" id="store-postcode" name="postcode" placeholder="1234567">
-          </div>
-          <div class="form-field half">
-            <label for="store-pref">都道府県</label>
-            <input type="text" id="store-pref" name="pref" placeholder="東京都">
-          </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field half">
+          <label for="store-postcode">郵便番号</label>
+          <input type="text" id="store-postcode" name="postcode" placeholder="1234567">
         </div>
-        <div class="form-row">
-          <div class="form-field half">
-            <label for="store-city">市区町村</label>
-            <input type="text" id="store-city" name="city" placeholder="新宿区">
-          </div>
-          <div class="form-field half">
+        <div class="form-field half">
+          <label for="store-pref">都道府県</label>
+          <input type="text" id="store-pref" name="pref" placeholder="東京都">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field half">
+          <label for="store-city">市区町村</label>
+          <input type="text" id="store-city" name="city" placeholder="新宿区">
+        </div>
+        <div class="form-field half">
             <label for="store-address1">住所</label>
-            <input type="text" id="store-address1" name="address1" placeholder="1-2-3">
-          </div>
+          <input type="text" id="store-address1" name="address1" placeholder="1-2-3">
         </div>
-        <div class="form-row">
-          <div class="form-field">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
             <label for="store-address2">建物名等</label>
-            <input type="text" id="store-address2" name="address2" placeholder="○○ビル3F">
-          </div>
+          <input type="text" id="store-address2" name="address2" placeholder="○○ビル3F">
         </div>
-        <div class="form-row">
+      </div>
+      <div class="form-row">
           <div class="form-field">
             <label for="store-status">ステータス</label>
             <select id="store-status" name="status">
@@ -211,11 +278,11 @@
               <option value="suspended">休止中</option>
               <option value="terminated">契約終了</option>
             </select>
-          </div>
         </div>
-        <div class="form-row">
-          <div class="form-field">
-            <label for="store-description">備考</label>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="store-description">備考</label>
             <textarea id="store-description" name="description" rows="2"></textarea>
           </div>
         </div>
@@ -351,51 +418,126 @@
   </div>
 
   <style>
+    :root {
+      --sidebar-width: 240px;
+      --topbar-height: 64px;
+    }
+
     body.page-admin-stores {
-      background: #f4f5f7;
+      background: #f9fafb;
     }
-    main.admin-stores {
-      width: 100%;
-      min-height: calc(100vh - 110px);
-      background: var(--base-light, #FDEDED);
+    main.admin-stores-v2 {
+      display: flex;
+      min-height: 100vh;
+      background: #f9fafb;
     }
-    main.admin-stores > .container {
+
+    /* サイドバー */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+    }
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-icon {
+      font-size: 1.5rem;
+    }
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: #6b7280;
+      text-decoration: none;
+      border-radius: 10px;
+      transition: all 0.2s;
+    }
+    .nav-item:hover {
+      background: #f3f4f6;
+      color: #111827;
+    }
+    .nav-item.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .nav-item i {
+      width: 20px;
+      text-align: center;
+    }
+    .sidebar-footer {
+      padding: 16px 12px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* メインコンテンツ */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 24px;
+      background: #f9fafb;
+    }
+    main.admin-stores-v2 > .main-content > .container {
       width: 100%;
       max-width: 100%;
-      padding: 32px 24px;
     }
-    .page-header {
+
+    /* トップバー */
+    .topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 24px;
     }
-    .header-left {
+    .topbar-left {
       display: flex;
       align-items: center;
       gap: 16px;
     }
-    .back-link {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      background: #fff;
-      border-radius: 8px;
-      color: #374151;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-    .back-link:hover {
-      background: var(--primary);
-      color: #fff;
-    }
-    .page-title {
+    .topbar-left h1 {
       font-size: 1.75rem;
       font-weight: 700;
       color: #111827;
       margin: 0;
+    }
+    .store-count {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
     .store-count {
       background: var(--primary);
@@ -1570,7 +1712,7 @@
   
   // 法人選択時にブランド選択肢を更新
   document.getElementById('store-client').addEventListener('change', updateBrandSelectForForm);
-  
+
   // 新規追加モーダル
   document.getElementById('add-store-btn').addEventListener('click', () => {
     modalTitle.textContent = '新規顧客登録';
@@ -1767,13 +1909,13 @@
       container.innerHTML = storeSchedules.slice(0, 20).map(s => {
         const normalized = DataUtils.normalizeSchedule(s);
         return `
-          <div class="history-item">
-            <div class="history-header">
+        <div class="history-item">
+          <div class="history-header">
               <span class="history-id">${DataUtils.formatDate(normalized.date)} ${normalized.time || ''}</span>
               <span class="history-status ${normalized.status}">${DataUtils.getStatusLabel(normalized.status)}</span>
-            </div>
-            <div class="history-body">${DataUtils.escapeHtml(normalized.work_content) || '作業内容未設定'}</div>
           </div>
+            <div class="history-body">${DataUtils.escapeHtml(normalized.work_content) || '作業内容未設定'}</div>
+        </div>
         `;
       }).join('');
     } catch (err) {
@@ -1925,29 +2067,29 @@
       }
       
       // 店舗データ
-      const data = {
-        contact_person: document.getElementById('store-contact').value,
-        name: document.getElementById('store-name').value,
-        postcode: document.getElementById('store-postcode').value,
-        pref: document.getElementById('store-pref').value,
-        city: document.getElementById('store-city').value,
-        address1: document.getElementById('store-address1').value,
-        address2: document.getElementById('store-address2').value,
-        phone: document.getElementById('store-phone').value,
-        email: email,
+    const data = {
+      contact_person: document.getElementById('store-contact').value,
+      name: document.getElementById('store-name').value,
+      postcode: document.getElementById('store-postcode').value,
+      pref: document.getElementById('store-pref').value,
+      city: document.getElementById('store-city').value,
+      address1: document.getElementById('store-address1').value,
+      address2: document.getElementById('store-address2').value,
+      phone: document.getElementById('store-phone').value,
+      email: email,
         description: document.getElementById('store-description').value,
         status: document.getElementById('store-status').value,
         client_id: clientId || null,
         brand_id: brandId || null
-      };
-      
-      if (isNew) {
+    };
+    
+    if (isNew) {
         data.id = 'ST' + Date.now();
         data.created_at = new Date().toISOString();
         if (sendInvite) data.status = 'pending_customer_info';
-      } else {
-        data.id = id;
-      }
+    } else {
+      data.id = id;
+    }
       data.updated_at = new Date().toISOString();
       
       const response = await fetch(`${API_BASE}/stores${isNew ? '' : '/' + id}`, {
@@ -2102,7 +2244,7 @@
       }, 500);
     }
   }
-  
+
   // 初期化
   loadStores().then(() => {
     checkEditMode();

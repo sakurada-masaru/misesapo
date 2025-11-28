@@ -4,24 +4,89 @@
 
 <script src="/js/data_utils.js"></script>
 
-<main id="main" class="admin-schedules">
-  <div class="container">
-    <div class="page-header">
-      <div class="header-left">
-        <a href="/admin/dashboard.html" class="back-link">
-          <i class="fas fa-arrow-left"></i>
-        </a>
-        <h1 class="page-title">スケジュール管理</h1>
+<main id="main" class="admin-schedules-v2">
+  <!-- サイドバー -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">🧹</span>
+        <span class="logo-text">ミセサポ</span>
       </div>
-      <div class="header-actions">
-        <button type="button" class="btn btn-secondary" id="view-toggle">
-          <i class="fas fa-calendar"></i> カレンダー表示
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="/admin/dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i>
+        <span>ダッシュボード</span>
+      </a>
+      <a href="/admin/schedules/" class="nav-item active">
+        <i class="fas fa-calendar-alt"></i>
+        <span>スケジュール</span>
+      </a>
+      <a href="/admin/customers/" class="nav-item">
+        <i class="fas fa-store"></i>
+        <span>顧客管理</span>
+      </a>
+      <a href="/admin/reports/" class="nav-item">
+        <i class="fas fa-file-alt"></i>
+        <span>レポート</span>
+      </a>
+      <a href="/admin/estimates/" class="nav-item">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>見積もり</span>
+      </a>
+      <a href="/admin/orders.html" class="nav-item">
+        <i class="fas fa-shopping-cart"></i>
+        <span>発注管理</span>
+      </a>
+      <a href="/admin/partners.html" class="nav-item">
+        <i class="fas fa-handshake"></i>
+        <span>パートナー企業</span>
+      </a>
+      <a href="/admin/users/" class="nav-item">
+        <i class="fas fa-users"></i>
+        <span>ユーザー</span>
+      </a>
+      <a href="/admin/analytics/" class="nav-item">
+        <i class="fas fa-chart-bar"></i>
+        <span>分析</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="/admin/cleaning-manual.html" class="nav-item">
+        <i class="fas fa-book"></i>
+        <span>マニュアル</span>
+      </a>
+      <a href="/admin/images/" class="nav-item">
+        <i class="fas fa-images"></i>
+        <span>画像管理</span>
+      </a>
+      <a href="/admin/services/" class="nav-item">
+        <i class="fas fa-cog"></i>
+        <span>設定</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- メインコンテンツ -->
+  <div class="main-content">
+    <!-- トップバー -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>スケジュール管理</h1>
+      </div>
+      <div class="topbar-right">
+        <button type="button" class="topbar-btn" id="view-toggle" title="カレンダー表示">
+          <i class="fas fa-calendar"></i>
         </button>
         <button type="button" class="btn btn-primary" id="add-schedule-btn">
           <i class="fas fa-plus"></i> 新規作成
         </button>
       </div>
-    </div>
+    </header>
+
+    <div class="content-wrapper">
 
     <!-- 仮押さえアラート -->
     <div class="draft-alert hidden" id="draft-alert">
@@ -123,6 +188,7 @@
       </div>
       <div class="calendar-grid" id="calendar-days"></div>
     </div>
+    </div>
   </div>
 </main>
 
@@ -211,51 +277,130 @@
 </dialog>
 
 <style>
-  .admin-schedules {
+  :root {
+    --sidebar-width: 240px;
+    --topbar-height: 64px;
+  }
+
+  .admin-schedules-v2 {
+    display: flex;
+    min-height: 100vh;
+    background: #f9fafb;
+  }
+
+  /* サイドバー */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: #fff;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+  }
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-icon {
+    font-size: 1.5rem;
+  }
+  .logo-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+  }
+  .sidebar-nav {
+    flex: 1;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #6b7280;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: all 0.2s;
+  }
+  .nav-item:hover {
+    background: #f3f4f6;
+    color: #111827;
+  }
+  .nav-item.active {
+    background: var(--primary);
+    color: #fff;
+  }
+  .nav-item i {
+    width: 20px;
+    text-align: center;
+  }
+  .sidebar-footer {
+    padding: 16px 12px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* メインコンテンツ */
+  .main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
     padding: 24px;
     background: #f9fafb;
-    min-height: 100vh;
   }
-  .container {
-    max-width: 100%;
-    margin: 0 auto;
-  }
-  .page-header {
+
+  /* トップバー */
+  .topbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
   }
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  .back-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    background: #fff;
-    color: #6b7280;
-    text-decoration: none;
-    border: 1px solid #e5e7eb;
-  }
-  .back-link:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-  }
-  .page-title {
-    font-size: 1.5rem;
+  .topbar-left h1 {
+    font-size: 1.75rem;
     font-weight: 700;
     color: #111827;
     margin: 0;
   }
-  .header-actions {
+  .topbar-right {
     display: flex;
-    gap: 12px;
+    align-items: center;
+    gap: 16px;
+  }
+  .topbar-btn {
+    width: 44px;
+    height: 44px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    color: #6b7280;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .topbar-btn:hover {
+    background: #f3f4f6;
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .content-wrapper {
+    /* コンテンツラッパー */
   }
   
   /* フィルター */
@@ -265,6 +410,20 @@
     padding: 20px;
     margin-bottom: 24px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .filter-group label {
+    color: #6b7280;
+  }
+  .filter-group input,
+  .filter-group select {
+    background: #fff;
+    border-color: #e5e7eb;
+    color: #111827;
+  }
+  .filter-group input:focus,
+  .filter-group select:focus {
+    border-color: var(--primary);
+    outline: none;
   }
   .filter-row {
     display: flex;
@@ -312,6 +471,7 @@
     padding: 14px 16px;
     text-align: left;
     border-bottom: 1px solid #f3f4f6;
+    color: #111827;
   }
   .schedule-table th {
     background: #f9fafb;
@@ -385,8 +545,9 @@
     border: none;
     border-radius: 8px;
     font-weight: 600;
-    color: #333;
+    color: #000;
     cursor: pointer;
+    transition: all 0.2s;
   }
   .draft-alert-btn:hover {
     background: #e0a800;
@@ -469,6 +630,7 @@
     margin: 0;
     min-width: 150px;
     text-align: center;
+    color: #111827;
   }
   .btn-icon {
     width: 36px;
@@ -476,7 +638,14 @@
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     background: #fff;
+    color: #6b7280;
     cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-icon:hover {
+    background: #f3f4f6;
+    border-color: var(--primary);
+    color: var(--primary);
   }
   .calendar-weekdays {
     display: grid;
@@ -511,6 +680,7 @@
     border-bottom: 1px solid #f3f4f6;
     cursor: pointer;
     transition: background 0.15s;
+    color: #111827;
   }
   .calendar-day:hover {
     background: #f9fafb;
@@ -537,6 +707,7 @@
     font-size: 0.85rem;
     font-weight: 600;
     margin-bottom: 4px;
+    color: #111827;
   }
   .day-events {
     display: flex;
