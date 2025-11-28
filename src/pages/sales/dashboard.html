@@ -1234,6 +1234,9 @@
         // 1. 法人を検索または作成
         let clientId = null;
         const clientsRes = await fetch(`${API_BASE}/clients`);
+        if (!clientsRes.ok) {
+          throw new Error('法人一覧の取得に失敗しました');
+        }
         const clients = await clientsRes.json();
         const existingClient = clients.find(c => c.name === companyName);
         
@@ -1253,15 +1256,25 @@
               created_at: new Date().toISOString()
             })
           });
-          if (clientRes.ok) {
-            clientId = newClientId;
+          if (!clientRes.ok) {
+            const errorData = await clientRes.json().catch(() => ({}));
+            throw new Error(`法人の作成に失敗しました: ${errorData.error || clientRes.statusText}`);
           }
+          const clientData = await clientRes.json();
+          clientId = clientData.id || newClientId;
+        }
+
+        if (!clientId) {
+          throw new Error('法人IDの取得に失敗しました');
         }
 
         // 2. ブランドを検索または作成
         let brandId = null;
         if (brandName) {
           const brandsRes = await fetch(`${API_BASE}/brands`);
+          if (!brandsRes.ok) {
+            throw new Error('ブランド一覧の取得に失敗しました');
+          }
           const brands = await brandsRes.json();
           const existingBrand = brands.find(b => b.name === brandName && b.client_id === clientId);
           
@@ -1281,9 +1294,12 @@
                 created_at: new Date().toISOString()
               })
             });
-            if (brandRes.ok) {
-              brandId = newBrandId;
+            if (!brandRes.ok) {
+              const errorData = await brandRes.json().catch(() => ({}));
+              throw new Error(`ブランドの作成に失敗しました: ${errorData.error || brandRes.statusText}`);
             }
+            const brandData = await brandRes.json();
+            brandId = brandData.id || newBrandId;
           }
         }
 
@@ -1313,18 +1329,19 @@
           body: JSON.stringify(storeData)
         });
         
-        if (storeRes.ok) {
-          alert('顧客を登録しました');
-          // フォームクリア
-          document.querySelectorAll('#client-company, #client-brand, #client-store, #client-postcode, #client-address, #client-phone, #client-contact, #client-email, #client-notes').forEach(el => el.value = '');
-          document.getElementById('client-pref').value = '';
-          await loadData();
-        } else {
-          throw new Error('Failed');
+        if (!storeRes.ok) {
+          const errorData = await storeRes.json().catch(() => ({}));
+          throw new Error(`店舗の作成に失敗しました: ${errorData.error || storeRes.statusText}`);
         }
+        
+        alert('顧客を登録しました');
+        // フォームクリア
+        document.querySelectorAll('#client-company, #client-brand, #client-store, #client-postcode, #client-address, #client-phone, #client-contact, #client-email, #client-notes').forEach(el => el.value = '');
+        document.getElementById('client-pref').value = '';
+        await loadData();
       } catch (e) {
-        console.error(e);
-        alert('登録に失敗しました');
+        console.error('Customer registration error:', e);
+        alert(`登録に失敗しました: ${e.message || '不明なエラーが発生しました'}`);
       }
     }
 

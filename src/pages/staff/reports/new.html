@@ -914,14 +914,26 @@
         if (!response.ok) throw new Error('送信に失敗しました');
 
         // スケジュールを完了に更新
-        await fetch(`${API_BASE}/schedules/${selectedSchedule.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'completed' })
-        });
-
-        alert('レポートを送信しました！');
-      window.location.href = '/staff/dashboard.html';
+        try {
+          const scheduleUpdateRes = await fetch(`${API_BASE}/schedules/${selectedSchedule.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'completed' })
+          });
+          
+          if (!scheduleUpdateRes.ok) {
+            console.warn('スケジュールの更新に失敗しましたが、レポートは送信済みです');
+            // レポートは送信済みなので、警告のみ表示
+            alert('レポートを送信しました。\n\n注意: スケジュールの更新に失敗しました。管理者に連絡してください。');
+          } else {
+            alert('レポートを送信しました！');
+          }
+        } catch (scheduleError) {
+          console.error('Schedule update error:', scheduleError);
+          alert('レポートを送信しました。\n\n注意: スケジュールの更新に失敗しました。管理者に連絡してください。');
+        }
+        
+        window.location.href = '/staff/dashboard.html';
 
       } catch (error) {
         console.error('Submit error:', error);
