@@ -165,17 +165,73 @@
     padding: 12px;
   }
   .items-list h4 { margin: 0 0 12px; font-size: 0.9rem; color: #333; }
-  .item-row {
+  .item-row, .item-row-edit {
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
     border-bottom: 1px solid #eee;
     font-size: 0.9rem;
   }
-  .item-row:last-child { border-bottom: none; }
-  .item-name { color: #333; }
+  .item-row:last-child, .item-row-edit:last-child { border-bottom: none; }
+  .item-info {
+    flex: 1;
+  }
+  .item-name { 
+    color: #333; 
+    display: block;
+    margin-bottom: 4px;
+  }
   .item-multiplier { color: #666; font-size: 0.8rem; }
-  .item-price { font-weight: 600; }
+  .item-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 4px;
+  }
+  .item-controls label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .item-multiplier-input {
+    width: 60px;
+    padding: 4px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.875rem;
+  }
+  .btn-remove-item {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.75rem;
+  }
+  .btn-remove-item:hover {
+    background: #dc2626;
+  }
+  .item-price { 
+    font-weight: 600; 
+    min-width: 100px;
+    text-align: right;
+  }
+  .form-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    resize: vertical;
+  }
+  .btn-edit {
+    background: #e0e7ff;
+    color: #3730a3;
+  }
   .items-total {
     display: flex;
     justify-content: space-between;
