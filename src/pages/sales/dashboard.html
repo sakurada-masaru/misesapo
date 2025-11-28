@@ -1102,7 +1102,14 @@
 
     function parsePrice(priceStr) {
       // "¥ 21,000〜" → 21000
-      const match = priceStr.match(/[\d,]+/);
+      // "¥ 10.500〜" → 10500 (小数点をカンマに変換してから処理)
+      if (!priceStr) return 0;
+      
+      // 小数点をカンマに変換（誤った表記に対応）
+      let normalized = priceStr.replace(/\.(\d{3})/g, ',$1');
+      
+      // 数字とカンマを抽出
+      const match = normalized.match(/[\d,]+/);
       if (match) {
         return parseInt(match[0].replace(/,/g, ''), 10);
       }
