@@ -449,13 +449,16 @@
         <button class="action-btn btn-reject" onclick="updateStatus('${currentEstimate.id}', 'rejected'); closeModal();">
           <i class="fas fa-times"></i> 却下
         </button>
-        <button class="action-btn btn-process" onclick="updateStatus('${currentEstimate.id}', 'processing'); closeModal();">
+        <button class="action-btn btn-process" onclick="startEstimateEdit('${currentEstimate.id}');">
           <i class="fas fa-edit"></i> 本見積作成開始
         </button>
       `;
     } else if (currentEstimate.status === 'processing') {
       footerHtml += `
-        <button class="action-btn btn-complete" onclick="updateStatus('${currentEstimate.id}', 'completed'); closeModal();">
+        <button class="action-btn btn-edit" onclick="startEstimateEdit('${currentEstimate.id}');">
+          <i class="fas fa-edit"></i> 編集
+        </button>
+        <button class="action-btn btn-complete" onclick="completeEstimate('${currentEstimate.id}');">
           <i class="fas fa-check"></i> 完了にする
         </button>
       `;
@@ -494,6 +497,165 @@
     } catch (e) {
       console.error('Error:', e);
       alert('更新に失敗しました: ' + e.message);
+    }
+  }
+
+  // 本見積もり編集開始
+  function startEstimateEdit(id) {
+    const est = allEstimates.find(e => e.id === id);
+    if (!est) return;
+    
+    // ステータスを processing に更新（まだ更新されていない場合）
+    if (est.status === 'pending') {
+      updateStatus(id, 'processing').then(() => {
+        viewEstimate(id, true);
+      });
+    } else {
+      viewEstimate(id, true);
+    }
+    
+    // フッターボタンを更新
+    document.getElementById('modal-footer').innerHTML = `
+      <button class="action-btn btn-view" onclick="viewEstimate('${id}', false)">キャンセル</button>
+      <button class="action-btn btn-complete" onclick="saveEstimateEdit('${id}')">
+        <i class="fas fa-save"></i> 保存
+      </button>
+    `;
+  }
+
+  // 見積もり合計を更新
+  function updateEstimateTotal() {
+    if (!currentEstimate) return;
+    
+    const items = currentEstimate.items || [];
+    let total = 0;
+    
+    items.forEach((item, index) => {
+      const multiplierInput = document.querySelector(`.item-multiplier-input[data-index="${index}"]`);
+      if (multiplierInput) {
+        const multiplier = parseFloat(multiplierInput.value) || 1;
+        const basePrice = item.base_price || item.price / (item.multiplier || 1);
+        const itemTotal = Math.round(basePrice * multiplier);
+        total += itemTotal;
+        
+        // 価格表示を更新
+        const priceEl = multiplierInput.closest('.item-row-edit').querySelector('.item-price');
+        if (priceEl) {
+          priceEl.textContent = `¥${itemTotal.toLocaleString()}`;
+        }
+      } else {
+        total += item.price || 0;
+      }
+    });
+    
+    const totalEl = document.getElementById('estimate-total-edit');
+    if (totalEl) {
+      totalEl.textContent = `¥${total.toLocaleString()}`;
+    }
+  }
+
+  // 見積もり項目を削除
+  function removeEstimateItem(index) {
+    if (!currentEstimate) return;
+    if (!confirm('この項目を削除しますか？')) return;
+    
+    currentEstimate.items.splice(index, 1);
+    viewEstimate(currentEstimate.id, true);
+    
+    // フッターボタンを再設定
+    document.getElementById('modal-footer').innerHTML = `
+      <button class="action-btn btn-view" onclick="viewEstimate('${currentEstimate.id}', false)">キャンセル</button>
+      <button class="action-btn btn-complete" onclick="saveEstimateEdit('${currentEstimate.id}')">
+        <i class="fas fa-save"></i> 保存
+      </button>
+    `;
+  }
+
+  // 見積もり編集を保存
+  async function saveEstimateEdit(id) {
+    if (!currentEstimate) return;
+    
+    try {
+      // 編集された項目を取得
+      const items = currentEstimate.items.map((item, index) => {
+        const multiplierInput = document.querySelector(`.item-multiplier-input[data-index="${index}"]`);
+        const multiplier = multiplierInput ? parseFloat(multiplierInput.value) || 1 : (item.multiplier || 1);
+        const basePrice = item.base_price || item.price / (item.multiplier || 1);
+        const price = Math.round(basePrice * multiplier);
+        
+        return {
+          ...item,
+          multiplier: multiplier,
+          price: price,
+          base_price: basePrice
+        };
+      });
+      
+      // 合計を計算
+      const total = items.reduce((sum, item) => sum + item.price, 0);
+      
+      // メモを取得
+      const notesEl = document.getElementById('estimate-notes-edit');
+      const notes = notesEl ? notesEl.value : currentEstimate.notes;
+      
+      // APIに送信
+      const res = await fetch(`${API_BASE}/estimates/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items,
+          total: total,
+          notes: notes,
+          status: 'processing',
+          updated_at: new Date().toISOString()
+        })
+      });
+
+      if (!res.ok) throw new Error('保存に失敗しました');
+
+      // ローカルデータ更新
+      const est = allEstimates.find(e => e.id === id);
+      if (est) {
+        est.items = items;
+        est.total = total;
+        est.notes = notes;
+        currentEstimate = est;
+      }
+
+      renderEstimates();
+      updateStats();
+      
+      // 表示モードに戻す
+      viewEstimate(id, false);
+      
+      // フッターボタンを再設定
+      document.getElementById('modal-footer').innerHTML = `
+        <button class="action-btn btn-view" onclick="closeModal()">閉じる</button>
+        <button class="action-btn btn-edit" onclick="startEstimateEdit('${id}');">
+          <i class="fas fa-edit"></i> 編集
+        </button>
+        <button class="action-btn btn-complete" onclick="completeEstimate('${id}');">
+          <i class="fas fa-check"></i> 完了にする
+        </button>
+      `;
+      
+      alert('本見積もりを保存しました');
+    } catch (e) {
+      console.error('Error:', e);
+      alert('保存に失敗しました: ' + e.message);
+    }
+  }
+
+  // 見積もりを完了
+  async function completeEstimate(id) {
+    if (!confirm('この見積もりを完了にしますか？')) return;
+    
+    try {
+      await updateStatus(id, 'completed');
+      closeModal();
+    } catch (e) {
+      console.error('Error:', e);
+      alert('完了に失敗しました: ' + e.message);
     }
   }
 
