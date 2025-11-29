@@ -13,6 +13,7 @@ s3_client = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 ANNOUNCEMENTS_TABLE = dynamodb.Table('announcements')
 REPORTS_TABLE = dynamodb.Table('staff-reports')
+SCHEDULES_TABLE = dynamodb.Table('schedules')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -142,6 +143,21 @@ def lambda_handler(event, context):
                 return get_wiki_data(headers)
             elif method == 'PUT' or method == 'POST':
                 return save_wiki_data(event, headers)
+        elif normalized_path == '/schedules':
+            # スケジュールデータの読み書き
+            if method == 'GET':
+                return get_schedules(event, headers)
+            elif method == 'POST':
+                return create_schedule(event, headers)
+        elif normalized_path.startswith('/schedules/'):
+            # スケジュール詳細の取得・更新・削除
+            schedule_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_schedule_detail(schedule_id, headers)
+            elif method == 'PUT':
+                return update_schedule(schedule_id, event, headers)
+            elif method == 'DELETE':
+                return delete_schedule(schedule_id, headers)
         else:
             # デバッグ: パスが一致しなかった場合
             print(f"DEBUG: Path not matched. normalized_path={normalized_path}, original_path={path}")
@@ -1514,6 +1530,257 @@ def delete_report(report_id, event, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': 'レポートの削除に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def create_schedule(event, headers):
+    """
+    スケジュールを作成
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # スケジュールIDを生成（必須）
+        schedule_id = str(uuid.uuid4())
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        # DynamoDBに保存するアイテムを作成
+        schedule_item = {
+            'id': schedule_id,  # パーティションキー（必須）
+            'created_at': now,
+            'updated_at': now,
+            'date': body_json.get('date', ''),
+            'time_slot': body_json.get('time_slot', ''),
+            'order_type': body_json.get('order_type', 'regular'),
+            'client_id': body_json.get('client_id'),
+            'client_name': body_json.get('client_name', ''),
+            'store_name': body_json.get('store_name', ''),
+            'address': body_json.get('address', ''),
+            'phone': body_json.get('phone', ''),
+            'email': body_json.get('email', ''),
+            'cleaning_items': body_json.get('cleaning_items', []),
+            'notes': body_json.get('notes', ''),
+            'status': body_json.get('status', 'draft'),  # draft, pending, assigned, in_progress, completed, cancelled
+            'assigned_to': body_json.get('assigned_to'),  # 清掃員ID（後で割り当て）
+            'created_by': body_json.get('created_by'),  # 作成者ID（営業担当など）
+        }
+        
+        # DynamoDBに保存
+        SCHEDULES_TABLE.put_item(Item=schedule_item)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'スケジュールを作成しました',
+                'schedule_id': schedule_id
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error creating schedule: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'An error occurred (ValidationException) when calling the PutItem operation',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_schedules(event, headers):
+    """
+    スケジュール一覧を取得
+    """
+    try:
+        # クエリパラメータからフィルタ条件を取得
+        query_params = event.get('queryStringParameters') or {}
+        status = query_params.get('status')
+        date = query_params.get('date')
+        assigned_to = query_params.get('assigned_to')
+        
+        # スキャンまたはクエリを実行
+        if status:
+            # ステータスでフィルタ（GSIを使用する場合）
+            response = SCHEDULES_TABLE.scan(
+                FilterExpression=Attr('status').eq(status)
+            )
+        elif date:
+            # 日付でフィルタ
+            response = SCHEDULES_TABLE.scan(
+                FilterExpression=Attr('date').eq(date)
+            )
+        elif assigned_to:
+            # 担当者でフィルタ（GSIを使用する場合）
+            response = SCHEDULES_TABLE.scan(
+                FilterExpression=Attr('assigned_to').eq(assigned_to)
+            )
+        else:
+            # 全件取得
+            response = SCHEDULES_TABLE.scan()
+        
+        schedules = response.get('Items', [])
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(schedules, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting schedules: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'スケジュールの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_schedule_detail(schedule_id, headers):
+    """
+    スケジュール詳細を取得
+    """
+    try:
+        response = SCHEDULES_TABLE.get_item(Key={'id': schedule_id})
+        
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'スケジュールが見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting schedule detail: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'スケジュールの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_schedule(schedule_id, event, headers):
+    """
+    スケジュールを更新
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 既存のスケジュールを取得
+        response = SCHEDULES_TABLE.get_item(Key={'id': schedule_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'スケジュールが見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        existing_item = response['Item']
+        
+        # 更新可能なフィールドを更新
+        update_expression_parts = []
+        expression_attribute_values = {}
+        expression_attribute_names = {}
+        
+        updatable_fields = [
+            'date', 'time_slot', 'order_type', 'client_id', 'client_name',
+            'store_name', 'address', 'phone', 'email', 'cleaning_items',
+            'notes', 'status', 'assigned_to'
+        ]
+        
+        for field in updatable_fields:
+            if field in body_json:
+                update_expression_parts.append(f"#{field} = :{field}")
+                expression_attribute_names[f"#{field}"] = field
+                expression_attribute_values[f":{field}"] = body_json[field]
+        
+        # updated_atを更新
+        update_expression_parts.append("#updated_at = :updated_at")
+        expression_attribute_names["#updated_at"] = "updated_at"
+        expression_attribute_values[":updated_at"] = datetime.utcnow().isoformat() + 'Z'
+        
+        if update_expression_parts:
+            SCHEDULES_TABLE.update_item(
+                Key={'id': schedule_id},
+                UpdateExpression='SET ' + ', '.join(update_expression_parts),
+                ExpressionAttributeNames=expression_attribute_names,
+                ExpressionAttributeValues=expression_attribute_values
+            )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'スケジュールを更新しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error updating schedule: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'スケジュールの更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_schedule(schedule_id, headers):
+    """
+    スケジュールを削除
+    """
+    try:
+        SCHEDULES_TABLE.delete_item(Key={'id': schedule_id})
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'スケジュールを削除しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting schedule: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'スケジュールの削除に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }
