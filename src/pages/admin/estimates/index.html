@@ -1,10 +1,11 @@
-@layout('layouts.base')
+@layout('layouts.admin')
 @json('data/meta/admin_estimates_title.json', $title)
 @json('data/meta/admin_estimates_body_class.json', $body_class)
 
 <style>
   :root {
     --sidebar-width: 240px;
+    --sidebar-width-collapsed: 64px;
     --topbar-height: 64px;
   }
 
@@ -27,40 +28,89 @@
     bottom: 0;
     z-index: 100;
     box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+    transition: width 0.3s ease;
+    overflow: hidden;
+  }
+  .sidebar.collapsed {
+    width: var(--sidebar-width-collapsed);
+  }
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .logo-text,
+  .sidebar.collapsed .sidebar-role {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
+  .sidebar.collapsed .sidebar-toggle i {
+    transform: rotate(180deg);
   }
   .sidebar-header {
     padding: 20px;
     border-bottom: 1px solid #e5e7eb;
+    min-height: 64px;
+    display: flex;
+    align-items: center;
   }
-  .logo {
+  .logo-link {
     display: flex;
     align-items: center;
     gap: 12px;
+    text-decoration: none;
+    color: inherit;
   }
-  .logo-icon {
-    font-size: 1.5rem;
+  .logo-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    flex-shrink: 0;
   }
   .logo-text {
     font-size: 1.25rem;
     font-weight: 700;
     color: #111827;
+    white-space: nowrap;
+    transition: opacity 0.3s ease;
+  }
+  .sidebar-role {
+    padding: 8px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    transition: opacity 0.3s ease;
+  }
+  .sidebar-role .role-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #e0e7ff;
+    color: #3730a3;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
   }
   .sidebar-nav {
     flex: 1;
-    padding: 16px 12px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
+    overflow-y: auto;
   }
   .nav-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 16px;
+    padding: 10px 12px;
     color: #6b7280;
     text-decoration: none;
-    border-radius: 10px;
+    border-radius: 8px;
     transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-item-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
   }
   .nav-item:hover {
     background: #f3f4f6;
@@ -73,13 +123,46 @@
   .nav-item i {
     width: 20px;
     text-align: center;
+    flex-shrink: 0;
   }
-  .sidebar-footer {
-    padding: 16px 12px;
-    border-top: 1px solid #e5e7eb;
+  .nav-label {
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+  }
+  .sidebar-toggle {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: 1px solid #e5e7eb;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    transition: all 0.2s;
+    z-index: 200;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .sidebar-toggle:hover {
+    background: #f3f4f6;
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .sidebar-toggle i {
+    transition: transform 0.3s ease;
+  }
+  .sidebar.collapsed .sidebar-toggle {
+    right: 18px;
+  }
+  .nav-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 8px 12px;
   }
 
   /* メインコンテンツ */
@@ -88,6 +171,10 @@
     margin-left: var(--sidebar-width);
     padding: 24px;
     background: #f9fafb;
+    transition: margin-left 0.3s ease;
+  }
+  .sidebar.collapsed ~ .main-content {
+    margin-left: var(--sidebar-width-collapsed);
   }
 
   .estimates-page {
@@ -343,67 +430,83 @@
 
 <main id="main" class="admin-estimates-v2">
   <!-- サイドバー -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="admin-sidebar">
     <div class="sidebar-header">
-      <div class="logo">
-        <span class="logo-icon">🧹</span>
+      <a href="/admin/dashboard.html" class="logo-link">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
         <span class="logo-text">ミセサポ</span>
-      </div>
+      </a>
+    </div>
+    
+    <!-- ロール表示 -->
+    <div class="sidebar-role">
+      <span class="role-badge" id="sidebar-role-badge">管理者</span>
     </div>
     
     <nav class="sidebar-nav">
       <a href="/admin/dashboard.html" class="nav-item">
         <i class="fas fa-home"></i>
-        <span>ダッシュボード</span>
+        <span class="nav-label">ダッシュボード</span>
       </a>
       <a href="/admin/schedules/" class="nav-item">
         <i class="fas fa-calendar-alt"></i>
-        <span>スケジュール</span>
+        <span class="nav-label">スケジュール</span>
       </a>
       <a href="/admin/customers/" class="nav-item">
         <i class="fas fa-store"></i>
-        <span>顧客管理</span>
+        <span class="nav-label">顧客管理</span>
       </a>
       <a href="/admin/reports/" class="nav-item">
         <i class="fas fa-file-alt"></i>
-        <span>レポート</span>
+        <span class="nav-label">レポート</span>
       </a>
       <a href="/admin/estimates/" class="nav-item active">
         <i class="fas fa-file-invoice-dollar"></i>
-        <span>見積もり</span>
+        <span class="nav-label">見積もり</span>
       </a>
       <a href="/admin/orders.html" class="nav-item">
         <i class="fas fa-shopping-cart"></i>
-        <span>発注管理</span>
+        <span class="nav-label">発注管理</span>
       </a>
       <a href="/admin/partners.html" class="nav-item">
         <i class="fas fa-handshake"></i>
-        <span>パートナー企業</span>
+        <span class="nav-label">パートナー企業</span>
       </a>
       <a href="/admin/users/" class="nav-item">
         <i class="fas fa-users"></i>
-        <span>ユーザー</span>
+        <span class="nav-label">ユーザー</span>
       </a>
       <a href="/admin/analytics/" class="nav-item">
         <i class="fas fa-chart-bar"></i>
-        <span>分析</span>
+        <span class="nav-label">分析</span>
       </a>
-    </nav>
-
-    <div class="sidebar-footer">
       <a href="/admin/cleaning-manual.html" class="nav-item">
         <i class="fas fa-book"></i>
-        <span>マニュアル</span>
+        <span class="nav-label">マニュアル</span>
       </a>
       <a href="/admin/images/" class="nav-item">
         <i class="fas fa-images"></i>
-        <span>画像管理</span>
+        <span class="nav-label">メディア</span>
       </a>
+      <div class="nav-divider"></div>
       <a href="/admin/services/" class="nav-item">
         <i class="fas fa-cog"></i>
-        <span>設定</span>
+        <span class="nav-label">設定</span>
       </a>
-    </div>
+      <a href="/wiki" class="nav-item">
+        <i class="fas fa-book-open"></i>
+        <span class="nav-label">WIKI</span>
+      </a>
+      <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
+        <i class="fas fa-sign-out-alt"></i>
+        <span class="nav-label">ログアウト</span>
+      </button>
+    </nav>
+
+    <!-- トグルボタン -->
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+      <i class="fas fa-chevron-left"></i>
+    </button>
   </aside>
 
   <!-- メインコンテンツ -->
@@ -881,5 +984,63 @@
   document.getElementById('detail-modal').addEventListener('click', (e) => {
     if (e.target.classList.contains('modal-overlay')) closeModal();
   });
+
+  // サイドバー開閉機能
+  const sidebar = document.getElementById('admin-sidebar');
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  
+  if (sidebar && sidebarToggle) {
+    const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+    if (isCollapsed) {
+      sidebar.classList.add('collapsed');
+    }
+    
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      const collapsed = sidebar.classList.contains('collapsed');
+      localStorage.setItem('sidebar-collapsed', collapsed);
+    });
+  }
+
+  // ロール表示の更新
+  function updateRoleBadge() {
+    const roleBadge = document.getElementById('sidebar-role-badge');
+    if (!roleBadge) return;
+    
+    if (window.Auth && window.Auth.getCurrentUser) {
+      const user = window.Auth.getCurrentUser();
+      if (user && user.role) {
+        const roleConfig = window.RoleConfig?.ROLE_CONFIG;
+        const roleInfo = roleConfig?.roles?.[user.role];
+        if (roleInfo) {
+          roleBadge.textContent = roleInfo.displayName || roleInfo.name || user.role;
+          
+          const badgeColors = {
+            'guest': { bg: '#e5e7eb', color: '#6b7280' },
+            'customer': { bg: '#dbeafe', color: '#1e40af' },
+            'staff': { bg: '#dcfce7', color: '#166534' },
+            'concierge': { bg: '#fef3c7', color: '#92400e' },
+            'admin': { bg: '#e0e7ff', color: '#3730a3' },
+            'developer': { bg: '#fce7f3', color: '#831843' },
+            'master': { bg: '#fef2f2', color: '#991b1b' }
+          };
+          
+          const colors = badgeColors[user.role] || badgeColors['admin'];
+          roleBadge.style.background = colors.bg;
+          roleBadge.style.color = colors.color;
+        }
+      }
+    } else {
+      roleBadge.textContent = '管理者';
+    }
+  }
+  
+  updateRoleBadge();
+  
+  if (window.Auth && window.Auth.onAuthStateChanged) {
+    window.Auth.onAuthStateChanged(() => {
+      updateRoleBadge();
+    });
+  }
 </script>
 
