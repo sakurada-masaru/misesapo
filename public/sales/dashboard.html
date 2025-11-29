@@ -153,6 +153,9 @@
 
 <script src="/js/data_utils.js"></script>
 <script src="/js/aws-services-api.js"></script>
+<!-- PDF生成ライブラリ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.min.js"></script>
 
 <main id="main" class="sales-app">
   <!-- スワイプコンテナ -->
@@ -481,6 +484,9 @@
           </div>
 
           <div class="estimate-fixed-footer">
+            <button type="button" class="btn-pdf" onclick="generateEstimatePDF()" style="margin-right: 8px; background: #6b7280;">
+              <i class="fas fa-file-pdf"></i> PDFをダウンロード
+            </button>
             <button class="btn-submit" onclick="submitEstimateCase()">
               <i class="fas fa-paper-plane"></i> 見積もりを送信
             </button>
