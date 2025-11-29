@@ -1,0 +1,689 @@
+@layout('layouts.base')
+@json('data/meta/wiki_title.json', $title)
+@json('data/meta/wiki_body_class.json', $body_class)
+
+<main id="main" class="wiki-page">
+  <div class="container">
+    <header class="wiki-header">
+      <h1>ミセサポ システム用語辞典</h1>
+      <p class="wiki-subtitle">開発者ではない事務の方でも理解できるよう、システムの要点と専門用語をわかりやすく説明します。</p>
+    </header>
+
+    <div class="wiki-content">
+      <!-- 目次 -->
+      <nav class="wiki-toc">
+        <h2>目次</h2>
+        <ul>
+          <li><a href="#overview">1. システム概要</a></li>
+          <li><a href="#roles">2. ロール（役割）について</a></li>
+          <li><a href="#glossary">3. 専門用語辞典</a></li>
+          <li><a href="#features">4. 主要機能の説明</a></li>
+          <li><a href="#data">5. データ構造の簡単な説明</a></li>
+        </ul>
+      </nav>
+
+      <!-- システム概要 -->
+      <section id="overview" class="wiki-section">
+        <h2>1. システム概要</h2>
+        <div class="wiki-card">
+          <h3>ミセサポとは</h3>
+          <p>ミセサポは、店舗清掃サービスを管理するためのWebアプリケーション（ウェブサイト）です。お客様、清掃員、営業担当、管理者など、それぞれの立場の人が使える機能を提供しています。</p>
+          
+          <h4>主な機能</h4>
+          <ul>
+            <li><strong>お客様向け</strong>: サービスを注文したり、清掃レポートを確認したりできます</li>
+            <li><strong>清掃員向け</strong>: 作業予定を確認したり、作業レポートを作成したりできます</li>
+            <li><strong>営業担当向け</strong>: お客様を管理したり、見積もりを作成したりできます</li>
+            <li><strong>管理者向け</strong>: システム全体を管理し、すべての情報を確認できます</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ロールについて -->
+      <section id="roles" class="wiki-section">
+        <h2>2. ロール（役割）について</h2>
+        <p class="wiki-intro">ロールとは、システムを使う人の「役割」のことです。ロールによって、見られるページや使える機能が変わります。</p>
+
+        <div class="roles-grid">
+          <div class="role-card">
+            <div class="role-badge customer">顧客</div>
+            <h3>customer（顧客・お客様）</h3>
+            <p><strong>誰のこと？</strong> 清掃サービスを利用するお客様（個人・法人）</p>
+            <p><strong>できること</strong></p>
+            <ul>
+              <li>サービスを注文する</li>
+              <li>清掃レポートを確認する</li>
+              <li>スケジュールを確認する</li>
+              <li>マイページで情報を管理する</li>
+            </ul>
+          </div>
+
+          <div class="role-card">
+            <div class="role-badge staff">清掃員</div>
+            <h3>staff（清掃員）</h3>
+            <p><strong>誰のこと？</strong> 実際に清掃作業を行うスタッフ</p>
+            <p><strong>できること</strong></p>
+            <ul>
+              <li>作業予定を確認する</li>
+              <li>作業レポートを作成する</li>
+              <li>作業前後の写真をアップロードする</li>
+              <li>研修動画を見る</li>
+            </ul>
+          </div>
+
+          <div class="role-card">
+            <div class="role-badge concierge">コンシェルジュ</div>
+            <h3>concierge（コンシェルジュ・営業担当）</h3>
+            <p><strong>誰のこと？</strong> お客様対応や営業を行う担当者</p>
+            <p><strong>できること</strong></p>
+            <ul>
+              <li>お客様情報を管理する</li>
+              <li>見積もりを作成する</li>
+              <li>スケジュールを管理する</li>
+              <li>発注を管理する</li>
+            </ul>
+          </div>
+
+          <div class="role-card">
+            <div class="role-badge admin">管理者</div>
+            <h3>admin（管理者）</h3>
+            <p><strong>誰のこと？</strong> システム全体を管理する人</p>
+            <p><strong>できること</strong></p>
+            <ul>
+              <li>すべてのユーザーを管理する</li>
+              <li>サービス内容を管理する</li>
+              <li>発注を管理する</li>
+              <li>レポートを確認・管理する</li>
+              <li>システムの設定を変更する</li>
+            </ul>
+          </div>
+
+          <div class="role-card">
+            <div class="role-badge developer">開発者</div>
+            <h3>developer（開発者）</h3>
+            <p><strong>誰のこと？</strong> システムを作ったり、修正したりする技術者</p>
+            <p><strong>できること</strong></p>
+            <ul>
+              <li>管理者のすべての機能</li>
+              <li>サービス変更のレビュー（確認）</li>
+              <li>画像の管理</li>
+              <li>システムの技術的な設定</li>
+            </ul>
+          </div>
+
+          <div class="role-card">
+            <div class="role-badge master">マスター</div>
+            <h3>master（マスター）</h3>
+            <p><strong>誰のこと？</strong> システムの最上位権限を持つ人</p>
+            <p><strong>できること</strong></p>
+            <ul>
+              <li>すべての機能にアクセスできる</li>
+              <li>システム全体を完全に管理できる</li>
+              <li>他のロールのユーザーを作成できる</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="wiki-note">
+          <h4>ロールの階層</h4>
+          <p>ロールには階層があり、上位のロールは下位のロールの機能も使えます。</p>
+          <div class="hierarchy">
+            <div class="hierarchy-item">マスター（最上位）</div>
+            <div class="hierarchy-arrow">↓</div>
+            <div class="hierarchy-item">開発者</div>
+            <div class="hierarchy-arrow">↓</div>
+            <div class="hierarchy-item">管理者</div>
+            <div class="hierarchy-arrow">↓</div>
+            <div class="hierarchy-item">コンシェルジュ</div>
+            <div class="hierarchy-arrow">↓</div>
+            <div class="hierarchy-item">清掃員・顧客（同レベル）</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 専門用語辞典 -->
+      <section id="glossary" class="wiki-section">
+        <h2>3. 専門用語辞典</h2>
+        <p class="wiki-intro">システムで使われる専門用語を、わかりやすく説明します。</p>
+
+        <div class="glossary-list">
+          <div class="glossary-item">
+            <h3>API（エーピーアイ）</h3>
+            <p><strong>読み方</strong>: エーピーアイ</p>
+            <p><strong>意味</strong>: アプリケーション同士が情報をやり取りするための仕組み。システムの「窓口」のようなもの。</p>
+            <p><strong>例</strong>: 清掃レポートのデータを取得するとき、APIを通じてデータを取得します。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>API Gateway（エーピーアイゲートウェイ）</h3>
+            <p><strong>読み方</strong>: エーピーアイゲートウェイ</p>
+            <p><strong>意味</strong>: APIへのアクセスを管理する「門番」のようなもの。誰がアクセスできるか、どのような情報をやり取りできるかを制御します。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>認証（にんしょう）</h3>
+            <p><strong>読み方</strong>: にんしょう</p>
+            <p><strong>意味</strong>: 「あなたは本当にこの人ですか？」を確認すること。ログインするときに、メールアドレスとパスワードで本人確認をします。</p>
+            <p><strong>関連用語</strong>: ログイン、パスワード</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>権限（けんげん）</h3>
+            <p><strong>読み方</strong>: けんげん</p>
+            <p><strong>意味</strong>: その人が「何をできるか」を決めるもの。ロールによって権限が変わります。</p>
+            <p><strong>例</strong>: 管理者はすべての情報を見られますが、清掃員は自分の作業に関係する情報だけ見られます。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>クラウド（Cloud）</h3>
+            <p><strong>読み方</strong>: クラウド</p>
+            <p><strong>意味</strong>: インターネット上にあるコンピューターやサービス。自分のパソコンではなく、インターネット上でデータを保存したり、処理したりします。</p>
+            <p><strong>例</strong>: AWS（アマゾンのクラウドサービス）、Azure（マイクロソフトのクラウドサービス）</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>CORS（コース）</h3>
+            <p><strong>読み方</strong>: コース</p>
+            <p><strong>意味</strong>: 異なるウェブサイト間でデータをやり取りするためのセキュリティの仕組み。安全にデータを共有するためのルールです。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>データベース（Database）</h3>
+            <p><strong>読み方</strong>: データベース</p>
+            <p><strong>意味</strong>: 情報を整理して保存しておく場所。Excelの表のようなものですが、もっと大量のデータを効率的に管理できます。</p>
+            <p><strong>例</strong>: DynamoDB（AWSのデータベース）、Firestore（Googleのデータベース）</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>デプロイ（Deploy）</h3>
+            <p><strong>読み方</strong>: デプロイ</p>
+            <p><strong>意味</strong>: 作ったシステムを実際に使えるように公開すること。「本番環境に反映する」という意味です。</p>
+            <p><strong>例</strong>: 新しい機能を追加したら、デプロイして実際のサイトに反映します。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>DynamoDB（ダイナモディービー）</h3>
+            <p><strong>読み方</strong>: ダイナモディービー</p>
+            <p><strong>意味</strong>: AWSが提供するデータベースサービス。お客様情報やレポートなどのデータを保存します。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>Firebase（ファイアベース）</h3>
+            <p><strong>読み方</strong>: ファイアベース</p>
+            <p><strong>意味</strong>: Googleが提供するサービス。認証（ログイン機能）やデータベースなど、さまざまな機能を提供します。</p>
+            <p><strong>関連用語</strong>: Firebase Authentication（認証機能）、Firestore（データベース機能）</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>Firestore（ファイアストア）</h3>
+            <p><strong>読み方</strong>: ファイアストア</p>
+            <p><strong>意味</strong>: Firebaseが提供するデータベースサービス。現在はAWSのDynamoDBに移行中です。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>GitHub（ギットハブ）</h3>
+            <p><strong>読み方</strong>: ギットハブ</p>
+            <p><strong>意味</strong>: プログラムのコードを保存・管理するサービス。複数の人が協力してシステムを作るときに使います。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>JSON（ジェイソン）</h3>
+            <p><strong>読み方</strong>: ジェイソン</p>
+            <p><strong>意味</strong>: データを保存する形式の一つ。テキストファイルで、人間が読める形式でデータを保存します。</p>
+            <p><strong>例</strong>: お客様情報をJSON形式で保存すると、{ "name": "山田太郎", "email": "yamada@example.com" } のような形式になります。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>Lambda（ラムダ）</h3>
+            <p><strong>読み方</strong>: ラムダ</p>
+            <p><strong>意味</strong>: AWSが提供するサービス。プログラムを実行するための「関数」のようなもの。データを処理したり、APIの処理を行ったりします。</p>
+            <p><strong>例</strong>: レポートを保存するとき、Lambda関数がデータを処理してデータベースに保存します。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>ログイン（Login）</h3>
+            <p><strong>読み方</strong>: ログイン</p>
+            <p><strong>意味</strong>: システムを使うために、メールアドレスとパスワードを入力して本人確認をすること。</p>
+            <p><strong>関連用語</strong>: 認証、ログアウト</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>ログアウト（Logout）</h3>
+            <p><strong>読み方</strong>: ログアウト</p>
+            <p><strong>意味</strong>: システムの使用を終了すること。セキュリティのため、使い終わったらログアウトしましょう。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>マスターデータ</h3>
+            <p><strong>読み方</strong>: マスターデータ</p>
+            <p><strong>意味</strong>: 基本的な情報で、あまり変更されないデータ。お客様の店舗情報やサービス一覧などが該当します。</p>
+            <p><strong>例</strong>: 店舗情報、サービス一覧、清掃員の基本情報</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>S3（エススリー）</h3>
+            <p><strong>読み方</strong>: エススリー</p>
+            <p><strong>意味</strong>: AWSが提供するファイル保存サービス。画像やPDFなどのファイルを保存します。</p>
+            <p><strong>例</strong>: 清掃レポートの写真はS3に保存されます。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>スケジュール（Schedule）</h3>
+            <p><strong>読み方</strong>: スケジュール</p>
+            <p><strong>意味</strong>: 作業予定のこと。いつ、どこで、誰が清掃作業を行うかを管理します。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>トランザクションデータ</h3>
+            <p><strong>読み方</strong>: トランザクションデータ</p>
+            <p><strong>意味</strong>: 頻繁に追加・更新されるデータ。作業予定やレポートなど、日々増えていくデータです。</p>
+            <p><strong>例</strong>: 作業予定、清掃レポート、メッセージ</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>レポート（Report）</h3>
+            <p><strong>読み方</strong>: レポート</p>
+            <p><strong>意味</strong>: 清掃作業の報告書。作業内容や作業前後の写真が含まれます。</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>ロール（Role）</h3>
+            <p><strong>読み方</strong>: ロール</p>
+            <p><strong>意味</strong>: システムを使う人の「役割」。顧客、清掃員、管理者など、それぞれの役割によって使える機能が変わります。</p>
+            <p><strong>関連用語</strong>: 権限</p>
+          </div>
+
+          <div class="glossary-item">
+            <h3>UI（ユーアイ）</h3>
+            <p><strong>読み方</strong>: ユーアイ</p>
+            <p><strong>意味</strong>: ユーザーインターフェースの略。システムの画面や操作の見た目のことです。</p>
+            <p><strong>例</strong>: ボタンのデザイン、メニューの配置など</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 主要機能の説明 -->
+      <section id="features" class="wiki-section">
+        <h2>4. 主要機能の説明</h2>
+
+        <div class="feature-card">
+          <h3>ダッシュボード</h3>
+          <p>システムにログインしたときに最初に表示される画面。重要な情報や統計が一目でわかるように表示されます。</p>
+          <p><strong>例</strong>: 今日の清掃予定数、今月の清掃件数、通知など</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>顧客管理</h3>
+          <p>お客様の情報を管理する機能。店舗情報、連絡先、契約情報などを登録・編集・確認できます。</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>スケジュール管理</h3>
+          <p>清掃作業の予定を管理する機能。いつ、どこで、誰が作業するかを登録し、カレンダー形式で確認できます。</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>レポート管理</h3>
+          <p>清掃作業の報告書を管理する機能。清掃員が作成したレポートを確認したり、お客様に公開したりできます。</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>発注管理</h3>
+          <p>お客様からのサービス注文を管理する機能。注文内容を確認し、処理状況を管理します。</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>ユーザー管理</h3>
+          <p>システムを使う人（ユーザー）を管理する機能。新しいユーザーを追加したり、権限を変更したりできます。</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>サービス管理</h3>
+          <p>提供する清掃サービスの内容を管理する機能。サービス名、料金、説明などを登録・編集できます。</p>
+        </div>
+      </section>
+
+      <!-- データ構造の説明 -->
+      <section id="data" class="wiki-section">
+        <h2>5. データ構造の簡単な説明</h2>
+        <p class="wiki-intro">システムで管理しているデータの種類と、どこに保存されているかを説明します。</p>
+
+        <div class="data-card">
+          <h3>マスターデータ（基本情報）</h3>
+          <p>あまり変更されない基本的な情報です。</p>
+          <ul>
+            <li><strong>店舗情報</strong>: お客様の店舗名、住所、連絡先など</li>
+            <li><strong>サービス一覧</strong>: 提供する清掃サービスの内容</li>
+            <li><strong>ユーザー情報</strong>: システムを使う人の基本情報</li>
+            <li><strong>清掃員情報</strong>: 清掃スタッフの基本情報</li>
+          </ul>
+          <p><strong>保存場所</strong>: データベース（DynamoDB）またはJSONファイル</p>
+        </div>
+
+        <div class="data-card">
+          <h3>トランザクションデータ（日々のデータ）</h3>
+          <p>日々追加・更新されるデータです。</p>
+          <ul>
+            <li><strong>スケジュール</strong>: 作業予定（年間10,000件以上）</li>
+            <li><strong>レポート</strong>: 作業報告書（年間10,000件以上）</li>
+            <li><strong>契約</strong>: お客様との契約情報（500件以上）</li>
+            <li><strong>メッセージ</strong>: 通知や連絡（年間50,000件以上）</li>
+          </ul>
+          <p><strong>保存場所</strong>: データベース（DynamoDB）</p>
+        </div>
+
+        <div class="data-card">
+          <h3>ファイルデータ（画像・文書）</h3>
+          <p>画像やPDFなどのファイルです。</p>
+          <ul>
+            <li><strong>レポート画像</strong>: 作業前後の写真</li>
+            <li><strong>契約書類</strong>: PDFなどの文書</li>
+            <li><strong>研修動画</strong>: 清掃員向けの動画</li>
+          </ul>
+          <p><strong>保存場所</strong>: S3（ファイル保存サービス）</p>
+        </div>
+      </section>
+
+      <!-- お問い合わせ -->
+      <section class="wiki-section wiki-contact">
+        <h2>わからないことがあったら</h2>
+        <p>この辞典で説明されていない用語や、もっと詳しく知りたいことがあれば、開発者や管理者に質問してください。</p>
+      </section>
+    </div>
+  </div>
+</main>
+
+<style>
+  .wiki-page {
+    padding: 40px 20px;
+    background: #f9fafb;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .wiki-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .wiki-header h1 {
+    font-size: 2.5rem;
+    color: #111827;
+    margin-bottom: 16px;
+  }
+
+  .wiki-subtitle {
+    font-size: 1.125rem;
+    color: #6b7280;
+    line-height: 1.6;
+  }
+
+  .wiki-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .wiki-toc {
+    background: #f3f4f6;
+    padding: 24px;
+    border-radius: 8px;
+    margin-bottom: 40px;
+  }
+
+  .wiki-toc h2 {
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+    color: #111827;
+  }
+
+  .wiki-toc ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .wiki-toc li {
+    margin-bottom: 8px;
+  }
+
+  .wiki-toc a {
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 1rem;
+  }
+
+  .wiki-toc a:hover {
+    text-decoration: underline;
+  }
+
+  .wiki-section {
+    margin-bottom: 60px;
+  }
+
+  .wiki-section h2 {
+    font-size: 2rem;
+    color: #111827;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .wiki-intro {
+    font-size: 1.125rem;
+    color: #6b7280;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .wiki-card,
+  .feature-card,
+  .data-card {
+    background: #f9fafb;
+    padding: 24px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    border-left: 4px solid #2563eb;
+  }
+
+  .wiki-card h3,
+  .feature-card h3,
+  .data-card h3 {
+    font-size: 1.5rem;
+    color: #111827;
+    margin-bottom: 12px;
+  }
+
+  .wiki-card h4 {
+    font-size: 1.25rem;
+    color: #374151;
+    margin-top: 20px;
+    margin-bottom: 12px;
+  }
+
+  .wiki-card ul,
+  .feature-card ul,
+  .data-card ul {
+    margin-left: 20px;
+    line-height: 1.8;
+  }
+
+  .wiki-card li,
+  .feature-card li,
+  .data-card li {
+    margin-bottom: 8px;
+  }
+
+  .roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  .role-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .role-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  .role-badge.customer {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .role-badge.staff {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .role-badge.concierge {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .role-badge.admin {
+    background: #e0e7ff;
+    color: #3730a3;
+  }
+
+  .role-badge.developer {
+    background: #fce7f3;
+    color: #831843;
+  }
+
+  .role-badge.master {
+    background: #fef2f2;
+    color: #991b1b;
+  }
+
+  .role-card h3 {
+    font-size: 1.25rem;
+    color: #111827;
+    margin-bottom: 12px;
+  }
+
+  .role-card p {
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+
+  .role-card ul {
+    margin-left: 20px;
+    line-height: 1.8;
+  }
+
+  .wiki-note {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 32px;
+  }
+
+  .wiki-note h4 {
+    font-size: 1.125rem;
+    color: #92400e;
+    margin-bottom: 12px;
+  }
+
+  .hierarchy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .hierarchy-item {
+    background: #fff;
+    padding: 12px 24px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    font-weight: 500;
+  }
+
+  .hierarchy-arrow {
+    color: #6b7280;
+    font-size: 1.5rem;
+  }
+
+  .glossary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .glossary-item {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .glossary-item h3 {
+    font-size: 1.5rem;
+    color: #2563eb;
+    margin-bottom: 12px;
+  }
+
+  .glossary-item p {
+    margin-bottom: 8px;
+    line-height: 1.6;
+  }
+
+  .glossary-item strong {
+    color: #111827;
+    font-weight: 600;
+  }
+
+  .wiki-contact {
+    background: #eff6ff;
+    border-left: 4px solid #2563eb;
+    padding: 24px;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .wiki-contact h2 {
+    border: none;
+    margin-bottom: 12px;
+  }
+
+  @media (max-width: 768px) {
+    .wiki-content {
+      padding: 24px;
+    }
+
+    .wiki-header h1 {
+      font-size: 2rem;
+    }
+
+    .roles-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hierarchy {
+      font-size: 0.875rem;
+    }
+  }
+</style>
+
