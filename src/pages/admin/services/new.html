@@ -1027,12 +1027,10 @@
             console.log('[AdminServicesNew] Service created:', result);
             
             // 成功メッセージ
-            alert(`サービスID ${result.id} を登録しました！\n\nページを自動生成しています。数秒後に一覧ページに移動します。`);
+            alert(`サービスID ${result.id} を登録しました！\n\nサービス一覧ページに移動します。`);
             
-            // 少し待ってからリダイレクト（ビルドが完了するまで）
-            setTimeout(() => {
-              window.location.href = '/admin/services.html';
-            }, 2000);
+            // サービス一覧ページにリダイレクト（リロードパラメータ付きで確実に更新）
+            window.location.href = '/admin/services/?reload=' + Date.now();
             
           } catch (error) {
             console.error('Error:', error);
