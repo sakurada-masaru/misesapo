@@ -85,14 +85,6 @@
         <i class="fas fa-chart-bar"></i>
         <span class="nav-label">分析</span>
       </a>
-    </nav>
-
-    <!-- トグルボタン -->
-    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
-      <i class="fas fa-chevron-left"></i>
-    </button>
-
-    <div class="sidebar-footer">
       <a href="/admin/cleaning-manual.html" class="nav-item">
         <i class="fas fa-book"></i>
         <span class="nav-label">マニュアル</span>
@@ -117,7 +109,12 @@
         <i class="fas fa-sign-out-alt"></i>
         <span class="nav-label">ログアウト</span>
       </button>
-    </div>
+    </nav>
+
+    <!-- トグルボタン -->
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+      <i class="fas fa-chevron-left"></i>
+    </button>
   </aside>
 
   <!-- メインコンテンツ -->
@@ -340,20 +337,20 @@
     }
     .sidebar-nav {
       flex: 1;
-      padding: 16px 12px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
       overflow-y: auto;
     }
     .nav-item {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px 16px;
+      padding: 10px 12px;
       color: #6b7280;
       text-decoration: none;
-      border-radius: 10px;
+      border-radius: 8px;
       transition: all 0.2s;
       white-space: nowrap;
     }
@@ -397,7 +394,7 @@
       justify-content: center;
       color: #6b7280;
       transition: all 0.2s;
-      z-index: 10;
+      z-index: 200;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     .sidebar-toggle:hover {
@@ -407,13 +404,6 @@
     }
     .sidebar-toggle i {
       transition: transform 0.3s ease;
-    }
-    .sidebar-footer {
-      padding: 16px 12px;
-      border-top: 1px solid #e5e7eb;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
     }
 
     /* メインコンテンツ */
