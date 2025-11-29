@@ -126,9 +126,26 @@
             <span>すべて</span>
           </button>
         </div>
-        
-        <div class="tag-filters" id="tag-filters">
-          <span class="filter-label">タグ:</span>
+      </div>
+
+      <!-- アクティブなフィルター表示 -->
+      <div class="active-filters" id="active-filters" style="display: none;">
+        <span class="active-filters-label">適用中のフィルター:</span>
+        <div class="active-filters-list" id="active-filters-list"></div>
+        <button class="clear-all-filters" id="clear-all-filters">
+          <i class="fas fa-times"></i>
+          <span>すべてクリア</span>
+        </button>
+      </div>
+
+      <!-- タグクラウド -->
+      <div class="tag-cloud-section">
+        <h3 class="tag-cloud-title">
+          <i class="fas fa-tags"></i>
+          <span>タグで絞り込む</span>
+        </h3>
+        <div class="tag-cloud" id="tag-cloud">
+          <!-- タグクラウドはJavaScriptで動的に生成 -->
         </div>
       </div>
     </div>
@@ -814,17 +831,11 @@
     gap: 16px;
     align-items: center;
   }
-  .category-filters,
-  .tag-filters {
+  .category-filters {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     align-items: center;
-  }
-  .filter-label {
-    font-size: 0.875rem;
-    color: var(--wiki-text-light);
-    font-weight: 500;
   }
   .filter-chip {
     display: flex;
@@ -851,6 +862,141 @@
   .filter-chip i {
     font-size: 0.75rem;
   }
+
+  /* アクティブフィルター */
+  .active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+  }
+  .active-filters-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--wiki-primary);
+  }
+  .active-filters-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .active-filter-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--wiki-primary);
+    color: #fff;
+    border-radius: 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  .active-filter-badge .remove {
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+  }
+  .active-filter-badge .remove:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .clear-all-filters {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid var(--wiki-primary);
+    color: var(--wiki-primary);
+    border-radius: 16px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: auto;
+  }
+  .clear-all-filters:hover {
+    background: var(--wiki-primary);
+    color: #fff;
+  }
+
+  /* タグクラウド */
+  .tag-cloud-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--wiki-border);
+  }
+  .tag-cloud-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--wiki-text);
+    margin: 0 0 16px 0;
+  }
+  .tag-cloud-title i {
+    color: var(--wiki-primary);
+  }
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .tag-cloud-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #fff;
+    border: 2px solid var(--wiki-border);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    color: var(--wiki-text);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .tag-cloud-item:hover {
+    border-color: var(--wiki-primary);
+    background: #eff6ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+  }
+  .tag-cloud-item.active {
+    background: var(--wiki-primary);
+    color: #fff;
+    border-color: var(--wiki-primary);
+    font-weight: 500;
+  }
+  .tag-cloud-item .tag-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .tag-cloud-item.active .tag-count {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  .tag-cloud-item.tag-size-1 { font-size: 0.75rem; }
+  .tag-cloud-item.tag-size-2 { font-size: 0.875rem; }
+  .tag-cloud-item.tag-size-3 { font-size: 1rem; font-weight: 500; }
+  .tag-cloud-item.tag-size-4 { font-size: 1.125rem; font-weight: 600; }
+  .tag-cloud-item.tag-size-5 { font-size: 1.25rem; font-weight: 600; }
 
   /* パンくずリスト */
   .breadcrumb {
@@ -983,13 +1129,23 @@
     border-top: 1px solid var(--wiki-border);
   }
   .wiki-card-tag {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     padding: 4px 10px;
     background: var(--wiki-bg);
     color: var(--wiki-text-light);
     border-radius: 12px;
     font-size: 0.75rem;
     border: 1px solid var(--wiki-border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .wiki-card-tag:hover {
+    background: #eff6ff;
+    border-color: var(--wiki-primary);
+    color: var(--wiki-primary);
+    transform: translateY(-1px);
   }
   .wiki-card-category {
     display: inline-flex;
@@ -1357,44 +1513,191 @@
       button.setAttribute('data-category', category.id);
       button.innerHTML = `<i class="${category.icon}"></i><span>${category.name}</span>`;
       button.style.borderLeftColor = category.color;
-      button.addEventListener('click', () => {
+        button.addEventListener('click', () => {
         document.querySelectorAll('.category-filters .filter-chip').forEach(chip => {
           chip.classList.remove('active');
         });
         button.classList.add('active');
         activeCategory = category.id;
+        updateActiveFilters();
         renderWikiGrid();
       });
       container.appendChild(button);
     });
   }
 
-  // タグフィルターの生成
-  function renderTagFilters() {
-    const container = document.getElementById('tag-filters');
+  // タグの使用頻度を計算
+  function getTagCounts() {
+    const tagCounts = new Map();
+    wikiData.entries.forEach(entry => {
+      entry.tags.forEach(tag => {
+        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+      });
+    });
+    return tagCounts;
+  }
+
+  // タグクラウドの生成
+  function renderTagCloud() {
+    const container = document.getElementById('tag-cloud');
     if (!container) return;
 
-    const allTags = new Set();
-    wikiData.entries.forEach(entry => {
-      entry.tags.forEach(tag => allTags.add(tag));
+    const tagCounts = getTagCounts();
+    const sortedTags = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1]);
+    
+    if (sortedTags.length === 0) {
+      container.innerHTML = '<p style="color: var(--wiki-text-light);">タグがありません</p>';
+      return;
+    }
+
+    const maxCount = Math.max(...sortedTags.map(([_, count]) => count));
+    const minCount = Math.min(...sortedTags.map(([_, count]) => count));
+    const sizeRange = maxCount - minCount || 1;
+
+    container.innerHTML = sortedTags.map(([tag, count]) => {
+      // 使用頻度に応じてサイズを決定（1-5の5段階）
+      const normalizedCount = (count - minCount) / sizeRange;
+      const size = Math.max(1, Math.min(5, Math.ceil(normalizedCount * 4) + 1));
+      
+      const isActive = activeTags.has(tag);
+      
+      return `
+        <span class="tag-cloud-item ${isActive ? 'active' : ''} tag-size-${size}" data-tag="${tag}">
+          <span>${tag}</span>
+          <span class="tag-count">${count}</span>
+        </span>
+      `;
+    }).join('');
+
+    // タグクリックイベント
+    container.querySelectorAll('.tag-cloud-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const tag = item.getAttribute('data-tag');
+        toggleTag(tag);
+      });
+    });
+  }
+
+  // タグのトグル
+  function toggleTag(tag) {
+    if (activeTags.has(tag)) {
+      activeTags.delete(tag);
+    } else {
+      activeTags.add(tag);
+    }
+    updateActiveFilters();
+    renderTagCloud();
+    renderWikiGrid();
+  }
+
+  // アクティブフィルターの表示更新
+  function updateActiveFilters() {
+    const container = document.getElementById('active-filters');
+    const list = document.getElementById('active-filters-list');
+    if (!container || !list) return;
+
+    const hasActiveFilters = activeCategory !== 'all' || activeTags.size > 0 || searchQuery;
+
+    if (!hasActiveFilters) {
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'flex';
+    list.innerHTML = '';
+
+    // カテゴリフィルター
+    if (activeCategory !== 'all') {
+      const category = wikiData.categories.find(c => c.id === activeCategory);
+      if (category) {
+        const badge = document.createElement('span');
+        badge.className = 'active-filter-badge';
+        badge.innerHTML = `
+          <i class="${category.icon}"></i>
+          <span>${category.name}</span>
+          <span class="remove" data-type="category" data-value="${activeCategory}">
+            <i class="fas fa-times"></i>
+          </span>
+        `;
+        list.appendChild(badge);
+      }
+    }
+
+    // タグフィルター
+    activeTags.forEach(tag => {
+      const badge = document.createElement('span');
+      badge.className = 'active-filter-badge';
+      badge.innerHTML = `
+        <i class="fas fa-tag"></i>
+        <span>${tag}</span>
+        <span class="remove" data-type="tag" data-value="${tag}">
+          <i class="fas fa-times"></i>
+        </span>
+      `;
+      list.appendChild(badge);
     });
 
-    allTags.forEach(tag => {
-      const button = document.createElement('button');
-      button.className = 'filter-chip';
-      button.setAttribute('data-tag', tag);
-      button.textContent = tag;
-      button.addEventListener('click', () => {
-        button.classList.toggle('active');
-        if (button.classList.contains('active')) {
-          activeTags.add(tag);
-        } else {
-          activeTags.delete(tag);
+    // 検索フィルター
+    if (searchQuery) {
+      const badge = document.createElement('span');
+      badge.className = 'active-filter-badge';
+      badge.innerHTML = `
+        <i class="fas fa-search"></i>
+        <span>検索: "${searchQuery}"</span>
+        <span class="remove" data-type="search">
+          <i class="fas fa-times"></i>
+        </span>
+      `;
+      list.appendChild(badge);
+    }
+
+    // 削除ボタンのイベント
+    list.querySelectorAll('.remove').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const type = btn.getAttribute('data-type');
+        const value = btn.getAttribute('data-value');
+        
+        if (type === 'category') {
+          document.querySelector('.category-filters .filter-chip[data-category="all"]')?.click();
+        } else if (type === 'tag') {
+          toggleTag(value);
+        } else if (type === 'search') {
+          const searchInput = document.getElementById('wiki-search');
+          if (searchInput) {
+            searchInput.value = '';
+            searchQuery = '';
+            const searchClear = document.getElementById('search-clear');
+            if (searchClear) searchClear.style.display = 'none';
+            updateActiveFilters();
+            renderWikiGrid();
+          }
         }
-        renderWikiGrid();
       });
-      container.appendChild(button);
     });
+  }
+
+  // すべてのフィルターをクリア
+  function clearAllFilters() {
+    activeCategory = 'all';
+    activeTags.clear();
+    searchQuery = '';
+    
+    // UIのリセット
+    document.querySelectorAll('.category-filters .filter-chip').forEach(chip => {
+      chip.classList.remove('active');
+    });
+    document.querySelector('.category-filters .filter-chip[data-category="all"]')?.classList.add('active');
+    
+    const searchInput = document.getElementById('wiki-search');
+    if (searchInput) searchInput.value = '';
+    const searchClear = document.getElementById('search-clear');
+    if (searchClear) searchClear.style.display = 'none';
+    
+    updateActiveFilters();
+    renderTagCloud();
+    renderWikiGrid();
   }
 
   // フィルタリングされたエントリを取得
@@ -1458,7 +1761,7 @@
           <h3 class="wiki-card-title">${entry.title}</h3>
           <p class="wiki-card-description">${entry.description}</p>
           <div class="wiki-card-footer">
-            ${entry.tags.map(tag => `<span class="wiki-card-tag">${tag}</span>`).join('')}
+            ${entry.tags.map(tag => `<span class="wiki-card-tag" data-tag="${tag}">${tag}</span>`).join('')}
             <span class="wiki-card-category" style="color: ${categoryColor};">
               <i class="${category.icon || 'fas fa-folder'}"></i>
               ${entry.category}
@@ -1470,7 +1773,17 @@
 
     // カードクリックイベント
     grid.querySelectorAll('.wiki-card-item').forEach(card => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (e) => {
+        // タグクリック時はフィルター処理
+        if (e.target.classList.contains('wiki-card-tag') || e.target.closest('.wiki-card-tag')) {
+          e.stopPropagation();
+          const tag = e.target.closest('.wiki-card-tag')?.getAttribute('data-tag');
+          if (tag) {
+            toggleTag(tag);
+          }
+          return;
+        }
+        
         const entryId = card.getAttribute('data-entry-id');
         showWikiDetail(entryId);
       });
@@ -1561,6 +1874,7 @@
         } else {
           searchClear.style.display = 'none';
         }
+        updateActiveFilters();
         renderWikiGrid();
       }, 300);
     });
@@ -1571,8 +1885,15 @@
       searchInput.value = '';
       searchQuery = '';
       searchClear.style.display = 'none';
+      updateActiveFilters();
       renderWikiGrid();
     });
+  }
+
+  // すべてクリアボタン
+  const clearAllBtn = document.getElementById('clear-all-filters');
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener('click', clearAllFilters);
   }
 
   // 新規追加ボタン（将来の機能）
@@ -1607,7 +1928,8 @@
 
   // 初期化
   renderCategoryFilters();
-  renderTagFilters();
+  renderTagCloud();
+  updateActiveFilters();
   renderWikiGrid();
 
   // URLハッシュから初期表示
