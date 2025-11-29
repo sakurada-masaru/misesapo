@@ -1031,9 +1031,20 @@
         // サービスマスタをAPI（またはローカルJSON）から読み込み
         await loadServicesFromApi();
 
-        // 仮見積もりパネル形式のサービス一覧を表示
-        renderServiceListNew();
-        renderSelectedServicesNew();
+        // 仮見積もりパネル形式のサービス一覧を表示（サービス読み込み後に確実に実行）
+        console.log('[sales/schedules/new] Service items loaded:', serviceItems.length);
+        if (serviceItems && serviceItems.length > 0) {
+          renderServiceListNew();
+          renderSelectedServicesNew();
+          console.log('[sales/schedules/new] Service list rendered');
+        } else {
+          // サービスが読み込まれていない場合のエラー表示
+          const container = document.getElementById('service-list-new');
+          if (container) {
+            container.innerHTML = '<div class="empty-state">サービスを読み込み中...</div>';
+          }
+          console.warn('[sales/schedules/new] Service items not loaded yet');
+        }
 
         // 今日の日付をデフォルトに設定
         const dateInput = document.getElementById('schedule-date');
