@@ -1,6 +1,12 @@
 @layout('layouts.admin')
 @json('data/meta/wiki_title.json', $title)
 @json('data/meta/wiki_body_class.json', $body_class)
+@json('data/wiki_entries.json', $wikiData)
+
+<script>
+  // WIKIデータをJavaScript変数として設定
+  window.wikiData = @jsonvar $wikiData;
+</script>
 
 <main id="main" class="wiki-page">
   <!-- サイドバー -->
@@ -89,49 +95,72 @@
 
   <!-- メインコンテンツ -->
   <div class="main-content">
-    <div class="wiki-layout">
-      <!-- 中央カラム：詳細表示 -->
-      <div class="wiki-center">
-        <header class="wiki-header">
+    <!-- ヘッダー -->
+    <header class="wiki-page-header">
+      <div class="wiki-header-content">
+        <div>
           <h1>ミセサポ システム用語辞典</h1>
           <p class="wiki-subtitle">開発者ではない事務の方でも理解できるよう、システムの要点と専門用語をわかりやすく説明します。</p>
-        </header>
+        </div>
+        <button class="btn-new-wiki" id="btn-new-wiki" title="新しいWIKIを追加">
+          <i class="fas fa-plus"></i>
+          <span>新規追加</span>
+        </button>
+      </div>
+    </header>
 
-        <div class="wiki-detail" id="wiki-detail">
-          <div class="wiki-welcome">
-            <h2>ようこそ</h2>
-            <p>左側のメニューから項目を選択すると、詳細が表示されます。</p>
-          </div>
+    <!-- 検索・フィルター -->
+    <div class="wiki-filters">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="wiki-search" placeholder="WIKIを検索..." />
+        <button class="search-clear" id="search-clear" style="display: none;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="filter-group">
+        <div class="category-filters" id="category-filters">
+          <button class="filter-chip active" data-category="all">
+            <i class="fas fa-th"></i>
+            <span>すべて</span>
+          </button>
+        </div>
+        
+        <div class="tag-filters" id="tag-filters">
+          <span class="filter-label">タグ:</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- パンくずリスト -->
+    <nav class="breadcrumb" id="breadcrumb" style="display: none;">
+      <a href="#" class="breadcrumb-item" data-action="home">
+        <i class="fas fa-home"></i>
+        <span>ホーム</span>
+      </a>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-current" id="breadcrumb-current"></span>
+    </nav>
+
+    <!-- コンテンツエリア -->
+    <div class="wiki-content-area">
+      <!-- グリッドビュー -->
+      <div class="wiki-grid-view" id="wiki-grid-view">
+        <div class="wiki-grid" id="wiki-grid">
+          <!-- カードはJavaScriptで動的に生成 -->
+        </div>
+        <div class="wiki-empty" id="wiki-empty" style="display: none;">
+          <i class="fas fa-search"></i>
+          <p>検索結果が見つかりませんでした</p>
         </div>
       </div>
 
-      <!-- 右カラム：項目リスト -->
-      <div class="wiki-sidebar">
-        <h2>目次</h2>
-        <nav class="wiki-menu">
-          <div class="wiki-menu-section">
-            <h3>基本情報</h3>
-            <ul>
-              <li><a href="#" data-section="overview" class="wiki-menu-item">システム概要</a></li>
-              <li><a href="#" data-section="roles" class="wiki-menu-item">ロール（役割）について</a></li>
-            </ul>
-          </div>
-
-          <div class="wiki-menu-section">
-            <h3>専門用語</h3>
-            <ul>
-              <li><a href="#" data-section="glossary" class="wiki-menu-item">専門用語辞典</a></li>
-            </ul>
-          </div>
-
-          <div class="wiki-menu-section">
-            <h3>機能説明</h3>
-            <ul>
-              <li><a href="#" data-section="features" class="wiki-menu-item">主要機能の説明</a></li>
-              <li><a href="#" data-section="data" class="wiki-menu-item">データ構造の説明</a></li>
-            </ul>
-          </div>
-        </nav>
+      <!-- 詳細ビュー -->
+      <div class="wiki-detail-view" id="wiki-detail-view" style="display: none;">
+        <div class="wiki-detail-content" id="wiki-detail-content">
+          <!-- 詳細コンテンツはJavaScriptで動的に生成 -->
+        </div>
       </div>
     </div>
   </div>
@@ -506,19 +535,26 @@
   :root {
     --sidebar-width: 240px;
     --sidebar-width-collapsed: 64px;
+    --wiki-primary: #3b82f6;
+    --wiki-primary-hover: #2563eb;
+    --wiki-bg: #f9fafb;
+    --wiki-card-bg: #ffffff;
+    --wiki-border: #e5e7eb;
+    --wiki-text: #111827;
+    --wiki-text-light: #6b7280;
   }
 
   .wiki-page {
     display: flex;
     min-height: 100vh;
-    background: #f9fafb;
+    background: var(--wiki-bg);
   }
 
   /* サイドバー（管理画面と同じスタイル） */
   .sidebar {
     width: var(--sidebar-width);
     background: #fff;
-    border-right: 1px solid #e5e7eb;
+    border-right: 1px solid var(--wiki-border);
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -545,7 +581,7 @@
   }
   .sidebar-header {
     padding: 20px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--wiki-border);
     min-height: 64px;
     display: flex;
     align-items: center;
@@ -566,13 +602,13 @@
   .logo-text {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #111827;
+    color: var(--wiki-text);
     white-space: nowrap;
     transition: opacity 0.3s ease;
   }
   .sidebar-role {
     padding: 8px 20px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--wiki-border);
     transition: opacity 0.3s ease;
   }
   .sidebar-role .role-badge {
@@ -613,7 +649,7 @@
   }
   .nav-item:hover {
     background: #f3f4f6;
-    color: #111827;
+    color: var(--wiki-text);
   }
   .nav-item.active {
     background: var(--primary);
@@ -635,7 +671,7 @@
     transform: translateY(-50%);
     width: 28px;
     height: 28px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--wiki-border);
     border-radius: 50%;
     background: #fff;
     cursor: pointer;
@@ -660,7 +696,7 @@
   }
   .nav-divider {
     height: 1px;
-    background: #e5e7eb;
+    background: var(--wiki-border);
     margin: 8px 12px;
   }
 
@@ -668,129 +704,355 @@
   .main-content {
     flex: 1;
     margin-left: var(--sidebar-width);
-    padding: 24px;
-    background: #f9fafb;
+    padding: 0;
+    background: var(--wiki-bg);
     transition: margin-left 0.3s ease;
   }
   .sidebar.collapsed ~ .main-content {
     margin-left: var(--sidebar-width-collapsed);
   }
 
-  /* WIKIレイアウト（3カラム） */
-  .wiki-layout {
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: 24px;
+  /* ページヘッダー */
+  .wiki-page-header {
+    background: var(--wiki-card-bg);
+    border-bottom: 1px solid var(--wiki-border);
+    padding: 32px 40px;
+    margin-bottom: 0;
+  }
+  .wiki-header-content {
     max-width: 1400px;
     margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
   }
-
-  /* 中央カラム */
-  .wiki-center {
-    background: #fff;
-    border-radius: 12px;
-    padding: 40px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    min-height: calc(100vh - 48px);
-  }
-
-  .wiki-header {
-    text-align: center;
-    margin-bottom: 40px;
-    padding-bottom: 30px;
-    border-bottom: 2px solid #e5e7eb;
-  }
-
-  .wiki-header h1 {
+  .wiki-page-header h1 {
     font-size: 2rem;
-    color: #111827;
-    margin-bottom: 16px;
+    font-weight: 700;
+    color: var(--wiki-text);
+    margin: 0 0 8px 0;
   }
-
   .wiki-subtitle {
     font-size: 1rem;
-    color: #6b7280;
+    color: var(--wiki-text-light);
+    margin: 0;
     line-height: 1.6;
   }
-
-  .wiki-detail {
-    min-height: 400px;
-  }
-
-  .wiki-welcome {
-    text-align: center;
-    padding: 60px 20px;
-    color: #6b7280;
-  }
-
-  .wiki-welcome h2 {
-    font-size: 1.5rem;
-    margin-bottom: 16px;
-    color: #111827;
-  }
-
-  /* 右カラム */
-  .wiki-sidebar {
-    background: #fff;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    height: fit-content;
-    position: sticky;
-    top: 24px;
-  }
-
-  .wiki-sidebar h2 {
-    font-size: 1.25rem;
-    color: #111827;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #e5e7eb;
-  }
-
-  .wiki-menu-section {
-    margin-bottom: 24px;
-  }
-
-  .wiki-menu-section h3 {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 12px;
-  }
-
-  .wiki-menu ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .wiki-menu-item {
-    display: block;
-    padding: 10px 12px;
-    color: #374151;
-    text-decoration: none;
-    border-radius: 6px;
-    transition: all 0.2s;
-    margin-bottom: 4px;
+  .btn-new-wiki {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--wiki-primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
     font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-new-wiki:hover {
+    background: var(--wiki-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   }
 
-  .wiki-menu-item:hover {
+  /* フィルター */
+  .wiki-filters {
+    background: var(--wiki-card-bg);
+    border-bottom: 1px solid var(--wiki-border);
+    padding: 24px 40px;
+  }
+  .search-box {
+    position: relative;
+    max-width: 600px;
+    margin-bottom: 20px;
+  }
+  .search-box i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--wiki-text-light);
+  }
+  .search-box input {
+    width: 100%;
+    padding: 12px 16px 12px 48px;
+    border: 2px solid var(--wiki-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+  .search-box input:focus {
+    outline: none;
+    border-color: var(--wiki-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  .search-clear {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--wiki-text-light);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .search-clear:hover {
+    color: var(--wiki-text);
+  }
+  .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+  }
+  .category-filters,
+  .tag-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .filter-label {
+    font-size: 0.875rem;
+    color: var(--wiki-text-light);
+    font-weight: 500;
+  }
+  .filter-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--wiki-bg);
+    border: 1px solid var(--wiki-border);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    color: var(--wiki-text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-chip:hover {
     background: #f3f4f6;
-    color: #111827;
+    border-color: var(--wiki-primary);
+  }
+  .filter-chip.active {
+    background: var(--wiki-primary);
+    color: #fff;
+    border-color: var(--wiki-primary);
+  }
+  .filter-chip i {
+    font-size: 0.75rem;
   }
 
-  .wiki-menu-item.active {
-    background: #eff6ff;
-    color: #2563eb;
+  /* パンくずリスト */
+  .breadcrumb {
+    background: var(--wiki-card-bg);
+    border-bottom: 1px solid var(--wiki-border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--wiki-primary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+  }
+  .breadcrumb-item:hover {
+    color: var(--wiki-primary-hover);
+    text-decoration: underline;
+  }
+  .breadcrumb-separator {
+    color: var(--wiki-text-light);
+  }
+  .breadcrumb-current {
+    color: var(--wiki-text);
+    font-size: 0.875rem;
     font-weight: 500;
   }
 
-  /* セクションコンテンツ */
-  .wiki-section-content {
+  /* コンテンツエリア */
+  .wiki-content-area {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+
+  /* グリッドビュー */
+  .wiki-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+  }
+  .wiki-card-item {
+    background: var(--wiki-card-bg);
+    border: 1px solid var(--wiki-border);
+    border-radius: 12px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .wiki-card-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--wiki-primary);
+    transform: scaleX(0);
+    transition: transform 0.3s;
+  }
+  .wiki-card-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    border-color: var(--wiki-primary);
+  }
+  .wiki-card-item:hover::before {
+    transform: scaleX(1);
+  }
+  .wiki-card-item.featured {
+    border-color: var(--wiki-primary);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  }
+  .wiki-card-item.featured::before {
+    transform: scaleX(1);
+  }
+  .wiki-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .wiki-card-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--wiki-primary), var(--wiki-primary-hover));
+    color: #fff;
+    border-radius: 10px;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+  .wiki-card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  .wiki-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--wiki-text);
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+  }
+  .wiki-card-description {
+    font-size: 0.9375rem;
+    color: var(--wiki-text-light);
+    line-height: 1.6;
+    margin: 0 0 16px 0;
+  }
+  .wiki-card-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid var(--wiki-border);
+  }
+  .wiki-card-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--wiki-bg);
+    color: var(--wiki-text-light);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    border: 1px solid var(--wiki-border);
+  }
+  .wiki-card-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--wiki-bg);
+    color: var(--wiki-text-light);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: auto;
+  }
+
+  .wiki-empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--wiki-text-light);
+  }
+  .wiki-empty i {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+  .wiki-empty p {
+    font-size: 1.125rem;
+    margin: 0;
+  }
+
+  /* 詳細ビュー */
+  .wiki-detail-view {
+    background: var(--wiki-card-bg);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .wiki-detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--wiki-border);
+  }
+  .wiki-detail-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--wiki-bg);
+    border: 1px solid var(--wiki-border);
+    border-radius: 8px;
+    color: var(--wiki-text);
+    text-decoration: none;
+    font-size: 0.9375rem;
+    transition: all 0.2s;
+  }
+  .wiki-detail-back:hover {
+    background: #f3f4f6;
+    border-color: var(--wiki-primary);
+    color: var(--wiki-primary);
+  }
+  .wiki-detail-content {
     animation: fadeIn 0.3s ease;
   }
 
@@ -805,74 +1067,69 @@
     }
   }
 
+  /* セクションコンテンツ */
+  .wiki-section-content {
+    animation: fadeIn 0.3s ease;
+  }
   .wiki-section-content h2 {
     font-size: 2rem;
-    color: #111827;
+    color: var(--wiki-text);
     margin-bottom: 24px;
     padding-bottom: 12px;
-    border-bottom: 2px solid #e5e7eb;
+    border-bottom: 2px solid var(--wiki-border);
   }
-
   .wiki-intro {
     font-size: 1.125rem;
-    color: #6b7280;
+    color: var(--wiki-text-light);
     margin-bottom: 24px;
     line-height: 1.6;
   }
-
   .wiki-card,
   .feature-card,
   .data-card {
-    background: #f9fafb;
+    background: var(--wiki-bg);
     padding: 24px;
     border-radius: 8px;
     margin-bottom: 24px;
-    border-left: 4px solid #2563eb;
+    border-left: 4px solid var(--wiki-primary);
   }
-
   .wiki-card h3,
   .feature-card h3,
   .data-card h3 {
     font-size: 1.5rem;
-    color: #111827;
+    color: var(--wiki-text);
     margin-bottom: 12px;
   }
-
   .wiki-card h4 {
     font-size: 1.25rem;
     color: #374151;
     margin-top: 20px;
     margin-bottom: 12px;
   }
-
   .wiki-card ul,
   .feature-card ul,
   .data-card ul {
     margin-left: 20px;
     line-height: 1.8;
   }
-
   .wiki-card li,
   .feature-card li,
   .data-card li {
     margin-bottom: 8px;
   }
-
   .roles-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 24px;
     margin-bottom: 32px;
   }
-
   .role-card {
     background: #fff;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--wiki-border);
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   }
-
   .role-badge {
     display: inline-block;
     padding: 6px 12px;
@@ -881,53 +1138,43 @@
     font-weight: 600;
     margin-bottom: 12px;
   }
-
   .role-badge.customer {
     background: #dbeafe;
     color: #1e40af;
   }
-
   .role-badge.staff {
     background: #dcfce7;
     color: #166534;
   }
-
   .role-badge.concierge {
     background: #fef3c7;
     color: #92400e;
   }
-
   .role-badge.admin {
     background: #e0e7ff;
     color: #3730a3;
   }
-
   .role-badge.developer {
     background: #fce7f3;
     color: #831843;
   }
-
   .role-badge.master {
     background: #fef2f2;
     color: #991b1b;
   }
-
   .role-card h3 {
     font-size: 1.25rem;
-    color: #111827;
+    color: var(--wiki-text);
     margin-bottom: 12px;
   }
-
   .role-card p {
     margin-bottom: 12px;
     line-height: 1.6;
   }
-
   .role-card ul {
     margin-left: 20px;
     line-height: 1.8;
   }
-
   .wiki-note {
     background: #fef3c7;
     border-left: 4px solid #f59e0b;
@@ -935,13 +1182,11 @@
     border-radius: 8px;
     margin-top: 32px;
   }
-
   .wiki-note h4 {
     font-size: 1.125rem;
     color: #92400e;
     margin-bottom: 12px;
   }
-
   .hierarchy {
     display: flex;
     flex-direction: column;
@@ -949,84 +1194,83 @@
     gap: 8px;
     margin-top: 16px;
   }
-
   .hierarchy-item {
     background: #fff;
     padding: 12px 24px;
     border-radius: 6px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--wiki-border);
     font-weight: 500;
   }
-
   .hierarchy-arrow {
-    color: #6b7280;
+    color: var(--wiki-text-light);
     font-size: 1.5rem;
   }
-
   .glossary-list {
     display: flex;
     flex-direction: column;
     gap: 24px;
   }
-
   .glossary-item {
     background: #fff;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--wiki-border);
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   }
-
   .glossary-item h3 {
     font-size: 1.5rem;
-    color: #2563eb;
+    color: var(--wiki-primary);
     margin-bottom: 12px;
   }
-
   .glossary-item p {
     margin-bottom: 8px;
     line-height: 1.6;
   }
-
   .glossary-item strong {
-    color: #111827;
+    color: var(--wiki-text);
     font-weight: 600;
   }
 
+  /* レスポンシブ */
   @media (max-width: 1200px) {
-    .wiki-layout {
-      grid-template-columns: 1fr;
-    }
-
-    .wiki-sidebar {
-      position: static;
-      order: -1;
+    .wiki-grid {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     }
   }
 
   @media (max-width: 768px) {
     .main-content {
       margin-left: 0;
-      padding: 16px;
     }
-
     .sidebar {
       transform: translateX(-100%);
     }
-
     .sidebar.collapsed {
       transform: translateX(0);
       width: var(--sidebar-width-collapsed);
     }
-
     .sidebar.collapsed ~ .main-content {
       margin-left: var(--sidebar-width-collapsed);
     }
-
-    .wiki-center {
+    .wiki-page-header {
+      padding: 24px 20px;
+    }
+    .wiki-header-content {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .wiki-filters {
+      padding: 20px;
+    }
+    .wiki-content-area {
+      padding: 24px 20px;
+    }
+    .wiki-grid {
+      grid-template-columns: 1fr;
+    }
+    .wiki-detail-view {
       padding: 24px;
     }
-
     .roles-grid {
       grid-template-columns: 1fr;
     }
@@ -1093,39 +1337,285 @@
     });
   }
 
-  // WIKIメニューのクリック処理
-  const menuItems = document.querySelectorAll('.wiki-menu-item');
-  const detailContainer = document.getElementById('wiki-detail');
-  const dataContainer = document.getElementById('wiki-data');
+  // WIKIデータの管理
+  let wikiData = window.wikiData || { entries: [], categories: [] };
+  let currentView = 'grid'; // 'grid' or 'detail'
+  let currentEntry = null;
+  let activeCategory = 'all';
+  let activeTags = new Set();
+  let searchQuery = '';
 
-  menuItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      
-      // アクティブ状態を更新
-      menuItems.forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
-      
-      // セクションを取得
-      const section = item.getAttribute('data-section');
-      const sectionContent = dataContainer.querySelector(`[data-section="${section}"]`);
-      
-      if (sectionContent) {
-        // 詳細を表示
-        detailContainer.innerHTML = sectionContent.innerHTML;
-        
-        // スクロールをトップに
-        detailContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+  // カテゴリフィルターの生成
+  function renderCategoryFilters() {
+    const container = document.getElementById('category-filters');
+    if (!container) return;
+
+    // "すべて"ボタンは既にあるので、カテゴリを追加
+    wikiData.categories.forEach(category => {
+      const button = document.createElement('button');
+      button.className = 'filter-chip';
+      button.setAttribute('data-category', category.id);
+      button.innerHTML = `<i class="${category.icon}"></i><span>${category.name}</span>`;
+      button.style.borderLeftColor = category.color;
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.category-filters .filter-chip').forEach(chip => {
+          chip.classList.remove('active');
+        });
+        button.classList.add('active');
+        activeCategory = category.id;
+        renderWikiGrid();
+      });
+      container.appendChild(button);
     });
+  }
+
+  // タグフィルターの生成
+  function renderTagFilters() {
+    const container = document.getElementById('tag-filters');
+    if (!container) return;
+
+    const allTags = new Set();
+    wikiData.entries.forEach(entry => {
+      entry.tags.forEach(tag => allTags.add(tag));
+    });
+
+    allTags.forEach(tag => {
+      const button = document.createElement('button');
+      button.className = 'filter-chip';
+      button.setAttribute('data-tag', tag);
+      button.textContent = tag;
+      button.addEventListener('click', () => {
+        button.classList.toggle('active');
+        if (button.classList.contains('active')) {
+          activeTags.add(tag);
+        } else {
+          activeTags.delete(tag);
+        }
+        renderWikiGrid();
+      });
+      container.appendChild(button);
+    });
+  }
+
+  // フィルタリングされたエントリを取得
+  function getFilteredEntries() {
+    return wikiData.entries.filter(entry => {
+      // カテゴリフィルター
+      if (activeCategory !== 'all' && entry.category !== activeCategory) {
+        return false;
+      }
+
+      // タグフィルター
+      if (activeTags.size > 0) {
+        const hasActiveTag = entry.tags.some(tag => activeTags.has(tag));
+        if (!hasActiveTag) return false;
+      }
+
+      // 検索フィルター
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesTitle = entry.title.toLowerCase().includes(query);
+        const matchesDescription = entry.description.toLowerCase().includes(query);
+        const matchesTags = entry.tags.some(tag => tag.toLowerCase().includes(query));
+        if (!matchesTitle && !matchesDescription && !matchesTags) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  // WIKIグリッドのレンダリング
+  function renderWikiGrid() {
+    const grid = document.getElementById('wiki-grid');
+    const empty = document.getElementById('wiki-empty');
+    if (!grid || !empty) return;
+
+    const entries = getFilteredEntries();
+
+    if (entries.length === 0) {
+      grid.style.display = 'none';
+      empty.style.display = 'block';
+      return;
+    }
+
+    grid.style.display = 'grid';
+    empty.style.display = 'none';
+
+    grid.innerHTML = entries.map(entry => {
+      const category = wikiData.categories.find(c => c.id === entry.category) || {};
+      const categoryColor = category.color || '#6b7280';
+      
+      return `
+        <div class="wiki-card-item ${entry.featured ? 'featured' : ''}" data-entry-id="${entry.id}">
+          <div class="wiki-card-header">
+            <div class="wiki-card-icon" style="background: linear-gradient(135deg, ${categoryColor}, ${categoryColor}dd);">
+              <i class="${entry.icon}"></i>
+            </div>
+            ${entry.featured ? '<span class="wiki-card-badge"><i class="fas fa-star"></i> おすすめ</span>' : ''}
+          </div>
+          <h3 class="wiki-card-title">${entry.title}</h3>
+          <p class="wiki-card-description">${entry.description}</p>
+          <div class="wiki-card-footer">
+            ${entry.tags.map(tag => `<span class="wiki-card-tag">${tag}</span>`).join('')}
+            <span class="wiki-card-category" style="color: ${categoryColor};">
+              <i class="${category.icon || 'fas fa-folder'}"></i>
+              ${entry.category}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // カードクリックイベント
+    grid.querySelectorAll('.wiki-card-item').forEach(card => {
+      card.addEventListener('click', () => {
+        const entryId = card.getAttribute('data-entry-id');
+        showWikiDetail(entryId);
+      });
+    });
+  }
+
+  // WIKI詳細の表示
+  function showWikiDetail(entryId) {
+    const entry = wikiData.entries.find(e => e.id === entryId);
+    if (!entry) return;
+
+    currentEntry = entry;
+    currentView = 'detail';
+
+    // ビューの切り替え
+    document.getElementById('wiki-grid-view').style.display = 'none';
+    document.getElementById('wiki-detail-view').style.display = 'block';
+
+    // パンくずリスト
+    const breadcrumb = document.getElementById('breadcrumb');
+    const breadcrumbCurrent = document.getElementById('breadcrumb-current');
+    if (breadcrumb && breadcrumbCurrent) {
+      breadcrumb.style.display = 'flex';
+      breadcrumbCurrent.textContent = entry.title;
+    }
+
+    // 詳細コンテンツの取得
+    const dataContainer = document.getElementById('wiki-data');
+    const sectionContent = dataContainer.querySelector(`[data-section="${entry.content}"]`);
+    
+    const detailContent = document.getElementById('wiki-detail-content');
+    if (detailContent && sectionContent) {
+      detailContent.innerHTML = `
+        <div class="wiki-detail-header">
+          <a href="#" class="wiki-detail-back" id="wiki-detail-back">
+            <i class="fas fa-arrow-left"></i>
+            <span>一覧に戻る</span>
+          </a>
+        </div>
+        ${sectionContent.innerHTML}
+      `;
+
+      // 戻るボタンのイベント
+      const backButton = document.getElementById('wiki-detail-back');
+      if (backButton) {
+        backButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          showWikiGrid();
+        });
+      }
+    }
+
+    // URLハッシュを更新
+    window.history.pushState({ entryId }, '', `#${entryId}`);
+  }
+
+  // WIKIグリッドの表示
+  function showWikiGrid() {
+    currentView = 'grid';
+    currentEntry = null;
+
+    // ビューの切り替え
+    document.getElementById('wiki-grid-view').style.display = 'block';
+    document.getElementById('wiki-detail-view').style.display = 'none';
+
+    // パンくずリストを非表示
+    const breadcrumb = document.getElementById('breadcrumb');
+    if (breadcrumb) {
+      breadcrumb.style.display = 'none';
+    }
+
+    // URLハッシュをクリア
+    window.history.pushState({}, '', window.location.pathname);
+  }
+
+  // 検索機能
+  const searchInput = document.getElementById('wiki-search');
+  const searchClear = document.getElementById('search-clear');
+  
+  if (searchInput) {
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchQuery = e.target.value;
+        if (searchQuery) {
+          searchClear.style.display = 'block';
+        } else {
+          searchClear.style.display = 'none';
+        }
+        renderWikiGrid();
+      }, 300);
+    });
+  }
+
+  if (searchClear) {
+    searchClear.addEventListener('click', () => {
+      searchInput.value = '';
+      searchQuery = '';
+      searchClear.style.display = 'none';
+      renderWikiGrid();
+    });
+  }
+
+  // 新規追加ボタン（将来の機能）
+  const btnNewWiki = document.getElementById('btn-new-wiki');
+  if (btnNewWiki) {
+    btnNewWiki.addEventListener('click', () => {
+      alert('新規WIKI追加機能は今後実装予定です。');
+    });
+  }
+
+  // パンくずリストのホームボタン
+  const breadcrumbHome = document.querySelector('.breadcrumb-item[data-action="home"]');
+  if (breadcrumbHome) {
+    breadcrumbHome.addEventListener('click', (e) => {
+      e.preventDefault();
+      showWikiGrid();
+    });
+  }
+
+  // URLハッシュから初期表示
+  window.addEventListener('popstate', () => {
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+      const entry = wikiData.entries.find(e => e.id === hash);
+      if (entry) {
+        showWikiDetail(hash);
+        return;
+      }
+    }
+    showWikiGrid();
   });
+
+  // 初期化
+  renderCategoryFilters();
+  renderTagFilters();
+  renderWikiGrid();
 
   // URLハッシュから初期表示
   const hash = window.location.hash.replace('#', '');
   if (hash) {
-    const item = document.querySelector(`[data-section="${hash}"]`);
-    if (item) {
-      item.click();
+    const entry = wikiData.entries.find(e => e.id === hash);
+    if (entry) {
+      showWikiDetail(hash);
     }
   }
 })();

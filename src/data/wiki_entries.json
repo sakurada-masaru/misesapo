@@ -1,0 +1,85 @@
+{
+  "entries": [
+    {
+      "id": "overview",
+      "title": "システム概要",
+      "category": "基本情報",
+      "tags": ["基本", "概要", "システム"],
+      "description": "ミセサポとは何か、主な機能について説明します",
+      "icon": "fas fa-info-circle",
+      "content": "overview",
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-01",
+      "featured": true
+    },
+    {
+      "id": "roles",
+      "title": "ロール（役割）について",
+      "category": "基本情報",
+      "tags": ["基本", "ロール", "権限"],
+      "description": "システムで使われるロール（役割）と権限について説明します",
+      "icon": "fas fa-users-cog",
+      "content": "roles",
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-01",
+      "featured": true
+    },
+    {
+      "id": "glossary",
+      "title": "専門用語辞典",
+      "category": "専門用語",
+      "tags": ["用語", "辞典", "専門"],
+      "description": "システムで使われる専門用語をわかりやすく説明します",
+      "icon": "fas fa-book",
+      "content": "glossary",
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-01",
+      "featured": true
+    },
+    {
+      "id": "features",
+      "title": "主要機能の説明",
+      "category": "機能説明",
+      "tags": ["機能", "使い方"],
+      "description": "システムの主要な機能について説明します",
+      "icon": "fas fa-cogs",
+      "content": "features",
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-01",
+      "featured": false
+    },
+    {
+      "id": "data",
+      "title": "データ構造の説明",
+      "category": "機能説明",
+      "tags": ["データ", "構造", "技術"],
+      "description": "システムで管理しているデータの種類と構造について説明します",
+      "icon": "fas fa-database",
+      "content": "data",
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-01",
+      "featured": false
+    }
+  ],
+  "categories": [
+    {
+      "id": "基本情報",
+      "name": "基本情報",
+      "icon": "fas fa-info-circle",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "専門用語",
+      "name": "専門用語",
+      "icon": "fas fa-book",
+      "color": "#10b981"
+    },
+    {
+      "id": "機能説明",
+      "name": "機能説明",
+      "icon": "fas fa-cogs",
+      "color": "#f59e0b"
+    }
+  ]
+}
+
