@@ -433,9 +433,32 @@
       const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
       // データ読み込み
-      // service_items は従来どおりローカルJSONから
-      if (typeof service_items_data !== 'undefined') {
-        serviceItems = service_items_data;
+      // サービスマスタは、まずAWSのサービスAPIから取得し、
+      // 失敗した場合にのみローカルJSON（service_items_data）をフォールバックとする
+      async function loadServicesFromApi() {
+        try {
+          // AWSServicesAPI が読み込まれていればそれを利用
+          if (window.AWSServicesAPI && window.AWSServicesAPI.loadServices) {
+            const data = await window.AWSServicesAPI.loadServices();
+            // APIの戻り値が配列または { items: [] } のどちらでも対応
+            if (Array.isArray(data)) {
+              serviceItems = data;
+            } else if (Array.isArray(data.items)) {
+              serviceItems = data.items;
+            } else {
+              serviceItems = [];
+            }
+          } else {
+            serviceItems = [];
+          }
+        } catch (error) {
+          console.warn('[sales/schedules/new] Failed to load services from API, using local service_items_data if available:', error);
+          if (typeof service_items_data !== 'undefined') {
+            serviceItems = service_items_data;
+          } else {
+            serviceItems = [];
+          }
+        }
       }
 
       // 顧客・店舗データは、可能であればバックエンドAPIから取得し、
@@ -694,7 +717,10 @@
         await loadClientsFromApi();
         initClientSelect();
 
-        // 最初の作業項目を追加
+        // サービスマスタをAPI（またはローカルJSON）から読み込み
+        await loadServicesFromApi();
+
+        // 最初の作業項目を追加（serviceItems を使ってプルダウンを生成）
         addCleaningItem();
 
         // 「項目を追加」ボタン
