@@ -1092,18 +1092,26 @@
     const status = document.getElementById('status-filter').value;
 
     filteredSchedules = allSchedules.filter(s => {
-      const matchDate = (!dateFrom || s.scheduled_date >= dateFrom) && (!dateTo || s.scheduled_date <= dateTo);
-      const matchStore = !storeId || s.store_id === storeId;
-      const matchWorker = !workerId || s.worker_id === workerId;
+      // date または scheduled_date フィールドに対応
+      const scheduleDate = s.date || s.scheduled_date || '';
+      const matchDate = (!dateFrom || scheduleDate >= dateFrom) && (!dateTo || scheduleDate <= dateTo);
+      // store_id または client_id に対応
+      const scheduleStoreId = s.store_id || s.client_id;
+      const matchStore = !storeId || scheduleStoreId === storeId;
+      // worker_id または assigned_to に対応
+      const scheduleWorkerId = s.worker_id || s.assigned_to;
+      const matchWorker = !workerId || scheduleWorkerId === workerId;
       const matchStatus = !status || s.status === status;
       return matchDate && matchStore && matchWorker && matchStatus;
     });
 
     // 日付順ソート
     filteredSchedules.sort((a, b) => {
-      const dateA = `${a.scheduled_date} ${a.scheduled_time || '00:00'}`;
-      const dateB = `${b.scheduled_date} ${b.scheduled_time || '00:00'}`;
-      return dateA.localeCompare(dateB);
+      const dateA = a.date || a.scheduled_date || '';
+      const dateB = b.date || b.scheduled_date || '';
+      const timeA = a.time_slot || a.scheduled_time || '00:00';
+      const timeB = b.time_slot || b.scheduled_time || '00:00';
+      return `${dateA} ${timeA}`.localeCompare(`${dateB} ${timeB}`);
     });
 
     currentPage = 1;
@@ -1122,13 +1130,17 @@
     }
 
     tbody.innerHTML = pageSchedules.map(schedule => {
-      const store = DataUtils.findStore(allStores, schedule.store_id) || {};
-      const worker = allWorkers.find(w => w.id === schedule.worker_id);
-      const isDraft = schedule.status === 'draft';
-      
       // 正規化されたスケジュールデータを使用
       const normalized = DataUtils.normalizeSchedule(schedule);
-      const displayStoreName = DataUtils.getStoreName(allStores, schedule.store_id, schedule.store_name);
+      // store_id または client_id に対応（営業側は client_id を使用）
+      const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
+      const store = DataUtils.findStore(allStores, storeId) || {};
+      // worker_id または assigned_to に対応
+      const workerId = normalized.worker_id || schedule.worker_id || schedule.assigned_to;
+      const worker = allWorkers.find(w => w.id === workerId);
+      const isDraft = schedule.status === 'draft';
+      
+      const displayStoreName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
       
       return `
         <tr data-id="${schedule.id}" class="${isDraft ? 'draft-row' : ''}">
@@ -1349,15 +1361,22 @@
     const schedule = allSchedules.find(s => s.id === id);
     if (!schedule) return;
 
+    // 正規化されたスケジュールデータを使用
+    const normalized = DataUtils.normalizeSchedule(schedule);
+    const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
+    const date = normalized.date || schedule.date || schedule.scheduled_date || '';
+    const time = normalized.time || schedule.time_slot || schedule.scheduled_time || '';
+    const workerId = normalized.worker_id || schedule.worker_id || schedule.assigned_to || '';
+
     document.getElementById('dialog-title').textContent = 'スケジュール編集';
     document.getElementById('schedule-id').value = schedule.id;
-    document.getElementById('schedule-store').value = schedule.store_id || '';
-    document.getElementById('schedule-date').value = schedule.scheduled_date || '';
-    document.getElementById('schedule-time').value = schedule.scheduled_time || '';
-    document.getElementById('schedule-duration').value = schedule.duration_minutes || 60;
-    document.getElementById('schedule-worker').value = schedule.worker_id || '';
+    document.getElementById('schedule-store').value = storeId || '';
+    document.getElementById('schedule-date').value = date;
+    document.getElementById('schedule-time').value = time;
+    document.getElementById('schedule-duration').value = schedule.duration_minutes || normalized.duration || 60;
+    document.getElementById('schedule-worker').value = workerId;
     document.getElementById('schedule-status').value = schedule.status || 'scheduled';
-    document.getElementById('schedule-notes').value = schedule.notes || '';
+    document.getElementById('schedule-notes').value = schedule.notes || normalized.notes || '';
     formStatus.textContent = '';
     scheduleDialog.showModal();
   };
@@ -1438,8 +1457,11 @@
       dayNum.textContent = day;
       dayCell.appendChild(dayNum);
       
-      // その日のスケジュール
-      const daySchedules = allSchedules.filter(s => s.scheduled_date === dateStr);
+      // その日のスケジュール（date または scheduled_date フィールドに対応）
+      const daySchedules = allSchedules.filter(s => {
+        const scheduleDate = s.date || s.scheduled_date;
+        return scheduleDate === dateStr;
+      });
       if (daySchedules.length > 0) {
         const eventsContainer = document.createElement('div');
         eventsContainer.className = 'day-events';
@@ -1449,7 +1471,8 @@
           const event = document.createElement('div');
           const normalized = DataUtils.normalizeSchedule(schedule);
           event.className = `day-event status-${normalized.status}`;
-          const displayName = DataUtils.getStoreName(allStores, schedule.store_id, schedule.store_name);
+          const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
+          const displayName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
           event.textContent = displayName;
           event.title = `${normalized.time || ''} ${displayName}`;
           event.onclick = () => openEditDialog(schedule);
