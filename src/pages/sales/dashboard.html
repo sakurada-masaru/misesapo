@@ -179,7 +179,59 @@
         </div>
       </section>
 
-      <!-- 画面4: 案件管理（仮見積もりと仮押さえを統合） -->
+      <!-- 画面4: スケジュール -->
+      <section class="swipe-screen" data-screen="schedule-list">
+        <header class="screen-header">
+          <h1>スケジュール</h1>
+        </header>
+        
+        <!-- 週ストリップ -->
+        <div class="week-strip" id="week-strip">
+          <div class="week-days" id="week-days"></div>
+        </div>
+
+        <!-- スケジュールビュー -->
+        <div class="schedule-view" id="schedule-view">
+          <div class="loading">読み込み中...</div>
+        </div>
+
+        <!-- イベント詳細シート -->
+        <div class="event-sheet" id="event-sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-content">
+            <h2 id="event-title">-</h2>
+            <div class="event-info">
+              <div class="event-info-item">
+                <i class="fas fa-calendar"></i>
+                <span id="event-date">-</span>
+              </div>
+              <div class="event-info-item">
+                <i class="fas fa-clock"></i>
+                <span id="event-time">-</span>
+              </div>
+              <div class="event-info-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="event-address">-</span>
+              </div>
+              <div class="event-info-item">
+                <i class="fas fa-user"></i>
+                <span id="event-worker">-</span>
+              </div>
+              <div class="event-info-item" id="event-notes-item" style="display: none;">
+                <i class="fas fa-sticky-note"></i>
+                <span id="event-notes">-</span>
+              </div>
+            </div>
+            <div class="event-status">
+              <span class="event-color" id="event-color"></span>
+              <span class="event-status-badge" id="event-status">-</span>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-overlay" id="sheet-overlay"></div>
+      </section>
+
+      <!-- 画面5: 案件管理（仮見積もりと仮押さえを統合） -->
       <section class="swipe-screen" data-screen="case">
         <header class="screen-header">
           <h1>案件管理</h1>
@@ -275,10 +327,10 @@
         <i class="fas fa-user-plus"></i>
       <span>顧客登録</span>
     </button>
-    <a href="/sales/schedule.html" class="tab">
+    <button class="tab" data-screen="schedule-list">
         <i class="fas fa-calendar"></i>
       <span>スケジュール</span>
-    </a>
+    </button>
     <button class="tab" data-screen="case">
         <i class="fas fa-briefcase"></i>
       <span>案件管理</span>
@@ -943,6 +995,279 @@
       height: 100%;
     }
 
+    /* スケジュール画面のスタイル */
+    [data-screen="schedule-list"] {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* 週ストリップ */
+    .week-strip {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 8px 0;
+      flex-shrink: 0;
+    }
+    .week-days {
+      display: flex;
+    }
+    .w-day {
+      flex: 1;
+      text-align: center;
+      padding: 4px;
+      cursor: pointer;
+    }
+    .w-day-name {
+      font-size: 0.7rem;
+      color: #70757a;
+      margin-bottom: 4px;
+    }
+    .w-day.sun .w-day-name { color: #d93025; }
+    .w-day.sat .w-day-name { color: var(--primary, #ff679c); }
+    .w-day-num {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: #202124;
+      border-radius: 50%;
+      position: relative;
+    }
+    .w-day:active .w-day-num {
+      background: #f1f3f4;
+    }
+    .w-day.today .w-day-num {
+      background: var(--primary, #ff679c);
+      color: #fff;
+      font-weight: 500;
+    }
+    .w-day.selected .w-day-num {
+      border: 2px solid var(--primary, #ff679c);
+    }
+    .w-day.today.selected .w-day-num {
+      border: none;
+    }
+    .w-day.has-event .w-day-num::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      width: 4px;
+      height: 4px;
+      background: var(--primary, #ff679c);
+      border-radius: 50%;
+    }
+    .w-day.today.has-event .w-day-num::after {
+      background: #fff;
+    }
+
+    /* スケジュールビュー */
+    .schedule-view {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 0 80px;
+    }
+    .day-section {
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .day-header {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 10;
+    }
+    .day-date {
+      width: 48px;
+      text-align: center;
+    }
+    .day-date .num {
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: #202124;
+    }
+    .day-date .dow {
+      font-size: 0.75rem;
+      color: #70757a;
+    }
+    .day-date.today .num {
+      background: var(--primary, #ff679c);
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+    .day-date.today .dow {
+      color: var(--primary, #ff679c);
+    }
+    .day-events {
+      flex: 1;
+      padding-left: 16px;
+    }
+    .event-card {
+      display: flex;
+      align-items: flex-start;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      border-left: 4px solid var(--primary, #ff679c);
+    }
+    .event-card:active {
+      background: #f8f9fa;
+    }
+    .event-card.completed {
+      border-left-color: #34a853;
+    }
+    .event-card.draft {
+      border-left-color: #ffc107;
+      background: #fffde7;
+    }
+    .event-time-col {
+      width: 56px;
+      flex-shrink: 0;
+    }
+    .event-time-start {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #202124;
+    }
+    .event-time-end {
+      font-size: 0.75rem;
+      color: #5f6368;
+    }
+    .event-details {
+      flex: 1;
+      min-width: 0;
+    }
+    .event-name {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #202124;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .event-location {
+      font-size: 0.75rem;
+      color: #5f6368;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .no-events {
+      padding: 24px 16px;
+      text-align: center;
+      color: #5f6368;
+      font-size: 0.875rem;
+    }
+
+    /* イベント詳細シート */
+    .event-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      z-index: 200;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .event-sheet.open {
+      transform: translateY(0);
+    }
+    .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 199;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .sheet-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .sheet-handle {
+      width: 32px;
+      height: 4px;
+      background: #dadce0;
+      border-radius: 2px;
+      margin: 12px auto;
+    }
+    .event-info {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .event-info-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .event-info-item i {
+      width: 20px;
+      color: #5f6368;
+      margin-top: 2px;
+    }
+    .event-info-item span {
+      font-size: 0.9rem;
+      color: #202124;
+    }
+    .event-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .event-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      background: var(--primary, #ff679c);
+      flex-shrink: 0;
+    }
+    .event-color.completed {
+      background: #34a853;
+    }
+    .event-color.draft {
+      background: #ffc107;
+    }
+    .event-status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: rgba(255, 103, 156, 0.1);
+      color: var(--primary, #ff679c);
+    }
+    .event-status-badge.completed {
+      background: #e6f4ea;
+      color: #137333;
+    }
+    .event-status-badge.draft {
+      background: #fff8e1;
+      color: #f57c00;
+    }
+
     @media (min-width: 600px) {
       .sales-app {
         max-width: 480px;
@@ -964,8 +1289,11 @@
     
     let allStores = [];
     let allSchedules = [];
+    let allWorkers = [];
     let selectedServices = [];
     let serviceItems = [];
+    let selectedScheduleDate = new Date();
+    const dowClass = ['sun', '', '', '', '', '', 'sat'];
 
     document.addEventListener('DOMContentLoaded', async () => {
       setupTabs();
@@ -1011,6 +1339,13 @@
       if (screenName === 'case') {
         setupCaseTabs();
         loadServiceItems();
+      }
+      
+      // スケジュール画面に切り替えた時にスケジュールを読み込み
+      if (screenName === 'schedule-list') {
+        loadScheduleData();
+        renderScheduleWeekStrip();
+        renderScheduleView();
       }
     }
     
@@ -1090,6 +1425,15 @@
         
         allStores = await storesRes.json();
         allSchedules = await schedulesRes.json();
+        
+        // 清掃員データも読み込み（スケジュール表示用）
+        try {
+          const workersRes = await fetch(`${API_BASE}/workers`);
+          allWorkers = await workersRes.json();
+        } catch (error) {
+          console.warn('Failed to load workers:', error);
+          allWorkers = [];
+        }
         
         // 統計更新
         const today = new Date().toISOString().split('T')[0];
@@ -1733,6 +2077,189 @@
         totalEl.textContent = `¥${total.toLocaleString()}`;
       }
     }
+
+    // スケジュール機能
+    async function loadScheduleData() {
+      try {
+        const [schedulesRes, workersRes] = await Promise.all([
+          fetch(`${API_BASE}/schedules`).catch(() => ({ ok: false })),
+          fetch(`${API_BASE}/workers`).catch(() => ({ ok: false }))
+        ]);
+        
+        if (schedulesRes.ok) {
+          allSchedules = await schedulesRes.json();
+        }
+        if (workersRes.ok) {
+          allWorkers = await workersRes.json();
+        }
+      } catch (error) {
+        console.error('Failed to load schedule data:', error);
+      }
+    }
+
+    function getScheduleStoreName(storeId) {
+      if (!storeId) return '不明';
+      const store = allStores.find(s => s.id === storeId);
+      return store ? store.name : '不明';
+    }
+
+    function getScheduleStoreAddress(storeId) {
+      if (!storeId) return '';
+      const store = allStores.find(s => s.id === storeId);
+      if (!store) return '';
+      return `${store.pref || ''}${store.city || ''}${store.address1 || ''}`;
+    }
+
+    function getScheduleWorkerName(workerId) {
+      if (!workerId) return '未割当';
+      const worker = allWorkers.find(w => w.id === workerId);
+      return worker ? worker.name : '不明';
+    }
+
+    function getWeekStart(d) {
+      const date = new Date(d);
+      date.setDate(date.getDate() - date.getDay());
+      return date;
+    }
+
+    function renderScheduleWeekStrip() {
+      const ws = getWeekStart(selectedScheduleDate);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const eventDates = new Set(allSchedules.map(s => s.date || s.scheduled_date));
+      
+      const weekDaysEl = document.getElementById('week-days');
+      if (!weekDaysEl) return;
+      
+      let html = '';
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(ws);
+        d.setDate(d.getDate() + i);
+        const dateStr = d.toISOString().split('T')[0];
+        const isToday = d.toDateString() === today.toDateString();
+        const isSelected = d.toDateString() === selectedScheduleDate.toDateString();
+        const hasEvent = eventDates.has(dateStr);
+        
+        html += `
+          <div class="w-day ${dowClass[i]} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${hasEvent ? 'has-event' : ''}" data-date="${dateStr}">
+            <div class="w-day-name">${weekdays[i]}</div>
+            <div class="w-day-num">${d.getDate()}</div>
+          </div>
+        `;
+      }
+      weekDaysEl.innerHTML = html;
+
+      // 日付選択イベント
+      weekDaysEl.querySelectorAll('.w-day').forEach(day => {
+        day.addEventListener('click', () => {
+          if (day.dataset.date) {
+            selectedScheduleDate = new Date(day.dataset.date);
+            renderScheduleWeekStrip();
+            renderScheduleView();
+          }
+        });
+      });
+    }
+
+    function renderScheduleView() {
+      const container = document.getElementById('schedule-view');
+      if (!container) return;
+
+      const ws = getWeekStart(selectedScheduleDate);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      
+      let html = '';
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(ws);
+        d.setDate(d.getDate() + i);
+        const dateStr = d.toISOString().split('T')[0];
+        const isToday = d.toDateString() === today.toDateString();
+        
+        // スケジュールを取得（date または scheduled_date フィールドに対応）
+        let daySchedules = allSchedules.filter(s => {
+          const scheduleDate = s.date || s.scheduled_date;
+          return scheduleDate === dateStr;
+        });
+        
+        // 時間でソート
+        daySchedules.sort((a, b) => {
+          const timeA = a.time_slot || a.scheduled_time || '';
+          const timeB = b.time_slot || b.scheduled_time || '';
+          return timeA.localeCompare(timeB);
+        });
+        
+        html += `
+          <div class="day-section">
+            <div class="day-header">
+              <div class="day-date ${isToday ? 'today' : ''}">
+                <div class="num">${d.getDate()}</div>
+                <div class="dow">${weekdays[d.getDay()]}</div>
+              </div>
+              <div class="day-events">
+                ${daySchedules.length > 0 ? daySchedules.map(s => {
+                  const timeSlot = s.time_slot || s.scheduled_time || '-';
+                  const [startTime, endTime] = timeSlot.includes('-') ? timeSlot.split('-') : [timeSlot, ''];
+                  const statusClass = s.status === 'completed' ? 'completed' : (s.status === 'draft' ? 'draft' : '');
+                  const storeName = getScheduleStoreName(s.client_id || s.store_id);
+                  const storeAddress = getScheduleStoreAddress(s.client_id || s.store_id);
+                  
+                  return `
+                    <div class="event-card ${statusClass}" onclick="showScheduleEvent('${s.id}')">
+                      <div class="event-time-col">
+                        <div class="event-time-start">${startTime}</div>
+                        <div class="event-time-end">${endTime || ''}</div>
+                      </div>
+                      <div class="event-details">
+                        <div class="event-name">${escapeHtml(storeName)}</div>
+                        <div class="event-location">${escapeHtml(storeAddress)}</div>
+                      </div>
+                    </div>
+                  `;
+                }).join('') : '<div class="no-events">予定なし</div>'}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    window.showScheduleEvent = function(scheduleId) {
+      const s = allSchedules.find(x => x.id === scheduleId);
+      if (!s) return;
+      
+      const scheduleDate = s.date || s.scheduled_date;
+      const d = new Date(scheduleDate);
+      const timeSlot = s.time_slot || s.scheduled_time || '-';
+      const [startTime, endTime] = timeSlot.includes('-') ? timeSlot.split('-') : [timeSlot, ''];
+      
+      document.getElementById('event-title').textContent = getScheduleStoreName(s.client_id || s.store_id);
+      document.getElementById('event-date').textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${weekdays[d.getDay()]}）`;
+      document.getElementById('event-time').textContent = `${startTime}${endTime ? ' - ' + endTime : ''}`;
+      document.getElementById('event-address').textContent = getScheduleStoreAddress(s.client_id || s.store_id) || '-';
+      document.getElementById('event-worker').textContent = `担当: ${getScheduleWorkerName(s.assigned_to || s.worker_id)}`;
+      
+      const notesItem = document.getElementById('event-notes-item');
+      if (s.notes) {
+        document.getElementById('event-notes').textContent = s.notes;
+        notesItem.style.display = 'flex';
+      } else {
+        notesItem.style.display = 'none';
+      }
+      
+      const isDraft = s.status === 'draft';
+      const isCompleted = s.status === 'completed';
+      const colorEl = document.getElementById('event-color');
+      colorEl.className = 'event-color' + (isCompleted ? ' completed' : (isDraft ? ' draft' : ''));
+      const statusEl = document.getElementById('event-status');
+      statusEl.textContent = isDraft ? '仮押さえ' : (isCompleted ? '完了' : '確定');
+      statusEl.className = 'event-status-badge' + (isCompleted ? ' completed' : (isDraft ? ' draft' : ''));
+      
+      document.getElementById('event-sheet').classList.add('open');
+      document.getElementById('sheet-overlay').classList.add('open');
+    };
+
 
     function escapeHtml(str) {
       if (!str) return '';
