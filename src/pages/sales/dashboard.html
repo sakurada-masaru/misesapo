@@ -1425,20 +1425,30 @@
 
     async function loadData() {
       try {
-        const [storesRes, schedulesRes] = await Promise.all([
-          fetch(`${API_BASE}/stores`),
-          fetch(`${API_BASE}/schedules`)
+        const [storesRes, schedulesRes, workersRes] = await Promise.all([
+          fetch(`${API_BASE}/stores`).catch(() => ({ ok: false })),
+          fetch(`${API_BASE}/schedules`).catch(() => ({ ok: false })),
+          fetch(`${API_BASE}/workers`).catch(() => ({ ok: false }))
         ]);
         
-        allStores = await storesRes.json();
-        allSchedules = await schedulesRes.json();
+        if (storesRes.ok) {
+          allStores = await storesRes.json();
+        } else {
+          console.warn('Failed to load stores');
+          allStores = [];
+        }
         
-        // 清掃員データも読み込み（スケジュール表示用）
-        try {
-          const workersRes = await fetch(`${API_BASE}/workers`);
+        if (schedulesRes.ok) {
+          allSchedules = await schedulesRes.json();
+        } else {
+          console.warn('Failed to load schedules');
+          allSchedules = [];
+        }
+        
+        if (workersRes.ok) {
           allWorkers = await workersRes.json();
-        } catch (error) {
-          console.warn('Failed to load workers:', error);
+        } else {
+          console.warn('Failed to load workers');
           allWorkers = [];
         }
         
