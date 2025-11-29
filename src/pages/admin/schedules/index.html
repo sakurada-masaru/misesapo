@@ -122,12 +122,6 @@
     <div class="filter-section">
       <div class="filter-row">
         <div class="filter-group">
-          <label>期間</label>
-          <input type="date" id="date-from" />
-          <span>〜</span>
-          <input type="date" id="date-to" />
-        </div>
-        <div class="filter-group">
           <label>店舗</label>
           <select id="store-filter">
             <option value="">全店舗</option>
@@ -998,13 +992,6 @@
 
   // 初期化
   document.addEventListener('DOMContentLoaded', async () => {
-    // 日付フィルターのデフォルト値（今日から1ヶ月）
-    const today = new Date();
-    const nextMonth = new Date(today);
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
-    document.getElementById('date-from').value = today.toISOString().split('T')[0];
-    document.getElementById('date-to').value = nextMonth.toISOString().split('T')[0];
-    
     await Promise.all([loadStores(), loadWorkers(), loadSchedules()]);
     setupEventListeners();
   });
@@ -1085,16 +1072,11 @@
 
   // フィルタリング
   function filterAndRender() {
-    const dateFrom = document.getElementById('date-from').value;
-    const dateTo = document.getElementById('date-to').value;
     const storeId = document.getElementById('store-filter').value;
     const workerId = document.getElementById('worker-filter').value;
     const status = document.getElementById('status-filter').value;
 
     filteredSchedules = allSchedules.filter(s => {
-      // date または scheduled_date フィールドに対応
-      const scheduleDate = s.date || s.scheduled_date || '';
-      const matchDate = (!dateFrom || scheduleDate >= dateFrom) && (!dateTo || scheduleDate <= dateTo);
       // store_id または client_id に対応
       const scheduleStoreId = s.store_id || s.client_id;
       const matchStore = !storeId || scheduleStoreId === storeId;
@@ -1102,7 +1084,7 @@
       const scheduleWorkerId = s.worker_id || s.assigned_to;
       const matchWorker = !workerId || scheduleWorkerId === workerId;
       const matchStatus = !status || s.status === status;
-      return matchDate && matchStore && matchWorker && matchStatus;
+      return matchStore && matchWorker && matchStatus;
     });
 
     // 日付順ソート
@@ -1219,18 +1201,11 @@
   // イベントリスナー
   function setupEventListeners() {
     // フィルター
-    document.getElementById('date-from').addEventListener('change', filterAndRender);
-    document.getElementById('date-to').addEventListener('change', filterAndRender);
     document.getElementById('store-filter').addEventListener('change', filterAndRender);
     document.getElementById('worker-filter').addEventListener('change', filterAndRender);
     document.getElementById('status-filter').addEventListener('change', filterAndRender);
     
     document.getElementById('reset-filters').addEventListener('click', () => {
-      const today = new Date();
-      const nextMonth = new Date(today);
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      document.getElementById('date-from').value = today.toISOString().split('T')[0];
-      document.getElementById('date-to').value = nextMonth.toISOString().split('T')[0];
       document.getElementById('store-filter').value = '';
       document.getElementById('worker-filter').value = '';
       document.getElementById('status-filter').value = '';
