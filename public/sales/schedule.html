@@ -273,25 +273,6 @@
   </div>
   <div class="menu-overlay" id="menu-overlay"></div>
 
-  <!-- 下部タブバー -->
-  <nav class="bottom-tab-bar">
-    <a href="/sales/dashboard.html" class="tab-item">
-      <i class="fas fa-home"></i>
-      <span>ホーム</span>
-    </a>
-    <a href="/sales/schedule.html" class="tab-item active">
-      <i class="fas fa-calendar"></i>
-      <span>スケジュール</span>
-    </a>
-    <a href="/sales/clients.html" class="tab-item">
-      <i class="fas fa-building"></i>
-      <span>顧客</span>
-    </a>
-    <a href="/sales/estimates.html" class="tab-item">
-      <i class="fas fa-file-invoice"></i>
-      <span>見積</span>
-    </a>
-  </nav>
 
   <!-- イベント詳細 -->
   <div class="event-sheet" id="event-sheet">
@@ -993,52 +974,11 @@
       color: #f57c00;
     }
     
-    /* 下部タブバー */
-    .bottom-tab-bar {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 64px;
-      background: #fff;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      border-top: 1px solid #e0e0e0;
-      z-index: 100;
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-    .tab-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 8px 16px;
-      color: #9ca3af;
-      text-decoration: none;
-      font-size: 0.7rem;
-      transition: color 0.2s;
-    }
-    .tab-item i {
-      font-size: 1.25rem;
-    }
-    .tab-item.active {
-      color: var(--primary, #ff679c);
-    }
-    .tab-item:active {
-      opacity: 0.7;
-    }
-    
     @media (min-width: 600px) {
       .gcal-mobile {
         max-width: 480px;
         margin: 0 auto;
         box-shadow: 0 0 20px rgba(0,0,0,0.1);
-      }
-      .bottom-tab-bar {
-        max-width: 480px;
-        left: 50%;
-        transform: translateX(-50%);
       }
     }
   </style>
