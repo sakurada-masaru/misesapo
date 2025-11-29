@@ -343,12 +343,6 @@
         <div class="schedule-filter-section">
           <div class="schedule-filter-row">
             <div class="schedule-filter-group">
-              <label>期間</label>
-              <input type="date" id="schedule-date-from" />
-              <span>〜</span>
-              <input type="date" id="schedule-date-to" />
-            </div>
-            <div class="schedule-filter-group">
               <label>ステータス</label>
               <select id="schedule-status-filter">
                 <option value="">全て</option>
@@ -2760,26 +2754,7 @@
 
     // スケジュールパネルのリスト表示とカレンダー表示
     function setupScheduleView() {
-      // フィルターの初期化
-      const today = new Date();
-      const nextMonth = new Date(today);
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      const dateFromEl = document.getElementById('schedule-date-from');
-      const dateToEl = document.getElementById('schedule-date-to');
-      if (dateFromEl && !dateFromEl.value) {
-        dateFromEl.value = today.toISOString().split('T')[0];
-      }
-      if (dateToEl && !dateToEl.value) {
-        dateToEl.value = nextMonth.toISOString().split('T')[0];
-      }
-
       // フィルターイベントリスナー
-      if (dateFromEl) {
-        dateFromEl.addEventListener('change', filterAndRenderSchedules);
-      }
-      if (dateToEl) {
-        dateToEl.addEventListener('change', filterAndRenderSchedules);
-      }
       const statusFilterEl = document.getElementById('schedule-status-filter');
       if (statusFilterEl) {
         statusFilterEl.addEventListener('change', filterAndRenderSchedules);
@@ -2805,34 +2780,29 @@
         });
       }
 
-      // カレンダーナビゲーション
+      // カレンダーナビゲーション（1ヶ月ずつ）
       const prevMonthEl = document.getElementById('schedule-prev-month');
       const nextMonthEl = document.getElementById('schedule-next-month');
       if (prevMonthEl) {
         prevMonthEl.addEventListener('click', () => {
-          scheduleCurrentMonth.setMonth(scheduleCurrentMonth.getMonth() - 1);
+          scheduleCurrentMonth = new Date(scheduleCurrentMonth.getFullYear(), scheduleCurrentMonth.getMonth() - 1, 1);
           renderScheduleCalendar();
         });
       }
       if (nextMonthEl) {
         nextMonthEl.addEventListener('click', () => {
-          scheduleCurrentMonth.setMonth(scheduleCurrentMonth.getMonth() + 1);
+          scheduleCurrentMonth = new Date(scheduleCurrentMonth.getFullYear(), scheduleCurrentMonth.getMonth() + 1, 1);
           renderScheduleCalendar();
         });
       }
     }
 
     function filterAndRenderSchedules() {
-      const dateFrom = document.getElementById('schedule-date-from')?.value || '';
-      const dateTo = document.getElementById('schedule-date-to')?.value || '';
       const status = document.getElementById('schedule-status-filter')?.value || '';
 
       scheduleFilteredSchedules = allSchedules.filter(s => {
-        const normalized = DataUtils.normalizeSchedule(s);
-        const scheduleDate = normalized.date || s.date || s.scheduled_date || '';
-        const matchDate = (!dateFrom || scheduleDate >= dateFrom) && (!dateTo || scheduleDate <= dateTo);
         const matchStatus = !status || s.status === status;
-        return matchDate && matchStatus;
+        return matchStatus;
       });
 
       // 日付順ソート

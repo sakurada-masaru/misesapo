@@ -1253,6 +1253,17 @@
       }
     });
 
+    // カレンダー月ナビゲーション
+    document.getElementById('prev-month').addEventListener('click', () => {
+      currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+      renderCalendar();
+    });
+
+    document.getElementById('next-month').addEventListener('click', () => {
+      currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+      renderCalendar();
+    });
+
     // 新規作成
     document.getElementById('add-schedule-btn').addEventListener('click', () => {
       document.getElementById('dialog-title').textContent = '新規スケジュール作成';
