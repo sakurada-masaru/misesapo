@@ -768,6 +768,26 @@
       // 仮見積もりパネル形式のサービス選択機能
       let selectedServicesNew = [];
 
+      // 価格を数値に変換する関数
+      function parsePrice(price) {
+        if (typeof price === 'number') {
+          return price;
+        }
+        if (typeof price === 'string') {
+          // 文字列から数値部分を抽出（¥、,、〜などを除去）
+          const numStr = price.replace(/[¥￥,\s〜~]/g, '').replace(/[^\d.]/g, '');
+          const num = parseFloat(numStr);
+          return isNaN(num) ? 0 : num;
+        }
+        return 0;
+      }
+
+      // 価格を表示用にフォーマットする関数
+      function formatPrice(price) {
+        const num = parsePrice(price);
+        return num.toLocaleString();
+      }
+
       function renderServiceListNew() {
         const container = document.getElementById('service-list-new');
         if (!container) return;
@@ -780,10 +800,11 @@
         container.innerHTML = serviceItems.map(item => {
           const isSelected = selectedServicesNew.some(s => s.id === item.id);
           const serviceName = item.title || item.name || '';
+          const priceNum = parsePrice(item.price);
           return `
             <div class="service-item ${isSelected ? 'selected' : ''}" onclick="toggleServiceNew('${item.id}')">
               <span class="service-name">${escapeHtml(serviceName)}</span>
-              <span class="service-price">¥${(item.price || 0).toLocaleString()}</span>
+              <span class="service-price">¥${formatPrice(priceNum)}</span>
             </div>
           `;
         }).join('');
@@ -791,13 +812,22 @@
       
       window.toggleServiceNew = function(id) {
         const item = serviceItems.find(s => s.id === id);
-        if (!item) return;
+        if (!item) {
+          console.warn('[sales/schedules/new] Service item not found:', id);
+          return;
+        }
 
         const index = selectedServicesNew.findIndex(s => s.id === id);
         if (index >= 0) {
           selectedServicesNew.splice(index, 1);
         } else {
-          selectedServicesNew.push({ ...item, multiplier: 1 });
+          // 価格を数値として保存
+          const priceNum = parsePrice(item.price);
+          selectedServicesNew.push({ 
+            ...item, 
+            price: priceNum,  // 数値として保存
+            multiplier: 1 
+          });
         }
 
         renderSelectedServicesNew();
@@ -818,7 +848,8 @@
 
         container.innerHTML = selectedServicesNew.map(item => {
           const currentMultiplier = item.multiplier || 1;
-          const calculatedPrice = Math.round((item.price || 0) * currentMultiplier);
+          const basePrice = typeof item.price === 'number' ? item.price : parsePrice(item.price);
+          const calculatedPrice = Math.round(basePrice * currentMultiplier);
           const serviceName = item.title || item.name || '';
           
           return `
@@ -826,10 +857,10 @@
               <div class="selected-item-main">
                 <div class="selected-item-info">
                   <div class="selected-item-name">${escapeHtml(serviceName)}</div>
-                  <div class="selected-item-base">¥${(item.price || 0).toLocaleString()} × ${currentMultiplier}</div>
+                  <div class="selected-item-base">¥${formatPrice(basePrice)} × ${currentMultiplier}</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <span class="selected-item-price">¥${calculatedPrice.toLocaleString()}</span>
+                  <span class="selected-item-price">¥${formatPrice(calculatedPrice)}</span>
                   <button class="selected-item-remove" onclick="removeServiceNew('${item.id}')">
                     <i class="fas fa-times"></i>
                   </button>
@@ -868,12 +899,13 @@
       function updateEstimateTotalNew() {
         const total = selectedServicesNew.reduce((sum, s) => {
           const multiplier = s.multiplier || 1;
-          return sum + Math.round((s.price || 0) * multiplier);
+          const price = typeof s.price === 'number' ? s.price : parsePrice(s.price);
+          return sum + Math.round(price * multiplier);
         }, 0);
         
         const totalEl = document.getElementById('estimate-total-new');
         if (totalEl) {
-          totalEl.textContent = `¥${total.toLocaleString()}`;
+          totalEl.textContent = `¥${formatPrice(total)}`;
         }
       }
 
@@ -909,7 +941,7 @@
           selectedServicesNew.forEach((item, index) => {
             const serviceName = item.title || item.name || '';
             const multiplier = item.multiplier || 1;
-            const basePrice = item.price || 0;
+            const basePrice = typeof item.price === 'number' ? item.price : parsePrice(item.price);
             const calculatedPrice = Math.round(basePrice * multiplier);
             
             // 作業項目データ
