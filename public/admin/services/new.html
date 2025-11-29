@@ -611,14 +611,110 @@
     }
     .image-select-modal-body {
       flex: 1;
-      overflow: hidden;
+      overflow-y: auto;
+      padding: 20px;
       display: flex;
       flex-direction: column;
     }
-    .image-select-modal-iframe {
+    .image-select-search {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .image-select-search .search-box {
+      flex: 1;
+      position: relative;
+    }
+    .image-select-search .search-box i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+    }
+    .image-select-search .search-input {
+      width: 100%;
+      padding: 8px 12px 8px 36px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+    .image-select-search .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      background: #fff;
+    }
+    .image-select-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .image-select-card {
+      background: #fff;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .image-select-card:hover {
+      border-color: var(--primary, #FF6BA6);
+      box-shadow: 0 4px 12px rgba(255, 107, 156, 0.15);
+      transform: translateY(-2px);
+    }
+    .image-select-thumb {
+      position: relative;
+      width: 100%;
+      padding-top: 75%;
+      background: #f9fafb;
+      overflow: hidden;
+    }
+    .image-select-thumb img {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
-      border: none;
+      object-fit: cover;
+    }
+    .image-select-info {
+      padding: 8px;
+    }
+    .image-select-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .image-select-path {
+      font-size: 0.625rem;
+      color: #6b7280;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .loading-spinner {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+    .loading-spinner i {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    .empty-message,
+    .error-message {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
     }
     .radio-group {
       display: flex;
@@ -683,34 +779,238 @@
       }
     })();
     
-    // Image preview functionality
+    // 画像選択機能
     (function() {
-      const imageInput = document.getElementById('image-input');
-      const imagePreview = document.getElementById('image-preview');
-      const previewImg = document.getElementById('preview-img');
-      const imageRemove = document.getElementById('image-remove');
+      const imageUrlInput = document.getElementById('image_url');
+      const imagePreview = document.getElementById('image_preview');
+      const previewImg = imagePreview?.querySelector('img');
+      const selectImageBtn = document.querySelector('.btn-select-image');
+      let imageSelectModal = null;
       
-      if (imageInput) {
-        imageInput.addEventListener('change', function(e) {
-          const file = e.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-              previewImg.src = e.target.result;
-              imagePreview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
+      // ベースパスを取得（GitHub Pages対応）
+      function getBasePath() {
+        const base = document.querySelector('base');
+        if (base && base.href) {
+          try {
+            const url = new URL(base.href);
+            return url.pathname;
+          } catch (e) {
+            return base.getAttribute('href') || '/';
+          }
+        }
+        const path = window.location.pathname;
+        if (path.includes('/misesapo/')) {
+          return '/misesapo/';
+        }
+        return '/';
+      }
+      
+      // パスを解決（ベースパス付き）
+      function resolvePath(path) {
+        if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+          return path;
+        }
+        const basePath = getBasePath();
+        if (path.startsWith('/')) {
+          return basePath === '/' ? path : basePath.slice(0, -1) + path;
+        }
+        return basePath === '/' ? '/' + path : basePath + path;
+      }
+      
+      // 画像選択モーダルを作成
+      function createImageSelectModal() {
+        if (imageSelectModal) return;
+        
+        imageSelectModal = document.createElement('div');
+        imageSelectModal.id = 'image-select-modal';
+        imageSelectModal.className = 'image-select-modal';
+        imageSelectModal.innerHTML = `
+          <div class="image-select-modal-content">
+            <div class="image-select-modal-header">
+              <h3 class="image-select-modal-title">画像を選択</h3>
+              <button type="button" class="image-select-modal-close" id="image-select-modal-close">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="image-select-search">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" class="search-input" id="image-select-search" placeholder="画像名で検索..." />
+              </div>
+              <select class="filter-select" id="image-select-filter">
+                <option value="">すべての形式</option>
+                <option value="png">PNG</option>
+                <option value="jpg">JPG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="svg">SVG</option>
+              </select>
+            </div>
+            <div class="image-select-modal-body">
+              <div class="image-select-grid" id="image-select-grid">
+                <div class="loading-spinner">
+                  <i class="fas fa-spinner fa-spin"></i> 画像を読み込み中...
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(imageSelectModal);
+        
+        // 閉じるボタン
+        document.getElementById('image-select-modal-close')?.addEventListener('click', closeImageSelectModal);
+        imageSelectModal.addEventListener('click', function(e) {
+          if (e.target === imageSelectModal) {
+            closeImageSelectModal();
           }
         });
+        
+        // ESCキーで閉じる
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && imageSelectModal.classList.contains('open')) {
+            closeImageSelectModal();
+          }
+        });
+        
+        // 検索・フィルタ
+        document.getElementById('image-select-search')?.addEventListener('input', loadImagesForSelect);
+        document.getElementById('image-select-filter')?.addEventListener('change', loadImagesForSelect);
       }
       
-      if (imageRemove) {
-        imageRemove.addEventListener('click', function() {
+      // 画像選択モーダルを開く
+      function openImageSelectModal() {
+        if (!imageSelectModal) {
+          createImageSelectModal();
+        }
+        imageSelectModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        loadImagesForSelect();
+      }
+      
+      // 画像選択モーダルを閉じる
+      function closeImageSelectModal() {
+        if (imageSelectModal) {
+          imageSelectModal.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+      }
+      
+      // 画像一覧を読み込む
+      async function loadImagesForSelect() {
+        const grid = document.getElementById('image-select-grid');
+        if (!grid) return;
+        
+        try {
+          // 画像一覧を取得
+          let response = await fetch(resolvePath('/data/images.json'));
+          if (!response.ok) {
+            response = await fetch(resolvePath('/api/images'));
+          }
+          const data = await response.ok ? await response.json() : { images: [] };
+          
+          if (data.images && data.images.length > 0) {
+            const searchQuery = (document.getElementById('image-select-search')?.value || '').toLowerCase();
+            const filterType = document.getElementById('image-select-filter')?.value || '';
+            
+            // フィルタリング
+            let filteredImages = data.images;
+            if (Array.isArray(filteredImages) && filteredImages[0] && typeof filteredImages[0] === 'string') {
+              // パスの配列の場合
+              filteredImages = filteredImages.map(path => ({ path }));
+            }
+            
+            if (searchQuery) {
+              filteredImages = filteredImages.filter(img => {
+                const path = typeof img === 'string' ? img : img.path;
+                return path.toLowerCase().includes(searchQuery);
+              });
+            }
+            if (filterType) {
+              filteredImages = filteredImages.filter(img => {
+                const path = typeof img === 'string' ? img : img.path;
+                return path.toLowerCase().endsWith('.' + filterType);
+              });
+            }
+            
+            // グリッドを生成
+            grid.innerHTML = filteredImages.map(img => {
+              const path = typeof img === 'string' ? img : img.path;
+              const fileName = path.split('/').pop();
+              const fileExt = fileName.split('.').pop().toLowerCase();
+              const resolvedPath = resolvePath(path);
+              
+              return `
+                <div class="image-select-card" data-path="${path}">
+                  <div class="image-select-thumb">
+                    <img src="${resolvedPath}" alt="${fileName}" loading="lazy" onerror="this.src='${resolvePath('/images/service-300x200.svg')}'" />
+                  </div>
+                  <div class="image-select-info">
+                    <div class="image-select-name" title="${fileName}">${fileName}</div>
+                    <div class="image-select-path" title="${path}">${path}</div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+            
+            // クリックイベント
+            grid.querySelectorAll('.image-select-card').forEach(card => {
+              card.addEventListener('click', function() {
+                const path = this.dataset.path;
+                // 入力欄にパスを設定（先頭の / を削除）
+                if (imageUrlInput) {
+                  const imagePath = path.startsWith('/') ? path.substring(1) : path;
+                  imageUrlInput.value = imagePath;
+                  imageUrlInput.dispatchEvent(new Event('input', { bubbles: true }));
+                  // プレビューを更新
+                  updateImagePreview(imagePath);
+                }
+                closeImageSelectModal();
+              });
+            });
+          } else {
+            grid.innerHTML = '<div class="empty-message">画像が見つかりませんでした</div>';
+          }
+        } catch (err) {
+          console.error('画像の読み込みに失敗しました:', err);
+          grid.innerHTML = '<div class="error-message">画像の読み込みに失敗しました</div>';
+        }
+      }
+      
+      // 画像プレビューを更新
+      function updateImagePreview(imagePath) {
+        if (!imagePreview || !previewImg) return;
+        
+        if (imagePath && imagePath.trim()) {
+          const path = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+          previewImg.src = resolvePath(path);
+          previewImg.onerror = function() {
+            imagePreview.style.display = 'none';
+          };
+          imagePreview.style.display = 'block';
+        } else {
           imagePreview.style.display = 'none';
-          previewImg.src = '';
-          imageInput.value = '';
+        }
+      }
+      
+      // 画像選択ボタンをクリック
+      if (selectImageBtn) {
+        selectImageBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          openImageSelectModal();
         });
       }
+      
+      // 画像URL入力時のプレビュー更新
+      if (imageUrlInput) {
+        imageUrlInput.addEventListener('input', function() {
+          updateImagePreview(this.value);
+        });
+        
+        // 初期値がある場合はプレビューを表示
+        if (imageUrlInput.value) {
+          updateImagePreview(imageUrlInput.value);
+        }
+      }
+    })();
       
       // Form submission
       const form = document.getElementById('service-form');
