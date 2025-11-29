@@ -812,15 +812,23 @@
       }
       
       window.toggleServiceNew = function(id) {
-        const item = serviceItems.find(s => s.id === id);
+        console.log('[sales/schedules/new] toggleServiceNew called with id:', id);
+        console.log('[sales/schedules/new] serviceItems:', serviceItems);
+        console.log('[sales/schedules/new] serviceItems.length:', serviceItems.length);
+        
+        // IDの型を統一（文字列と数値の両方に対応）
+        const item = serviceItems.find(s => String(s.id) === String(id));
         if (!item) {
-          console.warn('[sales/schedules/new] Service item not found:', id);
+          console.warn('[sales/schedules/new] Service item not found:', id, 'Available IDs:', serviceItems.map(s => s.id));
           return;
         }
 
-        const index = selectedServicesNew.findIndex(s => s.id === id);
+        console.log('[sales/schedules/new] Found service item:', item);
+
+        const index = selectedServicesNew.findIndex(s => String(s.id) === String(id));
         if (index >= 0) {
           selectedServicesNew.splice(index, 1);
+          console.log('[sales/schedules/new] Service removed from selection');
         } else {
           // 価格を数値として保存
           const priceNum = parsePrice(item.price);
@@ -829,6 +837,7 @@
             price: priceNum,  // 数値として保存
             multiplier: 1 
           });
+          console.log('[sales/schedules/new] Service added to selection:', selectedServicesNew);
         }
 
         renderSelectedServicesNew();
