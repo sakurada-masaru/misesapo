@@ -291,7 +291,7 @@
           </div>
         </header>
 
-        <!-- フィルター（PC版のみ） -->
+        <!-- フィルター -->
         <div class="schedule-filter-section" id="schedule-filter-section">
           <div class="schedule-filter-row">
             <div class="schedule-filter-group">
@@ -317,7 +317,7 @@
           </div>
         </div>
 
-        <!-- カレンダー表示（PC版のみ） -->
+        <!-- カレンダー表示 -->
         <div class="schedule-calendar-view" id="schedule-calendar-view" style="display:none;">
           <div class="calendar-header">
             <button type="button" class="btn-icon" id="schedule-prev-month">
@@ -2743,27 +2743,21 @@
       // 表示切り替えボタン
       const viewToggleEl = document.getElementById('schedule-view-toggle');
       if (viewToggleEl) {
-        // SP版ではカレンダー表示ボタンを非表示
-        const isMobile = window.innerWidth < 600;
-        if (isMobile) {
-          viewToggleEl.style.display = 'none';
-        } else {
-          viewToggleEl.addEventListener('click', () => {
-            if (scheduleCurrentView === 'list') {
-              scheduleCurrentView = 'calendar';
-              document.getElementById('schedule-list-view').style.display = 'none';
-              document.getElementById('schedule-calendar-view').style.display = 'block';
-              viewToggleEl.innerHTML = '<i class="fas fa-list"></i>';
-              renderScheduleCalendar();
-            } else {
-              scheduleCurrentView = 'list';
-              document.getElementById('schedule-list-view').style.display = 'block';
-              document.getElementById('schedule-calendar-view').style.display = 'none';
-              viewToggleEl.innerHTML = '<i class="fas fa-calendar"></i>';
-              renderScheduleList();
-            }
-          });
-        }
+        viewToggleEl.addEventListener('click', () => {
+          if (scheduleCurrentView === 'list') {
+            scheduleCurrentView = 'calendar';
+            document.getElementById('schedule-list-view').style.display = 'none';
+            document.getElementById('schedule-calendar-view').style.display = 'block';
+            viewToggleEl.innerHTML = '<i class="fas fa-list"></i>';
+            renderScheduleCalendar();
+          } else {
+            scheduleCurrentView = 'list';
+            document.getElementById('schedule-list-view').style.display = 'block';
+            document.getElementById('schedule-calendar-view').style.display = 'none';
+            viewToggleEl.innerHTML = '<i class="fas fa-calendar"></i>';
+            renderScheduleList();
+          }
+        });
       }
 
       // カレンダーナビゲーション（1ヶ月ずつ）
@@ -2813,35 +2807,12 @@
       const container = document.getElementById('schedule-list-content');
       if (!container) return;
 
-      // SP版では当日のスケジュールのみを表示
-      const isMobile = window.innerWidth < 600;
-      let schedulesToRender = scheduleFilteredSchedules;
-      
-      if (isMobile) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        schedulesToRender = scheduleFilteredSchedules.filter(schedule => {
-          const normalized = DataUtils.normalizeSchedule(schedule);
-          const dateStr = normalized.date || schedule.date || schedule.scheduled_date || '';
-          if (!dateStr) return false;
-          const scheduleDate = new Date(dateStr);
-          scheduleDate.setHours(0, 0, 0, 0);
-          return scheduleDate.getTime() === today.getTime();
-        });
-        
-        // 当日の件数を表示
-        if (schedulesToRender.length === 0) {
-          container.innerHTML = '<div class="loading">本日のスケジュールはありません</div>';
-          return;
-        }
-      } else {
-        if (scheduleFilteredSchedules.length === 0) {
-          container.innerHTML = '<div class="loading">該当するスケジュールがありません</div>';
-          return;
-        }
+      if (scheduleFilteredSchedules.length === 0) {
+        container.innerHTML = '<div class="loading">該当するスケジュールがありません</div>';
+        return;
       }
 
-      container.innerHTML = schedulesToRender.map(schedule => {
+      container.innerHTML = scheduleFilteredSchedules.map(schedule => {
         const normalized = DataUtils.normalizeSchedule(schedule);
         const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
         const storeName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
