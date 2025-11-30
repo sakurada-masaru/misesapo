@@ -2327,15 +2327,7 @@
     .schedule-form-modal .req {
       color: #ef4444;
     }
-    .schedule-form-modal input[type="date"] {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 1rem;
-      box-sizing: border-box;
-      min-height: 44px;
-    }
+    .schedule-form-modal input[type="date"],
     .schedule-form-modal input[type="time"],
     .schedule-form-modal select,
     .schedule-form-modal textarea {
@@ -2345,6 +2337,9 @@
       border-radius: 6px;
       font-size: 1rem;
       box-sizing: border-box;
+    }
+    .schedule-form-modal input[type="date"] {
+      min-height: 44px;
     }
     .schedule-form-modal .time-inputs {
       display: flex;
@@ -2966,7 +2961,11 @@
       container.innerHTML = weekSchedules.slice(0, 5).map(s => {
         // DataUtilsで店舗検索・スケジュール正規化
         const normalized = DataUtils.normalizeSchedule(s);
-        const storeName = DataUtils.getStoreName(allStores, s.store_id, s.store_name);
+        const storeId = normalized.store_id || s.store_id || s.client_id;
+        const isReminder = s.type === 'reminder' || !storeId;
+        const displayName = isReminder
+          ? (s.notes || s.title || 'リマインダー')
+          : DataUtils.getStoreName(allStores, storeId, normalized.store_name || s.store_name || s.client_name);
         const statusClass = normalized.status === 'completed' ? 'completed' : (normalized.status === 'draft' ? 'draft' : '');
         
         return `
@@ -2977,7 +2976,7 @@
             </div>
             <div class="schedule-info">
               <div class="schedule-time">${normalized.time || '-'}</div>
-              <div class="schedule-store">${DataUtils.escapeHtml(storeName)}</div>
+              <div class="schedule-store">${DataUtils.escapeHtml(displayName)}</div>
             </div>
             <div class="schedule-dot ${statusClass}"></div>
           </div>
@@ -3690,26 +3689,43 @@
                   const [startTime, endTime] = timeSlot.includes('-') ? timeSlot.split('-') : [timeSlot, ''];
                   const statusClass = normalized.status === 'completed' ? 'completed' : (normalized.status === 'draft' ? 'draft' : '');
                   
-                  // store_id または client_id に対応
+                  // リマインダーかどうかを判定
                   const storeId = normalized.store_id || s.store_id || s.client_id;
-                  const storeName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || s.store_name || s.client_name);
+                  const isReminder = s.type === 'reminder' || !storeId;
+                  const displayName = isReminder
+                    ? (s.notes || s.title || 'リマインダー')
+                    : DataUtils.getStoreName(allStores, storeId, normalized.store_name || s.store_name || s.client_name);
                   
-                  // 店舗情報を取得して住所を表示
-                  const store = DataUtils.findStore(allStores, storeId);
-                  const storeAddress = store ? `${store.pref || ''}${store.city || ''}${store.address1 || ''}` : '';
-                  
-                  return `
-                    <div class="event-card ${statusClass}" onclick="showScheduleEvent('${s.id}')">
-                      <div class="event-time-col">
-                        <div class="event-time-start">${escapeHtml(startTime)}</div>
-                        <div class="event-time-end">${escapeHtml(endTime || '')}</div>
+                  if (isReminder) {
+                    return `
+                      <div class="event-card ${statusClass}" onclick="showScheduleEvent('${s.id}')">
+                        <div class="event-time-col">
+                          <div class="event-time-start">${escapeHtml(startTime)}</div>
+                          <div class="event-time-end">${escapeHtml(endTime || '')}</div>
+                        </div>
+                        <div class="event-details">
+                          <div class="event-name">${escapeHtml(displayName)}</div>
+                        </div>
                       </div>
-                      <div class="event-details">
-                        <div class="event-name">${escapeHtml(storeName)}</div>
-                        <div class="event-location">${escapeHtml(storeAddress)}</div>
+                    `;
+                  } else {
+                    // 通常のスケジュール（案件）の場合
+                    const store = DataUtils.findStore(allStores, storeId);
+                    const storeAddress = store ? `${store.pref || ''}${store.city || ''}${store.address1 || ''}` : '';
+                    
+                    return `
+                      <div class="event-card ${statusClass}" onclick="showScheduleEvent('${s.id}')">
+                        <div class="event-time-col">
+                          <div class="event-time-start">${escapeHtml(startTime)}</div>
+                          <div class="event-time-end">${escapeHtml(endTime || '')}</div>
+                        </div>
+                        <div class="event-details">
+                          <div class="event-name">${escapeHtml(displayName)}</div>
+                          <div class="event-location">${escapeHtml(storeAddress)}</div>
+                        </div>
                       </div>
-                    </div>
-                  `;
+                    `;
+                  }
                 }).join('') : '<div class="no-events">予定なし</div>'}
               </div>
             </div>
@@ -3730,32 +3746,50 @@
       const timeSlot = normalized.time || s.time_slot || s.scheduled_time || '-';
       const [startTime, endTime] = timeSlot.includes('-') ? timeSlot.split('-') : [timeSlot, ''];
       
-      // store_id または client_id に対応
+      // リマインダーかどうかを判定
       const storeId = normalized.store_id || s.store_id || s.client_id;
-      const storeName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || s.store_name || s.client_name);
+      const isReminder = s.type === 'reminder' || !storeId;
       
-      // 店舗情報を取得して住所を表示
-      const store = DataUtils.findStore(allStores, storeId);
-      const storeAddress = store ? `${store.pref || ''}${store.city || ''}${store.address1 || ''}` : '';
-      
-      // worker_id または assigned_to に対応
-      const workerId = normalized.worker_id || s.worker_id || s.assigned_to;
-      const worker = allWorkers.find(w => w.id === workerId);
-      const workerName = worker ? worker.name : '未割当';
-      
-      document.getElementById('event-title').textContent = storeName;
-      document.getElementById('event-date').textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${weekdays[d.getDay()]}）`;
-      document.getElementById('event-time').textContent = `${startTime}${endTime ? ' - ' + endTime : ''}`;
-      document.getElementById('event-address').textContent = storeAddress || '-';
-      document.getElementById('event-worker').textContent = `担当: ${workerName}`;
-      
-      const notesItem = document.getElementById('event-notes-item');
-      const notes = normalized.notes || s.notes || '';
-      if (notes) {
-        document.getElementById('event-notes').textContent = notes;
-        notesItem.style.display = 'flex';
+      if (isReminder) {
+        // リマインダー/メモの場合
+        const title = s.notes || s.title || 'リマインダー';
+        document.getElementById('event-title').textContent = title;
+        document.getElementById('event-date').textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${weekdays[d.getDay()]}）`;
+        document.getElementById('event-time').textContent = `${startTime}${endTime ? ' - ' + endTime : ''}`;
+        document.getElementById('event-address').textContent = '-';
+        document.getElementById('event-worker').textContent = '';
+        
+        const notesItem = document.getElementById('event-notes-item');
+        const notes = normalized.notes || s.notes || '';
+        if (notes) {
+          document.getElementById('event-notes').textContent = notes;
+          notesItem.style.display = 'flex';
         } else {
-        notesItem.style.display = 'none';
+          notesItem.style.display = 'none';
+        }
+      } else {
+        // 通常のスケジュール（案件）の場合
+        const storeName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || s.store_name || s.client_name);
+        const store = DataUtils.findStore(allStores, storeId);
+        const storeAddress = store ? `${store.pref || ''}${store.city || ''}${store.address1 || ''}` : '';
+        const workerId = normalized.worker_id || s.worker_id || s.assigned_to;
+        const worker = allWorkers.find(w => w.id === workerId);
+        const workerName = worker ? worker.name : '未割当';
+        
+        document.getElementById('event-title').textContent = storeName;
+        document.getElementById('event-date').textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${weekdays[d.getDay()]}）`;
+        document.getElementById('event-time').textContent = `${startTime}${endTime ? ' - ' + endTime : ''}`;
+        document.getElementById('event-address').textContent = storeAddress || '-';
+        document.getElementById('event-worker').textContent = `担当: ${workerName}`;
+        
+        const notesItem = document.getElementById('event-notes-item');
+        const notes = normalized.notes || s.notes || '';
+        if (notes) {
+          document.getElementById('event-notes').textContent = notes;
+          notesItem.style.display = 'flex';
+        } else {
+          notesItem.style.display = 'none';
+        }
       }
       
       const isDraft = normalized.status === 'draft';
@@ -3911,7 +3945,10 @@
       container.innerHTML = scheduleFilteredSchedules.map(schedule => {
         const normalized = DataUtils.normalizeSchedule(schedule);
         const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
-        const storeName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
+        const isReminder = schedule.type === 'reminder' || !storeId;
+        const displayName = isReminder 
+          ? (schedule.notes || schedule.title || 'リマインダー')
+          : DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
         const store = DataUtils.findStore(allStores, storeId);
         const workerId = normalized.worker_id || schedule.worker_id || schedule.assigned_to;
         const worker = allWorkers.find(w => w.id === workerId);
@@ -3921,7 +3958,7 @@
         const timeStr = normalized.time || schedule.time_slot || schedule.scheduled_time || '-';
 
         return `
-          <div class="schedule-list-item ${isDraft ? 'draft' : ''}" onclick="showScheduleEvent('${schedule.id}')">
+          <div class="schedule-list-item ${isDraft ? 'draft' : ''} ${isReminder ? 'reminder' : ''}" onclick="showScheduleEvent('${schedule.id}')">
             <div class="schedule-item-date">
               <div class="schedule-item-date-num">${date.getDate()}</div>
               <div class="schedule-item-date-dow">${weekdays[date.getDay()]}</div>
@@ -3931,8 +3968,8 @@
                 <span class="schedule-item-time">${escapeHtml(timeStr)}</span>
                 <span class="schedule-item-status status-${normalized.status}">${getStatusLabel(normalized.status)}</span>
               </div>
-              <div class="schedule-item-store">${escapeHtml(storeName)}</div>
-              ${worker ? `<div class="schedule-item-worker">担当: ${escapeHtml(worker.name)}</div>` : '<div class="schedule-item-worker">未割当</div>'}
+              <div class="schedule-item-store">${escapeHtml(displayName)}</div>
+              ${!isReminder && worker ? `<div class="schedule-item-worker">担当: ${escapeHtml(worker.name)}</div>` : ''}
             </div>
           </div>
         `;
@@ -4004,8 +4041,11 @@
             const normalized = DataUtils.normalizeSchedule(schedule);
             event.className = `day-event status-${normalized.status}`;
             const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
-            const displayName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
-            event.textContent = displayName;
+            const isReminder = schedule.type === 'reminder' || !storeId;
+            const displayName = isReminder
+              ? (schedule.notes || schedule.title || 'リマインダー')
+              : DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
+            event.textContent = displayName.length > 15 ? displayName.substring(0, 15) + '...' : displayName;
             event.title = `${normalized.time || ''} ${displayName}`;
             event.onclick = (e) => {
               e.stopPropagation();
@@ -4129,6 +4169,7 @@
           }
           
           const timeSlot = startTime && endTime ? `${startTime}-${endTime}` : (startTime || '');
+          // メモ/リマインダーとして扱うため、店舗ID等は不要
           const scheduleData = {
             date: date,
             scheduled_date: date,
@@ -4136,7 +4177,9 @@
             time_slot: timeSlot || null,
             scheduled_time: timeSlot || null,
             status: 'scheduled',
-            notes: notes || ''
+            notes: notes || '',
+            title: notes || 'リマインダー', // メモ内容をタイトルとして使用
+            type: 'reminder' // リマインダータイプを明示
           };
           
           try {
