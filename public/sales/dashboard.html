@@ -278,72 +278,21 @@
             <i class="fas fa-save"></i> 登録する
           </button>
       </div>
-    </section>
-
-      <!-- 画面3: 仮見積もり -->
-      <section class="swipe-screen estimate-screen" data-screen="estimate">
-        <!-- 固定ヘッダー: 合計金額 + 顧客選択 -->
-        <div class="estimate-fixed-header">
-          <div class="estimate-total-bar">
-            <span class="total-label">合計</span>
-            <span class="total-value" id="estimate-total">¥0</span>
-      </div>
-          <div class="estimate-customer">
-            <select id="estimate-store">
-              <option value="">顧客を選択</option>
-            </select>
-        </div>
-        </div>
-        
-        <!-- スクロール可能なコンテンツ -->
-        <div class="estimate-scroll-content">
-          <!-- 選択済みサービス -->
-          <div class="estimate-section">
-            <div class="section-label"><i class="fas fa-check-circle"></i> 選択中のサービス</div>
-            <div class="selected-services" id="selected-services">
-              <div class="empty-hint">
-                <i class="fas fa-hand-pointer"></i>
-                <span>下からサービスを選択</span>
-        </div>
-      </div>
-        </div>
-
-          <!-- サービス一覧 -->
-          <div class="estimate-section">
-            <div class="section-label"><i class="fas fa-list"></i> サービス一覧</div>
-            <div class="service-list" id="service-list">
-              <div class="loading">読み込み中...</div>
-        </div>
-  </div>
-
-          <!-- メモ -->
-          <div class="estimate-section">
-            <div class="section-label"><i class="fas fa-sticky-note"></i> メモ</div>
-            <textarea id="estimate-notes" rows="2" placeholder="補足事項があれば入力"></textarea>
-    </div>
-        </div>
-
-        <!-- 固定フッター: 送信ボタン -->
-        <div class="estimate-fixed-footer">
-          <button class="btn-submit" onclick="submitEstimate()">
-            <i class="fas fa-paper-plane"></i> 見積もりを送信
-          </button>
-        </div>
       </section>
 
-      <!-- 画面4: スケジュール -->
+      <!-- 画面3: スケジュール -->
       <section class="swipe-screen" data-screen="schedule-list">
         <header class="screen-header">
           <h1>スケジュール</h1>
-          <div class="screen-header-actions">
+          <div class="screen-header-actions" id="schedule-header-actions">
             <button type="button" class="btn-icon" id="schedule-view-toggle" title="カレンダー表示">
               <i class="fas fa-calendar"></i>
             </button>
           </div>
         </header>
 
-        <!-- フィルター -->
-        <div class="schedule-filter-section">
+        <!-- フィルター（PC版のみ） -->
+        <div class="schedule-filter-section" id="schedule-filter-section">
           <div class="schedule-filter-row">
             <div class="schedule-filter-group">
               <label>ステータス</label>
@@ -368,7 +317,7 @@
           </div>
         </div>
 
-        <!-- カレンダー表示 -->
+        <!-- カレンダー表示（PC版のみ） -->
         <div class="schedule-calendar-view" id="schedule-calendar-view" style="display:none;">
           <div class="calendar-header">
             <button type="button" class="btn-icon" id="schedule-prev-month">
@@ -427,7 +376,7 @@
         <div class="sheet-overlay" id="sheet-overlay"></div>
       </section>
 
-      <!-- 画面5: 案件管理（仮見積もりと仮押さえを統合） -->
+      <!-- 画面4: 案件管理（仮見積もりと仮押さえを統合） -->
       <section class="swipe-screen" data-screen="case">
         <header class="screen-header">
           <h1>案件管理</h1>
@@ -1646,6 +1595,9 @@
       font-size: 0.9rem;
       font-weight: 500;
       color: #111827;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      max-width: 100%;
     }
     .schedule-item-worker {
       font-size: 0.8rem;
@@ -1787,7 +1739,6 @@
     let allStores = [];
     let allSchedules = [];
     let allWorkers = [];
-    let selectedServices = [];
     let serviceItems = [];
     let selectedScheduleDate = new Date();
     let scheduleCurrentView = 'list';
@@ -1826,14 +1777,6 @@
       tabs.forEach(tab => {
         tab.classList.toggle('active', tab.dataset.screen === screenName);
       });
-      
-      // 見積もりフッターの表示制御
-      updateEstimateFooterVisibility(screenName);
-      
-      // 見積もり画面に切り替えた時にサービス一覧を再読み込み（最新のサービスを取得）
-      if (screenName === 'estimate') {
-        loadServiceItems();
-      }
       
       // 案件管理画面に切り替えた時にタブ機能を初期化
       if (screenName === 'case') {
@@ -1898,12 +1841,6 @@
       });
     }
     
-    function updateEstimateFooterVisibility(screenName) {
-      const footer = document.querySelector('.estimate-fixed-footer');
-      if (footer) {
-        footer.style.display = screenName === 'estimate' ? 'block' : 'none';
-      }
-    }
 
     function setupSwipe() {
       const container = document.getElementById('swipe-container');
@@ -1917,8 +1854,6 @@
           tabs.forEach(tab => {
             tab.classList.toggle('active', tab.dataset.screen === screenName);
           });
-          // 見積もりフッターの表示制御
-          updateEstimateFooterVisibility(screenName);
         }
       });
     }
@@ -2071,10 +2006,6 @@
       const scheduleOptions = '<option value="">選択してください</option>' +
         allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
         
-      const estimateStoreEl = document.getElementById('estimate-store');
-      if (estimateStoreEl) {
-        estimateStoreEl.innerHTML = estimateOptions;
-      }
       const scheduleStoreEl = document.getElementById('schedule-store');
       if (scheduleStoreEl) {
         scheduleStoreEl.innerHTML = scheduleOptions;
@@ -2101,14 +2032,9 @@
           name: item.title,
           price: parsePrice(item.price)
         }));
-        renderServiceList();
-        renderServiceListCase(); // 案件管理画面用も更新
+        renderServiceListCase(); // 案件管理画面用を更新
       } catch (e) {
         console.error('Failed to load service items:', e);
-        const serviceListEl = document.getElementById('service-list');
-        if (serviceListEl) {
-          serviceListEl.innerHTML = '<div class="empty-state">サービスの読み込みに失敗しました</div>';
-        }
         const serviceListCaseEl = document.getElementById('service-list-case');
         if (serviceListCaseEl) {
           serviceListCaseEl.innerHTML = '<div class="empty-state">サービスの読み込みに失敗しました</div>';
@@ -2132,103 +2058,6 @@
       return 0;
     }
 
-    function renderServiceList() {
-      const container = document.getElementById('service-list');
-      if (serviceItems.length === 0) {
-        container.innerHTML = '<div class="empty-state">サービスがありません</div>';
-        return;
-      }
-
-      container.innerHTML = serviceItems.map(item => {
-        const isSelected = selectedServices.some(s => s.id === item.id);
-        return `
-          <div class="service-item ${isSelected ? 'selected' : ''}" onclick="toggleService('${item.id}')">
-            <span class="service-name">${escapeHtml(item.name)}</span>
-            <span class="service-price">¥${item.price.toLocaleString()}</span>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function toggleService(id) {
-      const item = serviceItems.find(s => s.id === id);
-      if (!item) return;
-
-      const index = selectedServices.findIndex(s => s.id === id);
-      if (index >= 0) {
-        selectedServices.splice(index, 1);
-      } else {
-        // 倍率のデフォルトは1
-        selectedServices.push({ ...item, multiplier: 1 });
-      }
-
-      renderSelectedServices();
-      renderServiceList();
-      updateEstimateTotal();
-    }
-
-    function setMultiplier(id, multiplier) {
-      const item = selectedServices.find(s => s.id === id);
-      if (item) {
-        item.multiplier = multiplier;
-        renderSelectedServices();
-        updateEstimateTotal();
-      }
-    }
-
-    function renderSelectedServices() {
-      const container = document.getElementById('selected-services');
-      if (selectedServices.length === 0) {
-        container.innerHTML = '<div class="empty-hint"><i class="fas fa-hand-pointer"></i><span>下からサービスを選択</span></div>';
-          return;
-        }
-        
-      const multipliers = [1, 1.5, 2, 3];
-
-      container.innerHTML = selectedServices.map(item => {
-        const currentMultiplier = item.multiplier || 1;
-        const calculatedPrice = Math.round(item.price * currentMultiplier);
-        
-          return `
-          <div class="selected-item">
-            <div class="selected-item-main">
-              <div class="selected-item-info">
-                <div class="selected-item-name">${escapeHtml(item.name)}</div>
-                ${currentMultiplier !== 1 ? `<div class="selected-item-base">基本: ¥${item.price.toLocaleString()}</div>` : ''}
-              </div>
-              <span class="selected-item-price">¥${calculatedPrice.toLocaleString()}</span>
-              <button class="selected-item-remove" onclick="removeService('${item.id}')">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <div class="multiplier-row">
-              <span class="multiplier-label">単価調整</span>
-              ${multipliers.map(m => `
-                <button class="multiplier-btn ${currentMultiplier === m ? 'active' : ''}" 
-                        onclick="setMultiplier('${item.id}', ${m})">
-                  ${m === 1 ? '1x' : m + 'x'}
-                </button>
-              `).join('')}
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-      
-    function removeService(id) {
-      selectedServices = selectedServices.filter(s => s.id !== id);
-      renderSelectedServices();
-      renderServiceList();
-      updateEstimateTotal();
-    }
-
-    function updateEstimateTotal() {
-      const total = selectedServices.reduce((sum, s) => {
-        const multiplier = s.multiplier || 1;
-        return sum + Math.round(s.price * multiplier);
-      }, 0);
-      document.getElementById('estimate-total').textContent = `¥${total.toLocaleString()}`;
-    }
 
     // 顧客登録（3層構造対応）
     async function submitClient() {
@@ -2357,69 +2186,6 @@
     }
 
     // 見積もり送信
-    async function submitEstimate() {
-      const storeId = document.getElementById('estimate-store').value;
-      const notes = document.getElementById('estimate-notes').value;
-      
-      if (!storeId) {
-        alert('顧客を選択してください');
-        return;
-      }
-      if (selectedServices.length === 0) {
-        alert('サービスを選択してください');
-        return;
-      }
-
-      const store = allStores.find(s => s.id === storeId);
-      const total = selectedServices.reduce((sum, s) => {
-        const multiplier = s.multiplier || 1;
-        return sum + Math.round(s.price * multiplier);
-      }, 0);
-      
-      // 見積もりデータを作成
-      const estimateData = {
-        store_id: storeId,
-        store_name: store?.name || '不明',
-        items: selectedServices.map(s => ({
-          id: s.id,
-          name: s.name,
-          base_price: s.price,
-          multiplier: s.multiplier || 1,
-          price: Math.round(s.price * (s.multiplier || 1))
-        })),
-        total: total,
-        notes: notes,
-        status: 'pending', // pending: 未処理, processing: 本見積作成中, completed: 完了, rejected: 却下
-        created_by: 'sales', // 営業担当
-        created_at: new Date().toISOString()
-      };
-
-      try {
-        const res = await fetch(`${API_BASE}/estimates`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(estimateData)
-        });
-
-        if (!res.ok) throw new Error('送信に失敗しました');
-
-        const result = await res.json();
-        
-        alert(`仮見積もりを経理担当に送信しました！\n\n見積もり番号: ${result.id}\n店舗: ${store?.name}\n合計: ¥${total.toLocaleString()}\n\n経理担当が確認後、本見積もりを作成します。`);
-        
-        // リセット
-        selectedServices = [];
-        document.getElementById('estimate-store').value = '';
-        document.getElementById('estimate-notes').value = '';
-        renderSelectedServices();
-        renderServiceList();
-        updateEstimateTotal();
-      } catch (error) {
-        console.error('Error:', error);
-        alert('送信に失敗しました: ' + error.message);
-      }
-    }
-
     // 旧「スケジュール仮押さえ」機能は、新規スケジュール作成ページに統合したため未使用
 
     // 案件管理画面用の仮見積もり関数
@@ -3041,12 +2807,35 @@
       const container = document.getElementById('schedule-list-content');
       if (!container) return;
 
-      if (scheduleFilteredSchedules.length === 0) {
-        container.innerHTML = '<div class="loading">該当するスケジュールがありません</div>';
-        return;
+      // SP版では当日のスケジュールのみを表示
+      const isMobile = window.innerWidth < 600;
+      let schedulesToRender = scheduleFilteredSchedules;
+      
+      if (isMobile) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        schedulesToRender = scheduleFilteredSchedules.filter(schedule => {
+          const normalized = DataUtils.normalizeSchedule(schedule);
+          const dateStr = normalized.date || schedule.date || schedule.scheduled_date || '';
+          if (!dateStr) return false;
+          const scheduleDate = new Date(dateStr);
+          scheduleDate.setHours(0, 0, 0, 0);
+          return scheduleDate.getTime() === today.getTime();
+        });
+        
+        // 当日の件数を表示
+        if (schedulesToRender.length === 0) {
+          container.innerHTML = '<div class="loading">本日のスケジュールはありません</div>';
+          return;
+        }
+      } else {
+        if (scheduleFilteredSchedules.length === 0) {
+          container.innerHTML = '<div class="loading">該当するスケジュールがありません</div>';
+          return;
+        }
       }
 
-      container.innerHTML = scheduleFilteredSchedules.map(schedule => {
+      container.innerHTML = schedulesToRender.map(schedule => {
         const normalized = DataUtils.normalizeSchedule(schedule);
         const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
         const storeName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
