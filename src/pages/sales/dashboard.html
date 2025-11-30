@@ -2312,6 +2312,17 @@
     let scheduleFilteredSchedules = [];
     const dowClass = ['sun', '', '', '', '', '', 'sat'];
 
+    // ローカルタイムゾーンで日付をYYYY-MM-DD形式の文字列に変換
+    function formatDateToYYYYMMDD(date) {
+      if (!date) return '';
+      const d = date instanceof Date ? date : new Date(date);
+      if (isNaN(d.getTime())) return '';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
       setupTabs();
       setupSwipe();
@@ -2538,19 +2549,33 @@
             let dateA = normalizedA.date || a.date || a.scheduled_date || '';
             let dateB = normalizedB.date || b.date || b.scheduled_date || '';
             
-            // Dateオブジェクトの場合は文字列に変換
+            // Dateオブジェクトの場合は文字列に変換（ローカルタイムゾーンで）
             if (dateA instanceof Date) {
-              dateA = dateA.toISOString().split('T')[0];
-            } else if (typeof dateA !== 'string') {
-              dateA = String(dateA || '');
+              dateA = formatDateToYYYYMMDD(dateA);
+            } else if (dateA && typeof dateA !== 'string') {
+              dateA = formatDateToYYYYMMDD(new Date(dateA));
+            } else if (dateA && dateA.includes('T')) {
+              dateA = formatDateToYYYYMMDD(new Date(dateA));
+            } else if (dateA && !dateA.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              const dateObj = new Date(dateA);
+              if (!isNaN(dateObj.getTime())) {
+                dateA = formatDateToYYYYMMDD(dateObj);
+              }
             }
             if (dateB instanceof Date) {
-              dateB = dateB.toISOString().split('T')[0];
-            } else if (typeof dateB !== 'string') {
-              dateB = String(dateB || '');
+              dateB = formatDateToYYYYMMDD(dateB);
+            } else if (dateB && typeof dateB !== 'string') {
+              dateB = formatDateToYYYYMMDD(new Date(dateB));
+            } else if (dateB && dateB.includes('T')) {
+              dateB = formatDateToYYYYMMDD(new Date(dateB));
+            } else if (dateB && !dateB.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              const dateObj = new Date(dateB);
+              if (!isNaN(dateObj.getTime())) {
+                dateB = formatDateToYYYYMMDD(dateObj);
+              }
             }
             
-            return dateA.localeCompare(dateB);
+            return (dateA || '').localeCompare(dateB || '');
           })[0];
         
         let nextDateFormatted = '未設定';
@@ -2809,8 +2834,15 @@
         }
         
         // 統計更新
-        const today = new Date().toISOString().split('T')[0];
-        const todayCount = allSchedules.filter(s => s.scheduled_date === today).length;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = formatDateToYYYYMMDD(today);
+        const todayCount = allSchedules.filter(s => {
+          const sDate = s.scheduled_date || s.date;
+          if (!sDate) return false;
+          const sDateStr = formatDateToYYYYMMDD(new Date(sDate));
+          return sDateStr === todayStr;
+        }).length;
         document.getElementById('today-count').textContent = todayCount;
         
         // 仮押さえ件数（自分が申請したもの）
@@ -2839,23 +2871,31 @@
       for (let i = 0; i < 7; i++) {
         const d = new Date(today);
         d.setDate(d.getDate() + i);
-        const dateStr = d.toISOString().split('T')[0];
+        const dateStr = formatDateToYYYYMMDD(d);
         
         allSchedules.filter(s => {
           // 正規化された日付も確認（リマインダーを含むすべての予定に対応）
           const normalized = DataUtils.normalizeSchedule(s);
           let scheduleDate = normalized.date || s.date || s.scheduled_date || '';
           
-          // Dateオブジェクトの場合は文字列に変換
+          // Dateオブジェクトの場合は文字列に変換（ローカルタイムゾーンで）
           if (scheduleDate instanceof Date) {
-            scheduleDate = scheduleDate.toISOString().split('T')[0];
+            scheduleDate = formatDateToYYYYMMDD(scheduleDate);
           } else if (scheduleDate && typeof scheduleDate !== 'string') {
             scheduleDate = String(scheduleDate);
           }
           
           // 日付文字列を正規化（YYYY-MM-DD形式に統一）
           if (scheduleDate && scheduleDate.includes('T')) {
-            scheduleDate = scheduleDate.split('T')[0];
+            // ISO形式の場合は、ローカルタイムゾーンで解釈
+            const dateObj = new Date(scheduleDate);
+            scheduleDate = formatDateToYYYYMMDD(dateObj);
+          } else if (scheduleDate && !scheduleDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            // YYYY-MM-DD形式でない場合は、Dateオブジェクトに変換してからフォーマット
+            const dateObj = new Date(scheduleDate);
+            if (!isNaN(dateObj.getTime())) {
+              scheduleDate = formatDateToYYYYMMDD(dateObj);
+            }
           }
           
           return scheduleDate === dateStr;
@@ -2871,19 +2911,33 @@
         let dateA = normalizedA.date || a.date || a.scheduled_date || '';
         let dateB = normalizedB.date || b.date || b.scheduled_date || '';
         
-        // Dateオブジェクトの場合は文字列に変換
+        // Dateオブジェクトの場合は文字列に変換（ローカルタイムゾーンで）
         if (dateA instanceof Date) {
-          dateA = dateA.toISOString().split('T')[0];
-        } else if (typeof dateA !== 'string') {
-          dateA = String(dateA || '');
+          dateA = formatDateToYYYYMMDD(dateA);
+        } else if (dateA && typeof dateA !== 'string') {
+          dateA = formatDateToYYYYMMDD(new Date(dateA));
+        } else if (dateA && dateA.includes('T')) {
+          dateA = formatDateToYYYYMMDD(new Date(dateA));
+        } else if (dateA && !dateA.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const dateObj = new Date(dateA);
+          if (!isNaN(dateObj.getTime())) {
+            dateA = formatDateToYYYYMMDD(dateObj);
+          }
         }
         if (dateB instanceof Date) {
-          dateB = dateB.toISOString().split('T')[0];
-        } else if (typeof dateB !== 'string') {
-          dateB = String(dateB || '');
+          dateB = formatDateToYYYYMMDD(dateB);
+        } else if (dateB && typeof dateB !== 'string') {
+          dateB = formatDateToYYYYMMDD(new Date(dateB));
+        } else if (dateB && dateB.includes('T')) {
+          dateB = formatDateToYYYYMMDD(new Date(dateB));
+        } else if (dateB && !dateB.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const dateObj = new Date(dateB);
+          if (!isNaN(dateObj.getTime())) {
+            dateB = formatDateToYYYYMMDD(dateObj);
+          }
         }
         
-        if (dateA !== dateB) return dateA.localeCompare(dateB);
+        if (dateA !== dateB) return (dateA || '').localeCompare(dateB || '');
         // 時間で比較
         const timeA = normalizedA.time || a.time_slot || a.scheduled_time || '';
         const timeB = normalizedB.time || b.time_slot || b.scheduled_time || '';
@@ -3560,7 +3614,11 @@
       // スケジュールの日付を取得（date または scheduled_date フィールドに対応）
       const eventDates = new Set(allSchedules.map(s => {
         const normalized = DataUtils.normalizeSchedule(s);
-        return normalized.date || s.date || s.scheduled_date || '';
+        let dateStr = normalized.date || s.date || s.scheduled_date || '';
+        if (dateStr) {
+          dateStr = formatDateToYYYYMMDD(new Date(dateStr));
+        }
+        return dateStr;
       }).filter(d => d));
       
       const weekDaysEl = document.getElementById('week-days');
@@ -3570,7 +3628,7 @@
       for (let i = 0; i < 7; i++) {
         const d = new Date(ws);
         d.setDate(d.getDate() + i);
-        const dateStr = d.toISOString().split('T')[0];
+        const dateStr = formatDateToYYYYMMDD(d);
         const isToday = d.toDateString() === today.toDateString();
         const isSelected = d.toDateString() === selectedScheduleDate.toDateString();
         const hasEvent = eventDates.has(dateStr);
@@ -3611,13 +3669,34 @@
       for (let i = 0; i < 7; i++) {
         const d = new Date(ws);
         d.setDate(d.getDate() + i);
-        const dateStr = d.toISOString().split('T')[0];
+        const dateStr = formatDateToYYYYMMDD(d);
         const isToday = d.toDateString() === today.toDateString();
         
         // スケジュールを取得（date または scheduled_date フィールドに対応）
         let daySchedules = allSchedules.filter(s => {
           const normalized = DataUtils.normalizeSchedule(s);
-          const scheduleDate = normalized.date || s.date || s.scheduled_date || '';
+          let scheduleDate = normalized.date || s.date || s.scheduled_date || '';
+          
+          // Dateオブジェクトの場合は文字列に変換（ローカルタイムゾーンで）
+          if (scheduleDate instanceof Date) {
+            scheduleDate = formatDateToYYYYMMDD(scheduleDate);
+          } else if (scheduleDate && typeof scheduleDate !== 'string') {
+            scheduleDate = String(scheduleDate);
+          }
+          
+          // 日付文字列を正規化（YYYY-MM-DD形式に統一）
+          if (scheduleDate && scheduleDate.includes('T')) {
+            // ISO形式の場合は、ローカルタイムゾーンで解釈
+            const dateObj = new Date(scheduleDate);
+            scheduleDate = formatDateToYYYYMMDD(dateObj);
+          } else if (scheduleDate && !scheduleDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            // YYYY-MM-DD形式でない場合は、Dateオブジェクトに変換してからフォーマット
+            const dateObj = new Date(scheduleDate);
+            if (!isNaN(dateObj.getTime())) {
+              scheduleDate = formatDateToYYYYMMDD(dateObj);
+            }
+          }
+          
           return scheduleDate === dateStr;
         });
         
@@ -3932,21 +4011,35 @@
         let dateA = normalizedA.date || a.date || a.scheduled_date || '';
         let dateB = normalizedB.date || b.date || b.scheduled_date || '';
         
-        // Dateオブジェクトの場合は文字列に変換
+        // Dateオブジェクトの場合は文字列に変換（ローカルタイムゾーンで）
         if (dateA instanceof Date) {
-          dateA = dateA.toISOString().split('T')[0];
-        } else if (typeof dateA !== 'string') {
-          dateA = String(dateA || '');
+          dateA = formatDateToYYYYMMDD(dateA);
+        } else if (dateA && typeof dateA !== 'string') {
+          dateA = formatDateToYYYYMMDD(new Date(dateA));
+        } else if (dateA && dateA.includes('T')) {
+          dateA = formatDateToYYYYMMDD(new Date(dateA));
+        } else if (dateA && !dateA.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const dateObj = new Date(dateA);
+          if (!isNaN(dateObj.getTime())) {
+            dateA = formatDateToYYYYMMDD(dateObj);
+          }
         }
         if (dateB instanceof Date) {
-          dateB = dateB.toISOString().split('T')[0];
-        } else if (typeof dateB !== 'string') {
-          dateB = String(dateB || '');
+          dateB = formatDateToYYYYMMDD(dateB);
+        } else if (dateB && typeof dateB !== 'string') {
+          dateB = formatDateToYYYYMMDD(new Date(dateB));
+        } else if (dateB && dateB.includes('T')) {
+          dateB = formatDateToYYYYMMDD(new Date(dateB));
+        } else if (dateB && !dateB.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const dateObj = new Date(dateB);
+          if (!isNaN(dateObj.getTime())) {
+            dateB = formatDateToYYYYMMDD(dateObj);
+          }
         }
         
         const timeA = normalizedA.time || a.time_slot || a.scheduled_time || '00:00';
         const timeB = normalizedB.time || b.time_slot || b.scheduled_time || '00:00';
-        return `${dateA} ${timeA}`.localeCompare(`${dateB} ${timeB}`);
+        return `${dateA || ''} ${timeA}`.localeCompare(`${dateB || ''} ${timeB}`);
       });
 
       if (scheduleCurrentView === 'list') {
@@ -3982,19 +4075,27 @@
         const isDraft = schedule.status === 'draft';
         let dateStr = normalized.date || schedule.date || schedule.scheduled_date || '';
         
-        // Dateオブジェクトの場合は文字列に変換
+        // Dateオブジェクトの場合は文字列に変換（ローカルタイムゾーンで）
         if (dateStr instanceof Date) {
-          dateStr = dateStr.toISOString().split('T')[0];
+          dateStr = formatDateToYYYYMMDD(dateStr);
         } else if (dateStr && typeof dateStr !== 'string') {
           dateStr = String(dateStr);
         }
         
         // 日付文字列を正規化（YYYY-MM-DD形式に統一）
         if (dateStr && dateStr.includes('T')) {
-          dateStr = dateStr.split('T')[0];
+          // ISO形式の場合は、ローカルタイムゾーンで解釈
+          const dateObj = new Date(dateStr);
+          dateStr = formatDateToYYYYMMDD(dateObj);
+        } else if (dateStr && !dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          // YYYY-MM-DD形式でない場合は、Dateオブジェクトに変換してからフォーマット
+          const dateObj = new Date(dateStr);
+          if (!isNaN(dateObj.getTime())) {
+            dateStr = formatDateToYYYYMMDD(dateObj);
+          }
         }
         
-        const date = new Date(dateStr);
+        const date = new Date(dateStr + 'T00:00:00');
         const timeStr = normalized.time || schedule.time_slot || schedule.scheduled_time || '-';
 
         return `
@@ -4051,8 +4152,9 @@
 
       // 日付セル
       for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const dayOfWeek = new Date(year, month, day).getDay();
+        const dateObj = new Date(year, month, day);
+        const dateStr = formatDateToYYYYMMDD(dateObj);
+        const dayOfWeek = dateObj.getDay();
 
         const dayCell = document.createElement('div');
         dayCell.className = 'calendar-day';
@@ -4070,16 +4172,24 @@
           const normalized = DataUtils.normalizeSchedule(s);
           let scheduleDate = normalized.date || s.date || s.scheduled_date || '';
           
-          // Dateオブジェクトの場合は文字列に変換
+          // Dateオブジェクトの場合は文字列に変換（ローカルタイムゾーンで）
           if (scheduleDate instanceof Date) {
-            scheduleDate = scheduleDate.toISOString().split('T')[0];
+            scheduleDate = formatDateToYYYYMMDD(scheduleDate);
           } else if (scheduleDate && typeof scheduleDate !== 'string') {
             scheduleDate = String(scheduleDate);
           }
           
           // 日付文字列を正規化（YYYY-MM-DD形式に統一）
           if (scheduleDate && scheduleDate.includes('T')) {
-            scheduleDate = scheduleDate.split('T')[0];
+            // ISO形式の場合は、ローカルタイムゾーンで解釈
+            const dateObj = new Date(scheduleDate);
+            scheduleDate = formatDateToYYYYMMDD(dateObj);
+          } else if (scheduleDate && !scheduleDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            // YYYY-MM-DD形式でない場合は、Dateオブジェクトに変換してからフォーマット
+            const dateObj = new Date(scheduleDate);
+            if (!isNaN(dateObj.getTime())) {
+              scheduleDate = formatDateToYYYYMMDD(dateObj);
+            }
           }
           
           return scheduleDate === dateStr;
