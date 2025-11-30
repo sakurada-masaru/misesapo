@@ -427,24 +427,12 @@
                 <input type="date" id="new-schedule-date" required />
               </div>
               <div class="form-group">
-                <label>時間帯 <span class="req">*</span></label>
+                <label>時間帯</label>
                 <div class="time-inputs">
-                  <input type="time" id="new-schedule-start-time" required />
+                  <input type="time" id="new-schedule-start-time" />
                   <span>〜</span>
-                  <input type="time" id="new-schedule-end-time" required />
+                  <input type="time" id="new-schedule-end-time" />
                 </div>
-              </div>
-              <div class="form-group">
-                <label>顧客・店舗 <span class="req">*</span></label>
-                <select id="new-schedule-store" required>
-                  <option value="">選択してください</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>担当者</label>
-                <select id="new-schedule-worker">
-                  <option value="">未割当</option>
-                </select>
               </div>
               <div class="form-group">
                 <label>メモ</label>
@@ -2339,7 +2327,15 @@
     .schedule-form-modal .req {
       color: #ef4444;
     }
-    .schedule-form-modal input[type="date"],
+    .schedule-form-modal input[type="date"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      min-height: 44px;
+    }
     .schedule-form-modal input[type="time"],
     .schedule-form-modal select,
     .schedule-form-modal textarea {
@@ -3056,18 +3052,6 @@
       const estimateStoreCaseEl = document.getElementById('estimate-store-case');
       if (estimateStoreCaseEl) {
         estimateStoreCaseEl.innerHTML = estimateOptions;
-      }
-      // 新規予定作成モーダルのセレクトも更新
-      const newScheduleStoreEl = document.getElementById('new-schedule-store');
-      if (newScheduleStoreEl) {
-        newScheduleStoreEl.innerHTML = scheduleOptions;
-      }
-      // 新規予定作成モーダルの担当者セレクトを更新
-      const workerSelect = document.getElementById('new-schedule-worker');
-      if (workerSelect) {
-        const workerOptions = '<option value="">未割当</option>' +
-          allWorkers.map(w => `<option value="${w.id}">${escapeHtml(w.name)}</option>`).join('');
-        workerSelect.innerHTML = workerOptions;
       }
     }
 
@@ -4137,35 +4121,21 @@
           const date = document.getElementById('new-schedule-date').value;
           const startTime = document.getElementById('new-schedule-start-time').value;
           const endTime = document.getElementById('new-schedule-end-time').value;
-          const storeId = document.getElementById('new-schedule-store').value;
-          const workerId = document.getElementById('new-schedule-worker').value;
           const notes = document.getElementById('new-schedule-notes').value;
           
-          if (!date || !startTime || !endTime || !storeId) {
-            alert('必須項目を入力してください');
+          if (!date) {
+            alert('日付を入力してください');
             return;
           }
           
-          const store = allStores.find(s => s.id === storeId);
-          if (!store) {
-            alert('店舗が見つかりません');
-            return;
-          }
-          
-          const timeSlot = `${startTime}-${endTime}`;
+          const timeSlot = startTime && endTime ? `${startTime}-${endTime}` : (startTime || '');
           const scheduleData = {
             date: date,
             scheduled_date: date,
-            time: timeSlot,
-            time_slot: timeSlot,
-            scheduled_time: timeSlot,
-            store_id: storeId,
-            client_id: store.client_id,
-            store_name: store.name,
-            client_name: getClientName(store.client_id) || '',
+            time: timeSlot || null,
+            time_slot: timeSlot || null,
+            scheduled_time: timeSlot || null,
             status: 'scheduled',
-            worker_id: workerId || null,
-            assigned_to: workerId || null,
             notes: notes || ''
           };
           
