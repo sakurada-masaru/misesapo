@@ -102,7 +102,7 @@
         <div class="estimate-total-bar">
           <span class="total-label">合計</span>
           <span class="total-value" id="estimate-total-new">¥0</span>
-        </div>
+      </div>
       </div>
       
       <div class="estimate-scroll-content">
@@ -704,11 +704,11 @@
           }));
         } catch (error) {
           console.warn('[sales/schedules/new] Failed to load clients from API, using local clients_data if available:', error);
-          if (typeof clients_data !== 'undefined' && clients_data.clients) {
-            clients = clients_data.clients;
+      if (typeof clients_data !== 'undefined' && clients_data.clients) {
+        clients = clients_data.clients;
           } else {
             clients = [];
-          }
+      }
         }
       }
 
@@ -791,7 +791,7 @@
       function renderServiceListNew() {
         const container = document.getElementById('service-list-new');
         if (!container) return;
-        
+
         if (serviceItems.length === 0) {
           container.innerHTML = '<div class="empty-state">サービスがありません</div>';
           return;
@@ -806,7 +806,7 @@
             <div class="service-item ${isSelected ? 'selected' : ''}" onclick="toggleServiceNew('${itemId}')" data-service-id="${itemId}">
               <span class="service-name">${escapeHtml(serviceName)}</span>
               <span class="service-price">¥${formatPrice(priceNum)}</span>
-            </div>
+          </div>
           `;
         }).join('');
       }
@@ -868,14 +868,14 @@
                 <div class="selected-item-info">
                   <div class="selected-item-name">${escapeHtml(serviceName)}</div>
                   <div class="selected-item-base">¥${formatPrice(basePrice)} × ${currentMultiplier}</div>
-                </div>
+            </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span class="selected-item-price">¥${formatPrice(calculatedPrice)}</span>
                   <button type="button" class="selected-item-remove" onclick="removeServiceNew('${item.id}')">
                     <i class="fas fa-times"></i>
                   </button>
-                </div>
-              </div>
+            </div>
+            </div>
               <div class="multiplier-row">
                 <span style="font-size: 0.7rem; color: #666; margin-right: 8px;">倍率:</span>
                 ${multipliers.map(m => `
@@ -884,9 +884,9 @@
                     ${m}
                   </button>
                 `).join('')}
-              </div>
             </div>
-          `;
+          </div>
+        `;
         }).join('');
       }
       
@@ -924,7 +924,7 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-      }
+        }
 
       // フォーム送信
       const form = document.getElementById('schedule-form');
@@ -1007,11 +1007,11 @@
 
           try {
             const response = await fetch(`${API_BASE}/schedules`, {
-              method: 'POST',
-              headers: {
+            method: 'POST',
+            headers: {
                 'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(scheduleData)
+            },
+            body: JSON.stringify(scheduleData)
             });
 
             if (!response.ok) {
@@ -1035,8 +1035,8 @@
       (async function initPage() {
         // 顧客・店舗データをAPI（またはローカルJSON）から読み込み
         await loadClientsFromApi();
-        initClientSelect();
-
+      initClientSelect();
+      
         // サービスマスタをAPI（またはローカルJSON）から読み込み
         await loadServicesFromApi();
 
@@ -1053,17 +1053,17 @@
             container.innerHTML = '<div class="empty-state">サービスを読み込み中...</div>';
           }
           console.warn('[sales/schedules/new] Service items not loaded yet');
-        }
+      }
 
-        // 今日の日付をデフォルトに設定
-        const dateInput = document.getElementById('schedule-date');
-        if (dateInput) {
-          const today = new Date();
-          const year = today.getFullYear();
-          const month = String(today.getMonth() + 1).padStart(2, '0');
-          const day = String(today.getDate()).padStart(2, '0');
-          dateInput.value = `${year}-${month}-${day}`;
-        }
+      // 今日の日付をデフォルトに設定
+      const dateInput = document.getElementById('schedule-date');
+      if (dateInput) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        dateInput.value = `${year}-${month}-${day}`;
+      }
       })();
     })();
   </script>

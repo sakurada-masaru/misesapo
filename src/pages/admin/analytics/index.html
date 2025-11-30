@@ -10,7 +10,7 @@
         <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
         <span class="logo-text">ミセサポ</span>
       </a>
-    </div>
+      </div>
     
     <!-- ロール表示 -->
     <div class="sidebar-role">
@@ -88,18 +88,18 @@
     <!-- トップバー -->
     <header class="topbar">
       <div class="topbar-left">
-        <h1>アクセス分析</h1>
+            <h1>アクセス分析</h1>
         <p class="topbar-sub">サイトアクセスとAI流入の分析</p>
-      </div>
+          </div>
       <div class="topbar-right">
         <select id="analytics-period" class="topbar-select">
-          <option value="7">過去7日</option>
-          <option value="14">過去14日</option>
-          <option value="30">過去30日</option>
-        </select>
-        <button class="btn-refresh" id="refresh-btn">
-          <i class="fas fa-sync-alt"></i> 更新
-        </button>
+            <option value="7">過去7日</option>
+            <option value="14">過去14日</option>
+            <option value="30">過去30日</option>
+          </select>
+          <button class="btn-refresh" id="refresh-btn">
+            <i class="fas fa-sync-alt"></i> 更新
+          </button>
       </div>
     </header>
 
@@ -132,33 +132,33 @@
           <div class="summary-body">
             <div class="summary-value" id="daily-avg">-</div>
             <div class="summary-label">日平均アクセス</div>
-          </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
     <!-- メインコンテンツエリア -->
     <div class="main-layout">
       <!-- 左側：チャート -->
-      <section class="chart-section">
-        <div class="panel">
-          <div class="panel-header">
-            <h3><i class="fas fa-chart-bar"></i> アクセス推移</h3>
-            <div class="chart-legend">
-              <span class="legend-item"><span class="legend-dot blue"></span> 通常アクセス</span>
-              <span class="legend-item"><span class="legend-dot purple"></span> AI経由</span>
-            </div>
-          </div>
-          <div class="panel-body">
-            <div class="chart-container" id="access-chart">
-              <div class="loading"><i class="fas fa-spinner fa-spin"></i></div>
-            </div>
+  <section class="chart-section">
+      <div class="panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-chart-bar"></i> アクセス推移</h3>
+          <div class="chart-legend">
+            <span class="legend-item"><span class="legend-dot blue"></span> 通常アクセス</span>
+            <span class="legend-item"><span class="legend-dot purple"></span> AI経由</span>
           </div>
         </div>
-      </section>
+        <div class="panel-body">
+          <div class="chart-container" id="access-chart">
+            <div class="loading"><i class="fas fa-spinner fa-spin"></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
       <!-- 右側：詳細情報 -->
-      <section class="details-section">
+  <section class="details-section">
         <!-- AI流入元 -->
         <div class="panel">
           <div class="panel-header">
@@ -176,14 +176,14 @@
           </div>
           <div class="panel-body" id="top-pages">
             <div class="loading"><i class="fas fa-spinner fa-spin"></i></div>
-          </div>
-        </div>
-      </section>
+      </div>
+    </div>
+  </section>
     </div>
 
   <!-- 日別データ -->
   <section class="table-section">
-    <div class="panel">
+      <div class="panel">
         <div class="panel-header">
           <h3><i class="fas fa-table"></i> 日別データ</h3>
         </div>
@@ -201,8 +201,8 @@
               <tr><td colspan="4" class="loading-cell"><i class="fas fa-spinner fa-spin"></i></td></tr>
             </tbody>
           </table>
-        </div>
       </div>
+    </div>
   </section>
 
   <style>

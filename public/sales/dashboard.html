@@ -278,7 +278,7 @@
             <i class="fas fa-save"></i> 登録する
           </button>
       </div>
-      </section>
+    </section>
 
       <!-- 画面3: スケジュール -->
       <section class="swipe-screen" data-screen="schedule-list">
@@ -396,59 +396,59 @@
         <!-- 仮見積もりタブ -->
         <div class="case-tab-content active" data-case-content="estimate">
           <!-- 仮見積もり画面の内容をここに移動 -->
-          <div class="estimate-fixed-header">
-            <div class="estimate-total-bar">
-              <span class="total-label">合計</span>
+        <div class="estimate-fixed-header">
+          <div class="estimate-total-bar">
+            <span class="total-label">合計</span>
               <span class="total-value" id="estimate-total-case">¥0</span>
-            </div>
-            <div class="estimate-customer">
+      </div>
+          <div class="estimate-customer">
               <select id="estimate-store-case">
-                <option value="">顧客を選択</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="estimate-scroll-content">
-            <div class="estimate-section">
-              <div class="section-label"><i class="fas fa-check-circle"></i> 選択中のサービス</div>
+              <option value="">顧客を選択</option>
+            </select>
+        </div>
+        </div>
+        
+        <div class="estimate-scroll-content">
+          <div class="estimate-section">
+            <div class="section-label"><i class="fas fa-check-circle"></i> 選択中のサービス</div>
               <div class="selected-services" id="selected-services-case">
-                <div class="empty-hint">
-                  <i class="fas fa-hand-pointer"></i>
-                  <span>下からサービスを選択</span>
-                </div>
-              </div>
-            </div>
+              <div class="empty-hint">
+                <i class="fas fa-hand-pointer"></i>
+                <span>下からサービスを選択</span>
+        </div>
+      </div>
+        </div>
 
-            <div class="estimate-section">
-              <div class="section-label"><i class="fas fa-list"></i> サービス一覧</div>
+          <div class="estimate-section">
+            <div class="section-label"><i class="fas fa-list"></i> サービス一覧</div>
               <div class="service-list" id="service-list-case">
-                <div class="loading">読み込み中...</div>
-              </div>
-            </div>
+              <div class="loading">読み込み中...</div>
+        </div>
+  </div>
 
-            <div class="estimate-section">
-              <div class="section-label"><i class="fas fa-sticky-note"></i> メモ</div>
+          <div class="estimate-section">
+            <div class="section-label"><i class="fas fa-sticky-note"></i> メモ</div>
               <textarea id="estimate-notes-case" rows="2" placeholder="補足事項があれば入力"></textarea>
-            </div>
-          </div>
+    </div>
+        </div>
 
-          <div class="estimate-fixed-footer">
+        <div class="estimate-fixed-footer">
             <button type="button" class="btn-pdf" onclick="generateEstimatePDF()" style="margin-right: 8px; background: #6b7280;">
               <i class="fas fa-file-pdf"></i> PDFをダウンロード
             </button>
             <button class="btn-submit" onclick="submitEstimateCase()">
-              <i class="fas fa-paper-plane"></i> 見積もりを送信
-            </button>
-          </div>
+            <i class="fas fa-paper-plane"></i> 見積もりを送信
+          </button>
+        </div>
         </div>
 
         <!-- 仮押さえタブ -->
         <div class="case-tab-content" data-case-content="schedule">
-          <div class="form-container">
-            <div class="info-banner">
-              <i class="fas fa-info-circle"></i>
+        <div class="form-container">
+          <div class="info-banner">
+            <i class="fas fa-info-circle"></i>
               <span>新しい案件のスケジュールは、詳細入力画面から登録します。</span>
-            </div>
+      </div>
 
             <p style="margin-top:16px; margin-bottom:24px; color:#4b5563; font-size:0.9rem;">
               営業用の詳細なスケジュール作成フォームに遷移します。<br>
@@ -458,9 +458,9 @@
             <a class="btn-primary" href="/sales/schedules/new.html" style="width:100%; text-align:center; text-decoration:none;">
               <i class="fas fa-calendar-plus"></i> 新規スケジュールを作成
             </a>
-          </div>
         </div>
-      </section>
+    </div>
+  </section>
 
     </div>
     </div>
@@ -1657,6 +1657,7 @@
       border-top: none;
     }
     .calendar-day {
+      height: 80px;
       min-height: 80px;
       padding: 6px;
       border-right: 1px solid #f3f4f6;
@@ -1664,11 +1665,15 @@
       cursor: pointer;
       transition: background 0.15s;
       color: #111827;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      overflow: hidden;
     }
     .calendar-day:hover {
       background: #f9fafb;
     }
-    .calendar-day:nth-child(7n) {
+    .calendar-day:nth-child(7n+7) {
       border-right: none;
     }
     .calendar-day.empty {
@@ -1696,6 +1701,9 @@
       display: flex;
       flex-direction: column;
       gap: 2px;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
     }
     .day-event {
       font-size: 0.65rem;
@@ -1843,7 +1851,7 @@
           // 仮見積もりタブの場合、サービス一覧を再読み込み
           if (clickedTab === 'estimate') {
             loadServiceItems();
-          }
+      }
         });
       });
     }
@@ -1874,14 +1882,14 @@
         ]);
         
         if (storesRes.ok) {
-          allStores = await storesRes.json();
+        allStores = await storesRes.json();
         } else {
           console.warn('Failed to load stores');
           allStores = [];
         }
         
         if (schedulesRes.ok) {
-          allSchedules = await schedulesRes.json();
+        allSchedules = await schedulesRes.json();
         } else {
           console.warn('Failed to load schedules');
           allSchedules = [];
@@ -2260,7 +2268,7 @@
         alert('送信に失敗しました: ' + error.message);
       }
     }
-    
+
     function renderServiceListCase() {
       const container = document.getElementById('service-list-case');
       if (!container) return;
@@ -2722,7 +2730,7 @@
       if (notes) {
         document.getElementById('event-notes').textContent = notes;
         notesItem.style.display = 'flex';
-      } else {
+        } else {
         notesItem.style.display = 'none';
       }
       
