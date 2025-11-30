@@ -313,7 +313,12 @@
         <div class="event-sheet" id="event-sheet">
           <div class="sheet-handle"></div>
           <div class="sheet-content">
-            <h2 id="event-title">-</h2>
+            <div class="sheet-header">
+              <h2 id="event-title">-</h2>
+              <button type="button" class="sheet-close-btn" id="close-event-sheet">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
             <div class="event-info">
               <div class="event-info-item">
                 <i class="fas fa-calendar"></i>
@@ -1760,6 +1765,38 @@
       background: #dadce0;
       border-radius: 2px;
       margin: 12px auto;
+      cursor: pointer;
+    }
+    .sheet-content {
+      padding: 0 20px 20px;
+    }
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .sheet-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .sheet-close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sheet-close-btn:active {
+      opacity: 0.6;
     }
     .event-info {
       display: flex;
@@ -2261,6 +2298,7 @@
       setupSwipe();
       setupCaseTabs(); // 案件管理タブの初期化
       setupClientTabs(); // 顧客管理タブの初期化
+      setupEventSheet(); // 予定詳細シートの初期化
       setupNewScheduleModal(); // 新規予定作成モーダルの初期化
       await loadData();
       loadServiceItems();
@@ -3598,6 +3636,36 @@
       document.getElementById('event-sheet').classList.add('open');
       document.getElementById('sheet-overlay').classList.add('open');
     };
+    
+    // 予定詳細シートの閉じる機能
+    function setupEventSheet() {
+      const closeBtn = document.getElementById('close-event-sheet');
+      const overlay = document.getElementById('sheet-overlay');
+      const sheet = document.getElementById('event-sheet');
+      
+      const closeSheet = () => {
+        if (sheet) {
+          sheet.classList.remove('open');
+        }
+        if (overlay) {
+          overlay.classList.remove('open');
+        }
+      };
+      
+      if (closeBtn) {
+        closeBtn.addEventListener('click', closeSheet);
+      }
+      
+      if (overlay) {
+        overlay.addEventListener('click', closeSheet);
+      }
+      
+      // シートハンドルで閉じる（スワイプダウン）
+      const handle = document.querySelector('.sheet-handle');
+      if (handle) {
+        handle.addEventListener('click', closeSheet);
+      }
+    }
 
 
     // スケジュールパネルのリスト表示とカレンダー表示
@@ -3852,6 +3920,143 @@
       const div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
+    }
+    
+    // 新規予定作成モーダルの設定
+    function setupNewScheduleModal() {
+      const newScheduleBtn = document.getElementById('new-schedule-btn');
+      const modal = document.getElementById('new-schedule-modal');
+      const closeBtn = document.getElementById('close-schedule-modal');
+      const cancelBtn = document.getElementById('cancel-schedule-btn');
+      const form = document.getElementById('new-schedule-form');
+      
+      if (newScheduleBtn) {
+        newScheduleBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (modal) {
+            // 今日の日付をデフォルトに設定
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('new-schedule-date');
+            if (dateInput) {
+              dateInput.value = today;
+            }
+            modal.style.display = 'flex';
+          }
+        });
+      }
+      
+      const closeModal = () => {
+        if (modal) {
+          modal.style.display = 'none';
+          if (form) {
+            form.reset();
+          }
+        }
+      };
+      
+      if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          closeModal();
+        });
+      }
+      
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          closeModal();
+        });
+      }
+      
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            closeModal();
+          }
+        });
+      }
+      
+      // フォーム送信
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const date = document.getElementById('new-schedule-date').value;
+          const startTime = document.getElementById('new-schedule-start-time').value;
+          const endTime = document.getElementById('new-schedule-end-time').value;
+          const storeId = document.getElementById('new-schedule-store').value;
+          const workerId = document.getElementById('new-schedule-worker').value;
+          const notes = document.getElementById('new-schedule-notes').value;
+          
+          if (!date || !startTime || !endTime || !storeId) {
+            alert('必須項目を入力してください');
+            return;
+          }
+          
+          const store = allStores.find(s => s.id === storeId);
+          if (!store) {
+            alert('店舗が見つかりません');
+            return;
+          }
+          
+          const timeSlot = `${startTime}-${endTime}`;
+          const scheduleData = {
+            date: date,
+            scheduled_date: date,
+            time: timeSlot,
+            time_slot: timeSlot,
+            scheduled_time: timeSlot,
+            store_id: storeId,
+            client_id: store.client_id,
+            store_name: store.name,
+            client_name: getClientName(store.client_id) || '',
+            status: 'scheduled',
+            worker_id: workerId || null,
+            assigned_to: workerId || null,
+            notes: notes || ''
+          };
+          
+          try {
+            const response = await fetch(`${API_BASE}/schedules`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(scheduleData)
+            });
+            
+            if (response.ok) {
+              const newSchedule = await response.json();
+              allSchedules.push(newSchedule);
+              
+              // データを再読み込み
+              await loadData();
+              
+              // スケジュール表示を更新
+              if (scheduleCurrentView === 'list') {
+                filterAndRenderSchedules();
+              } else {
+                renderScheduleCalendar();
+              }
+              
+              // アクティビティ画面のスケジュール表示も更新
+              renderSchedules();
+              
+              alert('予定を作成しました');
+              closeModal();
+            } else {
+              throw new Error('予定の作成に失敗しました');
+            }
+          } catch (error) {
+            console.error('Failed to create schedule:', error);
+            alert('予定の作成に失敗しました');
+          }
+        });
+      }
     }
   </script>
 </main>
