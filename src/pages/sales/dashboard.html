@@ -73,63 +73,113 @@
       <!-- 画面2: 顧客登録 -->
       <section class="swipe-screen" data-screen="client">
         <header class="screen-header">
-          <h1>顧客登録</h1>
+          <h1>顧客管理</h1>
         </header>
         
-        <div class="form-container">
-          <div class="form-group">
-            <label>企業名 / 個人名 <span class="req">*</span></label>
-            <input type="text" id="client-company" placeholder="例: 株式会社ABC" />
-    </div>
-          <div class="form-group">
-            <label>ブランド名 / 屋号</label>
-            <input type="text" id="client-brand" placeholder="例: カフェXYZ" />
-      </div>
-          <div class="form-group">
-            <label>店舗名 <span class="req">*</span></label>
-            <input type="text" id="client-store" placeholder="例: 渋谷店" />
-      </div>
-          <div class="form-row">
-            <div class="form-group half">
-              <label>郵便番号</label>
-              <input type="text" id="client-postcode" placeholder="123-4567" />
-    </div>
-            <div class="form-group half">
-              <label>都道府県</label>
-              <select id="client-pref">
-                <option value="">選択</option>
-                <option value="東京都">東京都</option>
-                <option value="神奈川県">神奈川県</option>
-                <option value="埼玉県">埼玉県</option>
-                <option value="千葉県">千葉県</option>
-              </select>
-  </div>
-      </div>
-          <div class="form-group">
-            <label>住所</label>
-            <input type="text" id="client-address" placeholder="市区町村・番地" />
-        </div>
-          <div class="form-group">
-            <label>電話番号</label>
-            <input type="tel" id="client-phone" placeholder="03-1234-5678" />
-        </div>
-          <div class="form-group">
-            <label>担当者名</label>
-            <input type="text" id="client-contact" placeholder="山田太郎" />
-        </div>
-          <div class="form-group">
-            <label>メールアドレス</label>
-            <input type="email" id="client-email" placeholder="info@example.com" />
-        </div>
-          <div class="form-group">
-            <label>備考</label>
-            <textarea id="client-notes" rows="3" placeholder="特記事項があれば入力"></textarea>
-      </div>
-          <button class="btn-primary" onclick="submitClient()">
-            <i class="fas fa-save"></i> 登録する
+        <div class="client-tabs">
+          <button class="client-tab active" data-client-tab="register">
+            <i class="fas fa-user-plus"></i>
+            <span>顧客登録</span>
           </button>
-      </div>
-    </section>
+          <button class="client-tab" data-client-tab="list">
+            <i class="fas fa-list"></i>
+            <span>顧客一覧</span>
+          </button>
+        </div>
+
+        <!-- 顧客登録タブ -->
+        <div class="client-tab-content active" data-client-content="register">
+          <div class="form-container">
+            <div class="form-group">
+              <label>企業名 / 個人名 <span class="req">*</span></label>
+              <input type="text" id="client-company" placeholder="例: 株式会社ABC" />
+            </div>
+            <div class="form-group">
+              <label>ブランド名 / 屋号</label>
+              <input type="text" id="client-brand" placeholder="例: カフェXYZ" />
+            </div>
+            <div class="form-group">
+              <label>店舗名 <span class="req">*</span></label>
+              <input type="text" id="client-store" placeholder="例: 渋谷店" />
+            </div>
+            <div class="form-row">
+              <div class="form-group half">
+                <label>郵便番号</label>
+                <input type="text" id="client-postcode" placeholder="123-4567" />
+              </div>
+              <div class="form-group half">
+                <label>都道府県</label>
+                <select id="client-pref">
+                  <option value="">選択</option>
+                  <option value="東京都">東京都</option>
+                  <option value="神奈川県">神奈川県</option>
+                  <option value="埼玉県">埼玉県</option>
+                  <option value="千葉県">千葉県</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>住所</label>
+              <input type="text" id="client-address" placeholder="市区町村・番地" />
+            </div>
+            <div class="form-group">
+              <label>電話番号</label>
+              <input type="tel" id="client-phone" placeholder="03-1234-5678" />
+            </div>
+            <div class="form-group">
+              <label>担当者名</label>
+              <input type="text" id="client-contact" placeholder="山田太郎" />
+            </div>
+            <div class="form-group">
+              <label>メールアドレス</label>
+              <input type="email" id="client-email" placeholder="info@example.com" />
+            </div>
+            <div class="form-group">
+              <label>備考</label>
+              <textarea id="client-notes" rows="3" placeholder="特記事項があれば入力"></textarea>
+            </div>
+            <button class="btn-primary" onclick="submitClient()">
+              <i class="fas fa-save"></i> 登録する
+            </button>
+          </div>
+        </div>
+
+        <!-- 顧客一覧タブ -->
+        <div class="client-tab-content" data-client-content="list">
+          <!-- 検索バー -->
+          <div class="client-search-section">
+            <div class="client-search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" placeholder="店舗名・企業名で検索..." id="client-list-search" />
+            </div>
+          </div>
+
+          <!-- 統計 -->
+          <div class="client-stats-row">
+            <div class="client-stat-chip">
+              <span class="client-stat-num" id="client-total-count">0</span>
+              <span class="client-stat-label">全件</span>
+            </div>
+            <div class="client-stat-chip active">
+              <span class="client-stat-num" id="client-active-count">0</span>
+              <span class="client-stat-label">稼働中</span>
+            </div>
+          </div>
+
+          <!-- フィルタータブ -->
+          <div class="client-filter-tabs">
+            <button class="client-filter-tab active" data-client-filter="all">すべて</button>
+            <button class="client-filter-tab" data-client-filter="稼働中">稼働中</button>
+            <button class="client-filter-tab" data-client-filter="休止">休止</button>
+            <button class="client-filter-tab" data-client-filter="契約終了">終了</button>
+          </div>
+
+          <!-- 顧客リスト -->
+          <div class="client-list-container" id="client-list-container">
+            <div class="loading">読み込み中...</div>
+          </div>
+        </div>
+      </section>
 
       <!-- 画面3: スケジュール -->
       <section class="swipe-screen" data-screen="schedule-list">
@@ -959,6 +1009,196 @@
     }
 
     /* 案件管理タブ */
+    /* 顧客管理タブ */
+    .client-tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+      padding: 0 16px;
+    }
+    .client-tab {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .client-tab i {
+      font-size: 1rem;
+    }
+    .client-tab.active {
+      color: var(--primary, #ff679c);
+      border-bottom-color: var(--primary, #ff679c);
+      font-weight: 600;
+    }
+    .client-tab-content {
+      display: none;
+      flex-direction: column;
+      height: calc(100vh - 64px - 48px);
+      overflow-y: auto;
+    }
+    .client-tab-content.active {
+      display: flex;
+    }
+    /* 顧客一覧スタイル */
+    .client-search-section {
+      padding: 12px 16px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .client-search-box {
+      position: relative;
+    }
+    .client-search-box i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+    }
+    .client-search-box input {
+      width: 100%;
+      padding: 12px 12px 12px 42px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      background: #f9fafb;
+    }
+    .client-search-box input:focus {
+      outline: none;
+      border-color: var(--primary, #ff679c);
+      background: #fff;
+    }
+    .client-stats-row {
+      display: flex;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .client-stat-chip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 16px;
+      background: #f3f4f6;
+      border-radius: 8px;
+      min-width: 80px;
+    }
+    .client-stat-chip.active {
+      background: var(--primary, #ff679c);
+      color: #fff;
+    }
+    .client-stat-num {
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .client-stat-label {
+      font-size: 0.75rem;
+      margin-top: 2px;
+    }
+    .client-filter-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      overflow-x: auto;
+    }
+    .client-filter-tab {
+      padding: 8px 16px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: #6b7280;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .client-filter-tab.active {
+      background: var(--primary, #ff679c);
+      color: #fff;
+      border-color: var(--primary, #ff679c);
+    }
+    .client-list-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      background: #f9fafb;
+    }
+    .client-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .client-card:active {
+      transform: scale(0.98);
+    }
+    .client-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .client-store-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+    .client-company-name {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+    .client-status-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .client-status-稼働中 {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .client-status-休止 {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .client-status-契約終了 {
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+    .client-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .client-info-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+    .client-info-item i {
+      color: #9ca3af;
+      width: 16px;
+    }
+
     .case-tabs {
       display: flex;
       background: #fff;
@@ -1605,8 +1845,12 @@
     let allStores = [];
     let allSchedules = [];
     let allWorkers = [];
+    let allClients = [];
+    let allBrands = [];
     let serviceItems = [];
     let selectedScheduleDate = new Date();
+    let clientCurrentFilter = 'all';
+    let clientSearchQuery = '';
     let scheduleCurrentView = 'list';
     let scheduleCurrentMonth = new Date();
     let scheduleFilteredSchedules = [];
@@ -1616,8 +1860,10 @@
       setupTabs();
       setupSwipe();
       setupCaseTabs(); // 案件管理タブの初期化
+      setupClientTabs(); // 顧客管理タブの初期化
       await loadData();
       loadServiceItems();
+      renderClientList(); // 顧客一覧の初期表示
     });
 
     function setupTabs() {
@@ -1650,6 +1896,11 @@
         loadServiceItems();
       }
       
+      // 顧客管理画面に切り替えた時に顧客一覧を更新
+      if (screenName === 'client') {
+        renderClientList();
+      }
+      
       // スケジュール画面に切り替えた時にスケジュールを読み込み
       if (screenName === 'schedule-list') {
         // データが既に読み込まれている場合は再読み込みしない
@@ -1663,6 +1914,128 @@
           filterAndRenderSchedules();
         }
       }
+    }
+    
+    // 顧客管理タブの切り替え
+    function setupClientTabs() {
+      const clientTabs = document.querySelectorAll('.client-tab');
+      const clientContents = document.querySelectorAll('.client-tab-content');
+      
+      clientTabs.forEach(tab => {
+        const newTab = tab.cloneNode(true);
+        tab.parentNode.replaceChild(newTab, tab);
+        
+        newTab.addEventListener('click', () => {
+          const clickedTab = newTab.dataset.clientTab;
+          
+          const allClientTabs = document.querySelectorAll('.client-tab');
+          const allClientContents = document.querySelectorAll('.client-tab-content');
+          
+          allClientTabs.forEach(t => t.classList.remove('active'));
+          newTab.classList.add('active');
+          
+          allClientContents.forEach(content => {
+            content.classList.remove('active');
+            if (content.dataset.clientContent === clickedTab) {
+              content.classList.add('active');
+            }
+          });
+          
+          // 顧客一覧タブの場合、顧客一覧を再表示
+          if (clickedTab === 'list') {
+            renderClientList();
+          }
+        });
+      });
+      
+      // 顧客一覧のフィルターと検索のイベントリスナー
+      const filterTabs = document.querySelectorAll('.client-filter-tab');
+      filterTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          filterTabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          clientCurrentFilter = tab.dataset.clientFilter;
+          renderClientList();
+        });
+      });
+      
+      const searchInput = document.getElementById('client-list-search');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          clientSearchQuery = e.target.value;
+          renderClientList();
+        });
+      }
+    }
+    
+    // 顧客一覧の表示
+    function renderClientList() {
+      const container = document.getElementById('client-list-container');
+      if (!container) return;
+      
+      let filtered = allStores.filter(store => {
+        // ステータスフィルター
+        if (clientCurrentFilter !== 'all') {
+          const status = store.status || '稼働中';
+          if (status !== clientCurrentFilter) return false;
+        }
+        
+        // 検索フィルター
+        if (clientSearchQuery) {
+          const clientName = getClientName(store.client_id) || '';
+          const brandName = getBrandName(store.brand_id) || '';
+          const searchText = `${store.name || ''} ${clientName} ${brandName}`.toLowerCase();
+          if (!searchText.includes(clientSearchQuery.toLowerCase())) return false;
+        }
+        
+        return true;
+      });
+      
+      // 統計更新
+      document.getElementById('client-total-count').textContent = allStores.length;
+      document.getElementById('client-active-count').textContent = 
+        allStores.filter(s => s.status === '稼働中' || !s.status).length;
+      
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="loading">該当する顧客がありません</div>';
+        return;
+      }
+      
+      container.innerHTML = filtered.map(store => {
+        const status = store.status || '稼働中';
+        const clientName = getClientName(store.client_id) || '';
+        const brandName = getBrandName(store.brand_id) || '';
+        
+        return `
+          <div class="client-card" onclick="viewClientDetail('${store.id}')">
+            <div class="client-card-header">
+              <div>
+                <div class="client-store-name">${escapeHtml(store.name || '店舗名なし')}</div>
+                <div class="client-company-name">${escapeHtml(clientName)}${brandName ? ' / ' + escapeHtml(brandName) : ''}</div>
+              </div>
+              <span class="client-status-badge client-status-${status}">${status}</span>
+            </div>
+            <div class="client-card-info">
+              ${store.pref ? `<div class="client-info-item"><i class="fas fa-map-marker-alt"></i>${escapeHtml(store.pref)}</div>` : ''}
+              ${store.phone ? `<div class="client-info-item"><i class="fas fa-phone"></i>${escapeHtml(store.phone)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function getClientName(clientId) {
+      const c = allClients.find(x => x.id === clientId);
+      return c ? c.name : '';
+    }
+    
+    function getBrandName(brandId) {
+      const b = allBrands.find(x => x.id === brandId);
+      return b ? b.name : '';
+    }
+    
+    function viewClientDetail(id) {
+      window.location.href = `/sales/clients/${id}.html`;
     }
     
     // 案件管理タブの切り替え
@@ -1726,10 +2099,12 @@
 
     async function loadData() {
       try {
-        const [storesRes, schedulesRes, workersRes] = await Promise.all([
+        const [storesRes, schedulesRes, workersRes, clientsRes, brandsRes] = await Promise.all([
           fetch(`${API_BASE}/stores`).catch(() => ({ ok: false })),
           fetch(`${API_BASE}/schedules`).catch(() => ({ ok: false })),
-          fetch(`${API_BASE}/workers`).catch(() => ({ ok: false }))
+          fetch(`${API_BASE}/workers`).catch(() => ({ ok: false })),
+          fetch(`${API_BASE}/clients`).catch(() => ({ ok: false })),
+          fetch(`${API_BASE}/brands`).catch(() => ({ ok: false }))
         ]);
         
         if (storesRes.ok) {
@@ -1751,6 +2126,20 @@
         } else {
           console.warn('Failed to load workers');
           allWorkers = [];
+        }
+        
+        if (clientsRes.ok) {
+          allClients = await clientsRes.json();
+        } else {
+          console.warn('Failed to load clients');
+          allClients = [];
+        }
+        
+        if (brandsRes.ok) {
+          allBrands = await brandsRes.json();
+        } else {
+          console.warn('Failed to load brands');
+          allBrands = [];
         }
         
         // 統計更新
@@ -2045,6 +2434,7 @@
         document.querySelectorAll('#client-company, #client-brand, #client-store, #client-postcode, #client-address, #client-phone, #client-contact, #client-email, #client-notes').forEach(el => el.value = '');
         document.getElementById('client-pref').value = '';
         await loadData();
+        renderClientList(); // 顧客一覧を更新
       } catch (e) {
         console.error('Customer registration error:', e);
         alert(`登録に失敗しました: ${e.message || '不明なエラーが発生しました'}`);

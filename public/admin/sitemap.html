@@ -154,7 +154,7 @@
 <main id="main" class="container admin-sitemap">
     <div class="sitemap-container">
       <h1>ミセサポ サイトマップ図</h1>
-      <p class="muted">最終更新: 2025年1月 - ロール別サイトマップ構成（サポートデスク要素含む）</p>
+      <p class="muted">最終更新: 2025年1月 - ロール別サイトマップ構成（サポートデスク要素含む）※営業ダッシュボードのスワイプ機能を詳細化</p>
       <p class="muted">詳細な提案は <code>docs/SITEMAP_PROPOSAL.md</code> を参照してください。</p>
 
       <div class="legend">
@@ -928,19 +928,6 @@
         <div class="sitemap-tree">
           <div class="sitemap-node">
             <div class="sitemap-item">
-              <span class="sitemap-item-name">
-                <a href="/concierge.html">コンシェルジュ</a>
-                <span class="new-badge">NEW2025/11/19UP</span>
-              </span>
-              <code class="sitemap-item-path">/concierge.html</code>
-              <div class="sitemap-item-badges">
-                <span class="role-badge role-sales">営業</span>
-                <span class="status-badge status partial">部分実装</span>
-              </div>
-            </div>
-          </div>
-          <div class="sitemap-node">
-            <div class="sitemap-item">
               <span class="sitemap-item-name"><a href="/sales/dashboard.html">営業ダッシュボード（スワイプUI）</a><span class="new-badge">リニューアル</span></span>
               <code class="sitemap-item-path">/sales/dashboard.html</code>
               <div class="sitemap-item-badges">
@@ -951,7 +938,10 @@
             <div class="sitemap-children">
               <div class="sitemap-node">
                 <div class="sitemap-item">
-                  <span class="sitemap-item-name">アクティビティ（スワイプ1画面目）</span>
+                  <span class="sitemap-item-name">
+                    <strong>① アクティビティ</strong>（スワイプ1画面目・初期画面）
+                    <span class="feature-badge">本日の予定・仮押さえ状況・緊急対応・今週のスケジュール</span>
+                  </span>
                   <code class="sitemap-item-path">/sales/dashboard.html#activity</code>
                   <div class="sitemap-item-badges">
                     <span class="role-badge role-sales">営業</span>
@@ -961,8 +951,11 @@
               </div>
               <div class="sitemap-node">
                 <div class="sitemap-item">
-                  <span class="sitemap-item-name">顧客登録（スワイプ2画面目）</span>
-                  <code class="sitemap-item-path">/sales/dashboard.html#register</code>
+                  <span class="sitemap-item-name">
+                    <strong>② 顧客登録</strong>（スワイプ2画面目）
+                    <span class="feature-badge">企業名・ブランド名・店舗名・住所・連絡先の新規登録</span>
+                  </span>
+                  <code class="sitemap-item-path">/sales/dashboard.html#client</code>
                   <div class="sitemap-item-badges">
                     <span class="role-badge role-sales">営業</span>
                     <span class="status-badge status implemented">実装済み</span>
@@ -971,8 +964,11 @@
               </div>
               <div class="sitemap-node">
                 <div class="sitemap-item">
-                  <span class="sitemap-item-name">仮見積もり（スワイプ3画面目）</span>
-                  <code class="sitemap-item-path">/sales/dashboard.html#estimate</code>
+                  <span class="sitemap-item-name">
+                    <strong>③ スケジュール</strong>（スワイプ3画面目）
+                    <span class="feature-badge">リスト表示・カレンダー表示・ステータスフィルター・イベント詳細</span>
+                  </span>
+                  <code class="sitemap-item-path">/sales/dashboard.html#schedule-list</code>
                   <div class="sitemap-item-badges">
                     <span class="role-badge role-sales">営業</span>
                     <span class="status-badge status implemented">実装済み</span>
@@ -981,11 +977,42 @@
               </div>
               <div class="sitemap-node">
                 <div class="sitemap-item">
-                  <span class="sitemap-item-name">スケジュール仮押さえ（スワイプ4画面目）</span>
-                  <code class="sitemap-item-path">/sales/dashboard.html#schedule</code>
+                  <span class="sitemap-item-name">
+                    <strong>④ 案件管理</strong>（スワイプ4画面目）
+                    <span class="feature-badge">仮見積もりタブ・仮押さえタブ</span>
+                  </span>
+                  <code class="sitemap-item-path">/sales/dashboard.html#case</code>
                   <div class="sitemap-item-badges">
                     <span class="role-badge role-sales">営業</span>
                     <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+                <div class="sitemap-children">
+                  <div class="sitemap-node">
+                    <div class="sitemap-item">
+                      <span class="sitemap-item-name">
+                        仮見積もりタブ
+                        <span class="feature-badge">サービス選択・倍率設定・合計金額表示・PDF出力・見積もり送信</span>
+                      </span>
+                      <code class="sitemap-item-path">/sales/dashboard.html#case (estimateタブ)</code>
+                      <div class="sitemap-item-badges">
+                        <span class="role-badge role-sales">営業</span>
+                        <span class="status-badge status implemented">実装済み</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="sitemap-node">
+                    <div class="sitemap-item">
+                      <span class="sitemap-item-name">
+                        仮押さえタブ
+                        <span class="feature-badge">新規スケジュール作成へのリンク</span>
+                      </span>
+                      <code class="sitemap-item-path">/sales/dashboard.html#case (scheduleタブ)</code>
+                      <div class="sitemap-item-badges">
+                        <span class="role-badge role-sales">営業</span>
+                        <span class="status-badge status implemented">実装済み</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1359,7 +1386,8 @@
         <ul class="summary-task-list">
           <li><strong>3層構造の顧客管理</strong>: 企業 → ブランド → 店舗の階層構造を実装</li>
           <li><strong>顧客詳細ページ</strong>: 企業詳細・ブランド詳細・店舗詳細（マイページ風レイアウト）</li>
-          <li><strong>営業ダッシュボード</strong>: スワイプUIで4画面（アクティビティ/顧客登録/仮見積もり/スケジュール仮押さえ）</li>
+          <li><strong>営業ダッシュボード</strong>: スワイプUIで4画面（アクティビティ/顧客登録/スケジュール/案件管理）</li>
+          <li><strong>案件管理画面</strong>: 仮見積もりタブ（サービス選択・PDF出力）と仮押さえタブを統合</li>
           <li><strong>見積もり管理</strong>: 仮見積もり作成→経理承認フロー</li>
           <li><strong>スケジュール管理</strong>: 仮押さえ→管理者承認フロー</li>
           <li><strong>ロール別権限管理</strong>: 情報開示レベルの制御（role_permissions.js）</li>
@@ -1624,6 +1652,14 @@
     }
     .new-badge i {
       font-size: 0.65rem;
+    }
+    .feature-badge {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.75rem;
+      font-weight: normal;
+      color: #6b7280;
+      font-style: italic;
     }
     .sitemap-children {
       margin-left: 32px;

@@ -79,7 +79,6 @@ const ROLE_CONFIG = {
     '/signup3.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
     '/reset-password.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
     '/contact.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/concierge.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
     
     // 顧客向けページ（ユーザーと清掃員がアクセス可能、コンシェルジュと管理者も可）
     '/mypage.html': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
@@ -177,7 +176,6 @@ const ROLE_CONFIG = {
     'パブリック': [
       { href: '/index.html', label: 'トップページ（発注）', icon: 'fa-home' },
       { href: '/service.html', label: 'サービス一覧', icon: 'fa-list' },
-      { href: '/concierge.html', label: 'コンシェルジュ', icon: 'fa-concierge-bell' },
       { href: '/contact.html', label: 'お問い合わせ', icon: 'fa-envelope' },
       { href: '/signin.html', label: 'ログイン', icon: 'fa-sign-in-alt' },
       { href: '/signup.html', label: '新規登録', icon: 'fa-user-plus' }
