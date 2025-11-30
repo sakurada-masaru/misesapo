@@ -3729,6 +3729,7 @@
                   
                   // アクティビティ画面のスケジュール表示も更新
                   renderSchedules();
+                  renderDraftStatus();
                   
                   // シートを閉じる
                   const sheet = document.getElementById('event-sheet');
@@ -4158,6 +4159,7 @@
               
               // アクティビティ画面のスケジュール表示も更新
               renderSchedules();
+              renderDraftStatus();
               
               alert('予定を作成しました');
               closeModal();
