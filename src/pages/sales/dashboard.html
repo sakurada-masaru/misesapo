@@ -2844,7 +2844,20 @@
         allSchedules.filter(s => {
           // 正規化された日付も確認（リマインダーを含むすべての予定に対応）
           const normalized = DataUtils.normalizeSchedule(s);
-          const scheduleDate = normalized.date || s.date || s.scheduled_date || '';
+          let scheduleDate = normalized.date || s.date || s.scheduled_date || '';
+          
+          // Dateオブジェクトの場合は文字列に変換
+          if (scheduleDate instanceof Date) {
+            scheduleDate = scheduleDate.toISOString().split('T')[0];
+          } else if (scheduleDate && typeof scheduleDate !== 'string') {
+            scheduleDate = String(scheduleDate);
+          }
+          
+          // 日付文字列を正規化（YYYY-MM-DD形式に統一）
+          if (scheduleDate && scheduleDate.includes('T')) {
+            scheduleDate = scheduleDate.split('T')[0];
+          }
+          
           return scheduleDate === dateStr;
         }).forEach(s => {
           weekSchedules.push({ ...s, date: d, isToday: i === 0 });
@@ -3967,7 +3980,20 @@
         const workerId = normalized.worker_id || schedule.worker_id || schedule.assigned_to;
         const worker = allWorkers.find(w => w.id === workerId);
         const isDraft = schedule.status === 'draft';
-        const dateStr = normalized.date || schedule.date || schedule.scheduled_date || '';
+        let dateStr = normalized.date || schedule.date || schedule.scheduled_date || '';
+        
+        // Dateオブジェクトの場合は文字列に変換
+        if (dateStr instanceof Date) {
+          dateStr = dateStr.toISOString().split('T')[0];
+        } else if (dateStr && typeof dateStr !== 'string') {
+          dateStr = String(dateStr);
+        }
+        
+        // 日付文字列を正規化（YYYY-MM-DD形式に統一）
+        if (dateStr && dateStr.includes('T')) {
+          dateStr = dateStr.split('T')[0];
+        }
+        
         const date = new Date(dateStr);
         const timeStr = normalized.time || schedule.time_slot || schedule.scheduled_time || '-';
 
@@ -4042,7 +4068,20 @@
         // その日のスケジュール
         const daySchedules = scheduleFilteredSchedules.filter(s => {
           const normalized = DataUtils.normalizeSchedule(s);
-          const scheduleDate = normalized.date || s.date || s.scheduled_date || '';
+          let scheduleDate = normalized.date || s.date || s.scheduled_date || '';
+          
+          // Dateオブジェクトの場合は文字列に変換
+          if (scheduleDate instanceof Date) {
+            scheduleDate = scheduleDate.toISOString().split('T')[0];
+          } else if (scheduleDate && typeof scheduleDate !== 'string') {
+            scheduleDate = String(scheduleDate);
+          }
+          
+          // 日付文字列を正規化（YYYY-MM-DD形式に統一）
+          if (scheduleDate && scheduleDate.includes('T')) {
+            scheduleDate = scheduleDate.split('T')[0];
+          }
+          
           return scheduleDate === dateStr;
         });
 
