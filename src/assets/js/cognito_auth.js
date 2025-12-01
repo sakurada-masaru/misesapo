@@ -7,8 +7,8 @@
   'use strict';
 
   // AWS SDKの読み込みを確認
-  if (typeof AWS === 'undefined' || typeof AmazonCognitoIdentity === 'undefined') {
-    console.error('[CognitoAuth] AWS SDKが読み込まれていません');
+  if (typeof AmazonCognitoIdentity === 'undefined') {
+    console.error('[CognitoAuth] Amazon Cognito Identity JSが読み込まれていません');
     return;
   }
 
@@ -31,7 +31,7 @@
   const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
   /**
-   * ログイン
+   * ログイン（USER_SRP_AUTHを使用）
    */
   async function login(email, password) {
     return new Promise((resolve, reject) => {
@@ -205,14 +205,16 @@
    * Cognitoエラーメッセージを日本語に変換
    */
   function getCognitoErrorMessage(error) {
-    const errorCode = error.code || error.name;
+    const errorCode = error.code || error.name || error.__type;
     const errorMessages = {
       'NotAuthorizedException': 'メールアドレスまたはパスワードが正しくありません',
       'UserNotFoundException': 'ユーザーが見つかりません',
       'UserNotConfirmedException': 'メールアドレスが確認されていません',
       'PasswordResetRequiredException': 'パスワードのリセットが必要です',
       'TooManyRequestsException': 'リクエストが多すぎます。しばらく待ってから再度お試しください',
-      'LimitExceededException': '試行回数の上限に達しました。しばらく待ってから再度お試しください'
+      'LimitExceededException': '試行回数の上限に達しました。しばらく待ってから再度お試しください',
+      'InvalidParameterException': error.message || 'パラメータが無効です',
+      'InvalidPasswordException': 'パスワードが正しくありません'
     };
 
     return errorMessages[errorCode] || error.message || 'ログインに失敗しました';
