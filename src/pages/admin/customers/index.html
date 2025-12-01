@@ -1981,8 +1981,14 @@
     
     brandSelect.innerHTML = '<option value="">-- 新規ブランドまたは選択 --</option>' + 
       brands.map(b => {
-        const client = allClients.find(c => c.id === b.client_id);
-        const clientName = client ? ` (${client.name})` : '';
+        // EntityFinderを使用してID形式の違いに対応
+        let client = null;
+        if (window.DataUtils?.EntityFinder?.findClient) {
+          client = window.DataUtils.EntityFinder.findClient(allClients, b.client_id);
+        } else {
+          client = allClients.find(c => c.id === b.client_id || String(c.id) === String(b.client_id));
+        }
+        const clientName = client ? ` (${client.name || client.company_name || ''})` : '';
         return `<option value="${b.id}">${b.name}${clientName}</option>`;
       }).join('');
   }
@@ -2077,8 +2083,19 @@
     statusEl.className = 'detail-status ' + (currentDetailStore.status || 'pending');
 
     // 基本情報グリッド
-    const client = allClients.find(c => c.id === currentDetailStore.client_id);
-    const brand = allBrands.find(b => b.id === currentDetailStore.brand_id);
+    // EntityFinderを使用してID形式の違いに対応
+    let client = null;
+    if (window.DataUtils?.EntityFinder?.findClient) {
+      client = window.DataUtils.EntityFinder.findClient(allClients, currentDetailStore.client_id);
+    } else {
+      client = allClients.find(c => c.id === currentDetailStore.client_id || String(c.id) === String(currentDetailStore.client_id));
+    }
+    let brand = null;
+    if (window.DataUtils?.EntityFinder?.findBrand) {
+      brand = window.DataUtils.EntityFinder.findBrand(allBrands, currentDetailStore.brand_id);
+    } else {
+      brand = allBrands.find(b => b.id === currentDetailStore.brand_id || String(b.id) === String(currentDetailStore.brand_id));
+    }
     
     document.getElementById('detail-info-grid').innerHTML = `
       <div class="info-item">
