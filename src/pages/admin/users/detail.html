@@ -781,13 +781,16 @@
 
         currentUser = await response.json();
         
-        // ロールを変換（role_codeが存在する場合は優先的に使用）
-        if (currentUser.role_code !== undefined && currentUser.role_code !== null) {
-          currentUser.role = getRoleFromCode(currentUser.role_code);
-        } else if (!currentUser.role) {
-          // role_codeもroleも存在しない場合はデフォルト値を設定
-          currentUser.role = 'staff';
+        // ロールを変換（roleフィールドを優先、存在しない場合のみrole_codeから変換）
+        if (!currentUser.role || currentUser.role === '') {
+          if (currentUser.role_code !== undefined && currentUser.role_code !== null) {
+            currentUser.role = getRoleFromCode(currentUser.role_code);
+          } else {
+            // role_codeもroleも存在しない場合はデフォルト値を設定
+            currentUser.role = 'staff';
+          }
         }
+        // roleフィールドが存在する場合はそのまま使用（role_codeは無視）
 
         // 出退勤記録を読み込み
         loadAttendanceRecords();
