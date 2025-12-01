@@ -193,6 +193,7 @@
       );
       
       const firebaseUser = userCredential.user;
+      const firebaseUid = firebaseUser.uid;
       
       // Firebase Custom Claimsからロールを取得
       let role = 'customer'; // デフォルトロール
@@ -203,7 +204,29 @@
         console.warn('[Auth] Could not get custom claims, using default role:', error);
       }
       
-      // Custom Claimsにロールがない場合、users.jsからロールを取得
+      // DynamoDBからユーザー情報を取得（Firebase UIDで検索）
+      let userInfo = null;
+      try {
+        const apiBaseUrl = getApiBaseUrl();
+        if (apiBaseUrl) {
+          const response = await fetch(`${apiBaseUrl}/workers?firebase_uid=${encodeURIComponent(firebaseUid)}`);
+          if (response.ok) {
+            const workers = await response.json();
+            const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+            if (workersArray.length > 0) {
+              userInfo = workersArray[0];
+              // DynamoDBから取得したロールを優先
+              if (userInfo.role) {
+                role = userInfo.role;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('[Auth] Could not fetch user info from DynamoDB:', error);
+      }
+      
+      // Custom Claimsにロールがない場合、users.jsからロールを取得（フォールバック）
       if (role === 'customer' && window.Users && window.Users.findUserByEmail) {
         const userFromUsersJs = window.Users.findUserByEmail(firebaseUser.email);
         if (userFromUsersJs && userFromUsersJs.role) {
@@ -212,12 +235,14 @@
         }
       }
       
-      // ユーザー情報を保存
+      // ユーザー情報を保存（個人のIDを含む）
       const user = {
-        id: firebaseUser.uid,
+        id: userInfo ? userInfo.id : firebaseUid,  // DynamoDBのID（重要！）
+        firebase_uid: firebaseUid,  // Firebase UID
         email: firebaseUser.email,
         role: role,
-        name: firebaseUser.displayName || (window.Users && window.Users.findUserByEmail ? (window.Users.findUserByEmail(firebaseUser.email)?.name || email.split('@')[0]) : email.split('@')[0]),
+        name: userInfo ? userInfo.name : (firebaseUser.displayName || (window.Users && window.Users.findUserByEmail ? (window.Users.findUserByEmail(firebaseUser.email)?.name || email.split('@')[0]) : email.split('@')[0])),
+        department: userInfo ? userInfo.department : '',
         emailVerified: firebaseUser.emailVerified
       };
       

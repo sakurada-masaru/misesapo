@@ -2145,9 +2145,15 @@ def get_workers(event, headers):
         role = query_params.get('role')
         status = query_params.get('status')
         email = query_params.get('email')
+        firebase_uid = query_params.get('firebase_uid')
         
         # スキャンまたはクエリを実行
-        if role:
+        if firebase_uid:
+            # Firebase UIDでフィルタ（個人ログイン用）
+            response = WORKERS_TABLE.scan(
+                FilterExpression=Attr('firebase_uid').eq(firebase_uid)
+            )
+        elif role:
             # ロールでフィルタ
             response = WORKERS_TABLE.scan(
                 FilterExpression=Attr('role').eq(role)
@@ -2247,6 +2253,7 @@ def create_worker(event, headers):
         # デフォルト値を設定
         worker_data = {
             'id': worker_id,
+            'firebase_uid': body_json.get('firebase_uid', ''),  # Firebase UIDを追加
             'name': body_json.get('name', ''),
             'email': body_json.get('email', ''),
             'phone': body_json.get('phone', ''),
@@ -2257,6 +2264,15 @@ def create_worker(event, headers):
             'created_at': body_json.get('created_at', now),
             'updated_at': now
         }
+        
+        # role_codeからroleを設定（roleが指定されていない場合）
+        if not worker_data['role'] or worker_data['role'] == 'staff':
+            if worker_data['role_code'] == '1':
+                worker_data['role'] = 'admin'
+            elif worker_data['role_code'] == '2':
+                worker_data['role'] = 'sales'
+            elif worker_data['role_code'] == '99':
+                worker_data['role'] = 'staff'
         
         # DynamoDBに保存
         WORKERS_TABLE.put_item(Item=worker_data)

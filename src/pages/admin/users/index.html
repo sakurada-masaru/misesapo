@@ -1314,8 +1314,22 @@
       }
 
       if (isNew) {
+        // 新規作成時: IDを自動生成（ロールに基づいたID形式）
         data.id = 'W' + Date.now();
         data.created_at = new Date().toISOString();
+        
+        // ロールコードを設定
+        const roleCodeMap = {
+          'staff': '99',
+          'sales': '2',
+          'admin': '1',
+          'developer': '1',
+          'master': '1'
+        };
+        data.role_code = roleCodeMap[data.role] || '99';
+        
+        // 新規作成時はFirebaseユーザーも作成する（firebase_uidは後で設定）
+        // 注意: 実際のFirebaseユーザー作成はLambda関数で行う
       } else {
         data.id = id;
       }
