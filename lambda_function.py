@@ -2154,10 +2154,16 @@ def get_workers(event, headers):
         status = query_params.get('status')
         email = query_params.get('email')
         firebase_uid = query_params.get('firebase_uid')
+        cognito_sub = query_params.get('cognito_sub')
         
         # スキャンまたはクエリを実行
-        if firebase_uid:
-            # Firebase UIDでフィルタ（個人ログイン用）
+        if cognito_sub:
+            # Cognito Subでフィルタ（従業員ログイン用）
+            response = WORKERS_TABLE.scan(
+                FilterExpression=Attr('cognito_sub').eq(cognito_sub)
+            )
+        elif firebase_uid:
+            # Firebase UIDでフィルタ（お客様ログイン用、後方互換性のため残す）
             response = WORKERS_TABLE.scan(
                 FilterExpression=Attr('firebase_uid').eq(firebase_uid)
             )
