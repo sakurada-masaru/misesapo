@@ -64,6 +64,25 @@
               </button>
             </div>
             
+            <!-- 休憩時間セクション -->
+            <div id="break-section" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+              <div style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-weight: 500; color: #374151;">休憩時間</span>
+                  <span id="break-time-display" style="font-size: 0.875rem; color: #6b7280;">-</span>
+                </div>
+                <div id="breaks-list" style="margin-bottom: 12px; font-size: 0.875rem; color: #6b7280;"></div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-outline btn-sm" id="break-start-btn" style="flex: 1;">
+                  <i class="fas fa-coffee"></i> 休憩開始
+                </button>
+                <button class="btn btn-outline btn-sm" id="break-end-btn" style="flex: 1; display: none;">
+                  <i class="fas fa-undo"></i> 休憩終了
+                </button>
+              </div>
+            </div>
+            
             <div class="attendance-summary">
               <div class="summary-item">
                 <span class="summary-label">今月の出勤日数</span>
@@ -642,6 +661,31 @@
       });
     }
 
+    // 労働時間を計算（休憩時間を考慮）
+    function calculateWorkHours(clockIn, clockOut, breaks) {
+      if (!clockIn || !clockOut) return 0;
+      
+      const start = new Date(clockIn);
+      const end = new Date(clockOut);
+      const totalHours = (end - start) / (1000 * 60 * 60);
+      
+      const breakTime = calculateTotalBreakTime(breaks || []);
+      const workHours = Math.max(0, totalHours - breakTime);
+      
+      return round(workHours, 2);
+    }
+
+    // 労働時間をフォーマット
+    function formatWorkHours(hours) {
+      if (!hours || hours === 0) return '0時間';
+      const h = Math.floor(hours);
+      const m = Math.round((hours - h) * 60);
+      if (m === 0) {
+        return `${h}時間`;
+      }
+      return `${h}時間${m}分`;
+    }
+
     // 出退勤記録を読み込み
     async function loadAttendanceRecords() {
       if (!currentUser) {
@@ -743,6 +787,8 @@
         if (workStartBtn) {
           workStartBtn.style.display = 'block';
         }
+        // 休憩セクションを表示
+        renderBreakSection(todayRecord);
       } else if (todayRecord && todayRecord.clock_out) {
         // 退勤済み
         statusIndicator.className = 'status-indicator';
@@ -1100,10 +1146,11 @@
         // 確認ダイアログを表示
         const clockInTime = formatTimeForDialog(todayRecord.clock_in);
         const currentTime = formatTimeForDialog(now);
-        const workHours = calculateWorkHours(todayRecord.clock_in, now);
-        const workHoursText = workHours ? `${workHours.hours}時間${workHours.minutes}分` : '-';
+        const breaks = todayRecord.breaks || [];
+        const workHours = calculateWorkHours(todayRecord.clock_in, now, breaks);
+        const workHoursText = formatWorkHours(workHours);
         
-        const message = `出勤時刻: ${clockInTime}\n現在時刻: ${currentTime}\n勤務時間: ${workHoursText}\n\n退勤を記録しますか？`;
+        const message = `出勤時刻: ${clockInTime}\n現在時刻: ${currentTime}\n実労働時間: ${workHoursText}\n\n退勤を記録しますか？`;
         shouldProceed = await showConfirmDialog('退勤を記録しますか？', message, '退勤する', 'キャンセル');
         
         if (!shouldProceed) {
@@ -1143,12 +1190,14 @@
           staff_id: currentUser.id,
           staff_name: currentUser.name,
           date: today,
-          clock_in: now
+          clock_in: now,
+          breaks: []
         };
         attendanceRecords[today][currentUser.id] = {
           clock_in: now,
           staff_id: currentUser.id,
-          staff_name: currentUser.name
+          staff_name: currentUser.name,
+          breaks: []
         };
       }
       
@@ -1565,10 +1614,208 @@
       }
     }
 
+    // 休憩開始ボタンの設定
+    function setupBreakButtons() {
+      const breakStartBtn = document.getElementById('break-start-btn');
+      const breakEndBtn = document.getElementById('break-end-btn');
+      
+      if (breakStartBtn) {
+        breakStartBtn.addEventListener('click', async () => {
+          await startBreak();
+        });
+      }
+      
+      if (breakEndBtn) {
+        breakEndBtn.addEventListener('click', async () => {
+          await endBreak();
+        });
+      }
+    }
+
+    // 休憩開始
+    async function startBreak() {
+      if (!currentUser) return;
+      
+      const today = new Date().toISOString().split('T')[0];
+      const now = new Date().toISOString();
+      
+      if (!attendanceRecords[today]) {
+        attendanceRecords[today] = {};
+      }
+      
+      const todayRecord = attendanceRecords[today][currentUser.id] || {};
+      
+      if (!todayRecord.clock_in) {
+        showErrorMessage('出勤記録がありません。先に出勤してください。');
+        return;
+      }
+      
+      if (todayRecord.clock_out) {
+        showErrorMessage('既に退勤しています。');
+        return;
+      }
+      
+      // 確認ダイアログ
+      const currentTime = formatTimeForDialog(now);
+      const message = `現在時刻: ${currentTime}\n\n休憩を開始しますか？`;
+      const shouldProceed = await showConfirmDialog('休憩を開始しますか？', message, '休憩開始', 'キャンセル');
+      
+      if (!shouldProceed) return;
+      
+      // 既存の休憩配列を取得
+      const breaks = todayRecord.breaks || [];
+      
+      // 新しい休憩を追加（終了時刻は後で設定）
+      const newBreak = {
+        break_start: now,
+        break_end: null,
+        break_duration: 0
+      };
+      breaks.push(newBreak);
+      
+      // データを更新
+      const attendanceData = {
+        staff_id: currentUser.id,
+        staff_name: currentUser.name,
+        date: today,
+        clock_in: todayRecord.clock_in,
+        clock_out: todayRecord.clock_out,
+        breaks: breaks
+      };
+      
+      try {
+        const response = await fetch(`${API_BASE}/attendance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(attendanceData)
+        });
+        
+        if (response.ok) {
+          showSuccessMessage('休憩を開始しました');
+          // ローカルストレージを更新
+          attendanceRecords[today][currentUser.id] = {
+            ...todayRecord,
+            breaks: breaks
+          };
+          localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+          renderAttendanceStatus();
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          showErrorMessage(errorData.error || '休憩開始の記録に失敗しました');
+        }
+      } catch (error) {
+        console.error('Error starting break:', error);
+        showErrorMessage('休憩開始の記録に失敗しました');
+      }
+    }
+
+    // 休憩終了
+    async function endBreak() {
+      if (!currentUser) return;
+      
+      const today = new Date().toISOString().split('T')[0];
+      const now = new Date().toISOString();
+      
+      if (!attendanceRecords[today]) {
+        attendanceRecords[today] = {};
+      }
+      
+      const todayRecord = attendanceRecords[today][currentUser.id] || {};
+      
+      const breaks = todayRecord.breaks || [];
+      if (breaks.length === 0) {
+        showErrorMessage('休憩記録がありません。');
+        return;
+      }
+      
+      // 最後の休憩を取得
+      const lastBreak = breaks[breaks.length - 1];
+      if (!lastBreak.break_start) {
+        showErrorMessage('休憩開始記録がありません。');
+        return;
+      }
+      
+      if (lastBreak.break_end) {
+        showErrorMessage('既に休憩を終了しています。');
+        return;
+      }
+      
+      // 確認ダイアログ
+      const breakStartTime = formatTimeForDialog(lastBreak.break_start);
+      const currentTime = formatTimeForDialog(now);
+      const breakDuration = calculateBreakDuration(lastBreak.break_start, now);
+      const message = `休憩開始: ${breakStartTime}\n現在時刻: ${currentTime}\n休憩時間: ${breakDuration}\n\n休憩を終了しますか？`;
+      const shouldProceed = await showConfirmDialog('休憩を終了しますか？', message, '休憩終了', 'キャンセル');
+      
+      if (!shouldProceed) return;
+      
+      // 休憩終了時刻を設定
+      const breakStartDt = new Date(lastBreak.break_start);
+      const breakEndDt = new Date(now);
+      const breakDurationHours = (breakEndDt - breakStartDt) / (1000 * 60 * 60);
+      
+      breaks[breaks.length - 1] = {
+        ...lastBreak,
+        break_end: now,
+        break_duration: round(breakDurationHours, 2)
+      };
+      
+      // データを更新
+      const attendanceData = {
+        staff_id: currentUser.id,
+        staff_name: currentUser.name,
+        date: today,
+        clock_in: todayRecord.clock_in,
+        clock_out: todayRecord.clock_out,
+        breaks: breaks
+      };
+      
+      try {
+        const response = await fetch(`${API_BASE}/attendance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(attendanceData)
+        });
+        
+        if (response.ok) {
+          showSuccessMessage('休憩を終了しました');
+          // ローカルストレージを更新
+          attendanceRecords[today][currentUser.id] = {
+            ...todayRecord,
+            breaks: breaks
+          };
+          localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+          renderAttendanceStatus();
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          showErrorMessage(errorData.error || '休憩終了の記録に失敗しました');
+        }
+      } catch (error) {
+        console.error('Error ending break:', error);
+        showErrorMessage('休憩終了の記録に失敗しました');
+      }
+    }
+
+    // 休憩時間を計算（表示用）
+    function calculateBreakDuration(startTime, endTime) {
+      const start = new Date(startTime);
+      const end = new Date(endTime);
+      const diff = (end - start) / (1000 * 60); // 分
+      const hours = Math.floor(diff / 60);
+      const minutes = Math.round(diff % 60);
+      return `${hours}時間${minutes}分`;
+    }
+
+    // 数値を丸める
+    function round(value, decimals) {
+      return Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    }
+
     // 初期化
     document.addEventListener('DOMContentLoaded', () => {
       loadCurrentUser();
       setupCorrectionRequestButton();
+      setupBreakButtons();
     });
   </script>
 </main>

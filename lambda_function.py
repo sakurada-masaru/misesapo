@@ -3094,6 +3094,9 @@ def create_or_update_attendance(event, headers):
         date = body_json.get('date')
         clock_in = body_json.get('clock_in')
         clock_out = body_json.get('clock_out')
+        break_start = body_json.get('break_start')
+        break_end = body_json.get('break_end')
+        breaks = body_json.get('breaks', [])  # 休憩の配列
         
         # バリデーション
         if not staff_id or not date:
@@ -3181,6 +3184,38 @@ def create_or_update_attendance(event, headers):
                 log_attendance_error(staff_id, 'VALIDATION_ERROR', '退勤時刻の形式が正しくありません', body_json, 400)
                 return error_response
         
+        # 休憩時間のバリデーション
+        if break_start and break_end:
+            try:
+                break_start_dt = datetime.fromisoformat(break_start.replace('Z', '+00:00'))
+                break_end_dt = datetime.fromisoformat(break_end.replace('Z', '+00:00'))
+                if break_end_dt <= break_start_dt:
+                    error_response = {
+                        'statusCode': 400,
+                        'headers': headers,
+                        'body': json.dumps({
+                            'error': '休憩終了時刻が休憩開始時刻より前です',
+                            'code': 'VALIDATION_ERROR'
+                        }, ensure_ascii=False)
+                    }
+                    log_attendance_error(staff_id, 'VALIDATION_ERROR', '休憩終了時刻が休憩開始時刻より前です', body_json, 400)
+                    return error_response
+                # 休憩時間が24時間を超える場合はエラー
+                break_duration = (break_end_dt - break_start_dt).total_seconds() / 3600
+                if break_duration > 24:
+                    error_response = {
+                        'statusCode': 400,
+                        'headers': headers,
+                        'body': json.dumps({
+                            'error': '休憩時間が24時間を超えています',
+                            'code': 'VALIDATION_ERROR'
+                        }, ensure_ascii=False)
+                    }
+                    log_attendance_error(staff_id, 'VALIDATION_ERROR', '休憩時間が24時間を超えています', body_json, 400)
+                    return error_response
+            except (ValueError, AttributeError):
+                pass
+        
         # 出退勤時刻の整合性チェック
         if clock_in and clock_out:
             try:
@@ -3198,8 +3233,8 @@ def create_or_update_attendance(event, headers):
                     log_attendance_error(staff_id, 'VALIDATION_ERROR', '退勤時刻が出勤時刻より前です', body_json, 400)
                     return error_response
                 # 勤務時間が24時間を超える場合は警告（エラーにはしない）
-                work_hours = (clock_out_dt - clock_in_dt).total_seconds() / 3600
-                if work_hours > 24:
+                total_hours = (clock_out_dt - clock_in_dt).total_seconds() / 3600
+                if total_hours > 24:
                     error_response = {
                         'statusCode': 400,
                         'headers': headers,
@@ -3267,6 +3302,61 @@ def create_or_update_attendance(event, headers):
                 log_attendance_error(staff_id, 'DUPLICATE_RECORD', '既に退勤記録があります', body_json, 400)
                 return error_response
         
+        # 休憩時間の処理
+        existing_breaks = existing_item.get('breaks', []) if existing_item else []
+        processed_breaks = []
+        
+        # 新しい休憩開始/終了を処理
+        if break_start and break_end:
+            # 新しい休憩を追加
+            try:
+                break_start_dt = datetime.fromisoformat(break_start.replace('Z', '+00:00'))
+                break_end_dt = datetime.fromisoformat(break_end.replace('Z', '+00:00'))
+                break_duration = (break_end_dt - break_start_dt).total_seconds() / 3600
+                
+                new_break = {
+                    'break_start': break_start,
+                    'break_end': break_end,
+                    'break_duration': round(break_duration, 2)
+                }
+                processed_breaks = existing_breaks + [new_break]
+            except (ValueError, AttributeError):
+                processed_breaks = existing_breaks
+        elif breaks:
+            # breaks配列が直接指定された場合
+            processed_breaks = breaks
+        else:
+            # 既存の休憩を保持
+            processed_breaks = existing_breaks
+        
+        # 総休憩時間を計算
+        total_break_hours = sum(b.get('break_duration', 0) for b in processed_breaks if isinstance(b, dict))
+        
+        # 労働時間を計算
+        total_hours = 0
+        work_hours = 0
+        overtime_hours = 0
+        
+        if clock_in and clock_out:
+            try:
+                clock_in_dt = datetime.fromisoformat(clock_in.replace('Z', '+00:00'))
+                clock_out_dt = datetime.fromisoformat(clock_out.replace('Z', '+00:00'))
+                total_hours = (clock_out_dt - clock_in_dt).total_seconds() / 3600
+                work_hours = max(0, total_hours - total_break_hours)
+                # 残業時間（8時間超過分）
+                overtime_hours = max(0, work_hours - 8.0)
+            except (ValueError, AttributeError):
+                pass
+        
+        # 勤務状態を判定
+        status = 'working'
+        if clock_in and clock_out:
+            status = 'completed'
+        elif clock_in:
+            status = 'working'
+        else:
+            status = 'absent'
+        
         if existing_item:
             # 既存の記録を更新
             update_expression_parts = []
@@ -3282,6 +3372,35 @@ def create_or_update_attendance(event, headers):
                 update_expression_parts.append("#clock_out = :clock_out")
                 expression_attribute_names["#clock_out"] = "clock_out"
                 expression_attribute_values[":clock_out"] = clock_out
+            
+            if processed_breaks:
+                update_expression_parts.append("#breaks = :breaks")
+                expression_attribute_names["#breaks"] = "breaks"
+                expression_attribute_values[":breaks"] = processed_breaks
+            
+            if total_break_hours > 0:
+                update_expression_parts.append("#break_time = :break_time")
+                expression_attribute_names["#break_time"] = "break_time"
+                expression_attribute_values[":break_time"] = round(total_break_hours, 2)
+            
+            if work_hours > 0:
+                update_expression_parts.append("#work_hours = :work_hours")
+                expression_attribute_names["#work_hours"] = "work_hours"
+                expression_attribute_values[":work_hours"] = round(work_hours, 2)
+            
+            if total_hours > 0:
+                update_expression_parts.append("#total_hours = :total_hours")
+                expression_attribute_names["#total_hours"] = "total_hours"
+                expression_attribute_values[":total_hours"] = round(total_hours, 2)
+            
+            if overtime_hours > 0:
+                update_expression_parts.append("#overtime_hours = :overtime_hours")
+                expression_attribute_names["#overtime_hours"] = "overtime_hours"
+                expression_attribute_values[":overtime_hours"] = round(overtime_hours, 2)
+            
+            update_expression_parts.append("#status = :status")
+            expression_attribute_names["#status"] = "status"
+            expression_attribute_values[":status"] = status
             
             update_expression_parts.append("#updated_at = :updated_at")
             expression_attribute_names["#updated_at"] = "updated_at"
@@ -3302,9 +3421,17 @@ def create_or_update_attendance(event, headers):
                 'date': date,
                 'clock_in': clock_in,
                 'clock_out': clock_out,
+                'breaks': processed_breaks,
+                'break_time': round(total_break_hours, 2) if total_break_hours > 0 else None,
+                'total_hours': round(total_hours, 2) if total_hours > 0 else None,
+                'work_hours': round(work_hours, 2) if work_hours > 0 else None,
+                'overtime_hours': round(overtime_hours, 2) if overtime_hours > 0 else None,
+                'status': status,
                 'created_at': now,
                 'updated_at': now
             }
+            # Noneの値を削除
+            attendance_data = {k: v for k, v in attendance_data.items() if v is not None}
             ATTENDANCE_TABLE.put_item(Item=attendance_data)
         
         return {
