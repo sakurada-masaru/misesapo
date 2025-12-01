@@ -40,9 +40,6 @@ CLIENT_ID=$(aws cognito-idp create-user-pool-client \
   --region ${REGION} \
   --no-generate-secret \
   --explicit-auth-flows ALLOW_USER_PASSWORD_AUTH ALLOW_REFRESH_TOKEN_AUTH \
-  --access-token-validity 3600 \
-  --id-token-validity 3600 \
-  --refresh-token-validity 2592000 \
   --query 'UserPoolClient.ClientId' \
   --output text)
 

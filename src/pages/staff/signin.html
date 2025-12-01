@@ -1,0 +1,139 @@
+@layout('layouts.base')
+@json('data/meta/staff_signin_title.json', $title)
+@json('data/meta/staff_signin_body_class.json', $body_class)
+
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/assets/js/cognito_config.js"></script>
+<script src="/assets/js/cognito_auth.js"></script>
+
+<main id="main" class="container max-720">
+  <div class="text-center mt-24 mb-8">
+    <img src="/images/logo_144x144.png" alt="ミセサポ" class="h-48" />
+    <h2 class="fw-700 text-20 text-gray-900 mt-16">従業員ログイン</h2>
+  </div>
+  <hr class="divider" />
+
+  <section class="card p-24">
+    <p class="small text-center mb-16">
+      メールアドレスとパスワードを入力してログインしてください。
+    </p>
+
+    <form id="staff-signin-form" action="#" method="post" class="stack lg mt-8">
+      <div>
+        <label for="email" class="label">
+          メールアドレス
+          <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+        </label>
+        <input type="email" id="email" name="email" class="input" placeholder="name@example.com" required />
+      </div>
+
+      <div>
+        <label for="password" class="label">
+          パスワード
+          <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+        </label>
+        <div class="field">
+          <input type="password" id="password" name="password" class="input" required />
+          <button type="button" class="toggle-visibility" aria-label="パスワードを表示" onclick="togglePasswordVisibility('password')">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="signin-error" class="error-message" style="display: none; padding: 12px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; color: #991b1b; margin-bottom: 16px;"></div>
+
+      <div>
+        <button type="submit" class="btn btn-primary btn-round btn-full btn-lg fw-700">ログイン</button>
+      </div>
+    </form>
+
+    <p class="small text-center mt-16">
+      お客様の方は
+      <a href="/signin.html" style="color: var(--primary); font-weight: 600;">こちら</a>
+    </p>
+  </section>
+</main>
+
+<script>
+  function togglePasswordVisibility(id) {
+    const input = document.getElementById(id);
+    const icon = input && input.parentElement && input.parentElement.querySelector('i');
+    if (!input || !icon) return;
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  }
+
+  // ログインフォーム処理
+  (function() {
+    const signinForm = document.getElementById('staff-signin-form');
+    const errorDiv = document.getElementById('signin-error');
+
+    if (signinForm) {
+      signinForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!email || !password) {
+          errorDiv.textContent = 'メールアドレスとパスワードを入力してください';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        // ログインボタンを無効化
+        const submitButton = signinForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.textContent = 'ログイン中...';
+        }
+
+        try {
+          // AWS Cognitoでログイン
+          if (!window.CognitoAuth) {
+            throw new Error('Cognito認証が利用できません');
+          }
+
+          const result = await window.CognitoAuth.login(email, password);
+
+          if (result.success) {
+            errorDiv.style.display = 'none';
+
+            // ユーザー情報を保存
+            localStorage.setItem('cognito_user', JSON.stringify(result.user));
+
+            // 従業員ダッシュボードにリダイレクト
+            window.location.href = '/staff/dashboard.html';
+          } else {
+            errorDiv.textContent = result.message || 'ログインに失敗しました';
+            errorDiv.style.display = 'block';
+
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = 'ログイン';
+            }
+          }
+        } catch (error) {
+          console.error('Login error:', error);
+          errorDiv.textContent = error.message || 'ログインに失敗しました';
+          errorDiv.style.display = 'block';
+
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'ログイン';
+          }
+        }
+      });
+    }
+  })();
+</script>
+
