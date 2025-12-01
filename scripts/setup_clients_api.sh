@@ -128,9 +128,10 @@ done
 # Lambda関数にAPI Gatewayの実行権限を付与
 echo "Lambda関数にAPI Gatewayの実行権限を付与中..."
 for METHOD in GET POST PUT DELETE; do
+  METHOD_LOWER=$(echo ${METHOD} | tr '[:upper:]' '[:lower:]')
   aws lambda add-permission \
     --function-name ${LAMBDA_FUNCTION_NAME} \
-    --statement-id "apigateway-${METHOD,,}-clients-$(date +%s)-${RANDOM}" \
+    --statement-id "apigateway-${METHOD_LOWER}-clients-$(date +%s)-${RANDOM}" \
     --action lambda:InvokeFunction \
     --principal apigateway.amazonaws.com \
     --source-arn "arn:aws:execute-api:${REGION}:475462779604:${REST_API_ID}/*/${METHOD}/clients" \
