@@ -813,7 +813,82 @@
         if (workStartBtn) {
           workStartBtn.style.display = 'none';
         }
+        // 休憩セクションを非表示
+        const breakSection = document.getElementById('break-section');
+        if (breakSection) {
+          breakSection.style.display = 'none';
+        }
       }
+    }
+
+    // 休憩セクションをレンダリング
+    function renderBreakSection(record) {
+      const breakSection = document.getElementById('break-section');
+      const breakTimeDisplay = document.getElementById('break-time-display');
+      const breaksList = document.getElementById('breaks-list');
+      const breakStartBtn = document.getElementById('break-start-btn');
+      const breakEndBtn = document.getElementById('break-end-btn');
+      
+      if (!breakSection) return;
+      
+      // 出勤中の場合のみ表示
+      if (record && record.clock_in && !record.clock_out) {
+        breakSection.style.display = 'block';
+        
+        // 休憩時間の表示
+        const breaks = record.breaks || [];
+        const totalBreakTime = record.break_time || calculateTotalBreakTime(breaks);
+        
+        if (totalBreakTime > 0) {
+          const hours = Math.floor(totalBreakTime);
+          const minutes = Math.round((totalBreakTime - hours) * 60);
+          breakTimeDisplay.textContent = `${hours}時間${minutes}分`;
+        } else {
+          breakTimeDisplay.textContent = '0分';
+        }
+        
+        // 休憩リストの表示
+        if (breaks.length > 0) {
+          breaksList.innerHTML = breaks.map((b, index) => {
+            const start = b.break_start ? formatTime(b.break_start) : '-';
+            const end = b.break_end ? formatTime(b.break_end) : '（休憩中）';
+            const duration = b.break_duration ? formatWorkHours(b.break_duration) : '-';
+            return `<div style="margin-bottom: 4px;">休憩${index + 1}: ${start} - ${end} (${duration})</div>`;
+          }).join('');
+        } else {
+          breaksList.innerHTML = '<div style="color: #9ca3af;">休憩記録はありません</div>';
+        }
+        
+        // 休憩中かどうかを判定（最後の休憩に終了時刻がない場合）
+        const isOnBreak = breaks.length > 0 && breaks[breaks.length - 1] && !breaks[breaks.length - 1].break_end;
+        
+        if (isOnBreak) {
+          // 休憩中
+          if (breakStartBtn) breakStartBtn.style.display = 'none';
+          if (breakEndBtn) breakEndBtn.style.display = 'block';
+        } else {
+          // 休憩中でない
+          if (breakStartBtn) breakStartBtn.style.display = 'block';
+          if (breakEndBtn) breakEndBtn.style.display = 'none';
+        }
+      } else {
+        breakSection.style.display = 'none';
+      }
+    }
+
+    // 総休憩時間を計算
+    function calculateTotalBreakTime(breaks) {
+      if (!breaks || !Array.isArray(breaks)) return 0;
+      return breaks.reduce((total, b) => {
+        if (b.break_duration) {
+          return total + b.break_duration;
+        } else if (b.break_start && b.break_end) {
+          const start = new Date(b.break_start);
+          const end = new Date(b.break_end);
+          return total + (end - start) / (1000 * 60 * 60);
+        }
+        return total;
+      }, 0);
     }
 
     // 月間統計を計算
@@ -843,7 +918,7 @@
       }
       
       document.getElementById('monthly-work-days').textContent = `${workDays}日`;
-      document.getElementById('monthly-work-hours').textContent = `${Math.round(totalHours)}時間`;
+      document.getElementById('monthly-work-hours').textContent = formatWorkHours(totalHours);
     }
 
     // 確認ダイアログを表示する関数
@@ -1007,8 +1082,8 @@
       });
     }
 
-    // 勤務時間を計算
-    function calculateWorkHours(clockIn, clockOut) {
+    // 勤務時間を計算（旧バージョン - 互換性のため残す）
+    function calculateWorkHoursOld(clockIn, clockOut) {
       if (!clockIn || !clockOut) return null;
       const start = new Date(clockIn);
       const end = new Date(clockOut);
@@ -1016,6 +1091,36 @@
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       return { hours, minutes };
+    }
+
+    // 労働時間を計算（休憩時間を考慮）
+    function calculateWorkHours(clockIn, clockOut, breaks) {
+      if (!clockIn || !clockOut) return 0;
+      
+      const start = new Date(clockIn);
+      const end = new Date(clockOut);
+      const totalHours = (end - start) / (1000 * 60 * 60);
+      
+      const breakTime = calculateTotalBreakTime(breaks || []);
+      const workHours = Math.max(0, totalHours - breakTime);
+      
+      return round(workHours, 2);
+    }
+
+    // 労働時間をフォーマット
+    function formatWorkHours(hours) {
+      if (!hours || hours === 0) return '0時間';
+      const h = Math.floor(hours);
+      const m = Math.round((hours - h) * 60);
+      if (m === 0) {
+        return `${h}時間`;
+      }
+      return `${h}時間${m}分`;
+    }
+
+    // 数値を丸める
+    function round(value, decimals) {
+      return Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
     }
 
     // 時刻の妥当性チェック
