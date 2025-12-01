@@ -1118,23 +1118,7 @@
       divider.className = 'nav-divider';
       sidebarNav.appendChild(divider);
       
-      // サイトマップ（管理者・開発者・マスターのみ）
-      if (['admin', 'developer', 'master'].includes(userRole)) {
-        const sitemapItem = document.createElement('a');
-        sitemapItem.href = basePath === '/' ? '/admin/sitemap.html' : basePath.replace(/\/$/, '') + '/admin/sitemap.html';
-        sitemapItem.className = 'nav-item';
-        if (normalizedPath === '/admin/sitemap.html') {
-          sitemapItem.classList.add('active');
-        }
-        const sitemapIcon = document.createElement('i');
-        sitemapIcon.className = 'fas fa-sitemap';
-        sitemapItem.appendChild(sitemapIcon);
-        const sitemapLabel = document.createElement('span');
-        sitemapLabel.className = 'nav-label';
-        sitemapLabel.textContent = 'サイトマップ';
-        sitemapItem.appendChild(sitemapLabel);
-        sidebarNav.appendChild(sitemapItem);
-      }
+      // サイトマップはrole_config.jsのnavigationに含まれているため、ここでは追加しない
       
       // ログアウトボタン
       const logoutBtn = document.createElement('button');

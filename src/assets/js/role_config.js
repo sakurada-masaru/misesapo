@@ -188,13 +188,18 @@ const ROLE_CONFIG = {
     office: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
       { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
-      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
-      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' }
+      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' }
     ],
     designer: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
       { href: '/admin/images.html', label: '画像管理', icon: 'fa-images' },
       { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' }
+    ],
+    operation: [
+      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
+      { href: '/admin/analytics.html', label: '分析', icon: 'fa-chart-bar' },
+      { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     concierge: [
       { href: '/sales/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
@@ -211,7 +216,6 @@ const ROLE_CONFIG = {
       { href: '/admin/services/new.html', label: '新規サービス登録', icon: 'fa-plus-circle' },
       { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
       { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
-      { href: '/admin/users.html', label: 'ユーザーID管理', icon: 'fa-user-shield' },
       { href: '/admin/partners.html', label: 'パートナー企業一覧', icon: 'fa-handshake' },
       { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' }
     ],
@@ -223,6 +227,7 @@ const ROLE_CONFIG = {
       { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
       { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
       { href: '/admin/users.html', label: 'ユーザーID管理', icon: 'fa-user-shield' },
+      { href: '/admin/analytics.html', label: '分析', icon: 'fa-chart-bar' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     master: [
