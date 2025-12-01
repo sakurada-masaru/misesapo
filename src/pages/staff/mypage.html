@@ -1187,8 +1187,19 @@
       return { valid: true };
     }
 
-    // 出退勤トグル
-    document.getElementById('attendance-toggle-btn').addEventListener('click', async () => {
+    // 出退勤トグルボタンのセットアップ
+    function setupAttendanceToggleButton() {
+      const toggleBtn = document.getElementById('attendance-toggle-btn');
+      if (!toggleBtn) {
+        console.warn('Attendance toggle button not found');
+        return;
+      }
+      
+      // 既存のイベントリスナーを削除（重複防止）
+      const newToggleBtn = toggleBtn.cloneNode(true);
+      toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
+      
+      newToggleBtn.addEventListener('click', async () => {
       if (!currentUser) return;
       
       const today = new Date().toISOString().split('T')[0];
@@ -1928,6 +1939,7 @@
     // 初期化
     document.addEventListener('DOMContentLoaded', () => {
       loadCurrentUser();
+      setupAttendanceToggleButton();
       setupCorrectionRequestButton();
       setupBreakButtons();
     });
