@@ -1039,11 +1039,7 @@
       
       if (!todayRecord.clock_in) {
         // 出勤
-        // 1日1回制限チェック（既に出勤済みでないか確認）
-        if (todayRecord.clock_in) {
-          showErrorMessage(`既に出勤記録があります。\n出勤時刻: ${formatTimeForDialog(todayRecord.clock_in)}`);
-          return;
-        }
+        // 1日1回制限チェックは既に!todayRecord.clock_inで確認済み
         
         // 時刻の妥当性チェック
         const timeValidation = validateTime(now, 'clock_in');
@@ -1080,11 +1076,7 @@
         }, 100);
       } else if (!todayRecord.clock_out) {
         // 退勤
-        // 1日1回制限チェック（既に退勤済みでないか確認）
-        if (todayRecord.clock_out) {
-          showErrorMessage(`既に退勤記録があります。\n退勤時刻: ${formatTimeForDialog(todayRecord.clock_out)}`);
-          return;
-        }
+        // 1日1回制限チェックは既に!todayRecord.clock_outで確認済み
         
         // 時刻の妥当性チェック
         const timeValidation = validateTime(now, 'clock_out');

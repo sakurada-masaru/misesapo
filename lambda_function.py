@@ -3,7 +3,7 @@ import boto3
 import base64
 import os
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from boto3.dynamodb.conditions import Key, Attr
 
 # ID生成ヘルパー関数をインポート
@@ -3016,14 +3016,14 @@ def create_or_update_attendance(event, headers):
             }
         
         # 時刻のバリデーション
-        now_utc = datetime.utcnow()
-        now_iso = now_utc.isoformat() + 'Z'
+        now_utc = datetime.now(timezone.utc)
+        now_iso = now_utc.isoformat().replace('+00:00', 'Z')
         
         if clock_in:
             try:
                 clock_in_dt = datetime.fromisoformat(clock_in.replace('Z', '+00:00'))
                 # 未来時刻のチェック（5分の許容範囲を設ける）
-                if clock_in_dt > now_utc.replace(tzinfo=clock_in_dt.tzinfo) + timedelta(minutes=5):
+                if clock_in_dt > now_utc + timedelta(minutes=5):
                     return {
                         'statusCode': 400,
                         'headers': headers,
@@ -3046,7 +3046,7 @@ def create_or_update_attendance(event, headers):
             try:
                 clock_out_dt = datetime.fromisoformat(clock_out.replace('Z', '+00:00'))
                 # 未来時刻のチェック（5分の許容範囲を設ける）
-                if clock_out_dt > now_utc.replace(tzinfo=clock_out_dt.tzinfo) + timedelta(minutes=5):
+                if clock_out_dt > now_utc + timedelta(minutes=5):
                     return {
                         'statusCode': 400,
                         'headers': headers,
@@ -3133,8 +3133,8 @@ def create_or_update_attendance(event, headers):
                     except (ValueError, AttributeError):
                         pass
             
-            # 退勤記録の重複チェック
-            if clock_out and existing_item.get('clock_out'):
+            # 退勤記録の重複チェック（existing_itemがNoneでない場合のみ）
+            if existing_item and clock_out and existing_item.get('clock_out'):
                 return {
                     'statusCode': 400,
                     'headers': headers,
