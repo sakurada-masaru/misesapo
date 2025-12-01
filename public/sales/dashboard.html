@@ -3346,7 +3346,7 @@
             throw new Error(`法人の作成に失敗しました: ${errorData.error || clientRes.statusText}`);
           }
           const clientData = await clientRes.json();
-          clientId = clientData.id || newClientId;
+          clientId = clientData.id;
         }
 
         if (!clientId) {

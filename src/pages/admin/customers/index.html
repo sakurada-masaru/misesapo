@@ -2231,7 +2231,13 @@
       const res = await fetch(`${API_BASE}/reports`);
       if (!res.ok) throw new Error('Failed');
       const reports = await res.json();
-      const storeReports = reports.filter(r => r.store_id === currentDetailStore.id);
+      // IdUtils.isSameを使用してID形式の違いに対応
+      let storeReports = [];
+      if (window.DataUtils?.IdUtils?.isSame) {
+        storeReports = reports.filter(r => window.DataUtils.IdUtils.isSame(r.store_id, currentDetailStore.id));
+      } else {
+        storeReports = reports.filter(r => r.store_id === currentDetailStore.id || String(r.store_id) === String(currentDetailStore.id));
+      }
       loading.style.display = 'none';
 
       if (storeReports.length === 0) {
@@ -2434,7 +2440,13 @@
             setTimeout(() => closeStoreDialog(), 800);
           }
         } else {
-          const idx = allStores.findIndex(s => s.id === id);
+          // IdUtils.isSameを使用してID形式の違いに対応
+          let idx = -1;
+          if (window.DataUtils?.IdUtils?.isSame) {
+            idx = allStores.findIndex(s => window.DataUtils.IdUtils.isSame(s.id, id));
+          } else {
+            idx = allStores.findIndex(s => s.id === id || String(s.id) === String(id));
+          }
           if (idx >= 0) allStores[idx] = { ...allStores[idx], ...data };
           formStatus.textContent = '保存しました';
           formStatus.className = 'form-status success';
