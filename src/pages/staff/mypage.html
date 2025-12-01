@@ -795,6 +795,126 @@
       document.getElementById('monthly-work-hours').textContent = `${Math.round(totalHours)}時間`;
     }
 
+    // 確認ダイアログを表示する関数
+    function showConfirmDialog(title, message, confirmText, cancelText) {
+      return new Promise((resolve) => {
+        // ダイアログのHTMLを作成
+        const dialogHTML = `
+          <div id="attendance-confirm-dialog" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+          ">
+            <div style="
+              background: white;
+              border-radius: 8px;
+              padding: 24px;
+              max-width: 400px;
+              width: 90%;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            ">
+              <h3 style="
+                margin: 0 0 16px 0;
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #1f2937;
+              ">${title}</h3>
+              <div style="
+                margin-bottom: 24px;
+                color: #4b5563;
+                line-height: 1.6;
+                white-space: pre-line;
+              ">${message}</div>
+              <div style="
+                display: flex;
+                gap: 12px;
+                justify-content: flex-end;
+              ">
+                <button id="dialog-cancel-btn" style="
+                  padding: 8px 16px;
+                  border: 1px solid #d1d5db;
+                  border-radius: 4px;
+                  background: white;
+                  color: #374151;
+                  cursor: pointer;
+                  font-size: 0.875rem;
+                ">${cancelText}</button>
+                <button id="dialog-confirm-btn" style="
+                  padding: 8px 16px;
+                  border: none;
+                  border-radius: 4px;
+                  background: var(--primary, #3b82f6);
+                  color: white;
+                  cursor: pointer;
+                  font-size: 0.875rem;
+                  font-weight: 500;
+                ">${confirmText}</button>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // ダイアログをDOMに追加
+        document.body.insertAdjacentHTML('beforeend', dialogHTML);
+        
+        const dialog = document.getElementById('attendance-confirm-dialog');
+        const confirmBtn = document.getElementById('dialog-confirm-btn');
+        const cancelBtn = document.getElementById('dialog-cancel-btn');
+        
+        // 確認ボタン
+        confirmBtn.addEventListener('click', () => {
+          dialog.remove();
+          resolve(true);
+        });
+        
+        // キャンセルボタン
+        cancelBtn.addEventListener('click', () => {
+          dialog.remove();
+          resolve(false);
+        });
+        
+        // 背景クリックでキャンセル
+        dialog.addEventListener('click', (e) => {
+          if (e.target === dialog) {
+            dialog.remove();
+            resolve(false);
+          }
+        });
+      });
+    }
+
+    // 時刻をフォーマット（確認ダイアログ用）
+    function formatTimeForDialog(dateString) {
+      if (!dateString) return '-';
+      const date = new Date(dateString);
+      return date.toLocaleString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+
+    // 勤務時間を計算
+    function calculateWorkHours(clockIn, clockOut) {
+      if (!clockIn || !clockOut) return null;
+      const start = new Date(clockIn);
+      const end = new Date(clockOut);
+      const diff = end - start;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      return { hours, minutes };
+    }
+
     // 出退勤トグル
     document.getElementById('attendance-toggle-btn').addEventListener('click', async () => {
       if (!currentUser) return;
@@ -808,9 +928,25 @@
       
       const todayRecord = attendanceRecords[today][currentUser.id] || {};
       let attendanceData = {};
+      let shouldProceed = false;
       
       if (!todayRecord.clock_in) {
         // 出勤
+        // 1日1回制限チェック（既に出勤済みでないか確認）
+        if (todayRecord.clock_in) {
+          alert(`既に出勤記録があります。\n出勤時刻: ${formatTimeForDialog(todayRecord.clock_in)}`);
+          return;
+        }
+        
+        // 確認ダイアログを表示
+        const currentTime = formatTimeForDialog(now);
+        const message = `現在時刻: ${currentTime}\n\n出勤を記録しますか？`;
+        shouldProceed = await showConfirmDialog('出勤を記録しますか？', message, '出勤する', 'キャンセル');
+        
+        if (!shouldProceed) {
+          return;
+        }
+        
         attendanceData = {
           staff_id: currentUser.id,
           staff_name: currentUser.name,
@@ -830,6 +966,25 @@
         }, 100);
       } else if (!todayRecord.clock_out) {
         // 退勤
+        // 1日1回制限チェック（既に退勤済みでないか確認）
+        if (todayRecord.clock_out) {
+          alert(`既に退勤記録があります。\n退勤時刻: ${formatTimeForDialog(todayRecord.clock_out)}`);
+          return;
+        }
+        
+        // 確認ダイアログを表示
+        const clockInTime = formatTimeForDialog(todayRecord.clock_in);
+        const currentTime = formatTimeForDialog(now);
+        const workHours = calculateWorkHours(todayRecord.clock_in, now);
+        const workHoursText = workHours ? `${workHours.hours}時間${workHours.minutes}分` : '-';
+        
+        const message = `出勤時刻: ${clockInTime}\n現在時刻: ${currentTime}\n勤務時間: ${workHoursText}\n\n退勤を記録しますか？`;
+        shouldProceed = await showConfirmDialog('退勤を記録しますか？', message, '退勤する', 'キャンセル');
+        
+        if (!shouldProceed) {
+          return;
+        }
+        
         attendanceData = {
           staff_id: currentUser.id,
           staff_name: currentUser.name,
@@ -842,7 +997,16 @@
           clock_out: now
         };
       } else {
-        // 再出勤
+        // 再出勤（1日1回制限の例外：退勤後の再出勤は別記録として扱う）
+        // 確認ダイアログを表示
+        const currentTime = formatTimeForDialog(now);
+        const message = `現在時刻: ${currentTime}\n\n再出勤を記録しますか？\n（退勤後の再出勤は別記録として扱われます）`;
+        shouldProceed = await showConfirmDialog('再出勤を記録しますか？', message, '再出勤する', 'キャンセル');
+        
+        if (!shouldProceed) {
+          return;
+        }
+        
         attendanceData = {
           staff_id: currentUser.id,
           staff_name: currentUser.name,
