@@ -199,6 +199,72 @@
         </div>
       </div>
 
+      <!-- 0. システム入口 -->
+      <div class="sitemap-section" style="background: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
+        <div class="sitemap-section-title" style="color: #0369a1; font-size: 1.5rem; margin-bottom: 16px;">
+          <i class="fas fa-door-open" style="margin-right: 8px;"></i>
+          システム入口
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;">
+          <!-- クライアント入口 -->
+          <div style="background: #ffffff; border: 2px solid #3b82f6; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1e40af; font-size: 1.25rem; margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-users" style="color: #3b82f6;"></i>
+              クライアント入口（WEBページ）
+            </h3>
+            <p style="color: #64748b; font-size: 0.9rem; margin: 0 0 16px 0; line-height: 1.6;">
+              お客様はこちらからログインしてください。<br>
+              <strong>→ お客様ログイン → お客様向けサイト</strong>
+            </p>
+            <div class="sitemap-node">
+              <div class="sitemap-item">
+                <span class="sitemap-item-name">
+                  <a href="/signin.html">お客様ログイン（Firebase認証）</a>
+                  <span class="system-badge">要システム</span>
+                </span>
+                <code class="sitemap-item-path">/signin.html</code>
+                <div class="sitemap-item-badges">
+                  <span class="role-badge role-customer">顧客</span>
+                  <span class="status-badge status implemented">実装済み</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- スタッフ入口 -->
+          <div style="background: #ffffff; border: 2px solid #10b981; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #047857; font-size: 1.25rem; margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-user-tie" style="color: #10b981;"></i>
+              スタッフ入口（スタッフログインページ）
+            </h3>
+            <p style="color: #64748b; font-size: 0.9rem; margin: 0 0 16px 0; line-height: 1.6;">
+              清掃員・営業・管理者はこちらからログインしてください。<br>
+              <strong>→ スタッフログイン → ロール別に振り分け</strong>
+            </p>
+            <div class="sitemap-node">
+              <div class="sitemap-item">
+                <span class="sitemap-item-name">
+                  <a href="/staff/signin.html">スタッフログイン（AWS Cognito認証）</a>
+                  <span class="system-badge">要システム</span>
+                </span>
+                <code class="sitemap-item-path">/staff/signin.html</code>
+                <div class="sitemap-item-badges">
+                  <span class="role-badge role-staff">清掃員</span>
+                  <span class="role-badge role-sales">営業</span>
+                  <span class="role-badge role-admin">管理者</span>
+                  <span class="status-badge status implemented">実装済み</span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 12px; padding: 12px; background: #f0fdf4; border-radius: 6px; font-size: 0.85rem; color: #166534;">
+              <strong>ログイン後の振り分け:</strong><br>
+              • 清掃員 → 清掃員向けサイト<br>
+              • 営業 → 営業マン向けサイト<br>
+              • 管理者・開発者 → 管理者向けサイト
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 1. パブリックサイト -->
       <div class="sitemap-section">
         <div class="sitemap-section-title">1. パブリックサイト（未認証ユーザー向け）</div>
@@ -369,26 +435,6 @@
               <div class="sitemap-item-badges">
                 <span class="role-badge role-public">公開</span>
                 <span class="status-badge status partial">部分実装</span>
-              </div>
-            </div>
-          </div>
-          <div class="sitemap-node">
-            <div class="sitemap-item">
-              <span class="sitemap-item-name"><a href="/signin.html">お客様ログイン（Firebase認証）</a><span class="system-badge">要システム</span></span>
-              <code class="sitemap-item-path">/signin.html</code>
-              <div class="sitemap-item-badges">
-                <span class="role-badge role-public">公開</span>
-                <span class="status-badge status implemented">実装済み</span>
-              </div>
-            </div>
-          </div>
-          <div class="sitemap-node">
-            <div class="sitemap-item">
-              <span class="sitemap-item-name"><a href="/staff/signin.html">従業員ログイン（AWS Cognito認証）</a><span class="system-badge">要システム</span></span>
-              <code class="sitemap-item-path">/staff/signin.html</code>
-              <div class="sitemap-item-badges">
-                <span class="role-badge role-public">公開</span>
-                <span class="status-badge status implemented">実装済み</span>
               </div>
             </div>
           </div>
@@ -630,7 +676,13 @@
 
       <!-- 2. ユーザー（顧客）向けサイト -->
       <div class="sitemap-section">
-        <div class="sitemap-section-title">2. ユーザー（顧客）向けサイト（SPメイン、PCもあり）</div>
+        <div class="sitemap-section-title">
+          2. ユーザー（顧客）向けサイト（SPメイン、PCもあり）
+          <span style="font-size: 0.9rem; font-weight: normal; color: #64748b; margin-left: 12px;">
+            <i class="fas fa-arrow-left" style="margin-right: 4px;"></i>
+            クライアント入口（WEBページ）→ お客様ログインからアクセス
+          </span>
+        </div>
         <div class="sitemap-tree">
           <div class="sitemap-node">
             <div class="sitemap-item">
@@ -831,18 +883,14 @@
 
       <!-- 3. 清掃員向けサイト -->
       <div class="sitemap-section">
-        <div class="sitemap-section-title">3. 清掃員向けサイト（SPのみ）</div>
+        <div class="sitemap-section-title">
+          3. 清掃員向けサイト（SPのみ）
+          <span style="font-size: 0.9rem; font-weight: normal; color: #64748b; margin-left: 12px;">
+            <i class="fas fa-arrow-left" style="margin-right: 4px;"></i>
+            スタッフログインページからアクセス（ロール: 清掃員）
+          </span>
+        </div>
         <div class="sitemap-tree">
-          <div class="sitemap-node">
-            <div class="sitemap-item">
-              <span class="sitemap-item-name"><a href="/staff/signin.html">従業員ログイン（AWS Cognito認証）</a><span class="system-badge">要システム</span></span>
-              <code class="sitemap-item-path">/staff/signin.html</code>
-              <div class="sitemap-item-badges">
-                <span class="role-badge role-staff">清掃員</span>
-                <span class="status-badge status implemented">実装済み</span>
-              </div>
-            </div>
-          </div>
           <div class="sitemap-node">
             <div class="sitemap-item">
               <span class="sitemap-item-name"><a href="/staff/dashboard.html">ダッシュボード</a></span>
@@ -959,7 +1007,13 @@
 
       <!-- 4. 営業マン向けサイト -->
       <div class="sitemap-section">
-        <div class="sitemap-section-title">4. 営業マン向けサイト（SPメイン）</div>
+        <div class="sitemap-section-title">
+          4. 営業マン向けサイト（SPメイン）
+          <span style="font-size: 0.9rem; font-weight: normal; color: #64748b; margin-left: 12px;">
+            <i class="fas fa-arrow-left" style="margin-right: 4px;"></i>
+            スタッフログインページからアクセス（ロール: 営業）
+          </span>
+        </div>
         <div class="sitemap-tree">
           <div class="sitemap-node">
             <div class="sitemap-item">
@@ -1200,7 +1254,13 @@
 
       <!-- 5. 管理者向けサイト -->
       <div class="sitemap-section">
-        <div class="sitemap-section-title">5. 管理者向けサイト（PCメイン）</div>
+        <div class="sitemap-section-title">
+          5. 管理者向けサイト（PCメイン）
+          <span style="font-size: 0.9rem; font-weight: normal; color: #64748b; margin-left: 12px;">
+            <i class="fas fa-arrow-left" style="margin-right: 4px;"></i>
+            スタッフログインページからアクセス（ロール: 管理者・開発者）
+          </span>
+        </div>
         <div class="sitemap-tree">
           <div class="sitemap-node">
             <div class="sitemap-item">
