@@ -88,6 +88,7 @@ CLIENTS_TABLE = dynamodb.Table('clients')
 BRANDS_TABLE = dynamodb.Table('brands')
 STORES_TABLE = dynamodb.Table('stores')
 ATTENDANCE_TABLE = dynamodb.Table('attendance')
+ATTENDANCE_ERRORS_TABLE = dynamodb.Table('attendance-errors')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -218,6 +219,10 @@ def lambda_handler(event, context):
                 return get_wiki_data(headers)
             elif method == 'PUT' or method == 'POST':
                 return save_wiki_data(event, headers)
+        elif normalized_path == '/attendance/errors':
+            # 出退勤エラーログの取得
+            if method == 'GET':
+                return get_attendance_errors(event, headers)
         elif normalized_path == '/estimates':
             # 見積もりデータの読み書き
             if method == 'GET':
@@ -2993,7 +2998,7 @@ def create_or_update_attendance(event, headers):
         
         # バリデーション
         if not staff_id or not date:
-            return {
+            error_response = {
                 'statusCode': 400,
                 'headers': headers,
                 'body': json.dumps({
@@ -3001,12 +3006,14 @@ def create_or_update_attendance(event, headers):
                     'code': 'VALIDATION_ERROR'
                 }, ensure_ascii=False)
             }
+            log_attendance_error(staff_id or 'unknown', 'VALIDATION_ERROR', 'staff_idとdateは必須です', body_json, 400)
+            return error_response
         
         # 日付形式のバリデーション
         try:
             datetime.strptime(date, '%Y-%m-%d')
         except ValueError:
-            return {
+            error_response = {
                 'statusCode': 400,
                 'headers': headers,
                 'body': json.dumps({
@@ -3014,6 +3021,8 @@ def create_or_update_attendance(event, headers):
                     'code': 'VALIDATION_ERROR'
                 }, ensure_ascii=False)
             }
+            log_attendance_error(staff_id, 'VALIDATION_ERROR', '日付の形式が正しくありません', body_json, 400)
+            return error_response
         
         # 時刻のバリデーション
         now_utc = datetime.now(timezone.utc)
@@ -3024,7 +3033,7 @@ def create_or_update_attendance(event, headers):
                 clock_in_dt = datetime.fromisoformat(clock_in.replace('Z', '+00:00'))
                 # 未来時刻のチェック（5分の許容範囲を設ける）
                 if clock_in_dt > now_utc + timedelta(minutes=5):
-                    return {
+                    error_response = {
                         'statusCode': 400,
                         'headers': headers,
                         'body': json.dumps({
@@ -3032,8 +3041,10 @@ def create_or_update_attendance(event, headers):
                             'code': 'VALIDATION_ERROR'
                         }, ensure_ascii=False)
                     }
+                    log_attendance_error(staff_id, 'VALIDATION_ERROR', '出勤時刻が未来の時刻です', body_json, 400)
+                    return error_response
             except (ValueError, AttributeError):
-                return {
+                error_response = {
                     'statusCode': 400,
                     'headers': headers,
                     'body': json.dumps({
@@ -3041,13 +3052,15 @@ def create_or_update_attendance(event, headers):
                         'code': 'VALIDATION_ERROR'
                     }, ensure_ascii=False)
                 }
+                log_attendance_error(staff_id, 'VALIDATION_ERROR', '出勤時刻の形式が正しくありません', body_json, 400)
+                return error_response
         
         if clock_out:
             try:
                 clock_out_dt = datetime.fromisoformat(clock_out.replace('Z', '+00:00'))
                 # 未来時刻のチェック（5分の許容範囲を設ける）
                 if clock_out_dt > now_utc + timedelta(minutes=5):
-                    return {
+                    error_response = {
                         'statusCode': 400,
                         'headers': headers,
                         'body': json.dumps({
@@ -3055,8 +3068,10 @@ def create_or_update_attendance(event, headers):
                             'code': 'VALIDATION_ERROR'
                         }, ensure_ascii=False)
                     }
+                    log_attendance_error(staff_id, 'VALIDATION_ERROR', '退勤時刻が未来の時刻です', body_json, 400)
+                    return error_response
             except (ValueError, AttributeError):
-                return {
+                error_response = {
                     'statusCode': 400,
                     'headers': headers,
                     'body': json.dumps({
@@ -3064,6 +3079,8 @@ def create_or_update_attendance(event, headers):
                         'code': 'VALIDATION_ERROR'
                     }, ensure_ascii=False)
                 }
+                log_attendance_error(staff_id, 'VALIDATION_ERROR', '退勤時刻の形式が正しくありません', body_json, 400)
+                return error_response
         
         # 出退勤時刻の整合性チェック
         if clock_in and clock_out:
@@ -3071,7 +3088,7 @@ def create_or_update_attendance(event, headers):
                 clock_in_dt = datetime.fromisoformat(clock_in.replace('Z', '+00:00'))
                 clock_out_dt = datetime.fromisoformat(clock_out.replace('Z', '+00:00'))
                 if clock_out_dt <= clock_in_dt:
-                    return {
+                    error_response = {
                         'statusCode': 400,
                         'headers': headers,
                         'body': json.dumps({
@@ -3079,10 +3096,12 @@ def create_or_update_attendance(event, headers):
                             'code': 'VALIDATION_ERROR'
                         }, ensure_ascii=False)
                     }
+                    log_attendance_error(staff_id, 'VALIDATION_ERROR', '退勤時刻が出勤時刻より前です', body_json, 400)
+                    return error_response
                 # 勤務時間が24時間を超える場合は警告（エラーにはしない）
                 work_hours = (clock_out_dt - clock_in_dt).total_seconds() / 3600
                 if work_hours > 24:
-                    return {
+                    error_response = {
                         'statusCode': 400,
                         'headers': headers,
                         'body': json.dumps({
@@ -3090,6 +3109,8 @@ def create_or_update_attendance(event, headers):
                             'code': 'VALIDATION_ERROR'
                         }, ensure_ascii=False)
                     }
+                    log_attendance_error(staff_id, 'VALIDATION_ERROR', '勤務時間が24時間を超えています', body_json, 400)
+                    return error_response
             except (ValueError, AttributeError):
                 pass  # 既に個別の時刻バリデーションでエラーが返される
         
@@ -3135,7 +3156,7 @@ def create_or_update_attendance(event, headers):
             
             # 退勤記録の重複チェック（existing_itemがNoneでない場合のみ）
             if existing_item and clock_out and existing_item.get('clock_out'):
-                return {
+                error_response = {
                     'statusCode': 400,
                     'headers': headers,
                     'body': json.dumps({
@@ -3144,6 +3165,8 @@ def create_or_update_attendance(event, headers):
                         'existing_clock_out': existing_item.get('clock_out')
                     }, ensure_ascii=False)
                 }
+                log_attendance_error(staff_id, 'DUPLICATE_RECORD', '既に退勤記録があります', body_json, 400)
+                return error_response
         
         if existing_item:
             # 既存の記録を更新
@@ -3195,11 +3218,98 @@ def create_or_update_attendance(event, headers):
         }
     except Exception as e:
         print(f"Error creating/updating attendance: {str(e)}")
+        error_message = str(e)
+        staff_id = body_json.get('staff_id', 'unknown') if 'body_json' in locals() else 'unknown'
+        log_attendance_error(staff_id, 'SERVER_ERROR', error_message, body_json if 'body_json' in locals() else {}, 500)
         return {
             'statusCode': 500,
             'headers': headers,
             'body': json.dumps({
                 'error': '勤怠記録の保存に失敗しました',
+                'message': error_message
+            }, ensure_ascii=False)
+        }
+
+def log_attendance_error(staff_id, error_code, error_message, request_data=None, status_code=400):
+    """
+    出退勤エラーをログに記録
+    """
+    try:
+        error_id = f"{datetime.now(timezone.utc).isoformat()}_{staff_id}_{uuid.uuid4().hex[:8]}"
+        error_log = {
+            'id': error_id,
+            'staff_id': staff_id,
+            'error_code': error_code,
+            'error_message': error_message,
+            'status_code': status_code,
+            'request_data': request_data or {},
+            'created_at': datetime.now(timezone.utc).isoformat() + 'Z',
+            'resolved': False
+        }
+        ATTENDANCE_ERRORS_TABLE.put_item(Item=error_log)
+        print(f"Attendance error logged: {error_id} - {error_code}: {error_message}")
+    except Exception as e:
+        print(f"Error logging attendance error: {str(e)}")
+        # エラーログの記録に失敗しても処理は続行
+
+def get_attendance_errors(event, headers):
+    """
+    出退勤エラーログを取得
+    """
+    try:
+        # クエリパラメータを取得
+        query_params = event.get('queryStringParameters') or {}
+        staff_id = query_params.get('staff_id')
+        error_code = query_params.get('error_code')
+        resolved = query_params.get('resolved')
+        limit = int(query_params.get('limit', 50))
+        
+        # スキャンまたはクエリを実行
+        if staff_id:
+            # スタッフIDでフィルタリング
+            response = ATTENDANCE_ERRORS_TABLE.query(
+                IndexName='staff_id-created_at-index',
+                KeyConditionExpression=Key('staff_id').eq(staff_id),
+                ScanIndexForward=False,
+                Limit=limit
+            )
+        elif error_code:
+            # エラーコードでフィルタリング
+            response = ATTENDANCE_ERRORS_TABLE.query(
+                IndexName='error_code-created_at-index',
+                KeyConditionExpression=Key('error_code').eq(error_code),
+                ScanIndexForward=False,
+                Limit=limit
+            )
+        else:
+            # 全件取得（スキャン）
+            response = ATTENDANCE_ERRORS_TABLE.scan(Limit=limit)
+        
+        items = response.get('Items', [])
+        
+        # resolvedフィルタリング
+        if resolved is not None:
+            resolved_bool = resolved.lower() == 'true'
+            items = [item for item in items if item.get('resolved', False) == resolved_bool]
+        
+        # 日付でソート（新しい順）
+        items.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'errors': items,
+                'count': len(items)
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting attendance errors: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'エラーログの取得に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }
