@@ -1612,6 +1612,20 @@
 
   // フィルタリングと表示
   function filterAndRender() {
+    // 配列であることを確認
+    if (!Array.isArray(allStores)) {
+      console.warn('allStores is not an array in filterAndRender:', allStores);
+      allStores = [];
+    }
+    if (!Array.isArray(allBrands)) {
+      console.warn('allBrands is not an array in filterAndRender:', allBrands);
+      allBrands = [];
+    }
+    if (!Array.isArray(allClients)) {
+      console.warn('allClients is not an array in filterAndRender:', allClients);
+      allClients = [];
+    }
+    
     const searchTerm = searchInput.value.toLowerCase();
     const clientValue = clientFilter.value;
     const brandValue = brandFilter.value;
