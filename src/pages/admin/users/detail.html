@@ -9,9 +9,9 @@
       <i class="fas fa-chevron-left"></i>
     </a>
     <h1 class="page-title" id="page-title">ユーザー詳細</h1>
-    <a href="#" class="btn btn-outline btn-sm" id="edit-btn" style="display: none;">
+    <button class="btn btn-outline btn-sm" id="edit-btn" style="display: none;" onclick="openEditModal()">
       <i class="fas fa-edit"></i> 編集
-    </a>
+    </button>
   </div>
 
   <div class="loading" id="loading">読み込み中...</div>
@@ -462,6 +462,161 @@
         grid-template-columns: repeat(2, 1fr);
       }
     }
+
+    /* 編集モーダル */
+    .edit-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      position: relative;
+      background: #ffffff;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      z-index: 1001;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .modal-close:hover {
+      background: #f3f4f6;
+      color: #111827;
+    }
+    .modal-body {
+      padding: 24px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+    .form-group label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .form-group .required {
+      color: #ef4444;
+    }
+    .form-group input,
+    .form-group select {
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .form-status {
+      margin-bottom: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      text-align: center;
+    }
+    .form-status.success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .form-status.error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .modal-content {
+        width: 95vw;
+        max-height: 95vh;
+      }
+    }
   </style>
 
   <script>
@@ -736,6 +891,85 @@
       } catch (error) {
         console.error('Error saving attendance:', error);
         alert('出退勤記録の保存に失敗しました');
+      }
+    });
+
+    // 編集モーダルを開く
+    function openEditModal() {
+      if (!currentUser) return;
+      
+      // フォームに現在の値を設定
+      document.getElementById('edit-name').value = currentUser.name || '';
+      document.getElementById('edit-email').value = currentUser.email || '';
+      document.getElementById('edit-phone').value = currentUser.phone || '';
+      document.getElementById('edit-role').value = currentUser.role || 'staff';
+      document.getElementById('edit-department').value = currentUser.department || '';
+      document.getElementById('edit-status').value = currentUser.status || 'active';
+      document.getElementById('edit-form-status').textContent = '';
+      document.getElementById('edit-form-status').className = 'form-status';
+      
+      // モーダルを表示
+      document.getElementById('edit-modal').style.display = 'flex';
+    }
+
+    // 編集モーダルを閉じる
+    function closeEditModal() {
+      document.getElementById('edit-modal').style.display = 'none';
+    }
+
+    // 編集フォームの送信
+    document.getElementById('edit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!currentUser) return;
+      
+      const statusEl = document.getElementById('edit-form-status');
+      statusEl.textContent = '保存中...';
+      statusEl.className = 'form-status';
+      
+      const data = {
+        name: document.getElementById('edit-name').value,
+        email: document.getElementById('edit-email').value,
+        phone: document.getElementById('edit-phone').value,
+        role: document.getElementById('edit-role').value,
+        department: document.getElementById('edit-department').value,
+        status: document.getElementById('edit-status').value
+      };
+      
+      // ロールコードを設定
+      const roleCodeMap = {
+        'staff': '99',
+        'sales': '2',
+        'admin': '1',
+        'developer': '1',
+        'master': '1'
+      };
+      data.role_code = roleCodeMap[data.role] || '99';
+      
+      try {
+        const response = await fetch(`${API_BASE}/workers/${currentUser.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          statusEl.textContent = '保存しました';
+          statusEl.className = 'form-status success';
+          
+          // ユーザー情報を再読み込み
+          setTimeout(async () => {
+            await loadUser();
+            closeEditModal();
+          }, 500);
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || errorData.message || '保存に失敗しました');
+        }
+      } catch (error) {
+        console.error('Error updating user:', error);
+        statusEl.textContent = error.message || '保存に失敗しました';
+        statusEl.className = 'form-status error';
       }
     });
 
