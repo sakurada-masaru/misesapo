@@ -51,6 +51,10 @@
         <i class="fas fa-users"></i>
         <span class="nav-label">ユーザー</span>
       </a>
+      <a href="#" class="nav-item" id="user-mypage-link" style="display: none;">
+        <i class="fas fa-user-circle"></i>
+        <span class="nav-label">このユーザーのマイページ</span>
+      </a>
       <a href="/admin/services/" class="nav-item">
         <i class="fas fa-cog"></i>
         <span class="nav-label">サービス管理</span>
@@ -1303,6 +1307,20 @@
       
       // クイックアクション
       document.getElementById('email-btn').href = user.email ? `mailto:${user.email}` : '#';
+      
+      // マイページリンクを更新（サイドバー）
+      const mypageLink = document.getElementById('user-mypage-link');
+      if (mypageLink && user.id) {
+        mypageLink.href = `/staff/mypage.html?id=${user.id}`;
+        mypageLink.style.display = 'flex';
+      }
+      
+      // マイページボタンを更新（クイックアクション）
+      const mypageBtn = document.getElementById('mypage-btn');
+      if (mypageBtn && user.id) {
+        mypageBtn.href = `/staff/mypage.html?id=${user.id}`;
+        mypageBtn.style.display = 'flex';
+      }
     }
 
     function getRoleColor(role) {
