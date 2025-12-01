@@ -220,6 +220,21 @@ def lambda_handler(event, context):
                 return get_wiki_data(headers)
             elif method == 'PUT' or method == 'POST':
                 return save_wiki_data(event, headers)
+        elif normalized_path == '/attendance':
+            # 出退勤記録の取得・作成・更新
+            if method == 'GET':
+                return get_attendance(event, headers)
+            elif method == 'POST':
+                return create_or_update_attendance(event, headers)
+        elif normalized_path.startswith('/attendance/'):
+            # 出退勤記録の詳細・更新・削除
+            attendance_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_attendance_detail(attendance_id, headers)
+            elif method == 'PUT':
+                return create_or_update_attendance(event, headers)
+            elif method == 'DELETE':
+                return delete_attendance(attendance_id, headers)
         elif normalized_path == '/attendance/errors':
             # 出退勤エラーログの取得
             if method == 'GET':
