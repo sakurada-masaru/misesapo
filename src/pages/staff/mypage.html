@@ -58,6 +58,10 @@
                 <i class="fas fa-power-off"></i>
                 <span id="toggle-btn-text">出勤する</span>
               </button>
+              <button class="btn btn-success btn-round" id="work-start-btn" style="display: none; margin-top: 12px;">
+                <i class="fas fa-play"></i>
+                <span>作業開始</span>
+              </button>
             </div>
             
             <div class="attendance-summary">
@@ -720,6 +724,7 @@
       const statusTime = document.getElementById('status-time');
       const toggleBtn = document.getElementById('attendance-toggle-btn');
       const toggleBtnText = document.getElementById('toggle-btn-text');
+      const workStartBtn = document.getElementById('work-start-btn');
       
       if (todayRecord && todayRecord.clock_in && !todayRecord.clock_out) {
         // 出勤中
@@ -729,6 +734,10 @@
         toggleBtnText.textContent = '退勤する';
         toggleBtn.classList.remove('btn-primary');
         toggleBtn.classList.add('btn-danger');
+        // 作業開始ボタンを表示
+        if (workStartBtn) {
+          workStartBtn.style.display = 'block';
+        }
       } else if (todayRecord && todayRecord.clock_out) {
         // 退勤済み
         statusIndicator.className = 'status-indicator';
@@ -737,6 +746,10 @@
         toggleBtnText.textContent = '再出勤';
         toggleBtn.classList.remove('btn-danger');
         toggleBtn.classList.add('btn-primary');
+        // 作業開始ボタンを非表示
+        if (workStartBtn) {
+          workStartBtn.style.display = 'none';
+        }
       } else {
         // 未出勤
         statusIndicator.className = 'status-indicator';
@@ -745,6 +758,10 @@
         toggleBtnText.textContent = '出勤する';
         toggleBtn.classList.remove('btn-danger');
         toggleBtn.classList.add('btn-primary');
+        // 作業開始ボタンを非表示
+        if (workStartBtn) {
+          workStartBtn.style.display = 'none';
+        }
       }
     }
 
@@ -806,6 +823,11 @@
           staff_id: currentUser.id,
           staff_name: currentUser.name
         };
+        
+        // 出勤記録後、作業開始ボタンを表示
+        setTimeout(() => {
+          renderAttendanceStatus();
+        }, 100);
       } else if (!todayRecord.clock_out) {
         // 退勤
         attendanceData = {
