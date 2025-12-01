@@ -154,6 +154,42 @@
     </div>
   </div>
 
+  <!-- 出退勤管理（ロール別） -->
+  <div class="attendance-sections">
+    <!-- 清掃員セクション -->
+    <div class="attendance-section" id="attendance-section-staff">
+      <div class="attendance-section-header">
+        <h2><i class="fas fa-hard-hat"></i> 清掃員の出退勤</h2>
+        <span class="attendance-count" id="staff-attendance-count">0名</span>
+      </div>
+      <div class="attendance-grid" id="attendance-grid-staff">
+        <!-- 清掃員のトグルスイッチがここに表示されます -->
+      </div>
+    </div>
+
+    <!-- 営業セクション -->
+    <div class="attendance-section" id="attendance-section-sales">
+      <div class="attendance-section-header">
+        <h2><i class="fas fa-user-tie"></i> 営業の出退勤</h2>
+        <span class="attendance-count" id="sales-attendance-count">0名</span>
+      </div>
+      <div class="attendance-grid" id="attendance-grid-sales">
+        <!-- 営業のトグルスイッチがここに表示されます -->
+      </div>
+    </div>
+
+    <!-- 管理者セクション -->
+    <div class="attendance-section" id="attendance-section-admin">
+      <div class="attendance-section-header">
+        <h2><i class="fas fa-user-shield"></i> 管理者の出退勤</h2>
+        <span class="attendance-count" id="admin-attendance-count">0名</span>
+      </div>
+      <div class="attendance-grid" id="attendance-grid-admin">
+        <!-- 管理者のトグルスイッチがここに表示されます -->
+      </div>
+    </div>
+  </div>
+
   <!-- テーブル -->
   <div class="table-container">
     <table class="users-table">
@@ -783,6 +819,175 @@
       color: #fff;
     }
 
+    /* 出退勤管理セクション */
+    .attendance-sections {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .attendance-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .attendance-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .attendance-section-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .attendance-section-header h2 i {
+      color: var(--primary);
+    }
+    .attendance-count {
+      font-size: 0.875rem;
+      color: #6b7280;
+      background: #f3f4f6;
+      padding: 4px 12px;
+      border-radius: 12px;
+    }
+    .attendance-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    .attendance-item {
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      background: #fff;
+      border-radius: 12px;
+      border: 2px solid #e5e7eb;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .attendance-item:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .attendance-item.clocked-in {
+      border-color: #16a34a;
+      background: #f0fdf4;
+    }
+    .attendance-item-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .attendance-item-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #ff6b9d);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .attendance-item.clocked-in .attendance-item-avatar {
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+    }
+    .attendance-item-details {
+      flex: 1;
+      min-width: 0;
+    }
+    .attendance-item-name {
+      font-weight: 700;
+      color: #111827;
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+    }
+    .attendance-item-time {
+      font-size: 0.875rem;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .attendance-item-time.clocked-in {
+      color: #16a34a;
+      font-weight: 600;
+    }
+    .attendance-item-time i {
+      font-size: 0.75rem;
+    }
+    .attendance-button {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .attendance-button.clock-in {
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color: #fff;
+    }
+    .attendance-button.clock-in:hover {
+      background: linear-gradient(135deg, #15803d, #16a34a);
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+      transform: translateY(-2px);
+    }
+    .attendance-button.clock-out {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color: #fff;
+    }
+    .attendance-button.clock-out:hover {
+      background: linear-gradient(135deg, #b91c1c, #dc2626);
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+      transform: translateY(-2px);
+    }
+    .attendance-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .attendance-button i {
+      font-size: 1.25rem;
+    }
+    .attendance-status-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .attendance-status-badge.working {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .attendance-status-badge.off-duty {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
     @media (max-width: 768px) {
       .admin-users { padding: 16px; }
       .stats-row { grid-template-columns: repeat(2, 1fr); }
@@ -790,6 +995,21 @@
       .filter-options { flex-wrap: wrap; }
       .form-row { flex-direction: column; }
       .form-field.half { flex: 1; }
+      .attendance-grid {
+        grid-template-columns: 1fr;
+      }
+      .attendance-item {
+        padding: 16px;
+      }
+      .attendance-item-avatar {
+        width: 48px;
+        height: 48px;
+        font-size: 1.1rem;
+      }
+      .attendance-button {
+        padding: 14px;
+        font-size: 1rem;
+      }
     }
   </style>
 </main>
@@ -809,10 +1029,15 @@
   const deleteDialog = document.getElementById('delete-dialog');
   const userForm = document.getElementById('user-form');
 
+  // 出退勤データ（ローカルストレージから読み込み、API連携前は一時保存）
+  let attendanceRecords = {};
+  
   // 初期化
   document.addEventListener('DOMContentLoaded', async () => {
+    loadAttendanceRecords();
     await loadUsers();
     setupEventListeners();
+    renderAttendanceSections();
   });
 
   // ユーザー読み込み
@@ -838,6 +1063,7 @@
       
       updateStats();
       filterAndRender();
+      renderAttendanceSections();
     } catch (error) {
       console.error('Failed to load users:', error);
       tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">読み込みに失敗しました</td></tr>';
@@ -1076,6 +1302,176 @@
     div.textContent = str;
     return div.innerHTML;
   }
+
+  // 出退勤データ（ローカルストレージから読み込み、API連携前は一時保存）
+  let attendanceRecords = {};
+  
+  // 出退勤記録の読み込み
+  function loadAttendanceRecords() {
+    try {
+      const stored = localStorage.getItem('attendanceRecords');
+      if (stored) {
+        attendanceRecords = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Failed to load attendance records:', error);
+      attendanceRecords = {};
+    }
+  }
+
+  // 出退勤記録の保存
+  function saveAttendanceRecords() {
+    try {
+      localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+    } catch (error) {
+      console.error('Failed to save attendance records:', error);
+    }
+  }
+
+  // 今日の日付を取得（YYYY-MM-DD形式）
+  function getTodayDate() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // ユーザーの出退勤状態を取得
+  function getUserAttendanceStatus(userId) {
+    const today = getTodayDate();
+    const key = `${userId}_${today}`;
+    return attendanceRecords[key] || { clockedIn: false, clockInTime: null, clockOutTime: null };
+  }
+
+  // 出退勤トグルスイッチのレンダリング
+  function renderAttendanceSections() {
+    // ロール別にユーザーをグループ化
+    const usersByRole = {
+      staff: allUsers.filter(u => u.role === 'staff' && u.status === 'active'),
+      sales: allUsers.filter(u => u.role === 'sales' && u.status === 'active'),
+      admin: allUsers.filter(u => (u.role === 'admin' || u.role === 'other') && u.status === 'active')
+    };
+
+    // 各ロールのセクションをレンダリング
+    renderAttendanceSection('staff', usersByRole.staff);
+    renderAttendanceSection('sales', usersByRole.sales);
+    renderAttendanceSection('admin', usersByRole.admin);
+  }
+
+  // 特定のロールの出退勤セクションをレンダリング
+  function renderAttendanceSection(role, users) {
+    const container = document.getElementById(`attendance-grid-${role}`);
+    const countEl = document.getElementById(`${role}-attendance-count`);
+    
+    if (!container) return;
+    
+    if (users.length === 0) {
+      container.innerHTML = '<div style="padding: 20px; text-align: center; color: #6b7280;">該当するユーザーがいません</div>';
+      if (countEl) countEl.textContent = '0名';
+      return;
+    }
+
+    if (countEl) {
+      const clockedInCount = users.filter(u => {
+        const status = getUserAttendanceStatus(u.id);
+        return status.clockedIn;
+      }).length;
+      countEl.textContent = `${clockedInCount}/${users.length}名`;
+    }
+
+    container.innerHTML = users.map(user => {
+      const status = getUserAttendanceStatus(user.id);
+      const isClockedIn = status.clockedIn;
+      const clockInTime = status.clockInTime ? new Date(status.clockInTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : null;
+      const clockOutTime = status.clockOutTime ? new Date(status.clockOutTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : null;
+      
+      return `
+        <div class="attendance-item ${isClockedIn ? 'clocked-in' : ''}">
+          <span class="attendance-status-badge ${isClockedIn ? 'working' : 'off-duty'}">
+            ${isClockedIn ? '勤務中' : '退勤済み'}
+          </span>
+          <div class="attendance-item-info">
+            <div class="attendance-item-avatar">${(user.name || '?')[0]}</div>
+            <div class="attendance-item-details">
+              <div class="attendance-item-name">${escapeHtml(user.name || '-')}</div>
+              <div class="attendance-item-time ${isClockedIn ? 'clocked-in' : ''}">
+                ${isClockedIn ? `<i class="fas fa-clock"></i> 出勤: ${clockInTime}` : (clockOutTime ? `<i class="fas fa-clock"></i> 退勤: ${clockOutTime}` : '<i class="fas fa-minus-circle"></i> 未出勤')}
+              </div>
+            </div>
+          </div>
+          <button class="attendance-button ${isClockedIn ? 'clock-out' : 'clock-in'}" 
+                  onclick="toggleAttendance('${user.id}', ${!isClockedIn})"
+                  ${user.status !== 'active' ? 'disabled' : ''}>
+            <i class="fas ${isClockedIn ? 'fa-sign-out-alt' : 'fa-sign-in-alt'}"></i>
+            ${isClockedIn ? '退勤する' : '出勤する'}
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 出退勤のトグル
+  window.toggleAttendance = async function(userId, isClockedIn) {
+    const today = getTodayDate();
+    const key = `${userId}_${today}`;
+    const now = new Date().toISOString();
+    
+    if (isClockedIn) {
+      // 出勤
+      attendanceRecords[key] = {
+        clockedIn: true,
+        clockInTime: now,
+        clockOutTime: null
+      };
+      
+      // APIに送信（将来実装）
+      try {
+        await fetch(`${API_BASE}/attendance/clock-in`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: userId,
+            date: today,
+            clock_in: now
+          })
+        }).catch(() => {
+          // APIが未実装の場合はローカルストレージのみ保存
+        });
+      } catch (error) {
+        console.error('Failed to record clock-in:', error);
+      }
+    } else {
+      // 退勤
+      const current = attendanceRecords[key];
+      attendanceRecords[key] = {
+        clockedIn: false,
+        clockInTime: current?.clockInTime || null,
+        clockOutTime: now
+      };
+      
+      // APIに送信（将来実装）
+      try {
+        await fetch(`${API_BASE}/attendance/clock-out`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: userId,
+            date: today,
+            clock_out: now
+          })
+        }).catch(() => {
+          // APIが未実装の場合はローカルストレージのみ保存
+        });
+      } catch (error) {
+        console.error('Failed to record clock-out:', error);
+      }
+    }
+    
+    saveAttendanceRecords();
+    renderAttendanceSections();
+  };
 })();
 
   // サイドバー開閉機能
