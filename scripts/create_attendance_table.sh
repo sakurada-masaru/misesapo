@@ -36,15 +36,10 @@ aws dynamodb create-table \
         ],
         \"Projection\": {
           \"ProjectionType\": \"ALL\"
-        },
-        \"ProvisionedThroughput\": {
-          \"ReadCapacityUnits\": 5,
-          \"WriteCapacityUnits\": 5
         }
       }
     ]" \
-  --provisioned-throughput \
-    ReadCapacityUnits=5,WriteCapacityUnits=5 \
+  --billing-mode PAY_PER_REQUEST \
   --region ${REGION}
 
 echo "テーブル ${TABLE_NAME} の作成を開始しました"
