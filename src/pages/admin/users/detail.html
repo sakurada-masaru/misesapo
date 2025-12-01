@@ -1210,13 +1210,10 @@
         }
         // roleフィールドが存在する場合はそのまま使用（role_codeは無視）
 
-        // 出退勤記録を読み込み
-        loadAttendanceRecords();
-
         // ユーザー情報を表示
         renderUser(currentUser);
         
-        // タイムカードを読み込み
+        // タイムカードを読み込み（出退勤記録も含む）
         loadTimecard();
 
         loadingEl.style.display = 'none';
@@ -1318,58 +1315,10 @@
       return colors[role] || '#64748b';
     }
 
-    // 出退勤記録を読み込み
+    // 出退勤記録を読み込み（タイムカード機能に統合されたため、この関数は空に）
     function loadAttendanceRecords() {
-      try {
-        const stored = localStorage.getItem('attendanceRecords');
-        if (stored) {
-          attendanceRecords = JSON.parse(stored);
-        }
-      } catch (error) {
-        console.error('Error loading attendance records:', error);
-        attendanceRecords = {};
-      }
-      renderAttendanceStatus();
-    }
-
-    // 出退勤ステータスを表示
-    function renderAttendanceStatus() {
-      if (!currentUser) return;
-      
-      const today = new Date().toISOString().split('T')[0];
-      const todayRecord = attendanceRecords[today]?.[currentUser.id];
-      
-      const statusIndicator = document.getElementById('status-indicator');
-      const statusLabel = document.getElementById('status-label');
-      const statusTime = document.getElementById('status-time');
-      const toggleBtn = document.getElementById('attendance-toggle-btn');
-      const toggleBtnText = document.getElementById('toggle-btn-text');
-      
-      if (todayRecord && todayRecord.clock_in && !todayRecord.clock_out) {
-        // 出勤中
-        statusIndicator.className = 'status-indicator working';
-        statusLabel.textContent = '出勤中';
-        statusTime.textContent = `出勤時刻: ${formatTime(todayRecord.clock_in)}`;
-        toggleBtnText.textContent = '退勤する';
-        toggleBtn.classList.remove('btn-primary');
-        toggleBtn.classList.add('btn-danger');
-      } else if (todayRecord && todayRecord.clock_out) {
-        // 退勤済み
-        statusIndicator.className = 'status-indicator';
-        statusLabel.textContent = '退勤済み';
-        statusTime.textContent = `出勤: ${formatTime(todayRecord.clock_in)} - 退勤: ${formatTime(todayRecord.clock_out)}`;
-        toggleBtnText.textContent = '再出勤';
-        toggleBtn.classList.remove('btn-danger');
-        toggleBtn.classList.add('btn-primary');
-      } else {
-        // 未出勤
-        statusIndicator.className = 'status-indicator';
-        statusLabel.textContent = '未出勤';
-        statusTime.textContent = '-';
-        toggleBtnText.textContent = '出勤する';
-        toggleBtn.classList.remove('btn-danger');
-        toggleBtn.classList.add('btn-primary');
-      }
+      // タイムカード機能で出退勤記録を管理するため、この関数は不要
+      // エラーを防ぐため、空の関数として残す
     }
 
 
@@ -1502,55 +1451,10 @@
       });
     }
 
-    // 出退勤トグルボタンのセットアップ
+    // 出退勤トグルボタンのセットアップ（タイムカード機能に統合されたため、この関数は空に）
     function setupAttendanceButton() {
-      const attendanceBtn = document.getElementById('attendance-toggle-btn');
-      if (!attendanceBtn) {
-        console.warn('Attendance toggle button not found');
-        return;
-      }
-      
-      attendanceBtn.addEventListener('click', () => {
-        if (!currentUser) return;
-        
-        const today = new Date().toISOString().split('T')[0];
-        if (!attendanceRecords[today]) {
-          attendanceRecords[today] = {};
-        }
-        
-        const todayRecord = attendanceRecords[today][currentUser.id] || {};
-        
-        if (!todayRecord.clock_in) {
-          // 出勤
-          attendanceRecords[today][currentUser.id] = {
-            ...todayRecord,
-            clock_in: new Date().toISOString(),
-            staff_id: currentUser.id,
-            staff_name: currentUser.name
-          };
-        } else if (!todayRecord.clock_out) {
-          // 退勤
-          attendanceRecords[today][currentUser.id] = {
-            ...todayRecord,
-            clock_out: new Date().toISOString()
-          };
-        } else {
-          // 再出勤
-          attendanceRecords[today][currentUser.id] = {
-            clock_in: new Date().toISOString(),
-            staff_id: currentUser.id,
-            staff_name: currentUser.name
-          };
-        }
-        
-        try {
-          localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
-          renderAttendanceStatus();
-        } catch (error) {
-          console.error('Error saving attendance:', error);
-          alert('出退勤記録の保存に失敗しました');
-        }
-      });
+      // タイムカード機能で出退勤記録を管理するため、この関数は不要
+      // エラーを防ぐため、空の関数として残す
     }
 
     // タイムカードを読み込み
