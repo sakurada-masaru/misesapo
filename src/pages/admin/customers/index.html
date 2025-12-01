@@ -2155,7 +2155,13 @@
       const res = await fetch(`${API_BASE}/estimates`);
       if (!res.ok) throw new Error('Failed');
       const estimates = await res.json();
-      const storeEstimates = estimates.filter(e => e.store_id === currentDetailStore.id);
+      // IdUtils.isSameを使用してID形式の違いに対応
+      let storeEstimates = [];
+      if (window.DataUtils?.IdUtils?.isSame) {
+        storeEstimates = estimates.filter(e => window.DataUtils.IdUtils.isSame(e.store_id, currentDetailStore.id));
+      } else {
+        storeEstimates = estimates.filter(e => e.store_id === currentDetailStore.id || String(e.store_id) === String(currentDetailStore.id));
+      }
       loading.style.display = 'none';
 
       if (storeEstimates.length === 0) {
@@ -2295,7 +2301,12 @@
       });
       
       if (response.ok || response.status === 204) {
-        allStores = allStores.filter(s => s.id !== deleteTargetId);
+        // IdUtils.isSameを使用してID形式の違いに対応
+        if (window.DataUtils?.IdUtils?.isSame) {
+          allStores = allStores.filter(s => !window.DataUtils.IdUtils.isSame(s.id, deleteTargetId));
+        } else {
+          allStores = allStores.filter(s => s.id !== deleteTargetId && String(s.id) !== String(deleteTargetId));
+        }
         filterAndRender();
         deleteModal.classList.remove('active');
         deleteTargetId = null;

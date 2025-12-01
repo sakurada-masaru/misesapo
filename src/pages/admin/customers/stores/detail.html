@@ -1091,7 +1091,12 @@
         console.warn('Failed to load reports');
       }
 
-      storeData = stores.find(s => String(s.id) === String(storeId));
+      // EntityFinderを使用してID形式の違いに対応
+      if (window.DataUtils?.EntityFinder?.findStore) {
+        storeData = window.DataUtils.EntityFinder.findStore(stores, storeId);
+      } else {
+        storeData = stores.find(s => String(s.id) === String(storeId));
+      }
       if (!storeData) {
         document.getElementById('store-name').textContent = '店舗が見つかりません';
         return;

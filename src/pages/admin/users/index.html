@@ -1506,7 +1506,13 @@
 
   // 編集
   window.editUser = function(id) {
-    const user = allUsers.find(u => u.id === id);
+    // EntityFinderを使用してID形式の違いに対応
+    let user = null;
+    if (window.DataUtils?.EntityFinder?.find) {
+      user = window.DataUtils.EntityFinder.find(allUsers, id, 'W');
+    } else {
+      user = allUsers.find(u => u.id === id || String(u.id) === String(id));
+    }
     if (!user) return;
 
     document.getElementById('dialog-title').textContent = 'ユーザー編集';
