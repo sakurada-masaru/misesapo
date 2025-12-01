@@ -1,6 +1,8 @@
 @layout('layouts.admin')
 @json('data/meta/admin_dashboard_title.json', $title)
 @json('data/meta/admin_dashboard_body_class.json', $body_class)
+<script src="/assets/js/role_config.js"></script>
+<script src="/assets/js/navigation.js"></script>
 
 <main id="main" class="admin-dashboard">
   <!-- サイドバー -->
@@ -17,68 +19,8 @@
       <span class="role-badge" id="sidebar-role-badge">管理者</span>
     </div>
     
-    <nav class="sidebar-nav">
-      <a href="/admin/dashboard.html" class="nav-item active">
-        <i class="fas fa-history"></i>
-        <span class="nav-label">アクティビティ</span>
-      </a>
-      <a href="/admin/schedules/" class="nav-item">
-        <i class="fas fa-calendar-alt"></i>
-        <span class="nav-label">スケジュール</span>
-      </a>
-      <a href="/admin/customers/" class="nav-item">
-        <i class="fas fa-store"></i>
-        <span class="nav-label">顧客管理</span>
-      </a>
-      <a href="/admin/reports/" class="nav-item">
-        <i class="fas fa-file-alt"></i>
-        <span class="nav-label">レポート</span>
-      </a>
-      <a href="/admin/estimates/" class="nav-item">
-        <i class="fas fa-file-invoice-dollar"></i>
-        <span class="nav-label">見積もり</span>
-      </a>
-      <a href="/admin/orders.html" class="nav-item">
-        <i class="fas fa-shopping-cart"></i>
-        <span class="nav-label">発注管理</span>
-      </a>
-      <a href="/admin/partners.html" class="nav-item">
-        <i class="fas fa-handshake"></i>
-        <span class="nav-label">パートナー企業</span>
-      </a>
-      <a href="/admin/users/" class="nav-item">
-        <i class="fas fa-users"></i>
-        <span class="nav-label">ユーザー</span>
-      </a>
-      <a href="/admin/services/" class="nav-item">
-        <i class="fas fa-cog"></i>
-        <span class="nav-label">サービス管理</span>
-      </a>
-      <a href="/admin/analytics/" class="nav-item">
-        <i class="fas fa-chart-bar"></i>
-        <span class="nav-label">分析</span>
-      </a>
-      <a href="/admin/images/" class="nav-item">
-        <i class="fas fa-images"></i>
-        <span class="nav-label">メディア</span>
-      </a>
-      <div class="nav-divider"></div>
-      <a href="/wiki" class="nav-item">
-        <i class="fas fa-book-open"></i>
-        <span class="nav-label">WIKI</span>
-      </a>
-      <a href="/admin/settings/" class="nav-item">
-        <i class="fas fa-sliders-h"></i>
-        <span class="nav-label">設定</span>
-      </a>
-      <a href="/admin/sitemap.html" class="nav-item">
-        <i class="fas fa-sitemap"></i>
-        <span class="nav-label">サイトマップ</span>
-      </a>
-      <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
-        <i class="fas fa-sign-out-alt"></i>
-        <span class="nav-label">ログアウト</span>
-      </button>
+    <nav class="sidebar-nav" id="admin-sidebar-nav">
+      <!-- ロールに応じたナビゲーション項目が動的に生成されます -->
     </nav>
 
     <!-- トグルボタン -->
