@@ -1044,29 +1044,57 @@
   async function loadUsers() {
     try {
       const response = await fetch(`${API_BASE}/workers`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const workers = await response.json();
       
+      // レスポンスが配列でない場合の処理
+      const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+      
       // 新しいデータ構造に対応
-      allUsers = workers.map(w => ({
-        id: w.id,
-        name: w.name || `ユーザー${w.id}`,
-        email: w.email || '-',
-        phone: w.phone || '-',
-        role: w.role || 'staff',
-        department: w.department || '-',
-        team: w.team || '-',
-        status: w.status || 'active',
-        created_at: w.created_at
-      }));
+      allUsers = workersArray.map(w => {
+        // roleの判定（role_codeやroleフィールドから）
+        let role = w.role || 'staff';
+        if (w.role_code !== undefined) {
+          role = getRoleFromCode(w.role_code);
+        }
+        
+        return {
+          id: w.id || w.user_id || `user_${Date.now()}_${Math.random()}`,
+          name: w.name || w.display_name || `ユーザー${w.id || ''}`,
+          email: w.email || w.email_address || '-',
+          phone: w.phone || w.phone_number || '-',
+          role: role,
+          department: w.department || w.team || '-',
+          team: w.team || '-',
+          status: w.status || (w.active !== undefined ? (w.active ? 'active' : 'inactive') : 'active'),
+          created_at: w.created_at || w.created_date
+        };
+      });
       
       console.log('Users loaded:', allUsers.length);
+      console.log('Sample user:', allUsers[0]);
+      
+      if (allUsers.length === 0) {
+        console.warn('No users found. API response:', workers);
+        tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">ユーザーが見つかりませんでした</td></tr>';
+        // 出退勤セクションも空にする
+        renderAttendanceSections();
+        return;
+      }
       
       updateStats();
       filterAndRender();
       renderAttendanceSections();
     } catch (error) {
       console.error('Failed to load users:', error);
-      tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">読み込みに失敗しました</td></tr>';
+      console.error('Error details:', error.message, error.stack);
+      tbody.innerHTML = `<tr><td colspan="8" class="loading-cell">読み込みに失敗しました: ${error.message}</td></tr>`;
+      // エラー時も出退勤セクションを表示（空の状態）
+      renderAttendanceSections();
     }
   }
 
