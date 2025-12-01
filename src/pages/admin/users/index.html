@@ -18,7 +18,7 @@
       <span class="role-badge" id="sidebar-role-badge">管理者</span>
     </div>
     
-    <nav class="sidebar-nav">
+        <nav class="sidebar-nav">
       <a href="/admin/dashboard.html" class="nav-item">
         <i class="fas fa-history"></i>
         <span class="nav-label">アクティビティ</span>
@@ -1154,6 +1154,9 @@
       if (email) {
         mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
         mypageLink.style.display = 'flex';
+        console.log('[Users] Mypage link set:', mypageLink.href);
+      } else {
+        console.warn('[Users] No email found for mypage link');
       }
     } catch (error) {
       console.error('Error setting up mypage link:', error);

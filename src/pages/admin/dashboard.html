@@ -50,6 +50,10 @@
         <i class="fas fa-users"></i>
         <span class="nav-label">ユーザー</span>
       </a>
+      <a href="/admin/attendance/errors.html" class="nav-item">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span class="nav-label">出退勤エラー</span>
+      </a>
       <a href="/admin/services/" class="nav-item">
         <i class="fas fa-cog"></i>
         <span class="nav-label">サービス管理</span>
@@ -1077,10 +1081,6 @@
   }
   
   // マイページリンクを設定
-  setupMypageLink();
-})();
-
-  // マイページリンクを設定
   async function setupMypageLink() {
     const mypageLink = document.getElementById('sidebar-mypage-link');
     if (!mypageLink) return;
@@ -1107,10 +1107,17 @@
       if (email) {
         mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
         mypageLink.style.display = 'flex';
+        console.log('[Dashboard] Mypage link set:', mypageLink.href);
+      } else {
+        console.warn('[Dashboard] No email found for mypage link');
       }
     } catch (error) {
       console.error('Error setting up mypage link:', error);
     }
   }
+  
+  // マイページリンクを設定
+  setupMypageLink();
+})();
 
 </script>
