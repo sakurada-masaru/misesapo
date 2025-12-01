@@ -90,6 +90,7 @@ STORES_TABLE = dynamodb.Table('stores')
 ATTENDANCE_TABLE = dynamodb.Table('attendance')
 ATTENDANCE_ERRORS_TABLE = dynamodb.Table('attendance-errors')
 ATTENDANCE_REQUESTS_TABLE = dynamodb.Table('attendance-requests')
+HOLIDAYS_TABLE = dynamodb.Table('holidays')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -252,6 +253,21 @@ def lambda_handler(event, context):
                 return get_attendance_detail(attendance_id, headers)
             elif method == 'PUT':
                 return create_or_update_attendance(event, headers)
+        elif normalized_path == '/holidays':
+            # 休日・祝日の取得・作成
+            if method == 'GET':
+                return get_holidays(event, headers)
+            elif method == 'POST':
+                return create_holiday(event, headers)
+        elif normalized_path.startswith('/holidays/'):
+            # 休日・祝日の詳細・更新・削除
+            holiday_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_holiday_detail(holiday_id, headers)
+            elif method == 'PUT':
+                return update_holiday(holiday_id, event, headers)
+            elif method == 'DELETE':
+                return delete_holiday(holiday_id, headers)
             elif method == 'DELETE':
                 return delete_attendance(attendance_id, headers)
         elif normalized_path == '/estimates':
@@ -3408,6 +3424,24 @@ def create_or_update_attendance(event, headers):
             except (ValueError, AttributeError):
                 pass
         
+        # 休日判定
+        is_holiday = False
+        is_holiday_work = False
+        
+        try:
+            # 日付で休日を検索
+            holiday_response = HOLIDAYS_TABLE.query(
+                IndexName='date-index',
+                KeyConditionExpression=Key('date').eq(date)
+            )
+            if holiday_response.get('Items'):
+                is_holiday = True
+                # 出退勤記録がある場合は休日出勤
+                if clock_in:
+                    is_holiday_work = True
+        except Exception as e:
+            print(f"Error checking holiday: {str(e)}")
+        
         # 勤務状態を判定
         status = 'working'
         if clock_in and clock_out:
@@ -3474,6 +3508,16 @@ def create_or_update_attendance(event, headers):
                 expression_attribute_values[":is_early_leave"] = True
                 expression_attribute_values[":early_leave_minutes"] = early_leave_minutes
             
+            if is_holiday:
+                update_expression_parts.append("#is_holiday = :is_holiday")
+                expression_attribute_names["#is_holiday"] = "is_holiday"
+                expression_attribute_values[":is_holiday"] = True
+            
+            if is_holiday_work:
+                update_expression_parts.append("#is_holiday_work = :is_holiday_work")
+                expression_attribute_names["#is_holiday_work"] = "is_holiday_work"
+                expression_attribute_values[":is_holiday_work"] = True
+            
             update_expression_parts.append("#status = :status")
             expression_attribute_names["#status"] = "status"
             expression_attribute_values[":status"] = status
@@ -3506,6 +3550,8 @@ def create_or_update_attendance(event, headers):
                 'late_minutes': late_minutes if is_late else None,
                 'is_early_leave': is_early_leave if is_early_leave else None,
                 'early_leave_minutes': early_leave_minutes if is_early_leave else None,
+                'is_holiday': is_holiday if is_holiday else None,
+                'is_holiday_work': is_holiday_work if is_holiday_work else None,
                 'status': status,
                 'created_at': now,
                 'updated_at': now
@@ -4088,6 +4134,259 @@ def delete_attendance(attendance_id, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': '勤怠記録の削除に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_holidays(event, headers):
+    """
+    休日・祝日一覧を取得
+    """
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        date_from = query_params.get('date_from')
+        date_to = query_params.get('date_to')
+        year = query_params.get('year')
+        month = query_params.get('month')
+        holiday_type = query_params.get('type')
+        
+        if date_from and date_to:
+            # 日付範囲でフィルタリング
+            holidays = []
+            scan_response = HOLIDAYS_TABLE.scan()
+            for item in scan_response.get('Items', []):
+                if date_from <= item.get('date', '') <= date_to:
+                    if not holiday_type or item.get('type') == holiday_type:
+                        holidays.append(item)
+            holidays.sort(key=lambda x: x.get('date', ''))
+        elif year and month:
+            # 年月でフィルタリング
+            month_start = f"{year}-{month.zfill(2)}-01"
+            next_month = int(month) + 1
+            next_year = int(year)
+            if next_month > 12:
+                next_month = 1
+                next_year += 1
+            month_end = f"{next_year}-{str(next_month).zfill(2)}-01"
+            
+            holidays = []
+            scan_response = HOLIDAYS_TABLE.scan()
+            for item in scan_response.get('Items', []):
+                item_date = item.get('date', '')
+                if month_start <= item_date < month_end:
+                    if not holiday_type or item.get('type') == holiday_type:
+                        holidays.append(item)
+            holidays.sort(key=lambda x: x.get('date', ''))
+        else:
+            # 全件取得
+            scan_response = HOLIDAYS_TABLE.scan()
+            holidays = scan_response.get('Items', [])
+            if holiday_type:
+                holidays = [h for h in holidays if h.get('type') == holiday_type]
+            holidays.sort(key=lambda x: x.get('date', ''))
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'holidays': holidays,
+                'count': len(holidays)
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting holidays: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '休日一覧の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def create_holiday(event, headers):
+    """
+    休日・祝日を作成
+    """
+    try:
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        holiday_id = body_json.get('id') or str(uuid.uuid4())
+        date = body_json.get('date')
+        name = body_json.get('name', '')
+        holiday_type = body_json.get('type', 'custom')
+        
+        if not date:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '日付は必須です'
+                }, ensure_ascii=False)
+            }
+        
+        now = datetime.now(timezone.utc).isoformat()
+        
+        holiday_data = {
+            'id': holiday_id,
+            'date': date,
+            'name': name,
+            'type': holiday_type,
+            'created_at': now,
+            'updated_at': now
+        }
+        
+        HOLIDAYS_TABLE.put_item(Item=holiday_data)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '休日を登録しました',
+                'holiday': holiday_data
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error creating holiday: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '休日の登録に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_holiday_detail(holiday_id, headers):
+    """
+    休日・祝日詳細を取得
+    """
+    try:
+        response = HOLIDAYS_TABLE.get_item(Key={'id': holiday_id})
+        if 'Item' in response:
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
+            }
+        else:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '休日が見つかりません'
+                }, ensure_ascii=False)
+            }
+    except Exception as e:
+        print(f"Error getting holiday detail: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '休日の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_holiday(holiday_id, event, headers):
+    """
+    休日・祝日を更新
+    """
+    try:
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 既存の休日を取得
+        response = HOLIDAYS_TABLE.get_item(Key={'id': holiday_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '休日が見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        # 更新可能なフィールドを更新
+        update_expression_parts = []
+        expression_attribute_values = {}
+        expression_attribute_names = {}
+        
+        updatable_fields = ['date', 'name', 'type']
+        for field in updatable_fields:
+            if field in body_json:
+                update_expression_parts.append(f"#{field} = :{field}")
+                expression_attribute_names[f"#{field}"] = field
+                expression_attribute_values[f":{field}"] = body_json[field]
+        
+        update_expression_parts.append("#updated_at = :updated_at")
+        expression_attribute_names["#updated_at"] = "updated_at"
+        expression_attribute_values[":updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        if update_expression_parts:
+            HOLIDAYS_TABLE.update_item(
+                Key={'id': holiday_id},
+                UpdateExpression='SET ' + ', '.join(update_expression_parts),
+                ExpressionAttributeNames=expression_attribute_names,
+                ExpressionAttributeValues=expression_attribute_values
+            )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '休日を更新しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error updating holiday: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '休日の更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_holiday(holiday_id, headers):
+    """
+    休日・祝日を削除
+    """
+    try:
+        HOLIDAYS_TABLE.delete_item(Key={'id': holiday_id})
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '休日を削除しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting holiday: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '休日の削除に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }
