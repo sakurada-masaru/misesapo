@@ -1,6 +1,11 @@
 @layout('layouts.base')
 @json('data/meta/staff_mypage_title.json', $title)
 @json('data/meta/staff_mypage_body_class.json', $body_class)
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/assets/js/cognito_config.js"></script>
+<script src="/assets/js/cognito_auth.js"></script>
 <script src="/assets/js/client_auth.js"></script>
 
 <main id="main" class="container staff-mypage">
@@ -465,13 +470,28 @@
         contentEl.style.display = 'none';
         errorEl.style.display = 'none';
 
-        // 認証情報から個人のIDを取得
-        const authData = window.Auth?.getAuthData?.();
-        if (!authData || !authData.user || !authData.user.id) {
-          throw new Error('ログインしてください。');
+        // 認証情報から個人のIDを取得（Cognito認証を優先）
+        let userId = null;
+        
+        // Cognito認証を確認
+        if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+          const cognitoUser = await window.CognitoAuth.getCurrentUser();
+          if (cognitoUser && cognitoUser.id) {
+            userId = cognitoUser.id;  // DynamoDBのID
+          }
         }
         
-        const userId = authData.user.id;  // DynamoDBのID（個人のID）
+        // Firebase認証を確認（フォールバック）
+        if (!userId) {
+          const authData = window.Auth?.getAuthData?.();
+          if (authData && authData.user && authData.user.id) {
+            userId = authData.user.id;
+          }
+        }
+        
+        if (!userId) {
+          throw new Error('ログインしてください。');
+        }
         
         // APIからユーザー情報を取得（個人のIDで取得）
         try {
@@ -479,15 +499,30 @@
           if (response.ok) {
             currentUser = await response.json();
           } else if (response.status === 404) {
-            // 個人のIDで見つからない場合、Firebase UIDで検索（フォールバック）
-            if (authData.user.firebase_uid) {
-              const fallbackResponse = await fetch(`${API_BASE}/workers?firebase_uid=${encodeURIComponent(authData.user.firebase_uid)}`);
-              if (fallbackResponse.ok) {
-                const users = await fallbackResponse.json();
-                const items = users.items || users.workers || users;
-                if (Array.isArray(items) && items.length > 0) {
-                  currentUser = items[0];
-                }
+            // 個人のIDで見つからない場合、Cognito SubまたはFirebase UIDで検索（フォールバック）
+            let fallbackResponse = null;
+            
+            // Cognito Subで検索
+            if (window.CognitoAuth) {
+              const cognitoUser = await window.CognitoAuth.getCurrentUser();
+              if (cognitoUser && cognitoUser.cognito_sub) {
+                fallbackResponse = await fetch(`${API_BASE}/workers?cognito_sub=${encodeURIComponent(cognitoUser.cognito_sub)}`);
+              }
+            }
+            
+            // Firebase UIDで検索（フォールバック）
+            if (!fallbackResponse || !fallbackResponse.ok) {
+              const authData = window.Auth?.getAuthData?.();
+              if (authData && authData.user && authData.user.firebase_uid) {
+                fallbackResponse = await fetch(`${API_BASE}/workers?firebase_uid=${encodeURIComponent(authData.user.firebase_uid)}`);
+              }
+            }
+            
+            if (fallbackResponse && fallbackResponse.ok) {
+              const users = await fallbackResponse.json();
+              const items = users.items || users.workers || users;
+              if (Array.isArray(items) && items.length > 0) {
+                currentUser = items[0];
               }
             }
           }
