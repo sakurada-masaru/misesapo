@@ -3329,7 +3329,9 @@
         if (!clientsRes.ok) {
           throw new Error('法人一覧の取得に失敗しました');
         }
-        const clients = await clientsRes.json();
+        const clientsData = await clientsRes.json();
+        // APIレスポンスが配列かオブジェクトかをチェック
+        const clients = Array.isArray(clientsData) ? clientsData : (clientsData.items || clientsData.clients || []);
         const existingClient = clients.find(c => c.name === companyName);
         
         if (existingClient) {
@@ -3366,7 +3368,9 @@
           if (!brandsRes.ok) {
             throw new Error('ブランド一覧の取得に失敗しました');
           }
-          const brands = await brandsRes.json();
+          const brandsData = await brandsRes.json();
+          // APIレスポンスが配列かオブジェクトかをチェック
+          const brands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
           // IdUtils.isSameを使用してID形式の違いに対応
           let existingBrand = null;
           if (window.DataUtils?.IdUtils?.isSame) {

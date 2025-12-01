@@ -1598,7 +1598,12 @@
     const selectedClient = clientFilter.value;
     let brands;
     if (selectedClient) {
-      brands = allBrands.filter(b => b.client_id === selectedClient);
+      // IdUtils.isSameを使用してID形式の違いに対応
+      if (window.DataUtils?.IdUtils?.isSame) {
+        brands = allBrands.filter(b => window.DataUtils.IdUtils.isSame(b.client_id, selectedClient));
+      } else {
+        brands = allBrands.filter(b => b.client_id === selectedClient || String(b.client_id) === String(selectedClient));
+      }
     } else {
       brands = allBrands;
     }
