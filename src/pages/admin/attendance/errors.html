@@ -607,30 +607,9 @@
       return div.innerHTML;
     }
 
-    // サイドバーの初期化
+    // サイドバーの初期化（共通サイドバーを使用しているため、個別の初期化は不要）
     function initSidebar() {
-      ('click', () => {
-          sidebar.classList.toggle('collapsed');
-          const collapsed = sidebar.classList.contains('collapsed');
-          localStorage.setItem('sidebar-collapsed', collapsed);
-        });
-      }
-
-      // ロール表示の更新
-
-      if (window.Auth && window.Auth.onAuthStateChanged) {
-        window.Auth.onAuthStateChanged(() => {
-          
-        });
-      }
-    }
-
-    // ロール表示の更新
-    
-        }
-      } else {
-        roleBadge.textContent = '管理者';
-      }
+      // 共通サイドバーのJavaScriptが処理するため、ここでは何もしない
     }
   </script>
 </main>

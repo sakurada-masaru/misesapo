@@ -1472,50 +1472,9 @@
         
   });
 
-    // サイドバーの初期化
+    // サイドバーの初期化（共通サイドバーを使用しているため、個別の初期化は不要）
     function initSidebar() {
-      ('click', () => {
-          sidebar.classList.toggle('collapsed');
-          const collapsed = sidebar.classList.contains('collapsed');
-          localStorage.setItem('sidebar-collapsed', collapsed);
-        });
-      }
-
-      // ロール表示の更新
-
-      if (window.Auth && window.Auth.onAuthStateChanged) {
-        window.Auth.onAuthStateChanged(() => {
-          
-        });
-      }
-    }
-
-    // ロール表示の更新
-    ,
-              'customer': { bg: '#dbeafe', color: '#1e40af' },
-              'admin': { bg: '#fce7f3', color: '#be185d' },
-              'sales': { bg: '#dcfce7', color: '#15803d' },
-              'office': { bg: '#e0e7ff', color: '#3730a3' },
-              'staff': { bg: '#ffedd5', color: '#c2410c' },
-              'developer': { bg: '#f0f9ff', color: '#0c4a6e' },
-              'designer': { bg: '#fce7f3', color: '#9f1239' },
-              'general_affairs': { bg: '#fef3c7', color: '#92400e' },
-              'operation': { bg: '#ddd6fe', color: '#5b21b6' },
-              'contractor': { bg: '#f3f4f6', color: '#374151' },
-              'accounting': { bg: '#d1fae5', color: '#065f46' },
-              'human_resources': { bg: '#fce7f3', color: '#831843' },
-              'concierge': { bg: '#fef3c7', color: '#92400e' },
-              'master': { bg: '#fef2f2', color: '#991b1b' }
-            };
-            
-            const colors = badgeColors[user.role] || badgeColors['admin'];
-            roleBadge.style.background = colors.bg;
-            roleBadge.style.color = colors.color;
-          }
-        }
-      } else {
-        roleBadge.textContent = '管理者';
-      }
+      // 共通サイドバーのJavaScriptが処理するため、ここでは何もしない
     }
   </script>
 </main>
