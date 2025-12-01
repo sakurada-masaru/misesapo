@@ -211,13 +211,33 @@
       // 従業員はAWS Cognitoを使用するため、customerロールで固定
       role = 'customer';
       
+      // DynamoDBのclientsテーブルからユーザー情報を取得（Firebase UIDで検索）
+      let userInfo = null;
+      try {
+        const apiBaseUrl = getApiBaseUrl();
+        if (apiBaseUrl) {
+          const response = await fetch(`${apiBaseUrl}/clients?firebase_uid=${encodeURIComponent(firebaseUid)}`);
+          if (response.ok) {
+            const clients = await response.json();
+            const clientsArray = Array.isArray(clients) ? clients : (clients.items || clients.clients || []);
+            if (clientsArray.length > 0) {
+              userInfo = clientsArray[0];
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('[Auth] Could not fetch client info from DynamoDB:', error);
+      }
+      
       // ユーザー情報を保存（お客様用）
       const user = {
-        id: firebaseUid,  // Firebase UID
+        id: userInfo ? userInfo.id : firebaseUid,  // DynamoDBのID（重要！）
         firebase_uid: firebaseUid,  // Firebase UID
         email: firebaseUser.email,
         role: role,
-        name: firebaseUser.displayName || (window.Users && window.Users.findUserByEmail ? (window.Users.findUserByEmail(firebaseUser.email)?.name || email.split('@')[0]) : email.split('@')[0]),
+        name: userInfo ? userInfo.name : (firebaseUser.displayName || (window.Users && window.Users.findUserByEmail ? (window.Users.findUserByEmail(firebaseUser.email)?.name || email.split('@')[0]) : email.split('@')[0])),
+        company_name: userInfo ? userInfo.company_name : '',
+        store_name: userInfo ? userInfo.store_name : '',
         emailVerified: firebaseUser.emailVerified
       };
       
