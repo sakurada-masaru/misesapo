@@ -984,9 +984,19 @@
       statusEl.textContent = '保存中...';
       statusEl.className = 'form-status';
       
+      // メールアドレスのバリデーション
+      const email = document.getElementById('edit-email').value;
+      const emailValidation = validateEmail(email);
+      
+      if (!emailValidation.valid) {
+        statusEl.textContent = emailValidation.message;
+        statusEl.className = 'form-status error';
+        return;
+      }
+      
       const data = {
         name: document.getElementById('edit-name').value,
-        email: document.getElementById('edit-email').value,
+        email: email,
         phone: document.getElementById('edit-phone').value,
         role: document.getElementById('edit-role').value,
         department: document.getElementById('edit-department').value,
