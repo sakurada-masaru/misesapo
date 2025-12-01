@@ -3007,7 +3007,9 @@
         }
         
         if (workersRes.ok) {
-          allWorkers = await workersRes.json();
+          const workersData = await workersRes.json();
+          // APIレスポンスが配列かオブジェクトかをチェック
+          allWorkers = Array.isArray(workersData) ? workersData : (workersData.items || workersData.workers || []);
         } else {
           console.warn('Failed to load workers');
           allWorkers = [];

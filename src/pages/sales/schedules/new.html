@@ -679,9 +679,20 @@
             fetch(`${API_BASE}/brands`).catch(() => ({ ok: false }))
           ]);
 
-          const stores = await storesRes.json();
-          const allClients = rawClientsRes && rawClientsRes.ok ? await rawClientsRes.json() : [];
-          const allBrands  = rawBrandsRes && rawBrandsRes.ok ? await rawBrandsRes.json() : [];
+          const storesData = await storesRes.json();
+          const stores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+          
+          let allClients = [];
+          if (rawClientsRes && rawClientsRes.ok) {
+            const clientsData = await rawClientsRes.json();
+            allClients = Array.isArray(clientsData) ? clientsData : (clientsData.items || clientsData.clients || []);
+          }
+          
+          let allBrands = [];
+          if (rawBrandsRes && rawBrandsRes.ok) {
+            const brandsData = await rawBrandsRes.json();
+            allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
+          }
 
           function getClientName(clientId) {
             if (!clientId) return '';
