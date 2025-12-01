@@ -2,6 +2,8 @@
 @json('data/meta/admin_services_title.json', $title)
 @json('data/meta/admin_services_body_class.json', $body_class)
 
+<script src="/js/role_config.js"></script>
+<script src="/js/navigation.js"></script>
 <!-- AWS API -->
 <script src="/js/aws-services-api.js"></script>
 
@@ -20,68 +22,8 @@
       <span class="role-badge" id="sidebar-role-badge">管理者</span>
     </div>
     
-    <nav class="sidebar-nav">
-      <a href="/admin/dashboard.html" class="nav-item">
-        <i class="fas fa-history"></i>
-        <span class="nav-label">アクティビティ</span>
-      </a>
-      <a href="/admin/schedules/" class="nav-item">
-        <i class="fas fa-calendar-alt"></i>
-        <span class="nav-label">スケジュール</span>
-      </a>
-      <a href="/admin/customers/" class="nav-item">
-        <i class="fas fa-store"></i>
-        <span class="nav-label">顧客管理</span>
-      </a>
-      <a href="/admin/reports/" class="nav-item">
-        <i class="fas fa-file-alt"></i>
-        <span class="nav-label">レポート</span>
-      </a>
-      <a href="/admin/estimates/" class="nav-item">
-        <i class="fas fa-file-invoice-dollar"></i>
-        <span class="nav-label">見積もり</span>
-      </a>
-      <a href="/admin/orders.html" class="nav-item">
-        <i class="fas fa-shopping-cart"></i>
-        <span class="nav-label">発注管理</span>
-      </a>
-      <a href="/admin/partners.html" class="nav-item">
-        <i class="fas fa-handshake"></i>
-        <span class="nav-label">パートナー企業</span>
-      </a>
-      <a href="/admin/users/" class="nav-item">
-        <i class="fas fa-users"></i>
-        <span class="nav-label">ユーザー</span>
-      </a>
-      <a href="/admin/services/" class="nav-item active">
-        <i class="fas fa-cog"></i>
-        <span class="nav-label">サービス管理</span>
-      </a>
-      <a href="/admin/analytics/" class="nav-item">
-        <i class="fas fa-chart-bar"></i>
-        <span class="nav-label">分析</span>
-      </a>
-      <a href="/admin/images/" class="nav-item">
-        <i class="fas fa-images"></i>
-        <span class="nav-label">メディア</span>
-      </a>
-      <div class="nav-divider"></div>
-      <a href="/wiki" class="nav-item">
-        <i class="fas fa-book-open"></i>
-        <span class="nav-label">WIKI</span>
-      </a>
-      <a href="/admin/settings/" class="nav-item">
-        <i class="fas fa-sliders-h"></i>
-        <span class="nav-label">設定</span>
-      </a>
-      <a href="/admin/sitemap.html" class="nav-item">
-        <i class="fas fa-sitemap"></i>
-        <span class="nav-label">サイトマップ</span>
-      </a>
-      <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
-        <i class="fas fa-sign-out-alt"></i>
-        <span class="nav-label">ログアウト</span>
-      </button>
+    <nav class="sidebar-nav" id="admin-sidebar-nav">
+      <!-- ロールに応じたナビゲーション項目が動的に生成されます -->
     </nav>
 
     <!-- トグルボタン -->
@@ -1246,33 +1188,67 @@
       });
     })();
     
-    // ロールバッジの更新
-    (function() {
+    // ロール表示の更新とサイドバーナビゲーションの生成
+    function updateRoleBadgeAndSidebar() {
       const roleBadge = document.getElementById('sidebar-role-badge');
-      if (!roleBadge) return;
+      const sidebarNav = document.getElementById('admin-sidebar-nav');
       
-      // ユーザー情報を取得してロールを表示
+      // ロール情報を取得
+      let userRole = 'admin'; // デフォルト
       if (window.Auth && window.Auth.getCurrentUser) {
         const user = window.Auth.getCurrentUser();
-        if (user && window.Users && window.Users.getUserRole) {
-          const role = window.Users.getUserRole(user.uid);
-          if (role) {
-            roleBadge.textContent = role === 'admin' ? '管理者' : role === 'staff' ? 'スタッフ' : 'ユーザー';
-            
-            // ロールに応じたバッジの色を設定
-            if (role === 'admin') {
-              roleBadge.style.background = '#e0e7ff';
-              roleBadge.style.color = '#3730a3';
-            } else if (role === 'staff') {
-              roleBadge.style.background = '#fef3c7';
-              roleBadge.style.color = '#92400e';
-            } else {
-              roleBadge.style.background = '#e5e7eb';
-              roleBadge.style.color = '#374151';
-            }
-          }
+        if (user && user.role) {
+          userRole = user.role;
+        }
+      } else if (window.CognitoAuth && window.CognitoAuth.isAuthenticated) {
+        const cognitoUser = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        if (cognitoUser && cognitoUser.role) {
+          userRole = cognitoUser.role;
         }
       }
-    })();
+      
+      // ロールバッジの更新
+      if (roleBadge) {
+        const roleConfig = window.RoleConfig?.ROLE_CONFIG;
+        const roleInfo = roleConfig?.roles?.[userRole];
+        if (roleInfo) {
+          roleBadge.textContent = roleInfo.displayName || roleInfo.name || userRole;
+          
+          // ロールに応じたバッジの色を設定
+          const badgeColors = {
+            'guest': { bg: '#e5e7eb', color: '#6b7280' },
+            'customer': { bg: '#dbeafe', color: '#1e40af' },
+            'staff': { bg: '#dcfce7', color: '#166534' },
+            'office': { bg: '#fef3c7', color: '#92400e' },
+            'designer': { bg: '#fce7f3', color: '#831843' },
+            'operation': { bg: '#fef3c7', color: '#92400e' },
+            'admin': { bg: '#e0e7ff', color: '#3730a3' },
+            'developer': { bg: '#fce7f3', color: '#831843' },
+            'master': { bg: '#fef2f2', color: '#991b1b' }
+          };
+          
+          const colors = badgeColors[userRole] || badgeColors['admin'];
+          roleBadge.style.background = colors.bg;
+          roleBadge.style.color = colors.color;
+        } else {
+          roleBadge.textContent = '管理者';
+        }
+      }
+      
+      // サイドバーナビゲーションの生成
+      if (sidebarNav && window.Navigation && window.Navigation.renderAdminSidebar) {
+        window.Navigation.renderAdminSidebar('admin-sidebar-nav', userRole);
+      }
+    }
+    
+    // ページ読み込み時にロールを更新
+    updateRoleBadgeAndSidebar();
+    
+    // Authの状態が変わったときにロールを更新
+    if (window.Auth && window.Auth.onAuthStateChanged) {
+      window.Auth.onAuthStateChanged(() => {
+        updateRoleBadgeAndSidebar();
+      });
+    }
   </script>
 

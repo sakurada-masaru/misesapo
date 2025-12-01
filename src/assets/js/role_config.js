@@ -203,7 +203,6 @@ const ROLE_CONFIG = {
       { href: '/admin/images.html', label: 'メディア', icon: 'fa-images' },
       { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
       { href: '/admin/analytics.html', label: '分析', icon: 'fa-chart-bar' },
-      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     designer: [
@@ -219,7 +218,6 @@ const ROLE_CONFIG = {
       { href: '/admin/images.html', label: 'メディア', icon: 'fa-images' },
       { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
       { href: '/admin/analytics.html', label: '分析', icon: 'fa-chart-bar' },
-      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     operation: [
@@ -234,7 +232,6 @@ const ROLE_CONFIG = {
       { href: '/admin/images.html', label: 'メディア', icon: 'fa-images' },
       { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
       { href: '/admin/analytics.html', label: '分析', icon: 'fa-chart-bar' },
-      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     concierge: [
@@ -260,7 +257,6 @@ const ROLE_CONFIG = {
       { href: '/admin/images.html', label: 'メディア', icon: 'fa-images' },
       { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
       { href: '/admin/analytics.html', label: '分析', icon: 'fa-chart-bar' },
-      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     developer: [
@@ -277,7 +273,6 @@ const ROLE_CONFIG = {
       { href: '/admin/images.html', label: 'メディア', icon: 'fa-images' },
       { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
       { href: '/admin/analytics.html', label: '分析', icon: 'fa-chart-bar' },
-      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     master: [
@@ -344,7 +339,6 @@ const ROLE_CONFIG = {
       { href: '/admin/users/sales.html', label: 'コンシェルジュ一覧', icon: 'fa-user-tie' },
       { href: '/admin/users/staff.html', label: '清掃員一覧', icon: 'fa-user-cog' },
       { href: '/admin/partners.html', label: 'パートナー企業一覧', icon: 'fa-handshake' },
-      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     '開発者': [
