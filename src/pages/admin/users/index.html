@@ -1344,8 +1344,15 @@
         });
         
         if (response.ok) {
+          const responseData = await response.json().catch(() => ({}));
+          console.log('Delete successful:', responseData);
+          
           deleteDialog.close();
-          loadUsers();
+          deleteTargetId = null; // 削除対象IDをリセット
+          
+          // ユーザー一覧を再読み込み（awaitで待つ）
+          await loadUsers();
+          
           alert('ユーザーを削除しました');
         } else {
           const errorText = await response.text();
@@ -1390,6 +1397,7 @@
       } finally {
         confirmBtn.disabled = false;
         confirmBtn.textContent = originalText;
+        deleteTargetId = null; // エラー時もリセット
       }
     });
   }
