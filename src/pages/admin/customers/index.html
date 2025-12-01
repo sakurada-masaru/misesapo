@@ -2239,18 +2239,24 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newClient)
         });
-        if (clientRes.ok) {
-          allClients.push(newClient);
-          clientId = newClient.id;
+        if (!clientRes.ok) {
+          const errorData = await clientRes.json().catch(() => ({}));
+          throw new Error(errorData.error || '法人の作成に失敗しました');
         }
+        const createdClient = await clientRes.json();
+        allClients.push(createdClient);
+        clientId = createdClient.id || newClient.id;
       }
       
       // 新規ブランドの作成
       if (!brandId && newBrandName) {
+        if (!clientId) {
+          throw new Error('ブランドを作成するには法人を選択または作成してください');
+        }
         const newBrand = {
           id: 'BR' + Date.now(),
           name: newBrandName,
-          client_id: clientId || null,
+          client_id: clientId,
           created_at: new Date().toISOString()
         };
         const brandRes = await fetch(`${API_BASE}/brands`, {
@@ -2258,10 +2264,13 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newBrand)
         });
-        if (brandRes.ok) {
-          allBrands.push(newBrand);
-          brandId = newBrand.id;
+        if (!brandRes.ok) {
+          const errorData = await brandRes.json().catch(() => ({}));
+          throw new Error(errorData.error || 'ブランドの作成に失敗しました');
         }
+        const createdBrand = await brandRes.json();
+        allBrands.push(createdBrand);
+        brandId = createdBrand.id || newBrand.id;
       }
       
       // 店舗データ
