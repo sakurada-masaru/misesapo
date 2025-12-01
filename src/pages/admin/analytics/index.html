@@ -222,7 +222,8 @@
       --sidebar-width: 240px;
       --sidebar-width-collapsed: 64px;
       --topbar-height: 64px;
-    }
+        --primary: #3b82f6;
+  }
 
     .admin-analytics-v2 {
       display: flex;
@@ -259,6 +260,7 @@
     .sidebar.collapsed .sidebar-toggle i {
       transform: rotate(180deg);
     }
+  .sidebar-header {
           padding: 16px;
       border-bottom: 1px solid #e5e7eb;
       min-height: 64px;
@@ -900,6 +902,7 @@
 
   // 初期化
   loadAnalytics();
+  setupMypageLink();
 })();
 
   // サイドバー開閉機能

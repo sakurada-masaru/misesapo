@@ -3,8 +3,8 @@
 @json('data/meta/admin_services_body_class.json', $body_class)
 
 <!-- AWS API -->
-<script src="/js/aws-services-api.js">
-  // マイページリンクを設定
+<script src="/js/aws-services-api.js"></script>
+<script>
   async function setupMypageLink() {
     const mypageLink = document.getElementById('sidebar-mypage-link');
     if (!mypageLink) return;
@@ -31,11 +31,16 @@
       if (email) {
         mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
         mypageLink.style.display = 'flex';
+        console.log('[Admin] Mypage link set:', mypageLink.href);
+      }
+    } else {
+        console.warn('[Admin] No email found for mypage link');
       }
     } catch (error) {
       console.error('Error setting up mypage link:', error);
     }
   }
+
 
 </script>
 
@@ -584,7 +589,8 @@
       --sidebar-width: 240px;
       --sidebar-width-collapsed: 64px;
       --topbar-height: 64px;
-    }
+        --primary: #3b82f6;
+  }
 
     main.admin-services-v2 {
       display: flex;
@@ -622,6 +628,7 @@
     .sidebar.collapsed .sidebar-toggle i {
       transform: rotate(180deg);
     }
+  .sidebar-header {
           padding: 16px;
       border-bottom: 1px solid #e5e7eb;
       min-height: 64px;
