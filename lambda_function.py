@@ -2771,8 +2771,14 @@ def create_worker(event, headers):
             elif worker_data['role_code'] == '3':
                 worker_data['role'] = 'office'
             elif worker_data['role_code'] == '4':
+                worker_data['role'] = 'staff'
+            elif worker_data['role_code'] == '5':
+                worker_data['role'] = 'developer'
+            elif worker_data['role_code'] == '6':
                 worker_data['role'] = 'designer'
-            elif worker_data['role_code'] == '99':
+            elif worker_data['role_code'] == '9':
+                worker_data['role'] = 'contractor'
+            else:
                 worker_data['role'] = 'staff'
         
         # DynamoDBに保存

@@ -719,12 +719,13 @@
       font-size: 0.75rem;
       font-weight: 600;
     }
-    .role-staff { background: #ffedd5; color: #c2410c; }
+    .role-admin { background: #fce7f3; color: #be185d; }
     .role-sales { background: #dcfce7; color: #15803d; }
     .role-office { background: #e0e7ff; color: #3730a3; }
-    .role-designer { background: #fce7f3; color: #9f1239; }
-    .role-admin { background: #fce7f3; color: #be185d; }
+    .role-staff { background: #ffedd5; color: #c2410c; }
     .role-developer { background: #f0f9ff; color: #0c4a6e; }
+    .role-designer { background: #fce7f3; color: #9f1239; }
+    .role-contractor { background: #f3f4f6; color: #374151; }
     .role-master { background: #fef3c7; color: #92400e; }
     .role-other { background: #e2e8f0; color: #475569; }
     .status-badge {
@@ -1187,11 +1188,13 @@
   }
 
   function getRoleFromCode(code) {
-    if (code === '99' || code === 99) return 'staff';
     if (code === '1' || code === 1) return 'admin';
     if (code === '2' || code === 2) return 'sales';
     if (code === '3' || code === 3) return 'office';
-    if (code === '4' || code === 4) return 'designer';
+    if (code === '4' || code === 4) return 'staff';
+    if (code === '5' || code === 5) return 'developer';
+    if (code === '6' || code === 6) return 'designer';
+    if (code === '9' || code === 9) return 'contractor';
     return 'staff';
   }
 
@@ -1367,15 +1370,15 @@
         
         // ロールコードを設定
         const roleCodeMap = {
-          'staff': '99',
+          'admin': '1',
           'sales': '2',
           'office': '3',
-          'designer': '4',
-          'admin': '1',
-          'developer': '1',
-          'master': '1'
+          'staff': '4',
+          'developer': '5',
+          'designer': '6',
+          'contractor': '9'
         };
-        data.role_code = roleCodeMap[data.role] || '99';
+        data.role_code = roleCodeMap[data.role] || '4';
         
         // 新規作成時はFirebaseユーザーも作成する
         if (!password) {
@@ -1796,13 +1799,13 @@
 
     try {
       const roleCodeMap = {
-        staff: '99',
+        admin: '1',
         sales: '2',
         office: '3',
-        designer: '4',
-        admin: '1',
-        developer: '1',
-        master: '1'
+        staff: '4',
+        developer: '5',
+        designer: '6',
+        contractor: '9'
       };
 
       const roleCode = roleCodeMap[bulkRoleTarget] || '99';

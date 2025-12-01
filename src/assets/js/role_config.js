@@ -45,6 +45,11 @@ const ROLE_CONFIG = {
       password: null,
       displayName: 'デザイナー'
     },
+    contractor: { 
+      name: '外部委託', 
+      password: null,
+      displayName: '外部委託'
+    },
     master: { 
       name: 'マスター', 
       password: 'master1234',
@@ -53,17 +58,18 @@ const ROLE_CONFIG = {
   },
   
   // ロール階層（上位ロールは下位ロールの権限も持つ）
-  // 階層: マスター > 開発者 > 管理者 > コンシェルジュ > 事務・デザイナー > 清掃員・ユーザー（同レベル）
+  // 階層: マスター > 開発者 > 管理者 > コンシェルジュ > 事務・デザイナー > 清掃員・外部委託・ユーザー（同レベル）
   roleHierarchy: {
     guest: ['guest'],
     customer: ['guest', 'customer'],  // ユーザー（顧客）
     staff: ['guest', 'staff'],        // 清掃員
+    contractor: ['guest', 'contractor'],  // 外部委託
     office: ['guest', 'office'],      // 事務
     designer: ['guest', 'designer'],  // デザイナー
     concierge: ['guest', 'customer', 'staff', 'concierge'],  // コンシェルジュ: 清掃員とユーザーの権限も持つ
-    admin: ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin'],  // 管理者: すべての権限
-    developer: ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer'],  // 開発者: すべての権限
-    master: ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master']  // マスター: すべての権限（最上位）
+    admin: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'concierge', 'admin'],  // 管理者: すべての権限
+    developer: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'concierge', 'admin', 'developer'],  // 開発者: すべての権限
+    master: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'concierge', 'admin', 'developer', 'master']  // マスター: すべての権限（最上位）
   },
   
   // ロールごとのログイン後リダイレクト先
