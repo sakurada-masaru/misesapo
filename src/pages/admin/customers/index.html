@@ -1647,11 +1647,18 @@
         matchBrand = store.brand_id === brandValue;
       }
       
-      // 取引先でフィルター（ブランド経由）
+      // 取引先でフィルター（ブランド経由、または直接）
       let matchClient = true;
-      if (clientValue && !brandValue) {
-        const clientBrands = allBrands.filter(b => b.client_id === clientValue).map(b => b.id);
-        matchBrand = clientBrands.includes(store.brand_id);
+      if (clientValue) {
+        if (brandValue) {
+          // ブランドも選択されている場合、ブランドがその取引先に属しているか確認
+          const brand = allBrands.find(b => b.id === brandValue);
+          matchClient = brand && brand.client_id === clientValue;
+        } else {
+          // ブランドが選択されていない場合、取引先に属するブランドの店舗を表示
+          const clientBrands = allBrands.filter(b => b.client_id === clientValue).map(b => b.id);
+          matchBrand = clientBrands.includes(store.brand_id) || store.client_id === clientValue;
+        }
       }
       
       const matchPref = !prefValue || store.pref === prefValue;
@@ -1755,10 +1762,13 @@
     }
     
     tbody.innerHTML = pageStores.map(store => {
-      // 3層構造の情報を取得
-      const brand = allBrands.find(b => b.id === store.brand_id);
-      const client = brand ? allClients.find(c => c.id === brand.client_id) : 
-                     allClients.find(c => c.id === store.client_id);
+      // 3層構造の情報を取得（data_utils.jsを使用）
+      const hierarchy = window.DataUtils?.Hierarchy?.getFromStore 
+        ? window.DataUtils.Hierarchy.getFromStore(store, allClients, allBrands)
+        : { client: null, brand: null, store: null };
+      const brand = hierarchy.brand || allBrands.find(b => b.id === store.brand_id);
+      const client = hierarchy.client || (brand ? allClients.find(c => c.id === brand.client_id) : 
+                     allClients.find(c => c.id === store.client_id));
       
       // 店舗名からブランド名と店舗名（〜店）を分離
       const storeName = store.name || '';
