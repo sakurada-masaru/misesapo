@@ -2370,27 +2370,57 @@ def delete_worker(worker_id, headers):
         print(f"Delete request for worker_id: {worker_id} (type: {type(worker_id).__name__})")
         
         # 削除前に存在確認
-        response = WORKERS_TABLE.get_item(Key={'id': worker_id})
+        # IDを文字列として正規化（数値の可能性があるため）
+        worker_id_str = str(worker_id)
+        print(f"Looking up worker with ID: {worker_id_str} (original: {worker_id}, type: {type(worker_id).__name__})")
+        
+        response = WORKERS_TABLE.get_item(Key={'id': worker_id_str})
         if 'Item' not in response:
             # 全ユーザーをスキャンしてIDを確認（デバッグ用）
-            scan_response = WORKERS_TABLE.scan()
-            all_ids = [item.get('id') for item in scan_response.get('Items', [])]
-            print(f"Worker not found: {worker_id}")
-            print(f"Available worker IDs: {all_ids}")
+            try:
+                scan_response = WORKERS_TABLE.scan()
+                all_items = scan_response.get('Items', [])
+                all_ids = [str(item.get('id', '')) for item in all_items]
+                print(f"Worker not found: {worker_id_str}")
+                print(f"Total workers in DB: {len(all_items)}")
+                print(f"Available worker IDs (first 20): {all_ids[:20]}")
+                
+                # IDが数値として保存されている可能性があるため、数値としても検索
+                if worker_id_str.isdigit():
+                    numeric_id = int(worker_id_str)
+                    print(f"Trying numeric lookup: {numeric_id}")
+                    numeric_response = WORKERS_TABLE.get_item(Key={'id': numeric_id})
+                    if 'Item' in numeric_response:
+                        print(f"Found worker with numeric ID: {numeric_id}")
+                        # 数値IDで見つかった場合は、文字列IDで削除を試みる
+                        WORKERS_TABLE.delete_item(Key={'id': numeric_id})
+                        return {
+                            'statusCode': 200,
+                            'headers': headers,
+                            'body': json.dumps({
+                                'status': 'success',
+                                'message': '従業員を削除しました',
+                                'id': worker_id_str
+                            }, ensure_ascii=False)
+                        }
+            except Exception as scan_error:
+                print(f"Error scanning workers table: {str(scan_error)}")
+                all_ids = []
+            
             return {
                 'statusCode': 404,
                 'headers': headers,
                 'body': json.dumps({
                     'error': '従業員が見つかりません',
-                    'id': worker_id,
-                    'available_ids': all_ids[:10]  # 最初の10件のみ返す
+                    'id': worker_id_str,
+                    'available_ids': all_ids[:20]  # 最初の20件を返す
                 }, ensure_ascii=False)
             }
         
         # 削除実行
-        print(f"Deleting worker: {worker_id}")
-        WORKERS_TABLE.delete_item(Key={'id': worker_id})
-        print(f"Worker deleted successfully: {worker_id}")
+        print(f"Deleting worker: {worker_id_str}")
+        WORKERS_TABLE.delete_item(Key={'id': worker_id_str})
+        print(f"Worker deleted successfully: {worker_id_str}")
         
         return {
             'statusCode': 200,
@@ -2398,7 +2428,7 @@ def delete_worker(worker_id, headers):
             'body': json.dumps({
                 'status': 'success',
                 'message': '従業員を削除しました',
-                'id': worker_id
+                'id': worker_id_str
             }, ensure_ascii=False)
         }
     except Exception as e:
