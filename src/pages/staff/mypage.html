@@ -498,69 +498,104 @@
         contentEl.style.display = 'none';
         errorEl.style.display = 'none';
 
-        // ユーザーIDを取得（優先順位: URLパラメータ > 認証情報）
+        // ユーザーIDまたはメールアドレスを取得（優先順位: URLパラメータ > 認証情報）
         let userId = null;
+        let userEmail = null;
         
-        // URLパラメータからIDを取得
+        // URLパラメータからIDまたはメールアドレスを取得
         const urlParams = new URLSearchParams(window.location.search);
         const urlId = urlParams.get('id');
+        const urlEmail = urlParams.get('email');
+        
         if (urlId) {
           userId = urlId;
+        } else if (urlEmail) {
+          userEmail = urlEmail;
         }
         
-        // URLパラメータがない場合、認証情報から個人のIDを取得（Cognito認証を優先）
-        if (!userId) {
+        // URLパラメータがない場合、認証情報から個人のIDまたはメールアドレスを取得（Cognito認証を優先）
+        if (!userId && !userEmail) {
           // Cognito認証を確認
           if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
             const cognitoUser = await window.CognitoAuth.getCurrentUser();
-            if (cognitoUser && cognitoUser.id) {
-              userId = cognitoUser.id;  // DynamoDBのID
+            if (cognitoUser) {
+              if (cognitoUser.id) {
+                userId = cognitoUser.id;  // DynamoDBのID
+              } else if (cognitoUser.email) {
+                userEmail = cognitoUser.email;
+              }
             }
           }
           
           // Firebase認証を確認（フォールバック）
-          if (!userId) {
+          if (!userId && !userEmail) {
             const authData = window.Auth?.getAuthData?.();
-            if (authData && authData.user && authData.user.id) {
-              userId = authData.user.id;
+            if (authData && authData.user) {
+              if (authData.user.id) {
+                userId = authData.user.id;
+              } else if (authData.user.email || authData.email) {
+                userEmail = authData.user.email || authData.email;
+              }
             }
           }
         }
         
-        if (!userId) {
+        if (!userId && !userEmail) {
           throw new Error('ログインしてください。');
         }
         
-        // APIからユーザー情報を取得（個人のIDで取得）
+        // APIからユーザー情報を取得
         try {
-          const response = await fetch(`${API_BASE}/workers/${userId}`);
-          if (response.ok) {
-            currentUser = await response.json();
-          } else if (response.status === 404) {
-            // 個人のIDで見つからない場合、Cognito SubまたはFirebase UIDで検索（フォールバック）
-            let fallbackResponse = null;
-            
-            // Cognito Subで検索
-            if (window.CognitoAuth) {
-              const cognitoUser = await window.CognitoAuth.getCurrentUser();
-              if (cognitoUser && cognitoUser.cognito_sub) {
-                fallbackResponse = await fetch(`${API_BASE}/workers?cognito_sub=${encodeURIComponent(cognitoUser.cognito_sub)}`);
+          let response = null;
+          
+          if (userId) {
+            // IDで取得を試みる
+            response = await fetch(`${API_BASE}/workers/${userId}`);
+            if (response.ok) {
+              currentUser = await response.json();
+            }
+          }
+          
+          // IDで見つからない場合、またはメールアドレスで検索する場合
+          if (!currentUser || !currentUser.id) {
+            if (userEmail) {
+              // メールアドレスで検索
+              response = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(userEmail)}`);
+              if (response && response.ok) {
+                const users = await response.json();
+                const items = users.items || users.workers || users;
+                if (Array.isArray(items) && items.length > 0) {
+                  currentUser = items[0];
+                }
               }
             }
             
-            // Firebase UIDで検索（フォールバック）
-            if (!fallbackResponse || !fallbackResponse.ok) {
-              const authData = window.Auth?.getAuthData?.();
-              if (authData && authData.user && authData.user.firebase_uid) {
-                fallbackResponse = await fetch(`${API_BASE}/workers?firebase_uid=${encodeURIComponent(authData.user.firebase_uid)}`);
+            // まだ見つからない場合、Cognito SubまたはFirebase UIDで検索（フォールバック）
+            if (!currentUser || !currentUser.id) {
+              let fallbackResponse = null;
+              
+              // Cognito Subで検索
+              if (window.CognitoAuth) {
+                const cognitoUser = await window.CognitoAuth.getCurrentUser();
+                if (cognitoUser && cognitoUser.cognito_sub) {
+                  fallbackResponse = await fetch(`${API_BASE}/workers?cognito_sub=${encodeURIComponent(cognitoUser.cognito_sub)}`);
+                }
               }
-            }
-            
-            if (fallbackResponse && fallbackResponse.ok) {
-              const users = await fallbackResponse.json();
-              const items = users.items || users.workers || users;
-              if (Array.isArray(items) && items.length > 0) {
-                currentUser = items[0];
+              
+              // Firebase UIDで検索（フォールバック）
+              if (!fallbackResponse || !fallbackResponse.ok) {
+                const authData = window.Auth?.getAuthData?.();
+                if (authData && authData.user && authData.user.firebase_uid) {
+                  fallbackResponse = await fetch(`${API_BASE}/workers?firebase_uid=${encodeURIComponent(authData.user.firebase_uid)}`);
+                }
+              }
+              
+              if (fallbackResponse && fallbackResponse.ok) {
+                const users = await fallbackResponse.json();
+                const items = users.items || users.workers || users;
+                if (Array.isArray(items) && items.length > 0) {
+                  currentUser = items[0];
+                }
               }
             }
           }

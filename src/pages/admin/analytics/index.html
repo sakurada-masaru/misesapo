@@ -63,6 +63,10 @@
         <span class="nav-label">メディア</span>
       </a>
       <div class="nav-divider"></div>
+      <a href="#" class="nav-item" id="sidebar-mypage-link" style="display: none;">
+        <i class="fas fa-user-circle"></i>
+        <span class="nav-label">マイページ</span>
+      </a>
       <a href="/wiki" class="nav-item">
         <i class="fas fa-book-open"></i>
         <span class="nav-label">WIKI</span>
@@ -251,8 +255,7 @@
     .sidebar.collapsed .sidebar-toggle i {
       transform: rotate(180deg);
     }
-    .sidebar-header {
-      padding: 20px;
+          padding: 16px;
       border-bottom: 1px solid #e5e7eb;
       min-height: 64px;
       display: flex;
@@ -278,14 +281,11 @@
       white-space: nowrap;
       transition: opacity 0.3s ease;
     }
-    .sidebar-role {
-      padding: 8px 20px;
+          padding: 6px 16px;
       border-bottom: 1px solid #e5e7eb;
       transition: opacity 0.3s ease;
     }
-    .sidebar-role .role-badge {
-      display: inline-block;
-      padding: 4px 12px;
+          padding: 3px 10px;
       background: #e0e7ff;
       color: #3730a3;
       border-radius: 4px;
@@ -293,19 +293,10 @@
       font-weight: 500;
       white-space: nowrap;
     }
-    .sidebar-nav {
-      flex: 1;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+          gap: 1px;
       overflow-y: auto;
     }
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 12px;
+          padding: 8px 10px;
       color: #6b7280;
       text-decoration: none;
       border-radius: 8px;
@@ -327,14 +318,14 @@
       background: var(--primary);
       color: #fff;
     }
-    .nav-item i {
-      width: 20px;
+          width: 18px;
       text-align: center;
       flex-shrink: 0;
     }
     .nav-label {
       transition: opacity 0.3s ease;
       white-space: nowrap;
+      font-size: 0.8125rem;
     }
     .sidebar-toggle {
       position: absolute;
@@ -964,5 +955,39 @@
       updateRoleBadge();
     });
   }
+
+  // マイページリンクを設定
+  async function setupMypageLink() {
+    const mypageLink = document.getElementById('sidebar-mypage-link');
+    if (!mypageLink) return;
+
+    try {
+      let email = null;
+
+      // Cognito認証からメールアドレスを取得
+      if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+        const cognitoUser = await window.CognitoAuth.getCurrentUser();
+        if (cognitoUser && cognitoUser.email) {
+          email = cognitoUser.email;
+        }
+      }
+
+      // Firebase認証からメールアドレスを取得（フォールバック）
+      if (!email) {
+        const authData = window.Auth?.getAuthData?.();
+        if (authData) {
+          email = authData.user?.email || authData.email;
+        }
+      }
+
+      if (email) {
+        mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
+        mypageLink.style.display = 'flex';
+      }
+    } catch (error) {
+      console.error('Error setting up mypage link:', error);
+    }
+  }
+
 </script>
 
