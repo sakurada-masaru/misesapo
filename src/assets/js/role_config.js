@@ -180,6 +180,7 @@ const ROLE_CONFIG = {
     ],
     staff: [
       { href: '/staff/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/staff/mypage.html', label: 'マイページ', icon: 'fa-user' },
       { href: '/staff/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
       { href: '/staff/assignments.html', label: '作業一覧', icon: 'fa-tasks' },
       { href: '/staff/reports/new.html', label: 'レポート作成', icon: 'fa-file-alt' },
@@ -187,6 +188,7 @@ const ROLE_CONFIG = {
     ],
     office: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/staff/mypage.html', label: 'マイページ', icon: 'fa-user' },
       { href: '/admin/schedules/', label: 'スケジュール', icon: 'fa-calendar-alt' },
       { href: '/admin/customers/', label: '顧客管理', icon: 'fa-store' },
       { href: '/admin/reports/', label: 'レポート', icon: 'fa-file-alt' },
@@ -200,6 +202,7 @@ const ROLE_CONFIG = {
     ],
     designer: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/staff/mypage.html', label: 'マイページ', icon: 'fa-user' },
       { href: '/admin/images.html', label: '画像管理', icon: 'fa-images' },
       { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' }
     ],
@@ -230,6 +233,7 @@ const ROLE_CONFIG = {
     ],
     admin: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/staff/mypage.html', label: 'マイページ', icon: 'fa-user' },
       { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' },
       { href: '/admin/services/new.html', label: '新規サービス登録', icon: 'fa-plus-circle' },
       { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
@@ -239,6 +243,7 @@ const ROLE_CONFIG = {
     ],
     developer: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/staff/mypage.html', label: 'マイページ', icon: 'fa-user' },
       { href: '/admin/schedules/', label: 'スケジュール', icon: 'fa-calendar-alt' },
       { href: '/admin/customers/', label: '顧客管理', icon: 'fa-store' },
       { href: '/admin/reports/', label: 'レポート', icon: 'fa-file-alt' },
