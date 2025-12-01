@@ -1831,6 +1831,16 @@
   
   // 法人・ブランドの選択肢を更新
   function populateHierarchySelects() {
+    // 配列であることを確認
+    if (!Array.isArray(allClients)) {
+      console.warn('allClients is not an array in populateHierarchySelects:', allClients);
+      allClients = [];
+    }
+    if (!Array.isArray(allBrands)) {
+      console.warn('allBrands is not an array in populateHierarchySelects:', allBrands);
+      allBrands = [];
+    }
+    
     const clientSelect = document.getElementById('store-client');
     const brandSelect = document.getElementById('store-brand');
     
