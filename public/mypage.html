@@ -405,7 +405,11 @@
       const authData = window.Auth?.getAuthData?.();
       if (!authData || !authData.user) {
         // 未ログインの場合はログインページにリダイレクト
-        window.location.href = '/signin.html';
+        // ベースパスを考慮
+        const base = document.querySelector('base');
+        const basePath = base ? (base.getAttribute('href') || '/') : '/';
+        const signinPath = basePath === '/' ? '/signin.html' : basePath.replace(/\/$/, '') + '/signin.html';
+        window.location.href = signinPath;
         return;
       }
 
@@ -414,30 +418,36 @@
 
       // APIからクライアント情報を取得
       try {
-        let response = null;
-        
         // まずIDで取得を試みる
         if (userId) {
-          response = await fetch(`${API_BASE}/clients/${userId}`);
+          try {
+            const response = await fetch(`${API_BASE}/clients/${userId}`);
+            if (response && response.ok) {
+              currentClient = await response.json();
+            }
+          } catch (fetchError) {
+            console.error('Error fetching client by ID:', fetchError);
+          }
         }
         
         // IDで見つからない場合、Firebase UIDで検索
-        if (!response || !response.ok) {
-          if (firebaseUid) {
-            response = await fetch(`${API_BASE}/clients?firebase_uid=${encodeURIComponent(firebaseUid)}`);
-            if (response.ok) {
+        if (!currentClient && firebaseUid) {
+          try {
+            const response = await fetch(`${API_BASE}/clients?firebase_uid=${encodeURIComponent(firebaseUid)}`);
+            if (response && response.ok) {
               const clients = await response.json();
               const clientsArray = Array.isArray(clients) ? clients : (clients.items || clients.clients || []);
               if (clientsArray.length > 0) {
                 currentClient = clientsArray[0];
               }
             }
+          } catch (fetchError) {
+            console.error('Error fetching client by Firebase UID:', fetchError);
           }
-        } else {
-          currentClient = await response.json();
         }
       } catch (error) {
         console.error('Error fetching client info:', error);
+        throw error; // エラーを再スローして、外側のcatchで処理
       }
 
       if (!currentClient || !currentClient.id) {
@@ -458,7 +468,10 @@
       // 認証エラーの場合はログインページにリダイレクト
       if (error.message.includes('ログイン') || error.message.includes('認証')) {
         setTimeout(() => {
-          window.location.href = '/signin.html';
+          const base = document.querySelector('base');
+          const basePath = base ? (base.getAttribute('href') || '/') : '/';
+          const signinPath = basePath === '/' ? '/signin.html' : basePath.replace(/\/$/, '') + '/signin.html';
+          window.location.href = signinPath;
         }, 2000);
       }
     }
