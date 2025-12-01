@@ -44,7 +44,28 @@
     if (!container) return;
     
     // ナビゲーション項目を取得
-    const navItems = window.RoleConfig?.getNavigationForRole(role) || [];
+    let navItems = window.RoleConfig?.getNavigationForRole(role) || [];
+    
+    // マスター権限の場合は、サイトマップへのリンクを確実に追加
+    if (role === 'master') {
+      // サイトマップが既に含まれているかチェック
+      const hasSitemap = navItems.some(item => item.href === '/admin/sitemap.html');
+      if (!hasSitemap) {
+        navItems = [
+          { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' },
+          ...navItems
+        ];
+      }
+      // special属性を無視して通常のリンクとして表示
+      navItems = navItems.map(item => {
+        if (item.special === 'dropdown') {
+          // dropdown属性を削除して通常のリンクとして扱う
+          const { special, ...rest } = item;
+          return rest;
+        }
+        return item;
+      });
+    }
     
     // 既存のナビゲーション項目をクリア
     container.innerHTML = '';
@@ -86,7 +107,9 @@
     const mobileNavPrimary = document.getElementById('mobile-nav-primary');
     if (mobileNavPrimary) {
       mobileNavPrimary.innerHTML = '';
-      navItems.forEach(item => {
+      // マスター権限の場合も同じnavItemsを使用
+      const mobileNavItems = role === 'master' ? navItems : (window.RoleConfig?.getNavigationForRole(role) || []);
+      mobileNavItems.forEach(item => {
         const link = document.createElement('a');
         link.href = resolvePath(item.href);
         link.className = 'mobile-nav-link';
