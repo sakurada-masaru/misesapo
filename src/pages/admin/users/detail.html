@@ -1,7 +1,6 @@
 @layout('layouts.admin')
 @json('data/meta/admin_user_detail_title.json', $title)
 @json('data/meta/admin_user_detail_body_class.json', $body_class)
-<script src="/assets/js/client_auth.js"></script>
 
 <main id="main" class="admin-user-detail">
   <div class="page-header">
@@ -851,48 +850,6 @@
       }
     }
 
-    // 出退勤トグル
-    document.getElementById('attendance-toggle-btn').addEventListener('click', () => {
-      if (!currentUser) return;
-      
-      const today = new Date().toISOString().split('T')[0];
-      if (!attendanceRecords[today]) {
-        attendanceRecords[today] = {};
-      }
-      
-      const todayRecord = attendanceRecords[today][currentUser.id] || {};
-      
-      if (!todayRecord.clock_in) {
-        // 出勤
-        attendanceRecords[today][currentUser.id] = {
-          ...todayRecord,
-          clock_in: new Date().toISOString(),
-          staff_id: currentUser.id,
-          staff_name: currentUser.name
-        };
-      } else if (!todayRecord.clock_out) {
-        // 退勤
-        attendanceRecords[today][currentUser.id] = {
-          ...todayRecord,
-          clock_out: new Date().toISOString()
-        };
-      } else {
-        // 再出勤
-        attendanceRecords[today][currentUser.id] = {
-          clock_in: new Date().toISOString(),
-          staff_id: currentUser.id,
-          staff_name: currentUser.name
-        };
-      }
-      
-      try {
-        localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
-        renderAttendanceStatus();
-      } catch (error) {
-        console.error('Error saving attendance:', error);
-        alert('出退勤記録の保存に失敗しました');
-      }
-    });
 
     // 編集モーダルを開く
     function openEditModal() {
@@ -917,8 +874,15 @@
       document.getElementById('edit-modal').style.display = 'none';
     }
 
-    // 編集フォームの送信
-    document.getElementById('edit-form').addEventListener('submit', async (e) => {
+    // 編集フォームの送信（DOMContentLoaded内で実行）
+    function setupEditForm() {
+      const editForm = document.getElementById('edit-form');
+      if (!editForm) {
+        console.warn('Edit form not found');
+        return;
+      }
+      
+      editForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       if (!currentUser) return;
@@ -971,11 +935,65 @@
         statusEl.textContent = error.message || '保存に失敗しました';
         statusEl.className = 'form-status error';
       }
-    });
+      });
+    }
+
+    // 出退勤トグルボタンのセットアップ
+    function setupAttendanceButton() {
+      const attendanceBtn = document.getElementById('attendance-toggle-btn');
+      if (!attendanceBtn) {
+        console.warn('Attendance toggle button not found');
+        return;
+      }
+      
+      attendanceBtn.addEventListener('click', () => {
+        if (!currentUser) return;
+        
+        const today = new Date().toISOString().split('T')[0];
+        if (!attendanceRecords[today]) {
+          attendanceRecords[today] = {};
+        }
+        
+        const todayRecord = attendanceRecords[today][currentUser.id] || {};
+        
+        if (!todayRecord.clock_in) {
+          // 出勤
+          attendanceRecords[today][currentUser.id] = {
+            ...todayRecord,
+            clock_in: new Date().toISOString(),
+            staff_id: currentUser.id,
+            staff_name: currentUser.name
+          };
+        } else if (!todayRecord.clock_out) {
+          // 退勤
+          attendanceRecords[today][currentUser.id] = {
+            ...todayRecord,
+            clock_out: new Date().toISOString()
+          };
+        } else {
+          // 再出勤
+          attendanceRecords[today][currentUser.id] = {
+            clock_in: new Date().toISOString(),
+            staff_id: currentUser.id,
+            staff_name: currentUser.name
+          };
+        }
+        
+        try {
+          localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+          renderAttendanceStatus();
+        } catch (error) {
+          console.error('Error saving attendance:', error);
+          alert('出退勤記録の保存に失敗しました');
+        }
+      });
+    }
 
     // 初期化
     document.addEventListener('DOMContentLoaded', () => {
       loadUser();
+      setupEditForm();
+      setupAttendanceButton();
     });
   </script>
 </main>
