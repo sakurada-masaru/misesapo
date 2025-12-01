@@ -1854,6 +1854,16 @@
   
   // フォーム用ブランド選択肢を更新
   function updateBrandSelectForForm() {
+    // 配列であることを確認
+    if (!Array.isArray(allBrands)) {
+      console.warn('allBrands is not an array in updateBrandSelectForForm:', allBrands);
+      allBrands = [];
+    }
+    if (!Array.isArray(allClients)) {
+      console.warn('allClients is not an array in updateBrandSelectForForm:', allClients);
+      allClients = [];
+    }
+    
     const clientId = document.getElementById('store-client').value;
     const brandSelect = document.getElementById('store-brand');
     
