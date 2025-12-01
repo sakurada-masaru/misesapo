@@ -49,6 +49,31 @@ def generate_next_id(table, prefix):
     next_num = max_num + 1
     return f"{prefix}{str(next_num).zfill(5)}"
 
+def validate_worker_email(email):
+    """
+    従業員のメールアドレスをバリデーション
+    @misesapo.appで終わることを確認し、個人のメールアドレスを拒否
+    """
+    if not email:
+        return {'valid': False, 'message': 'メールアドレスは必須です。'}
+    
+    # @misesapo.appで終わることを確認
+    if not email.endswith('@misesapo.app'):
+        return {
+            'valid': False,
+            'message': 'メールアドレスは@misesapo.appで終わる必要があります。企業用メールアドレスを使用してください。'
+        }
+    
+    # 個人のメールアドレスを拒否
+    personal_domains = ['@gmail.com', '@yahoo.co.jp', '@outlook.com', '@hotmail.com', '@icloud.com']
+    if any(email.endswith(domain) for domain in personal_domains):
+        return {
+            'valid': False,
+            'message': '個人のメールアドレスは使用できません。企業用メールアドレス（@misesapo.app）を使用してください。'
+        }
+    
+    return {'valid': True}
+
 # Cognitoクライアントの初期化
 cognito_client = boto3.client('cognito-idp', region_name='ap-northeast-1')
 COGNITO_USER_POOL_ID = 'ap-northeast-1_EDKElIGoC'
@@ -2705,6 +2730,18 @@ def create_worker(event, headers):
         else:
             body_json = json.loads(body.decode('utf-8'))
         
+        # メールアドレスのバリデーション
+        email = body_json.get('email', '')
+        email_validation = validate_worker_email(email)
+        if not email_validation['valid']:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': email_validation['message']
+                }, ensure_ascii=False)
+            }
+        
         # ID生成（5桁形式: W00001〜）
         if 'id' not in body_json or not body_json['id']:
             worker_id = generate_next_id(WORKERS_TABLE, 'W')
@@ -2718,7 +2755,7 @@ def create_worker(event, headers):
             'cognito_sub': body_json.get('cognito_sub', ''),  # Cognito User Sub（従業員用）
             'firebase_uid': body_json.get('firebase_uid', ''),  # Firebase UID（お客様用、後方互換性のため残す）
             'name': body_json.get('name', ''),
-            'email': body_json.get('email', ''),
+            'email': email,
             'phone': body_json.get('phone', ''),
             'role': body_json.get('role', 'staff'),
             'role_code': body_json.get('role_code', '99'),

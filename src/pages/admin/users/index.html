@@ -256,7 +256,8 @@
         <div class="form-row">
           <div class="form-field half">
             <label for="user-email">メールアドレス <span class="required">*</span></label>
-            <input type="email" id="user-email" name="email" required placeholder="example@mail.com">
+            <input type="email" id="user-email" name="email" required placeholder="yamada.taro@misesapo.app">
+            <small class="form-hint">企業用メールアドレス（@misesapo.app）のみ使用可能です</small>
           </div>
           <div class="form-field half">
             <label for="user-phone">電話番号</label>
@@ -1302,6 +1303,32 @@
       userDialog.showModal();
     });
 
+    // メールアドレスのバリデーション
+    function validateEmail(email) {
+      if (!email) {
+        return { valid: false, message: 'メールアドレスは必須です。' };
+      }
+      
+      // @misesapo.appで終わることを確認
+      if (!email.endsWith('@misesapo.app')) {
+        return {
+          valid: false,
+          message: 'メールアドレスは@misesapo.appで終わる必要があります。企業用メールアドレスを使用してください。'
+        };
+      }
+      
+      // 個人のメールアドレスを拒否
+      const personalDomains = ['@gmail.com', '@yahoo.co.jp', '@outlook.com', '@hotmail.com', '@icloud.com'];
+      if (personalDomains.some(domain => email.includes(domain))) {
+        return {
+          valid: false,
+          message: '個人のメールアドレスは使用できません。企業用メールアドレス（@misesapo.app）を使用してください。'
+        };
+      }
+      
+      return { valid: true };
+    }
+
     // フォーム送信
     userForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1309,9 +1336,18 @@
       const id = document.getElementById('user-id').value;
       const isNew = !id;
       
+      const email = document.getElementById('user-email').value;
+      const emailValidation = validateEmail(email);
+      
+      if (!emailValidation.valid) {
+        document.getElementById('form-status').textContent = emailValidation.message;
+        document.getElementById('form-status').style.color = 'red';
+        return;
+      }
+      
       const data = {
         name: document.getElementById('user-name').value,
-        email: document.getElementById('user-email').value,
+        email: email,
         phone: document.getElementById('user-phone').value,
         role: document.getElementById('user-role').value,
         department: document.getElementById('user-department').value,
