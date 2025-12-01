@@ -2375,7 +2375,8 @@ def create_worker(event, headers):
         # デフォルト値を設定
         worker_data = {
             'id': worker_id,
-            'firebase_uid': body_json.get('firebase_uid', ''),  # Firebase UIDを追加
+            'cognito_sub': body_json.get('cognito_sub', ''),  # Cognito User Sub（従業員用）
+            'firebase_uid': body_json.get('firebase_uid', ''),  # Firebase UID（お客様用、後方互換性のため残す）
             'name': body_json.get('name', ''),
             'email': body_json.get('email', ''),
             'phone': body_json.get('phone', ''),
