@@ -89,6 +89,7 @@ BRANDS_TABLE = dynamodb.Table('brands')
 STORES_TABLE = dynamodb.Table('stores')
 ATTENDANCE_TABLE = dynamodb.Table('attendance')
 ATTENDANCE_ERRORS_TABLE = dynamodb.Table('attendance-errors')
+ATTENDANCE_REQUESTS_TABLE = dynamodb.Table('attendance-requests')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -223,6 +224,21 @@ def lambda_handler(event, context):
             # 出退勤エラーログの取得
             if method == 'GET':
                 return get_attendance_errors(event, headers)
+        elif normalized_path == '/attendance/requests':
+            # 出退勤修正申請の取得・作成
+            if method == 'GET':
+                return get_attendance_requests(event, headers)
+            elif method == 'POST':
+                return create_attendance_request(event, headers)
+        elif normalized_path.startswith('/attendance/requests/'):
+            # 出退勤修正申請の詳細・更新・削除
+            request_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_attendance_request_detail(request_id, headers)
+            elif method == 'PUT':
+                return update_attendance_request(request_id, event, headers)
+            elif method == 'DELETE':
+                return delete_attendance_request(request_id, headers)
         elif normalized_path == '/estimates':
             # 見積もりデータの読み書き
             if method == 'GET':
@@ -3310,6 +3326,352 @@ def get_attendance_errors(event, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': 'エラーログの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def create_attendance_request(event, headers):
+    """
+    出退勤修正申請を作成
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        staff_id = body_json.get('staff_id')
+        attendance_id = body_json.get('attendance_id')
+        date = body_json.get('date')
+        reason = body_json.get('reason', '')
+        requested_clock_in = body_json.get('requested_clock_in')
+        requested_clock_out = body_json.get('requested_clock_out')
+        current_clock_in = body_json.get('current_clock_in')
+        current_clock_out = body_json.get('current_clock_out')
+        
+        # バリデーション
+        if not staff_id or not date:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'staff_idとdateは必須です',
+                    'code': 'VALIDATION_ERROR'
+                }, ensure_ascii=False)
+            }
+        
+        if not reason:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '修正理由は必須です',
+                    'code': 'VALIDATION_ERROR'
+                }, ensure_ascii=False)
+            }
+        
+        # 申請IDを生成
+        request_id = f"REQ_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{staff_id}_{uuid.uuid4().hex[:8]}"
+        now = datetime.now(timezone.utc).isoformat() + 'Z'
+        
+        # 申請データを作成
+        request_data = {
+            'id': request_id,
+            'staff_id': staff_id,
+            'staff_name': body_json.get('staff_name', ''),
+            'attendance_id': attendance_id,
+            'date': date,
+            'reason': reason,
+            'current_clock_in': current_clock_in,
+            'current_clock_out': current_clock_out,
+            'requested_clock_in': requested_clock_in,
+            'requested_clock_out': requested_clock_out,
+            'status': 'pending',  # pending, approved, rejected
+            'created_at': now,
+            'updated_at': now
+        }
+        
+        ATTENDANCE_REQUESTS_TABLE.put_item(Item=request_data)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '修正申請を作成しました',
+                'request_id': request_id
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error creating attendance request: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '修正申請の作成に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_attendance_requests(event, headers):
+    """
+    出退勤修正申請一覧を取得
+    """
+    try:
+        # クエリパラメータを取得
+        query_params = event.get('queryStringParameters') or {}
+        staff_id = query_params.get('staff_id')
+        status = query_params.get('status')
+        limit = int(query_params.get('limit', 50))
+        
+        # スキャンまたはクエリを実行
+        if staff_id:
+            # スタッフIDでフィルタリング
+            response = ATTENDANCE_REQUESTS_TABLE.query(
+                IndexName='staff_id-created_at-index',
+                KeyConditionExpression=Key('staff_id').eq(staff_id),
+                ScanIndexForward=False,
+                Limit=limit
+            )
+        elif status:
+            # ステータスでフィルタリング
+            response = ATTENDANCE_REQUESTS_TABLE.query(
+                IndexName='status-created_at-index',
+                KeyConditionExpression=Key('status').eq(status),
+                ScanIndexForward=False,
+                Limit=limit
+            )
+        else:
+            # 全件取得（スキャン）
+            response = ATTENDANCE_REQUESTS_TABLE.scan(Limit=limit)
+        
+        items = response.get('Items', [])
+        
+        # 日付でソート（新しい順）
+        items.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'requests': items,
+                'count': len(items)
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting attendance requests: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '修正申請の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_attendance_request_detail(request_id, headers):
+    """
+    出退勤修正申請詳細を取得
+    """
+    try:
+        response = ATTENDANCE_REQUESTS_TABLE.get_item(Key={'id': request_id})
+        if 'Item' in response:
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
+            }
+        else:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '修正申請が見つかりません'
+                }, ensure_ascii=False)
+            }
+    except Exception as e:
+        print(f"Error getting attendance request detail: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '修正申請の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_attendance_request(request_id, event, headers):
+    """
+    出退勤修正申請を更新（承認・却下）
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        status = body_json.get('status')  # approved, rejected
+        admin_comment = body_json.get('admin_comment', '')
+        admin_id = body_json.get('admin_id', '')
+        
+        if status not in ['approved', 'rejected']:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'statusはapprovedまたはrejectedである必要があります',
+                    'code': 'VALIDATION_ERROR'
+                }, ensure_ascii=False)
+            }
+        
+        # 既存の申請を取得
+        existing_response = ATTENDANCE_REQUESTS_TABLE.get_item(Key={'id': request_id})
+        if 'Item' not in existing_response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '修正申請が見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        existing_request = existing_response['Item']
+        
+        # 承認済みまたは却下済みの場合は更新不可
+        if existing_request.get('status') in ['approved', 'rejected']:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '既に処理済みの申請です',
+                    'code': 'ALREADY_PROCESSED'
+                }, ensure_ascii=False)
+            }
+        
+        now = datetime.now(timezone.utc).isoformat() + 'Z'
+        
+        # 申請を更新
+        update_expression_parts = []
+        expression_attribute_values = {}
+        expression_attribute_names = {}
+        
+        update_expression_parts.append("#status = :status")
+        expression_attribute_names["#status"] = "status"
+        expression_attribute_values[":status"] = status
+        
+        update_expression_parts.append("#updated_at = :updated_at")
+        expression_attribute_names["#updated_at"] = "updated_at"
+        expression_attribute_values[":updated_at"] = now
+        
+        if admin_comment:
+            update_expression_parts.append("#admin_comment = :admin_comment")
+            expression_attribute_names["#admin_comment"] = "admin_comment"
+            expression_attribute_values[":admin_comment"] = admin_comment
+        
+        if admin_id:
+            update_expression_parts.append("#admin_id = :admin_id")
+            expression_attribute_names["#admin_id"] = "admin_id"
+            expression_attribute_values[":admin_id"] = admin_id
+        
+        if status == 'approved':
+            update_expression_parts.append("#approved_at = :approved_at")
+            expression_attribute_names["#approved_at"] = "approved_at"
+            expression_attribute_values[":approved_at"] = now
+        elif status == 'rejected':
+            update_expression_parts.append("#rejected_at = :rejected_at")
+            expression_attribute_names["#rejected_at"] = "rejected_at"
+            expression_attribute_values[":rejected_at"] = now
+        
+        ATTENDANCE_REQUESTS_TABLE.update_item(
+            Key={'id': request_id},
+            UpdateExpression='SET ' + ', '.join(update_expression_parts),
+            ExpressionAttributeNames=expression_attribute_names,
+            ExpressionAttributeValues=expression_attribute_values
+        )
+        
+        # 承認された場合、勤怠記録を更新
+        if status == 'approved':
+            attendance_id = existing_request.get('attendance_id')
+            if attendance_id:
+                # 勤怠記録を更新
+                update_expression_parts = []
+                expression_attribute_values = {}
+                expression_attribute_names = {}
+                
+                if existing_request.get('requested_clock_in'):
+                    update_expression_parts.append("#clock_in = :clock_in")
+                    expression_attribute_names["#clock_in"] = "clock_in"
+                    expression_attribute_values[":clock_in"] = existing_request['requested_clock_in']
+                
+                if existing_request.get('requested_clock_out'):
+                    update_expression_parts.append("#clock_out = :clock_out")
+                    expression_attribute_names["#clock_out"] = "clock_out"
+                    expression_attribute_values[":clock_out"] = existing_request['requested_clock_out']
+                
+                update_expression_parts.append("#updated_at = :updated_at")
+                expression_attribute_names["#updated_at"] = "updated_at"
+                expression_attribute_values[":updated_at"] = now
+                
+                if update_expression_parts:
+                    ATTENDANCE_TABLE.update_item(
+                        Key={'id': attendance_id},
+                        UpdateExpression='SET ' + ', '.join(update_expression_parts),
+                        ExpressionAttributeNames=expression_attribute_names,
+                        ExpressionAttributeValues=expression_attribute_values
+                    )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': f'修正申請を{status}しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error updating attendance request: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '修正申請の更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_attendance_request(request_id, headers):
+    """
+    出退勤修正申請を削除
+    """
+    try:
+        ATTENDANCE_REQUESTS_TABLE.delete_item(Key={'id': request_id})
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '修正申請を削除しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting attendance request: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '修正申請の削除に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }
