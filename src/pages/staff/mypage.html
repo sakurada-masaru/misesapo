@@ -793,13 +793,23 @@
         // 退勤済み
         statusIndicator.className = 'status-indicator';
         statusLabel.textContent = '退勤済み';
-        statusTime.textContent = `出勤: ${formatTime(todayRecord.clock_in)} - 退勤: ${formatTime(todayRecord.clock_out)}`;
+        
+        // 労働時間を表示
+        const workHours = todayRecord.work_hours || calculateWorkHours(todayRecord.clock_in, todayRecord.clock_out, todayRecord.breaks || []);
+        const workHoursText = workHours ? formatWorkHours(workHours) : '';
+        statusTime.textContent = `出勤: ${formatTime(todayRecord.clock_in)} - 退勤: ${formatTime(todayRecord.clock_out)}${workHoursText ? ` (実働: ${workHoursText})` : ''}`;
+        
         toggleBtnText.textContent = '再出勤';
         toggleBtn.classList.remove('btn-danger');
         toggleBtn.classList.add('btn-primary');
         // 作業開始ボタンを非表示
         if (workStartBtn) {
           workStartBtn.style.display = 'none';
+        }
+        // 休憩セクションを非表示
+        const breakSection = document.getElementById('break-section');
+        if (breakSection) {
+          breakSection.style.display = 'none';
         }
       } else {
         // 未出勤
