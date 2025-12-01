@@ -3336,13 +3336,12 @@
           if (existingBrand) {
             brandId = existingBrand.id;
           } else {
-            // 新規ブランド作成
-            const newBrandId = 'BR' + Date.now();
+            // 新規ブランド作成（IDはバックエンドで生成）
             const brandRes = await fetch(`${API_BASE}/brands`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                id: newBrandId,
+                // IDはバックエンドで生成されるため、ここでは指定しない
                 name: brandName,
                 client_id: clientId,
                 status: 'active',
@@ -3354,14 +3353,13 @@
               throw new Error(`ブランドの作成に失敗しました: ${errorData.error || brandRes.statusText}`);
             }
             const brandData = await brandRes.json();
-            brandId = brandData.id || newBrandId;
+            brandId = brandData.id;
           }
         }
 
-        // 3. 店舗を作成
-        const storeId = 'ST' + Date.now();
+        // 3. 店舗を作成（IDはバックエンドで生成）
         const storeData = {
-          id: storeId,
+          // IDはバックエンドで生成されるため、ここでは指定しない
           name: storeName,
           client_id: clientId,
           brand_id: brandId,
