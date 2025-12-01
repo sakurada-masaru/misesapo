@@ -99,19 +99,19 @@ const ROLE_CONFIG = {
   // ロールごとのログイン後リダイレクト先
   defaultPages: {
     'customer': '/mypage.html',
-    'staff': '/staff/mypage.html',
-    'office': '/staff/mypage.html',
-    'designer': '/staff/mypage.html',
-    'general_affairs': '/staff/mypage.html',
-    'operation': '/staff/mypage.html',
-    'accounting': '/staff/mypage.html',
-    'human_resources': '/staff/mypage.html',
-    'contractor': '/staff/mypage.html',
-    'concierge': '/staff/mypage.html',
-    'sales': '/staff/mypage.html',
-    'admin': '/staff/mypage.html',
-    'developer': '/staff/mypage.html',
-    'master': '/admin/sitemap.html',
+    'staff': '/staff/mypage.html',  // 清掃員はマイページ（勤怠機能使用）
+    'office': '/admin/dashboard.html',  // 事務は管理ダッシュボード
+    'designer': '/admin/dashboard.html',  // デザイナーは管理ダッシュボード
+    'general_affairs': '/admin/dashboard.html',  // 総務は管理ダッシュボード
+    'operation': '/admin/dashboard.html',  // 運営は管理ダッシュボード
+    'accounting': '/admin/dashboard.html',  // 経理は管理ダッシュボード
+    'human_resources': '/admin/dashboard.html',  // 人事は管理ダッシュボード
+    'contractor': '/staff/mypage.html',  // 外部委託はマイページ（勤怠機能使用）
+    'concierge': '/sales/dashboard.html',  // コンシェルジュは営業ダッシュボード
+    'sales': '/sales/dashboard.html',  // 営業は営業ダッシュボード
+    'admin': '/admin/dashboard.html',  // 管理者は管理ダッシュボード
+    'developer': '/admin/dashboard.html',  // 開発者は管理ダッシュボード
+    'master': '/admin/sitemap.html',  // マスターはサイトマップ
     'guest': '/index.html'
   },
   
