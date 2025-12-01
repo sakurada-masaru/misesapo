@@ -537,6 +537,66 @@
       }).join('');
     }
     
+    // ロール表示の更新とサイドバーナビゲーションの生成
+    function updateRoleBadgeAndSidebar() {
+      const roleBadge = document.getElementById('sidebar-role-badge');
+      const sidebarNav = document.getElementById('admin-sidebar-nav');
+      
+      // ロール情報を取得
+      let userRole = 'admin'; // デフォルト
+      if (window.Auth && window.Auth.getCurrentUser) {
+        const user = window.Auth.getCurrentUser();
+        if (user && user.role) {
+          userRole = user.role;
+        }
+      } else if (window.CognitoAuth && window.CognitoAuth.isAuthenticated) {
+        const cognitoUser = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        if (cognitoUser && cognitoUser.role) {
+          userRole = cognitoUser.role;
+        }
+      }
+      
+      // ロールバッジの更新
+      if (roleBadge) {
+        const roleConfig = window.RoleConfig?.ROLE_CONFIG;
+        const roleInfo = roleConfig?.roles?.[userRole];
+        if (roleInfo) {
+          roleBadge.textContent = roleInfo.displayName || roleInfo.name || userRole;
+          
+          const badgeColors = {
+            'guest': { bg: '#e5e7eb', color: '#6b7280' },
+            'customer': { bg: '#dbeafe', color: '#1e40af' },
+            'staff': { bg: '#dcfce7', color: '#166534' },
+            'office': { bg: '#fef3c7', color: '#92400e' },
+            'designer': { bg: '#fce7f3', color: '#831843' },
+            'operation': { bg: '#fef3c7', color: '#92400e' },
+            'admin': { bg: '#e0e7ff', color: '#3730a3' },
+            'developer': { bg: '#fce7f3', color: '#831843' },
+            'master': { bg: '#fef2f2', color: '#991b1b' }
+          };
+          
+          const colors = badgeColors[userRole] || badgeColors['admin'];
+          roleBadge.style.background = colors.bg;
+          roleBadge.style.color = colors.color;
+        } else {
+          roleBadge.textContent = '管理者';
+        }
+      }
+      
+      // サイドバーナビゲーションの生成
+      if (sidebarNav && window.Navigation && window.Navigation.renderAdminSidebar) {
+        window.Navigation.renderAdminSidebar('admin-sidebar-nav', userRole);
+      }
+    }
+    
+    updateRoleBadgeAndSidebar();
+    
+    if (window.Auth && window.Auth.onAuthStateChanged) {
+      window.Auth.onAuthStateChanged(() => {
+        updateRoleBadgeAndSidebar();
+      });
+    }
+    
     // 初期表示
     renderPartners(partners);
     
