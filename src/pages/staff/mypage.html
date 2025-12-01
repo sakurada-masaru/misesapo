@@ -54,7 +54,7 @@
                   <span class="status-time" id="status-time">-</span>
                 </div>
               </div>
-              <button class="btn btn-primary btn-round" id="attendance-toggle-btn">
+              <button class="btn btn-primary btn-round" id="attendance-toggle-btn" style="display: block !important; visibility: visible !important;">
                 <i class="fas fa-power-off"></i>
                 <span id="toggle-btn-text">出勤する</span>
               </button>
@@ -572,6 +572,8 @@
           throw new Error('ユーザー情報を取得できませんでした。ログインしてください。');
         }
 
+        console.log('User loaded:', currentUser);
+
         // ロールを変換
         if (currentUser.role_code !== undefined) {
           currentUser.role = getRoleFromCode(currentUser.role_code);
@@ -590,11 +592,30 @@
         // カレンダーを表示
         renderCalendar();
         
-        // 出退勤ボタンのイベントリスナーを再設定（コンテンツ表示後）
-        setupAttendanceToggleButton();
-
         loadingEl.style.display = 'none';
         contentEl.style.display = 'block';
+        
+        console.log('Content displayed, checking button...');
+        console.log('Button element:', document.getElementById('attendance-toggle-btn'));
+        console.log('Content element display:', window.getComputedStyle(contentEl).display);
+        
+        // 出退勤ボタンのイベントリスナーを再設定（コンテンツ表示後）
+        // 少し遅延を入れてDOMが完全にレンダリングされるのを待つ
+        setTimeout(() => {
+          console.log('Setting up button after delay...');
+          setupAttendanceToggleButton();
+          
+          // ボタンが存在するか再確認
+          const btn = document.getElementById('attendance-toggle-btn');
+          if (btn) {
+            console.log('Button found after setup:', btn);
+            console.log('Button display style:', window.getComputedStyle(btn).display);
+            console.log('Button visibility:', window.getComputedStyle(btn).visibility);
+            console.log('Button parent display:', window.getComputedStyle(btn.parentElement).display);
+          } else {
+            console.error('Button still not found after setup!');
+          }
+        }, 100);
       } catch (error) {
         console.error('Error loading user:', error);
         loadingEl.style.display = 'none';
@@ -1194,9 +1215,16 @@
     function setupAttendanceToggleButton() {
       const toggleBtn = document.getElementById('attendance-toggle-btn');
       if (!toggleBtn) {
-        console.warn('Attendance toggle button not found');
+        console.error('Attendance toggle button not found!');
+        console.error('Available elements:', {
+          mypageContent: document.getElementById('mypage-content'),
+          attendanceCard: document.querySelector('.attendance-card'),
+          attendanceToday: document.querySelector('.attendance-today')
+        });
         return;
       }
+      
+      console.log('Setting up attendance toggle button:', toggleBtn);
       
       // 既存のイベントリスナーを削除（重複防止）
       const newToggleBtn = toggleBtn.cloneNode(true);
