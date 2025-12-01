@@ -589,6 +589,9 @@
 
         // カレンダーを表示
         renderCalendar();
+        
+        // 出退勤ボタンのイベントリスナーを再設定（コンテンツ表示後）
+        setupAttendanceToggleButton();
 
         loadingEl.style.display = 'none';
         contentEl.style.display = 'block';
