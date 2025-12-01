@@ -7,6 +7,12 @@
     <title>{{ title }}</title>
     @include('partials.head-links')
     <style>
+      /* Staff signin page: hide all headers */
+      body.page-staff-signin #default-header-wrapper,
+      body.page-staff-signin #normal-header-wrapper {
+        display: none !important;
+      }
+      
       /* Admin pages: hide global header while keeping auth buttons */
       body[class*="page-admin-"] #default-header-wrapper {
         height: 0;
