@@ -1330,19 +1330,66 @@
     document.getElementById('confirm-delete').addEventListener('click', async () => {
       if (!deleteTargetId) return;
       
+      const confirmBtn = document.getElementById('confirm-delete');
+      const originalText = confirmBtn.textContent;
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = '削除中...';
+      
       try {
         const response = await fetch(`${API_BASE}/workers/${deleteTargetId}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
         
         if (response.ok) {
           deleteDialog.close();
           loadUsers();
+          alert('ユーザーを削除しました');
         } else {
-          alert('削除に失敗しました');
+          const errorText = await response.text();
+          let errorMessage = '削除に失敗しました';
+          
+          // CORSエラーの場合
+          if (response.status === 0 || errorText.includes('CORS') || errorText.includes('Access-Control')) {
+            errorMessage = 'CORSエラー: API Gateway側でCORS設定が必要です。\n\n' +
+                          'AWS API Gatewayコンソールで、/workers/{id} リソースのDELETEメソッドにCORSを設定してください。\n\n' +
+                          '詳細: ブラウザのコンソールを確認してください。';
+          } else if (response.status === 404) {
+            errorMessage = 'ユーザーが見つかりませんでした';
+          } else if (response.status === 401 || response.status === 403) {
+            errorMessage = '権限がありません';
+          } else {
+            errorMessage = `削除に失敗しました (ステータス: ${response.status})`;
+          }
+          
+          console.error('Delete error:', response.status, errorText);
+          alert(errorMessage);
         }
       } catch (error) {
-        alert('削除に失敗しました');
+        console.error('Delete error:', error);
+        let errorMessage = '削除に失敗しました';
+        
+        // CORSエラーの場合
+        if (error.message.includes('CORS') || error.message.includes('Access-Control') || error.name === 'TypeError') {
+          errorMessage = 'CORSエラーが発生しました。\n\n' +
+                        '原因: API Gateway側でDELETEメソッドのCORS設定が不足しています。\n\n' +
+                        '解決方法:\n' +
+                        '1. AWS API Gatewayコンソールにアクセス\n' +
+                        '2. /workers/{id} リソースのDELETEメソッドを選択\n' +
+                        '3. 「アクション」→「CORSを有効にする」をクリック\n' +
+                        '4. アクセス制御を許可するメソッドに「DELETE」を追加\n' +
+                        '5. デプロイを実行\n\n' +
+                        '詳細: ブラウザのコンソール（F12）を確認してください。';
+        } else {
+          errorMessage = `削除に失敗しました: ${error.message}`;
+        }
+        
+        alert(errorMessage);
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = originalText;
       }
     });
   }
