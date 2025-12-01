@@ -175,9 +175,14 @@
             <div class="greeting">こんにちは</div>
             <div class="user-name" id="user-name">営業担当</div>
           </div>
-          <a href="/index.html" class="header-action">
-            <i class="fas fa-sign-out-alt"></i>
-      </a>
+          <div class="header-actions">
+            <a href="/staff/mypage.html" class="header-action" title="マイページ">
+              <i class="fas fa-user"></i>
+            </a>
+            <a href="/index.html" class="header-action" title="ログアウト">
+              <i class="fas fa-sign-out-alt"></i>
+            </a>
+          </div>
         </header>
         
         <!-- 今日のサマリー -->
@@ -694,6 +699,11 @@
       font-size: 1.25rem;
       font-weight: 600;
     }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
     .header-action {
       width: 44px;
       height: 44px;
@@ -705,6 +715,11 @@
       color: #fff;
       text-decoration: none;
       font-size: 1.125rem;
+      transition: all 0.2s;
+    }
+    .header-action:hover {
+      background: rgba(255,255,255,0.3);
+      transform: scale(1.05);
     }
 
     /* サマリー */

@@ -298,9 +298,92 @@
     init();
   }
   
+  /**
+   * 管理画面用サイドバーナビゲーションを生成
+   */
+  function renderAdminSidebar(containerId, role) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    // ナビゲーション項目を取得
+    const navItems = window.RoleConfig?.getNavigationForRole(role) || [];
+    
+    // 既存のナビゲーション項目をクリア
+    container.innerHTML = '';
+    
+    // ベースパスを取得
+    const base = document.querySelector('base');
+    const basePath = base ? (base.getAttribute('href') || '/') : '/';
+    
+    // 現在のパスを取得
+    const currentPath = window.location.pathname;
+    let normalizedPath = currentPath;
+    if (basePath !== '/' && currentPath.startsWith(basePath)) {
+      normalizedPath = currentPath.substring(basePath.length - 1);
+    }
+    
+    // ナビゲーション項目を生成
+    navItems.forEach(item => {
+      const navItem = document.createElement('a');
+      navItem.href = basePath === '/' ? item.href : basePath.replace(/\/$/, '') + item.href;
+      navItem.className = 'nav-item';
+      
+      // アイコン
+      if (item.icon) {
+        const icon = document.createElement('i');
+        icon.className = `fas ${item.icon}`;
+        navItem.appendChild(icon);
+      }
+      
+      // ラベル
+      const label = document.createElement('span');
+      label.className = 'nav-label';
+      label.textContent = item.label;
+      navItem.appendChild(label);
+      
+      // アクティブ状態の判定
+      if (normalizedPath === item.href || normalizedPath === item.href.replace('.html', '')) {
+        navItem.classList.add('active');
+      }
+      
+      container.appendChild(navItem);
+    });
+    
+    // 区切り線
+    const divider = document.createElement('div');
+    divider.className = 'nav-divider';
+    container.appendChild(divider);
+    
+    // ログアウトボタン
+    const logoutBtn = document.createElement('button');
+    logoutBtn.className = 'nav-item nav-item-button';
+    logoutBtn.onclick = function() {
+      if (window.Auth && window.Auth.logout) {
+        window.Auth.logout();
+      } else if (window.CognitoAuth && window.CognitoAuth.logout) {
+        window.CognitoAuth.logout();
+        window.location.href = '/staff/signin.html';
+      } else {
+        window.location.href = '/index.html';
+      }
+    };
+    
+    const logoutIcon = document.createElement('i');
+    logoutIcon.className = 'fas fa-sign-out-alt';
+    logoutBtn.appendChild(logoutIcon);
+    
+    const logoutLabel = document.createElement('span');
+    logoutLabel.className = 'nav-label';
+    logoutLabel.textContent = 'ログアウト';
+    logoutBtn.appendChild(logoutLabel);
+    
+    container.appendChild(logoutBtn);
+  }
+  
   // グローバルに公開
   window.Navigation = {
     renderNavigation: renderNavigation,
+    renderAdminSidebar: renderAdminSidebar,
     switchHeaderByRole: switchHeaderByRole,
     init: init,
     toggleMobileNav: toggleMobileNav,

@@ -1,8 +1,8 @@
 @layout('layouts.admin')
 @json('data/meta/admin_dashboard_title.json', $title)
 @json('data/meta/admin_dashboard_body_class.json', $body_class)
-<script src="/assets/js/role_config.js"></script>
-<script src="/assets/js/navigation.js"></script>
+<script src="/js/role_config.js"></script>
+<script src="/js/navigation.js"></script>
 
 <main id="main" class="admin-dashboard">
   <!-- サイドバー -->
@@ -1072,72 +1072,8 @@
     }
     
     // サイドバーナビゲーションの生成
-    if (sidebarNav && window.RoleConfig) {
-      const navItems = window.RoleConfig.getNavigationForRole(userRole) || [];
-      sidebarNav.innerHTML = '';
-      
-      // ベースパスを取得
-      const base = document.querySelector('base');
-      const basePath = base ? (base.getAttribute('href') || '/') : '/';
-      
-      // 現在のパスを取得
-      const currentPath = window.location.pathname;
-      let normalizedPath = currentPath;
-      if (basePath !== '/' && currentPath.startsWith(basePath)) {
-        normalizedPath = currentPath.substring(basePath.length - 1);
-      }
-      
-      navItems.forEach(item => {
-        const navItem = document.createElement('a');
-        navItem.href = basePath === '/' ? item.href : basePath.replace(/\/$/, '') + item.href;
-        navItem.className = 'nav-item';
-        
-        // アイコン
-        if (item.icon) {
-          const icon = document.createElement('i');
-          icon.className = `fas ${item.icon}`;
-          navItem.appendChild(icon);
-        }
-        
-        // ラベル
-        const label = document.createElement('span');
-        label.className = 'nav-label';
-        label.textContent = item.label;
-        navItem.appendChild(label);
-        
-        // アクティブ状態の判定
-        if (normalizedPath === item.href || normalizedPath === item.href.replace('.html', '')) {
-          navItem.classList.add('active');
-        }
-        
-        sidebarNav.appendChild(navItem);
-      });
-      
-      // 区切り線
-      const divider = document.createElement('div');
-      divider.className = 'nav-divider';
-      sidebarNav.appendChild(divider);
-      
-      // サイトマップはrole_config.jsのnavigationに含まれているため、ここでは追加しない
-      
-      // ログアウトボタン
-      const logoutBtn = document.createElement('button');
-      logoutBtn.className = 'nav-item nav-item-button';
-      logoutBtn.onclick = function() {
-        if (window.Auth && window.Auth.logout) {
-          window.Auth.logout();
-        } else if (window.CognitoAuth && window.CognitoAuth.logout) {
-          window.CognitoAuth.logout();
-        }
-      };
-      const logoutIcon = document.createElement('i');
-      logoutIcon.className = 'fas fa-sign-out-alt';
-      logoutBtn.appendChild(logoutIcon);
-      const logoutLabel = document.createElement('span');
-      logoutLabel.className = 'nav-label';
-      logoutLabel.textContent = 'ログアウト';
-      logoutBtn.appendChild(logoutLabel);
-      sidebarNav.appendChild(logoutBtn);
+    if (sidebarNav && window.Navigation && window.Navigation.renderAdminSidebar) {
+      window.Navigation.renderAdminSidebar('admin-sidebar-nav', userRole);
     }
   }
   

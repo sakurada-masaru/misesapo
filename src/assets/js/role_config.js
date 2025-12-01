@@ -154,6 +154,10 @@ const ROLE_CONFIG = {
     '/admin/partners/': ['admin', 'developer', 'master'],
     '/admin/partners/new.html': ['admin', 'developer', 'master'],
     
+    // ユーザー管理ページ（運営と開発者のみ）
+    '/admin/users.html': ['operation', 'developer', 'master'],
+    '/admin/users/': ['operation', 'developer', 'master'],
+    
     // 開発者向けページ（開発者のみ）
     '/admin/services/review.html': ['developer', 'master'],
     
@@ -198,13 +202,27 @@ const ROLE_CONFIG = {
       { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' },
       { href: '/admin/services/new.html', label: '新規サービス登録', icon: 'fa-plus-circle' },
       { href: '/admin/images.html', label: 'メディア', icon: 'fa-images' },
-      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' }
+      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
+      { href: '/admin/analytics.html', label: '分析', icon: 'fa-chart-bar' },
+      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' },
+      { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     designer: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
       { href: '/staff/mypage.html', label: 'マイページ', icon: 'fa-user' },
-      { href: '/admin/images.html', label: '画像管理', icon: 'fa-images' },
-      { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' }
+      { href: '/admin/schedules/', label: 'スケジュール', icon: 'fa-calendar-alt' },
+      { href: '/admin/customers/', label: '顧客管理', icon: 'fa-store' },
+      { href: '/admin/reports/', label: 'レポート', icon: 'fa-file-alt' },
+      { href: '/admin/estimates/', label: '見積もり', icon: 'fa-file-invoice-dollar' },
+      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
+      { href: '/admin/partners.html', label: 'パートナー企業', icon: 'fa-handshake' },
+      { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' },
+      { href: '/admin/services/new.html', label: '新規サービス登録', icon: 'fa-plus-circle' },
+      { href: '/admin/images.html', label: 'メディア', icon: 'fa-images' },
+      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
+      { href: '/admin/analytics.html', label: '分析', icon: 'fa-chart-bar' },
+      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' },
+      { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     operation: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
@@ -235,12 +253,19 @@ const ROLE_CONFIG = {
     admin: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
       { href: '/staff/mypage.html', label: 'マイページ', icon: 'fa-user' },
+      { href: '/admin/schedules/', label: 'スケジュール', icon: 'fa-calendar-alt' },
+      { href: '/admin/customers/', label: '顧客管理', icon: 'fa-store' },
+      { href: '/admin/reports/', label: 'レポート', icon: 'fa-file-alt' },
+      { href: '/admin/estimates/', label: '見積もり', icon: 'fa-file-invoice-dollar' },
+      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
+      { href: '/admin/partners.html', label: 'パートナー企業', icon: 'fa-handshake' },
       { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' },
       { href: '/admin/services/new.html', label: '新規サービス登録', icon: 'fa-plus-circle' },
-      { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
-      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
-      { href: '/admin/partners.html', label: 'パートナー企業一覧', icon: 'fa-handshake' },
-      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' }
+      { href: '/admin/images.html', label: 'メディア', icon: 'fa-images' },
+      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
+      { href: '/admin/analytics.html', label: '分析', icon: 'fa-chart-bar' },
+      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' },
+      { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     developer: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
@@ -255,7 +280,7 @@ const ROLE_CONFIG = {
       { href: '/admin/services/new.html', label: '新規サービス登録', icon: 'fa-plus-circle' },
       { href: '/admin/services/review.html', label: '変更レビュー', icon: 'fa-code-branch' },
       { href: '/admin/images.html', label: 'メディア', icon: 'fa-images' },
-      { href: '/admin/users.html', label: 'ユーザーID管理', icon: 'fa-user-shield' },
+      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
       { href: '/admin/analytics.html', label: '分析', icon: 'fa-chart-bar' },
       { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
