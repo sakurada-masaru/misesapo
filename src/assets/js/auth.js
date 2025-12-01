@@ -454,9 +454,54 @@
       // 現時点では、デフォルトでcustomerロールを使用
       // 将来的に、Cloud FunctionsでCustom Claimsを設定する必要がある
       
+      // DynamoDBのworkersテーブルにも登録（管理画面で表示されるようにするため）
+      try {
+        const apiBaseUrl = getApiBaseUrl();
+        if (apiBaseUrl) {
+          const workerId = 'W' + Date.now();
+          const workerData = {
+            id: workerId,
+            firebase_uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            name: name || email.split('@')[0],
+            phone: '',
+            role: role,
+            role_code: role === 'customer' ? '99' : '99',  // customerはデフォルトでstaff扱い
+            department: '',
+            status: 'active',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          
+          const response = await fetch(`${apiBaseUrl}/workers`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(workerData)
+          });
+          
+          if (response.ok) {
+            console.log('[Auth] Worker created in DynamoDB:', workerId);
+            // DynamoDBのIDを使用
+            const createdWorker = await response.json();
+            if (createdWorker && createdWorker.id) {
+              workerData.id = createdWorker.id;
+            }
+          } else {
+            console.warn('[Auth] Failed to create worker in DynamoDB:', await response.text());
+            // DynamoDBへの登録に失敗しても、Firebase登録は成功とする
+          }
+        }
+      } catch (error) {
+        console.error('[Auth] Error creating worker in DynamoDB:', error);
+        // DynamoDBへの登録に失敗しても、Firebase登録は成功とする
+      }
+      
       // 認証情報を保存（customerロールで登録）
       setAuthData(role, firebaseUser.email, {
-        id: firebaseUser.uid,
+        id: firebaseUser.uid,  // 一時的にFirebase UIDを使用（ログイン時にDynamoDBのIDに更新される）
+        firebase_uid: firebaseUser.uid,
         email: firebaseUser.email,
         role: role,
         name: name || email.split('@')[0],
