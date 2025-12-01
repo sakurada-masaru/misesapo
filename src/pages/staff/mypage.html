@@ -549,8 +549,8 @@
           currentUser.role = getRoleFromCode(currentUser.role_code);
         }
 
-        // 出退勤記録を読み込み
-        loadAttendanceRecords();
+        // 出退勤記録を読み込み（非同期）
+        await loadAttendanceRecords();
 
         // ユーザー情報を表示
         renderUser(currentUser);
