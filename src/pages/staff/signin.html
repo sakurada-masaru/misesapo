@@ -123,11 +123,11 @@
             let redirectPath;
             
             // ロールに応じたデフォルトページを取得
-            if (window.RoleConfig && window.RoleConfig.getDefaultPageForRole) {
-              redirectPath = window.RoleConfig.getDefaultPageForRole(role);
-            } else if (window.RoleConfig && window.RoleConfig.ROLE_CONFIG && window.RoleConfig.ROLE_CONFIG.defaultPages) {
-              redirectPath = window.RoleConfig.ROLE_CONFIG.defaultPages[role] || window.RoleConfig.ROLE_CONFIG.defaultPages['staff'];
-            } else {
+              if (window.RoleConfig && window.RoleConfig.getDefaultPageForRole) {
+                redirectPath = window.RoleConfig.getDefaultPageForRole(role);
+              } else if (window.RoleConfig && window.RoleConfig.ROLE_CONFIG && window.RoleConfig.ROLE_CONFIG.defaultPages) {
+                redirectPath = window.RoleConfig.ROLE_CONFIG.defaultPages[role] || window.RoleConfig.ROLE_CONFIG.defaultPages['staff'];
+              } else {
               // フォールバック: ロールに応じた管理ページ
               if (role === 'staff' || role === 'contractor') {
                 redirectPath = '/staff/mypage.html';
