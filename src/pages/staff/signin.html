@@ -118,45 +118,23 @@
             const base = document.querySelector('base');
             const basePath = base ? (base.getAttribute('href') || '/') : '/';
             
-            // ロールに応じてリダイレクト（出退勤状態をチェック）
+            // ロールに応じて管理ページにリダイレクト（従業員ログインは常に管理ページへ）
             const role = result.user.role || 'staff';
-            const userId = result.user.id || result.user.user_id;
-            
-            // 今日の出退勤記録を取得
-            const today = new Date().toISOString().split('T')[0];
-            let hasAttendance = false;
-            
-            try {
-              const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-              const attendanceResponse = await fetch(
-                `${API_BASE}/attendance?staff_id=${userId}&date=${today}`
-              );
-              
-              if (attendanceResponse.ok) {
-                const attendanceData = await attendanceResponse.json();
-                // 出退勤記録があるかチェック
-                if (attendanceData.clock_in || (attendanceData.items && attendanceData.items.length > 0 && attendanceData.items[0].clock_in)) {
-                  hasAttendance = true;
-                }
-              }
-            } catch (error) {
-              console.warn('出退勤記録の取得に失敗:', error);
-              // エラー時は安全のためマイページにリダイレクト
-            }
-            
             let redirectPath;
             
-            if (!hasAttendance) {
-              // 未出退勤 → マイページにリダイレクト
-              redirectPath = `/staff/mypage.html?id=${userId}`;
+            // ロールに応じたデフォルトページを取得
+            if (window.RoleConfig && window.RoleConfig.getDefaultPageForRole) {
+              redirectPath = window.RoleConfig.getDefaultPageForRole(role);
+            } else if (window.RoleConfig && window.RoleConfig.ROLE_CONFIG && window.RoleConfig.ROLE_CONFIG.defaultPages) {
+              redirectPath = window.RoleConfig.ROLE_CONFIG.defaultPages[role] || window.RoleConfig.ROLE_CONFIG.defaultPages['staff'];
             } else {
-              // 既に出退勤済み → 該当ページにリダイレクト
-              if (window.RoleConfig && window.RoleConfig.getDefaultPageForRole) {
-                redirectPath = window.RoleConfig.getDefaultPageForRole(role);
-              } else if (window.RoleConfig && window.RoleConfig.ROLE_CONFIG && window.RoleConfig.ROLE_CONFIG.defaultPages) {
-                redirectPath = window.RoleConfig.ROLE_CONFIG.defaultPages[role] || window.RoleConfig.ROLE_CONFIG.defaultPages['staff'];
-              } else {
+              // フォールバック: ロールに応じた管理ページ
+              if (role === 'staff' || role === 'contractor') {
                 redirectPath = '/staff/mypage.html';
+              } else if (role === 'concierge' || role === 'sales') {
+                redirectPath = '/sales/dashboard.html';
+              } else {
+                redirectPath = '/admin/dashboard.html';
               }
             }
             
