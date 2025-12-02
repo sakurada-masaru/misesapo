@@ -8,6 +8,16 @@
   // ページ識別子のマッピング
   const PAGE_MAPPING = {
     'dashboard': ['dashboard'],
+    'mypage': ['mypage'],
+    'order': ['index'],
+    'service': ['service'],
+    'cart': ['cart'],
+    'order-history': ['order', 'history'],
+    'schedule': ['schedule'],
+    'report': ['report'],
+    'info': ['info'],
+    'stores': ['stores'],
+    'settings': ['settings'],
     'schedules': ['schedules'],
     'customers': ['customers'],
     'reports': ['reports'],
@@ -22,7 +32,6 @@
     'analytics': ['analytics'],
     'images': ['images'],
     'wiki': ['wiki'],
-    'settings': ['settings'],
     'sitemap': ['sitemap']
   };
 
@@ -38,6 +47,11 @@
       if (keywords.every(keyword => pathParts.includes(keyword) || path.includes(keyword))) {
         return pageId;
       }
+    }
+    
+    // マイページの場合はmypageを返す
+    if (path.includes('/mypage')) {
+      return 'mypage';
     }
     
     // デフォルトはdashboard
@@ -96,8 +110,10 @@
       if (user && user.role) {
         const roleLabels = {
           'admin': '管理者',
+          'customer': '顧客',
           'sales': '営業',
           'office': '事務',
+          'staff': '清掃員',
           'cleaner': '清掃員',
           'developer': '開発者',
           'designer': 'デザイナー',
