@@ -18,6 +18,11 @@
     'info': ['info'],
     'stores': ['stores'],
     'settings': ['settings'],
+    'assignments': ['assignments'],
+    'reports-new': ['reports', 'new'],
+    'training': ['training'],
+    'cleaning-manual': ['cleaning-manual'],
+    'announcements': ['announcements'],
     'schedules': ['schedules'],
     'customers': ['customers'],
     'reports': ['reports'],
@@ -49,8 +54,13 @@
       }
     }
     
-    // マイページの場合はmypageを返す
-    if (path.includes('/mypage')) {
+    // スタッフマイページの場合はmypageを返す
+    if (path.includes('/staff/mypage')) {
+      return 'mypage';
+    }
+    
+    // ユーザー向けマイページの場合はmypageを返す
+    if (path.includes('/mypage') && !path.includes('/staff/')) {
       return 'mypage';
     }
     

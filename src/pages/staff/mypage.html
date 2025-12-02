@@ -1,14 +1,84 @@
 @layout('layouts.base')
 @json('data/meta/staff_mypage_title.json', $title)
 @json('data/meta/staff_mypage_body_class.json', $body_class)
+<link rel="stylesheet" href="/assets/css/admin-sidebar.css">
 <!-- AWS SDKの読み込み -->
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
 <script src="/js/cognito_config.js"></script>
 <script src="/js/cognito_auth.js"></script>
 <script src="/js/client_auth.js"></script>
+<script src="/assets/js/admin-sidebar.js"></script>
 
-<main id="main" class="container staff-mypage">
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/staff/mypage.html" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <!-- ロール表示 -->
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">清掃員</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/staff/mypage.html" class="nav-item" data-page="mypage">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <a href="/staff/dashboard.html" class="nav-item" data-page="dashboard">
+      <i class="fas fa-tachometer-alt"></i>
+      <span class="nav-label">ダッシュボード</span>
+    </a>
+    <a href="/staff/schedule.html" class="nav-item" data-page="schedule">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/staff/assignments.html" class="nav-item" data-page="assignments">
+      <i class="fas fa-tasks"></i>
+      <span class="nav-label">作業一覧</span>
+    </a>
+    <a href="/staff/reports.html" class="nav-item" data-page="reports">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">レポート一覧</span>
+    </a>
+    <a href="/staff/reports/new.html" class="nav-item" data-page="reports-new">
+      <i class="fas fa-plus-circle"></i>
+      <span class="nav-label">レポート作成</span>
+    </a>
+    <a href="/staff/training.html" class="nav-item" data-page="training">
+      <i class="fas fa-graduation-cap"></i>
+      <span class="nav-label">トレーニング</span>
+    </a>
+    <a href="/cleaning-manual.html" class="nav-item" data-page="cleaning-manual">
+      <i class="fas fa-book"></i>
+      <span class="nav-label">清掃マニュアル</span>
+    </a>
+    <a href="/announcements.html" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">お知らせ</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/staff/mypage/settings.html" class="nav-item" data-page="settings">
+      <i class="fas fa-sliders-h"></i>
+      <span class="nav-label">設定</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+  </nav>
+
+  <!-- トグルボタン -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<main id="main" class="container staff-mypage main-content">
   <div class="loading" id="loading">読み込み中...</div>
   <div id="error-message" class="error-message" style="display: none;"></div>
   
