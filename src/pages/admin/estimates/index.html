@@ -817,57 +817,5 @@
   document.getElementById('detail-modal').addEventListener('click', (e) => {
     if (e.target.classList.contains('modal-overlay')) closeModal();
   });
-
-  , collapsed);
-    });
-  }
-
-  // ロール表示の更新
-  ,
-            'customer': { bg: '#dbeafe', color: '#1e40af' },
-            'staff': { bg: '#dcfce7', color: '#166534' },
-            'concierge': { bg: '#fef3c7', color: '#92400e' },
-            'admin': { bg: '#e0e7ff', color: '#3730a3' },
-            'developer': { bg: '#fce7f3', color: '#831843' },
-            'master': { bg: '#fef2f2', color: '#991b1b' }
-          };
-          
-          const colors = badgeColors[user.role] || badgeColors['admin'];
-          roleBadge.style.background = colors.bg;
-          roleBadge.style.color = colors.color;
-        }
-      }
-    } else {
-      roleBadge.textContent = '管理者';
-    }
-  }
-
-  if (window.Auth && window.Auth.onAuthStateChanged) {
-    window.Auth.onAuthStateChanged(() => {
-      
-    });
-  }
-
-  // マイページリンクを設定
-  async 
-      }
-
-      // Firebase認証からメールアドレスを取得（フォールバック）
-      if (!email) {
-        const authData = window.Auth?.getAuthData?.();
-        if (authData) {
-          email = authData.user?.email || authData.email;
-        }
-      }
-
-      if (email) {
-        mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
-        mypageLink.style.display = 'flex';
-      }
-    } catch (error) {
-      console.error('Error setting up mypage link:', error);
-    }
-  }
-
 </script>
 

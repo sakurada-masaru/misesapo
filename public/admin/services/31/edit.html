@@ -37,7 +37,7 @@
 
 
 <!-- AWS Services API -->
-<script src="/assets/js/aws-services-api.js"></script>
+<script src="/js/aws-services-api.js"></script>
 
 <main id="main" class="admin-services-edit">
   <!-- サイドバー -->
@@ -1662,42 +1662,6 @@
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
           }
-        });
-      }
-    })();
-
-    , collapsed);
-          }
-        });
-      }
-
-      // ロール表示の更新
-      ,
-                'customer': { bg: '#dbeafe', color: '#1e40af' },
-                'staff': { bg: '#dcfce7', color: '#166534' },
-                'concierge': { bg: '#fef3c7', color: '#92400e' },
-                'admin': { bg: '#e0e7ff', color: '#3730a3' },
-                'developer': { bg: '#fce7f3', color: '#831843' },
-                'master': { bg: '#fef2f2', color: '#991b1b' }
-              };
-              
-              const colors = badgeColors[user.role] || badgeColors['admin'];
-              roleBadge.style.background = colors.bg;
-              roleBadge.style.color = colors.color;
-            }
-          }
-        } else {
-          // デフォルトで管理者として表示
-          roleBadge.textContent = '管理者';
-        }
-      }
-      
-      // ページ読み込み時にロールを更新
-
-      // Authの状態が変わったときにロールを更新
-      if (window.Auth && window.Auth.onAuthStateChanged) {
-        window.Auth.onAuthStateChanged(() => {
-          
         });
       }
     })();
