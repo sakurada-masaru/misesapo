@@ -217,7 +217,12 @@ def process_jsonvar_directives(text: str, context: Dict[str, object]) -> str:
     return RE_JSONVAR.sub(_sub, text)
 def get_base_path() -> str:
     """Get base path for GitHub Pages or local development."""
-    # Check if running in GitHub Actions (GitHub Pages)
+    # Check for custom domain (CNAME file exists) - always use root path
+    cname_path = Path(__file__).parent.parent / "public" / "CNAME"
+    if cname_path.exists():
+        return "/"
+    
+    # Check if running in GitHub Actions without custom domain
     github_repository = os.environ.get("GITHUB_REPOSITORY")
     if github_repository:
         # Extract repository name from GITHUB_REPOSITORY (e.g., "sakurada-masaru/misesapo" -> "misesapo")
