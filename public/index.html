@@ -2822,42 +2822,31 @@
     <body>
     <!-- スプラッシュスクリーン（最上部に配置） -->
     <div class="splash-screen" id="splash-screen">
-        <img id="splash-logo-img" src="/images-material/logo_144x144.png" alt="ミセサポ" class="splash-logo" />
+        <img id="splash-logo-img" src="" alt="ミセサポ" class="splash-logo" />
     </div>
     <script>
-        // スプラッシュロゴのパスを設定（GitHub Pages対応）
-        // resolvePath関数が定義されるまで待つ
+        // スプラッシュロゴのパスを設定（GitHub Pages/カスタムドメイン対応）
         (function() {
-            function setSplashLogoPath() {
-                // resolvePath関数が定義されているか確認
-                if (typeof window.resolvePathForSplash === 'function') {
-                    const logoImg = document.getElementById('splash-logo-img');
-                    if (logoImg) {
-                        logoImg.src = window.resolvePathForSplash('/images-material/logo_144x144.png');
-                    }
-                } else {
-                    // resolvePathがまだ定義されていない場合は少し待つ
-                    setTimeout(setSplashLogoPath, 100);
-                }
-            }
-            
             // 簡易版resolvePath関数を先に定義（絶対URLを返す）
-            window.resolvePathForSplash = function(path) {
+            function resolveLogoPath(path) {
                 if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
                     return path;
                 }
                 
-                const hostname = window.location.hostname;
-                const isLocalDev = hostname === 'localhost' || 
+                var hostname = window.location.hostname;
+                var isLocalDev = hostname === 'localhost' || 
                                   hostname === '127.0.0.1' ||
                                   hostname === '';
                 
-                if (isLocalDev) {
+                // カスタムドメインの場合もローカルと同じ扱い
+                var isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+                
+                if (isLocalDev || isCustomDomain) {
                     return path.startsWith('/') ? path : '/' + path;
                 }
                 
                 // GitHub Pagesでは/misesapo/を追加
-                let resolvedPath;
+                var resolvedPath;
                 if (path.startsWith('/misesapo/')) {
                     resolvedPath = path;
                 } else if (path.startsWith('/')) {
@@ -2866,14 +2855,13 @@
                     resolvedPath = '/misesapo/' + path;
                 }
                 
-                return window.location.origin + resolvedPath;
-            };
+                return resolvedPath;
+            }
             
-            // DOMContentLoadedまたは即座に実行
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', setSplashLogoPath);
-            } else {
-                setSplashLogoPath();
+            // 即座にロゴパスを設定
+            var logoImg = document.getElementById('splash-logo-img');
+            if (logoImg) {
+                logoImg.src = resolveLogoPath('/images-material/logo_144x144.png');
             }
         })();
     </script>

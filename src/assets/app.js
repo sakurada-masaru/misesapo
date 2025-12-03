@@ -323,13 +323,13 @@
       // SP: show splash animation (fallback if index.html script didn't run)
       setTimeout(() => {
         splash.classList.add('fade-out');
-        setTimeout(() => {
-          splash.classList.add('hidden');
-          if (pageContent) {
-            pageContent.classList.remove('page-content-hidden');
-            pageContent.classList.add('page-content-visible');
-          }
-          // Remove splash from DOM after animation completes
+      setTimeout(() => {
+        splash.classList.add('hidden');
+        if (pageContent) {
+          pageContent.classList.remove('page-content-hidden');
+          pageContent.classList.add('page-content-visible');
+        }
+        // Remove splash from DOM after animation completes
           splash.remove();
         }, 800); // Match CSS transition duration
       }, 2000);
