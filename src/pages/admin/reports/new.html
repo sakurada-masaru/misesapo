@@ -19,14 +19,14 @@
           <div class="form-group-inline">
             <label class="form-label-inline">店舗 <span class="required">*</span></label>
             <select name="store_id" id="store-id" class="form-select-inline" required>
-              <option value="">店舗を選択</option>
-              <option value="store-001">Darts Bar A's 神楽坂店</option>
-              <option value="store-002">大塚店</option>
-              <option value="store-003">高円寺店</option>
-              <option value="store-004">日本橋茅場町店</option>
-            </select>
-            <input type="hidden" name="store_name" id="store-name">
-          </div>
+          <option value="">店舗を選択</option>
+          <option value="store-001">Darts Bar A's 神楽坂店</option>
+          <option value="store-002">大塚店</option>
+          <option value="store-003">高円寺店</option>
+          <option value="store-004">日本橋茅場町店</option>
+        </select>
+        <input type="hidden" name="store_name" id="store-name">
+      </div>
           <div class="form-group-inline">
             <label class="form-label-inline">清掃日 <span class="required">*</span></label>
             <input type="date" name="cleaning_date" id="cleaning-date" class="form-input-inline" required>
@@ -34,11 +34,11 @@
           <div class="form-group-inline">
             <label class="form-label-inline">開始時刻</label>
             <input type="time" name="cleaning_start_time" id="cleaning-start-time" class="form-input-inline">
-          </div>
+        </div>
           <div class="form-group-inline">
             <label class="form-label-inline">終了時刻</label>
             <input type="time" name="cleaning_end_time" id="cleaning-end-time" class="form-input-inline">
-          </div>
+        </div>
         </div>
       </header>
       
@@ -48,8 +48,8 @@
           <span class="items-list-label">実施清掃項目</span>
           <div class="items-list-items" id="cleaning-items-list">
             <span class="items-list-empty">項目を追加してください</span>
-          </div>
-        </div>
+      </div>
+    </div>
         <button type="button" class="btn-add-item" id="add-work-item">
           <i class="fas fa-plus"></i>
           項目を追加
@@ -623,7 +623,7 @@
             <div class="image-list" data-category="before" data-item-id="${itemIdValue}">
               <div class="image-item">
                 <label class="image-upload-btn">
-                  <input type="file" accept="image/*" capture="environment" data-category="before" data-item-id="${itemIdValue}" />
+                  <input type="file" accept="image/*" multiple data-category="before" data-item-id="${itemIdValue}" />
                   <i class="fas fa-camera"></i>
                   <span>写真を追加</span>
                 </label>
@@ -635,7 +635,7 @@
             <div class="image-list" data-category="after" data-item-id="${itemIdValue}">
               <div class="image-item">
                 <label class="image-upload-btn">
-                  <input type="file" accept="image/*" capture="environment" data-category="after" data-item-id="${itemIdValue}" />
+                  <input type="file" accept="image/*" multiple data-category="after" data-item-id="${itemIdValue}" />
                   <i class="fas fa-camera"></i>
                   <span>写真を追加</span>
                 </label>
@@ -674,36 +674,45 @@
 
     // 写真アップロード処理
     async function handlePhotoUpload(e) {
-      const file = e.target.files[0];
-      if (!file || !file.type.startsWith('image/')) {
+      const files = Array.from(e.target.files);
+      if (files.length === 0) {
         return;
       }
       
-      try {
-        const optimizedBlob = await optimizeImage(file, 800, 0.8);
-        const base64 = await blobToBase64(optimizedBlob);
+      const photoGrid = e.target.closest('.image-list');
+      const category = photoGrid.dataset.category;
+      const itemId = photoGrid.dataset.itemId;
+      
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) {
+          continue;
+        }
         
-        const photoGrid = e.target.closest('.image-list');
-        const category = photoGrid.dataset.category;
-        const itemId = photoGrid.dataset.itemId;
-        
-        const photoItem = document.createElement('div');
-        photoItem.className = 'image-item';
-        photoItem.innerHTML = `
-          <img src="${base64}" alt="Uploaded photo">
-          <button type="button" class="image-remove" onclick="removePhoto(this)">
-            <i class="fas fa-times"></i>
-          </button>
-        `;
-        
-        const uploadBtn = e.target.closest('.image-item');
-        uploadBtn.parentNode.insertBefore(photoItem, uploadBtn);
-        
-        photoItem.dataset.base64 = base64;
-      } catch (error) {
-        console.error('Error uploading photo:', error);
-        alert('写真のアップロードに失敗しました');
+        try {
+          const optimizedBlob = await optimizeImage(file, 800, 0.8);
+          const base64 = await blobToBase64(optimizedBlob);
+          
+          const photoItem = document.createElement('div');
+          photoItem.className = 'image-item';
+          photoItem.innerHTML = `
+            <img src="${base64}" alt="Uploaded photo">
+            <button type="button" class="image-remove" onclick="removePhoto(this)">
+              <i class="fas fa-times"></i>
+            </button>
+          `;
+          
+          const uploadBtn = e.target.closest('.image-item');
+          uploadBtn.parentNode.insertBefore(photoItem, uploadBtn);
+          
+          photoItem.dataset.base64 = base64;
+        } catch (error) {
+          console.error('Error uploading photo:', error);
+          alert(`写真「${file.name}」のアップロードに失敗しました`);
+        }
       }
+      
+      // ファイル入力をリセット（同じファイルを再度選択できるように）
+      e.target.value = '';
     }
 
     // 写真を削除

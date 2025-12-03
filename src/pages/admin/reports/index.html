@@ -89,7 +89,7 @@
   </div>
 
   <!-- 詳細モーダル -->
-  <dialog id="detail-dialog" class="modal-dialog">
+  <dialog id="detail-dialog" class="modal-dialog modal-dialog-large">
     <div class="modal-content">
       <div class="modal-header">
         <h3>レポート詳細</h3>
@@ -97,7 +97,7 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <div class="modal-body" id="detail-body">
+      <div class="modal-body modal-body-scrollable" id="detail-body">
         <!-- 動的に挿入 -->
       </div>
       <div class="modal-footer">
@@ -109,7 +109,7 @@
   </dialog>
 
   <!-- 新規作成モーダル -->
-  <dialog id="new-dialog" class="modal-dialog">
+  <dialog id="new-dialog" class="modal-dialog modal-dialog-large">
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="form-title">新規レポート作成</h3>
@@ -117,49 +117,62 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <form id="report-form">
-        <div class="modal-body">
+      <form id="report-form-modal">
+        <div class="modal-body modal-body-scrollable">
           <input type="hidden" id="report-id" name="id">
-          <div class="form-row">
-            <div class="form-field">
-              <label>店舗 <span class="required">*</span></label>
-              <select id="report-store" name="store_id" required>
-                <option value="">選択してください</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label>担当者</label>
-              <select id="report-worker" name="worker_id">
-                <option value="">選択してください</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-field">
-              <label>作業日 <span class="required">*</span></label>
-              <input type="date" id="report-date" name="work_date" required>
-            </div>
-            <div class="form-field">
-              <label>作業時間</label>
-              <div class="time-range">
-                <input type="time" id="report-start" name="start_time">
-                <span>〜</span>
-                <input type="time" id="report-end" name="end_time">
+          
+          <div class="report-container-modal">
+            <!-- ヘッダー部分（ピンク背景） -->
+            <header class="report-header-modal">
+              <div class="report-header-content-modal">
+                <div class="form-group-inline-modal">
+                  <label class="form-label-inline-modal">店舗 <span class="required">*</span></label>
+                  <select id="report-store" name="store_id" class="form-select-inline-modal" required>
+                    <option value="">店舗を選択</option>
+                  </select>
+                  <input type="hidden" id="report-store-name" name="store_name">
+                </div>
+                <div class="form-group-inline-modal">
+                  <label class="form-label-inline-modal">清掃日 <span class="required">*</span></label>
+                  <input type="date" id="report-date" name="cleaning_date" class="form-input-inline-modal" required>
+                </div>
+                <div class="form-group-inline-modal">
+                  <label class="form-label-inline-modal">開始時刻</label>
+                  <input type="time" id="report-start" name="cleaning_start_time" class="form-input-inline-modal">
+                </div>
+                <div class="form-group-inline-modal">
+                  <label class="form-label-inline-modal">終了時刻</label>
+                  <input type="time" id="report-end" name="cleaning_end_time" class="form-input-inline-modal">
+                </div>
               </div>
+            </header>
+            
+            <!-- 実施清掃項目リスト -->
+            <div class="items-list-bar-modal">
+              <div class="items-list-modal">
+                <span class="items-list-label-modal">実施清掃項目</span>
+                <div class="items-list-items-modal" id="cleaning-items-list-modal">
+                  <span class="items-list-empty-modal">項目を追加してください</span>
+                </div>
+              </div>
+              <button type="button" class="btn-add-item-modal" id="add-work-item-modal">
+                <i class="fas fa-plus"></i>
+                項目を追加
+              </button>
             </div>
-          </div>
-          <div class="form-field">
-            <label>作業内容</label>
-            <textarea id="report-content" name="content" rows="4" placeholder="作業内容を入力..."></textarea>
-          </div>
-          <div class="form-field">
-            <label>備考</label>
-            <textarea id="report-notes" name="notes" rows="2" placeholder="備考があれば入力..."></textarea>
+            
+            <!-- 清掃項目の詳細 -->
+            <div class="report-main-modal" id="work-items-container-modal">
+              <!-- 清掃項目が動的に追加される -->
+            </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline" onclick="document.getElementById('new-dialog').close()">キャンセル</button>
-          <button type="submit" class="btn btn-primary">保存</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-check-circle"></i>
+            レポートを作成
+          </button>
         </div>
       </form>
     </div>
@@ -487,14 +500,26 @@
       color: #94a3b8;
       cursor: pointer;
     }
-    .modal-body { padding: 24px; }
+    .modal-dialog-large {
+      max-width: 95vw;
+      width: 900px;
+      max-height: 95vh;
+    }
+    .modal-body { padding: 0; }
+    .modal-body-scrollable {
+      max-height: calc(95vh - 140px);
+      overflow-y: auto;
+      padding: 0;
+    }
     .modal-footer {
       display: flex;
       justify-content: flex-end;
       gap: 12px;
       padding: 16px 24px;
       border-top: 1px solid #e2e8f0;
-      background: #f8fafc;
+      background: #fff;
+      position: sticky;
+      bottom: 0;
     }
 
     /* フォーム */
@@ -515,6 +540,286 @@
     .time-range { display: flex; align-items: center; gap: 8px; }
     .time-range input { flex: 1; }
     .required { color: var(--danger); }
+
+    /* モーダル内レポートコンテナ */
+    .report-container-modal {
+      background: #fff;
+      border-radius: 0;
+      overflow: hidden;
+    }
+    .report-header-modal {
+      background: #FF679C;
+      color: #fff;
+      padding: 16px 24px;
+    }
+    .report-header-content-modal {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .form-group-inline-modal {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .form-label-inline-modal {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      min-width: 80px;
+    }
+    .form-select-inline-modal,
+    .form-input-inline-modal {
+      flex: 1;
+      min-width: 150px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.9);
+      color: #333;
+      font-size: 0.95rem;
+    }
+    .form-select-inline-modal:focus,
+    .form-input-inline-modal:focus {
+      outline: none;
+      border-color: #fff;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+    }
+    .items-list-bar-modal {
+      background: #f9f9f9;
+      padding: 12px 24px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .items-list-modal {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+    .items-list-label-modal {
+      font-weight: 600;
+      color: #555;
+      font-size: 0.9rem;
+    }
+    .items-list-items-modal {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .items-list-item-modal {
+      font-size: 0.9rem;
+      color: #333;
+      padding: 6px 12px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+    }
+    .items-list-empty-modal {
+      font-size: 0.9rem;
+      color: #999;
+      font-style: italic;
+    }
+    .btn-add-item-modal {
+      padding: 8px 16px;
+      background: #FF679C;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .btn-add-item-modal:hover {
+      background: #e55a8a;
+    }
+    .cleaning-section-modal {
+      padding: 24px;
+      border-bottom: 1px solid #eee;
+    }
+    .cleaning-section-modal:last-child {
+      border-bottom: none;
+    }
+    .item-header-modal {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .item-title-input-modal {
+      flex: 1;
+      min-width: 200px;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #222;
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #fff;
+    }
+    .item-title-input-modal:focus {
+      outline: none;
+      border-color: #FF679C;
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .item-details-modal {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-top: 5px;
+    }
+    .detail-tag-input-modal {
+      padding: 6px 12px;
+      background: #f0f4f8;
+      color: #555;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+    .detail-tag-input-modal:focus {
+      outline: none;
+      border-color: #FF679C;
+      background: #fff;
+    }
+    .subsection-modal {
+      margin-top: 20px;
+    }
+    .subsection-title-modal {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #333;
+      border-bottom: 2px solid #333;
+      padding-bottom: 5px;
+      margin-top: 25px;
+      margin-bottom: 15px;
+    }
+    .subsection-modal textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+    .subsection-modal textarea:focus {
+      outline: none;
+      border-color: #FF679C;
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .image-grid-modal {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .image-category-modal {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+    .image-category-title-modal {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #444;
+      margin: 0;
+      text-align: center;
+      width: 100%;
+    }
+    .image-list-modal {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      width: 100%;
+      max-width: 100%;
+    }
+    .image-item-modal {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #ccc;
+      background: #fafafa;
+    }
+    .image-item-modal img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-upload-btn-modal {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background: #f9fafb;
+      border: 2px dashed #d1d5db;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .image-upload-btn-modal:hover {
+      background: #ffffff;
+      border-color: #FF679C;
+    }
+    .image-upload-btn-modal input[type="file"] {
+      display: none;
+    }
+    .image-upload-btn-modal i {
+      font-size: 2rem;
+      color: #FF679C;
+      margin-bottom: 8px;
+    }
+    .image-upload-btn-modal span {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .image-remove-modal {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 32px;
+      height: 32px;
+      background: #ef4444;
+      color: #ffffff;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .item-remove-btn-modal {
+      padding: 8px 16px;
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .item-remove-btn-modal:hover {
+      background: #dc2626;
+    }
 
     /* 詳細表示 */
     .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -754,64 +1059,179 @@
 
     // 詳細表示
     window.viewReport = function(id) {
-      const report = allReports.find(r => String(r.id) === String(id));
+      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
       if (!report) return;
 
       currentReportId = id;
       const store = allStores.find(s => s.id === report.store_id) || {};
-      const worker = allWorkers.find(w => w.id === report.worker_id) || {};
+      const worker = allWorkers.find(w => w.id === report.worker_id || w.id === report.staff_id) || {};
       const status = report.send_at || report.status === 'approved' ? 'approved' : (report.status === 'rejected' ? 'rejected' : 'pending');
 
-      // 写真表示用HTML
-      const photosHtml = report.photos ? `
-        <div class="detail-item" style="grid-column: 1/-1;">
-          <div class="detail-label">写真</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
-            <div>
-              <div style="font-size:0.75rem;color:#6b7280;margin-bottom:4px;">作業前</div>
-              <div style="display:flex;gap:4px;flex-wrap:wrap;">
-                ${(report.photos.before || []).map(p => `<img src="${p}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;">`).join('') || '<span style="color:#9ca3af;font-size:0.8rem;">なし</span>'}
-              </div>
-            </div>
-            <div>
-              <div style="font-size:0.75rem;color:#6b7280;margin-bottom:4px;">作業後</div>
-              <div style="display:flex;gap:4px;flex-wrap:wrap;">
-                ${(report.photos.after || []).map(p => `<img src="${p}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;">`).join('') || '<span style="color:#9ca3af;font-size:0.8rem;">なし</span>'}
-              </div>
-            </div>
-          </div>
-        </div>
-      ` : '';
+      // 新しい形式のレポート（work_items配列）かどうかを判定
+      const hasWorkItems = report.work_items && Array.isArray(report.work_items) && report.work_items.length > 0;
 
-      document.getElementById('detail-body').innerHTML = `
-        <div class="detail-grid">
-          <div class="detail-item">
-            <div class="detail-label">店舗</div>
-            <div class="detail-value">${escapeHtml(report.store_name || store.name || '不明')}</div>
+      let reportHtml = '';
+
+      if (hasWorkItems) {
+        // 新しい形式: レポート表示ページと同じレイアウト
+        const dateStr = formatDate(report.cleaning_date || report.work_date || report.created_at?.split('T')[0]);
+        const timeStr = (report.cleaning_start_time || report.start_time || '') && (report.cleaning_end_time || report.end_time || '')
+          ? `${report.cleaning_start_time || report.start_time} - ${report.cleaning_end_time || report.end_time}`
+          : '';
+
+        // 実施清掃項目リスト
+        const itemNames = report.work_items.map(item => item.item_name || item.name || item.item_id).filter(Boolean);
+        const itemsListHtml = itemNames.length > 0
+          ? itemNames.map(name => `<span class="items-list-item-modal">${escapeHtml(name)}</span>`).join('')
+          : '<span class="items-list-empty-modal">項目なし</span>';
+
+        // 清掃項目の詳細
+        const workItemsHtml = report.work_items.map(item => {
+          const details = item.details || {};
+          const tags = [];
+          if (details.type) tags.push(details.type);
+          if (details.count) tags.push(`${details.count}個`);
+          const tagsHtml = tags.map(tag => `<span class="detail-tag-input-modal" style="display:inline-block;margin-right:8px;">${escapeHtml(tag)}</span>`).join('');
+
+          // 写真の表示
+          const beforePhotos = item.photos?.before || [];
+          const afterPhotos = item.photos?.after || [];
+
+          const beforePhotosHtml = beforePhotos.length > 0
+            ? `<div class="image-list-modal">
+                 ${beforePhotos.map(url => `
+                   <div class="image-item-modal">
+                     <img src="${url}" alt="作業前" loading="lazy" />
+                   </div>
+                 `).join('')}
+               </div>`
+            : '<p style="color: #999; font-style: italic; padding: 20px; text-align: center;">写真なし</p>';
+
+          const afterPhotosHtml = afterPhotos.length > 0
+            ? `<div class="image-list-modal">
+                 ${afterPhotos.map(url => `
+                   <div class="image-item-modal">
+                     <img src="${url}" alt="作業後" loading="lazy" />
+                   </div>
+                 `).join('')}
+               </div>`
+            : '<p style="color: #999; font-style: italic; padding: 20px; text-align: center;">写真なし</p>';
+
+          return `
+            <section class="cleaning-section-modal">
+              <div class="item-header-modal">
+                <h3 class="item-title-input-modal" style="border:none;background:transparent;padding:0;font-size:1.6rem;font-weight:600;color:#222;">${escapeHtml(item.item_name || item.name || item.item_id)}</h3>
+                <div class="item-details-modal">${tagsHtml}</div>
+              </div>
+              ${item.work_content ? `
+                <div class="subsection-modal">
+                  <h4 class="subsection-title-modal">作業内容</h4>
+                  <p style="white-space: pre-wrap;">${escapeHtml(item.work_content)}</p>
+                </div>
+              ` : ''}
+              <div class="image-grid-modal">
+                <div class="image-category-modal">
+                  <h4 class="image-category-title-modal">作業前</h4>
+                  ${beforePhotosHtml}
+                </div>
+                <div class="image-category-modal">
+                  <h4 class="image-category-title-modal">作業後</h4>
+                  ${afterPhotosHtml}
+                </div>
+              </div>
+              ${item.work_memo ? `
+                <div class="subsection-modal">
+                  <h4 class="subsection-title-modal">作業メモ</h4>
+                  <p style="white-space: pre-wrap;">${escapeHtml(item.work_memo)}</p>
+                </div>
+              ` : ''}
+            </section>
+          `;
+        }).join('');
+
+        reportHtml = `
+          <div class="report-container-modal">
+            <header class="report-header-modal">
+              <div class="report-header-content-modal">
+                <div class="form-group-inline-modal">
+                  <span class="form-label-inline-modal">清掃日時</span>
+                  <span style="color:#fff;font-size:1rem;">${dateStr} ${timeStr}</span>
+                </div>
+                <div class="form-group-inline-modal">
+                  <span class="form-label-inline-modal">店舗</span>
+                  <span style="color:#fff;font-size:1rem;">${escapeHtml(report.store_name || store.name || '不明')}</span>
+                </div>
+                <div class="form-group-inline-modal">
+                  <span class="form-label-inline-modal">担当者</span>
+                  <span style="color:#fff;font-size:1rem;">${escapeHtml(report.staff_name || worker.name || '-')}</span>
+                </div>
+              </div>
+            </header>
+            <div class="items-list-bar-modal">
+              <div class="items-list-modal">
+                <span class="items-list-label-modal">実施清掃項目</span>
+                <div class="items-list-items-modal">${itemsListHtml}</div>
+              </div>
+            </div>
+            <div class="report-main-modal">
+              ${workItemsHtml}
+            </div>
+          </div>
+        `;
+      } else {
+        // 古い形式: 従来の表示
+        const photosHtml = report.photos ? `
+          <div class="detail-item" style="grid-column: 1/-1;">
+            <div class="detail-label">写真</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+              <div>
+                <div style="font-size:0.75rem;color:#6b7280;margin-bottom:4px;">作業前</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                  ${(report.photos.before || []).map(p => `<img src="${p}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;">`).join('') || '<span style="color:#9ca3af;font-size:0.8rem;">なし</span>'}
+                </div>
+              </div>
+              <div>
+                <div style="font-size:0.75rem;color:#6b7280;margin-bottom:4px;">作業後</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                  ${(report.photos.after || []).map(p => `<img src="${p}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;">`).join('') || '<span style="color:#9ca3af;font-size:0.8rem;">なし</span>'}
+                </div>
+              </div>
+            </div>
+          </div>
+        ` : '';
+
+        reportHtml = `
+          <div class="detail-grid">
+            <div class="detail-item">
+              <div class="detail-label">店舗</div>
+              <div class="detail-value">${escapeHtml(report.store_name || store.name || '不明')}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">担当者</div>
+              <div class="detail-value">${escapeHtml(report.staff_name || worker.name || '-')}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">作業日</div>
+              <div class="detail-value">${formatDate(report.work_date || report.cleaning_date || report.created_at?.split('T')[0])}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">作業時間</div>
+              <div class="detail-value">${report.start_time || report.cleaning_start_time || '-'} 〜 ${report.end_time || report.cleaning_end_time || '-'}</div>
+            </div>
+            ${photosHtml}
           </div>
           <div class="detail-item">
-            <div class="detail-label">担当者</div>
-            <div class="detail-value">${escapeHtml(report.staff_name || worker.name || '-')}</div>
+            <div class="detail-label">作業内容</div>
+            <div class="detail-value">${escapeHtml(report.content || '-')}</div>
           </div>
           <div class="detail-item">
-            <div class="detail-label">作業日</div>
-            <div class="detail-value">${formatDate(report.work_date || report.cleaning_date || report.created_at?.split('T')[0])}</div>
+            <div class="detail-label">備考</div>
+            <div class="detail-value">${escapeHtml(report.notes || '-')}</div>
           </div>
-          <div class="detail-item">
-            <div class="detail-label">作業時間</div>
-            <div class="detail-value">${report.start_time || report.cleaning_start_time || '-'} 〜 ${report.end_time || report.cleaning_end_time || '-'}</div>
-          </div>
-          ${photosHtml}
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">作業内容</div>
-          <div class="detail-value">${escapeHtml(report.content || (report.work_items?.map(w => w.name).join(', ')) || '-')}</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">備考</div>
-          <div class="detail-value">${escapeHtml(report.notes || report.work_memo || '-')}</div>
-        </div>
-      `;
+        `;
+      }
+
+      document.getElementById('detail-body').innerHTML = reportHtml;
 
       // 承認済みなら承認/却下ボタンを非表示
       document.getElementById('btn-approve').style.display = status === 'approved' ? 'none' : '';
@@ -982,52 +1402,361 @@
       // 新規作成
       document.getElementById('btn-new-report').addEventListener('click', () => {
         document.getElementById('form-title').textContent = '新規レポート作成';
-        document.getElementById('report-form').reset();
+        document.getElementById('report-form-modal').reset();
         document.getElementById('report-id').value = '';
         document.getElementById('report-date').value = new Date().toISOString().split('T')[0];
+        // モーダル内のコンテナをクリア
+        document.getElementById('work-items-container-modal').innerHTML = '';
+        document.getElementById('cleaning-items-list-modal').innerHTML = '<span class="items-list-empty-modal">項目を追加してください</span>';
+        // 初期項目を追加
+        modalWorkItemCounter = 0;
+        addWorkItemModal();
         document.getElementById('new-dialog').showModal();
       });
 
       // テストデータクリア
       document.getElementById('btn-clear-test').addEventListener('click', clearAllTestReports);
 
-      // フォーム送信
-      document.getElementById('report-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const id = document.getElementById('report-id').value;
-        const data = {
-          store_id: parseInt(document.getElementById('report-store').value) || null,
-          worker_id: document.getElementById('report-worker').value || null,
-          work_date: document.getElementById('report-date').value,
-          start_time: document.getElementById('report-start').value,
-          end_time: document.getElementById('report-end').value,
-          content: document.getElementById('report-content').value,
-          notes: document.getElementById('report-notes').value,
-          status: 'pending'
-        };
+      // モーダル用の変数と関数
+      let modalWorkItemCounter = 0;
 
-        try {
-          if (id) {
-            await fetch(`${API_BASE}/reports/${id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data)
-            });
-          } else {
-            data.id = 'R' + Date.now();
-            data.created_at = new Date().toISOString();
-            await fetch(`${API_BASE}/reports`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data)
+      // モーダル用: 画像の最適化
+      function optimizeImageModal(file, maxWidth = 800, quality = 0.8) {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              
+              if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+              }
+              
+              canvas.width = width;
+              canvas.height = height;
+              
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              canvas.toBlob(resolve, 'image/jpeg', quality);
+            };
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // モーダル用: Base64に変換
+      function blobToBase64Modal(blob) {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      // モーダル用: 清掃項目リストを更新
+      function updateCleaningItemsListModal() {
+        const container = document.getElementById('cleaning-items-list-modal');
+        const items = document.querySelectorAll('.cleaning-section-modal');
+        
+        if (items.length === 0) {
+          container.innerHTML = '<span class="items-list-empty-modal">項目を追加してください</span>';
+          return;
+        }
+        
+        const itemNames = Array.from(items).map(section => {
+          const input = section.querySelector('.item-title-input-modal');
+          return input ? input.value || '未入力' : '未入力';
+        }).filter(name => name !== '未入力');
+        
+        if (itemNames.length === 0) {
+          container.innerHTML = '<span class="items-list-empty-modal">項目を追加してください</span>';
+          return;
+        }
+        
+        container.innerHTML = itemNames.map(name => 
+          `<span class="items-list-item-modal">${name}</span>`
+        ).join('');
+      }
+
+      // モーダル用: 清掃項目を追加
+      function addWorkItemModal(itemId = null, itemName = null) {
+        modalWorkItemCounter++;
+        const container = document.getElementById('work-items-container-modal');
+        const itemIdValue = itemId || `work-item-modal-${modalWorkItemCounter}`;
+        const itemNameValue = itemName || '';
+        
+        const workItemSection = document.createElement('section');
+        workItemSection.className = 'cleaning-section-modal';
+        workItemSection.dataset.itemId = itemIdValue;
+        workItemSection.innerHTML = `
+          <div class="item-header-modal">
+            <input type="text" class="item-title-input-modal" placeholder="清掃項目名（例: グリストラップ）" value="${itemNameValue}" data-item-id="${itemIdValue}">
+            <div class="item-details-modal">
+              <input type="text" class="detail-tag-input-modal" placeholder="タイプ（例: 床置き型）" style="width: 150px;">
+              <input type="text" class="detail-tag-input-modal" placeholder="個数（例: 2個）" style="width: 100px;">
+            </div>
+            <button type="button" class="item-remove-btn-modal" onclick="removeWorkItemModal('${itemIdValue}')">
+              <i class="fas fa-trash"></i>
+              削除
+            </button>
+          </div>
+          <div class="subsection-modal">
+            <h4 class="subsection-title-modal">作業内容</h4>
+            <textarea class="work-item-content-modal" placeholder="作業内容を入力してください"></textarea>
+          </div>
+          <div class="image-grid-modal">
+            <div class="image-category-modal">
+              <h4 class="image-category-title-modal">作業前</h4>
+              <div class="image-list-modal" data-category="before" data-item-id="${itemIdValue}">
+                <div class="image-item-modal">
+                  <label class="image-upload-btn-modal">
+                    <input type="file" accept="image/*" multiple data-category="before" data-item-id="${itemIdValue}" />
+                    <i class="fas fa-camera"></i>
+                    <span>写真を追加</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="image-category-modal">
+              <h4 class="image-category-title-modal">作業後</h4>
+              <div class="image-list-modal" data-category="after" data-item-id="${itemIdValue}">
+                <div class="image-item-modal">
+                  <label class="image-upload-btn-modal">
+                    <input type="file" accept="image/*" multiple data-category="after" data-item-id="${itemIdValue}" />
+                    <i class="fas fa-camera"></i>
+                    <span>写真を追加</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="subsection-modal">
+            <h4 class="subsection-title-modal">作業メモ</h4>
+            <textarea class="work-item-memo-modal" placeholder="特記事項を入力してください"></textarea>
+          </div>
+        `;
+        
+        container.appendChild(workItemSection);
+        
+        // タイトル入力のイベントリスナー（リスト更新用）
+        const titleInput = workItemSection.querySelector('.item-title-input-modal');
+        titleInput.addEventListener('input', updateCleaningItemsListModal);
+        
+        // 写真アップロードのイベントリスナー
+        workItemSection.querySelectorAll('input[type="file"]').forEach(input => {
+          console.log('[Modal] Adding event listener to file input', input);
+          // changeイベントを直接設定
+          input.addEventListener('change', function(e) {
+            console.log('[Modal] File input change event fired', e.target.files);
+            handlePhotoUploadModal(e);
+          });
+          // labelクリックでも確実に動作するように
+          const label = input.closest('label');
+          if (label) {
+            label.addEventListener('click', function(e) {
+              // label内のinput以外をクリックした場合は、inputをクリック
+              if (e.target !== input && !input.contains(e.target)) {
+                e.preventDefault();
+                input.click();
+              }
             });
           }
+        });
+        
+        updateCleaningItemsListModal();
+      }
+
+      // モーダル用: 清掃項目を削除
+      window.removeWorkItemModal = function(itemId) {
+        const section = document.querySelector(`[data-item-id="${itemId}"].cleaning-section-modal`);
+        if (section && confirm('この清掃項目を削除しますか？')) {
+          section.remove();
+          updateCleaningItemsListModal();
+        }
+      };
+
+      // モーダル用: 写真アップロード処理
+      async function handlePhotoUploadModal(e) {
+        console.log('[Modal] handlePhotoUploadModal called', e.target, e.target.files);
+        const input = e.target;
+        const files = Array.from(input.files || []);
+        if (files.length === 0) {
+          console.log('[Modal] No files selected');
+          return;
+        }
+        
+        const photoGrid = input.closest('.image-list-modal');
+        if (!photoGrid) {
+          console.error('[Modal] Could not find .image-list-modal');
+          return;
+        }
+        const category = photoGrid.dataset.category;
+        const itemId = photoGrid.dataset.itemId;
+        console.log('[Modal] Category:', category, 'ItemId:', itemId);
+        
+        for (const file of files) {
+          if (!file.type.startsWith('image/')) {
+            console.warn('[Modal] Skipping non-image file:', file.name);
+            continue;
+          }
           
+          try {
+            console.log('[Modal] Processing file:', file.name);
+            const optimizedBlob = await optimizeImageModal(file, 800, 0.8);
+            const base64 = await blobToBase64Modal(optimizedBlob);
+            
+            const photoItem = document.createElement('div');
+            photoItem.className = 'image-item-modal';
+            photoItem.innerHTML = `
+              <img src="${base64}" alt="Uploaded photo">
+              <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
+                <i class="fas fa-times"></i>
+              </button>
+            `;
+            
+            const uploadBtn = input.closest('.image-item-modal');
+            if (!uploadBtn) {
+              console.error('[Modal] Could not find .image-item-modal');
+              continue;
+            }
+            uploadBtn.parentNode.insertBefore(photoItem, uploadBtn);
+            
+            photoItem.dataset.base64 = base64;
+            console.log('[Modal] Photo added successfully');
+          } catch (error) {
+            console.error('[Modal] Error uploading photo:', error);
+            alert(`写真「${file.name}」のアップロードに失敗しました: ${error.message}`);
+          }
+        }
+        
+        // ファイル入力をリセット（同じファイルを再度選択できるように）
+        input.value = '';
+      }
+
+      // モーダル用: 写真を削除
+      window.removePhotoModal = function(button) {
+        const photoItem = button.closest('.image-item-modal');
+        photoItem.remove();
+      };
+
+      // モーダル用: 項目を追加ボタン
+      document.getElementById('add-work-item-modal')?.addEventListener('click', function() {
+        addWorkItemModal();
+      });
+
+      // モーダル用: 店舗選択の変更
+      document.getElementById('report-store')?.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        document.getElementById('report-store-name').value = selectedOption.text;
+      });
+
+      // フォーム送信（モーダル用）
+      document.getElementById('report-form-modal').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        try {
+          const formData = {
+            store_id: document.getElementById('report-store').value,
+            store_name: document.getElementById('report-store-name').value,
+            cleaning_date: document.getElementById('report-date').value,
+            cleaning_start_time: document.getElementById('report-start').value,
+            cleaning_end_time: document.getElementById('report-end').value,
+            work_items: []
+          };
+          
+          // 清掃項目を収集
+          document.querySelectorAll('.cleaning-section-modal').forEach(section => {
+            const itemId = section.dataset.itemId;
+            const titleInput = section.querySelector('.item-title-input-modal');
+            const itemName = titleInput.value.trim();
+            
+            if (!itemName) {
+              return;
+            }
+            
+            const detailInputs = section.querySelectorAll('.detail-tag-input-modal');
+            const type = detailInputs[0]?.value.trim() || '';
+            const count = detailInputs[1]?.value.trim() || '';
+            
+            const workItem = {
+              item_id: itemId,
+              item_name: itemName,
+              details: {
+                type: type,
+                count: count
+              },
+              work_content: section.querySelector('.work-item-content-modal').value.trim(),
+              work_memo: section.querySelector('.work-item-memo-modal').value.trim(),
+              photos: {
+                before: [],
+                after: []
+              }
+            };
+            
+            // 作業前の写真
+            section.querySelectorAll('[data-category="before"] .image-item-modal img').forEach(img => {
+              const photoItem = img.closest('.image-item-modal');
+              if (photoItem.dataset.base64) {
+                workItem.photos.before.push(photoItem.dataset.base64);
+              }
+            });
+            
+            // 作業後の写真
+            section.querySelectorAll('[data-category="after"] .image-item-modal img').forEach(img => {
+              const photoItem = img.closest('.image-item-modal');
+              if (photoItem.dataset.base64) {
+                workItem.photos.after.push(photoItem.dataset.base64);
+              }
+            });
+            
+            formData.work_items.push(workItem);
+          });
+          
+          // バリデーション
+          if (!formData.store_id) {
+            alert('店舗を選択してください');
+            return;
+          }
+          
+          if (!formData.cleaning_date) {
+            alert('清掃日を入力してください');
+            return;
+          }
+          
+          if (formData.work_items.length === 0) {
+            alert('少なくとも1つの清掃項目を追加してください');
+            return;
+          }
+          
+          // APIに送信
+          const idToken = await getFirebaseIdToken();
+          const response = await fetch(`${REPORT_API}/staff/reports`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${idToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'レポートの作成に失敗しました');
+          }
+          
+          const result = await response.json();
+          alert('レポートを作成しました');
           document.getElementById('new-dialog').close();
           await loadReports();
-        } catch (e) {
-          alert('保存に失敗しました');
+        } catch (error) {
+          console.error('Error submitting report:', error);
+          alert(`エラー: ${error.message}`);
         }
       });
     }
