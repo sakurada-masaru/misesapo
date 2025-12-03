@@ -647,6 +647,8 @@
       '/service.html',
       '/service/',           // /service/1.html など
       '/about.html',
+      '/greeting.html',      // 代表あいさつ
+      '/partner.html',       // パートナーシップ
       '/contact.html',
       '/voice.html',
       '/announcements.html',

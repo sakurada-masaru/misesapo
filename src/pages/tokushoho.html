@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>特定商取引法に基づく表記 | ミセサポ</title>
+        <script>
+            // baseタグは使用しない（すべてのパスを絶対URLで解決する）
+            // baseタグがあると、絶対URLも相対パスとして解釈される可能性があるため
+        </script>
+        <!--GoogleFonts(Noto Sans JP)-->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        <!--GoogleFonts(Noto Sans JP) end-->
+        <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+        <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+        <link rel="stylesheet" href="/css/style.css">
+        <link rel="stylesheet" href="/css/header.css">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: #FDEDED;
+                color: #333;
+                line-height: 1.8;
+            }
+
+            .tokushoho-page {
+                padding-top: 100px;
+            }
+
+            .tokushoho-hero {
+                background: linear-gradient(135deg, #FF679C 0%, #FF008C 100%);
+                color: #fff;
+                padding: 30px 20px;
+                text-align: center;
+            }
+
+            .tokushoho-hero h1 {
+                font-size: 36px;
+                font-weight: 700;
+                margin-bottom: 10px;
+                letter-spacing: 0.1em;
+            }
+
+            .tokushoho-hero p {
+                font-size: 16px;
+                opacity: 0.95;
+            }
+
+            .breadcrumb {
+                max-width: 1000px;
+                margin: 0 auto;
+                padding: 20px 20px 0;
+                font-size: 14px;
+                color: #666;
+            }
+
+            .breadcrumb-inner {
+                display: inline-block;
+                padding-bottom: 8px;
+                border-bottom: 1px solid #e5e5e5;
+            }
+
+            .breadcrumb a {
+                color: #666;
+                text-decoration: none;
+                transition: color 0.3s ease;
+            }
+
+            .breadcrumb a:hover {
+                color: #FF679C;
+            }
+
+            .breadcrumb span {
+                margin: 0 8px;
+                color: #999;
+            }
+
+            .breadcrumb .current {
+                color: #333;
+                font-weight: 500;
+            }
+
+            .tokushoho-content {
+                max-width: 1000px;
+                margin: 0 auto;
+                padding: 60px 20px;
+            }
+
+            .tokushoho-section {
+                background: #fff;
+                border-radius: 12px;
+                padding: 40px;
+                margin-bottom: 30px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            }
+
+            .tokushoho-section h2 {
+                font-size: 28px;
+                font-weight: 700;
+                color: #FF679C;
+                margin-bottom: 30px;
+                padding-bottom: 15px;
+                border-bottom: 3px solid #FF679C;
+            }
+
+            .tokushoho-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                font-size: 16px;
+            }
+
+            .tokushoho-table th {
+                background: #FDEDED;
+                padding: 18px 20px;
+                text-align: left;
+                font-weight: 700;
+                border: 1px solid #e5e5e5;
+                vertical-align: top;
+                width: 200px;
+            }
+
+            .tokushoho-table td {
+                padding: 18px 20px;
+                border: 1px solid #e5e5e5;
+                line-height: 1.8;
+            }
+
+            .tokushoho-note {
+                background: #FDEDED;
+                padding: 20px;
+                border-radius: 8px;
+                margin-top: 20px;
+                border-left: 4px solid #FF679C;
+            }
+
+            .tokushoho-note p {
+                margin: 0;
+                font-size: 14px;
+                line-height: 1.8;
+            }
+
+            .copyright {
+                text-align: center;
+                padding: 40px 20px;
+                color: #fff;
+                font-size: 14px;
+                background: #FF679C;
+            }
+
+            @media (max-width: 768px) {
+                .tokushoho-hero h1 {
+                    font-size: 28px;
+                }
+
+                .tokushoho-content {
+                    padding: 40px 15px;
+                }
+
+                .tokushoho-section {
+                    padding: 25px 20px;
+                }
+
+                .tokushoho-section h2 {
+                    font-size: 24px;
+                }
+
+                .tokushoho-table {
+                    font-size: 14px;
+                }
+
+                .tokushoho-table th,
+                .tokushoho-table td {
+                    padding: 12px 10px;
+                    display: block;
+                    width: 100%;
+                }
+
+                .tokushoho-table th {
+                    border-bottom: none;
+                }
+
+                .tokushoho-table td {
+                    border-top: none;
+                }
+
+                .tokushoho-table tr {
+                    display: block;
+                    margin-bottom: 15px;
+                    border: 1px solid #e5e5e5;
+                    border-radius: 8px;
+                    overflow: hidden;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <!-- 通常ヘッダー -->
+        <header class="normal-header visible">
+            <div class="normal-header-inner">
+                <div class="normal-header-logo">
+                    <a href="/">
+                        <img src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+                    </a>
+                </div>
+                <nav class="normal-header-nav">
+                    <a href="/">TOP</a>
+                    <a href="/service.html">対応可能サービス</a>
+                    <a href="/lp.html#voice">お客様の声</a>
+                    <a href="/customers-support-desk.html">カスタマーズサポート</a>
+                    <a href="/index.html#news">お知らせ</a>
+                    <a href="/privacy-policy.html">規約＆ポリシー</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="tokushoho-page">
+            <!-- ヒーローセクション -->
+            <section class="tokushoho-hero">
+                <h1>特定商取引法に基づく表記</h1>
+                <p>Specified Commercial Transaction Act</p>
+            </section>
+
+            <!-- パンくずリスト -->
+            <div class="breadcrumb">
+                <div class="breadcrumb-inner">
+                    <a href="/">TOP</a>
+                    <span>></span>
+                    <a href="/about.html">企業情報</a>
+                    <span>></span>
+                    <span class="current">特定商取引法に基づく表記</span>
+                </div>
+            </div>
+
+            <!-- 特定商取引法に基づく表記コンテンツ -->
+            <div class="tokushoho-content">
+                <section class="tokushoho-section">
+                    <h2>特定商取引法に基づく表記</h2>
+                    
+                    <table class="tokushoho-table">
+                        <tr>
+                            <th>販売事業者名</th>
+                            <td>株式会社ミセサポ</td>
+                        </tr>
+                        <tr>
+                            <th>代表者名</th>
+                            <td>代表取締役 櫻田 勝</td>
+                        </tr>
+                        <tr>
+                            <th>所在地</th>
+                            <td>〒160-0023<br>東京都新宿区西新宿7-7-26 ワコーレ新宿第一ビル1101</td>
+                        </tr>
+                        <tr>
+                            <th>電話番号</th>
+                            <td>03-6822-6691<br>
+                                <small>※お問い合わせはメールまたはお問い合わせフォームよりお願いいたします</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>メールアドレス</th>
+                            <td>info@misesapo.co.jp</td>
+                        </tr>
+                        <tr>
+                            <th>ホームページURL</th>
+                            <td>https://misesapo.co.jp</td>
+                        </tr>
+                        <tr>
+                            <th>販売価格</th>
+                            <td>各サービスページに記載の価格（税込表示）<br>
+                                ※詳細はお見積りにてご案内いたします
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>販売価格以外の必要料金</th>
+                            <td>特になし<br>
+                                ※特殊な作業や追加オプションが発生する場合は、事前にお見積りにてご案内いたします
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>支払方法</th>
+                            <td>・銀行振込<br>
+                                ・クレジットカード決済<br>
+                                ・請求書払い（法人のお客様のみ、審査あり）
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>支払時期</th>
+                            <td>・銀行振込：サービス提供前または請求書発行後14日以内<br>
+                                ・クレジットカード：サービス申込時<br>
+                                ・請求書払い：請求書発行後、月末締め翌月末払い
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>サービス提供時期</th>
+                            <td>お申し込み確認後、お客様とご相談の上、日程を調整いたします。<br>
+                                通常、お申し込みから1週間〜2週間程度でサービスを提供いたします。<br>
+                                ※繁忙期や地域によっては、お時間をいただく場合がございます
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>返品・キャンセルについて</th>
+                            <td>
+                                <strong>【キャンセルポリシー】</strong><br>
+                                ・サービス実施日の7日前まで：キャンセル料なし<br>
+                                ・サービス実施日の3日前〜6日前：サービス料金の30%<br>
+                                ・サービス実施日の前日〜2日前：サービス料金の50%<br>
+                                ・サービス実施日当日：サービス料金の100%<br><br>
+                                <strong>【返金について】</strong><br>
+                                キャンセル料を差し引いた金額を、お支払い方法に応じて返金いたします。<br>
+                                ※サービス提供後の返金はお受けできません
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>サービス内容の変更</th>
+                            <td>サービス内容の変更をご希望の場合は、サービス実施日の3日前までにご連絡ください。<br>
+                                変更内容によっては、追加料金が発生する場合がございます。
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>動作環境</th>
+                            <td>【ウェブサイト閲覧推奨環境】<br>
+                                ・Google Chrome 最新版<br>
+                                ・Safari 最新版<br>
+                                ・Microsoft Edge 最新版<br>
+                                ・Firefox 最新版
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="tokushoho-note">
+                        <p><strong>ご注意</strong>：上記の内容は予告なく変更される場合がございます。最新の情報は当ページにてご確認ください。ご不明な点がございましたら、お気軽にお問い合わせください。</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- コピーライト -->
+        <div class="copyright">
+            © 2025 ミセサポ | 株式会社ミセサポ
+        </div>
+
+        <script src="/js/swiper-bundle.min.js"></script>
+        <script src="/js/script.js"></script>
+        <script>
+            // パスを解決（GitHub Pages対応）
+            function resolvePath(path) {
+                if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                    return path;
+                }
+                
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+                
+                if (isLocalDev || isCustomDomain) {
+                    return path.startsWith('/') ? path : '/' + path;
+                }
+                
+                // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+                let resolvedPath;
+                if (path.startsWith('/misesapo/')) {
+                    resolvedPath = path;
+                } else if (path.startsWith('/')) {
+                    resolvedPath = '/misesapo' + path;
+                } else {
+                    resolvedPath = '/misesapo/' + path;
+                }
+                
+                return window.location.origin + resolvedPath;
+            }
+            
+            // 特定商取引法ページでは通常ヘッダーを常時表示
+            document.addEventListener('DOMContentLoaded', function() {
+                const normalHeader = document.querySelector('.normal-header');
+                if (normalHeader) {
+                    normalHeader.classList.add('visible');
+                    // スクロールイベントでクラスを削除しないようにする
+                    const originalRemove = normalHeader.classList.remove;
+                    normalHeader.classList.remove = function(...args) {
+                        if (args[0] !== 'visible') {
+                            originalRemove.apply(this, args);
+                        }
+                    };
+                }
+                
+                // リンクを解決
+                document.querySelectorAll('a[href^="/"]').forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                        link.href = resolvePath(href);
+                    }
+                });
+                
+                // 画像を解決
+                document.querySelectorAll('img[src^="/"]').forEach(img => {
+                    const src = img.getAttribute('src');
+                    if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+                        img.src = resolvePath(src);
+                    }
+                });
+            });
+        </script>
+        <script src="/js/header.js"></script>
+    </body>
+</html>
+

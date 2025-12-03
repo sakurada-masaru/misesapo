@@ -133,6 +133,9 @@ const ROLE_CONFIG = {
     '/customers.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/customers-support-desk.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/support/': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/tokushoho.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/about.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/lp.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     
     // 顧客向けページ（ユーザーと清掃員がアクセス可能、コンシェルジュと管理者も可）
     '/mypage.html': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
