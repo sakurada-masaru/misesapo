@@ -159,6 +159,19 @@
   transform: translateX(2px);
 }
 
+/* マイページへのリンク（目立たせる） */
+.nav-item.nav-item-mypage {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  font-weight: 600;
+}
+
+.nav-item.nav-item-mypage:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #fff;
+  transform: translateX(2px);
+}
+
 .sidebar.collapsed .nav-divider {
   margin: 8px 8px;
 }
