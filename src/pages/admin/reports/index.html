@@ -12,6 +12,9 @@
         <h1>レポート管理</h1>
       </div>
       <div class="topbar-right">
+        <button type="button" class="btn btn-outline" id="btn-clear-test" style="margin-right: 12px; background: #fee2e2; color: #dc2626; border-color: #dc2626;">
+          <i class="fas fa-trash-alt"></i> テストデータをクリア
+        </button>
         <button type="button" class="btn btn-primary" id="btn-new-report">
           <i class="fas fa-plus"></i> 新規作成
         </button>
@@ -840,7 +843,17 @@
       if (!confirm('このレポートを削除しますか？')) return;
       
       try {
-        await fetch(`${API_BASE}/reports/${id}`, { method: 'DELETE' });
+        // 新レポートAPIから削除を試みる
+        try {
+          const idToken = await getFirebaseIdToken();
+          await fetch(`${REPORT_API}/staff/reports/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${idToken}` }
+          });
+        } catch (e) {
+          // 旧APIから削除を試みる
+          await fetch(`${API_BASE}/reports/${id}`, { method: 'DELETE' });
+        }
         allReports = allReports.filter(r => String(r.id) !== String(id));
         updateStats();
         filterAndRender();
@@ -848,6 +861,60 @@
         alert('削除に失敗しました');
       }
     };
+
+    // テストデータを全削除
+    async function clearAllTestReports() {
+      if (!confirm('すべてのテストレポートを削除しますか？\nこの操作は取り消せません。')) return;
+      
+      try {
+        const idToken = await getFirebaseIdToken();
+        let deletedCount = 0;
+        let failedCount = 0;
+        
+        // すべてのレポートを削除
+        for (const report of allReports) {
+          try {
+            const reportId = report.id || report.report_id;
+            await fetch(`${REPORT_API}/staff/reports/${reportId}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${idToken}` }
+            });
+            deletedCount++;
+          } catch (e) {
+            console.error(`Failed to delete report ${report.id}:`, e);
+            failedCount++;
+          }
+        }
+        
+        if (deletedCount > 0) {
+          alert(`${deletedCount}件のレポートを削除しました${failedCount > 0 ? `\n${failedCount}件の削除に失敗しました` : ''}`);
+          await loadReports();
+        } else {
+          alert('削除できるレポートがありませんでした');
+        }
+      } catch (e) {
+        console.error('Error clearing test reports:', e);
+        alert('テストデータの削除に失敗しました');
+      }
+    }
+
+    // Firebase認証からIDトークンを取得
+    async function getFirebaseIdToken() {
+      try {
+        if (!window.FirebaseAuth) {
+          return 'mock-token';
+        }
+        const currentUser = window.FirebaseAuth.currentUser;
+        if (!currentUser) {
+          return 'mock-token';
+        }
+        const idToken = await currentUser.getIdToken();
+        return idToken;
+      } catch (error) {
+        console.error('Error getting Firebase ID token:', error);
+        return 'mock-token';
+      }
+    }
 
     // 承認
     document.getElementById('btn-approve').addEventListener('click', async () => {
@@ -920,6 +987,9 @@
         document.getElementById('report-date').value = new Date().toISOString().split('T')[0];
         document.getElementById('new-dialog').showModal();
       });
+
+      // テストデータクリア
+      document.getElementById('btn-clear-test').addEventListener('click', clearAllTestReports);
 
       // フォーム送信
       document.getElementById('report-form').addEventListener('submit', async (e) => {

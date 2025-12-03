@@ -4,69 +4,61 @@
 
 <main id="main" class="container admin-report-new">
   <div class="page-header">
-    <a href="/admin/reports/" class="back-btn">
+    <a href="/admin/reports" class="back-btn">
       <i class="fas fa-chevron-left"></i>
+      レポート一覧に戻る
     </a>
     <h1 class="page-title">レポート作成</h1>
   </div>
 
   <form id="report-form" class="report-form">
-    <!-- 作業情報 -->
-    <div class="form-section">
-      <h2 class="section-title">作業情報</h2>
-      <div class="form-group">
-        <label class="form-label">店舗 <span class="required">*</span></label>
-        <select name="store_id" id="store-id" class="form-select" required>
-          <option value="">店舗を選択</option>
-          <option value="store-001">Darts Bar A's 神楽坂店</option>
-          <option value="store-002">大塚店</option>
-          <option value="store-003">高円寺店</option>
-          <option value="store-004">日本橋茅場町店</option>
-        </select>
-        <input type="hidden" name="store_name" id="store-name">
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">清掃日 <span class="required">*</span></label>
-          <input type="date" name="cleaning_date" id="cleaning-date" class="form-input" required>
+    <div class="report-container">
+      <!-- ヘッダー部分（ピンク背景） -->
+      <header class="report-header">
+        <div class="report-header-content">
+          <div class="form-group-inline">
+            <label class="form-label-inline">店舗 <span class="required">*</span></label>
+            <select name="store_id" id="store-id" class="form-select-inline" required>
+              <option value="">店舗を選択</option>
+              <option value="store-001">Darts Bar A's 神楽坂店</option>
+              <option value="store-002">大塚店</option>
+              <option value="store-003">高円寺店</option>
+              <option value="store-004">日本橋茅場町店</option>
+            </select>
+            <input type="hidden" name="store_name" id="store-name">
+          </div>
+          <div class="form-group-inline">
+            <label class="form-label-inline">清掃日 <span class="required">*</span></label>
+            <input type="date" name="cleaning_date" id="cleaning-date" class="form-input-inline" required>
+          </div>
+          <div class="form-group-inline">
+            <label class="form-label-inline">開始時刻</label>
+            <input type="time" name="cleaning_start_time" id="cleaning-start-time" class="form-input-inline">
+          </div>
+          <div class="form-group-inline">
+            <label class="form-label-inline">終了時刻</label>
+            <input type="time" name="cleaning_end_time" id="cleaning-end-time" class="form-input-inline">
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">開始時刻</label>
-          <input type="time" name="cleaning_start_time" id="cleaning-start-time" class="form-input">
+      </header>
+      
+      <!-- 実施清掃項目リスト -->
+      <div class="items-list-bar">
+        <div class="items-list">
+          <span class="items-list-label">実施清掃項目</span>
+          <div class="items-list-items" id="cleaning-items-list">
+            <span class="items-list-empty">項目を追加してください</span>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">終了時刻</label>
-          <input type="time" name="cleaning_end_time" id="cleaning-end-time" class="form-input">
-        </div>
-      </div>
-    </div>
-
-    <!-- 清掃項目 -->
-    <div class="form-section">
-      <div class="section-header">
-        <h2 class="section-title">清掃項目</h2>
-        <button type="button" class="btn btn-outline btn-sm" id="add-work-item">
+        <button type="button" class="btn-add-item" id="add-work-item">
           <i class="fas fa-plus"></i>
           項目を追加
         </button>
       </div>
-      <div id="work-items-container">
+      
+      <!-- 清掃項目の詳細 -->
+      <div class="report-main" id="work-items-container">
         <!-- 清掃項目が動的に追加される -->
-      </div>
-    </div>
-
-    <!-- 位置情報（オプション） -->
-    <div class="form-section">
-      <h2 class="section-title">位置情報（オプション）</h2>
-      <div class="location-info">
-        <button type="button" class="btn btn-outline btn-sm" id="get-location">
-          <i class="fas fa-map-marker-alt"></i>
-          現在位置を取得
-        </button>
-        <div id="location-display" class="location-display" style="display: none;">
-          <span class="location-text">取得済み</span>
-        </div>
-        <input type="hidden" name="location" id="location-data">
       </div>
     </div>
 
@@ -81,37 +73,31 @@
   </form>
 
   <style>
+    body { background: #f4f7f6; }
     .admin-report-new {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 16px;
+      max-width: 900px;
+      margin: 20px auto;
       padding-bottom: 100px;
     }
     .page-header {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #e5e7eb;
+      margin-bottom: 20px;
     }
     .back-btn {
       display: flex;
       align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
+      gap: 8px;
       color: #374151;
       text-decoration: none;
-      transition: all 0.2s;
+      font-size: 0.95rem;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: background 0.2s;
     }
     .back-btn:hover {
-      background: #f9fafb;
-      border-color: var(--primary);
-      color: var(--primary);
+      background: #f3f4f6;
     }
     .page-title {
       font-size: 1.5rem;
@@ -119,139 +105,260 @@
       color: #111827;
       margin: 0;
     }
-    .report-form {
+    .report-container {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.05);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .report-header {
+      background: #FF679C;
+      color: #fff;
+      padding: 16px 24px;
+    }
+    .report-header-content {
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 12px;
     }
-    .form-section {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .section-header {
+    .form-group-inline {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
     }
-    .section-title {
-      font-size: 1.125rem;
+    .form-label-inline {
+      font-size: 1rem;
       font-weight: 600;
-      color: #111827;
-      margin: 0;
+      color: #fff;
+      min-width: 80px;
     }
-    .form-group {
-      margin-bottom: 16px;
+    .form-select-inline,
+    .form-input-inline {
+      flex: 1;
+      min-width: 150px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.9);
+      color: #333;
+      font-size: 0.95rem;
     }
-    .form-group:last-child {
-      margin-bottom: 0;
-    }
-    .form-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr;
-      gap: 16px;
-    }
-    .form-label {
-      display: block;
-      font-weight: 600;
-      color: #374151;
-      font-size: 0.875rem;
-      margin-bottom: 8px;
+    .form-select-inline:focus,
+    .form-input-inline:focus {
+      outline: none;
+      border-color: #fff;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
     }
     .required {
-      color: #ef4444;
+      color: #fff;
+      font-weight: 700;
     }
-    .form-select,
-    .form-input {
+    .items-list-bar {
+      background: #f9f9f9;
+      padding: 12px 24px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .items-list {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+    .items-list-label {
+      font-weight: 600;
+      color: #555;
+      font-size: 0.9rem;
+    }
+    .items-list-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .items-list-item {
+      font-size: 0.9rem;
+      color: #333;
+      padding: 6px 12px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+    }
+    .items-list-empty {
+      font-size: 0.9rem;
+      color: #999;
+      font-style: italic;
+    }
+    .btn-add-item {
+      padding: 8px 16px;
+      background: #FF679C;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .btn-add-item:hover {
+      background: #e55a8a;
+    }
+    .cleaning-section {
+      padding: 24px;
+      border-bottom: 1px solid #eee;
+    }
+    .cleaning-section:last-child {
+      border-bottom: none;
+    }
+    .item-header {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .item-title-input {
+      flex: 1;
+      min-width: 200px;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #222;
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #fff;
+    }
+    .item-title-input:focus {
+      outline: none;
+      border-color: #FF679C;
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .item-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-top: 5px;
+    }
+    .detail-tag-input {
+      padding: 6px 12px;
+      background: #f0f4f8;
+      color: #555;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+    .detail-tag-input:focus {
+      outline: none;
+      border-color: #FF679C;
+      background: #fff;
+    }
+    .subsection {
+      margin-top: 20px;
+    }
+    .subsection-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #333;
+      border-bottom: 2px solid #333;
+      padding-bottom: 5px;
+      margin-top: 25px;
+      margin-bottom: 15px;
+    }
+    .subsection textarea {
       width: 100%;
+      min-height: 100px;
       padding: 12px;
       border: 1px solid #e5e7eb;
       border-radius: 8px;
       font-size: 0.95rem;
       font-family: inherit;
+      resize: vertical;
     }
-    .form-select:focus,
-    .form-input:focus {
+    .subsection textarea:focus {
       outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(255, 107, 166, 0.1);
+      border-color: #FF679C;
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
     }
-    .work-item-card {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .work-item-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .work-item-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #111827;
-    }
-    .work-item-details {
+    .image-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 16px;
+      margin-top: 20px;
     }
-    .work-item-detail {
+    .image-category {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 8px;
+      align-items: center;
     }
-    .work-item-detail label {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-    .work-item-detail input,
-    .work-item-detail textarea {
-      padding: 8px;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      font-size: 0.875rem;
-    }
-    .work-item-detail textarea {
-      resize: vertical;
-      min-height: 60px;
-    }
-    .photo-upload-section {
-      margin-top: 16px;
-    }
-    .photo-category {
-      margin-bottom: 16px;
-    }
-    .photo-category-title {
-      font-size: 0.875rem;
+    .image-category-title {
+      font-size: 1rem;
       font-weight: 600;
-      color: #374151;
-      margin-bottom: 8px;
+      color: #444;
+      margin: 0;
+      text-align: center;
+      width: 100%;
     }
-    .photo-grid {
+    .image-list {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 8px;
+      width: 100%;
+      max-width: 100%;
     }
-    .photo-item {
+    .image-item {
       position: relative;
       aspect-ratio: 1;
       border-radius: 8px;
       overflow: hidden;
+      border: 1px solid #ccc;
+      background: #fafafa;
     }
-    .photo-item img {
+    .image-item img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-    .photo-remove {
+    .image-upload-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background: #f9fafb;
+      border: 2px dashed #d1d5db;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .image-upload-btn:hover {
+      background: #ffffff;
+      border-color: #FF679C;
+    }
+    .image-upload-btn input[type="file"] {
+      display: none;
+    }
+    .image-upload-btn i {
+      font-size: 2rem;
+      color: #FF679C;
+      margin-bottom: 8px;
+    }
+    .image-upload-btn span {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .image-remove {
       position: absolute;
       top: 4px;
       right: 4px;
@@ -267,46 +374,21 @@
       justify-content: center;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-    .photo-upload-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-      background: #f9fafb;
-      border: 2px dashed #d1d5db;
-      border-radius: 8px;
+    .item-remove-btn {
+      padding: 8px 16px;
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
-    }
-    .photo-upload-btn:hover {
-      background: #ffffff;
-      border-color: var(--primary);
-    }
-    .photo-upload-btn input[type="file"] {
-      display: none;
-    }
-    .photo-upload-btn i {
-      font-size: 2rem;
-      color: var(--primary);
-      margin-bottom: 8px;
-    }
-    .photo-upload-btn span {
-      font-size: 0.875rem;
-      color: #6b7280;
-    }
-    .location-info {
       display: flex;
-      flex-direction: column;
-      gap: 12px;
+      align-items: center;
+      gap: 6px;
     }
-    .location-display {
-      padding: 12px;
-      background: #d1fae5;
-      border-radius: 8px;
-      color: #065f46;
-      font-size: 0.875rem;
+    .item-remove-btn:hover {
+      background: #dc2626;
     }
     .form-actions {
       position: fixed;
@@ -339,11 +421,11 @@
       gap: 8px;
     }
     .btn-primary {
-      background: #FF6BA6;
+      background: #FF679C;
       color: #ffffff;
     }
     .btn-primary:hover {
-      background: #FF5A9A;
+      background: #e55a8a;
     }
     .btn-outline {
       background: #ffffff;
@@ -353,28 +435,57 @@
     .btn-outline:hover {
       background: #f9fafb;
     }
-    .btn-sm {
-      padding: 8px 16px;
-      font-size: 0.875rem;
-    }
     .btn-block {
       width: 100%;
     }
     @media (max-width: 768px) {
       .admin-report-new {
-        padding: 12px;
+        margin: 0;
+        padding: 16px;
         padding-bottom: 100px;
       }
-      .form-section {
-        padding: 16px;
+      .report-container {
+        margin: 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
       }
-      .form-row {
+      .report-header-content {
+        gap: 10px;
+      }
+      .form-group-inline {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+      }
+      .form-label-inline {
+        min-width: auto;
+      }
+      .form-select-inline,
+      .form-input-inline {
+        width: 100%;
+      }
+      .items-list-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
+      }
+      .cleaning-section {
+        padding: 20px 15px;
+      }
+      .item-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .item-title-input {
+        width: 100%;
+        font-size: 1.4rem;
+      }
+      .image-grid {
         grid-template-columns: 1fr;
       }
-      .work-item-details {
-        grid-template-columns: 1fr;
-      }
-      .photo-grid {
+      .image-list {
         grid-template-columns: repeat(2, 1fr);
       }
     }
@@ -387,25 +498,19 @@
     // Firebase認証からIDトークンを取得
     async function getFirebaseIdToken() {
       try {
-        // Firebase Authが利用可能か確認
         if (!window.FirebaseAuth) {
           console.warn('[Reports] Firebase Auth is not available, using mock token');
           return 'mock-token';
         }
-        
-        // 現在のユーザーを取得
         const currentUser = window.FirebaseAuth.currentUser;
         if (!currentUser) {
           console.warn('[Reports] No authenticated user, using mock token');
           return 'mock-token';
         }
-        
-        // IDトークンを取得
         const idToken = await currentUser.getIdToken();
         return idToken;
       } catch (error) {
         console.error('[Reports] Error getting Firebase ID token:', error);
-        // エラー時はモックトークンを返す（開発環境用）
         return 'mock-token';
       }
     }
@@ -461,59 +566,63 @@
       });
     }
 
+    // 清掃項目リストを更新
+    function updateCleaningItemsList() {
+      const container = document.getElementById('cleaning-items-list');
+      const items = document.querySelectorAll('.cleaning-section');
+      
+      if (items.length === 0) {
+        container.innerHTML = '<span class="items-list-empty">項目を追加してください</span>';
+        return;
+      }
+      
+      const itemNames = Array.from(items).map(section => {
+        const input = section.querySelector('.item-title-input');
+        return input ? input.value || '未入力' : '未入力';
+      }).filter(name => name !== '未入力');
+      
+      if (itemNames.length === 0) {
+        container.innerHTML = '<span class="items-list-empty">項目を追加してください</span>';
+        return;
+      }
+      
+      container.innerHTML = itemNames.map(name => 
+        `<span class="items-list-item">${name}</span>`
+      ).join('');
+    }
+
     // 清掃項目を追加
     function addWorkItem(itemId = null, itemName = null) {
       workItemCounter++;
       const container = document.getElementById('work-items-container');
       const itemIdValue = itemId || `work-item-${workItemCounter}`;
-      const itemNameValue = itemName || '新しい清掃項目';
+      const itemNameValue = itemName || '';
       
-      const workItemCard = document.createElement('div');
-      workItemCard.className = 'work-item-card';
-      workItemCard.dataset.itemId = itemIdValue;
-      workItemCard.innerHTML = `
-        <div class="work-item-header">
-          <div class="form-group" style="flex: 1; margin: 0;">
-            <select class="form-select work-item-select" data-item-id="${itemIdValue}">
-              <option value="">清掃項目を選択</option>
-              ${availableWorkItems.map(item => `
-                <option value="${item.id}" ${item.id === itemIdValue ? 'selected' : ''}>${item.name}</option>
-              `).join('')}
-            </select>
+      const workItemSection = document.createElement('section');
+      workItemSection.className = 'cleaning-section';
+      workItemSection.dataset.itemId = itemIdValue;
+      workItemSection.innerHTML = `
+        <div class="item-header">
+          <input type="text" class="item-title-input" placeholder="清掃項目名（例: グリストラップ）" value="${itemNameValue}" data-item-id="${itemIdValue}">
+          <div class="item-details">
+            <input type="text" class="detail-tag-input" placeholder="タイプ（例: 床置き型）" style="width: 150px;">
+            <input type="text" class="detail-tag-input" placeholder="個数（例: 2個）" style="width: 100px;">
           </div>
-          <button type="button" class="btn btn-outline btn-sm" onclick="removeWorkItem('${itemIdValue}')">
+          <button type="button" class="item-remove-btn" onclick="removeWorkItem('${itemIdValue}')">
             <i class="fas fa-trash"></i>
             削除
           </button>
         </div>
-        <div class="work-item-details">
-          <div class="work-item-detail">
-            <label>タイプ</label>
-            <input type="text" class="work-item-type" placeholder="例: 床置き型">
-          </div>
-          <div class="work-item-detail">
-            <label>個数</label>
-            <input type="number" class="work-item-count" value="1" min="1">
-          </div>
-          <div class="work-item-detail">
-            <label>メモ</label>
-            <input type="text" class="work-item-notes" placeholder="例: 少し流れが悪い">
-          </div>
+        <div class="subsection">
+          <h4 class="subsection-title">作業内容</h4>
+          <textarea class="work-item-content" placeholder="作業内容を入力してください"></textarea>
         </div>
-        <div class="form-group">
-          <label class="form-label">作業内容</label>
-          <textarea class="form-textarea work-item-content" rows="3" placeholder="作業内容を入力してください"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">作業メモ</label>
-          <textarea class="form-textarea work-item-memo" rows="3" placeholder="特記事項を入力してください"></textarea>
-        </div>
-        <div class="photo-upload-section">
-          <div class="photo-category">
-            <h3 class="photo-category-title">作業前</h3>
-            <div class="photo-grid" data-category="before" data-item-id="${itemIdValue}">
-              <div class="photo-item">
-                <label class="photo-upload-btn">
+        <div class="image-grid">
+          <div class="image-category">
+            <h4 class="image-category-title">作業前</h4>
+            <div class="image-list" data-category="before" data-item-id="${itemIdValue}">
+              <div class="image-item">
+                <label class="image-upload-btn">
                   <input type="file" accept="image/*" capture="environment" data-category="before" data-item-id="${itemIdValue}" />
                   <i class="fas fa-camera"></i>
                   <span>写真を追加</span>
@@ -521,11 +630,11 @@
               </div>
             </div>
           </div>
-          <div class="photo-category">
-            <h3 class="photo-category-title">作業後</h3>
-            <div class="photo-grid" data-category="after" data-item-id="${itemIdValue}">
-              <div class="photo-item">
-                <label class="photo-upload-btn">
+          <div class="image-category">
+            <h4 class="image-category-title">作業後</h4>
+            <div class="image-list" data-category="after" data-item-id="${itemIdValue}">
+              <div class="image-item">
+                <label class="image-upload-btn">
                   <input type="file" accept="image/*" capture="environment" data-category="after" data-item-id="${itemIdValue}" />
                   <i class="fas fa-camera"></i>
                   <span>写真を追加</span>
@@ -534,34 +643,32 @@
             </div>
           </div>
         </div>
+        <div class="subsection">
+          <h4 class="subsection-title">作業メモ</h4>
+          <textarea class="work-item-memo" placeholder="特記事項を入力してください"></textarea>
+        </div>
       `;
       
-      container.appendChild(workItemCard);
+      container.appendChild(workItemSection);
       
-      // 清掃項目選択のイベントリスナー
-      const select = workItemCard.querySelector('.work-item-select');
-      select.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        if (selectedOption.value) {
-          workItemCard.dataset.itemId = selectedOption.value;
-          // 写真アップロードのdata-item-idも更新
-          workItemCard.querySelectorAll('input[type="file"]').forEach(input => {
-            input.dataset.itemId = selectedOption.value;
-          });
-        }
-      });
+      // タイトル入力のイベントリスナー（リスト更新用）
+      const titleInput = workItemSection.querySelector('.item-title-input');
+      titleInput.addEventListener('input', updateCleaningItemsList);
       
       // 写真アップロードのイベントリスナー
-      workItemCard.querySelectorAll('input[type="file"]').forEach(input => {
+      workItemSection.querySelectorAll('input[type="file"]').forEach(input => {
         input.addEventListener('change', handlePhotoUpload);
       });
+      
+      updateCleaningItemsList();
     }
 
     // 清掃項目を削除
     function removeWorkItem(itemId) {
-      const card = document.querySelector(`[data-item-id="${itemId}"]`);
-      if (card && confirm('この清掃項目を削除しますか？')) {
-        card.remove();
+      const section = document.querySelector(`[data-item-id="${itemId}"]`);
+      if (section && confirm('この清掃項目を削除しますか？')) {
+        section.remove();
+        updateCleaningItemsList();
       }
     }
 
@@ -573,30 +680,25 @@
       }
       
       try {
-        // 画像を最適化
         const optimizedBlob = await optimizeImage(file, 800, 0.8);
         const base64 = await blobToBase64(optimizedBlob);
         
-        // 写真グリッドを取得
-        const photoGrid = e.target.closest('.photo-grid');
+        const photoGrid = e.target.closest('.image-list');
         const category = photoGrid.dataset.category;
         const itemId = photoGrid.dataset.itemId;
         
-        // 新しい写真アイテムを作成
         const photoItem = document.createElement('div');
-        photoItem.className = 'photo-item';
+        photoItem.className = 'image-item';
         photoItem.innerHTML = `
           <img src="${base64}" alt="Uploaded photo">
-          <button type="button" class="photo-remove" onclick="removePhoto(this)">
+          <button type="button" class="image-remove" onclick="removePhoto(this)">
             <i class="fas fa-times"></i>
           </button>
         `;
         
-        // アップロードボタンの前に追加
-        const uploadBtn = e.target.closest('.photo-item');
+        const uploadBtn = e.target.closest('.image-item');
         uploadBtn.parentNode.insertBefore(photoItem, uploadBtn);
         
-        // Base64データをdata属性に保存（送信時に使用）
         photoItem.dataset.base64 = base64;
       } catch (error) {
         console.error('Error uploading photo:', error);
@@ -606,7 +708,7 @@
 
     // 写真を削除
     function removePhoto(button) {
-      const photoItem = button.closest('.photo-item');
+      const photoItem = button.closest('.image-item');
       photoItem.remove();
     }
 
@@ -614,22 +716,6 @@
     document.getElementById('store-id')?.addEventListener('change', function() {
       const selectedOption = this.options[this.selectedIndex];
       document.getElementById('store-name').value = selectedOption.text;
-    });
-
-    // 位置情報を取得
-    document.getElementById('get-location')?.addEventListener('click', function() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          const locationData = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          };
-          document.getElementById('location-data').value = JSON.stringify(locationData);
-          document.getElementById('location-display').style.display = 'block';
-        });
-      } else {
-        alert('位置情報が取得できません');
-      }
     });
 
     // 項目を追加ボタン
@@ -642,43 +728,38 @@
       e.preventDefault();
       
       try {
-        // フォームデータを収集
         const formData = {
           store_id: document.getElementById('store-id').value,
           store_name: document.getElementById('store-name').value,
           cleaning_date: document.getElementById('cleaning-date').value,
           cleaning_start_time: document.getElementById('cleaning-start-time').value,
           cleaning_end_time: document.getElementById('cleaning-end-time').value,
-          work_items: [],
-          location: null
+          work_items: []
         };
         
-        // 位置情報
-        const locationData = document.getElementById('location-data').value;
-        if (locationData) {
-          formData.location = JSON.parse(locationData);
-        }
-        
         // 清掃項目を収集
-        document.querySelectorAll('.work-item-card').forEach(card => {
-          const itemId = card.dataset.itemId;
-          const select = card.querySelector('.work-item-select');
-          const selectedOption = select.options[select.selectedIndex];
+        document.querySelectorAll('.cleaning-section').forEach(section => {
+          const itemId = section.dataset.itemId;
+          const titleInput = section.querySelector('.item-title-input');
+          const itemName = titleInput.value.trim();
           
-          if (!selectedOption.value) {
-            return; // 項目が選択されていない場合はスキップ
+          if (!itemName) {
+            return;
           }
           
+          const detailInputs = section.querySelectorAll('.detail-tag-input');
+          const type = detailInputs[0]?.value.trim() || '';
+          const count = detailInputs[1]?.value.trim() || '';
+          
           const workItem = {
-            item_id: selectedOption.value,
-            item_name: selectedOption.text,
+            item_id: itemId,
+            item_name: itemName,
             details: {
-              type: card.querySelector('.work-item-type').value,
-              count: parseInt(card.querySelector('.work-item-count').value) || 1,
-              notes: card.querySelector('.work-item-notes').value
+              type: type,
+              count: count
             },
-            work_content: card.querySelector('.work-item-content').value,
-            work_memo: card.querySelector('.work-item-memo').value,
+            work_content: section.querySelector('.work-item-content').value.trim(),
+            work_memo: section.querySelector('.work-item-memo').value.trim(),
             photos: {
               before: [],
               after: []
@@ -686,16 +767,16 @@
           };
           
           // 作業前の写真
-          card.querySelectorAll('[data-category="before"] .photo-item img').forEach(img => {
-            const photoItem = img.closest('.photo-item');
+          section.querySelectorAll('[data-category="before"] .image-item img').forEach(img => {
+            const photoItem = img.closest('.image-item');
             if (photoItem.dataset.base64) {
               workItem.photos.before.push(photoItem.dataset.base64);
             }
           });
           
           // 作業後の写真
-          card.querySelectorAll('[data-category="after"] .photo-item img').forEach(img => {
-            const photoItem = img.closest('.photo-item');
+          section.querySelectorAll('[data-category="after"] .image-item img').forEach(img => {
+            const photoItem = img.closest('.image-item');
             if (photoItem.dataset.base64) {
               workItem.photos.after.push(photoItem.dataset.base64);
             }
@@ -738,11 +819,9 @@
         
         const result = await response.json();
         alert('レポートを作成しました');
-        // 作成したレポートの詳細ページにリダイレクト
         if (result.report_id) {
           window.location.href = `/reports/${result.report_id}`;
         } else {
-          // report_idが取得できない場合はレポート一覧にリダイレクト
           window.location.href = '/admin/reports';
         }
       } catch (error) {
@@ -750,9 +829,5 @@
         alert(`エラー: ${error.message}`);
       }
     });
-
-    // 初期化: 1つの清掃項目を追加
-    addWorkItem();
   </script>
 </main>
-

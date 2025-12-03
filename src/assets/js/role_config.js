@@ -118,7 +118,7 @@ const ROLE_CONFIG = {
   // ページ別アクセス制御（パスパターン）
   pageAccess: {
     // パブリックページ（全員アクセス可能）
-    '/index.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/service.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/service/': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
     '/recruit.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
@@ -183,18 +183,18 @@ const ROLE_CONFIG = {
   // ロールごとのナビゲーション項目（推奨ナビゲーション）
   navigation: {
     guest: [
-      { href: '/index.html', label: '発注', icon: 'fa-shopping-cart' },
-      { href: '/service.html', label: 'サービス一覧', icon: 'fa-list' },
-      { href: '/contact.html', label: 'お問い合わせ', icon: 'fa-envelope' }
+      { href: '/', label: '発注', icon: 'fa-shopping-cart' },
+      { href: '/service', label: 'サービス一覧', icon: 'fa-list' },
+      { href: '/contact', label: 'お問い合わせ', icon: 'fa-envelope' }
     ],
     customer: [
-      { href: '/mypage.html', label: 'マイページ', icon: 'fa-user' },
-      { href: '/index.html', label: '発注', icon: 'fa-shopping-cart' },
-      { href: '/service.html', label: 'サービス一覧', icon: 'fa-list' },
-      { href: '/cart.html', label: 'カート', icon: 'fa-shopping-bag' },
-      { href: '/order/history.html', label: '注文履歴', icon: 'fa-history' },
-      { href: '/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
-      { href: '/report.html', label: 'レポート一覧', icon: 'fa-file-alt' }
+      { href: '/mypage', label: 'マイページ', icon: 'fa-user' },
+      { href: '/', label: '発注', icon: 'fa-shopping-cart' },
+      { href: '/service', label: 'サービス一覧', icon: 'fa-list' },
+      { href: '/cart', label: 'カート', icon: 'fa-shopping-bag' },
+      { href: '/order/history', label: '注文履歴', icon: 'fa-history' },
+      { href: '/schedule', label: 'スケジュール', icon: 'fa-calendar' },
+      { href: '/report', label: 'レポート一覧', icon: 'fa-file-alt' }
     ],
     staff: [
       { href: '/staff/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
@@ -204,56 +204,56 @@ const ROLE_CONFIG = {
       { href: '/staff/training.html', label: 'トレーニング', icon: 'fa-graduation-cap' }
     ],
     office: [
-      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
-      { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
-      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
-      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' }
+      { href: '/admin/dashboard', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/clients', label: '顧客管理', icon: 'fa-users' },
+      { href: '/admin/orders', label: '発注管理', icon: 'fa-shopping-cart' },
+      { href: '/admin/users', label: 'ユーザー管理', icon: 'fa-user-shield' }
     ],
     designer: [
-      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
-      { href: '/admin/images.html', label: '画像管理', icon: 'fa-images' },
-      { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' }
+      { href: '/admin/dashboard', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/images', label: '画像管理', icon: 'fa-images' },
+      { href: '/admin/services', label: 'サービス管理', icon: 'fa-cogs' }
     ],
     concierge: [
-      { href: '/sales/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/sales/dashboard', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
       { href: '/sales/dashboard#client', label: '顧客管理', icon: 'fa-users' },
-      { href: '/sales/clients/new.html', label: '新規顧客登録', icon: 'fa-user-plus' },
-      { href: '/sales/estimates.html', label: '見積もり一覧', icon: 'fa-file-invoice' },
-      { href: '/sales/estimates/new.html', label: '見積もり作成', icon: 'fa-file-invoice-dollar' },
-      { href: '/sales/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
-      { href: '/sales/orders.html', label: '発注管理', icon: 'fa-shopping-cart' }
+      { href: '/sales/clients/new', label: '新規顧客登録', icon: 'fa-user-plus' },
+      { href: '/sales/estimates', label: '見積もり一覧', icon: 'fa-file-invoice' },
+      { href: '/sales/estimates/new', label: '見積もり作成', icon: 'fa-file-invoice-dollar' },
+      { href: '/sales/schedule', label: 'スケジュール', icon: 'fa-calendar' },
+      { href: '/sales/orders', label: '発注管理', icon: 'fa-shopping-cart' }
     ],
     admin: [
-      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
-      { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' },
-      { href: '/admin/services/new.html', label: '新規サービス登録', icon: 'fa-plus-circle' },
-      { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
-      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
-      { href: '/admin/users.html', label: 'ユーザーID管理', icon: 'fa-user-shield' },
-      { href: '/admin/partners.html', label: 'パートナー企業一覧', icon: 'fa-handshake' },
-      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' }
+      { href: '/admin/dashboard', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/services', label: 'サービス管理', icon: 'fa-cogs' },
+      { href: '/admin/services/new', label: '新規サービス登録', icon: 'fa-plus-circle' },
+      { href: '/admin/clients', label: '顧客管理', icon: 'fa-users' },
+      { href: '/admin/orders', label: '発注管理', icon: 'fa-shopping-cart' },
+      { href: '/admin/users', label: 'ユーザーID管理', icon: 'fa-user-shield' },
+      { href: '/admin/partners', label: 'パートナー企業一覧', icon: 'fa-handshake' },
+      { href: '/cleaning-manual-admin', label: '清掃マニュアル', icon: 'fa-book' }
     ],
     developer: [
-      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
-      { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' },
-      { href: '/admin/services/review.html', label: '変更レビュー', icon: 'fa-code-branch' },
-      { href: '/admin/images.html', label: '画像管理', icon: 'fa-images' },
-      { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
-      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
-      { href: '/admin/users.html', label: 'ユーザーID管理', icon: 'fa-user-shield' },
-      { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
+      { href: '/admin/dashboard', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/services', label: 'サービス管理', icon: 'fa-cogs' },
+      { href: '/admin/services/review', label: '変更レビュー', icon: 'fa-code-branch' },
+      { href: '/admin/images', label: '画像管理', icon: 'fa-images' },
+      { href: '/admin/clients', label: '顧客管理', icon: 'fa-users' },
+      { href: '/admin/orders', label: '発注管理', icon: 'fa-shopping-cart' },
+      { href: '/admin/users', label: 'ユーザーID管理', icon: 'fa-user-shield' },
+      { href: '/admin/sitemap', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     master: [
       // マスター権限はドロップダウンリストを使用するため、通常のナビゲーション項目は最小限
-      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
-      { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap', special: 'dropdown' }
+      { href: '/admin/dashboard', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/sitemap', label: 'サイトマップ', icon: 'fa-sitemap', special: 'dropdown' }
     ]
   },
   
   // マスター権限用のドロップダウンリスト項目（カテゴリ別）
   masterNavigation: {
     'パブリック': [
-      { href: '/index.html', label: 'トップページ（発注）', icon: 'fa-home' },
+      { href: '/', label: 'トップページ（発注）', icon: 'fa-home' },
       { href: '/service.html', label: 'サービス一覧', icon: 'fa-list' },
       { href: '/contact.html', label: 'お問い合わせ', icon: 'fa-envelope' },
       { href: '/signin.html', label: 'ログイン', icon: 'fa-sign-in-alt' },
@@ -384,7 +384,7 @@ function getMasterNavigation() {
  * ロールごとのデフォルトページ（ログイン後リダイレクト先）を取得
  */
 function getDefaultPageForRole(role) {
-  return ROLE_CONFIG.defaultPages[role] || ROLE_CONFIG.defaultPages.guest || '/index.html';
+  return ROLE_CONFIG.defaultPages[role] || ROLE_CONFIG.defaultPages.guest || '/';
 }
 
 // グローバルに公開
