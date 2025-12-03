@@ -74,7 +74,7 @@
       <i class="fas fa-sitemap"></i>
       <span class="nav-label">サイトマップ</span>
     </a>
-    <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
+    <button class="nav-item nav-item-button" onclick="staffLogout()">
       <i class="fas fa-sign-out-alt"></i>
       <span class="nav-label">ログアウト</span>
     </button>
@@ -85,4 +85,22 @@
     <i class="fas fa-chevron-left"></i>
   </button>
 </aside>
+
+<script>
+  // 従業員用ログアウト関数（グローバル）
+  function staffLogout() {
+    // Cognitoからログアウト
+    if (window.CognitoAuth && typeof window.CognitoAuth.logout === 'function') {
+      window.CognitoAuth.logout();
+    }
+    // ローカルストレージをクリア
+    localStorage.removeItem('cognito_user');
+    localStorage.removeItem('misesapo_auth');
+    localStorage.removeItem('cognito_id_token');
+    localStorage.removeItem('cognito_access_token');
+    localStorage.removeItem('cognito_refresh_token');
+    // 従業員ログイン画面にリダイレクト
+    window.location.href = '/staff/signin.html';
+  }
+</script>
 
