@@ -4720,7 +4720,20 @@
         <script>
             // スプラッシュスクリーンの制御（最優先で実行）
             (function() {
-                // 即座にbodyのoverflowをhiddenに
+                // PC/SPの判定（768px未満をモバイルとする）
+                var isMobile = window.innerWidth < 768;
+                
+                // PCの場合はスプラッシュスクリーンを表示しない
+                if (!isMobile) {
+                    var splash = document.getElementById('splash-screen');
+                    if (splash) {
+                        splash.style.display = 'none';
+                        splash.classList.add('hidden');
+                    }
+                    return;
+                }
+                
+                // SP: bodyのoverflowをhiddenに
                 if (document.body) {
                     document.body.classList.add('splash-active');
                 } else {
@@ -4730,7 +4743,7 @@
                 }
 
                 function initSplash() {
-                    const splash = document.getElementById('splash-screen');
+                    var splash = document.getElementById('splash-screen');
                     if (!splash) {
                         // 要素が見つからない場合は少し待って再試行
                         setTimeout(initSplash, 100);
@@ -4742,7 +4755,7 @@
                     splash.style.opacity = '1';
 
                     // フェードインアップはCSSアニメーションで自動実行
-                    // 3秒後にフェードアウト開始
+                    // 2秒後にフェードアウト開始（app.jsと統一）
                     setTimeout(function() {
                         splash.classList.add('fade-out');
                         // フェードアウト完了後に非表示
@@ -4752,8 +4765,10 @@
                                 document.body.classList.remove('splash-active');
                                 document.body.classList.add('splash-inactive');
                             }
+                            // DOMから削除
+                            splash.remove();
                         }, 800); // フェードアウトの時間（0.8s）に合わせる
-                    }, 3000); // 3秒表示
+                    }, 2000); // 2秒表示（app.jsと統一）
                 }
 
                 // DOMContentLoadedまたは即座に実行

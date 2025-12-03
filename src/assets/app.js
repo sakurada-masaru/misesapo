@@ -296,17 +296,23 @@
   }
 
   function init() {
-    // Splash Screen (index page, SP only)
+    // Splash Screen is now handled inline in index.html
+    // This code is kept for backward compatibility but will skip if already processed
     (function initSplash() {
       const splash = document.getElementById('splash-screen');
       const pageContent = document.getElementById('page-content');
-      if (!splash) return; // Not on index page
+      
+      // Skip if splash doesn't exist or already hidden (processed by index.html inline script)
+      if (!splash || splash.classList.contains('hidden') || splash.classList.contains('fade-out')) {
+        return;
+      }
       
       // Only run on mobile (max-width: 767.98px)
-      const isMobile = window.innerWidth <= 767.98;
+      const isMobile = window.innerWidth < 768;
       if (!isMobile) {
         // PC: show content immediately, hide splash
         splash.style.display = 'none';
+        splash.classList.add('hidden');
         if (pageContent) {
           pageContent.classList.remove('page-content-hidden');
           pageContent.classList.add('page-content-visible');
@@ -314,18 +320,19 @@
         return;
       }
       
-      // SP: show splash animation
+      // SP: show splash animation (fallback if index.html script didn't run)
       setTimeout(() => {
-        splash.classList.add('hidden');
-        if (pageContent) {
-          pageContent.classList.remove('page-content-hidden');
-          pageContent.classList.add('page-content-visible');
-        }
-        // Remove splash from DOM after animation completes
+        splash.classList.add('fade-out');
         setTimeout(() => {
+          splash.classList.add('hidden');
+          if (pageContent) {
+            pageContent.classList.remove('page-content-hidden');
+            pageContent.classList.add('page-content-visible');
+          }
+          // Remove splash from DOM after animation completes
           splash.remove();
-        }, 500); // Match CSS transition duration
-      }, 2000); // Total display time: 0.3s delay + 1s animation + 0.7s display = ~2s
+        }, 800); // Match CSS transition duration
+      }, 2000);
     })();
 
 
