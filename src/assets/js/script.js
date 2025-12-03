@@ -236,33 +236,51 @@ opacityIns.forEach((opacityIn) => {
 /*===================================
    既存顧客一覧自動スクロール(Swiper.js)
 ===================================*/
-const swiper01 = new Swiper('.swiper-left', {
-   loop: true,
-   loopAdditionalSlides: 1,
-   effect: 'slide',
-   speed: 5000,
-   slidesPerView: 'auto',
-   allowTouchMove: false,
-   centerSlides: true,
-   autoplay: {
-    delay: 0,
-    disableOnInteraction: false,
+let swiper01 = null;
+let swiper02 = null;
+
+// スライドが十分にある場合のみSwiperを初期化
+const swiperLeftContainer = document.querySelector('.swiper-left');
+const swiperRightContainer = document.querySelector('.swiper-right');
+
+if (swiperLeftContainer) {
+   const leftSlides = swiperLeftContainer.querySelectorAll('.swiper-slide');
+   if (leftSlides.length >= 3) {
+      swiper01 = new Swiper('.swiper-left', {
+         loop: true,
+         loopAdditionalSlides: 1,
+         effect: 'slide',
+         speed: 5000,
+         slidesPerView: 'auto',
+         allowTouchMove: false,
+         centerSlides: true,
+         autoplay: {
+            delay: 0,
+            disableOnInteraction: false,
+         }
+      });
    }
-});
-const swiper02 = new Swiper('.swiper-right', {
-   loop: true,
-   loopAdditionalSlides: 1,
-   effect: 'slide',
-   speed: 5000,
-   slidesPerView: 'auto',
-   allowTouchMove: false,
-   centerSlides: true,
-   autoplay: {
-    reverseDirection: true,//左から右へ自動スクロールができるようにする
-    delay: 0,
-    disableOnInteraction: false,
+}
+
+if (swiperRightContainer) {
+   const rightSlides = swiperRightContainer.querySelectorAll('.swiper-slide');
+   if (rightSlides.length >= 3) {
+      swiper02 = new Swiper('.swiper-right', {
+         loop: true,
+         loopAdditionalSlides: 1,
+         effect: 'slide',
+         speed: 5000,
+         slidesPerView: 'auto',
+         allowTouchMove: false,
+         centerSlides: true,
+         autoplay: {
+            reverseDirection: true,//左から右へ自動スクロールができるようにする
+            delay: 0,
+            disableOnInteraction: false,
+         }
+      });
    }
-});
+}
 // ウィンドウリサイズ時のイベントリスナー
 window.addEventListener('resize', () => {
   // swiper01 の自動再生を再開
@@ -289,28 +307,35 @@ function handleTabletChange(e) {
     if(e.matches) {//メディアクエリの条件（e.matches）に基づいてSwiperの初期化または破棄を行う（.matchesは、キープロパティ）
         // 767.98px以下の場合（モバイル・タブレット）
         if(!swiper03) {
-            swiper03 = new Swiper('.swiper-cards', {
-                slidesPerView: 1, // コンテナ内に表示させるスライド数（CSSでサイズ指定する場合は 'auto'）
-                centeredSlides: true, // アクティブなスライドを中央に配置する
-                loop: true,
-                spaceBetween: 10,
+            const swiperCardsContainer = document.querySelector('.swiper-cards');
+            if (swiperCardsContainer) {
+                const cardsSlides = swiperCardsContainer.querySelectorAll('.swiper-slide');
+                // ループモードにはスライドが3つ以上必要
+                const useLoop = cardsSlides.length >= 3;
+                
+                swiper03 = new Swiper('.swiper-cards', {
+                    slidesPerView: 1, // コンテナ内に表示させるスライド数（CSSでサイズ指定する場合は 'auto'）
+                    centeredSlides: true, // アクティブなスライドを中央に配置する
+                    loop: useLoop, // スライドが3つ以上ある場合のみループ
+                    spaceBetween: 10,
 
-                autoplay: { // 自動再生させる
-                    delay: 3000, // 次のスライドに切り替わるまでの時間（ミリ秒）
-                    disableOnInteraction: false, // ユーザーが操作しても自動再生を止めない
-                    waitForTransition: false, // アニメーションの間も自動再生を止めない（最初のスライドの表示時間を揃えたいときに）
-                },
+                    autoplay: { // 自動再生させる
+                        delay: 3000, // 次のスライドに切り替わるまでの時間（ミリ秒）
+                        disableOnInteraction: false, // ユーザーが操作しても自動再生を止めない
+                        waitForTransition: false, // アニメーションの間も自動再生を止めない（最初のスライドの表示時間を揃えたいときに）
+                    },
 
-                // ページネーションが必要なら追加
-                pagination: {
-                    el: ".swiper-pagination"
-                },
-                // ナビボタンが必要なら追加
-                navigation: {
-                    nextEl: ".swiper-button-next",
-                    prevEl: ".swiper-button-prev"
-                }
-            });
+                    // ページネーションが必要なら追加
+                    pagination: {
+                        el: ".swiper-pagination"
+                    },
+                    // ナビボタンが必要なら追加
+                    navigation: {
+                        nextEl: ".swiper-button-next",
+                        prevEl: ".swiper-button-prev"
+                    }
+                });
+            }
         }
     } else {
         // 768px以上の場合（PC）

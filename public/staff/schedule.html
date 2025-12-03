@@ -279,6 +279,17 @@
         <i class="fas fa-calendar-alt"></i>
         マイスケジュール
       </h1>
+      <div class="role-badge-display" id="role-badge-display"></div>
+    </div>
+
+    <!-- ロール別タブ（開発者の場合のみ表示） -->
+    <div class="schedule-tabs" id="schedule-tabs" style="display: none;">
+      <button class="tab-btn active" data-tab="dev-tasks">
+        <i class="fas fa-code"></i> 開発タスク
+      </button>
+      <button class="tab-btn" data-tab="personal-memo">
+        <i class="fas fa-sticky-note"></i> メモ
+      </button>
     </div>
 
     <div class="calendar-nav">
@@ -306,13 +317,134 @@
       </div>
     </div>
 
-    <div class="schedule-list">
+    <!-- 開発タスクセクション（開発者用） -->
+    <div class="dev-tasks-section" id="dev-tasks-section" style="display: none;">
+      <div class="section-header">
+        <h3 class="list-title">
+          <i class="fas fa-tasks"></i> 開発タスク
+        </h3>
+        <button class="btn-add-task" id="btn-add-task">
+          <i class="fas fa-plus"></i> 新規タスク
+        </button>
+      </div>
+      <div class="task-filters">
+        <button class="filter-btn active" data-filter="all">すべて</button>
+        <button class="filter-btn" data-filter="in_progress">進行中</button>
+        <button class="filter-btn" data-filter="not_started">未着手</button>
+        <button class="filter-btn" data-filter="completed">完了</button>
+      </div>
+      <div class="dev-tasks-list" id="dev-tasks-list">
+        <div class="loading-message">
+          <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+        </div>
+      </div>
+    </div>
+
+    <!-- 清掃スケジュールセクション（清掃員・営業用） -->
+    <div class="schedule-list" id="cleaning-schedule-section">
       <h3 class="list-title" id="list-title">今後の予定</h3>
       <div class="schedule-items" id="schedule-items">
         <div class="loading-message">
           <i class="fas fa-spinner fa-spin"></i> 読み込み中...
         </div>
       </div>
+    </div>
+
+    <!-- メモセクション（全ロール共通） -->
+    <div class="memo-section" id="memo-section">
+      <div class="section-header">
+        <h3 class="list-title">
+          <i class="fas fa-sticky-note"></i> 個人メモ
+        </h3>
+        <button class="btn-add-memo" id="btn-add-memo">
+          <i class="fas fa-plus"></i> メモ追加
+        </button>
+      </div>
+      <div class="memo-list" id="memo-list">
+        <!-- メモがここに表示される -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 新規タスク追加モーダル -->
+  <div class="modal-overlay" id="task-modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-plus-circle"></i> 新規タスク</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <form id="task-form">
+        <div class="form-group">
+          <label>タスク名 <span class="required">*</span></label>
+          <input type="text" id="task-title" required placeholder="タスク名を入力">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>タイプ</label>
+            <select id="task-type">
+              <option value="development">開発</option>
+              <option value="design">デザイン</option>
+              <option value="bug_fix">バグ修正</option>
+              <option value="review">レビュー</option>
+              <option value="other">その他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>優先度</label>
+            <select id="task-priority">
+              <option value="low">低</option>
+              <option value="medium" selected>中</option>
+              <option value="high">高</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>開始日</label>
+            <input type="date" id="task-start-date">
+          </div>
+          <div class="form-group">
+            <label>納期</label>
+            <input type="date" id="task-due-date">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>説明</label>
+          <textarea id="task-description" rows="3" placeholder="タスクの詳細を入力"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" id="btn-cancel-task">キャンセル</button>
+          <button type="submit" class="btn-submit">
+            <i class="fas fa-save"></i> 保存
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- メモ追加モーダル -->
+  <div class="modal-overlay" id="memo-modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-sticky-note"></i> メモ追加</h3>
+        <button class="modal-close" id="memo-modal-close">&times;</button>
+      </div>
+      <form id="memo-form">
+        <div class="form-group">
+          <label>日付</label>
+          <input type="date" id="memo-date">
+        </div>
+        <div class="form-group">
+          <label>メモ内容 <span class="required">*</span></label>
+          <textarea id="memo-content" rows="4" required placeholder="メモを入力"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" id="btn-cancel-memo">キャンセル</button>
+          <button type="submit" class="btn-submit">
+            <i class="fas fa-save"></i> 保存
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -322,12 +454,17 @@
       min-height: 100vh;
     }
     .page-container {
-      max-width: 900px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 24px;
     }
     .page-header {
       margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
     }
     .page-title {
       font-size: 1.5rem;
@@ -341,6 +478,482 @@
     .page-title i {
       color: var(--primary);
     }
+    .role-badge-display {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .role-badge-display.developer {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+    .role-badge-display.cleaner {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+    }
+    .role-badge-display.sales {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #fff;
+    }
+    .role-badge-display.office {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: #fff;
+    }
+    
+    /* タブ */
+    .schedule-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      background: #ffffff;
+      padding: 8px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: #6b7280;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .tab-btn:hover {
+      background: #f3f4f6;
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    /* セクションヘッダー */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .btn-add-task, .btn-add-memo {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-add-task:hover, .btn-add-memo:hover {
+      background: var(--primary-600);
+      transform: translateY(-1px);
+    }
+    
+    /* フィルター */
+    .task-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 8px 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      background: #fff;
+      color: #6b7280;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .filter-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    
+    /* 開発タスクセクション */
+    .dev-tasks-section {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .dev-tasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    /* タスクカード */
+    .task-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 12px;
+      border-left: 4px solid #6366f1;
+      transition: all 0.2s;
+    }
+    .task-card:hover {
+      background: #f3f4f6;
+      transform: translateX(2px);
+    }
+    .task-card.priority-high {
+      border-left-color: #ef4444;
+    }
+    .task-card.priority-medium {
+      border-left-color: #f59e0b;
+    }
+    .task-card.priority-low {
+      border-left-color: #10b981;
+    }
+    .task-card.status-completed {
+      opacity: 0.7;
+    }
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .task-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .task-title i {
+      font-size: 0.875rem;
+    }
+    .task-type-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .task-type-badge.development {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .task-type-badge.design {
+      background: #fce7f3;
+      color: #9d174d;
+    }
+    .task-type-badge.bug_fix {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .task-type-badge.review {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    .task-type-badge.other {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    .task-meta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .task-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .task-meta-item i {
+      color: #9ca3af;
+    }
+    .task-description {
+      font-size: 0.875rem;
+      color: #6b7280;
+      padding: 12px;
+      background: #fff;
+      border-radius: 8px;
+    }
+    .task-progress {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .progress-bar {
+      flex: 1;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    .progress-text {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #10b981;
+      min-width: 40px;
+    }
+    .task-actions {
+      display: flex;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .task-action-btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .task-action-btn.btn-progress {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .task-action-btn.btn-progress:hover {
+      background: #bfdbfe;
+    }
+    .task-action-btn.btn-complete {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .task-action-btn.btn-complete:hover {
+      background: #a7f3d0;
+    }
+    .task-action-btn.btn-edit {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    .task-action-btn.btn-edit:hover {
+      background: #e5e7eb;
+    }
+    
+    /* メモセクション */
+    .memo-section {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .memo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .memo-card {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      background: #fffbeb;
+      border-radius: 12px;
+      border-left: 4px solid #f59e0b;
+    }
+    .memo-date {
+      min-width: 60px;
+      text-align: center;
+    }
+    .memo-date-day {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      line-height: 1;
+    }
+    .memo-date-month {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    .memo-content {
+      flex: 1;
+      font-size: 0.95rem;
+      color: #374151;
+      line-height: 1.6;
+    }
+    .memo-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .memo-action-btn {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.05);
+      color: #6b7280;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .memo-action-btn:hover {
+      background: rgba(0,0,0,0.1);
+      color: #374151;
+    }
+    .memo-empty {
+      text-align: center;
+      padding: 40px;
+      color: #9ca3af;
+    }
+    
+    /* モーダル */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #6b7280;
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .modal-close:hover {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    #task-form, #memo-form {
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .form-group label .required {
+      color: #ef4444;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .btn-cancel {
+      padding: 12px 20px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fff;
+      color: #6b7280;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-cancel:hover {
+      background: #f3f4f6;
+    }
+    .btn-submit {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-submit:hover {
+      background: var(--primary-600);
+      transform: translateY(-1px);
+    }
+    
     .calendar-nav {
       display: flex;
       justify-content: space-between;

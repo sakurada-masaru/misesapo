@@ -215,11 +215,21 @@ def process_jsonvar_directives(text: str, context: Dict[str, object]) -> str:
             raise BuildError(f"Failed to serialize ${var} to JSON: {e}")
 
     return RE_JSONVAR.sub(_sub, text)
+_base_path_logged = False
+
 def get_base_path() -> str:
     """Get base path for GitHub Pages or local development."""
-    # Check for custom domain (CNAME file exists) - always use root path
-    cname_path = Path(__file__).parent.parent / "public" / "CNAME"
-    if cname_path.exists():
+    global _base_path_logged
+    
+    # ALWAYS check for custom domain first (CNAME file exists in root OR public)
+    # This takes priority over GITHUB_REPOSITORY environment variable
+    root_cname = Path(__file__).parent.parent / "CNAME"
+    public_cname = Path(__file__).parent.parent / "public" / "CNAME"
+    
+    if root_cname.exists() or public_cname.exists():
+        if not _base_path_logged:
+            print("[build] Custom domain (CNAME) detected, using base_path='/'")
+            _base_path_logged = True
         return "/"
     
     # Check if running in GitHub Actions without custom domain
@@ -227,8 +237,15 @@ def get_base_path() -> str:
     if github_repository:
         # Extract repository name from GITHUB_REPOSITORY (e.g., "sakurada-masaru/misesapo" -> "misesapo")
         repo_name = github_repository.split("/")[1] if "/" in github_repository else github_repository
+        if not _base_path_logged:
+            print(f"[build] GitHub Actions detected (no CNAME), using base_path='/{repo_name}/'")
+            _base_path_logged = True
         return f"/{repo_name}/"
+    
     # Local development
+    if not _base_path_logged:
+        print("[build] Local development, using base_path='/'")
+        _base_path_logged = True
     return "/"
 
 def render_page(path: Path, preset_context: Optional[Dict[str, object]] = None) -> str:
