@@ -36,6 +36,11 @@
         return base.getAttribute('href') || '/';
       }
     }
+    // カスタムドメインの場合はルートパスを使用
+    const hostname = window.location.hostname;
+    if (hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp') {
+      return '/';
+    }
     const path = window.location.pathname;
     if (path.includes('/misesapo/')) {
       return '/misesapo/';
@@ -635,6 +640,48 @@
       normalizedPath = currentPath.substring(basePath.length - 1); // 先頭の/を残す
     }
     
+    // パブリックページ（認証不要）のリスト
+    const publicPages = [
+      '/',
+      '/index.html',
+      '/service.html',
+      '/service/',           // /service/1.html など
+      '/about.html',
+      '/contact.html',
+      '/voice.html',
+      '/announcements.html',
+      '/privacy-policy.html',
+      '/service-terms.html',
+      '/security-policy.html',
+      '/workplace-policy.html',
+      '/antisocial-declaration.html',
+      '/cleaning-manual.html',
+      '/teikiseisou.html',
+      '/lp.html',
+      '/recruit.html',
+      '/recruit/',           // /recruit/apply/cleaning.html など
+      '/customers.html',
+      '/customers-support-desk.html',
+      '/signin.html',
+      '/signup.html',
+      '/signup/',            // /signup/2.html など
+      '/new-page.html'
+    ];
+    
+    // パブリックページかどうかをチェック
+    const isPublicPage = publicPages.some(page => {
+      if (page.endsWith('/')) {
+        // ディレクトリパスの場合は前方一致
+        return normalizedPath.startsWith(page) || currentPath.includes(page);
+      }
+      // 完全一致
+      return normalizedPath === page || currentPath.endsWith(page);
+    });
+    
+    if (isPublicPage) {
+      return true;
+    }
+    
     // 従業員関連ページ（管理、営業、清掃）では、顧客認証（Firebase）のチェックをスキップ
     // これらのページはAWS Cognito認証のみを使用する
     if (normalizedPath.startsWith('/admin/') || 
@@ -645,23 +692,21 @@
         currentPath.includes('/sales/') || 
         currentPath.includes('/staff/') ||
         currentPath.includes('/wiki')) {
-      // 従業員関連ページでは、顧客認証のチェックをスキップ
       return true;
     }
     
-    // ログインページとサインアップページは常にアクセス可能
-    if (normalizedPath.includes('/signin.html') || normalizedPath.includes('/signup') ||
-        currentPath.includes('/signin.html') || currentPath.includes('/signup')) {
+    // 以下は顧客専用ページ（/mypage/*, /order/*, /cart/* など）のみFirebase認証をチェック
+    const customerOnlyPaths = ['/mypage/', '/order/', '/cart/', '/order-history/'];
+    const isCustomerOnlyPage = customerOnlyPaths.some(path => 
+      normalizedPath.startsWith(path) || currentPath.includes(path)
+    );
+    
+    if (!isCustomerOnlyPage) {
+      // 顧客専用ページでなければ認証不要
       return true;
     }
     
-    // パブリックページ（index.html, service.html, recruit.html）は常にアクセス可能
-    if (normalizedPath === '/index.html' || normalizedPath === '/service.html' || normalizedPath.startsWith('/service/') || 
-        normalizedPath === '/recruit.html' || normalizedPath.startsWith('/recruit/')) {
-      return true;
-    }
-    
-    // 以下は顧客関連ページ（/mypage/*など）のみFirebase認証をチェック
+    // 顧客専用ページの場合、認証をチェック
     const currentRole = getCurrentRole();
     
     // マスター、管理者、開発者はすべてのページにアクセス可能

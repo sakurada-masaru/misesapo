@@ -1404,7 +1404,9 @@
           if (img) {
             // パスが / で始まっていない場合は / を追加
             // ベースパスを考慮（GitHub Pages対応）
-            const basePath = window.location.pathname.includes('/misesapo/') ? '/misesapo' : '';
+            const hostname = window.location.hostname;
+            const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+            const basePath = isCustomDomain ? '' : (window.location.pathname.includes('/misesapo/') ? '/misesapo' : '');
             let path = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
             // 既にベースパスが含まれている場合は追加しない
             if (basePath && !path.startsWith(basePath)) {

@@ -143,36 +143,36 @@
       <div class="signin-logo">
         <img src="/images/logo_144x144.png" alt="ミセサポ" />
         <h2>従業員ログイン</h2>
-      </div>
-      
+  </div>
+
       <div class="signin-divider"></div>
 
       <p class="signin-description">
-        メールアドレスとパスワードを入力してログインしてください。<br />
+      メールアドレスとパスワードを入力してログインしてください。<br />
         <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
-      </p>
+    </p>
 
       <form id="staff-signin-form" action="#" method="post" class="signin-form">
         <div class="form-group">
-          <label for="email" class="label">
-            メールアドレス
-            <span class="pill pill-required" style="margin-left: 8px;">必須</span>
-          </label>
-          <input type="email" id="email" name="email" class="input" placeholder="name@example.com" required />
-        </div>
+        <label for="email" class="label">
+          メールアドレス
+          <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+        </label>
+        <input type="email" id="email" name="email" class="input" placeholder="name@example.com" required />
+      </div>
 
         <div class="form-group">
-          <label for="password" class="label">
-            パスワード
-            <span class="pill pill-required" style="margin-left: 8px;">必須</span>
-          </label>
-          <div class="field">
-            <input type="password" id="password" name="password" class="input" required />
-            <button type="button" class="toggle-visibility" aria-label="パスワードを表示" onclick="togglePasswordVisibility('password')">
-              <i class="fas fa-eye"></i>
-            </button>
-          </div>
+        <label for="password" class="label">
+          パスワード
+          <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+        </label>
+        <div class="field">
+          <input type="password" id="password" name="password" class="input" required />
+          <button type="button" class="toggle-visibility" aria-label="パスワードを表示" onclick="togglePasswordVisibility('password')">
+            <i class="fas fa-eye"></i>
+          </button>
         </div>
+      </div>
 
         <div id="signin-error" class="signin-error" style="display: none;"></div>
 
@@ -180,7 +180,7 @@
       </form>
     </div>
   </div>
-</div>
+      </div>
 
 <script>
   function togglePasswordVisibility(id) {

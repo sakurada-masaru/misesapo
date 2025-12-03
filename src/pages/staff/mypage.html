@@ -108,7 +108,7 @@
                 <button class="btn-attendance btn-clock-in" id="attendance-toggle-btn">
                   <i class="fas fa-sign-in-alt"></i>
                   <span id="toggle-btn-text">出勤</span>
-                </button>
+              </button>
               </div>
             </div>
             
@@ -117,7 +117,7 @@
               <div class="break-header">
                 <span class="break-label"><i class="fas fa-coffee"></i> 休憩</span>
                 <span id="break-time-display" class="break-time">0分</span>
-              </div>
+                </div>
               <div id="breaks-list" class="breaks-list"></div>
               <div class="break-actions">
                 <button class="btn btn-outline btn-sm" id="break-start-btn">
@@ -934,24 +934,24 @@
           
           // ローカルで見つからない場合、APIで検索
           if (!currentUser || !currentUser.id) {
-            let response = null;
-            
-            if (userId) {
-              // IDで取得を試みる
-              response = await fetch(`${API_BASE}/workers/${userId}`);
-              if (response.ok) {
-                currentUser = await response.json();
-              }
+          let response = null;
+          
+          if (userId) {
+            // IDで取得を試みる
+            response = await fetch(`${API_BASE}/workers/${userId}`);
+            if (response.ok) {
+              currentUser = await response.json();
             }
-            
+          }
+          
             // IDで見つからない場合、メールアドレスで検索
-            if (!currentUser || !currentUser.id) {
-              if (userEmail) {
-                response = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(userEmail)}`);
-                if (response && response.ok) {
-                  const users = await response.json();
-                  const items = users.items || users.workers || users;
-                  if (Array.isArray(items) && items.length > 0) {
+          if (!currentUser || !currentUser.id) {
+            if (userEmail) {
+              response = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(userEmail)}`);
+              if (response && response.ok) {
+                const users = await response.json();
+                const items = users.items || users.workers || users;
+                if (Array.isArray(items) && items.length > 0) {
                     const matchingUser = items.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
                     if (matchingUser) {
                       currentUser = matchingUser;
@@ -959,35 +959,35 @@
                     }
                   }
                 }
-              }
-            }
-          }
-          
-          // まだ見つからない場合、Cognito SubまたはFirebase UIDで検索（フォールバック）
-          if (!currentUser || !currentUser.id) {
-            let fallbackResponse = null;
-            
-            // Cognito Subで検索
-            if (window.CognitoAuth) {
-              const cognitoUser = await window.CognitoAuth.getCurrentUser();
-              if (cognitoUser && cognitoUser.cognito_sub) {
-                fallbackResponse = await fetch(`${API_BASE}/workers?cognito_sub=${encodeURIComponent(cognitoUser.cognito_sub)}`);
+                }
               }
             }
             
-            // Firebase UIDで検索（フォールバック）
-            if (!fallbackResponse || !fallbackResponse.ok) {
-              const authData = window.Auth?.getAuthData?.();
-              if (authData && authData.user && authData.user.firebase_uid) {
-                fallbackResponse = await fetch(`${API_BASE}/workers?firebase_uid=${encodeURIComponent(authData.user.firebase_uid)}`);
+            // まだ見つからない場合、Cognito SubまたはFirebase UIDで検索（フォールバック）
+            if (!currentUser || !currentUser.id) {
+              let fallbackResponse = null;
+              
+              // Cognito Subで検索
+              if (window.CognitoAuth) {
+                const cognitoUser = await window.CognitoAuth.getCurrentUser();
+                if (cognitoUser && cognitoUser.cognito_sub) {
+                  fallbackResponse = await fetch(`${API_BASE}/workers?cognito_sub=${encodeURIComponent(cognitoUser.cognito_sub)}`);
+                }
               }
-            }
-            
-            if (fallbackResponse && fallbackResponse.ok) {
-              const users = await fallbackResponse.json();
-              const items = users.items || users.workers || users;
-              if (Array.isArray(items) && items.length > 0) {
-                currentUser = items[0];
+              
+              // Firebase UIDで検索（フォールバック）
+              if (!fallbackResponse || !fallbackResponse.ok) {
+                const authData = window.Auth?.getAuthData?.();
+                if (authData && authData.user && authData.user.firebase_uid) {
+                  fallbackResponse = await fetch(`${API_BASE}/workers?firebase_uid=${encodeURIComponent(authData.user.firebase_uid)}`);
+                }
+              }
+              
+              if (fallbackResponse && fallbackResponse.ok) {
+                const users = await fallbackResponse.json();
+                const items = users.items || users.workers || users;
+                if (Array.isArray(items) && items.length > 0) {
+                  currentUser = items[0];
               }
             }
           }

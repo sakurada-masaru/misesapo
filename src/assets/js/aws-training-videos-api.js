@@ -81,6 +81,11 @@
                         return base.getAttribute('href') || '/';
                     }
                 }
+                // カスタムドメインの場合はルートパスを使用
+                const hostname = window.location.hostname;
+                if (hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp') {
+                    return '/';
+                }
                 const path = window.location.pathname;
                 if (path.includes('/misesapo/')) {
                     return '/misesapo/';
@@ -91,8 +96,7 @@
             const basePath = getBasePath();
             const fallbackPaths = [
                 `${basePath}data/training_videos.json`,
-                '/data/training_videos.json',
-                '/misesapo/data/training_videos.json'
+                '/data/training_videos.json'
             ];
             
             for (const fallbackPath of fallbackPaths) {

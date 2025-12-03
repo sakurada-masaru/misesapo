@@ -19,6 +19,11 @@
         return base.getAttribute('href') || '/';
       }
     }
+    // カスタムドメインの場合はルートパスを使用
+    const hostname = window.location.hostname;
+    if (hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp') {
+      return '/';
+    }
     // baseタグがない場合は、現在のパスから推測
     const path = window.location.pathname;
     if (path.includes('/misesapo/')) {
@@ -34,13 +39,14 @@
       return path;
     }
     
-    // ローカル開発環境ではbaseタグを無視
+    // ローカル開発環境またはカスタムドメインではルートパスを使用
     const hostname = window.location.hostname;
     const isLocalDev = hostname === 'localhost' || 
                       hostname === '127.0.0.1' ||
                       hostname === '';
+    const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
     
-    if (isLocalDev) {
+    if (isLocalDev || isCustomDomain) {
       return path.startsWith('/') ? path : '/' + path;
     }
     

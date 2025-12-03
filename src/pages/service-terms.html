@@ -264,8 +264,9 @@
 
         const hostname = window.location.hostname;
         const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
+        const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
 
-        if (isLocalDev) {
+        if (isLocalDev || isCustomDomain) {
           return path.startsWith('/') ? path : '/' + path;
         }
 
