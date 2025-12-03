@@ -367,11 +367,13 @@
                                   hostname === '127.0.0.1' ||
                                   hostname === '';
                 
-                if (isLocalDev) {
+                const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+                
+                if (isLocalDev || isCustomDomain) {
                     return path.startsWith('/') ? path : '/' + path;
                 }
                 
-                // GitHub Pagesでは/misesapo/を追加
+                // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
                 let resolvedPath;
                 if (path.startsWith('/misesapo/')) {
                     resolvedPath = path;

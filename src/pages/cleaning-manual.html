@@ -18,7 +18,9 @@
             function setHeaderLogoPath() {
                 const logoImg = document.getElementById('header-logo-img');
                 if (logoImg) {
-                    if (isLocalDev) {
+                    const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+                
+                if (isLocalDev || isCustomDomain) {
                         logoImg.src = '/images/header-logo.jpg';
                     } else {
                         logoImg.src = window.location.origin + '/misesapo/images/header-logo.jpg';
@@ -551,11 +553,13 @@
                               hostname === '127.0.0.1' ||
                               hostname === '';
             
-            if (isLocalDev) {
+            const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+                
+                if (isLocalDev || isCustomDomain) {
                 return path.startsWith('/') ? path : '/' + path;
             }
             
-            // GitHub Pagesでは/misesapo/を追加
+            // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
             let resolvedPath;
             if (path.startsWith('/misesapo/')) {
                 // 既に/misesapo/で始まる場合はそのまま使用
@@ -1581,7 +1585,9 @@
                                   hostname === '127.0.0.1' ||
                                   hostname === '';
                 
-                if (isLocalDev) {
+                const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+                
+                if (isLocalDev || isCustomDomain) {
                     console.log('[CleaningManual] Development server: Auth check bypassed');
                     return true;
                 }
