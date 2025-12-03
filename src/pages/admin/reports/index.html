@@ -129,21 +129,21 @@
                   <label class="form-label-inline-modal">店舗 <span class="required">*</span></label>
                   <select id="report-store" name="store_id" class="form-select-inline-modal" required>
                     <option value="">店舗を選択</option>
-                  </select>
+              </select>
                   <input type="hidden" id="report-store-name" name="store_name">
-                </div>
+            </div>
                 <div class="form-group-inline-modal">
                   <label class="form-label-inline-modal">清掃日 <span class="required">*</span></label>
                   <input type="date" id="report-date" name="cleaning_date" class="form-input-inline-modal" required>
-                </div>
+            </div>
                 <div class="form-group-inline-modal">
                   <label class="form-label-inline-modal">開始時刻</label>
                   <input type="time" id="report-start" name="cleaning_start_time" class="form-input-inline-modal">
-                </div>
+          </div>
                 <div class="form-group-inline-modal">
                   <label class="form-label-inline-modal">終了時刻</label>
                   <input type="time" id="report-end" name="cleaning_end_time" class="form-input-inline-modal">
-                </div>
+            </div>
               </div>
             </header>
             
@@ -153,13 +153,13 @@
                 <span class="items-list-label-modal">実施清掃項目</span>
                 <div class="items-list-items-modal" id="cleaning-items-list-modal">
                   <span class="items-list-empty-modal">項目を追加してください</span>
-                </div>
-              </div>
+            </div>
+          </div>
               <button type="button" class="btn-add-item-modal" id="add-work-item-modal">
                 <i class="fas fa-plus"></i>
                 項目を追加
               </button>
-            </div>
+          </div>
             
             <!-- 清掃項目の詳細 -->
             <div class="report-main-modal" id="work-items-container-modal">
@@ -1261,55 +1261,55 @@
         `;
       } else {
         // 古い形式: 従来の表示
-        const photosHtml = report.photos ? `
-          <div class="detail-item" style="grid-column: 1/-1;">
-            <div class="detail-label">写真</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
-              <div>
-                <div style="font-size:0.75rem;color:#6b7280;margin-bottom:4px;">作業前</div>
-                <div style="display:flex;gap:4px;flex-wrap:wrap;">
-                  ${(report.photos.before || []).map(p => `<img src="${p}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;">`).join('') || '<span style="color:#9ca3af;font-size:0.8rem;">なし</span>'}
-                </div>
+      const photosHtml = report.photos ? `
+        <div class="detail-item" style="grid-column: 1/-1;">
+          <div class="detail-label">写真</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+            <div>
+              <div style="font-size:0.75rem;color:#6b7280;margin-bottom:4px;">作業前</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                ${(report.photos.before || []).map(p => `<img src="${p}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;">`).join('') || '<span style="color:#9ca3af;font-size:0.8rem;">なし</span>'}
               </div>
-              <div>
-                <div style="font-size:0.75rem;color:#6b7280;margin-bottom:4px;">作業後</div>
-                <div style="display:flex;gap:4px;flex-wrap:wrap;">
-                  ${(report.photos.after || []).map(p => `<img src="${p}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;">`).join('') || '<span style="color:#9ca3af;font-size:0.8rem;">なし</span>'}
-                </div>
+            </div>
+            <div>
+              <div style="font-size:0.75rem;color:#6b7280;margin-bottom:4px;">作業後</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                ${(report.photos.after || []).map(p => `<img src="${p}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;">`).join('') || '<span style="color:#9ca3af;font-size:0.8rem;">なし</span>'}
               </div>
             </div>
           </div>
-        ` : '';
+        </div>
+      ` : '';
 
         reportHtml = `
-          <div class="detail-grid">
-            <div class="detail-item">
-              <div class="detail-label">店舗</div>
-              <div class="detail-value">${escapeHtml(report.store_name || store.name || '不明')}</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">担当者</div>
-              <div class="detail-value">${escapeHtml(report.staff_name || worker.name || '-')}</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">作業日</div>
-              <div class="detail-value">${formatDate(report.work_date || report.cleaning_date || report.created_at?.split('T')[0])}</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">作業時間</div>
-              <div class="detail-value">${report.start_time || report.cleaning_start_time || '-'} 〜 ${report.end_time || report.cleaning_end_time || '-'}</div>
-            </div>
-            ${photosHtml}
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">店舗</div>
+            <div class="detail-value">${escapeHtml(report.store_name || store.name || '不明')}</div>
           </div>
           <div class="detail-item">
-            <div class="detail-label">作業内容</div>
+            <div class="detail-label">担当者</div>
+            <div class="detail-value">${escapeHtml(report.staff_name || worker.name || '-')}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">作業日</div>
+            <div class="detail-value">${formatDate(report.work_date || report.cleaning_date || report.created_at?.split('T')[0])}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">作業時間</div>
+            <div class="detail-value">${report.start_time || report.cleaning_start_time || '-'} 〜 ${report.end_time || report.cleaning_end_time || '-'}</div>
+          </div>
+          ${photosHtml}
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">作業内容</div>
             <div class="detail-value">${escapeHtml(report.content || '-')}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">備考</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">備考</div>
             <div class="detail-value">${escapeHtml(report.notes || '-')}</div>
-          </div>
-        `;
+        </div>
+      `;
       }
 
       document.getElementById('detail-body').innerHTML = reportHtml;
@@ -1442,7 +1442,7 @@
           });
         } catch (e) {
           // 旧APIから削除を試みる
-          await fetch(`${API_BASE}/reports/${id}`, { method: 'DELETE' });
+        await fetch(`${API_BASE}/reports/${id}`, { method: 'DELETE' });
         }
         allReports = allReports.filter(r => String(r.id) !== String(id));
         updateStats();
@@ -1766,7 +1766,7 @@
             label.addEventListener('click', function(e) {
               // label内のinput以外をクリックした場合は、inputをクリック
               if (e.target !== input && !input.contains(e.target)) {
-                e.preventDefault();
+        e.preventDefault();
                 input.click();
               }
             });
@@ -1960,7 +1960,7 @@
               'Content-Type': 'application/json'
             },
             body: JSON.stringify(formData)
-          });
+            });
           
           if (!response.ok) {
             const error = await response.json();

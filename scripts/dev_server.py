@@ -90,6 +90,26 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             if report_id_template.exists():
                 return str(report_id_template)
         
+        # 動的ルーティング: /reports/shared/{id} を /reports/shared/[id].html にマッピング
+        if path.startswith('/reports/shared/'):
+            parts = [p for p in path.split('/') if p]  # 空文字列を除去
+            # /reports/shared/{id} または /reports/shared/{id}/ の場合
+            if len(parts) >= 3 and parts[2] and parts[2] != 'view':
+                # /reports/shared/{id}/view の場合は除外
+                if len(parts) < 4 or parts[3] != 'view':
+                    shared_template = PUBLIC / "reports" / "shared" / "[id].html"
+                    if shared_template.exists():
+                        return str(shared_template)
+        
+        # 動的ルーティング: /reports/shared/{id}/view を /reports/shared/[id]/view.html にマッピング
+        if path.startswith('/reports/shared/'):
+            parts = [p for p in path.split('/') if p]  # 空文字列を除去
+            # /reports/shared/{id}/view または /reports/shared/{id}/view/ の場合
+            if len(parts) >= 4 and parts[2] and parts[3] == 'view':
+                view_template = PUBLIC / "reports" / "shared" / "[id]" / "view.html"
+                if view_template.exists():
+                    return str(view_template)
+        
         # 通常のパス変換
         return super().translate_path(path)
     
