@@ -1118,19 +1118,37 @@
                 height: 120px;
             }
 
-            /* 固定バナー */
+            /* 固定バナー - タブレット用に縮小 */
             .fixed-banner {
-                top: 350px;
-                right: 30px;
-                width: 280px;
-                max-width: 280px;
+                top: 280px;
+                right: 20px;
+                width: 200px;
+                max-width: 200px;
             }
 
-            /* ニュースセクション */
+            /* ニュースセクション - タブレット用に縮小 */
             .news-section-wrapper {
-                top: 80px;
-                right: 30px;
-                width: 300px;
+                top: 60px;
+                right: 20px;
+                width: 220px;
+            }
+
+            .news-section-wrapper .news-section {
+                padding: 12px;
+            }
+
+            .news-section-wrapper .news-section h3 {
+                font-size: 12px;
+                margin-bottom: 8px;
+            }
+
+            .news-section-wrapper .news-list li {
+                padding: 6px 0;
+                font-size: 11px;
+            }
+
+            .news-section-wrapper .news-date {
+                font-size: 10px;
             }
 
             /* サービスセクション */
@@ -1139,46 +1157,64 @@
             }
 
             .service-sections-title {
-                font-size: 28px;
+                font-size: 24px;
             }
 
             /* プランカード */
             .plan-cards-grid {
                 grid-template-columns: repeat(3, 1fr);
-                gap: 15px;
+                gap: 12px;
             }
 
             .plan-card {
-                padding: 20px 15px;
+                padding: 16px 12px;
             }
 
             .plan-card__period {
-                font-size: 28px;
+                font-size: 24px;
             }
 
             /* サービスセクションアイテム */
             .service-section-item__content {
-                padding: 40px 30px;
+                padding: 30px 20px;
             }
 
             .service-section-item__title {
-                font-size: 32px;
+                font-size: 28px;
             }
 
             .service-section-item__features {
                 grid-template-columns: repeat(2, 1fr);
             }
 
-            /* ご利用イメージ */
-            .use-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
+            /* ご利用イメージ - 3カラム2段 */
+            .use-grid,
+            .service-sections .use-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 16px;
+            }
+
+            .use-grid .use-item,
+            .service-sections .use-grid .use-item {
+                padding: 16px;
+            }
+
+            .use-grid .use-item h4 {
+                font-size: 14px;
+            }
+
+            .use-grid .use-item p {
+                font-size: 11px;
+            }
+
+            .use-grid .use-item img {
+                max-height: 120px;
             }
 
             /* お客様の声 */
             .voice-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
+                gap: 16px;
             }
 
             /* FAQ */
@@ -1192,13 +1228,13 @@
             }
 
             .mega-menu-column {
-                min-width: 200px;
+                min-width: 150px;
             }
 
             /* フッター */
             .footer-content {
                 flex-direction: column;
-                gap: 30px;
+                gap: 24px;
             }
         }
 
@@ -3602,6 +3638,38 @@
             </div>
         </div>
     </section>
+
+    <!-- フッター -->
+    <footer class="site-footer">
+        <div class="footer-copyright">
+            © 2025 ミセサポ | 株式会社ミセサポ
+        </div>
+    </footer>
+
+    <style>
+        .site-footer {
+            background: #FF679C;
+            color: #fff;
+            padding: 30px 20px;
+            text-align: center;
+            margin-top: 0;
+        }
+
+        .footer-copyright {
+            font-size: 14px;
+            letter-spacing: 0.05em;
+        }
+
+        @media (max-width: 768px) {
+            .site-footer {
+                padding: 20px 15px;
+            }
+
+            .footer-copyright {
+                font-size: 12px;
+            }
+        }
+    </style>
 
     <!-- 化粧ヘッダー -->
     <header class="cosmetic-header">

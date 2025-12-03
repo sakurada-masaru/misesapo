@@ -583,112 +583,126 @@
 /* レスポンシブ - タブレット（769px〜1024px） */
 @media (min-width: 769px) and (max-width: 1024px) {
     .cosmetic-header {
-        height: 160px;
-        background-size: 100% 160px;
+        height: 140px;
+        background-size: 100% 140px;
     }
 
     .cosmetic-header-inner {
-        transform: translateY(-30px);
-        padding: 10px 20px;
+        transform: translateY(-20px);
+        padding: 8px 15px;
+        gap: 10px;
     }
 
     .cosmetic-header-logo {
-        left: 20px;
+        left: 15px;
     }
 
     .cosmetic-header-right {
-        right: 20px;
+        right: 15px;
+        gap: 8px;
     }
 
     .cosmetic-logo img {
-        height: 50px;
+        height: 40px;
+    }
+
+    /* ナビゲーションを中央に配置し、スペースを確保 */
+    .cosmetic-header-nav {
+        max-width: calc(100% - 200px);
+        justify-content: center;
     }
 
     .misesapo-mega-menu.ishikawa-style .mega-menu-link {
-        padding: 0 8px;
-        font-size: 11px;
+        padding: 0 5px;
+        font-size: 10px;
     }
 
     .misesapo-mega-menu.ishikawa-style .mega-menu-text::before {
-        margin-right: 4px;
-        font-size: 0.5em;
+        margin-right: 3px;
+        font-size: 0.4em;
     }
 
     .misesapo-mega-menu.ishikawa-style .mega-menu-arrow {
-        font-size: 8px;
-        margin-left: 4px;
+        font-size: 7px;
+        margin-left: 3px;
     }
 
     .misesapo-mega-menu.ishikawa-style .mega-menu-submenu {
-        min-width: 400px;
-        max-width: 90vw;
-        padding: 20px 30px;
+        min-width: 350px;
+        max-width: 85vw;
+        padding: 15px 20px;
     }
 
     .misesapo-mega-menu.ishikawa-style .mega-menu-submenu-inner {
-        gap: 25px;
+        gap: 20px;
     }
 
     .misesapo-mega-menu.ishikawa-style .mega-menu-column {
-        min-width: 150px;
+        min-width: 130px;
     }
 
     .misesapo-mega-menu.ishikawa-style .mega-menu-column-title {
-        font-size: 12px;
-        margin-bottom: 12px;
+        font-size: 11px;
+        margin-bottom: 10px;
     }
 
     .misesapo-mega-menu.ishikawa-style .mega-menu-column-list a {
-        font-size: 11px;
+        font-size: 10px;
     }
 
     .misesapo-mega-menu.ishikawa-style .mega-menu-column-list li {
-        margin: 0 0 8px 0;
+        margin: 0 0 6px 0;
     }
 
     .cosmetic-login-btn {
-        padding: 6px 14px;
-        font-size: 12px;
+        padding: 5px 10px;
+        font-size: 10px;
+        white-space: nowrap;
     }
 
     .cosmetic-action-btn {
-        padding: 6px;
+        padding: 4px;
     }
 
     .cosmetic-action-btn svg {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
+    }
+
+    .cosmetic-actions {
+        gap: 2px;
     }
 
     /* 通常ヘッダー */
     .normal-header {
-        height: 60px;
+        height: 50px;
     }
 
     .normal-header-inner {
-        padding: 0 20px;
+        padding: 0 15px;
     }
 
     .normal-header-logo {
-        left: 20px;
+        left: 15px;
     }
 
     .normal-header-logo img {
-        height: 32px;
+        height: 28px;
     }
 
     .normal-header-nav a {
-        font-size: 12px;
-        padding: 4px 10px;
+        font-size: 10px;
+        padding: 3px 6px;
     }
 
     .normal-header-actions {
-        right: 20px;
+        right: 15px;
+        gap: 6px;
     }
 
     .normal-header-login {
-        padding: 6px 14px;
-        font-size: 12px;
+        padding: 5px 10px;
+        font-size: 10px;
     }
 }
 
