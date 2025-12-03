@@ -147,8 +147,50 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                         self.send_error(500, f"Internal Server Error: {e}")
                         return
             
+            # 動的ルーティング: /reports/shared/{id}/view を /reports/shared/[id]/view.html にマッピング（先にチェック）
+            if path.startswith('/reports/shared/'):
+                parts = [p for p in path.split('/') if p]  # 空文字列を除去
+                # /reports/shared/{id}/view または /reports/shared/{id}/view/ の場合
+                if len(parts) >= 4 and parts[2] and parts[3] == 'view':
+                    view_template = PUBLIC / "reports" / "shared" / "[id]" / "view.html"
+                    if view_template.exists() and view_template.is_file():
+                        try:
+                            with open(view_template, 'rb') as f:
+                                content = f.read()
+                            self.send_response(200)
+                            self.send_header('Content-type', 'text/html; charset=utf-8')
+                            self.send_header('Content-length', str(len(content)))
+                            self.end_headers()
+                            self.wfile.write(content)
+                            return
+                        except Exception as e:
+                            print(f"Error serving shared report view template: {e}")
+                            self.send_error(500, f"Internal Server Error: {e}")
+                            return
+            
+            # 動的ルーティング: /reports/shared/{id} を /reports/shared/[id].html にマッピング
+            if path.startswith('/reports/shared/'):
+                parts = [p for p in path.split('/') if p]  # 空文字列を除去
+                # /reports/shared/{id} または /reports/shared/{id}/ の場合
+                if len(parts) >= 3 and parts[2] and parts[2] != 'view':
+                    shared_template = PUBLIC / "reports" / "shared" / "[id].html"
+                    if shared_template.exists() and shared_template.is_file():
+                        try:
+                            with open(shared_template, 'rb') as f:
+                                content = f.read()
+                            self.send_response(200)
+                            self.send_header('Content-type', 'text/html; charset=utf-8')
+                            self.send_header('Content-length', str(len(content)))
+                            self.end_headers()
+                            self.wfile.write(content)
+                            return
+                        except Exception as e:
+                            print(f"Error serving shared report template: {e}")
+                            self.send_error(500, f"Internal Server Error: {e}")
+                            return
+            
             # 動的ルーティング: /reports/{report_id}.html を /reports/[id].html にマッピング
-            if path.startswith('/reports/') and path.endswith('.html'):
+            if path.startswith('/reports/') and path.endswith('.html') and not path.startswith('/reports/shared/'):
                 # /reports/{report_id}.html の形式
                 report_id_template = PUBLIC / "reports" / "[id].html"
                 if report_id_template.exists():
