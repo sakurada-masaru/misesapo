@@ -411,6 +411,12 @@
   max-height: 85vh;
   background: #fff;
   box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+  display: none;
+}
+
+.modal-dialog[open] {
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-dialog::backdrop {
