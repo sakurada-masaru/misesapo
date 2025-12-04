@@ -2498,7 +2498,9 @@
         
         // 保存ボタンのイベントリスナー
         const saveBtn = document.getElementById('warehouse-save-btn');
+        console.log('[Warehouse] Looking for save button:', saveBtn);
         if (saveBtn) {
+          console.log('[Warehouse] Save button found, adding click listener');
           saveBtn.addEventListener('click', function() {
             console.log('[Warehouse] Save button clicked');
             console.log('[Warehouse] Selected images count:', selectedWarehouseImages.size);
