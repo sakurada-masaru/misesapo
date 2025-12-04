@@ -1242,30 +1242,14 @@
       renderPagination();
     };
 
-    // 詳細表示 - 実際のレポートページを新しいタブで開く
+    // 詳細表示 - モーダルで表示
     window.viewReport = function(id) {
       const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
-      if (!report) return;
-
-      // レポートIDを取得
-      const reportId = report.report_id || report.id;
-      
-      // ベースパスを取得
-      let basePath = '/';
-      const hostname = window.location.hostname;
-      if (hostname.includes('github.io')) {
-        const pathParts = window.location.pathname.split('/');
-        if (pathParts.length > 1 && pathParts[1]) {
-          basePath = `/${pathParts[1]}/`;
-        }
+      if (!report) {
+        alert('レポートが見つかりませんでした');
+        return;
       }
-      
-      // 実際のレポート共有ページを新しいタブで開く
-      const viewUrl = `${basePath}reports/shared/${reportId}/view`;
-      window.open(viewUrl, '_blank');
-      return;
 
-      // 以下は旧モーダル表示（使用しない）
       currentReportId = id;
       const store = allStores.find(s => s.id === report.store_id) || {};
       const worker = allWorkers.find(w => w.id === report.worker_id || w.id === report.staff_id) || {};
