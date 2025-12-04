@@ -1809,12 +1809,21 @@
         status: 'published'
       };
       
+      // デバッグ: 送信データを確認
+      console.log('[Submit] Report data:', JSON.stringify(reportData, null, 2));
+      console.log('[Submit] Work items photos:', workItems.map(item => ({
+        name: item.item_name,
+        before: item.photos.before,
+        after: item.photos.after
+      })));
+      
       try {
         const submitBtn = document.getElementById('ind-submit-btn');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
         
         const idToken = await getFirebaseIdToken();
+        console.log('[Submit] Firebase token:', idToken ? 'Got token' : 'No token');
         
         const response = await fetch(`${REPORT_API}/staff/reports`, {
           method: 'POST',
