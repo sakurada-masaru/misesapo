@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <base href="/" />
+        <title>ミセサポ</title>
+
+        <!--GoogleFonts(Noto Sans JP)-->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        <!--GoogleFonts(Noto Sans JP) end-->
+        <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+        <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+        <link rel="stylesheet" href="/css/style.css">
+        <link rel="stylesheet" href="/css/header.css">
+        <style>
+            .breadcrumb {
+                max-width: 1000px;
+                margin: 0 auto;
+                padding: 20px 20px 0;
+                font-size: 14px;
+                color: #666;
+            }
+
+            .breadcrumb-inner {
+                display: inline-block;
+                padding-bottom: 8px;
+                border-bottom: 1px solid #e5e5e5;
+            }
+
+            .breadcrumb a {
+                color: #666;
+                text-decoration: none;
+                transition: color 0.3s ease;
+            }
+
+            .breadcrumb a:hover {
+                color: #FF679C;
+            }
+
+            .breadcrumb span {
+                margin: 0 8px;
+                color: #999;
+            }
+
+            .breadcrumb .current {
+                color: #333;
+                font-weight: 500;
+            }
+
+            @media (max-width: 768px) {
+                .breadcrumb {
+                    padding: 15px 15px 0;
+                    font-size: 12px;
+                }
+            }
+            .contact-box {
+            background: var(--button-box-bg);
+            padding: 6rem 1rem;
+            }
+                   /* 固定ボタン */
+        .fixed-order-button {
+            position: fixed;
+            bottom: 50px;
+            right: 50px;
+            width: 150px;
+            height: 150px;
+            z-index: 10000;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            display: block;
+            text-decoration: none;
+        }
+
+        .fixed-order-button:hover {
+            transform: scale(1.1);
+        }
+
+        .fixed-order-button__circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #FF008C;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(255, 0, 140, 0.4);
+        }
+
+        .fixed-order-button__circle::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .fixed-order-button__text {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* 円形テキスト */
+        .fixed-order-button__rotating-text {
+            position: absolute;
+            width: 190px;
+            height: 190px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: rotate-text 20s infinite linear;
+        }
+
+        .fixed-order-button__rotating-text svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .fixed-order-button__rotating-text text {
+            fill: #FF008C;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: Arial, sans-serif;
+        }
+
+        @keyframes rotate-text {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .fixed-order-button {
+                width: 120px;
+                height: 120px;
+                bottom: 30px;
+                right: 30px;
+            }
+
+            .fixed-order-button__rotating-text {
+                width: 150px;
+                height: 150px;
+            }
+
+            .fixed-order-button__text {
+                font-size: 12px;
+            }
+
+            .fixed-order-button__rotating-text text {
+                font-size: 10px;
+            }
+        }
+        .copyright {
+        text-align: center;
+        padding: 40px 20px;
+        color: #fff;
+        font-size: 14px;
+        background: #FF679C;
+        }
+        .contact-box-title {
+        font-weight: bold;
+        }
+        .about-hero {
+        background: linear-gradient(135deg, #FF679C 0%, #FF008C 100%);
+        color: #fff;
+        padding: 30px 20px;
+        text-align: center;
+        }
+        .about-hero h1 {
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        letter-spacing: 0.1em;
+        }
+        .about-hero p {
+        font-size: 16px;
+        opacity: 0.95;
+        }
+        .about-text-head {
+        text-align: center;
+        margin-top: 10px;
+        }   
+        .about-text-line {
+        border-top: 2px solid #cccccc;
+        margin: 20px auto;
+        width: 90%;
+        }
+        .about-img-icon {
+        display: flex;
+        justify-content: space-evenly;
+        flex-wrap: wrap;
+        }
+        .about-text-head h3{
+        font-size: 16px;
+        }
+        .about-img-icon p{
+        display: flex;
+        width: 120pxabout;
+        font-size: 13px;
+        align-items: center;
+        margin-top: 20px;
+        }
+        .about-img-icon img{
+        width: 60px;
+        margin-right: 5px;
+        }
+    </style>
+    </head>
+
+    <body>
+        <!-- 通常ヘッダー -->
+        <header class="normal-header visible">
+            <div class="normal-header-inner">
+                <div class="normal-header-logo">
+                    <a href="/">
+                        <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+                    </a>
+                </div>
+                <nav class="normal-header-nav">
+                    <a href="/">TOP</a>
+                    <a href="/service.html">対応可能サービス</a>
+                    <a href="/lp.html#voice">お客様の声</a>
+                    <a href="/customers-support-desk.html">カスタマーズサポート</a>
+                    <a href="/index.html#news">お知らせ</a>
+                    <a href="/privacy-policy.html">規約＆ポリシー</a>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            <!-- ヒーローセクション -->
+            <section class="about-hero">
+                <h1>ミセサポとは？</h1>
+                <p>ミセサポが選ばれる理由</p>
+            </section>
+
+            <!-- パンくずリスト -->
+            <div class="breadcrumb">
+                <div class="breadcrumb-inner">
+                    <a href="/">TOP</a>
+                    <span>></span>
+                    <span class="current">ミセサポとは</span>
+                </div>
+            </div>
+
+
+            <!--ミセサポとは-->
+            <section id="about" class="about-bg section-box">
+                <h2 class="h2-title about-h2-title"><span class="fadeUp about-h2-normal">ミセサポなら、</span><span class="pink-slide">飲食店の地味に大変な作業を</span><br><span class="about-h2-pink fadeIn">全て</span><span class="pink-slide">丸投げできます！！</span></h2>
+                <div class="about-article-items wrapper">
+                    <article class="about-article-box fadeUp">
+                        <div class="about-article-flex">
+                            <img src="/images/about01.jpg" alt="清掃作業員">
+                            <div class="about-article-txt">
+                                <h3>清掃のプロに依頼するため、時間のかかる教育は不要です！</h3>
+                                <p>スキルや道具を持ったプロに依頼をするため、毎回１から教育をする必要はありません。</p>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="about-article-box fadeUp">
+                        <div class="about-article-flex">
+                            <img src="/images/about02.jpg" alt="清掃作業員">
+                            <div class="about-article-txt">
+                                <h3>品質保証を重視し、最後まで責任を持って清掃に取り組みます！</h3>
+                                <p>仕事の品質まで責任を持って保証いたします。ただマッチングするだけではありません。</p>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="about-article-box fadeUp">
+                        <div class="about-article-flex">
+                            <img src="/images/about03.jpg" alt="清掃作業員">
+                            <div class="about-article-txt">
+                                <h3>プラン提案から様々な清掃業務までを一挙に行うため、丸投げでOKです！</h3>
+                                <p>複数まとめて依頼が行えます。なにから対応するべきか等のご提案まで可能です。</p>
+                            </div>
+                        </div>
+                        <div class="about-text-line"></div>
+
+                            <div class="about-text-head">
+                                <h3>清掃以外にもこのようなご要望にも対応しております。</h3>
+                                <div class="about-img-icon">
+                                    <p><img src="images/service33.jpg" width="80px">壁紙補修</p>
+                                    <p><img src="images/service34.jpg" width="80px">床補修</p>
+                                    <p><img src="images/service35.jpg" width="80px">什器修繕</p>
+                                </div>
+                            </div>    
+
+                    </article>
+                    
+                </div>
+</section>
+            <!--ミセサポとは end-->
+
+
+
+            <!--お問い合わせボタンボックス-->
+            <section class="contact-box">
+                <div class="contact-box-inner wrapper">
+                    <p class="contact-box-title contact-box-catchphrase">「これもホントはやってほしいんだけど・・・」<br>「痒いところに手が届く清掃サービスがあれば・・・」</p>
+                    <h3 class="contact-box-title g-nav-orderBox-title">＼まずは無料で相談してみませんか？／</h3>
+                    <h2 class="contact-box-title">店舗の清掃はミセサポへ！！</h2>
+                </div>
+            </section>
+            <!--お問い合わせボタンボックス end-->
+
+
+        </main>
+
+        <!-- コピーライト -->
+        <div class="copyright">
+            © 2025 ミセサポ | 株式会社ミセサポ
+        </div>
+
+        <!-- 固定ボタン -->
+        <a href="/service.html" class="fixed-order-button">
+            <div class="fixed-order-button__rotating-text">
+                <svg viewBox="0 0 190 190">
+                    <defs>
+                        <path id="circle-path" d="M 95, 95 m -85, 0 a 85,85 0 1,1 170,0 a 85,85 0 1,1 -170,0" />
+                    </defs>
+                    <text>
+                        <textPath href="#circle-path" startOffset="0%">
+                            Welcome to Misesapo! To place an order, click here. For any questions, please contact us! 
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+            <div class="fixed-order-button__circle">
+                <div class="fixed-order-button__text">発注は<br>こちらから</div>
+            </div>
+        </a>
+
+        <script src="/js/swiper-bundle.min.js"></script>
+        <script src="/js/script.js"></script>
+        <script>
+            // パスを解決（GitHub Pages対応）
+            function resolvePath(path) {
+                if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                    return path;
+                }
+                
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                if (isLocalDev) {
+                    return path.startsWith('/') ? path : '/' + path;
+                }
+                
+                // GitHub Pagesでは/misesapo/を追加
+                let resolvedPath;
+                if (path.startsWith('/misesapo/')) {
+                    resolvedPath = path;
+                } else if (path.startsWith('/')) {
+                    resolvedPath = '/misesapo' + path;
+                } else {
+                    resolvedPath = '/misesapo/' + path;
+                }
+                
+                return window.location.origin + resolvedPath;
+            }
+            
+            // 企業情報ページでは通常ヘッダーを常時表示
+            document.addEventListener('DOMContentLoaded', function() {
+                const normalHeader = document.querySelector('.normal-header');
+                if (normalHeader) {
+                    normalHeader.classList.add('visible');
+                    // スクロールイベントでクラスを削除しないようにする
+                    const originalRemove = normalHeader.classList.remove;
+                    normalHeader.classList.remove = function(...args) {
+                        if (args[0] !== 'visible') {
+                            originalRemove.apply(this, args);
+                        }
+                    };
+                }
+                
+                // リンクを解決
+                document.querySelectorAll('a[href^="/"]').forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                        link.href = resolvePath(href);
+                    }
+                });
+                
+                // 画像を解決
+                document.querySelectorAll('img[src^="/"]').forEach(img => {
+                    const src = img.getAttribute('src');
+                    if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+                        img.src = resolvePath(src);
+                    }
+                });
+            });
+        </script>
+        <script src="/js/header.js"></script>
+    </body>
+</html>
