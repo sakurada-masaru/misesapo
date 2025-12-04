@@ -1389,20 +1389,6 @@
           photoGrid.appendChild(photoItem);
         }
       }
-          <img src="${resolvedPath}" alt="Selected from media">
-          <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
-            <i class="fas fa-times"></i>
-          </button>
-        `;
-        
-        // アップロードボタンの前に挿入
-        const addBtns = photoGrid.querySelector('.image-add-btns-modal');
-        if (addBtns) {
-          photoGrid.insertBefore(photoItem, addBtns);
-        } else {
-          photoGrid.appendChild(photoItem);
-        }
-      }
 
       // 画像倉庫用の変数
       let currentWarehouseCategory = null;
