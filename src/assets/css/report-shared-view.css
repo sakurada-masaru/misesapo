@@ -33,11 +33,20 @@ body {
     background: #FF679C;
     color: #fff;
     padding: 24px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.report-header-logo img {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
 }
 .report-header-content {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 }
 .report-date {
     font-size: 1.2rem;
