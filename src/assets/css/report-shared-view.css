@@ -32,7 +32,7 @@ body {
 .report-header {
     background: #FF679C;
     color: #fff;
-    padding: 16px 24px;
+    padding: 24px 24px;
 }
 .report-header-content {
     display: flex;
@@ -54,7 +54,7 @@ body {
 .items-list-bar {
     background: #f9f9f9;
     padding: 12px 24px;
-    padding-top: 76px; /* ヘッダーの高さ分 */
+    padding-top: 90px; /* ヘッダーの高さ分 */
     border-bottom: 1px solid #eee;
     display: flex;
     align-items: center;
