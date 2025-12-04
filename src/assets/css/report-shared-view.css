@@ -33,6 +33,7 @@ body {
     background: #FF679C;
     color: #fff;
     padding: 16px 24px;
+    position: static !important;
 }
 .report-header-content {
     display: flex;
