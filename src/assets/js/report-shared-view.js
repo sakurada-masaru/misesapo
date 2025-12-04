@@ -194,7 +194,7 @@ function renderReport(report) {
             return `
               <section class="image-section">
                 <div class="section-header">
-                  <h4 class="section-title">📷 画像セクション（${imageType === 'work' ? '作業前・作業後' : '設置前・設置後'}）</h4>
+                  <h4 class="section-title">📷 画像</h4>
                 </div>
                 <div class="image-grid">
                   <div class="image-category before-category">
