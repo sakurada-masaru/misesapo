@@ -132,6 +132,12 @@ function renderReport(report) {
     document.getElementById('report-date').textContent = `清掃日時: ${dateStr} ${timeStr}`;
     document.getElementById('report-store').textContent = report.store_name || '店舗名不明';
     
+    // 担当者氏名
+    const staffEl = document.getElementById('report-staff');
+    if (staffEl && report.staff_name) {
+        staffEl.textContent = `担当: ${report.staff_name}`;
+    }
+    
     // 清掃項目リスト
     const cleaningItemsEl = document.getElementById('cleaning-items');
     const items = report.work_items || [];

@@ -1722,6 +1722,7 @@ def get_public_report(report_id, headers):
         public_report = {
             'report_id': report.get('report_id'),
             'store_name': report.get('store_name'),
+            'staff_name': report.get('staff_name'),  # 担当者氏名
             'cleaning_date': report.get('cleaning_date'),
             'cleaning_start_time': report.get('cleaning_start_time'),
             'cleaning_end_time': report.get('cleaning_end_time'),
