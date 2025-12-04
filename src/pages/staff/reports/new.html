@@ -91,11 +91,11 @@
   </form>
 
   <!-- 画像倉庫モーダル -->
-  <dialog id="warehouse-dialog" class="modal-dialog">
+  <div id="warehouse-dialog" class="modal-overlay" style="display:none;">
     <div class="modal-content">
       <div class="modal-header">
         <h3>画像を選択</h3>
-        <button type="button" class="modal-close" onclick="document.getElementById('warehouse-dialog').close()">
+        <button type="button" class="modal-close" onclick="document.getElementById('warehouse-dialog').style.display='none'">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -142,20 +142,20 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="document.getElementById('warehouse-dialog').close()">キャンセル</button>
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('warehouse-dialog').style.display='none'">キャンセル</button>
         <button type="button" class="btn btn-primary" id="save-images-btn">
           <i class="fas fa-check"></i> 選択を確定
         </button>
       </div>
     </div>
-  </dialog>
+  </div>
 
   <!-- ヘルプモーダル -->
-  <dialog id="help-dialog" class="modal-dialog">
+  <div id="help-dialog" class="modal-overlay" style="display:none;">
     <div class="modal-content">
       <div class="modal-header">
         <h3>使い方</h3>
-        <button type="button" class="modal-close" onclick="document.getElementById('help-dialog').close()">
+        <button type="button" class="modal-close" onclick="document.getElementById('help-dialog').style.display='none'">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -178,10 +178,10 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" onclick="document.getElementById('help-dialog').close()">閉じる</button>
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('help-dialog').style.display='none'">閉じる</button>
       </div>
     </div>
-  </dialog>
+  </div>
 </main>
 
 <script src="/js/staff-report-new.js"></script>

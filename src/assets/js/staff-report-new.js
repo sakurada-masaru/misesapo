@@ -86,7 +86,7 @@
 
     // ヘルプボタン
     document.getElementById('help-btn').addEventListener('click', () => {
-      document.getElementById('help-dialog').showModal();
+      document.getElementById('help-dialog').style.display = 'flex';
     });
 
     // フォーム送信
@@ -288,7 +288,7 @@
     selectedWarehouseImages = { before: [], after: [] };
     document.getElementById('upload-preview').innerHTML = '';
     loadWarehouseImages();
-    document.getElementById('warehouse-dialog').showModal();
+    document.getElementById('warehouse-dialog').style.display = 'flex';
   };
 
   // カメラ入力処理
@@ -437,7 +437,7 @@
       container.insertBefore(thumb, addBtn);
     });
 
-    document.getElementById('warehouse-dialog').close();
+    document.getElementById('warehouse-dialog').style.display = 'none';
   }
 
   // 画像削除
