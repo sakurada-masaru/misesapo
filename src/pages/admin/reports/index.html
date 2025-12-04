@@ -755,18 +755,21 @@
       gap: 15px;
       margin-bottom: 20px;
     }
-    .item-title-input-modal {
+    .item-title-input-modal,
+    .item-title-select-modal {
       flex: 1;
       min-width: 200px;
-      font-size: 1.6rem;
+      font-size: 1.2rem;
       font-weight: 600;
       color: #222;
       padding: 8px 12px;
       border: 1px solid #e5e7eb;
       border-radius: 6px;
       background: #fff;
+      cursor: pointer;
     }
-    .item-title-input-modal:focus {
+    .item-title-input-modal:focus,
+    .item-title-select-modal:focus {
       outline: none;
       border-color: #FF679C;
       box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
@@ -1015,6 +1018,7 @@
     let allReports = [];
     let allStores = [];
     let allWorkers = [];
+    let allServiceItems = [];
     let filteredReports = [];
     let currentPage = 1;
     const perPage = 20;
@@ -1022,10 +1026,23 @@
 
     // 初期化
     document.addEventListener('DOMContentLoaded', async () => {
-      await Promise.all([loadReports(), loadStores(), loadWorkers()]);
+      await Promise.all([loadReports(), loadStores(), loadWorkers(), loadServiceItems()]);
       setupEventListeners();
         
   });
+
+    // サービス項目をロード
+    async function loadServiceItems() {
+      try {
+        const res = await fetch('/data/service_items.json');
+        if (res.ok) {
+          allServiceItems = await res.json();
+        }
+      } catch (err) {
+        console.warn('Failed to load service items:', err);
+        allServiceItems = [];
+      }
+    }
 
     async function loadReports() {
       try {
@@ -1727,9 +1744,13 @@
         }
         
         const itemNames = Array.from(items).map(section => {
+          const select = section.querySelector('.item-title-select-modal');
           const input = section.querySelector('.item-title-input-modal');
+          if (select) {
+            return select.value || '未入力';
+          }
           return input ? input.value || '未入力' : '未入力';
-        }).filter(name => name !== '未入力');
+        }).filter(name => name !== '未入力' && name !== '');
         
         if (itemNames.length === 0) {
           container.innerHTML = '<span class="items-list-empty-modal">項目を追加してください</span>';
@@ -1783,9 +1804,18 @@
           `;
         }).join('');
         
+        // サービス項目のドロップリストオプションを生成
+        const serviceOptions = allServiceItems.map(item => {
+          const selected = item.title === itemNameValue ? 'selected' : '';
+          return `<option value="${escapeHtml(item.title)}" ${selected}>${escapeHtml(item.title)}</option>`;
+        }).join('');
+        
         workItemSection.innerHTML = `
           <div class="item-header-modal">
-            <input type="text" class="item-title-input-modal" placeholder="清掃項目名（例: グリストラップ）" value="${escapeHtml(itemNameValue)}" data-item-id="${itemIdValue}">
+            <select class="item-title-select-modal" data-item-id="${itemIdValue}">
+              <option value="">-- 清掃項目を選択 --</option>
+              ${serviceOptions}
+            </select>
             <div class="item-details-modal">
               <input type="text" class="detail-tag-input-modal" placeholder="タイプ（例: 床置き型）" style="width: 150px;" value="${escapeHtml(details.type || '')}">
               <input type="text" class="detail-tag-input-modal" placeholder="個数（例: 2個）" style="width: 100px;" value="${escapeHtml(details.count || '')}">
@@ -1843,9 +1873,11 @@
         
         container.appendChild(workItemSection);
         
-        // タイトル入力のイベントリスナー（リスト更新用）
-        const titleInput = workItemSection.querySelector('.item-title-input-modal');
-        titleInput.addEventListener('input', window.updateCleaningItemsListModal);
+        // タイトル選択のイベントリスナー（リスト更新用）
+        const titleSelect = workItemSection.querySelector('.item-title-select-modal');
+        if (titleSelect) {
+          titleSelect.addEventListener('change', window.updateCleaningItemsListModal);
+        }
         
         // 写真アップロードのイベントリスナー
         workItemSection.querySelectorAll('input[type="file"]').forEach(input => {
@@ -2067,8 +2099,9 @@
           // 清掃項目を収集
           document.querySelectorAll('.cleaning-section-modal').forEach(section => {
             const itemId = section.dataset.itemId;
+            const titleSelect = section.querySelector('.item-title-select-modal');
             const titleInput = section.querySelector('.item-title-input-modal');
-            const itemName = titleInput.value.trim();
+            const itemName = titleSelect ? titleSelect.value.trim() : (titleInput ? titleInput.value.trim() : '');
             
             if (!itemName) {
               return;
