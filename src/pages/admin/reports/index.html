@@ -274,7 +274,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="document.getElementById('warehouse-dialog').close()">キャンセル</button>
-        <button type="button" class="btn btn-primary" id="warehouse-save-btn">
+        <button type="button" class="btn btn-primary" id="warehouse-save-btn" onclick="window.saveWarehouseImages()">
           <i class="fas fa-check"></i> 選択した画像を追加
         </button>
       </div>
@@ -2496,48 +2496,7 @@
           });
         }
         
-        // 保存ボタンのイベントリスナー
-        const saveBtn = document.getElementById('warehouse-save-btn');
-        console.log('[Warehouse] Looking for save button:', saveBtn);
-        if (saveBtn) {
-          console.log('[Warehouse] Save button found, adding click listener');
-          saveBtn.addEventListener('click', function() {
-            console.log('[Warehouse] Save button clicked');
-            console.log('[Warehouse] Selected images count:', selectedWarehouseImages.size);
-            console.log('[Warehouse] Current itemId:', currentWarehouseItemId);
-            console.log('[Warehouse] Selected images:', Array.from(selectedWarehouseImages.entries()));
-            
-            if (selectedWarehouseImages.size > 0 && currentWarehouseItemId) {
-              warehouseSaved = true;
-              
-              // 選択した画像をカテゴリごとに追加
-              // MapのforEachは (value, key) の順序なので、selectedWarehouseImages.set(imageUrl, category) の場合
-              // forEach((category, imageUrl) => ...) が正しい
-              let addedCount = 0;
-              selectedWarehouseImages.forEach((category, imageUrl) => {
-                console.log('[Warehouse] Processing image:', { imageUrl, category, itemId: currentWarehouseItemId });
-                console.log('[Warehouse] Calling addWarehouseImageToReport with:', { imageUrl, category, itemId: currentWarehouseItemId });
-                try {
-                  const result = window.addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
-                  console.log('[Warehouse] addWarehouseImageToReport returned:', result);
-                  if (result) {
-                    addedCount++;
-                  }
-                } catch (error) {
-                  console.error('[Warehouse] Error adding image:', error);
-                }
-              });
-              
-              console.log('[Warehouse] Added', addedCount, 'images out of', selectedWarehouseImages.size);
-              selectedWarehouseImages.clear();
-              
-              // モーダルを閉じる
-              document.getElementById('warehouse-dialog').close();
-            } else {
-              alert('画像を選択してください');
-            }
-          });
-        }
+        // 保存ボタンの処理（DOMContentLoaded内のイベントリスナーは削除し、onclickで直接呼び出す）
         
         // 画像倉庫モーダルが閉じられた時（キャンセルボタンや×ボタンで閉じた場合）
         const warehouseDialog = document.getElementById('warehouse-dialog');
@@ -2555,6 +2514,43 @@
           });
         }
       });
+
+      // 画像倉庫の保存ボタン処理
+      window.saveWarehouseImages = function() {
+        console.log('[Warehouse] Save button clicked');
+        console.log('[Warehouse] Selected images count:', selectedWarehouseImages.size);
+        console.log('[Warehouse] Current itemId:', currentWarehouseItemId);
+        console.log('[Warehouse] Selected images:', Array.from(selectedWarehouseImages.entries()));
+        
+        if (selectedWarehouseImages.size > 0 && currentWarehouseItemId) {
+          warehouseSaved = true;
+          
+          // 選択した画像をカテゴリごとに追加
+          // MapのforEachは (value, key) の順序なので、selectedWarehouseImages.set(imageUrl, category) の場合
+          // forEach((category, imageUrl) => ...) が正しい
+          let addedCount = 0;
+          selectedWarehouseImages.forEach((category, imageUrl) => {
+            console.log('[Warehouse] Processing image:', { imageUrl, category, itemId: currentWarehouseItemId });
+            try {
+              const result = window.addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
+              console.log('[Warehouse] addWarehouseImageToReport returned:', result);
+              if (result) {
+                addedCount++;
+              }
+            } catch (error) {
+              console.error('[Warehouse] Error adding image:', error);
+            }
+          });
+          
+          console.log('[Warehouse] Added', addedCount, 'images out of', selectedWarehouseImages.size);
+          selectedWarehouseImages.clear();
+          
+          // モーダルを閉じる
+          document.getElementById('warehouse-dialog').close();
+        } else {
+          alert('画像を選択してください');
+        }
+      };
 
       // 画像倉庫から選択した画像をレポートに追加
       window.addWarehouseImageToReport = function(imageUrl, category, itemId) {
