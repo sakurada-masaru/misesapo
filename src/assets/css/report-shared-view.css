@@ -3,18 +3,17 @@
 }
 body {
     font-family: 'Noto Sans JP', sans-serif;
-    background: #f4f7f6;
+    background: #fff;
     margin: 0;
     padding: 0;
     color: #333;
+    line-height: 1.6;
 }
 .shared-report-container {
-    max-width: 900px;
+    max-width: 1000px;
     margin: 0 auto;
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    overflow: hidden;
+    padding: 20px;
 }
 .loading {
     text-align: center;
@@ -29,146 +28,116 @@ body {
     border-radius: 8px;
     margin: 20px;
 }
+/* ヘッダー部分 */
 .report-header {
-    background: #FF679C;
-    color: #fff;
-    padding: 16px 24px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #eee;
 }
-.report-header-content {
+.report-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 20px 0;
+    color: #222;
+}
+.report-info {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
 }
-.report-date {
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-.report-store {
-    font-size: 1rem;
-    opacity: 0.9;
-}
-.items-list-bar {
-    background: #f9f9f9;
-    padding: 12px 24px;
-    border-bottom: 1px solid #eee;
+.info-row {
     display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-.items-list {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+    align-items: flex-start;
+    gap: 10px;
     flex-wrap: wrap;
 }
-.items-list-label {
+.info-label {
     font-weight: 600;
     color: #555;
-    font-size: 0.9rem;
+    min-width: 120px;
+    flex-shrink: 0;
 }
-.items-list-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-.items-list-item {
-    font-size: 0.9rem;
+.info-value {
     color: #333;
-    padding: 6px 12px;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
+    flex: 1;
 }
-.cleaning-section {
-    padding: 24px;
+/* 作業内容一覧 */
+.items-list-item {
+    display: inline-block;
+    font-size: 0.95rem;
+    color: #333;
+    padding: 4px 8px;
+    margin-right: 8px;
+    margin-bottom: 4px;
+}
+/* 作業内容表示セクション */
+.report-main {
+    margin-top: 30px;
+}
+.work-item-section {
+    margin-bottom: 40px;
+    padding-bottom: 30px;
     border-bottom: 1px solid #eee;
 }
-.cleaning-section:last-child {
+.work-item-section:last-child {
     border-bottom: none;
 }
-.item-header {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-.item-title {
-    font-size: 1.6rem;
+.work-item-title {
+    font-size: 1.4rem;
     font-weight: 600;
     color: #222;
-    margin: 0;
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #333;
 }
-.item-details {
+/* 写真セクション */
+.photos-section {
+    margin-bottom: 20px;
+}
+.photos-label {
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 10px;
+    font-size: 1rem;
+}
+.photos-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    padding-top: 5px;
-}
-.detail-tag {
-    background: #f0f4f8;
-    color: #555;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-}
-.subsection {
-    margin-top: 20px;
-}
-.subsection-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
-    border-bottom: 2px solid #333;
-    padding-bottom: 5px;
-    margin-top: 25px;
+    gap: 12px;
     margin-bottom: 15px;
 }
-.subsection p {
-    margin: 0 0 15px 0;
-    color: #555;
-    white-space: pre-wrap;
-}
-.image-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    margin-top: 20px;
-}
-.image-category {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: center;
-}
-.image-category-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #444;
-    margin: 0;
-    text-align: center;
-    width: 100%;
-}
-.image-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    width: 100%;
-    max-width: 100%;
-}
-.image-item {
+.photo-item {
     position: relative;
-    aspect-ratio: 1;
-    border-radius: 8px;
+    width: 200px;
+    height: 200px;
+    border-radius: 4px;
     overflow: hidden;
-    border: 1px solid #ccc;
+    border: 1px solid #ddd;
     background: #fafafa;
+    flex-shrink: 0;
 }
-.image-item img {
+.photo-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+/* コメントセクション */
+.comment-section {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+.comment-label {
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+    font-size: 1rem;
+}
+.comment-text {
+    color: #333;
+    white-space: pre-wrap;
+    line-height: 1.8;
 }
 /* 満足度アンケートフォーム */
 .satisfaction-form {
@@ -269,30 +238,28 @@ body {
 }
 @media (max-width: 768px) {
     .shared-report-container {
-        margin: 0;
-        border-radius: 0;
-    }
-    .items-list-bar {
-        flex-direction: column;
-        align-items: flex-start;
         padding: 15px;
     }
-    .cleaning-section {
-        padding: 20px 15px;
+    .report-title {
+        font-size: 1.5rem;
     }
-    .item-header {
+    .info-row {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+        gap: 5px;
     }
-    .item-title {
-        font-size: 1.4rem;
+    .info-label {
+        min-width: auto;
     }
-    .image-grid {
-        grid-template-columns: 1fr;
+    .work-item-title {
+        font-size: 1.2rem;
     }
-    .image-list {
-        grid-template-columns: repeat(2, 1fr);
+    .photo-item {
+        width: calc(50% - 6px);
+        height: auto;
+        aspect-ratio: 1;
+    }
+    .photos-grid {
+        gap: 8px;
     }
 }
 

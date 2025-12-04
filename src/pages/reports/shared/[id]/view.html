@@ -16,20 +16,30 @@
     <div class="shared-report-container">
         <div class="loading" id="loading">読み込み中...</div>
         <div id="report-content" style="display: none;">
-            <header class="report-header" id="report-header">
-                <div class="report-header-content">
-                    <div class="report-date" id="report-date"></div>
-                    <div class="report-store" id="report-store"></div>
+            <!-- ヘッダー部分 -->
+            <header class="report-header">
+                <h1 class="report-title" id="report-title">作業報告書</h1>
+                <div class="report-info">
+                    <div class="info-row">
+                        <span class="info-label">作業日時：</span>
+                        <span class="info-value" id="report-date"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">作業場所：</span>
+                        <span class="info-value" id="report-store"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">業者名・担当名：</span>
+                        <span class="info-value" id="report-staff"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">作業内容一覧：</span>
+                        <div class="info-value" id="cleaning-items"></div>
+                    </div>
                 </div>
             </header>
             
-            <div class="items-list-bar">
-                <div class="items-list">
-                    <span class="items-list-label">実施清掃項目</span>
-                    <div class="items-list-items" id="cleaning-items"></div>
-                </div>
-            </div>
-            
+            <!-- 作業内容表示セクション -->
             <div class="report-main" id="report-main">
                 <!-- 清掃項目が動的に追加される -->
             </div>
