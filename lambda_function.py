@@ -1225,24 +1225,38 @@ def create_report(event, headers):
             }
             
             # 作業前の写真
-            for idx, base64_image in enumerate(item.get('photos', {}).get('before', [])):
-                if base64_image:
-                    photo_key = f"reports/{report_id}/{item_id}-before-{idx+1}.jpg"
-                    try:
-                        photo_url = upload_photo_to_s3(base64_image, photo_key)
-                        photo_urls[item_id]['before'].append(photo_url)
-                    except Exception as e:
-                        print(f"Error uploading before photo: {str(e)}")
+            base64_counter_before = 0
+            for photo_data in item.get('photos', {}).get('before', []):
+                if photo_data:
+                    # Base64画像の場合はS3にアップロード
+                    if isinstance(photo_data, str) and photo_data.startswith('data:image'):
+                        base64_counter_before += 1
+                        photo_key = f"reports/{report_id}/{item_id}-before-{base64_counter_before}.jpg"
+                        try:
+                            photo_url = upload_photo_to_s3(photo_data, photo_key)
+                            photo_urls[item_id]['before'].append(photo_url)
+                        except Exception as e:
+                            print(f"Error uploading before photo: {str(e)}")
+                    else:
+                        # URLの場合はそのまま保持
+                        photo_urls[item_id]['before'].append(photo_data)
             
             # 作業後の写真
-            for idx, base64_image in enumerate(item.get('photos', {}).get('after', [])):
-                if base64_image:
-                    photo_key = f"reports/{report_id}/{item_id}-after-{idx+1}.jpg"
-                    try:
-                        photo_url = upload_photo_to_s3(base64_image, photo_key)
-                        photo_urls[item_id]['after'].append(photo_url)
-                    except Exception as e:
-                        print(f"Error uploading after photo: {str(e)}")
+            base64_counter_after = 0
+            for photo_data in item.get('photos', {}).get('after', []):
+                if photo_data:
+                    # Base64画像の場合はS3にアップロード
+                    if isinstance(photo_data, str) and photo_data.startswith('data:image'):
+                        base64_counter_after += 1
+                        photo_key = f"reports/{report_id}/{item_id}-after-{base64_counter_after}.jpg"
+                        try:
+                            photo_url = upload_photo_to_s3(photo_data, photo_key)
+                            photo_urls[item_id]['after'].append(photo_url)
+                        except Exception as e:
+                            print(f"Error uploading after photo: {str(e)}")
+                    else:
+                        # URLの場合はそのまま保持
+                        photo_urls[item_id]['after'].append(photo_data)
         
         # staff_idが指定されていない場合は、created_byを使用
         staff_id = body_json.get('staff_id') or user_info.get('uid', 'admin-uid')
