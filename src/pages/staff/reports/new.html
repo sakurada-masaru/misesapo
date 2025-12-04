@@ -1834,11 +1834,15 @@
           body: JSON.stringify(reportData)
         });
         
+        console.log('[Submit] Response status:', response.status);
+        const responseData = await response.json().catch(() => ({}));
+        console.log('[Submit] Response data:', responseData);
+        
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || '送信に失敗しました');
+          throw new Error(responseData.error || `送信に失敗しました (${response.status})`);
         }
         
+        console.log('[Submit] Success! Report ID:', responseData.report_id);
         alert('レポートを作成しました！');
         window.location.href = '/staff/dashboard';
         

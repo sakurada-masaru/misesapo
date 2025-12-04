@@ -1537,10 +1537,17 @@ def create_report(event, headers):
         }
         
         # 写真URLをwork_itemsに反映
+        print(f"[DEBUG] photo_urls: {json.dumps(photo_urls, default=str)}")
         for item in report_item['work_items']:
             item_id = item['item_id']
+            print(f"[DEBUG] Processing work_item: {item_id}, photo_urls has key: {item_id in photo_urls}")
             if item_id in photo_urls:
                 item['photos'] = photo_urls[item_id]
+                print(f"[DEBUG] Set photos for {item_id}: {json.dumps(item['photos'], default=str)}")
+            else:
+                print(f"[DEBUG] No photos found for {item_id}")
+        
+        print(f"[DEBUG] Final work_items: {json.dumps(report_item['work_items'], default=str)}")
         
         # DynamoDBに保存
         REPORTS_TABLE.put_item(Item=report_item)
