@@ -2230,11 +2230,14 @@
 
       // 画像倉庫を開く
       window.openImageWarehouse = function(category, itemId) {
-        console.log('[Warehouse] Opening warehouse:', { category, itemId });
+        console.log('[Warehouse] Opening warehouse:', { category, itemId, type: typeof itemId });
         
+        // itemIdを文字列として保存（比較のため）
         currentWarehouseCategory = category;
-        currentWarehouseItemId = itemId;
+        currentWarehouseItemId = String(itemId);
         selectedWarehouseImages.clear();
+        
+        console.log('[Warehouse] Set currentWarehouseItemId to:', currentWarehouseItemId);
         
         // レポートの日付を取得（デフォルト値として使用）
         const reportDate = document.getElementById('report-date').value || new Date().toISOString().split('T')[0];
@@ -2459,29 +2462,65 @@
         const warehouseDialog = document.getElementById('warehouse-dialog');
         if (warehouseDialog) {
           warehouseDialog.addEventListener('close', function() {
-            console.log('[Warehouse] Modal closed, selected images:', selectedWarehouseImages.size, 'ItemId:', currentWarehouseItemId);
+            console.log('[Warehouse] Modal closed');
+            console.log('[Warehouse] Selected images count:', selectedWarehouseImages.size);
+            console.log('[Warehouse] Current itemId:', currentWarehouseItemId);
+            console.log('[Warehouse] Selected images:', Array.from(selectedWarehouseImages.entries()));
+            
             if (selectedWarehouseImages.size > 0 && currentWarehouseItemId) {
               // 選択した画像をカテゴリごとに追加
               selectedWarehouseImages.forEach((category, imageUrl) => {
-                addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
+                console.log('[Warehouse] Processing image:', { imageUrl, category, itemId: currentWarehouseItemId });
+                window.addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
               });
               selectedWarehouseImages.clear();
             } else {
-              console.log('[Warehouse] No images to add or missing itemId');
+              console.log('[Warehouse] No images to add or missing itemId', {
+                hasImages: selectedWarehouseImages.size > 0,
+                hasItemId: !!currentWarehouseItemId
+              });
             }
           });
         }
       });
 
       // 画像倉庫から選択した画像をレポートに追加
-      function addWarehouseImageToReport(imageUrl, category, itemId) {
-        console.log('[Warehouse] Adding image to report:', { imageUrl, category, itemId });
+      window.addWarehouseImageToReport = function(imageUrl, category, itemId) {
+        console.log('[Warehouse] Adding image to report:', { imageUrl, category, itemId, itemIdType: typeof itemId });
         
-        const photoGrid = document.querySelector(`.image-list-modal[data-category="${category}"][data-item-id="${itemId}"]`);
+        // itemIdを文字列に変換（比較のため）
+        const itemIdStr = String(itemId);
+        
+        // セレクターを構築
+        const selector = `.image-list-modal[data-category="${category}"][data-item-id="${itemIdStr}"]`;
+        console.log('[Warehouse] Looking for photo grid with selector:', selector);
+        
+        let photoGrid = document.querySelector(selector);
         if (!photoGrid) {
-          console.error('[Warehouse] Could not find photo grid for', category, itemId);
-          return;
+          console.error('[Warehouse] Could not find photo grid for', { category, itemId: itemIdStr, selector });
+          // すべてのphotoGridを確認
+          const allPhotoGrids = document.querySelectorAll('.image-list-modal');
+          console.log('[Warehouse] Available photo grids:', Array.from(allPhotoGrids).map(el => ({
+            category: el.dataset.category,
+            itemId: el.dataset.itemId,
+            itemIdType: typeof el.dataset.itemId
+          })));
+          
+          // より柔軟な検索を試す（部分一致）
+          const fallbackGrid = Array.from(allPhotoGrids).find(el => 
+            el.dataset.category === category && 
+            (el.dataset.itemId === itemIdStr || el.dataset.itemId === itemId || String(el.dataset.itemId) === itemIdStr)
+          );
+          if (fallbackGrid) {
+            console.log('[Warehouse] Found photo grid using fallback search');
+            photoGrid = fallbackGrid;
+          } else {
+            console.error('[Warehouse] Could not find photo grid even with fallback search');
+            return;
+          }
         }
+        
+        console.log('[Warehouse] Found photo grid:', photoGrid);
         
         // 既に同じ画像が追加されていないか確認
         const escapedUrl = escapeHtml(imageUrl);
@@ -2505,12 +2544,14 @@
         const addBtns = photoGrid.querySelector('.image-add-btns-modal');
         if (addBtns) {
           photoGrid.insertBefore(photoItem, addBtns);
+          console.log('[Warehouse] Image inserted before add buttons');
         } else {
           photoGrid.appendChild(photoItem);
+          console.log('[Warehouse] Image appended to grid');
         }
         
         console.log('[Warehouse] Image added successfully:', imageUrl);
-      }
+      };
 
       // ベースパスを取得（GitHub Pages対応）
       function getBasePath() {
