@@ -257,8 +257,19 @@
             <i class="fas fa-search"></i> 検索
           </button>
         </div>
-        <div id="warehouse-images-container" class="warehouse-images-grid">
-          <div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>
+        <div id="warehouse-images-container">
+          <div class="warehouse-category-section">
+            <h4 class="warehouse-category-title"><i class="fas fa-clock"></i> 作業前（Before）</h4>
+            <div id="warehouse-images-before" class="warehouse-images-grid">
+              <div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>
+            </div>
+          </div>
+          <div class="warehouse-category-section">
+            <h4 class="warehouse-category-title"><i class="fas fa-check-circle"></i> 作業後（After）</h4>
+            <div id="warehouse-images-after" class="warehouse-images-grid">
+              <div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -1033,6 +1044,26 @@
     .warehouse-filters .form-group {
       flex: 1;
       margin: 0;
+    }
+    .warehouse-category-section {
+      margin-bottom: 24px;
+    }
+    .warehouse-category-section:last-child {
+      margin-bottom: 0;
+    }
+    .warehouse-category-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .warehouse-category-title i {
+      color: var(--primary, #FF6BA6);
     }
     .warehouse-images-grid {
       display: grid;
@@ -2194,7 +2225,8 @@
       // 画像倉庫用の変数
       let currentWarehouseCategory = null;
       let currentWarehouseItemId = null;
-      let selectedWarehouseImages = new Set();
+      // Map<imageUrl, category> で選択した画像とカテゴリを保持
+      let selectedWarehouseImages = new Map();
 
       // 画像倉庫を開く
       window.openImageWarehouse = function(category, itemId) {
@@ -2206,7 +2238,10 @@
         
         // レポートの日付を取得（デフォルト値として使用）
         const reportDate = document.getElementById('report-date').value || new Date().toISOString().split('T')[0];
-        document.getElementById('warehouse-date-filter').value = reportDate;
+        const dateFilter = document.getElementById('warehouse-date-filter');
+        if (dateFilter) {
+          dateFilter.value = reportDate;
+        }
         
         // カテゴリフィルターを設定
         const categoryFilter = document.getElementById('warehouse-category-filter');
@@ -2215,102 +2250,207 @@
           console.log('[Warehouse] Category filter set to:', categoryFilter.value);
         }
         
-        // 画像を読み込み（カテゴリが空の場合は undefined を渡す）
-        loadWarehouseImages(reportDate, category && category.trim() !== '' ? category : undefined);
-        
         // モーダルを開く
-        document.getElementById('warehouse-dialog').showModal();
+        const warehouseDialog = document.getElementById('warehouse-dialog');
+        if (warehouseDialog) {
+          warehouseDialog.showModal();
+          
+          // モーダルが開かれた後に画像を読み込み（少し遅延させてDOMが準備されるのを待つ）
+          setTimeout(() => {
+            // 画像を読み込み（カテゴリが空の場合は undefined を渡す）
+            loadWarehouseImages(reportDate, category && category.trim() !== '' ? category : undefined);
+          }, 100);
+        }
       };
 
       // 画像倉庫の画像を読み込み
       async function loadWarehouseImages(date, category) {
-        const container = document.getElementById('warehouse-images-container');
-        container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
+        const beforeContainer = document.getElementById('warehouse-images-before');
+        const afterContainer = document.getElementById('warehouse-images-after');
+        
+        if (!beforeContainer || !afterContainer) {
+          console.error('[Warehouse] Containers not found');
+          return;
+        }
+        
+        beforeContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
+        afterContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
         
         try {
           const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
           
-          // パラメータを構築（カテゴリが空文字列の場合は送信しない）
-          const params = new URLSearchParams({ date });
-          if (category && category.trim() !== '') {
-            params.append('category', category);
+          // カテゴリが指定されている場合はそのカテゴリのみ、指定されていない場合は両方を取得
+          const categoriesToLoad = category && category.trim() !== '' ? [category] : ['before', 'after'];
+          
+          // 各カテゴリの画像を取得
+          const allImages = { before: [], after: [] };
+          
+          for (const cat of categoriesToLoad) {
+            const params = new URLSearchParams({ date, category: cat });
+            const url = `${REPORT_API}/staff/report-images?${params}`;
+            console.log('[Warehouse] Loading images:', { date, category: cat, url });
+            
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error('[Warehouse] Error response:', errorText);
+              continue; // エラーが発生しても他のカテゴリを続行
+            }
+            
+            const data = await response.json();
+            console.log('[Warehouse] Received data:', { date: data.date, category: data.category, count: data.count });
+            
+            const images = data.images || [];
+            if (cat === 'before') {
+              allImages.before = images;
+            } else if (cat === 'after') {
+              allImages.after = images;
+            }
           }
           
-          const url = `${REPORT_API}/staff/report-images?${params}`;
-          console.log('[Warehouse] Loading images:', { date, category, url });
-          
-          const response = await fetch(url);
-          
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('[Warehouse] Error response:', errorText);
-            throw new Error('画像の読み込みに失敗しました: ' + response.status);
+          // 作業前の画像を表示
+          if (allImages.before.length === 0) {
+            beforeContainer.innerHTML = '<div class="loading">作業前の画像がありません</div>';
+          } else {
+            beforeContainer.innerHTML = allImages.before.map(img => {
+              const imageUrl = img.url || img.s3_key;
+              const isSelected = selectedWarehouseImages.has(imageUrl);
+              const escapedUrl = escapeHtml(imageUrl);
+              return `
+                <div class="warehouse-image-item ${isSelected ? 'selected' : ''}" 
+                     data-image-url="${escapedUrl}"
+                     data-category="before">
+                  <img src="${escapedUrl}" alt="作業前" loading="lazy">
+                  ${isSelected ? '<div class="image-check"><i class="fas fa-check"></i></div>' : ''}
+                </div>
+              `;
+            }).join('');
+            
+            // イベントリスナーを追加
+            beforeContainer.querySelectorAll('.warehouse-image-item').forEach(item => {
+              item.addEventListener('click', function() {
+                const imageUrl = this.dataset.imageUrl;
+                const category = this.dataset.category;
+                if (imageUrl && category) {
+                  toggleWarehouseImage(imageUrl, category);
+                }
+              });
+            });
           }
           
-          const data = await response.json();
-          console.log('[Warehouse] Received data:', { date: data.date, category: data.category, count: data.count });
-          
-          const images = data.images || [];
-          
-          if (images.length === 0) {
-            container.innerHTML = '<div class="loading">該当する画像がありません</div>';
-            return;
+          // 作業後の画像を表示
+          if (allImages.after.length === 0) {
+            afterContainer.innerHTML = '<div class="loading">作業後の画像がありません</div>';
+          } else {
+            afterContainer.innerHTML = allImages.after.map(img => {
+              const imageUrl = img.url || img.s3_key;
+              const isSelected = selectedWarehouseImages.has(imageUrl);
+              const escapedUrl = escapeHtml(imageUrl);
+              return `
+                <div class="warehouse-image-item ${isSelected ? 'selected' : ''}" 
+                     data-image-url="${escapedUrl}"
+                     data-category="after">
+                  <img src="${escapedUrl}" alt="作業後" loading="lazy">
+                  ${isSelected ? '<div class="image-check"><i class="fas fa-check"></i></div>' : ''}
+                </div>
+              `;
+            }).join('');
+            
+            // イベントリスナーを追加
+            afterContainer.querySelectorAll('.warehouse-image-item').forEach(item => {
+              item.addEventListener('click', function() {
+                const imageUrl = this.dataset.imageUrl;
+                const category = this.dataset.category;
+                if (imageUrl && category) {
+                  toggleWarehouseImage(imageUrl, category);
+                }
+              });
+            });
           }
-          
-          container.innerHTML = images.map(img => {
-            const imageUrl = img.url || img.s3_key;
-            const isSelected = selectedWarehouseImages.has(imageUrl);
-            return `
-              <div class="warehouse-image-item ${isSelected ? 'selected' : ''}" 
-                   data-url="${escapeHtml(imageUrl)}"
-                   onclick="toggleWarehouseImage('${escapeHtml(imageUrl)}')">
-                <img src="${escapeHtml(imageUrl)}" alt="画像" loading="lazy">
-                ${isSelected ? '<div class="image-check"><i class="fas fa-check"></i></div>' : ''}
-              </div>
-            `;
-          }).join('');
           
         } catch (error) {
           console.error('[Warehouse] Error loading warehouse images:', error);
-          container.innerHTML = '<div class="loading">エラー: ' + error.message + '</div>';
+          beforeContainer.innerHTML = '<div class="loading">エラー: ' + error.message + '</div>';
+          afterContainer.innerHTML = '<div class="loading">エラー: ' + error.message + '</div>';
         }
       }
 
       // 画像倉庫の画像を選択/解除
-      window.toggleWarehouseImage = function(imageUrl) {
-        const item = document.querySelector(`.warehouse-image-item[data-url="${escapeHtml(imageUrl)}"]`);
-        if (!item) return;
+      window.toggleWarehouseImage = function(imageUrl, category) {
+        console.log('[Warehouse] Toggling image:', { imageUrl, category });
+        const escapedUrl = escapeHtml(imageUrl);
+        const item = document.querySelector(`.warehouse-image-item[data-image-url="${escapedUrl}"]`);
+        if (!item) {
+          console.error('[Warehouse] Image item not found:', escapedUrl);
+          return;
+        }
         
         if (selectedWarehouseImages.has(imageUrl)) {
+          // 選択解除
           selectedWarehouseImages.delete(imageUrl);
           item.classList.remove('selected');
-          item.querySelector('.image-check')?.remove();
+          const checkMark = item.querySelector('.image-check');
+          if (checkMark) {
+            checkMark.remove();
+          }
+          console.log('[Warehouse] Image deselected:', imageUrl);
         } else {
-          selectedWarehouseImages.add(imageUrl);
+          // 選択（カテゴリ情報も保存）
+          selectedWarehouseImages.set(imageUrl, category);
           item.classList.add('selected');
-          item.innerHTML = `
-            <img src="${escapeHtml(imageUrl)}" alt="画像" loading="lazy">
-            <div class="image-check"><i class="fas fa-check"></i></div>
-          `;
+          // チェックマークがなければ追加
+          if (!item.querySelector('.image-check')) {
+            const checkMark = document.createElement('div');
+            checkMark.className = 'image-check';
+            checkMark.innerHTML = '<i class="fas fa-check"></i>';
+            item.appendChild(checkMark);
+          }
+          console.log('[Warehouse] Image selected:', { imageUrl, category, total: selectedWarehouseImages.size });
         }
       };
 
-      // 画像倉庫の検索ボタン
+      // 画像倉庫の検索関数
+      function performWarehouseSearch() {
+        const date = document.getElementById('warehouse-date-filter').value;
+        const categorySelect = document.getElementById('warehouse-category-filter');
+        const category = categorySelect ? categorySelect.value : '';
+        
+        console.log('[Warehouse] Performing search:', { date, category });
+        
+        if (date) {
+          // カテゴリが空文字列の場合は undefined を渡す（すべてのカテゴリを取得）
+          loadWarehouseImages(date, category && category.trim() !== '' ? category : undefined);
+        } else {
+          alert('日付を選択してください');
+        }
+      }
+
+      // 画像倉庫の検索ボタンとEnterキー
       document.addEventListener('DOMContentLoaded', function() {
         const searchBtn = document.getElementById('warehouse-search-btn');
         if (searchBtn) {
-          searchBtn.addEventListener('click', function() {
+          searchBtn.addEventListener('click', performWarehouseSearch);
+        }
+        
+        // 日付フィルターでEnterキーを押した時に検索
+        const dateFilter = document.getElementById('warehouse-date-filter');
+        if (dateFilter) {
+          dateFilter.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              performWarehouseSearch();
+            }
+          });
+        }
+        
+        // カテゴリフィルターが変更された時に自動検索（日付が設定されている場合）
+        const categoryFilter = document.getElementById('warehouse-category-filter');
+        if (categoryFilter) {
+          categoryFilter.addEventListener('change', function() {
             const date = document.getElementById('warehouse-date-filter').value;
-            const categorySelect = document.getElementById('warehouse-category-filter');
-            const category = categorySelect ? categorySelect.value : '';
-            
-            console.log('[Warehouse] Search clicked:', { date, category });
-            
             if (date) {
-              // カテゴリが空文字列の場合は undefined を渡す（すべてのカテゴリを取得）
-              loadWarehouseImages(date, category && category.trim() !== '' ? category : undefined);
-            } else {
-              alert('日付を選択してください');
+              performWarehouseSearch();
             }
           });
         }
@@ -2319,11 +2459,15 @@
         const warehouseDialog = document.getElementById('warehouse-dialog');
         if (warehouseDialog) {
           warehouseDialog.addEventListener('close', function() {
-            if (selectedWarehouseImages.size > 0 && currentWarehouseCategory && currentWarehouseItemId) {
-              selectedWarehouseImages.forEach(imageUrl => {
-                addWarehouseImageToReport(imageUrl, currentWarehouseCategory, currentWarehouseItemId);
+            console.log('[Warehouse] Modal closed, selected images:', selectedWarehouseImages.size, 'ItemId:', currentWarehouseItemId);
+            if (selectedWarehouseImages.size > 0 && currentWarehouseItemId) {
+              // 選択した画像をカテゴリごとに追加
+              selectedWarehouseImages.forEach((category, imageUrl) => {
+                addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
               });
               selectedWarehouseImages.clear();
+            } else {
+              console.log('[Warehouse] No images to add or missing itemId');
             }
           });
         }
@@ -2331,15 +2475,19 @@
 
       // 画像倉庫から選択した画像をレポートに追加
       function addWarehouseImageToReport(imageUrl, category, itemId) {
+        console.log('[Warehouse] Adding image to report:', { imageUrl, category, itemId });
+        
         const photoGrid = document.querySelector(`.image-list-modal[data-category="${category}"][data-item-id="${itemId}"]`);
         if (!photoGrid) {
-          console.error('Could not find photo grid for', category, itemId);
+          console.error('[Warehouse] Could not find photo grid for', category, itemId);
           return;
         }
         
         // 既に同じ画像が追加されていないか確認
-        const existingImages = photoGrid.querySelectorAll(`.image-item-modal[data-url="${escapeHtml(imageUrl)}"]`);
+        const escapedUrl = escapeHtml(imageUrl);
+        const existingImages = photoGrid.querySelectorAll(`.image-item-modal[data-url="${escapedUrl}"]`);
         if (existingImages.length > 0) {
+          console.log('[Warehouse] Image already exists, skipping:', imageUrl);
           return; // 既に追加されている
         }
         
@@ -2347,7 +2495,7 @@
         photoItem.className = 'image-item-modal';
         photoItem.dataset.url = imageUrl;
         photoItem.innerHTML = `
-          <img src="${escapeHtml(imageUrl)}" alt="Selected from warehouse">
+          <img src="${escapedUrl}" alt="Selected from warehouse" loading="lazy">
           <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
             <i class="fas fa-times"></i>
           </button>
@@ -2360,6 +2508,8 @@
         } else {
           photoGrid.appendChild(photoItem);
         }
+        
+        console.log('[Warehouse] Image added successfully:', imageUrl);
       }
 
       // ベースパスを取得（GitHub Pages対応）
