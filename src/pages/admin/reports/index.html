@@ -2096,8 +2096,8 @@
             }
             
             const detailInputs = section.querySelectorAll('.detail-tag-input-modal');
-            const type = detailInputs[0]?.value.trim() || '';
-            const count = detailInputs[1]?.value.trim() || '';
+            const type = detailInputs[0]?.value?.trim() || '';
+            const count = detailInputs[1]?.value?.trim() || '';
             
             const workContentEl = section.querySelector('.work-item-content-modal');
             const workMemoEl = section.querySelector('.work-item-memo-modal');
