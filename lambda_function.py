@@ -1893,6 +1893,14 @@ def update_report(event, headers):
                     except Exception as e:
                         print(f"Error uploading after photo: {str(e)}")
         
+        # staff_idの処理（空文字列の場合は既存の値を使用、それもなければNone）
+        # DynamoDBのセカンダリインデックスキーには空文字列を設定できないため
+        staff_id_value = body_json.get('staff_id', '')
+        if staff_id_value == '':
+            staff_id_value = existing_item.get('staff_id')
+        if staff_id_value == '' or staff_id_value is None:
+            staff_id_value = None
+        
         # レポートを更新
         updated_item = {
             'report_id': report_id,
@@ -1901,7 +1909,7 @@ def update_report(event, headers):
             'created_by': existing_item.get('created_by'),
             'created_by_name': body_json.get('created_by_name', existing_item.get('created_by_name', '')),
             'created_by_email': existing_item.get('created_by_email'),
-            'staff_id': body_json.get('staff_id', existing_item.get('staff_id')),
+            'staff_id': staff_id_value,
             'staff_name': body_json.get('staff_name', existing_item.get('staff_name')),
             'staff_email': body_json.get('staff_email', existing_item.get('staff_email')),
             'store_id': body_json.get('store_id', existing_item['store_id']),
@@ -1915,6 +1923,10 @@ def update_report(event, headers):
             'satisfaction': body_json.get('satisfaction', existing_item.get('satisfaction', {})),
             'ttl': existing_item.get('ttl')
         }
+        
+        # staff_idがNoneの場合は、DynamoDBアイテムから削除（インデックスキーとして使用できないため）
+        if updated_item['staff_id'] is None:
+            del updated_item['staff_id']
         
         # 写真URLをwork_itemsに反映
         for item in updated_item['work_items']:
@@ -2055,6 +2067,14 @@ def update_report_by_id(report_id, event, headers):
                     except Exception as e:
                         print(f"Error uploading after photo: {str(e)}")
         
+        # staff_idの処理（空文字列の場合は既存の値を使用、それもなければNone）
+        # DynamoDBのセカンダリインデックスキーには空文字列を設定できないため
+        staff_id_value = body_json.get('staff_id', '')
+        if staff_id_value == '':
+            staff_id_value = existing_item.get('staff_id')
+        if staff_id_value == '' or staff_id_value is None:
+            staff_id_value = None
+        
         # レポートを更新
         updated_item = {
             'report_id': report_id,
@@ -2063,7 +2083,7 @@ def update_report_by_id(report_id, event, headers):
             'created_by': existing_item.get('created_by'),
             'created_by_name': body_json.get('created_by_name', existing_item.get('created_by_name', '')),
             'created_by_email': existing_item.get('created_by_email'),
-            'staff_id': body_json.get('staff_id', existing_item.get('staff_id')),
+            'staff_id': staff_id_value,
             'staff_name': body_json.get('staff_name', existing_item.get('staff_name')),
             'staff_email': body_json.get('staff_email', existing_item.get('staff_email')),
             'store_id': body_json.get('store_id', existing_item['store_id']),
@@ -2077,6 +2097,10 @@ def update_report_by_id(report_id, event, headers):
             'satisfaction': body_json.get('satisfaction', existing_item.get('satisfaction', {})),
             'ttl': existing_item.get('ttl')
         }
+        
+        # staff_idがNoneの場合は、DynamoDBアイテムから削除（インデックスキーとして使用できないため）
+        if updated_item['staff_id'] is None:
+            del updated_item['staff_id']
         
         # 写真URLをwork_itemsに反映
         for item in updated_item['work_items']:

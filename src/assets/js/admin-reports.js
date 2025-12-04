@@ -240,6 +240,7 @@
       console.log('[viewReport] Report ID:', id);
       console.log('[viewReport] Report data:', report);
       console.log('[viewReport] Work items:', report.work_items);
+      console.log('[viewReport] Sections:', report.sections);
 
       currentReportId = id;
       const store = allStores.find(s => s.id === report.store_id) || {};
@@ -362,6 +363,87 @@
             </div>
             <div class="report-main-modal">
               ${workItemsHtml}
+              ${report.sections && Array.isArray(report.sections) && report.sections.length > 0 ? report.sections.map(section => {
+                if (section.section_type === 'image') {
+                  // 画像セクション
+                  const beforePhotos = section.photos?.before || [];
+                  const afterPhotos = section.photos?.after || [];
+                  const imageType = section.image_type || 'work';
+                  const beforeLabel = imageType === 'work' ? '作業前（Before）' : '設置前（Before）';
+                  const afterLabel = imageType === 'work' ? '作業後（After）' : '設置後（After）';
+                  
+                  const beforePhotosHtml = beforePhotos.length > 0
+                    ? `<div class="image-list-modal">
+                         ${beforePhotos.map(url => `
+                           <div class="image-item-modal">
+                             <img src="${url}" alt="${beforeLabel}" loading="lazy" 
+                                  onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E画像読み込みエラー%3C/text%3E%3C/svg%3E';" />
+                           </div>
+                         `).join('')}
+                       </div>`
+                    : '<p style="color: #999; font-style: italic; padding: 20px; text-align: center;">写真なし</p>';
+
+                  const afterPhotosHtml = afterPhotos.length > 0
+                    ? `<div class="image-list-modal">
+                         ${afterPhotos.map(url => `
+                           <div class="image-item-modal">
+                             <img src="${url}" alt="${afterLabel}" loading="lazy" 
+                                  onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E画像読み込みエラー%3C/text%3E%3C/svg%3E';" />
+                           </div>
+                         `).join('')}
+                       </div>`
+                    : '<p style="color: #999; font-style: italic; padding: 20px; text-align: center;">写真なし</p>';
+
+                  return `
+                    <section class="image-section-modal">
+                      <div class="section-header-modal">
+                        <h4 class="section-title-modal">
+                          <i class="fas fa-image"></i> 画像セクション（${imageType === 'work' ? '作業前・作業後' : '設置前・設置後'}）
+                        </h4>
+                      </div>
+                      <div class="image-grid-modal">
+                        <div class="image-category-modal before-category">
+                          <h4 class="image-category-title-modal">${beforeLabel}</h4>
+                          ${beforePhotosHtml}
+                        </div>
+                        <div class="image-category-modal after-category">
+                          <h4 class="image-category-title-modal">${afterLabel}</h4>
+                          ${afterPhotosHtml}
+                        </div>
+                      </div>
+                    </section>
+                  `;
+                } else if (section.section_type === 'comment') {
+                  // コメントセクション
+                  return `
+                    <section class="comment-section-modal">
+                      <div class="section-header-modal">
+                        <h4 class="section-title-modal">
+                          <i class="fas fa-comment"></i> コメント
+                        </h4>
+                      </div>
+                      <div class="subsection-modal">
+                        <p style="white-space: pre-wrap;">${escapeHtml(section.content || '')}</p>
+                      </div>
+                    </section>
+                  `;
+                } else if (section.section_type === 'work_content') {
+                  // 作業内容セクション
+                  return `
+                    <section class="work-content-section-modal">
+                      <div class="section-header-modal">
+                        <h4 class="section-title-modal">
+                          <i class="fas fa-tasks"></i> 作業内容
+                        </h4>
+                      </div>
+                      <div class="subsection-modal">
+                        <p style="white-space: pre-wrap;">${escapeHtml(section.content || '')}</p>
+                      </div>
+                    </section>
+                  `;
+                }
+                return '';
+              }).filter(Boolean).join('') : ''}
             </div>
           </div>
         `;
