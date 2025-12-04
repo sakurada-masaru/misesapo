@@ -828,14 +828,45 @@
       flex-direction: column;
       gap: 8px;
       align-items: center;
+      padding: 16px;
+      border-radius: 12px;
+    }
+    /* 作業前のスタイル */
+    .image-category-modal.before-category {
+      background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
+      border: 2px solid #f59e0b;
+    }
+    .image-category-modal.before-category .image-category-title-modal {
+      color: #b45309;
+    }
+    .image-category-modal.before-category .image-category-title-modal i {
+      color: #f59e0b;
+    }
+    /* 作業後のスタイル */
+    .image-category-modal.after-category {
+      background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
+      border: 2px solid #10b981;
+    }
+    .image-category-modal.after-category .image-category-title-modal {
+      color: #047857;
+    }
+    .image-category-modal.after-category .image-category-title-modal i {
+      color: #10b981;
     }
     .image-category-title-modal {
       font-size: 1rem;
-      font-weight: 600;
+      font-weight: 700;
       color: #444;
       margin: 0;
       text-align: center;
       width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .image-category-title-modal i {
+      font-size: 1.1rem;
     }
     .image-list-modal {
       display: grid;
@@ -1769,8 +1800,8 @@
             <textarea class="work-item-content-modal" placeholder="作業内容を入力してください">${escapeHtml(workContent)}</textarea>
           </div>
           <div class="image-grid-modal">
-            <div class="image-category-modal">
-              <h4 class="image-category-title-modal">作業前</h4>
+            <div class="image-category-modal before-category">
+              <h4 class="image-category-title-modal"><i class="fas fa-clock"></i> 作業前（Before）</h4>
               <div class="image-list-modal" data-category="before" data-item-id="${itemIdValue}">
                 ${beforePhotosHtml}
                 <div class="image-item-modal image-add-btns-modal">
@@ -1786,8 +1817,8 @@
                 </div>
               </div>
             </div>
-            <div class="image-category-modal">
-              <h4 class="image-category-title-modal">作業後</h4>
+            <div class="image-category-modal after-category">
+              <h4 class="image-category-title-modal"><i class="fas fa-check-circle"></i> 作業後（After）</h4>
               <div class="image-list-modal" data-category="after" data-item-id="${itemIdValue}">
                 ${afterPhotosHtml}
                 <div class="image-item-modal image-add-btns-modal">
