@@ -3,12 +3,8 @@
 .staff-report-page {
   min-height: 100vh;
   background: #f5f5f5;
-  padding-top: 70px; /* 固定ヘッダー分 */
-  padding-bottom: 180px; /* 固定フッター分 */
-}
-
-.report-form {
-  padding-top: 10px;
+  padding-top: 56px; /* 固定ヘッダーの高さと同じ */
+  padding-bottom: 200px; /* 固定フッター分（4ボタン + 送信 + 余白） */
 }
 
 /* 固定ヘッダー */
@@ -325,14 +321,14 @@
 /* 追加ボタンフッター */
 .add-buttons-footer {
   position: fixed;
-  bottom: 70px;
+  bottom: 60px; /* 送信ボタンの高さ分 */
   left: 0;
   right: 0;
   background: #fff;
   border-top: 1px solid #e5e7eb;
-  padding: 10px 12px;
+  padding: 8px 12px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   z-index: 90;
 }
 
@@ -370,18 +366,18 @@
   right: 0;
   background: #fff;
   border-top: 1px solid #e5e7eb;
-  padding: 12px 16px;
+  padding: 10px 16px;
   z-index: 90;
 }
 
 .btn-submit {
   width: 100%;
-  padding: 14px 20px;
+  padding: 12px 20px;
   background: linear-gradient(135deg, #FF679C 0%, #FF8FB1 100%);
   color: #fff;
   border: none;
-  border-radius: 12px;
-  font-size: 1rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
