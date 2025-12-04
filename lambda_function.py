@@ -211,6 +211,11 @@ def lambda_handler(event, context):
                 return get_report_detail(report_id, event, headers)
             elif method == 'DELETE':
                 return delete_report(report_id, event, headers)
+        elif normalized_path.startswith('/public/reports/'):
+            # 公開レポート詳細の取得（認証不要）
+            report_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_public_report(report_id, headers)
         elif normalized_path == '/admin/dashboard/stats':
             # 管理ダッシュボードの統計データを取得
             if method == 'GET':
@@ -1374,6 +1379,69 @@ def get_reports(event, headers):
                 'message': str(e)
             }, ensure_ascii=False)
         }
+
+def get_public_report(report_id, headers):
+    """
+    公開レポート詳細を取得（認証不要）
+    """
+    try:
+        # DynamoDBからレポートを取得（スキャンを使用）
+        items = []
+        last_evaluated_key = None
+        
+        while True:
+            scan_kwargs = {
+                'FilterExpression': Attr('report_id').eq(report_id),
+                'Limit': 10
+            }
+            if last_evaluated_key:
+                scan_kwargs['ExclusiveStartKey'] = last_evaluated_key
+            
+            response = REPORTS_TABLE.scan(**scan_kwargs)
+            items.extend(response.get('Items', []))
+            
+            if items:
+                break
+            
+            last_evaluated_key = response.get('LastEvaluatedKey')
+            if not last_evaluated_key:
+                break
+        
+        if not items:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'Report not found'}, ensure_ascii=False)
+            }
+        
+        # 公開用にセンシティブな情報を除外
+        report = items[0]
+        public_report = {
+            'report_id': report.get('report_id'),
+            'store_name': report.get('store_name'),
+            'cleaning_date': report.get('cleaning_date'),
+            'cleaning_start_time': report.get('cleaning_start_time'),
+            'cleaning_end_time': report.get('cleaning_end_time'),
+            'work_items': report.get('work_items', []),
+            'satisfaction': report.get('satisfaction', {})
+        }
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'report': public_report}, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting public report: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'レポートの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
 
 def get_report_detail(report_id, event, headers):
     """

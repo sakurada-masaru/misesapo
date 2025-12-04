@@ -41,71 +41,64 @@ async function loadReportDetail() {
         contentEl.style.display = 'none';
         errorEl.style.display = 'none';
         
-        // レポートデータを取得（まずはJSONファイルから）
+        // APIからレポートデータを取得
         try {
-            const reportsResponse = await fetch('/data/cleaning_reports.json');
-            const reportsData = await reportsResponse.json();
-            const report = reportsData.reports.find(r => r.id == reportId);
-            
-            if (!report) {
+            const response = await fetch(`${API_BASE_URL}/public/reports/${reportId}`);
+            if (!response.ok) {
                 throw new Error('レポートが見つかりませんでした');
             }
-            
-            // データ形式を変換
-            // cleaning_datetimeは "2023年11月6日(日)8:00-11:30" 形式なので、ISO形式に変換
-            let cleaningDate = new Date().toISOString();
-            if (report.cleaning_datetime) {
-                // "2023年11月6日(日)8:00-11:30" から日付を抽出
-                const match = report.cleaning_datetime.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-                if (match) {
-                    const year = parseInt(match[1]);
-                    const month = parseInt(match[2]) - 1; // 月は0ベース
-                    const day = parseInt(match[3]);
-                    cleaningDate = new Date(year, month, day).toISOString();
-                }
-            }
-            
-            const formattedReport = {
-                report_id: report.id,
-                cleaning_date: cleaningDate,
-                cleaning_start_time: '08:00',
-                cleaning_end_time: '11:30',
-                store_name: 'テスト店舗',
-                work_items: (report.detail || []).map(item => ({
-                    item_name: item.cleaning_item,
-                    work_content: item.work_content,
-                    work_memo: item.work_memo,
-                    photos: {
-                        before: item.images ? [item.images[0]] : [],
-                        after: item.images ? [item.images[1]] : []
-                    }
-                }))
-            };
+            const data = await response.json();
+            const report = data.report || data;
             
             // レポート情報を表示
-            renderReport(formattedReport);
-        } catch (fetchError) {
-            // フォールバック: モックデータを使用
-            console.warn('Failed to load report data, using mock:', fetchError);
-            const mockReport = {
-                report_id: reportId,
-                cleaning_date: new Date().toISOString(),
-                cleaning_start_time: '10:00',
-                cleaning_end_time: '12:00',
-                store_name: 'サンプル店舗',
-                work_items: [
-                    {
-                        item_name: '床清掃',
-                        work_content: 'フロア全体の清掃を行いました。',
-                        work_memo: '特に汚れがひどかった箇所を重点的に清掃しました。',
-                        photos: {
-                            before: ['/images/reports/floor_before_cleaning.png'],
-                            after: ['/images/reports/floor_after_cleaning.png']
+            renderReport(report);
+        } catch (apiError) {
+            console.warn('API fetch failed, trying local JSON:', apiError);
+            
+            // フォールバック: ローカルJSONファイルから取得
+            try {
+                const reportsResponse = await fetch('/data/cleaning_reports.json');
+                const reportsData = await reportsResponse.json();
+                const report = reportsData.reports.find(r => r.id == reportId);
+                
+                if (report) {
+                    // 古い形式のデータを変換
+                    let cleaningDate = new Date().toISOString();
+                    if (report.cleaning_datetime) {
+                        const match = report.cleaning_datetime.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+                        if (match) {
+                            const year = parseInt(match[1]);
+                            const month = parseInt(match[2]) - 1;
+                            const day = parseInt(match[3]);
+                            cleaningDate = new Date(year, month, day).toISOString();
                         }
                     }
-                ]
-            };
-            renderReport(mockReport);
+                    
+                    const formattedReport = {
+                        report_id: report.id,
+                        cleaning_date: cleaningDate,
+                        cleaning_start_time: '08:00',
+                        cleaning_end_time: '11:30',
+                        store_name: report.store_name || 'テスト店舗',
+                        work_items: (report.detail || []).map(item => ({
+                            item_name: item.cleaning_item,
+                            work_content: item.work_content,
+                            work_memo: item.work_memo,
+                            photos: {
+                                before: item.images ? [item.images[0]] : [],
+                                after: item.images ? [item.images[1]] : []
+                            }
+                        }))
+                    };
+                    
+                    renderReport(formattedReport);
+                } else {
+                    throw new Error('レポートが見つかりませんでした');
+                }
+            } catch (localError) {
+                console.error('Local JSON fetch also failed:', localError);
+                throw new Error('レポートが見つかりませんでした');
+            }
         }
         
         loadingEl.style.display = 'none';
