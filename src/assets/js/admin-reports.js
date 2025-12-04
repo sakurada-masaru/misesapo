@@ -265,7 +265,7 @@
           ? itemNames.map(name => `<span class="items-list-item-modal">${escapeHtml(name)}</span>`).join('')
           : '<span class="items-list-empty-modal">項目なし</span>';
 
-        // 清掃項目の詳細
+        // 清掃項目の詳細（画像は別のsectionsで管理されるため、ここでは表示しない）
         const workItemsHtml = report.work_items.map(item => {
           const details = item.details || {};
           const tags = [];
@@ -273,66 +273,12 @@
           if (details.count) tags.push(`${details.count}個`);
           const tagsHtml = tags.map(tag => `<span class="detail-tag-input-modal" style="display:inline-block;margin-right:8px;">${escapeHtml(tag)}</span>`).join('');
 
-          // 写真の表示
-          const beforePhotos = item.photos?.before || [];
-          const afterPhotos = item.photos?.after || [];
-          
-          // デバッグログ
-          console.log(`[viewReport] Item: ${item.item_name}, Before photos:`, beforePhotos);
-          console.log(`[viewReport] Item: ${item.item_name}, After photos:`, afterPhotos);
-
-          const beforePhotosHtml = beforePhotos.length > 0
-            ? `<div class="image-list-modal">
-                 ${beforePhotos.map(url => `
-                   <div class="image-item-modal">
-                     <img src="${url}" alt="作業前" loading="lazy" 
-                          onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E画像読み込みエラー%3C/text%3E%3C/svg%3E'; 
-                          onload="console.log('[Image] Loaded:', '${url}')" />
-                   </div>
-                 `).join('')}
-               </div>`
-            : '<p style="color: #999; font-style: italic; padding: 20px; text-align: center;">写真なし</p>';
-
-          const afterPhotosHtml = afterPhotos.length > 0
-            ? `<div class="image-list-modal">
-                 ${afterPhotos.map(url => `
-                   <div class="image-item-modal">
-                     <img src="${url}" alt="作業後" loading="lazy" 
-                          onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E画像読み込みエラー%3C/text%3E%3C/svg%3E'; 
-                          onload="console.log('[Image] Loaded:', '${url}')" />
-                   </div>
-                 `).join('')}
-               </div>`
-            : '<p style="color: #999; font-style: italic; padding: 20px; text-align: center;">写真なし</p>';
-
           return `
             <section class="cleaning-section-modal">
               <div class="item-header-modal">
                 <h3 class="item-title-input-modal" style="border:none;background:transparent;padding:0;font-size:1.6rem;font-weight:600;color:#222;">${escapeHtml(item.item_name || item.name || item.item_id)}</h3>
                 <div class="item-details-modal">${tagsHtml}</div>
               </div>
-              ${item.work_content ? `
-                <div class="subsection-modal">
-                  <h4 class="subsection-title-modal">作業内容</h4>
-                  <p style="white-space: pre-wrap;">${escapeHtml(item.work_content)}</p>
-                </div>
-              ` : ''}
-              <div class="image-grid-modal">
-                <div class="image-category-modal">
-                  <h4 class="image-category-title-modal">作業前</h4>
-                  ${beforePhotosHtml}
-                </div>
-                <div class="image-category-modal">
-                  <h4 class="image-category-title-modal">作業後</h4>
-                  ${afterPhotosHtml}
-                </div>
-              </div>
-              ${item.work_memo ? `
-                <div class="subsection-modal">
-                  <h4 class="subsection-title-modal">作業メモ</h4>
-                  <p style="white-space: pre-wrap;">${escapeHtml(item.work_memo)}</p>
-                </div>
-              ` : ''}
             </section>
           `;
         }).join('');
