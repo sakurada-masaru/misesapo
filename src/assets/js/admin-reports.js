@@ -369,6 +369,11 @@
                   const beforePhotos = section.photos?.before || [];
                   const afterPhotos = section.photos?.after || [];
                   const imageType = section.image_type || 'work';
+                  
+                  // デバッグログ
+                  console.log(`[viewReport] Image section:`, section);
+                  console.log(`[viewReport] Image section - Before photos:`, beforePhotos);
+                  console.log(`[viewReport] Image section - After photos:`, afterPhotos);
                   const beforeLabel = imageType === 'work' ? '作業前（Before）' : '設置前（Before）';
                   const afterLabel = imageType === 'work' ? '作業後（After）' : '設置後（After）';
                   
@@ -584,9 +589,10 @@
             if (addedSection) {
               // 作業前の写真を追加
               if (section.photos && section.photos.before && Array.isArray(section.photos.before)) {
-                section.photos.before.forEach(photoUrl => {
-                  const photoGrid = addedSection.querySelector('[data-category="before"]');
-                  if (photoGrid) {
+                const photoGrid = addedSection.querySelector('.image-list-modal[data-category="before"]');
+                if (photoGrid) {
+                  const addBtns = photoGrid.querySelector('.image-add-btns-modal');
+                  section.photos.before.forEach(photoUrl => {
                     const photoItem = document.createElement('div');
                     photoItem.className = 'image-item-modal';
                     photoItem.dataset.url = photoUrl;
@@ -596,16 +602,21 @@
                         <i class="fas fa-times"></i>
                       </button>
                     `;
-                    photoGrid.appendChild(photoItem);
-                  }
-                });
+                    if (addBtns) {
+                      photoGrid.insertBefore(photoItem, addBtns);
+                    } else {
+                      photoGrid.appendChild(photoItem);
+                    }
+                  });
+                }
               }
               
               // 作業後の写真を追加
               if (section.photos && section.photos.after && Array.isArray(section.photos.after)) {
-                section.photos.after.forEach(photoUrl => {
-                  const photoGrid = addedSection.querySelector('[data-category="after"]');
-                  if (photoGrid) {
+                const photoGrid = addedSection.querySelector('.image-list-modal[data-category="after"]');
+                if (photoGrid) {
+                  const addBtns = photoGrid.querySelector('.image-add-btns-modal');
+                  section.photos.after.forEach(photoUrl => {
                     const photoItem = document.createElement('div');
                     photoItem.className = 'image-item-modal';
                     photoItem.dataset.url = photoUrl;
@@ -615,9 +626,13 @@
                         <i class="fas fa-times"></i>
                       </button>
                     `;
-                    photoGrid.appendChild(photoItem);
-                  }
-                });
+                    if (addBtns) {
+                      photoGrid.insertBefore(photoItem, addBtns);
+                    } else {
+                      photoGrid.appendChild(photoItem);
+                    }
+                  });
+                }
               }
             }
           } else if (section.section_type === 'comment') {
@@ -1994,35 +2009,44 @@
             };
             
             // 作業前の写真
-            const beforeItems = section.querySelectorAll('[data-category="before"] .image-item-modal:not(.image-add-btns-modal)');
-            beforeItems.forEach(photoItem => {
-              if (photoItem.dataset.base64) {
-                sectionData.photos.before.push(photoItem.dataset.base64);
-              } else if (photoItem.dataset.url) {
-                sectionData.photos.before.push(photoItem.dataset.url);
-              } else {
-                const img = photoItem.querySelector('img');
-                if (img && img.src) {
-                  sectionData.photos.before.push(img.src);
+            const beforeContainer = section.querySelector('.image-list-modal[data-category="before"]');
+            if (beforeContainer) {
+              const beforeItems = beforeContainer.querySelectorAll('.image-item-modal:not(.image-add-btns-modal)');
+              console.log(`[Submit] Image section ${sectionId} - Before items found:`, beforeItems.length);
+              beforeItems.forEach(photoItem => {
+                if (photoItem.dataset.base64) {
+                  sectionData.photos.before.push(photoItem.dataset.base64);
+                } else if (photoItem.dataset.url) {
+                  sectionData.photos.before.push(photoItem.dataset.url);
+                } else {
+                  const img = photoItem.querySelector('img');
+                  if (img && img.src) {
+                    sectionData.photos.before.push(img.src);
+                  }
                 }
-              }
-            });
+              });
+            }
             
             // 作業後の写真
-            const afterItems = section.querySelectorAll('[data-category="after"] .image-item-modal:not(.image-add-btns-modal)');
-            afterItems.forEach(photoItem => {
-              if (photoItem.dataset.base64) {
-                sectionData.photos.after.push(photoItem.dataset.base64);
-              } else if (photoItem.dataset.url) {
-                sectionData.photos.after.push(photoItem.dataset.url);
-              } else {
-                const img = photoItem.querySelector('img');
-                if (img && img.src) {
-                  sectionData.photos.after.push(img.src);
+            const afterContainer = section.querySelector('.image-list-modal[data-category="after"]');
+            if (afterContainer) {
+              const afterItems = afterContainer.querySelectorAll('.image-item-modal:not(.image-add-btns-modal)');
+              console.log(`[Submit] Image section ${sectionId} - After items found:`, afterItems.length);
+              afterItems.forEach(photoItem => {
+                if (photoItem.dataset.base64) {
+                  sectionData.photos.after.push(photoItem.dataset.base64);
+                } else if (photoItem.dataset.url) {
+                  sectionData.photos.after.push(photoItem.dataset.url);
+                } else {
+                  const img = photoItem.querySelector('img');
+                  if (img && img.src) {
+                    sectionData.photos.after.push(img.src);
+                  }
                 }
-              }
-            });
+              });
+            }
             
+            console.log(`[Submit] Image section ${sectionId} - Photos:`, sectionData.photos);
             formData.sections.push(sectionData);
           });
           
@@ -2078,6 +2102,17 @@
             alert('少なくとも1つの項目（清掃項目、画像、コメント、作業内容のいずれか）を追加してください');
             return;
           }
+          
+          // デバッグログ
+          console.log('[Submit] Final formData:', JSON.stringify(formData, null, 2));
+          console.log('[Submit] Sections count:', formData.sections.length);
+          formData.sections.forEach((section, idx) => {
+            console.log(`[Submit] Section ${idx}:`, section);
+            if (section.section_type === 'image') {
+              console.log(`[Submit] Section ${idx} - Before photos:`, section.photos?.before);
+              console.log(`[Submit] Section ${idx} - After photos:`, section.photos?.after);
+            }
+          });
           
           // 編集モードかどうかを判定
           const reportId = document.getElementById('report-id').value;
