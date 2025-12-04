@@ -1962,11 +1962,11 @@
             // 清掃項目名を取得（フリーワード入力対応）
             let itemName = '';
             if (titleSelect && titleSelect.value === '__custom__' && titleInput) {
-              itemName = titleInput.value.trim();
+              itemName = (titleInput.value || '').trim();
             } else if (titleSelect && titleSelect.value && titleSelect.value !== '__custom__') {
-              itemName = titleSelect.value.trim();
-            } else if (titleInput && titleInput.value.trim()) {
-              itemName = titleInput.value.trim();
+              itemName = (titleSelect.value || '').trim();
+            } else if (titleInput && titleInput.value) {
+              itemName = (titleInput.value || '').trim();
             }
             
             // 未入力の清掃項目はスキップ
