@@ -10,7 +10,7 @@
       <div class="page-header">
         <h1 class="page-title">
           <i class="fas fa-images"></i>
-          画像一覧
+          メディア管理
         </h1>
         <div class="header-actions">
           <div class="search-box">
@@ -24,6 +24,9 @@
             <option value="jpeg">JPEG</option>
             <option value="svg">SVG</option>
           </select>
+          <button type="button" class="btn btn-primary" id="btn-upload-image">
+            <i class="fas fa-upload"></i> 画像をアップロード
+          </button>
         </div>
       </div>
 
@@ -39,6 +42,40 @@
 
   <div class="images-grid" id="images-grid">
     <!-- 画像はJavaScriptで動的に読み込まれます -->
+  </div>
+
+  <!-- アップロードモーダル -->
+  <div id="upload-modal" class="upload-modal hidden">
+    <div class="upload-modal-overlay"></div>
+    <div class="upload-modal-content">
+      <button class="upload-modal-close" id="upload-modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="upload-modal-header">
+        <h3 class="upload-modal-title">画像をアップロード</h3>
+      </div>
+      <div class="upload-modal-body">
+        <div class="upload-dropzone" id="upload-dropzone">
+          <input type="file" id="upload-file-input" accept="image/*" multiple hidden />
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p>ここにファイルをドラッグ&ドロップ</p>
+          <p class="upload-hint">または</p>
+          <button type="button" class="btn btn-primary" id="btn-select-files">
+            ファイルを選択
+          </button>
+          <p class="upload-formats">対応形式: PNG, JPG, JPEG, GIF, WebP</p>
+        </div>
+        <div class="upload-preview-list" id="upload-preview-list">
+          <!-- アップロード待ちのファイルがここに表示される -->
+        </div>
+      </div>
+      <div class="upload-modal-footer">
+        <button type="button" class="btn btn-outline" id="btn-cancel-upload">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-upload" disabled>
+          <i class="fas fa-upload"></i> アップロード
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- 画像プレビューモーダル -->
@@ -274,6 +311,166 @@
       
       // 初期読み込み
       loadImages();
+      
+      // ====== アップロード機能 ======
+      const API_GATEWAY_ENDPOINT = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+      let pendingFiles = [];
+      
+      // アップロードモーダルを開く
+      document.getElementById('btn-upload-image')?.addEventListener('click', function() {
+        const modal = document.getElementById('upload-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        pendingFiles = [];
+        updateUploadPreview();
+      });
+      
+      // アップロードモーダルを閉じる
+      function closeUploadModal() {
+        const modal = document.getElementById('upload-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+        pendingFiles = [];
+        updateUploadPreview();
+      }
+      
+      document.getElementById('upload-modal-close')?.addEventListener('click', closeUploadModal);
+      document.querySelector('.upload-modal-overlay')?.addEventListener('click', closeUploadModal);
+      document.getElementById('btn-cancel-upload')?.addEventListener('click', closeUploadModal);
+      
+      // ファイル選択
+      document.getElementById('btn-select-files')?.addEventListener('click', function() {
+        document.getElementById('upload-file-input')?.click();
+      });
+      
+      document.getElementById('upload-file-input')?.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files || []);
+        addFilesToPending(files);
+        e.target.value = '';
+      });
+      
+      // ドラッグ&ドロップ
+      const dropzone = document.getElementById('upload-dropzone');
+      if (dropzone) {
+        dropzone.addEventListener('dragover', function(e) {
+          e.preventDefault();
+          dropzone.classList.add('dragover');
+        });
+        
+        dropzone.addEventListener('dragleave', function(e) {
+          e.preventDefault();
+          dropzone.classList.remove('dragover');
+        });
+        
+        dropzone.addEventListener('drop', function(e) {
+          e.preventDefault();
+          dropzone.classList.remove('dragover');
+          const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+          addFilesToPending(files);
+        });
+      }
+      
+      // ファイルを追加
+      function addFilesToPending(files) {
+        files.forEach(file => {
+          if (file.type.startsWith('image/')) {
+            pendingFiles.push({
+              file: file,
+              name: file.name,
+              preview: URL.createObjectURL(file)
+            });
+          }
+        });
+        updateUploadPreview();
+      }
+      
+      // プレビュー更新
+      function updateUploadPreview() {
+        const list = document.getElementById('upload-preview-list');
+        const confirmBtn = document.getElementById('btn-confirm-upload');
+        
+        if (pendingFiles.length === 0) {
+          list.innerHTML = '';
+          confirmBtn.disabled = true;
+          return;
+        }
+        
+        confirmBtn.disabled = false;
+        list.innerHTML = pendingFiles.map((item, idx) => `
+          <div class="upload-preview-item">
+            <img src="${item.preview}" alt="${item.name}" />
+            <div class="upload-preview-info">
+              <span class="upload-preview-name">${item.name}</span>
+            </div>
+            <button type="button" class="upload-preview-remove" data-index="${idx}">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        `).join('');
+        
+        // 削除ボタン
+        list.querySelectorAll('.upload-preview-remove').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.index);
+            URL.revokeObjectURL(pendingFiles[idx].preview);
+            pendingFiles.splice(idx, 1);
+            updateUploadPreview();
+          });
+        });
+      }
+      
+      // アップロード実行
+      document.getElementById('btn-confirm-upload')?.addEventListener('click', async function() {
+        if (pendingFiles.length === 0) return;
+        
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> アップロード中...';
+        
+        let successCount = 0;
+        let errorCount = 0;
+        
+        for (const item of pendingFiles) {
+          try {
+            await uploadImage(item.file);
+            successCount++;
+          } catch (error) {
+            console.error('Upload error:', error);
+            errorCount++;
+          }
+        }
+        
+        btn.innerHTML = '<i class="fas fa-upload"></i> アップロード';
+        btn.disabled = false;
+        
+        if (successCount > 0) {
+          alert(`${successCount}件の画像をアップロードしました${errorCount > 0 ? `（${errorCount}件失敗）` : ''}`);
+          closeUploadModal();
+          loadImages();
+        } else {
+          alert('アップロードに失敗しました');
+        }
+      });
+      
+      // 画像をS3にアップロード
+      async function uploadImage(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', 'reports');
+        
+        const response = await fetch(`${API_GATEWAY_ENDPOINT}/upload`, {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+        
+        return await response.json();
+      }
     })();
 </script>
 
@@ -728,6 +925,204 @@
     .error-message i {
       font-size: 3rem;
       margin-bottom: 16px;
+    }
+    
+    /* アップロードモーダル */
+    .upload-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    
+    .upload-modal.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .upload-modal.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .upload-modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      cursor: pointer;
+    }
+    
+    .upload-modal-content {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      z-index: 1001;
+    }
+    
+    .upload-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #6b7280;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 1002;
+    }
+    
+    .upload-modal-close:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    
+    .upload-modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .upload-modal-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    
+    .upload-modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    
+    .upload-dropzone {
+      border: 2px dashed #d1d5db;
+      border-radius: 12px;
+      padding: 40px 24px;
+      text-align: center;
+      transition: all 0.2s;
+      background: #f9fafb;
+    }
+    
+    .upload-dropzone.dragover {
+      border-color: #3b82f6;
+      background: #eff6ff;
+    }
+    
+    .upload-dropzone i {
+      font-size: 3rem;
+      color: #9ca3af;
+      margin-bottom: 16px;
+    }
+    
+    .upload-dropzone p {
+      margin: 0 0 8px 0;
+      color: #6b7280;
+    }
+    
+    .upload-hint {
+      font-size: 0.875rem;
+      color: #9ca3af !important;
+    }
+    
+    .upload-formats {
+      font-size: 0.75rem;
+      color: #9ca3af !important;
+      margin-top: 16px !important;
+    }
+    
+    .upload-preview-list {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    
+    .upload-preview-item {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .upload-preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .upload-preview-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      padding: 4px 8px;
+    }
+    
+    .upload-preview-name {
+      color: #fff;
+      font-size: 0.625rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+    
+    .upload-preview-remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    
+    .upload-preview-remove:hover {
+      background: #dc2626;
+    }
+    
+    .upload-modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
     }
   </style>
     </div>

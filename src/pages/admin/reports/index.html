@@ -178,6 +178,24 @@
     </div>
   </dialog>
 
+  <!-- メディア選択モーダル -->
+  <dialog id="media-dialog" class="modal-dialog modal-dialog-large">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>メディアから画像を選択</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('media-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body modal-body-scrollable" style="padding: 0; height: 60vh;">
+        <iframe id="media-iframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('media-dialog').close()">キャンセル</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- URL発行モーダル -->
   <dialog id="share-dialog" class="modal-dialog">
     <div class="modal-content">
@@ -864,8 +882,46 @@
       margin-bottom: 8px;
     }
     .image-upload-btn-modal span {
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       color: #6b7280;
+    }
+    .image-add-btns-modal {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border: none;
+      background: transparent;
+    }
+    .image-add-btns-modal .image-upload-btn-modal,
+    .image-add-btns-modal .image-media-btn-modal {
+      flex: 1;
+      min-height: 50px;
+      border-radius: 6px;
+    }
+    .image-media-btn-modal {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      background: #f0f9ff;
+      border: 2px dashed #0ea5e9;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 8px;
+    }
+    .image-media-btn-modal:hover {
+      background: #e0f2fe;
+      border-color: #0284c7;
+    }
+    .image-media-btn-modal i {
+      font-size: 1.5rem;
+      color: #0ea5e9;
+      margin-bottom: 4px;
+    }
+    .image-media-btn-modal span {
+      font-size: 0.75rem;
+      color: #0369a1;
     }
     .image-remove-modal {
       position: absolute;
@@ -1717,12 +1773,16 @@
               <h4 class="image-category-title-modal">作業前</h4>
               <div class="image-list-modal" data-category="before" data-item-id="${itemIdValue}">
                 ${beforePhotosHtml}
-                <div class="image-item-modal">
+                <div class="image-item-modal image-add-btns-modal">
                   <label class="image-upload-btn-modal">
                     <input type="file" accept="image/*" multiple data-category="before" data-item-id="${itemIdValue}" />
                     <i class="fas fa-camera"></i>
-                    <span>写真を追加</span>
+                    <span>ファイルから</span>
                   </label>
+                  <button type="button" class="image-media-btn-modal" data-category="before" data-item-id="${itemIdValue}">
+                    <i class="fas fa-images"></i>
+                    <span>メディアから</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1730,12 +1790,16 @@
               <h4 class="image-category-title-modal">作業後</h4>
               <div class="image-list-modal" data-category="after" data-item-id="${itemIdValue}">
                 ${afterPhotosHtml}
-                <div class="image-item-modal">
+                <div class="image-item-modal image-add-btns-modal">
                   <label class="image-upload-btn-modal">
                     <input type="file" accept="image/*" multiple data-category="after" data-item-id="${itemIdValue}" />
                     <i class="fas fa-camera"></i>
-                    <span>写真を追加</span>
+                    <span>ファイルから</span>
                   </label>
+                  <button type="button" class="image-media-btn-modal" data-category="after" data-item-id="${itemIdValue}">
+                    <i class="fas fa-images"></i>
+                    <span>メディアから</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1766,11 +1830,20 @@
             label.addEventListener('click', function(e) {
               // label内のinput以外をクリックした場合は、inputをクリック
               if (e.target !== input && !input.contains(e.target)) {
-        e.preventDefault();
+                e.preventDefault();
                 input.click();
               }
             });
           }
+        });
+        
+        // メディア選択ボタンのイベントリスナー
+        workItemSection.querySelectorAll('.image-media-btn-modal').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const category = this.dataset.category;
+            const itemId = this.dataset.itemId;
+            openMediaSelector(category, itemId);
+          });
         });
         
         window.updateCleaningItemsListModal();
@@ -1848,6 +1921,92 @@
         const photoItem = button.closest('.image-item-modal');
         photoItem.remove();
       };
+
+      // メディア選択用の変数
+      let currentMediaCategory = null;
+      let currentMediaItemId = null;
+
+      // メディア選択モーダルを開く
+      function openMediaSelector(category, itemId) {
+        currentMediaCategory = category;
+        currentMediaItemId = itemId;
+        
+        const dialog = document.getElementById('media-dialog');
+        const iframe = document.getElementById('media-iframe');
+        iframe.src = '/admin/images?selectMode=true';
+        dialog.showModal();
+      }
+
+      // メディアからの画像選択メッセージを受け取る
+      window.addEventListener('message', function(e) {
+        if (e.data && e.data.type === 'image-selected') {
+          const path = e.data.path;
+          addMediaImageToReport(path, currentMediaCategory, currentMediaItemId);
+          document.getElementById('media-dialog').close();
+        }
+      });
+
+      // メディアから選択した画像をレポートに追加
+      function addMediaImageToReport(imagePath, category, itemId) {
+        const photoGrid = document.querySelector(`.image-list-modal[data-category="${category}"][data-item-id="${itemId}"]`);
+        if (!photoGrid) {
+          console.error('Could not find photo grid for', category, itemId);
+          return;
+        }
+        
+        // 画像URLを解決
+        const basePath = getBasePath();
+        let resolvedPath = imagePath;
+        if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://') && !imagePath.startsWith('//')) {
+          if (imagePath.startsWith('/')) {
+            resolvedPath = basePath === '/' ? imagePath : basePath.slice(0, -1) + imagePath;
+          } else {
+            resolvedPath = basePath === '/' ? '/' + imagePath : basePath + imagePath;
+          }
+        }
+        
+        const photoItem = document.createElement('div');
+        photoItem.className = 'image-item-modal';
+        photoItem.dataset.url = resolvedPath;
+        photoItem.innerHTML = `
+          <img src="${resolvedPath}" alt="Selected from media">
+          <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        
+        // アップロードボタンの前に挿入
+        const addBtns = photoGrid.querySelector('.image-add-btns-modal');
+        if (addBtns) {
+          photoGrid.insertBefore(photoItem, addBtns);
+        } else {
+          photoGrid.appendChild(photoItem);
+        }
+        
+        console.log('[Modal] Added media image:', resolvedPath);
+      }
+
+      // ベースパスを取得（GitHub Pages対応）
+      function getBasePath() {
+        const base = document.querySelector('base');
+        if (base && base.href) {
+          try {
+            const url = new URL(base.href);
+            return url.pathname;
+          } catch (e) {
+            return base.getAttribute('href') || '/';
+          }
+        }
+        const hostname = window.location.hostname;
+        if (hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp') {
+          return '/';
+        }
+        const path = window.location.pathname;
+        if (path.includes('/misesapo/')) {
+          return '/misesapo/';
+        }
+        return '/';
+      }
 
       // モーダル用: 項目を追加ボタン
       document.getElementById('add-work-item-modal')?.addEventListener('click', function() {
