@@ -158,16 +158,14 @@ async function processCart() {
     
     // 処理モードを選択
     const modeDialog = document.getElementById('process-mode-dialog');
-    modeDialog.style.display = 'flex';
-    modeDialog.showModal();
+    modeDialog.classList.add('active');
     
     // モード選択ボタンのイベント
     const modeButtons = document.querySelectorAll('.btn-mode');
     modeButtons.forEach(btn => {
         btn.onclick = async () => {
             const mode = btn.dataset.mode;
-            modeDialog.close();
-            modeDialog.style.display = 'none';
+            modeDialog.classList.remove('active');
             
             await executeCartProcess(mode);
         };
@@ -321,9 +319,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 手入力ボタン
     document.getElementById('btn-manual-input').addEventListener('click', () => {
-        const dialog = document.getElementById('manual-input-dialog');
-        dialog.style.display = 'flex';
-        dialog.showModal();
+        document.getElementById('manual-input-dialog').classList.add('active');
+        document.getElementById('manual-product-id').focus();
+    });
+    
+    // 手入力モーダルを閉じる
+    document.getElementById('btn-close-manual').addEventListener('click', () => {
+        document.getElementById('manual-input-dialog').classList.remove('active');
+    });
+    document.getElementById('btn-cancel-manual').addEventListener('click', () => {
+        document.getElementById('manual-input-dialog').classList.remove('active');
     });
     
     // 手入力確定ボタン
@@ -334,9 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const dialog = document.getElementById('manual-input-dialog');
-        dialog.close();
-        dialog.style.display = 'none';
+        document.getElementById('manual-input-dialog').classList.remove('active');
         
         try {
             const product = await loadProduct(productId);
@@ -391,6 +394,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') {
             document.getElementById('btn-submit-manual').click();
         }
+    });
+    
+    // 処理モードモーダルを閉じる
+    document.getElementById('btn-close-mode').addEventListener('click', () => {
+        document.getElementById('process-mode-dialog').classList.remove('active');
+    });
+    document.getElementById('btn-cancel-mode').addEventListener('click', () => {
+        document.getElementById('process-mode-dialog').classList.remove('active');
     });
     
     // 初期化
