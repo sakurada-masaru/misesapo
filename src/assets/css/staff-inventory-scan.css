@@ -225,12 +225,15 @@
 .quantity-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .btn-quantity {
-  width: 50px;
-  height: 50px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -239,10 +242,11 @@
   border-radius: 12px;
   color: #16a34a;
   cursor: pointer;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   transition: all 0.2s;
   box-shadow: 0 2px 4px rgba(22, 163, 74, 0.1);
+  flex-shrink: 0;
 }
 
 .btn-quantity:hover {
@@ -257,21 +261,32 @@
 
 #quantity-input {
   flex: 1;
-  padding: 14px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 12px 8px;
   border: 2px solid #16a34a;
   border-radius: 12px;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   text-align: center;
   background: #fff;
   transition: all 0.2s;
   color: #166534;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+#quantity-input::-webkit-outer-spin-button,
+#quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 #quantity-input:focus {
   outline: none;
   border-color: #15803d;
-  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
 }
 
 .action-buttons {
@@ -674,18 +689,19 @@
   }
 
   .quantity-controls {
-    gap: 8px;
+    gap: 6px;
   }
 
   .btn-quantity {
-    width: 44px;
-    height: 44px;
-    font-size: 1.3rem;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
   }
 
   #quantity-input {
-    font-size: 1.3rem;
-    padding: 12px;
+    font-size: 1.1rem;
+    padding: 10px 6px;
   }
 }
 
