@@ -350,14 +350,18 @@ async function showSingleQRCode(productId, productName) {
     
     try {
         container.innerHTML = '';
-        const canvas = document.createElement('canvas');
-        container.appendChild(canvas);
+        const qrDiv = document.createElement('div');
+        container.appendChild(qrDiv);
         
-        // QRコードを生成
+        // QRコードを生成（qrcodejsライブラリのAPIを使用）
         if (typeof QRCode !== 'undefined') {
-            await QRCode.toCanvas(canvas, qrUrl, {
+            new QRCode(qrDiv, {
+                text: qrUrl,
                 width: 256,
-                margin: 2
+                height: 256,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
             });
         } else {
             // QRCodeライブラリが読み込まれていない場合
@@ -365,7 +369,7 @@ async function showSingleQRCode(productId, productName) {
         }
     } catch (error) {
         console.error('Error generating QR code:', error);
-        container.innerHTML = '<div style="color: #dc2626;">QRコードの生成に失敗しました</div>';
+        container.innerHTML = '<div style="color: #dc2626;">QRコードの生成に失敗しました: ' + error.message + '</div>';
     }
 }
 
@@ -388,8 +392,9 @@ async function showQRCodes() {
             const qrCard = document.createElement('div');
             qrCard.style.cssText = 'text-align: center; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff;';
             
-            const canvas = document.createElement('canvas');
-            qrCard.appendChild(canvas);
+            const qrDiv = document.createElement('div');
+            qrDiv.style.cssText = 'display: inline-block;';
+            qrCard.appendChild(qrDiv);
             
             const nameDiv = document.createElement('div');
             nameDiv.style.cssText = 'margin-top: 12px; font-weight: 600; font-size: 0.9rem; color: #111827;';
@@ -403,10 +408,14 @@ async function showQRCodes() {
             
             qrcodeGrid.appendChild(qrCard);
             
-            // QRコードを生成
-            await QRCode.toCanvas(canvas, qrUrl, {
+            // QRコードを生成（qrcodejsライブラリのAPIを使用）
+            new QRCode(qrDiv, {
+                text: qrUrl,
                 width: 180,
-                margin: 2
+                height: 180,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
             });
         }
     } catch (error) {
