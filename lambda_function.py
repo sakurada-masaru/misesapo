@@ -49,6 +49,81 @@ def generate_next_id(table, prefix):
     next_num = max_num + 1
     return f"{prefix}{str(next_num).zfill(5)}"
 
+def get_max_sequence_for_date(table, date_prefix):
+    """
+    指定日付の最大連番を取得（スケジュールID用）
+    形式: SCH-YYYYMMDD-NNN から NNN を抽出
+    """
+    prefix = f"SCH-{date_prefix}-"
+    
+    try:
+        # その日付のIDを持つスケジュールをスキャン
+        response = table.scan(
+            FilterExpression=Attr('id').begins_with(prefix),
+            ProjectionExpression='id'
+        )
+        
+        max_seq = 0
+        for item in response.get('Items', []):
+            schedule_id = item.get('id', '')
+            # SCH-YYYYMMDD-NNN から NNN を抽出
+            if schedule_id.startswith(prefix):
+                seq_str = schedule_id[len(prefix):]
+                try:
+                    seq = int(seq_str)
+                    if seq > max_seq:
+                        max_seq = seq
+                except:
+                    pass
+        
+        # ページネーション対応
+        while 'LastEvaluatedKey' in response:
+            response = table.scan(
+                FilterExpression=Attr('id').begins_with(prefix),
+                ProjectionExpression='id',
+                ExclusiveStartKey=response['LastEvaluatedKey']
+            )
+            for item in response.get('Items', []):
+                schedule_id = item.get('id', '')
+                if schedule_id.startswith(prefix):
+                    seq_str = schedule_id[len(prefix):]
+                    try:
+                        seq = int(seq_str)
+                        if seq > max_seq:
+                            max_seq = seq
+                    except:
+                        pass
+        
+        return max_seq
+    except Exception as e:
+        print(f"Error getting max sequence for date {date_prefix}: {str(e)}")
+        return 0
+
+def generate_schedule_id(date_str, table):
+    """
+    スケジュールIDを生成: SCH-YYYYMMDD-NNN
+    日付ごとに連番をリセット
+    """
+    # 日付をYYYYMMDD形式に変換
+    if isinstance(date_str, str) and date_str:
+        try:
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+            date_prefix = date_obj.strftime('%Y%m%d')
+        except:
+            # 日付が無効な場合は現在日付を使用
+            date_prefix = datetime.now().strftime('%Y%m%d')
+    else:
+        date_prefix = datetime.now().strftime('%Y%m%d')
+    
+    # その日の最大連番を取得
+    max_seq = get_max_sequence_for_date(table, date_prefix)
+    next_seq = max_seq + 1
+    
+    # 3桁の連番にゼロパディング
+    seq_str = str(next_seq).zfill(3)
+    
+    return f"SCH-{date_prefix}-{seq_str}"
+
 def validate_worker_email(email):
     """
     従業員のメールアドレスをバリデーション
@@ -2533,75 +2608,105 @@ def create_schedule(event, headers):
         else:
             body_json = json.loads(body.decode('utf-8'))
         
-        # スケジュールIDを生成（必須）
-        schedule_id = str(uuid.uuid4())
+        # スケジュールIDを生成（新形式: SCH-YYYYMMDD-NNN）
+        date_str = body_json.get('date', '')
+        schedule_id = generate_schedule_id(date_str, SCHEDULES_TABLE)
         now = datetime.utcnow().isoformat() + 'Z'
         
-        # 見積もり情報が含まれている場合は、見積もりも同時に作成
-        estimate_id = None
-        estimate_data = body_json.get('estimate')
-        if estimate_data and estimate_data.get('items') and len(estimate_data.get('items', [])) > 0:
-            # 見積もりIDを生成
-            estimate_id = str(uuid.uuid4())
-            
-            # 見積もり合計を計算
-            estimate_total = estimate_data.get('total', 0)
-            if estimate_total == 0:
-                # 合計が指定されていない場合は計算
-                estimate_total = sum(item.get('price', 0) for item in estimate_data.get('items', []))
-            
-            # 見積もりアイテムを作成
-            estimate_item = {
-                'id': estimate_id,  # パーティションキー（必須）
-                'created_at': now,
-                'updated_at': now,
-                'store_id': body_json.get('client_id'),  # スケジュールのclient_idを使用
-                'store_name': body_json.get('store_name', ''),
-                'items': estimate_data.get('items', []),
-                'total': estimate_total,
-                'notes': estimate_data.get('notes', ''),
-                'status': 'pending',  # pending: 未処理, processing: 本見積作成中, completed: 完了, rejected: 却下
-                'created_by': body_json.get('created_by', 'sales'),
-                'schedule_id': schedule_id  # スケジュールIDを紐付け
-            }
-            
-            # 見積もりを保存
-            ESTIMATES_TABLE.put_item(Item=estimate_item)
+        # 条件付き書き込みで重複を防止（最大5回リトライ）
+        max_retries = 5
+        retry_count = 0
+        schedule_created = False
         
-        # DynamoDBに保存するアイテムを作成
-        schedule_item = {
-            'id': schedule_id,  # パーティションキー（必須）
-            'created_at': now,
-            'updated_at': now,
-            'date': body_json.get('date', ''),
-            'time_slot': body_json.get('time_slot', ''),
-            'order_type': body_json.get('order_type', 'regular'),
-            'client_id': body_json.get('client_id'),
-            'client_name': body_json.get('client_name', ''),
-            'store_name': body_json.get('store_name', ''),
-            'address': body_json.get('address', ''),
-            'phone': body_json.get('phone', ''),
-            'email': body_json.get('email', ''),
-            'cleaning_items': body_json.get('cleaning_items', []),
-            'notes': body_json.get('notes', ''),
-            'status': body_json.get('status', 'draft'),  # draft, pending, assigned, in_progress, completed, cancelled
-        }
-        
-        # 見積もりIDを紐付け（存在する場合）
-        if estimate_id:
-            schedule_item['estimate_id'] = estimate_id
-        
-        # GSIキーとなる属性は、値が存在する場合のみ追加（NULLは許可されない）
-        assigned_to = body_json.get('assigned_to')
-        if assigned_to:
-            schedule_item['assigned_to'] = assigned_to
-        
-        created_by = body_json.get('created_by')
-        if created_by:
-            schedule_item['created_by'] = created_by
-        
-        # DynamoDBに保存
-        SCHEDULES_TABLE.put_item(Item=schedule_item)
+        while retry_count < max_retries and not schedule_created:
+            try:
+                # 既に存在するIDかチェック
+                check_response = SCHEDULES_TABLE.get_item(Key={'id': schedule_id})
+                if 'Item' in check_response:
+                    # IDが存在する場合は連番をインクリメントして再生成
+                    schedule_id = generate_schedule_id(date_str, SCHEDULES_TABLE)
+                    retry_count += 1
+                    continue
+                
+                # 見積もり情報が含まれている場合は、見積もりも同時に作成
+                estimate_id = None
+                estimate_data = body_json.get('estimate')
+                if estimate_data and estimate_data.get('items') and len(estimate_data.get('items', [])) > 0:
+                    # 見積もりIDを生成（UUID形式のまま）
+                    estimate_id = str(uuid.uuid4())
+                    
+                    # 見積もり合計を計算
+                    estimate_total = estimate_data.get('total', 0)
+                    if estimate_total == 0:
+                        # 合計が指定されていない場合は計算
+                        estimate_total = sum(item.get('price', 0) for item in estimate_data.get('items', []))
+                    
+                    # 見積もりアイテムを作成
+                    estimate_item = {
+                        'id': estimate_id,  # パーティションキー（必須）
+                        'created_at': now,
+                        'updated_at': now,
+                        'store_id': body_json.get('client_id'),  # スケジュールのclient_idを使用
+                        'store_name': body_json.get('store_name', ''),
+                        'items': estimate_data.get('items', []),
+                        'total': estimate_total,
+                        'notes': estimate_data.get('notes', ''),
+                        'status': 'pending',  # pending: 未処理, processing: 本見積作成中, completed: 完了, rejected: 却下
+                        'created_by': body_json.get('created_by', 'sales'),
+                        'schedule_id': schedule_id  # 新形式のスケジュールIDを紐付け
+                    }
+                    
+                    # 見積もりを保存
+                    ESTIMATES_TABLE.put_item(Item=estimate_item)
+                
+                # DynamoDBに保存するアイテムを作成
+                schedule_item = {
+                    'id': schedule_id,  # 新形式のID（パーティションキー）
+                    'created_at': now,
+                    'updated_at': now,
+                    'date': body_json.get('date', ''),
+                    'time_slot': body_json.get('time_slot', ''),
+                    'order_type': body_json.get('order_type', 'regular'),
+                    'client_id': body_json.get('client_id'),
+                    'client_name': body_json.get('client_name', ''),
+                    'store_name': body_json.get('store_name', ''),
+                    'address': body_json.get('address', ''),
+                    'phone': body_json.get('phone', ''),
+                    'email': body_json.get('email', ''),
+                    'cleaning_items': body_json.get('cleaning_items', []),
+                    'notes': body_json.get('notes', ''),
+                    'status': body_json.get('status', 'draft'),  # draft, pending, assigned, in_progress, completed, cancelled
+                }
+                
+                # 見積もりIDを紐付け（存在する場合）
+                if estimate_id:
+                    schedule_item['estimate_id'] = estimate_id
+                
+                # GSIキーとなる属性は、値が存在する場合のみ追加（NULLは許可されない）
+                assigned_to = body_json.get('assigned_to')
+                if assigned_to:
+                    schedule_item['assigned_to'] = assigned_to
+                
+                created_by = body_json.get('created_by')
+                if created_by:
+                    schedule_item['created_by'] = created_by
+                
+                # 条件付き書き込み（IDが存在しない場合のみ）
+                SCHEDULES_TABLE.put_item(
+                    Item=schedule_item,
+                    ConditionExpression='attribute_not_exists(id)'
+                )
+                
+                schedule_created = True
+                
+            except SCHEDULES_TABLE.meta.client.exceptions.ConditionalCheckFailedException:
+                # 競合が発生した場合は再試行
+                schedule_id = generate_schedule_id(date_str, SCHEDULES_TABLE)
+                retry_count += 1
+                if retry_count >= max_retries:
+                    raise Exception('スケジュールIDの生成に失敗しました（最大リトライ回数に達しました）')
+            except Exception as e:
+                raise e
         
         response_body = {
             'status': 'success',
