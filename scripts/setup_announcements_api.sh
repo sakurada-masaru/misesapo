@@ -184,6 +184,45 @@ aws apigateway put-integration \
   --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
   --region ${REGION} &>/dev/null || echo "統合は既に存在します"
 
+# OPTIONS /staff/announcements メソッドを作成（CORS用）
+echo "OPTIONS /staff/announcements メソッドを作成中..."
+aws apigateway put-method \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ANNOUNCEMENTS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --authorization-type NONE \
+  --region ${REGION} &>/dev/null || echo "OPTIONSメソッドは既に存在します"
+
+aws apigateway delete-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ANNOUNCEMENTS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --region ${REGION} &>/dev/null || true
+
+aws apigateway put-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ANNOUNCEMENTS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --type MOCK \
+  --request-templates '{"application/json":"{\"statusCode\": 200}"}' \
+  --region ${REGION} &>/dev/null || echo "OPTIONS統合は既に存在します"
+
+aws apigateway put-method-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ANNOUNCEMENTS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters "method.response.header.Access-Control-Allow-Headers=false,method.response.header.Access-Control-Allow-Methods=false,method.response.header.Access-Control-Allow-Origin=false" \
+  --region ${REGION} &>/dev/null || echo "OPTIONSメソッドレスポンスは既に存在します"
+
+aws apigateway put-integration-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ANNOUNCEMENTS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,PUT,POST,DELETE,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --region ${REGION} &>/dev/null || echo "OPTIONS統合レスポンスは既に存在します"
+
 # POST /staff/announcements/{id}/read メソッドを作成
 echo "POST /staff/announcements/{id}/read メソッドを作成中..."
 aws apigateway put-method \
@@ -201,6 +240,45 @@ aws apigateway put-integration \
   --integration-http-method POST \
   --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
   --region ${REGION} &>/dev/null || echo "統合は既に存在します"
+
+# OPTIONS /staff/announcements/{id}/read メソッドを作成（CORS用）
+echo "OPTIONS /staff/announcements/{id}/read メソッドを作成中..."
+aws apigateway put-method \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ANNOUNCEMENT_READ_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --authorization-type NONE \
+  --region ${REGION} &>/dev/null || echo "OPTIONSメソッドは既に存在します"
+
+aws apigateway delete-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ANNOUNCEMENT_READ_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --region ${REGION} &>/dev/null || true
+
+aws apigateway put-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ANNOUNCEMENT_READ_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --type MOCK \
+  --request-templates '{"application/json":"{\"statusCode\": 200}"}' \
+  --region ${REGION} &>/dev/null || echo "OPTIONS統合は既に存在します"
+
+aws apigateway put-method-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ANNOUNCEMENT_READ_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters "method.response.header.Access-Control-Allow-Headers=false,method.response.header.Access-Control-Allow-Methods=false,method.response.header.Access-Control-Allow-Origin=false" \
+  --region ${REGION} &>/dev/null || echo "OPTIONSメソッドレスポンスは既に存在します"
+
+aws apigateway put-integration-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ANNOUNCEMENT_READ_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,PUT,POST,DELETE,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --region ${REGION} &>/dev/null || echo "OPTIONS統合レスポンスは既に存在します"
 
 # GET /admin/announcements メソッドを作成
 echo "GET /admin/announcements メソッドを作成中..."
@@ -237,6 +315,45 @@ aws apigateway put-integration \
   --integration-http-method POST \
   --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
   --region ${REGION} &>/dev/null || echo "統合は既に存在します"
+
+# OPTIONS /admin/announcements メソッドを作成（CORS用）
+echo "OPTIONS /admin/announcements メソッドを作成中..."
+aws apigateway put-method \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_ANNOUNCEMENTS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --authorization-type NONE \
+  --region ${REGION} &>/dev/null || echo "OPTIONSメソッドは既に存在します"
+
+aws apigateway delete-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_ANNOUNCEMENTS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --region ${REGION} &>/dev/null || true
+
+aws apigateway put-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_ANNOUNCEMENTS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --type MOCK \
+  --request-templates '{"application/json":"{\"statusCode\": 200}"}' \
+  --region ${REGION} &>/dev/null || echo "OPTIONS統合は既に存在します"
+
+aws apigateway put-method-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_ANNOUNCEMENTS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters "method.response.header.Access-Control-Allow-Headers=false,method.response.header.Access-Control-Allow-Methods=false,method.response.header.Access-Control-Allow-Origin=false" \
+  --region ${REGION} &>/dev/null || echo "OPTIONSメソッドレスポンスは既に存在します"
+
+aws apigateway put-integration-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_ANNOUNCEMENTS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,PUT,POST,DELETE,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --region ${REGION} &>/dev/null || echo "OPTIONS統合レスポンスは既に存在します"
 
 # GET /admin/announcements/{id} メソッドを作成
 echo "GET /admin/announcements/{id} メソッドを作成中..."
@@ -291,6 +408,45 @@ aws apigateway put-integration \
   --integration-http-method POST \
   --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
   --region ${REGION} &>/dev/null || echo "統合は既に存在します"
+
+# OPTIONS /admin/announcements/{id} メソッドを作成（CORS用）
+echo "OPTIONS /admin/announcements/{id} メソッドを作成中..."
+aws apigateway put-method \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_ANNOUNCEMENT_ID_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --authorization-type NONE \
+  --region ${REGION} &>/dev/null || echo "OPTIONSメソッドは既に存在します"
+
+aws apigateway delete-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_ANNOUNCEMENT_ID_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --region ${REGION} &>/dev/null || true
+
+aws apigateway put-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_ANNOUNCEMENT_ID_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --type MOCK \
+  --request-templates '{"application/json":"{\"statusCode\": 200}"}' \
+  --region ${REGION} &>/dev/null || echo "OPTIONS統合は既に存在します"
+
+aws apigateway put-method-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_ANNOUNCEMENT_ID_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters "method.response.header.Access-Control-Allow-Headers=false,method.response.header.Access-Control-Allow-Methods=false,method.response.header.Access-Control-Allow-Origin=false" \
+  --region ${REGION} &>/dev/null || echo "OPTIONSメソッドレスポンスは既に存在します"
+
+aws apigateway put-integration-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_ANNOUNCEMENT_ID_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,PUT,POST,DELETE,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --region ${REGION} &>/dev/null || echo "OPTIONS統合レスポンスは既に存在します"
 
 # Lambda関数にAPI Gatewayからの呼び出し権限を付与
 echo "Lambda関数にAPI Gatewayからの呼び出し権限を付与中..."
