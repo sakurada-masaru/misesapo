@@ -156,7 +156,7 @@ ${actionTextEn}?
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `${actionText}に失敗しました`);
+            throw new Error(errorData.error || `${actionTextJa}に失敗しました`);
         }
         
         const result = await response.json();
@@ -166,7 +166,7 @@ ${actionTextEn}?
             return;
         }
         
-        alert(`✅ ${actionText}完了: ${currentProduct.name} ${quantity}個`);
+        alert(`✅ ${actionTextJa}完了: ${currentProduct.name} ${quantity}個`);
         
         // 在庫情報を更新
         const updatedProduct = await loadProduct(currentProduct.product_id);
@@ -174,7 +174,7 @@ ${actionTextEn}?
         
     } catch (error) {
         console.error('Error processing stock:', error);
-        alert(`${actionText}に失敗しました: ` + error.message);
+        alert(`${actionTextJa}に失敗しました: ` + error.message);
     }
 }
 
