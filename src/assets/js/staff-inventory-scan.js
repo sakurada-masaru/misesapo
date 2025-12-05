@@ -121,9 +121,20 @@ async function processStock(mode) {
         return;
     }
     
-    const actionText = mode === 'in' ? '入庫' : '出庫';
+    const actionTextJa = mode === 'in' ? '入庫' : '出庫';
+    const actionTextEn = mode === 'in' ? 'Stock In' : 'Stock Out';
     
-    if (!confirm(`${currentProduct.name} を ${quantity}個 ${actionText}しますか？`)) {
+    const confirmMessage = `
+━━━━━━━━━━━━━━━━━
+${actionTextJa}しますか？
+${actionTextEn}?
+━━━━━━━━━━━━━━━━━
+
+📦 ${currentProduct.name}
+📊 数量: ${quantity}個
+    `.trim();
+    
+    if (!confirm(confirmMessage)) {
         return;
     }
     
