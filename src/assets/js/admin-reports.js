@@ -50,7 +50,8 @@
           end_time: r.cleaning_end_time,
           content: r.work_items?.map(w => w.name).join(', ') || '',
           notes: r.work_memo,
-          status: r.status === 'published' ? 'approved' : r.status
+          status: r.status === 'published' ? 'approved' : r.status,
+          resubmitted: r.resubmitted || false  // 再提出フラグを保持
         }));
         
         updateStats();
@@ -172,14 +173,24 @@
         const status = normalized.status === 'approved' ? 'approved' : (normalized.status === 'rejected' ? 'rejected' : 'pending');
         const statusLabel = DataUtils.getStatusLabel(status);
         const displayStoreName = DataUtils.getStoreName(allStores, r.store_id, normalized.store_name);
+        
+        // 再提出通知バッジ
+        const resubmittedBadge = (r.resubmitted || normalized.resubmitted) 
+          ? '<span class="resubmitted-badge" title="清掃員から再提出されました"><i class="fas fa-bell"></i> 再提出</span>' 
+          : '';
 
         return `
-          <tr>
+          <tr ${(r.resubmitted || normalized.resubmitted) ? 'class="resubmitted-row"' : ''}>
             <td>${DataUtils.formatDate(normalized.date)}</td>
             <td>${DataUtils.escapeHtml(displayStoreName)}</td>
             <td>${DataUtils.escapeHtml(worker.name || normalized.worker_name || '-')}</td>
             <td>${normalized.start_time || '-'} 〜 ${normalized.end_time || '-'}</td>
-            <td><span class="status-badge status-${status}">${statusLabel}</span></td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="status-badge status-${status}">${statusLabel}</span>
+                ${resubmittedBadge}
+              </div>
+            </td>
             <td>
               <div class="action-btns">
                 <button class="action-btn view" title="詳細" onclick="viewReport('${r.id}')"><i class="fas fa-eye"></i></button>
@@ -510,6 +521,11 @@
       document.getElementById('btn-reject').style.display = status === 'approved' ? 'none' : '';
 
       document.getElementById('detail-dialog').showModal();
+      
+      // 再提出フラグをクリア（モーダルを開いた時）
+      if (report.resubmitted) {
+        clearResubmittedFlag(currentReportId);
+      }
     };
 
     // 編集
@@ -792,28 +808,73 @@
       }
     }
 
+    // 再提出フラグをクリア
+    async function clearResubmittedFlag(reportId) {
+      try {
+        const idToken = await getFirebaseIdToken();
+        const report = allReports.find(r => String(r.id) === String(reportId) || String(r.report_id) === String(reportId));
+        if (!report || !report.resubmitted) {
+          return; // フラグがない場合は何もしない
+        }
+        
+        // フラグをクリア（バックエンドで更新）
+        await fetch(`${REPORT_API}/staff/reports/${reportId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify({
+            resubmitted: false
+          })
+        });
+        
+        // フロントエンドのデータも更新
+        if (report) {
+          report.resubmitted = false;
+        }
+        
+        // テーブルを再レンダリング
+        filterAndRender();
+      } catch (error) {
+        console.error('Error clearing resubmitted flag:', error);
+        // エラーが発生しても処理を続行
+      }
+    }
+
     // 承認
     document.getElementById('btn-approve').addEventListener('click', async () => {
       if (!currentReportId) return;
       
       try {
-        await fetch(`${API_BASE}/reports/${currentReportId}`, {
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/reports/${currentReportId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'approved', send_at: new Date().toISOString() })
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify({ 
+            status: 'approved',
+            resubmitted: false  // 再提出フラグをクリア
+          })
         });
         
-        const report = allReports.find(r => String(r.id) === String(currentReportId));
+        if (!response.ok) {
+          throw new Error('承認に失敗しました');
+        }
+        
+        const report = allReports.find(r => String(r.id) === String(currentReportId) || String(r.report_id) === String(currentReportId));
         if (report) {
           report.status = 'approved';
-          report.send_at = new Date().toISOString();
+          report.resubmitted = false;
         }
         
         document.getElementById('detail-dialog').close();
         updateStats();
         filterAndRender();
       } catch (e) {
-        alert('承認に失敗しました');
+        alert('承認に失敗しました: ' + e.message);
       }
     });
 
@@ -822,20 +883,34 @@
       if (!currentReportId) return;
       
       try {
-        await fetch(`${API_BASE}/reports/${currentReportId}`, {
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/reports/${currentReportId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'rejected' })
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify({ 
+            status: 'rejected',
+            resubmitted: false  // 再提出フラグをクリア
+          })
         });
         
-        const report = allReports.find(r => String(r.id) === String(currentReportId));
-        if (report) report.status = 'rejected';
+        if (!response.ok) {
+          throw new Error('却下に失敗しました');
+        }
+        
+        const report = allReports.find(r => String(r.id) === String(currentReportId) || String(r.report_id) === String(currentReportId));
+        if (report) {
+          report.status = 'rejected';
+          report.resubmitted = false;
+        }
         
         document.getElementById('detail-dialog').close();
         updateStats();
         filterAndRender();
       } catch (e) {
-        alert('却下に失敗しました');
+        alert('却下に失敗しました: ' + e.message);
       }
     });
 

@@ -2297,6 +2297,16 @@ def update_report_by_id(report_id, event, headers):
                 # コメントや作業内容セクションはそのまま追加
                 processed_sections.append(section)
         
+        # ステータスを取得
+        old_status = existing_item.get('status', 'published')
+        new_status = body_json.get('status', old_status)
+        
+        # 再提出フラグをチェック（revision_requestedからpendingに変更された場合）
+        resubmitted = False
+        if old_status == 'revision_requested' and new_status == 'pending' and not is_admin:
+            # 清掃員がrevision_requestedからpendingに変更した場合、再提出フラグを設定
+            resubmitted = True
+        
         # レポートを更新
         updated_item = {
             'report_id': report_id,
@@ -2313,13 +2323,34 @@ def update_report_by_id(report_id, event, headers):
             'cleaning_date': body_json.get('cleaning_date', existing_item['cleaning_date']),
             'cleaning_start_time': body_json.get('cleaning_start_time', existing_item.get('cleaning_start_time')),
             'cleaning_end_time': body_json.get('cleaning_end_time', existing_item.get('cleaning_end_time')),
-            'status': body_json.get('status', existing_item.get('status', 'published')),
+            'status': new_status,
             'work_items': body_json.get('work_items', existing_item['work_items']),
             'sections': processed_sections,
             'location': body_json.get('location', existing_item.get('location')),
             'satisfaction': body_json.get('satisfaction', existing_item.get('satisfaction', {})),
             'ttl': existing_item.get('ttl')
         }
+        
+        # 再提出フラグを設定
+        if 'resubmitted' in body_json:
+            # 明示的にresubmittedが指定されている場合（管理者がクリアする場合など）
+            if body_json.get('resubmitted') is False:
+                # フラグをクリア
+                if 'resubmitted' in updated_item:
+                    del updated_item['resubmitted']
+                if 'resubmitted_at' in updated_item:
+                    del updated_item['resubmitted_at']
+            else:
+                updated_item['resubmitted'] = True
+                updated_item['resubmitted_at'] = datetime.utcnow().isoformat() + 'Z'
+        elif resubmitted:
+            # 清掃員がrevision_requestedからpendingに変更した場合
+            updated_item['resubmitted'] = True
+            updated_item['resubmitted_at'] = datetime.utcnow().isoformat() + 'Z'
+        elif existing_item.get('resubmitted'):
+            # 既存の再提出フラグを保持（管理者が確認するまで残す）
+            updated_item['resubmitted'] = existing_item.get('resubmitted')
+            updated_item['resubmitted_at'] = existing_item.get('resubmitted_at')
         
         # 修正コメントを保存（管理者が要修正として返す場合）
         if 'revision_comment' in body_json:
