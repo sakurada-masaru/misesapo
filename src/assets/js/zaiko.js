@@ -160,6 +160,12 @@ async function openProductDetail(productId) {
     document.getElementById('modal-product-name-text').textContent = item.name;
     document.getElementById('modal-product-stock').textContent = `${item.stock.toLocaleString()} 個`;
     
+    // 商品名編集フォームをリセット
+    const editNameForm = document.getElementById('edit-name-form');
+    const editNameInput = document.getElementById('edit-name-input');
+    if (editNameForm) editNameForm.style.display = 'none';
+    if (editNameInput) editNameInput.value = item.name;
+    
     // 最終入出庫情報を初期化
     document.getElementById('last-in-info').textContent = '読み込み中...';
     document.getElementById('last-out-info').textContent = '読み込み中...';
@@ -626,6 +632,96 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnHelp) {
         btnHelp.addEventListener('click', () => {
             document.getElementById('help-dialog').showModal();
+        });
+    }
+    
+    // 商品名編集機能
+    const btnEditName = document.getElementById('btn-edit-name');
+    const btnSaveName = document.getElementById('btn-save-name');
+    const btnCancelEditName = document.getElementById('btn-cancel-edit-name');
+    const editNameForm = document.getElementById('edit-name-form');
+    const editNameInput = document.getElementById('edit-name-input');
+    const modalProductNameText = document.getElementById('modal-product-name-text');
+    
+    if (btnEditName) {
+        btnEditName.addEventListener('click', () => {
+            if (editNameForm) editNameForm.style.display = 'block';
+            if (editNameInput && modalProductNameText) {
+                editNameInput.value = modalProductNameText.textContent;
+                editNameInput.focus();
+            }
+        });
+    }
+    
+    if (btnCancelEditName) {
+        btnCancelEditName.addEventListener('click', () => {
+            if (editNameForm) editNameForm.style.display = 'none';
+            if (editNameInput && modalProductNameText) {
+                editNameInput.value = modalProductNameText.textContent;
+            }
+        });
+    }
+    
+    if (btnSaveName) {
+        btnSaveName.addEventListener('click', async () => {
+            if (!currentProductId || !editNameInput) return;
+            
+            const newName = editNameInput.value.trim();
+            if (!newName) {
+                alert('商品名を入力してください');
+                return;
+            }
+            
+            try {
+                const idToken = await getFirebaseIdToken();
+                const response = await fetch(`${REPORT_API}/staff/inventory/items/${currentProductId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${idToken}`
+                    },
+                    body: JSON.stringify({
+                        name: newName
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || '商品名の更新に失敗しました');
+                }
+                
+                // 成功したら表示を更新
+                if (modalProductNameText) {
+                    modalProductNameText.textContent = newName;
+                }
+                const modalProductName = document.getElementById('modal-product-name');
+                if (modalProductName) {
+                    modalProductName.textContent = newName;
+                }
+                
+                // フォームを非表示
+                if (editNameForm) editNameForm.style.display = 'none';
+                
+                // 在庫一覧を再読み込みしてカードの表示も更新
+                await loadInventory();
+                
+                // モーダルを再度開いて最新情報を表示
+                openProductDetail(currentProductId);
+                
+                alert('商品名を更新しました');
+            } catch (error) {
+                console.error('Error updating product name:', error);
+                alert('商品名の更新に失敗しました: ' + error.message);
+            }
+        });
+    }
+    
+    // Enterキーで保存
+    if (editNameInput) {
+        editNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && btnSaveName) {
+                btnSaveName.click();
+            }
         });
     }
 });

@@ -59,7 +59,19 @@
           </div>
           <div class="detail-item">
             <span class="detail-label">商品名:</span>
-            <span class="detail-value" id="modal-product-name-text">-</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="detail-value" id="modal-product-name-text">-</span>
+              <button type="button" id="btn-edit-name" class="btn-edit-name" style="background: none; border: none; color: #3b82f6; cursor: pointer; padding: 4px 8px; font-size: 0.875rem;">
+                <i class="fas fa-edit"></i> 編集
+              </button>
+            </div>
+            <div id="edit-name-form" style="display: none; margin-top: 8px;">
+              <input type="text" id="edit-name-input" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95rem;">
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button type="button" id="btn-save-name" class="btn btn-primary" style="padding: 6px 16px; font-size: 0.875rem;">保存</button>
+                <button type="button" id="btn-cancel-edit-name" class="btn btn-outline" style="padding: 6px 16px; font-size: 0.875rem;">キャンセル</button>
+              </div>
+            </div>
           </div>
           <div class="detail-item">
             <span class="detail-label">現在の在庫数:</span>

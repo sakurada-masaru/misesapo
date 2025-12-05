@@ -13,46 +13,6 @@
   </div>
 
   <!-- Next Assignment Card (最優先表示) -->
-  <section class="dashboard-section next-assignment-section">
-    <div class="next-assignment-card">
-      <div class="assignment-header">
-        <span class="badge-next">次の作業</span>
-        <span class="time-remaining" id="time-remaining">あと15分</span>
-      </div>
-      <div class="assignment-main">
-        <div class="location-large">
-          <i class="fas fa-map-marker-alt"></i>
-          神楽坂店
-        </div>
-        <div class="task-detail">レンジフード洗浄、グリストラップ清掃</div>
-        <div class="assignment-meta">
-          <span class="meta-item">
-            <i class="fas fa-clock"></i>
-            10:30
-          </span>
-          <span class="meta-item">
-            <i class="fas fa-route"></i>
-            2.3km
-          </span>
-          <span class="meta-item">
-            <i class="fas fa-hourglass-half"></i>
-            予定: 2時間
-          </span>
-        </div>
-      </div>
-      <div class="assignment-actions">
-        <a href="/staff/assignments/1" class="btn-start-assignment">
-          <i class="fas fa-play-circle"></i>
-          作業開始
-        </a>
-        <a href="#" class="link-map" onclick="window.open('https://maps.google.com/?q=神楽坂店', '_blank'); return false;">
-          <i class="fas fa-map"></i>
-          地図を開く
-        </a>
-      </div>
-    </div>
-  </section>
-
   <!-- Quick Actions (改善版) -->
   <section class="dashboard-section">
     <h2 class="section-title">クイックアクション</h2>
@@ -2066,36 +2026,6 @@
       setInterval(updateCountdowns, 60000);
     })();
 
-    // 残り時間の更新（次の作業カード用）
-    (function() {
-      function updateTimeRemaining() {
-        const timeRemaining = document.getElementById('time-remaining');
-        if (!timeRemaining) return;
-
-        // 次の作業の開始時刻（10:30）を取得
-        const now = new Date();
-        const nextTime = new Date();
-        nextTime.setHours(10, 30, 0, 0);
-
-        // 今日の10:30が過ぎている場合は明日の10:30
-        if (now > nextTime) {
-          nextTime.setDate(nextTime.getDate() + 1);
-        }
-
-        const diff = nextTime - now;
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-        if (hours > 0) {
-          timeRemaining.textContent = `あと${hours}時間${minutes}分`;
-        } else {
-          timeRemaining.textContent = `あと${minutes}分`;
-        }
-      }
-
-      updateTimeRemaining();
-      setInterval(updateTimeRemaining, 60000);
-    })();
 
     // オフライン対応の可視化
     (function() {
@@ -2208,19 +2138,6 @@
         }
       };
 
-      // 作業開始リマインダー（15分前）
-      if (reminderEnabled) {
-        setInterval(function() {
-          const timeRemaining = document.getElementById('time-remaining');
-          if (!timeRemaining) return;
-
-          const text = timeRemaining.textContent;
-          // "あと15分" または "あと0時間15分" の場合に通知
-          if (text.includes('15分') && !text.includes('16分') && !text.includes('14分')) {
-            window.sendNotification('次の作業まで15分です', 'reminder');
-          }
-        }, 60000); // 1分ごとにチェック
-      }
     })();
 
     // レイアウト切り替え

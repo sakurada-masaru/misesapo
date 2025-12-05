@@ -219,8 +219,8 @@ def lambda_handler(event, context):
                 report_id = parts[-1]
             if method == 'GET':
                 return get_report_detail(report_id, event, headers)
-                elif method == 'PUT':
-                    return update_report_by_id(report_id, event, headers)
+            elif method == 'PUT':
+                return update_report_by_id(report_id, event, headers)
             elif method == 'DELETE':
                 return delete_report(report_id, event, headers)
         elif normalized_path.startswith('/public/reports/'):
@@ -273,6 +273,8 @@ def lambda_handler(event, context):
                     'headers': headers,
                     'body': json.dumps({'error': 'Not implemented'}, ensure_ascii=False)
                 }
+            elif method == 'PUT':
+                return update_inventory_item(product_id, event, headers)
         elif normalized_path == '/staff/inventory/out':
             # 出庫処理
             if method == 'POST':
@@ -1265,7 +1267,7 @@ def verify_firebase_token(id_token):
         # ロールを取得（カスタムクレームから）
         role = payload.get('custom:role') or payload.get('role', 'staff')
         
-    return {
+        return {
             'uid': uid,
             'cognito_sub': uid,
             'email': email,
@@ -1546,11 +1548,11 @@ def create_report(event, headers):
                     'role': 'staff'
                 }
             else:
-            return {
-                'statusCode': 401,
-                'headers': headers,
-                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
-            }
+                return {
+                    'statusCode': 401,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+                }
         
         # リクエストボディを取得
         if event.get('isBase64Encoded'):
@@ -1591,9 +1593,9 @@ def create_report(event, headers):
                         base64_counter_before += 1
                         photo_key = f"reports/{report_id}/{item_id}-before-{base64_counter_before}.jpg"
                     try:
-                            photo_url = upload_photo_to_s3(photo_data, photo_key)
+                        photo_url = upload_photo_to_s3(photo_data, photo_key)
                         photo_urls[item_id]['before'].append(photo_url)
-                            print(f"[DEBUG] Uploaded to S3: {photo_url}")
+                        print(f"[DEBUG] Uploaded to S3: {photo_url}")
                     except Exception as e:
                         print(f"Error uploading before photo: {str(e)}")
                     else:
@@ -1615,9 +1617,9 @@ def create_report(event, headers):
                         base64_counter_after += 1
                         photo_key = f"reports/{report_id}/{item_id}-after-{base64_counter_after}.jpg"
                     try:
-                            photo_url = upload_photo_to_s3(photo_data, photo_key)
+                        photo_url = upload_photo_to_s3(photo_data, photo_key)
                         photo_urls[item_id]['after'].append(photo_url)
-                            print(f"[DEBUG] Uploaded to S3: {photo_url}")
+                        print(f"[DEBUG] Uploaded to S3: {photo_url}")
                     except Exception as e:
                         print(f"Error uploading after photo: {str(e)}")
                     else:
@@ -1800,7 +1802,7 @@ def get_reports(event, headers):
                 Limit=limit
             )
         else:
-        response = REPORTS_TABLE.scan(Limit=limit)
+            response = REPORTS_TABLE.scan(Limit=limit)
         
         items = response.get('Items', [])
         
@@ -6070,6 +6072,146 @@ def create_inventory_item(event, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': '商品の登録に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+
+def update_inventory_item(product_id, event, headers):
+    """
+    商品情報を更新（管理者のみ）
+    """
+    try:
+        # 認証チェック
+        auth_header = event.get('headers', {}).get('Authorization', '') or event.get('headers', {}).get('authorization', '')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': '認証が必要です'}, ensure_ascii=False)
+            }
+        
+        id_token = auth_header.replace('Bearer ', '')
+        user_info = verify_firebase_token(id_token)
+        
+        if not user_info or user_info.get('role') != 'admin':
+            return {
+                'statusCode': 403,
+                'headers': headers,
+                'body': json.dumps({'error': '管理者権限が必要です'}, ensure_ascii=False)
+            }
+        
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = json.loads(base64.b64decode(event.get('body', '{}')).decode('utf-8'))
+        else:
+            body = json.loads(event.get('body', '{}'))
+        
+        # 既存商品を取得
+        try:
+            existing = INVENTORY_ITEMS_TABLE.get_item(Key={'product_id': product_id})
+            if 'Item' not in existing:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': '商品が見つかりません'}, ensure_ascii=False)
+                }
+        except Exception as e:
+            return {
+                'statusCode': 500,
+                'headers': headers,
+                'body': json.dumps({'error': '商品の取得に失敗しました', 'message': str(e)}, ensure_ascii=False)
+            }
+        
+        # 更新可能なフィールド
+        update_expression_parts = []
+        expression_attribute_values = {}
+        expression_attribute_names = {}
+        
+        # 商品名の更新
+        if 'name' in body:
+            name = body.get('name', '').strip()
+            if not name:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': '商品名は必須です'}, ensure_ascii=False)
+                }
+            update_expression_parts.append('#name = :name')
+            expression_attribute_names['#name'] = 'name'
+            expression_attribute_values[':name'] = name
+        
+        # 在庫数の更新（オプション）
+        if 'stock' in body:
+            stock = int(body.get('stock', 0))
+            if stock < 0:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': '在庫数は0以上である必要があります'}, ensure_ascii=False)
+                }
+            update_expression_parts.append('#stock = :stock')
+            expression_attribute_names['#stock'] = 'stock'
+            expression_attribute_values[':stock'] = stock
+        
+        # 最小在庫数の更新（オプション）
+        if 'minStock' in body:
+            min_stock = int(body.get('minStock', 0))
+            update_expression_parts.append('#minStock = :minStock')
+            expression_attribute_names['#minStock'] = 'minStock'
+            expression_attribute_values[':minStock'] = min_stock
+        
+        # 安全在庫数の更新（オプション）
+        if 'safeStock' in body:
+            safe_stock = int(body.get('safeStock', 0))
+            update_expression_parts.append('#safeStock = :safeStock')
+            expression_attribute_names['#safeStock'] = 'safeStock'
+            expression_attribute_values[':safeStock'] = safe_stock
+        
+        if not update_expression_parts:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': '更新するフィールドが指定されていません'}, ensure_ascii=False)
+            }
+        
+        # updated_atを更新
+        now = datetime.now(timezone.utc).isoformat()
+        update_expression_parts.append('#updated_at = :updated_at')
+        expression_attribute_names['#updated_at'] = 'updated_at'
+        expression_attribute_values[':updated_at'] = now
+        
+        # 商品を更新
+        update_expression = 'SET ' + ', '.join(update_expression_parts)
+        
+        INVENTORY_ITEMS_TABLE.update_item(
+            Key={'product_id': product_id},
+            UpdateExpression=update_expression,
+            ExpressionAttributeNames=expression_attribute_names,
+            ExpressionAttributeValues=expression_attribute_values
+        )
+        
+        # 更新後の商品情報を取得
+        updated = INVENTORY_ITEMS_TABLE.get_item(Key={'product_id': product_id})
+        updated_item = updated.get('Item', {})
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'item': updated_item
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        import traceback
+        print(f"Error updating inventory item: {str(e)}")
+        print(traceback.format_exc())
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '商品の更新に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }
