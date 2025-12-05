@@ -261,6 +261,8 @@ async function createInventoryItem() {
         document.getElementById('new-item-dialog').close();
         
         // フォームをリセット
+        const savedProductId = productId;
+        const savedName = name;
         document.getElementById('new-product-id').value = '';
         document.getElementById('new-product-name').value = '';
         document.getElementById('new-product-stock').value = '0';
@@ -270,9 +272,76 @@ async function createInventoryItem() {
         // 在庫一覧を再読み込み
         await loadInventory();
         
+        // 登録した商品のQRコードを表示
+        showSingleQRCode(savedProductId, savedName);
+        
     } catch (error) {
         console.error('Error creating item:', error);
         alert('商品登録に失敗しました: ' + error.message);
+    }
+}
+
+// 単一商品のQRコードを表示
+async function showSingleQRCode(productId, productName) {
+    const qrUrl = `${BASE_URL}/staff/inventory/scan?product_id=${productId}`;
+    
+    // QRコード表示用のモーダルを作成または取得
+    let qrModal = document.getElementById('single-qrcode-dialog');
+    if (!qrModal) {
+        qrModal = document.createElement('dialog');
+        qrModal.id = 'single-qrcode-dialog';
+        qrModal.className = 'modal-dialog';
+        qrModal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>QRコード</h3>
+                    <button type="button" class="modal-close" onclick="document.getElementById('single-qrcode-dialog').close()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" style="text-align: center; padding: 24px;">
+                    <div id="single-qrcode-container"></div>
+                    <div style="margin-top: 16px;">
+                        <div style="font-weight: 600; font-size: 1.1rem; color: #111827; margin-bottom: 8px;" id="single-qrcode-name"></div>
+                        <div style="font-size: 0.9rem; color: #6b7280;" id="single-qrcode-id"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('single-qrcode-dialog').close()">閉じる</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(qrModal);
+    }
+    
+    const container = document.getElementById('single-qrcode-container');
+    const nameDiv = document.getElementById('single-qrcode-name');
+    const idDiv = document.getElementById('single-qrcode-id');
+    
+    container.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> QRコードを生成中...</div>';
+    nameDiv.textContent = productName;
+    idDiv.textContent = productId;
+    
+    qrModal.showModal();
+    
+    try {
+        container.innerHTML = '';
+        const canvas = document.createElement('canvas');
+        container.appendChild(canvas);
+        
+        // QRコードを生成
+        if (typeof QRCode !== 'undefined') {
+            await QRCode.toCanvas(canvas, qrUrl, {
+                width: 256,
+                margin: 2
+            });
+        } else {
+            // QRCodeライブラリが読み込まれていない場合
+            container.innerHTML = '<div style="color: #dc2626;">QRコードライブラリが読み込まれていません</div>';
+        }
+    } catch (error) {
+        console.error('Error generating QR code:', error);
+        container.innerHTML = '<div style="color: #dc2626;">QRコードの生成に失敗しました</div>';
     }
 }
 

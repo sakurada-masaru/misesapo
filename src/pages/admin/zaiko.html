@@ -84,6 +84,65 @@
       </div>
     </div>
   </dialog>
+
+  <!-- 商品登録モーダル -->
+  <dialog id="new-item-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>商品登録</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('new-item-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+          <label for="new-product-id">商品ID <span style="color: red;">*</span></label>
+          <input type="text" id="new-product-id" placeholder="例: P011" required>
+        </div>
+        <div class="input-group">
+          <label for="new-product-name">商品名 <span style="color: red;">*</span></label>
+          <input type="text" id="new-product-name" placeholder="例: 商品K（掃除用具）" required>
+        </div>
+        <div class="input-group">
+          <label for="new-product-stock">初期在庫数</label>
+          <input type="number" id="new-product-stock" value="0" min="0" required>
+        </div>
+        <div class="input-group">
+          <label for="new-product-min-stock">最小在庫数</label>
+          <input type="number" id="new-product-min-stock" value="50" min="0" required>
+        </div>
+        <div class="input-group">
+          <label for="new-product-safe-stock">安全在庫数</label>
+          <input type="number" id="new-product-safe-stock" value="100" min="0" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('new-item-dialog').close()">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="btn-create-item">登録</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- QRコード一覧モーダル -->
+  <dialog id="qrcode-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>QRコード一覧</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('qrcode-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="qrcode-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; padding: 16px;">
+          <!-- QRコードが動的に追加される -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('qrcode-dialog').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
 </main>
 
+<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
 <script src="/js/zaiko.js"></script>
