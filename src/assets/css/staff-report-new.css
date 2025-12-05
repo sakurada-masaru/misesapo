@@ -12,10 +12,10 @@
 }
 
 .report-form {
-  margin-top: 50px;
+  margin-top: 0;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 100px); /* ヘッダー分(50px) + マージン(50px)を引く */
+  min-height: calc(100vh - 98px);
   overflow: hidden;
 }
 
@@ -33,6 +33,68 @@
   padding: 0 12px;
   z-index: 100;
   gap: 12px;
+}
+
+/* タブナビゲーション */
+.tabs-navigation {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  z-index: 99;
+  padding: 0;
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+}
+
+.tab-btn.active {
+  color: #FF679C;
+  border-bottom-color: #FF679C;
+  background: #fdf2f8;
+}
+
+.tab-btn .badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.tab-content {
+  display: none;
+  margin-top: 98px; /* ヘッダー(50px) + タブ(48px) */
+  height: calc(100vh - 98px);
+  overflow-y: auto;
+}
+
+.tab-content.active {
+  display: block;
 }
 
 .back-btn {
@@ -781,6 +843,132 @@ body.dark-mode .add-buttons-footer {
 body.dark-mode .submit-section {
   background: #1f2937;
   border-color: #374151;
+}
+
+/* 修正依頼リスト */
+.revision-list-container {
+  padding: 12px;
+  min-height: calc(100vh - 98px);
+}
+
+.revision-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.revision-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border-left: 4px solid #f59e0b;
+}
+
+.revision-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.revision-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.revision-card-date {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.revision-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+.revision-card-comment {
+  background: #fef3c7;
+  border-left: 3px solid #f59e0b;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: #92400e;
+}
+
+.revision-card-comment-label {
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.revision-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-edit {
+  flex: 1;
+  padding: 10px 16px;
+  background: #FF679C;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-edit:active {
+  transform: scale(0.98);
+  background: #e91e63;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+  gap: 12px;
+}
+
+.loading-spinner i {
+  font-size: 2rem;
+  color: #FF679C;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+  gap: 12px;
+  text-align: center;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  color: #d1d5db;
+}
+
+.empty-state p {
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 body.dark-mode .modal-dialog {

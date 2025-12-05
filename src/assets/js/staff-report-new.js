@@ -23,7 +23,9 @@
   document.addEventListener('DOMContentLoaded', async () => {
     await Promise.all([loadStores(), loadServiceItems()]);
     setupEventListeners();
+    setupTabs();
     setDefaultDate();
+    loadRevisionRequests();
   });
 
   // 店舗読み込み
@@ -59,6 +61,336 @@
   // デフォルト日付設定
   function setDefaultDate() {
     document.getElementById('report-date').value = new Date().toISOString().split('T')[0];
+  }
+
+  // タブ切り替え設定
+  function setupTabs() {
+    const tabButtons = document.querySelectorAll('.tabs-navigation .tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.dataset.tab;
+        
+        // タブボタンのアクティブ状態を更新
+        tabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // タブコンテンツの表示を切り替え
+        tabContents.forEach(content => {
+          content.classList.remove('active');
+        });
+        document.getElementById(`tab-content-${targetTab}`).classList.add('active');
+        
+        // 修正タブに切り替えた場合は再読み込み
+        if (targetTab === 'edit') {
+          loadRevisionRequests();
+        }
+      });
+    });
+  }
+
+  // 修正依頼レポートを読み込み
+  async function loadRevisionRequests() {
+    const listContainer = document.getElementById('revision-list');
+    if (!listContainer) return;
+    
+    listContainer.innerHTML = `
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>読み込み中...</p>
+      </div>
+    `;
+    
+    try {
+      const idToken = await getFirebaseIdToken();
+      const response = await fetch(`${REPORT_API}/staff/reports?status=revision_requested`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${idToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('レポートの取得に失敗しました');
+      }
+      
+      const data = await response.json();
+      const reports = data.items || data.reports || [];
+      
+      // バッジを更新
+      const badge = document.getElementById('revision-badge');
+      if (badge) {
+        if (reports.length > 0) {
+          badge.textContent = reports.length;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+      
+      if (reports.length === 0) {
+        listContainer.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <p>修正依頼されたレポートはありません</p>
+          </div>
+        `;
+        return;
+      }
+      
+      listContainer.innerHTML = reports.map(report => {
+        const date = new Date(report.cleaning_date || report.created_at).toLocaleDateString('ja-JP');
+        const comment = report.revision_comment || report.admin_comment || '';
+        
+        return `
+          <div class="revision-card" data-report-id="${report.report_id || report.id}">
+            <div class="revision-card-header">
+              <h3 class="revision-card-title">${escapeHtml(report.store_name || '店舗名不明')}</h3>
+              <span class="revision-card-date">${date}</span>
+            </div>
+            <div class="revision-card-info">
+              <div><strong>清掃日:</strong> ${date}</div>
+              <div><strong>レポートID:</strong> ${report.report_id || report.id}</div>
+            </div>
+            ${comment ? `
+              <div class="revision-card-comment">
+                <span class="revision-card-comment-label">管理者からのコメント:</span>
+                <p style="margin: 0; white-space: pre-wrap;">${escapeHtml(comment)}</p>
+              </div>
+            ` : ''}
+            <div class="revision-card-actions">
+              <button type="button" class="btn-edit" onclick="editReport('${report.report_id || report.id}')">
+                <i class="fas fa-edit"></i>
+                修正する
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+    } catch (error) {
+      console.error('Error loading revision requests:', error);
+      listContainer.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>読み込みに失敗しました<br><small>${error.message}</small></p>
+        </div>
+      `;
+    }
+  }
+
+  // レポートを編集モードで開く
+  window.editReport = async function(reportId) {
+    try {
+      const idToken = await getFirebaseIdToken();
+      const response = await fetch(`${REPORT_API}/staff/reports/${reportId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${idToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('レポートの取得に失敗しました');
+      }
+      
+      const data = await response.json();
+      const report = data.report || data;
+      
+      // 新規作成タブに切り替え
+      document.getElementById('tab-new').click();
+      
+      // フォームにデータを読み込む
+      loadReportToForm(report);
+      
+    } catch (error) {
+      console.error('Error loading report:', error);
+      alert('レポートの読み込みに失敗しました: ' + error.message);
+    }
+  };
+
+  // レポートデータをフォームに読み込む
+  function loadReportToForm(report) {
+    // 基本情報
+    document.getElementById('report-store').value = report.store_id || '';
+    document.getElementById('report-store-name').value = report.store_name || '';
+    document.getElementById('report-store-search').value = report.store_name || '';
+    document.getElementById('report-date').value = report.cleaning_date || '';
+    document.getElementById('report-start').value = report.cleaning_start_time || '';
+    document.getElementById('report-end').value = report.cleaning_end_time || '';
+    
+    // レポートIDを保持（更新時に使用）
+    const form = document.getElementById('report-form');
+    form.dataset.reportId = report.report_id || report.id;
+    
+    // セクションをクリア
+    sections = {};
+    sectionCounter = 0;
+    document.getElementById('report-content').innerHTML = '';
+    
+    // 清掃項目を追加
+    const workItems = report.work_items || [];
+    workItems.forEach(item => {
+      sectionCounter++;
+      const sectionId = `section-${sectionCounter}`;
+      sections[sectionId] = {
+        type: 'cleaning',
+        item_name: item.item_name || item.item_id
+      };
+      
+      const options = serviceItems.map(si => 
+        `<option value="${escapeHtml(si.title)}" ${(si.title === item.item_name) ? 'selected' : ''}>${escapeHtml(si.title)}</option>`
+      ).join('');
+      
+      const html = `
+        <div class="section-card" data-section-id="${sectionId}">
+          <div class="section-header">
+            <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
+            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="section-body">
+            <select class="cleaning-item-select" onchange="updateCleaningItem('${sectionId}', this.value)">
+              <option value="">項目を選択</option>
+              ${options}
+              <option value="__other__">その他（自由入力）</option>
+            </select>
+            <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:none; margin-top:8px;" oninput="updateCleaningItem('${sectionId}', this.value)">
+          </div>
+        </div>
+      `;
+      document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    });
+    
+    // セクションを追加
+    const reportSections = report.sections || [];
+    reportSections.forEach(section => {
+      if (section.section_type === 'image') {
+        addImageSectionWithData(section);
+      } else if (section.section_type === 'comment') {
+        addCommentSectionWithData(section);
+      } else if (section.section_type === 'work_content') {
+        addWorkContentSectionWithData(section);
+      }
+    });
+    
+    updateCleaningItemsList();
+    
+    // 送信ボタンのテキストを変更
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+      submitBtn.innerHTML = '<i class="fas fa-save"></i> 修正を提出';
+    }
+  }
+
+  // データ付きでセクションを追加する関数
+  function addImageSectionWithData(section) {
+    sectionCounter++;
+    const sectionId = section.section_id || `section-${sectionCounter}`;
+    sections[sectionId] = {
+      type: 'image',
+      photos: section.photos || { before: [], after: [] }
+    };
+    
+    const html = `
+      <div class="section-card" data-section-id="${sectionId}">
+        <div class="section-header">
+          <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後）</span>
+          <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        <div class="section-body">
+          <div class="image-grid">
+            <div class="image-category">
+              <div class="image-category-title before"><i class="fas fa-clock"></i> 作業前</div>
+              <div class="image-list" id="${sectionId}-before">
+                ${(section.photos?.before || []).map(url => `
+                  <div class="image-thumb">
+                    <img src="${url}" alt="Before">
+                    <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'before', '${url}', this)">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                `).join('')}
+                <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'before')">
+                  <i class="fas fa-plus"></i>
+                  <span>追加</span>
+                </button>
+              </div>
+            </div>
+            <div class="image-category">
+              <div class="image-category-title after"><i class="fas fa-check-circle"></i> 作業後</div>
+              <div class="image-list" id="${sectionId}-after">
+                ${(section.photos?.after || []).map(url => `
+                  <div class="image-thumb">
+                    <img src="${url}" alt="After">
+                    <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'after', '${url}', this)">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                `).join('')}
+                <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'after')">
+                  <i class="fas fa-plus"></i>
+                  <span>追加</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+  }
+
+  function addCommentSectionWithData(section) {
+    sectionCounter++;
+    const sectionId = section.section_id || `section-${sectionCounter}`;
+    sections[sectionId] = {
+      type: 'comment',
+      content: section.content || ''
+    };
+    
+    const html = `
+      <div class="section-card" data-section-id="${sectionId}">
+        <div class="section-header">
+          <span class="section-title"><i class="fas fa-comment"></i> コメント</span>
+          <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        <div class="section-body">
+          <textarea class="section-textarea" placeholder="コメントを入力..." oninput="updateSectionContent('${sectionId}', this.value)">${escapeHtml(section.content || '')}</textarea>
+        </div>
+      </div>
+    `;
+    document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+  }
+
+  function addWorkContentSectionWithData(section) {
+    sectionCounter++;
+    const sectionId = section.section_id || `section-${sectionCounter}`;
+    sections[sectionId] = {
+      type: 'work_content',
+      content: section.content || ''
+    };
+    
+    const html = `
+      <div class="section-card" data-section-id="${sectionId}">
+        <div class="section-header">
+          <span class="section-title"><i class="fas fa-tasks"></i> 作業内容</span>
+          <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        <div class="section-body">
+          <textarea class="section-textarea" placeholder="作業内容を入力..." oninput="updateSectionContent('${sectionId}', this.value)">${escapeHtml(section.content || '')}</textarea>
+        </div>
+      </div>
+    `;
+    document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
   }
 
   // イベントリスナー設定
@@ -508,6 +840,10 @@
   async function handleSubmit(e) {
     e.preventDefault();
 
+    const form = document.getElementById('report-form');
+    const reportId = form.dataset.reportId; // 編集モードかどうか
+    const isEditMode = !!reportId;
+
     const storeId = document.getElementById('report-store').value;
     const storeName = document.getElementById('report-store-name').value;
     const cleaningDate = document.getElementById('report-date').value;
@@ -590,8 +926,19 @@
 
       const idToken = await getFirebaseIdToken();
 
-      const response = await fetch(`${REPORT_API}/staff/reports`, {
-        method: 'POST',
+      // 編集モードの場合はPUT、新規作成の場合はPOST
+      const url = isEditMode 
+        ? `${REPORT_API}/staff/reports/${reportId}`
+        : `${REPORT_API}/staff/reports`;
+      const method = isEditMode ? 'PUT' : 'POST';
+      
+      // 編集モードの場合はstatusをpendingに戻す
+      if (isEditMode) {
+        reportData.status = 'pending';
+      }
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${idToken}`
@@ -615,8 +962,25 @@
 
       const result = await response.json();
       console.log('[Submit] Success:', result);
-      alert('レポートを提出しました！');
-      window.location.href = '/staff/dashboard';
+      alert(isEditMode ? 'レポートを修正しました！' : 'レポートを提出しました！');
+      
+      // 編集モードの場合はフォームをリセット
+      if (isEditMode) {
+        form.dataset.reportId = '';
+        form.reset();
+        sections = {};
+        sectionCounter = 0;
+        document.getElementById('report-content').innerHTML = '';
+        updateCleaningItemsList();
+        const submitBtn = document.getElementById('submit-btn');
+        if (submitBtn) {
+          submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> レポートを提出';
+        }
+        // 修正タブに切り替えて一覧を更新
+        document.getElementById('tab-edit').click();
+      } else {
+        window.location.href = '/staff/dashboard';
+      }
 
     } catch (error) {
       console.error('[Submit] Error:', error);

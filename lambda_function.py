@@ -1681,13 +1681,37 @@ def get_reports(event, headers):
         
         # クエリパラメータを取得
         query_params = event.get('queryStringParameters') or {}
-        limit = int(query_params.get('limit', 20))
+        limit = int(query_params.get('limit', 50))
+        status_filter = query_params.get('status')
+        staff_id_filter = query_params.get('staff_id')
         
-        # 管理者は全レポートを取得、その他は暫定で全レポート閲覧可能
-        # TODO: 店舗とユーザーの関連テーブルができたら、ユーザーは自分の店舗のみ閲覧可能にする
+        # 管理者は全レポートを取得、清掃員は自分のレポートのみ
+        is_admin = user_info.get('role') == 'admin'
+        user_uid = user_info.get('uid')
         
-        # 全レポートをスキャン（効率化のため、将来はGSIを使用）
-        response = REPORTS_TABLE.scan(Limit=limit)
+        # フィルター条件を構築
+        filter_expressions = []
+        
+        # ステータスフィルター
+        if status_filter:
+            filter_expressions.append(Attr('status').eq(status_filter))
+        
+        # 清掃員の場合は自分のレポートのみ
+        if not is_admin and user_uid:
+            filter_expressions.append(Attr('staff_id').eq(user_uid))
+        elif staff_id_filter:
+            filter_expressions.append(Attr('staff_id').eq(staff_id_filter))
+        
+        # スキャン実行
+        if filter_expressions:
+            from functools import reduce
+            filter_expr = reduce(lambda x, y: x & y, filter_expressions)
+            response = REPORTS_TABLE.scan(
+                FilterExpression=filter_expr,
+                Limit=limit
+            )
+        else:
+            response = REPORTS_TABLE.scan(Limit=limit)
         
         items = response.get('Items', [])
         
@@ -2048,7 +2072,8 @@ def update_report(event, headers):
 
 def update_report_by_id(report_id, event, headers):
     """
-    レポートを更新（IDをURLパスから取得、管理者のみ）
+    レポートを更新（IDをURLパスから取得）
+    管理者は全レポートを更新可能、清掃員は自分のレポートのみ更新可能
     """
     try:
         # Firebase ID Tokenを取得
@@ -2064,13 +2089,8 @@ def update_report_by_id(report_id, event, headers):
                 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
             }
         
-        # 管理者権限をチェック
-        if not check_admin_permission(user_info):
-            return {
-                'statusCode': 403,
-                'headers': headers,
-                'body': json.dumps({'error': 'Forbidden: Admin access required'}, ensure_ascii=False)
-            }
+        is_admin = user_info.get('role') == 'admin'
+        user_uid = user_info.get('uid')
         
         # リクエストボディを取得
         if event.get('isBase64Encoded'):
