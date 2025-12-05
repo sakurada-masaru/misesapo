@@ -170,6 +170,17 @@
      */
     generate(prefix) {
       console.warn('IdUtils.generate() is deprecated. ID generation should be handled by the backend.');
+      // スケジュールIDの場合は日付+連番形式（SCH-2025-1125-001）を生成
+      if (prefix === 'SCH-') {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const dateStr = `${year}${month}${day}`;
+        // タイムスタンプの下3桁を連番として使用（実際の連番はバックエンドで管理すべき）
+        const seq = String(Date.now()).slice(-3).padStart(3, '0');
+        return `${prefix}${dateStr}-${seq}`;
+      }
       return `${prefix}${Date.now()}`;
     },
     
