@@ -221,6 +221,7 @@ aws apigateway put-integration-response \
   --http-method OPTIONS \
   --status-code 200 \
   --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,PUT,POST,DELETE,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --response-templates '{"application/json":""}' \
   --region ${REGION} &>/dev/null || echo "OPTIONS統合レスポンスは既に存在します"
 
 # POST /staff/announcements/{id}/read メソッドを作成
@@ -278,6 +279,7 @@ aws apigateway put-integration-response \
   --http-method OPTIONS \
   --status-code 200 \
   --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,PUT,POST,DELETE,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --response-templates '{"application/json":""}' \
   --region ${REGION} &>/dev/null || echo "OPTIONS統合レスポンスは既に存在します"
 
 # GET /admin/announcements メソッドを作成
@@ -353,6 +355,7 @@ aws apigateway put-integration-response \
   --http-method OPTIONS \
   --status-code 200 \
   --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,PUT,POST,DELETE,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --response-templates '{"application/json":""}' \
   --region ${REGION} &>/dev/null || echo "OPTIONS統合レスポンスは既に存在します"
 
 # GET /admin/announcements/{id} メソッドを作成
@@ -446,6 +449,7 @@ aws apigateway put-integration-response \
   --http-method OPTIONS \
   --status-code 200 \
   --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,PUT,POST,DELETE,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --response-templates '{"application/json":""}' \
   --region ${REGION} &>/dev/null || echo "OPTIONS統合レスポンスは既に存在します"
 
 # Lambda関数にAPI Gatewayからの呼び出し権限を付与
