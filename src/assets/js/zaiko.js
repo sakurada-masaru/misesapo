@@ -136,6 +136,31 @@ function openProductDetail(productId) {
     document.getElementById('modal-product-name-text').textContent = item.name;
     document.getElementById('modal-product-stock').textContent = `${item.stock.toLocaleString()} 個`;
     
+    // QRコードを生成
+    const qrContainer = document.getElementById('modal-product-qrcode');
+    if (qrContainer) {
+        qrContainer.innerHTML = ''; // 既存のQRコードをクリア
+        
+        const qrUrl = `${BASE_URL}/staff/inventory/scan?product_id=${currentProductId}`;
+        if (typeof QRCode !== 'undefined') {
+            try {
+                new QRCode(qrContainer, {
+                    text: qrUrl,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } catch (error) {
+                console.error('Error generating QR code:', error);
+                qrContainer.innerHTML = '<div style="color: #dc2626; font-size: 0.9rem;">QRコードの生成に失敗しました</div>';
+            }
+        } else {
+            qrContainer.innerHTML = '<div style="color: #dc2626; font-size: 0.9rem;">QRコードライブラリが読み込まれていません</div>';
+        }
+    }
+    
     // モーダル内のモードボタンをリセット
     const modalModeIn = document.getElementById('modal-mode-in');
     const modalModeOut = document.getElementById('modal-mode-out');
