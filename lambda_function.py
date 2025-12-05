@@ -223,16 +223,31 @@ def lambda_handler(event, context):
         elif normalized_path.startswith('/public/reports/'):
             # 公開レポート関連（認証不要）
             parts = normalized_path.split('/')
+            print(f"[DEBUG] Public reports path parts: {parts}, method: {method}")
             if len(parts) >= 4 and parts[-1] == 'feedback':
                 # /public/reports/{report_id}/feedback - フィードバック送信
                 report_id = parts[-2]
+                print(f"[DEBUG] Feedback endpoint, report_id: {report_id}, method: {method}")
                 if method == 'POST':
                     return save_report_feedback(report_id, event, headers)
+                else:
+                    # メソッドが一致しない場合もCORSヘッダーを返す
+                    return {
+                        'statusCode': 405,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                    }
             else:
                 # /public/reports/{report_id} - 公開レポート詳細の取得
                 report_id = parts[-1]
                 if method == 'GET':
                     return get_public_report(report_id, headers)
+                else:
+                    return {
+                        'statusCode': 405,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                    }
         elif normalized_path == '/staff/report-images':
             # レポート用画像のアップロード・一覧取得
             if method == 'POST':
@@ -378,14 +393,17 @@ def lambda_handler(event, context):
                 })
             }
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         print(f"Error: {str(e)}")
+        print(f"Traceback: {error_trace}")
         return {
             'statusCode': 500,
             'headers': headers,
             'body': json.dumps({
                 'error': '処理に失敗しました',
                 'message': str(e)
-            })
+            }, ensure_ascii=False)
         }
 
 def handle_image_upload(event, headers):
@@ -5617,14 +5635,26 @@ def save_report_feedback(report_id, event, headers):
     認証不要
     """
     try:
-        body = json.loads(event.get('body', '{}'))
+        print(f"[Feedback] Saving feedback for report_id: {report_id}")
+        
+        # リクエストボディを取得
+        body_str = event.get('body', '{}')
+        if event.get('isBase64Encoded'):
+            body_str = base64.b64decode(body_str).decode('utf-8')
+        
+        print(f"[Feedback] Body string: {body_str[:200]}")
+        
+        body = json.loads(body_str) if isinstance(body_str, str) else body_str
         rating = body.get('rating', 0)
         comment = body.get('comment', '')
+        
+        print(f"[Feedback] Parsed data: rating={rating}, comment={comment[:50] if comment else ''}")
         
         # レポートが存在するか確認
         REPORTS_TABLE = dynamodb.Table('misesapo-reports')
         response = REPORTS_TABLE.get_item(Key={'report_id': report_id})
         if 'Item' not in response:
+            print(f"[Feedback] Report not found: {report_id}")
             return {
                 'statusCode': 404,
                 'headers': headers,
@@ -5638,11 +5668,15 @@ def save_report_feedback(report_id, event, headers):
             'submitted_at': datetime.now().isoformat()
         }
         
+        print(f"[Feedback] Updating report with feedback: {feedback}")
+        
         REPORTS_TABLE.update_item(
             Key={'report_id': report_id},
             UpdateExpression='SET satisfaction = :feedback',
             ExpressionAttributeValues={':feedback': feedback}
         )
+        
+        print(f"[Feedback] Successfully saved feedback")
         
         return {
             'statusCode': 200,
@@ -5653,7 +5687,10 @@ def save_report_feedback(report_id, event, headers):
             }, ensure_ascii=False)
         }
     except Exception as e:
-        print(f"Error saving feedback: {str(e)}")
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"[Feedback] Error saving feedback: {str(e)}")
+        print(f"[Feedback] Traceback: {error_trace}")
         return {
             'statusCode': 500,
             'headers': headers,
