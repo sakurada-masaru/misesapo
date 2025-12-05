@@ -525,11 +525,22 @@
     // 清掃項目を収集
     const workItems = Object.values(sections)
       .filter(s => s.type === 'cleaning' && s.item_name)
-      .map(s => ({
-        item_name: s.item_name,
-        details: {},
-        photos: { before: [], after: [] }
-      }));
+      .map(s => {
+        // item_nameからitem_idを生成（スラッグ化）
+        const itemId = s.item_name.toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^\w\-]+/g, '')
+          .replace(/\-\-+/g, '-')
+          .replace(/^-+/, '')
+          .replace(/-+$/, '');
+        
+        return {
+          item_id: itemId,
+          item_name: s.item_name,
+          details: {},
+          photos: { before: [], after: [] }
+        };
+      });
 
     // セクションを収集
     const sectionData = Object.entries(sections)
@@ -589,15 +600,27 @@
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `送信に失敗しました (${response.status})`);
+        let errorMessage = `送信に失敗しました (${response.status})`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          console.error('[Submit] Error response:', errorData);
+        } catch (e) {
+          const errorText = await response.text();
+          console.error('[Submit] Error response text:', errorText);
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
+      const result = await response.json();
+      console.log('[Submit] Success:', result);
       alert('レポートを提出しました！');
       window.location.href = '/staff/dashboard';
 
     } catch (error) {
       console.error('[Submit] Error:', error);
+      console.error('[Submit] Report data that failed:', reportData);
       alert('送信に失敗しました: ' + error.message);
       const submitBtn = document.getElementById('submit-btn');
       submitBtn.disabled = false;
