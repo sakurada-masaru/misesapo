@@ -223,6 +223,18 @@
         <div class="schedule-filter-section" id="schedule-filter-section">
           <div class="schedule-filter-row">
             <div class="schedule-filter-group">
+              <label>店舗</label>
+              <select id="schedule-store-filter">
+                <option value="">全店舗</option>
+              </select>
+            </div>
+            <div class="schedule-filter-group">
+              <label>清掃員</label>
+              <select id="schedule-worker-filter">
+                <option value="">全員</option>
+              </select>
+            </div>
+            <div class="schedule-filter-group">
               <label>ステータス</label>
               <select id="schedule-status-filter">
                 <option value="">全て</option>
@@ -238,6 +250,9 @@
                 <i class="fas fa-calendar"></i>
               </button>
             </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="schedule-reset-filters">
+              <i class="fas fa-undo"></i> リセット
+            </button>
           </div>
         </div>
 
@@ -2152,6 +2167,29 @@
       text-align: center;
       padding: 2px;
     }
+    .day-add-schedule {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary, #ff679c);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .day-add-schedule:hover {
+      opacity: 1;
+    }
+    .calendar-day {
+      position: relative;
+    }
 
     /* モーダル */
     .modal-overlay {
@@ -2391,7 +2429,40 @@
     let scheduleCurrentView = 'list';
     let scheduleCurrentMonth = new Date();
     let scheduleFilteredSchedules = [];
+    let scheduleCurrentPage = 1;
+    const schedulePerPage = 20;
     const dowClass = ['sun', '', '', '', '', '', 'sat'];
+
+    // DataUtilsオブジェクトの定義
+    const DataUtils = {
+      // スケジュールデータを正規化
+      normalizeSchedule: function(schedule) {
+        if (!schedule) return {};
+        return {
+          id: schedule.id || schedule.schedule_id,
+          store_id: schedule.store_id || schedule.client_id,
+          store_name: schedule.store_name || schedule.client_name,
+          date: schedule.date || schedule.scheduled_date,
+          time: schedule.time || schedule.time_slot || schedule.scheduled_time,
+          status: schedule.status || 'draft',
+          worker_id: schedule.worker_id || schedule.assigned_to,
+          notes: schedule.notes || schedule.memo
+        };
+      },
+      
+      // 店舗名を取得
+      getStoreName: function(stores, storeId, fallbackName) {
+        if (!stores || !Array.isArray(stores)) return fallbackName || '';
+        const store = stores.find(s => s.id === storeId || String(s.id) === String(storeId));
+        return store ? (store.name || fallbackName || '') : (fallbackName || '');
+      },
+      
+      // 店舗を検索
+      findStore: function(stores, storeId) {
+        if (!stores || !Array.isArray(stores)) return null;
+        return stores.find(s => s.id === storeId || String(s.id) === String(storeId)) || null;
+      }
+    };
 
     // ローカルタイムゾーンで日付をYYYY-MM-DD形式の文字列に変換
     function formatDateToYYYYMMDD(date) {
@@ -2909,27 +2980,39 @@
 
     async function loadData() {
       try {
+        // 認証トークンを取得
+        const idToken = await getFirebaseIdToken();
+        const headers = {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        };
+        
         const [storesRes, schedulesRes, workersRes, clientsRes, brandsRes] = await Promise.all([
-          fetch(`${API_BASE}/stores`).catch(() => ({ ok: false })),
-          fetch(`${API_BASE}/schedules`).catch(() => ({ ok: false })),
-          fetch(`${API_BASE}/workers`).catch(() => ({ ok: false })),
-          fetch(`${API_BASE}/clients`).catch(() => ({ ok: false })),
-          fetch(`${API_BASE}/brands`).catch(() => ({ ok: false }))
+          fetch(`${API_BASE}/stores`, { headers }).catch(() => ({ ok: false })),
+          fetch(`${API_BASE}/schedules`, { headers }).catch(() => ({ ok: false })),
+          fetch(`${API_BASE}/workers`, { headers }).catch(() => ({ ok: false })),
+          fetch(`${API_BASE}/clients`, { headers }).catch(() => ({ ok: false })),
+          fetch(`${API_BASE}/brands`, { headers }).catch(() => ({ ok: false }))
         ]);
         
         if (storesRes.ok) {
           const storesData = await storesRes.json();
           allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
         } else {
-          console.warn('Failed to load stores');
+          console.warn('Failed to load stores:', storesRes.status, storesRes.statusText);
           allStores = [];
         }
         
         if (schedulesRes.ok) {
-          const schedulesData = await schedulesRes.json();
-          allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+          try {
+            const schedulesData = await schedulesRes.json();
+            allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+          } catch (jsonError) {
+            console.error('Error parsing schedules JSON:', jsonError);
+            allSchedules = [];
+          }
         } else {
-          console.warn('Failed to load schedules');
+          console.warn('Failed to load schedules:', schedulesRes.status, schedulesRes.statusText);
           allSchedules = [];
         }
         
@@ -2938,7 +3021,7 @@
           // APIレスポンスが配列かオブジェクトかをチェック
           allWorkers = Array.isArray(workersData) ? workersData : (workersData.items || workersData.workers || []);
         } else {
-          console.warn('Failed to load workers');
+          console.warn('Failed to load workers:', workersRes.status, workersRes.statusText);
           allWorkers = [];
         }
         
@@ -2964,7 +3047,7 @@
           const brandsData = await brandsRes.json();
           allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
         } else {
-          console.warn('Failed to load brands');
+          console.warn('Failed to load brands:', brandsRes.status, brandsRes.statusText);
           allBrands = [];
         }
         
@@ -2992,6 +3075,11 @@
         
         // 店舗セレクト更新
         populateStoreSelects();
+        
+        // スケジュール画面のフィルターを更新
+        if (document.getElementById('schedule-store-filter')) {
+          setupScheduleView();
+        }
       } catch (error) {
         console.error('Failed to load data:', error);
       }
@@ -3131,38 +3219,16 @@
       div.textContent = text;
       return div.innerHTML;
     }
-        
-        // 統計更新
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayStr = formatDateToYYYYMMDD(today);
-        const todayCount = allSchedules.filter(s => {
-          const sDate = s.scheduled_date || s.date;
-          if (!sDate) return false;
-          const sDateStr = formatDateToYYYYMMDD(new Date(sDate));
-          return sDateStr === todayStr;
-        }).length;
-        document.getElementById('today-count').textContent = todayCount;
-        
-        // 仮押さえ件数（自分が申請したもの）
-        const draftSchedules = allSchedules.filter(s => s.status === 'draft');
-        document.getElementById('draft-count').textContent = draftSchedules.length;
-        
-        // スケジュール表示
-        renderSchedules();
-        
-        // 仮押さえ状況表示
-        renderDraftStatus();
-        
-        // 店舗セレクト更新
-        populateStoreSelects();
-      } catch (error) {
-        console.error('Failed to load data:', error);
-      }
-    }
 
     function renderSchedules() {
       const container = document.getElementById('schedule-list');
+      if (!container) return;
+      
+      // allSchedulesが配列でない場合は空配列に
+      if (!Array.isArray(allSchedules)) {
+        allSchedules = [];
+      }
+      
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
@@ -3266,7 +3332,7 @@
             </div>
             <div class="schedule-info">
               <div class="schedule-time">${normalized.time || '-'}</div>
-              <div class="schedule-store">${DataUtils.escapeHtml(displayName)}</div>
+              <div class="schedule-store">${escapeHtml(displayName)}</div>
             </div>
             <div class="schedule-dot ${statusClass}"></div>
           </div>
@@ -3276,6 +3342,12 @@
 
     function renderDraftStatus() {
       const container = document.getElementById('draft-status-list');
+      if (!container) return;
+      
+      // allSchedulesが配列でない場合は空配列に
+      if (!Array.isArray(allSchedules)) {
+        allSchedules = [];
+      }
       
       // 仮押さえ（draft）のみを表示（リマインダーは除外）
       const recentDrafts = allSchedules
@@ -3326,7 +3398,7 @@
         return `
           <div class="draft-item status-${normalized.status}">
             <div class="draft-item-info">
-              <div class="draft-item-store">${DataUtils.escapeHtml(storeName)}</div>
+              <div class="draft-item-store">${escapeHtml(storeName)}</div>
               <div class="draft-item-date">${normalized.date || ''} ${normalized.time || ''}</div>
             </div>
             <span class="draft-item-status ${normalized.status}">${statusLabel}</span>
@@ -3882,23 +3954,40 @@
     async function loadScheduleData() {
       try {
         const [schedulesRes, workersRes] = await Promise.all([
-          fetch(`${API_BASE}/schedules`).catch(() => ({ ok: false })),
-          fetch(`${API_BASE}/workers`).catch(() => ({ ok: false }))
+          fetch(`${API_BASE}/schedules`).catch((err) => {
+            console.error('Error fetching schedules:', err);
+            return { ok: false };
+          }),
+          fetch(`${API_BASE}/workers`).catch((err) => {
+            console.error('Error fetching workers:', err);
+            return { ok: false };
+          })
         ]);
         
         if (schedulesRes.ok) {
-          allSchedules = await schedulesRes.json();
+          try {
+            const schedulesData = await schedulesRes.json();
+            allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+          } catch (jsonError) {
+            console.error('Error parsing schedules JSON:', jsonError);
+            allSchedules = [];
+          }
         } else {
-          console.warn('Failed to load schedules');
+          console.warn('Failed to load schedules:', schedulesRes.status, schedulesRes.statusText);
           allSchedules = [];
         }
         
         if (workersRes.ok) {
-          const workersData = await workersRes.json();
-          // APIレスポンスが配列かオブジェクトかをチェック
-          allWorkers = Array.isArray(workersData) ? workersData : (workersData.items || workersData.workers || []);
+          try {
+            const workersData = await workersRes.json();
+            // APIレスポンスが配列かオブジェクトかをチェック
+            allWorkers = Array.isArray(workersData) ? workersData : (workersData.items || workersData.workers || []);
+          } catch (jsonError) {
+            console.error('Error parsing workers JSON:', jsonError);
+            allWorkers = [];
+          }
         } else {
-          console.warn('Failed to load workers');
+          console.warn('Failed to load workers:', workersRes.status, workersRes.statusText);
           allWorkers = [];
         }
       } catch (error) {
@@ -4234,12 +4323,53 @@
 
     // スケジュールパネルのリスト表示とカレンダー表示
     function setupScheduleView() {
+      // 店舗フィルターの初期化
+      const storeFilterEl = document.getElementById('schedule-store-filter');
+      if (storeFilterEl && allStores.length > 0) {
+        const options = allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name || '')}</option>`).join('');
+        storeFilterEl.innerHTML = '<option value="">全店舗</option>' + options;
+      }
+      
+      // 清掃員フィルターの初期化
+      const workerFilterEl = document.getElementById('schedule-worker-filter');
+      if (workerFilterEl && allWorkers.length > 0) {
+        const cleaners = allWorkers.filter(w => (w.role || '').toLowerCase() === 'staff');
+        const workerOptions = (cleaners.length > 0 ? cleaners : allWorkers)
+          .map(w => `<option value="${w.id}">${escapeHtml(w.name || '')}</option>`).join('');
+        workerFilterEl.innerHTML = '<option value="">全員</option>' + workerOptions;
+      }
+      
       // フィルターイベントリスナー（重複登録を防ぐため、既存のリスナーを削除）
       const statusFilterEl = document.getElementById('schedule-status-filter');
       if (statusFilterEl) {
         const newFilter = statusFilterEl.cloneNode(true);
         statusFilterEl.parentNode.replaceChild(newFilter, statusFilterEl);
         newFilter.addEventListener('change', filterAndRenderSchedules);
+      }
+      
+      if (storeFilterEl) {
+        const newStoreFilter = storeFilterEl.cloneNode(true);
+        storeFilterEl.parentNode.replaceChild(newStoreFilter, storeFilterEl);
+        newStoreFilter.addEventListener('change', filterAndRenderSchedules);
+      }
+      
+      if (workerFilterEl) {
+        const newWorkerFilter = workerFilterEl.cloneNode(true);
+        workerFilterEl.parentNode.replaceChild(newWorkerFilter, workerFilterEl);
+        newWorkerFilter.addEventListener('change', filterAndRenderSchedules);
+      }
+      
+      // リセットボタン
+      const resetFiltersBtn = document.getElementById('schedule-reset-filters');
+      if (resetFiltersBtn) {
+        const newResetBtn = resetFiltersBtn.cloneNode(true);
+        resetFiltersBtn.parentNode.replaceChild(newResetBtn, resetFiltersBtn);
+        newResetBtn.addEventListener('click', () => {
+          if (storeFilterEl) storeFilterEl.value = '';
+          if (workerFilterEl) workerFilterEl.value = '';
+          if (statusFilterEl) statusFilterEl.value = '';
+          filterAndRenderSchedules();
+        });
       }
 
       // 表示切り替えボタン（重複登録を防ぐ）
@@ -4305,11 +4435,18 @@
     }
 
     function filterAndRenderSchedules() {
+      const storeId = document.getElementById('schedule-store-filter')?.value || '';
+      const workerId = document.getElementById('schedule-worker-filter')?.value || '';
       const status = document.getElementById('schedule-status-filter')?.value || '';
 
       scheduleFilteredSchedules = allSchedules.filter(s => {
+        const normalized = DataUtils.normalizeSchedule(s);
+        const scheduleStoreId = normalized.store_id || s.store_id || s.client_id;
+        const matchStore = !storeId || scheduleStoreId === storeId;
+        const scheduleWorkerId = normalized.worker_id || s.worker_id || s.assigned_to;
+        const matchWorker = !workerId || scheduleWorkerId === workerId;
         const matchStatus = !status || s.status === status;
-        return matchStatus;
+        return matchStore && matchWorker && matchStatus;
       });
 
       // 日付順ソート
@@ -4350,8 +4487,11 @@
         return `${dateA || ''} ${timeA}`.localeCompare(`${dateB || ''} ${timeB}`);
       });
 
+      scheduleCurrentPage = 1;
+      
       if (scheduleCurrentView === 'list') {
         renderScheduleList();
+        renderSchedulePagination();
       } else {
         renderScheduleCalendar();
       }
@@ -4364,13 +4504,21 @@
     function renderScheduleList() {
       const container = document.getElementById('schedule-list-content');
       if (!container) return;
+      
+      // scheduleFilteredSchedulesが配列でない場合は空配列に
+      if (!Array.isArray(scheduleFilteredSchedules)) {
+        scheduleFilteredSchedules = [];
+      }
 
-      if (scheduleFilteredSchedules.length === 0) {
+      const start = (scheduleCurrentPage - 1) * schedulePerPage;
+      const pageSchedules = scheduleFilteredSchedules.slice(start, start + schedulePerPage);
+
+      if (pageSchedules.length === 0) {
         container.innerHTML = '<div class="loading">該当するスケジュールがありません</div>';
         return;
       }
 
-      container.innerHTML = scheduleFilteredSchedules.map(schedule => {
+      container.innerHTML = pageSchedules.map(schedule => {
         const normalized = DataUtils.normalizeSchedule(schedule);
         const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
         const isReminder = schedule.type === 'reminder' || !storeId;
@@ -4425,10 +4573,50 @@
       }).join('');
     }
 
+    function renderSchedulePagination() {
+      const paginationEl = document.getElementById('schedule-pagination');
+      if (!paginationEl) return;
+      
+      const totalPages = Math.ceil(scheduleFilteredSchedules.length / schedulePerPage);
+      if (totalPages <= 1) {
+        paginationEl.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      html += `<button ${scheduleCurrentPage === 1 ? 'disabled' : ''} onclick="goToSchedulePage(${scheduleCurrentPage - 1})">前</button>`;
+      
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= scheduleCurrentPage - 2 && i <= scheduleCurrentPage + 2)) {
+          html += `<button class="${i === scheduleCurrentPage ? 'active' : ''}" onclick="goToSchedulePage(${i})">${i}</button>`;
+        } else if (i === scheduleCurrentPage - 3 || i === scheduleCurrentPage + 3) {
+          html += `<span style="padding:8px">...</span>`;
+        }
+      }
+      
+      html += `<button ${scheduleCurrentPage === totalPages ? 'disabled' : ''} onclick="goToSchedulePage(${scheduleCurrentPage + 1})">次</button>`;
+      paginationEl.innerHTML = html;
+    }
+
+    window.goToSchedulePage = function(page) {
+      scheduleCurrentPage = page;
+      renderScheduleList();
+      renderSchedulePagination();
+    };
+
     function renderScheduleCalendar() {
       // scheduleCurrentMonthが正しく設定されているか確認
       if (!scheduleCurrentMonth || isNaN(scheduleCurrentMonth.getTime())) {
         scheduleCurrentMonth = new Date();
+      }
+      
+      // allSchedulesが配列でない場合は空配列に
+      if (!Array.isArray(allSchedules)) {
+        allSchedules = [];
+      }
+      // scheduleFilteredSchedulesが配列でない場合は空配列に
+      if (!Array.isArray(scheduleFilteredSchedules)) {
+        scheduleFilteredSchedules = [];
       }
       
       const year = scheduleCurrentMonth.getFullYear();
@@ -4474,6 +4662,17 @@
         dayNum.className = 'day-number';
         dayNum.textContent = day;
         dayCell.appendChild(dayNum);
+
+        // 日付セルをクリック可能にする（スケジュール作成ページへ遷移）
+        dayCell.style.cursor = 'pointer';
+        dayCell.onclick = (e) => {
+          // イベントがクリックされた場合は詳細を表示、それ以外はスケジュール作成
+          if (e.target.closest('.day-event') || e.target.closest('.day-event-more')) {
+            return; // イベントのクリックは既存の処理に任せる
+          }
+          // スケジュール作成ページに遷移（日付をクエリパラメータで渡す）
+          window.location.href = `/sales/schedules/new?date=${dateStr}`;
+        };
 
         // その日のスケジュール
         const daySchedules = scheduleFilteredSchedules.filter(s => {
@@ -4533,6 +4732,17 @@
           }
 
           dayCell.appendChild(eventsContainer);
+        } else {
+          // スケジュールがない日付にも「+」ボタンを表示してスケジュール作成を促す
+          const addButton = document.createElement('div');
+          addButton.className = 'day-add-schedule';
+          addButton.innerHTML = '<i class="fas fa-plus"></i>';
+          addButton.title = 'スケジュールを追加';
+          addButton.onclick = (e) => {
+            e.stopPropagation();
+            window.location.href = `/sales/schedules/new?date=${dateStr}`;
+          };
+          dayCell.appendChild(addButton);
         }
 
         calendarDaysEl.appendChild(dayCell);

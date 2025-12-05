@@ -14,16 +14,35 @@ let currentView = 'list';
 let currentMonth = new Date();
 let deleteTargetId = null;
 
-// DOM要素
-const tbody = document.getElementById('schedule-tbody');
-const pagination = document.getElementById('pagination');
-const scheduleDialog = document.getElementById('schedule-dialog');
-const deleteDialog = document.getElementById('delete-dialog');
-const scheduleForm = document.getElementById('schedule-form');
-const formStatus = document.getElementById('form-status');
+// DOM要素（初期化時に取得）
+let tbody, pagination, scheduleDialog, deleteDialog, scheduleForm, formStatus;
 
 // 初期化
 document.addEventListener('DOMContentLoaded', async () => {
+  // DOM要素を取得
+  tbody = document.getElementById('schedule-tbody');
+  pagination = document.getElementById('pagination');
+  scheduleDialog = document.getElementById('schedule-dialog');
+  deleteDialog = document.getElementById('delete-dialog');
+  scheduleForm = document.getElementById('schedule-form');
+  formStatus = document.getElementById('form-status');
+  
+  // DataUtilsが利用可能になるまで待つ（最大5秒）
+  let retries = 0;
+  const maxRetries = 50; // 5秒間待機（100ms × 50）
+  while (typeof DataUtils === 'undefined' && retries < maxRetries) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    retries++;
+  }
+  
+  if (typeof DataUtils === 'undefined') {
+    console.error('DataUtils is not loaded after waiting');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">データユーティリティの読み込みに失敗しました</td></tr>';
+    }
+    return;
+  }
+  
   await Promise.all([
     loadStores(), 
     loadWorkers(), 

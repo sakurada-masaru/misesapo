@@ -1,8 +1,8 @@
 @layout('layouts.admin')
 @json('data/meta/admin_schedules_title.json', $title)
 @json('data/meta/admin_schedules_body_class.json', $body_class)
+
 <link rel="stylesheet" href="/css/admin-schedules.css" />
-<script src="/js/admin-schedules.js"></script>
 
 <main id="main" class="admin-schedules-v2">
   @include('partials.admin-sidebar')
@@ -223,3 +223,4 @@
       <button type="button" class="btn btn-danger" id="confirm-delete">削除</button>
     </div>
   </div>
+<script src="/js/admin-schedules.js"></script>

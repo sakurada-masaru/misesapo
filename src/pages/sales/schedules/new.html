@@ -1080,14 +1080,20 @@
           console.warn('[sales/schedules/new] Service items not loaded yet');
       }
 
-      // 今日の日付をデフォルトに設定
+      // URLパラメータから日付を取得、なければ今日の日付をデフォルトに設定
       const dateInput = document.getElementById('schedule-date');
       if (dateInput) {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        dateInput.value = `${year}-${month}-${day}`;
+        const urlParams = new URLSearchParams(window.location.search);
+        const dateParam = urlParams.get('date');
+        if (dateParam) {
+          dateInput.value = dateParam;
+        } else {
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          dateInput.value = `${year}-${month}-${day}`;
+        }
       }
       })();
     })();
