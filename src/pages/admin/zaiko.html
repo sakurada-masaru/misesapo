@@ -15,6 +15,9 @@
         <h1>在庫管理</h1>
       </div>
       <div class="topbar-right">
+        <button type="button" class="btn btn-outline" id="btn-help" style="margin-right: 8px;">
+          <i class="fas fa-question-circle"></i> 使い方
+        </button>
         <button type="button" class="btn btn-primary" id="btn-new-item">
           <i class="fas fa-plus"></i> 商品登録
         </button>
@@ -141,6 +144,97 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="document.getElementById('new-item-dialog').close()">キャンセル</button>
         <button type="button" class="btn btn-primary" id="btn-create-item">登録</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 使い方ヘルプモーダル -->
+  <dialog id="help-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>在庫管理の使い方</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('help-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div class="help-content">
+          <h4 style="margin-top: 0; color: #111827;">📦 在庫管理の基本操作</h4>
+          
+          <div class="help-section">
+            <h5>1. 在庫カードの見方</h5>
+            <ul>
+              <li><strong>緑色</strong>: 在庫が安全な状態（安全在庫数以上）</li>
+              <li><strong>黄色</strong>: 在庫が少なくなってきた状態（最小在庫数以上、安全在庫数未満）</li>
+              <li><strong>赤色</strong>: 在庫が不足している状態（最小在庫数未満）</li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h5>2. 商品詳細の確認</h5>
+            <p>在庫カードをクリックすると、以下の情報が表示されます：</p>
+            <ul>
+              <li>商品ID、商品名、現在の在庫数</li>
+              <li>最終入庫・出庫者の名前と日時</li>
+              <li>QRコード（清掃員がスキャンして使用）</li>
+              <li>在庫更新機能（入庫・出庫）</li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h5>3. 在庫の更新（入庫・出庫）</h5>
+            <ol>
+              <li>在庫カードをクリックして商品詳細を開く</li>
+              <li>「入庫」または「出庫」ボタンを選択</li>
+              <li>数量を入力</li>
+              <li>「在庫更新を実行」ボタンをクリック</li>
+            </ol>
+          </div>
+
+          <div class="help-section">
+            <h5>4. 商品の登録</h5>
+            <ol>
+              <li>右上の「商品登録」ボタンをクリック</li>
+              <li>商品名、初期在庫数、最小在庫数、安全在庫数を入力</li>
+              <li>商品IDは自動生成されます</li>
+              <li>「登録」ボタンをクリック</li>
+            </ol>
+          </div>
+
+          <div class="help-section">
+            <h5>5. QRコードの使い方</h5>
+            <ul>
+              <li>商品詳細モーダル内にQRコードが表示されます</li>
+              <li>このQRコードを清掃員がスマホでスキャンすると、在庫管理画面が開きます</li>
+              <li>清掃員はQRコードをスキャンして、入庫・出庫操作を行います</li>
+              <li>「QRコード一覧」ボタンから、全商品のQRコードを一覧表示できます</li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h5>6. 清掃員の操作フロー</h5>
+            <ol>
+              <li>スマホでQRコードをスキャン</li>
+              <li>商品情報が表示される（認証不要）</li>
+              <li>数量を入力して「入庫」または「出庫」ボタンをクリック</li>
+              <li>ログイン画面が表示される（初回のみ）</li>
+              <li>@misesapo.co.jp のアカウントでログイン</li>
+              <li>処理が完了すると、在庫数が更新されます</li>
+            </ol>
+          </div>
+
+          <div class="help-section">
+            <h5>💡 便利な機能</h5>
+            <ul>
+              <li><strong>最終更新情報</strong>: 誰が最後に入庫・出庫したかが分かります</li>
+              <li><strong>色分け表示</strong>: 在庫状況が一目で分かります</li>
+              <li><strong>履歴管理</strong>: すべての入出庫履歴が記録されます（3ヶ月間保存）</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('help-dialog').close()">閉じる</button>
       </div>
     </div>
   </dialog>

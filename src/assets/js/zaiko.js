@@ -620,4 +620,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnShowQRCodes) {
         btnShowQRCodes.addEventListener('click', showQRCodes);
     }
+    
+    // ヘルプボタン
+    const btnHelp = document.getElementById('btn-help');
+    if (btnHelp) {
+        btnHelp.addEventListener('click', () => {
+            document.getElementById('help-dialog').showModal();
+        });
+    }
 });
