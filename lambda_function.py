@@ -6506,11 +6506,15 @@ def get_admin_announcements(event, headers):
     管理者向け業務連絡一覧取得
     """
     try:
+        print(f"[DEBUG] get_admin_announcements called")
+        print(f"[DEBUG] ANNOUNCEMENTS_TABLE: {ANNOUNCEMENTS_TABLE}")
+        
         # 認証・権限チェック
         auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         if not user_info or not user_info.get('verified'):
+            print(f"[DEBUG] Unauthorized: user_info={user_info}")
             return {
                 'statusCode': 401,
                 'headers': headers,
@@ -6518,6 +6522,7 @@ def get_admin_announcements(event, headers):
             }
         
         if not check_admin_permission(user_info):
+            print(f"[DEBUG] Forbidden: user_info={user_info}")
             return {
                 'statusCode': 403,
                 'headers': headers,
@@ -6528,20 +6533,38 @@ def get_admin_announcements(event, headers):
         limit = int(query_params.get('limit', 50))
         target_type = query_params.get('target_type', '')  # 'all' or 'individual' or ''
         
+        print(f"[DEBUG] Query params: limit={limit}, target_type={target_type}")
+        
         # 業務連絡を取得
-        if target_type:
-            response = ANNOUNCEMENTS_TABLE.query(
-                IndexName='created_at-index',
-                KeyConditionExpression=Key('target_type').eq(target_type),
-                ScanIndexForward=False,
-                Limit=limit
-            )
-            announcements = response.get('Items', [])
-        else:
-            # すべて取得
-            response = ANNOUNCEMENTS_TABLE.scan(Limit=limit)
-            announcements = response.get('Items', [])
-            announcements.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        try:
+            if target_type:
+                print(f"[DEBUG] Querying with target_type={target_type}")
+                response = ANNOUNCEMENTS_TABLE.query(
+                    IndexName='created_at-index',
+                    KeyConditionExpression=Key('target_type').eq(target_type),
+                    ScanIndexForward=False,
+                    Limit=limit
+                )
+                announcements = response.get('Items', [])
+            else:
+                print(f"[DEBUG] Scanning all announcements")
+                response = ANNOUNCEMENTS_TABLE.scan(Limit=limit)
+                announcements = response.get('Items', [])
+                announcements.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+            
+            print(f"[DEBUG] Found {len(announcements)} announcements")
+        except Exception as table_error:
+            print(f"[DEBUG] Table error: {str(table_error)}")
+            import traceback
+            print(traceback.format_exc())
+            return {
+                'statusCode': 500,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '業務連絡の取得に失敗しました',
+                    'message': f'テーブルアクセスエラー: {str(table_error)}'
+                }, ensure_ascii=False)
+            }
         
         return {
             'statusCode': 200,
@@ -6553,14 +6576,16 @@ def get_admin_announcements(event, headers):
         }
     except Exception as e:
         import traceback
-        print(f"Error getting admin announcements: {str(e)}")
-        print(traceback.format_exc())
+        error_trace = traceback.format_exc()
+        print(f"[ERROR] Error getting admin announcements: {str(e)}")
+        print(f"[ERROR] Traceback: {error_trace}")
         return {
             'statusCode': 500,
             'headers': headers,
             'body': json.dumps({
                 'error': '業務連絡の取得に失敗しました',
-                'message': str(e)
+                'message': str(e),
+                'traceback': error_trace
             }, ensure_ascii=False)
         }
 
