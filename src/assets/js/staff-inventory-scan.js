@@ -293,8 +293,27 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// URLパラメータから商品IDを取得して自動表示
+async function checkUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('product_id');
+    
+    if (productId) {
+        try {
+            const product = await loadProduct(productId);
+            showProduct(product);
+        } catch (error) {
+            console.error('Error loading product from URL:', error);
+            alert('商品情報の読み込みに失敗しました: ' + error.message);
+        }
+    }
+}
+
 // イベントリスナーの設定
 document.addEventListener('DOMContentLoaded', function() {
+    // URLパラメータをチェック
+    checkUrlParams();
+    
     // スキャン開始ボタン
     document.getElementById('btn-start-scan').addEventListener('click', startScan);
     
