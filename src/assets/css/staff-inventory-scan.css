@@ -2,8 +2,8 @@
 
 .staff-inventory-scan {
   min-height: 100vh;
-  background: #f9fafb;
-  padding: 16px;
+  background: linear-gradient(to bottom, #f9fafb 0%, #ffffff 100%);
+  padding: 20px 16px 80px;
 }
 
 .scan-container {
@@ -15,34 +15,43 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+  padding: 0 4px;
 }
 
 .scan-header h1 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: #111827;
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .btn-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
   color: #374151;
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-icon:hover {
   background: #f9fafb;
   border-color: #d1d5db;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-icon:active {
+  transform: translateY(0);
 }
 
 .cart-badge {
@@ -66,54 +75,71 @@
 
 .scan-area {
   background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 32px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f3f4f6;
 }
 
 .scan-placeholder {
   text-align: center;
-  padding: 40px 20px;
+  padding: 48px 20px;
 }
 
 .scan-placeholder i {
-  font-size: 4rem;
-  color: #9ca3af;
-  margin-bottom: 16px;
+  font-size: 5rem;
+  color: #d1d5db;
+  margin-bottom: 20px;
+  display: block;
 }
 
 .scan-placeholder p {
   color: #6b7280;
-  margin-bottom: 24px;
-  font-size: 1rem;
+  margin-bottom: 32px;
+  font-size: 1.05rem;
+  font-weight: 500;
 }
 
 /* 商品情報表示 */
 .product-info-section {
   margin-bottom: 24px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .product-card {
   background: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f3f4f6;
 }
 
 .product-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid #f3f4f6;
 }
 
 .product-header h2 {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: #111827;
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .product-details {
@@ -123,7 +149,8 @@
 .detail-row {
   display: flex;
   justify-content: space-between;
-  padding: 12px 0;
+  align-items: center;
+  padding: 14px 0;
   border-bottom: 1px solid #f3f4f6;
 }
 
@@ -133,25 +160,29 @@
 
 .detail-label {
   color: #6b7280;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .detail-value {
   color: #111827;
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 1rem;
 }
 
 .quantity-input-area {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 12px;
 }
 
 .quantity-input-area label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   font-weight: 600;
   color: #374151;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .quantity-controls {
@@ -161,65 +192,84 @@
 }
 
 .btn-quantity {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
   color: #374151;
   cursor: pointer;
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: 700;
   transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-quantity:hover {
-  background: #e5e7eb;
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  transform: scale(1.05);
+}
+
+.btn-quantity:active {
+  transform: scale(0.98);
 }
 
 #quantity-input {
   flex: 1;
-  padding: 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 600;
+  padding: 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
   text-align: center;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+#quantity-input:focus {
+  outline: none;
+  border-color: #FF679C;
+  box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
 }
 
 .action-buttons {
   display: flex;
   gap: 12px;
+  margin-top: 8px;
 }
 
 /* カートエリア */
 .cart-section {
   background: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f3f4f6;
   max-height: 70vh;
   display: flex;
   flex-direction: column;
+  animation: slideIn 0.3s ease-out;
 }
 
 .cart-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid #f3f4f6;
 }
 
 .cart-header h2 {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: #111827;
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .cart-items {
@@ -232,12 +282,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 16px;
+  margin-bottom: 8px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #f3f4f6;
+  transition: all 0.2s;
+}
+
+.cart-item:hover {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
 }
 
 .cart-item:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
 }
 
 .cart-item-info {
@@ -247,45 +306,67 @@
 .cart-item-name {
   font-weight: 600;
   color: #111827;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
 }
 
 .cart-item-id {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #6b7280;
+  font-weight: 500;
 }
 
 .cart-item-quantity {
-  font-weight: 600;
-  color: #374151;
-  margin-right: 12px;
+  font-weight: 700;
+  color: #111827;
+  margin-right: 16px;
+  font-size: 1.1rem;
+  min-width: 40px;
+  text-align: center;
+  padding: 6px 12px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 .btn-remove-item {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #fee2e2;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #dc2626;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.btn-remove-item:hover {
+  background: #fecaca;
+  transform: scale(1.1);
+}
+
+.btn-remove-item:active {
+  transform: scale(0.95);
 }
 
 .cart-footer {
-  padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
+  padding-top: 20px;
+  border-top: 2px solid #f3f4f6;
 }
 
 .cart-total {
   text-align: center;
-  margin-bottom: 16px;
-  font-size: 1.1rem;
-  font-weight: 600;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+  font-weight: 700;
   color: #111827;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
 }
 
 .cart-actions {
@@ -295,9 +376,9 @@
 
 /* ボタンスタイル */
 .btn {
-  padding: 12px 24px;
+  padding: 14px 28px;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -306,6 +387,18 @@
   align-items: center;
   gap: 8px;
   justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.01em;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary {
@@ -314,7 +407,7 @@
 }
 
 .btn-primary:hover {
-  background: #e91e63;
+  background: #ff4d8a;
 }
 
 .btn-success {
@@ -338,21 +431,34 @@
 .btn-outline {
   background: #fff;
   color: #374151;
-  border: 1px solid #e5e7eb;
+  border: 2px solid #e5e7eb;
 }
 
 .btn-outline:hover {
   background: #f9fafb;
+  border-color: #d1d5db;
 }
 
 /* モーダル */
 .modal-dialog {
   border: none;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 0;
-  max-width: 400px;
+  max-width: 420px;
   width: 90vw;
   box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .modal-content {
@@ -364,84 +470,141 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 24px 24px;
+  border-bottom: 2px solid #f3f4f6;
 }
 
 .modal-header h3 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #111827;
+  letter-spacing: -0.01em;
 }
 
 .modal-close {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f3f4f6;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   color: #6b7280;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+  transform: rotate(90deg);
 }
 
 .modal-body {
-  padding: 24px;
+  padding: 28px 24px;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 16px 24px;
-  border-top: 1px solid #e5e7eb;
+  padding: 20px 24px;
+  border-top: 2px solid #f3f4f6;
 }
 
 .input-group {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.input-group:last-child {
+  margin-bottom: 0;
 }
 
 .input-group label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-weight: 600;
   color: #374151;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .input-group input {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  padding: 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
   font-size: 1rem;
   box-sizing: border-box;
+  transition: all 0.2s;
+  background: #fff;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #FF679C;
+  box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
 }
 
 .mode-buttons {
   display: flex;
-  gap: 12px;
+  gap: 16px;
 }
 
 .btn-mode {
   flex: 1;
-  padding: 16px;
+  padding: 20px;
   font-size: 1.1rem;
+  min-height: 80px;
 }
 
 /* QRコードリーダー */
 #reader {
   width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 #reader__dashboard_section {
-  margin-top: 16px;
+  margin-top: 20px;
 }
 
 #reader__dashboard_section_csr {
-  margin-top: 16px;
+  margin-top: 20px;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 640px) {
+  .staff-inventory-scan {
+    padding: 16px 12px 80px;
+  }
+  
+  .scan-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .scan-area {
+    padding: 24px 20px;
+  }
+  
+  .product-card {
+    padding: 20px;
+  }
+  
+  .cart-section {
+    padding: 20px;
+  }
+  
+  .btn {
+    padding: 12px 20px;
+    font-size: 0.95rem;
+  }
+  
+  .btn-mode {
+    padding: 16px;
+    font-size: 1rem;
+    min-height: 70px;
+  }
 }
 
