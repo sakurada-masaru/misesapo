@@ -25,37 +25,11 @@ const initialInventory = [
 ];
 
 let inventoryData = [...initialInventory]; // 実際に操作するデータ
-let currentMode = 'out'; // 初期モードは 'out'（出庫） - レジ打ちイメージ
 let modalCurrentMode = 'out'; // モーダル内のモード
 let currentProductId = null; // 現在選択中の商品ID
 
 // 2. DOM要素の取得
-const modeInButton = document.getElementById('mode-in');
-const modeOutButton = document.getElementById('mode-out');
-const productIdInput = document.getElementById('product-id');
-const quantityInput = document.getElementById('quantity');
-const processButton = document.getElementById('process-button');
 const inventoryGrid = document.getElementById('inventory-grid');
-const messageDiv = document.getElementById('message');
-
-// 3. モード切り替え機能
-function setMode(mode) {
-    currentMode = mode;
-    if (mode === 'in') {
-        modeInButton.className = 'active';
-        modeOutButton.className = 'inactive';
-        processButton.textContent = '入庫処理を実行';
-        processButton.style.backgroundColor = '#28a745';
-    } else {
-        modeInButton.className = 'inactive';
-        modeOutButton.className = 'active';
-        processButton.textContent = '出庫処理を実行';
-        processButton.style.backgroundColor = '#dc3545';
-    }
-}
-
-modeInButton.addEventListener('click', () => setMode('in'));
-modeOutButton.addEventListener('click', () => setMode('out'));
 
 // 4. 在庫ステータスの判定
 function getStockStatus(item) {
@@ -151,60 +125,7 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// 7. メッセージ表示機能
-function displayMessage(text, type) {
-    if (!messageDiv) return;
-    messageDiv.textContent = text;
-    messageDiv.className = type; // 'success' or 'error'
-    // メッセージを数秒後にクリアする
-    setTimeout(() => {
-        messageDiv.textContent = '';
-        messageDiv.className = '';
-    }, 3000);
-}
-
-// 8. 在庫更新処理（メインのトランザクションエリア用）
-function processTransaction() {
-    const productId = productIdInput.value.toUpperCase().trim();
-    const quantity = parseInt(quantityInput.value, 10);
-
-    // 入力チェック
-    if (!productId || isNaN(quantity) || quantity <= 0) {
-        displayMessage('商品IDと数量（1以上の数値）を正しく入力してください。', 'error');
-        return;
-    }
-
-    const item = inventoryData.find(i => i.id === productId);
-
-    // 商品ID存在チェック
-    if (!item) {
-        displayMessage(`エラー: 商品ID ${productId} は見つかりませんでした。`, 'error');
-        return;
-    }
-
-    // 在庫更新ロジック
-    if (currentMode === 'in') {
-        // 入庫処理
-        item.stock += quantity;
-        displayMessage(`✅ 入庫成功: ${item.name} に ${quantity} 個を追加しました。現在の在庫: ${item.stock}`, 'success');
-    } else {
-        // 出庫処理
-        if (item.stock < quantity) {
-            displayMessage(`⚠️ 出庫エラー: ${item.name} の在庫は ${item.stock} 個しかありません。${quantity} 個出庫できません。`, 'error');
-            return;
-        }
-        item.stock -= quantity;
-        displayMessage(`✅ 出庫成功: ${item.name} から ${quantity} 個を減らしました。現在の在庫: ${item.stock}`, 'success');
-    }
-
-    // UIを更新
-    renderInventory();
-    productIdInput.value = ''; // 入力フィールドをクリア
-    quantityInput.value = '1'; // 数量を初期値に戻す
-    productIdInput.focus(); // QRコードスキャンに備えてフォーカス
-}
-
-// 9. モーダル内での在庫更新処理
+// 7. モーダル内での在庫更新処理
 function processModalTransaction() {
     if (!currentProductId) return;
     
@@ -242,11 +163,7 @@ function processModalTransaction() {
     openProductDetail(currentProductId); // モーダルを更新
 }
 
-// 10. イベントリスナーの設定
-if (processButton) {
-    processButton.addEventListener('click', processTransaction);
-}
-
+// 8. イベントリスナーの設定
 // モーダル内のモード切り替え
 const modalModeIn = document.getElementById('modal-mode-in');
 const modalModeOut = document.getElementById('modal-mode-out');
@@ -280,13 +197,8 @@ if (modalProcessBtn) {
 
 // Enterキーでも実行できるようにする
 document.addEventListener('keypress', (e) => {
-    // スキャン後の商品ID入力時にEnterキーが押されたことを想定
+    // モーダル内の数量入力フィールドの場合
     if (e.key === 'Enter') {
-        // 現在フォーカスが数量入力フィールドにあるか、商品IDフィールドにある場合のみ実行
-        if (document.activeElement === productIdInput || document.activeElement === quantityInput) {
-            processTransaction();
-        }
-        // モーダル内の数量入力フィールドの場合
         if (document.activeElement === document.getElementById('modal-quantity')) {
             processModalTransaction();
         }
@@ -296,7 +208,4 @@ document.addEventListener('keypress', (e) => {
 // 初期化処理
 document.addEventListener('DOMContentLoaded', function() {
     renderInventory();
-    if (modeInButton && modeOutButton) {
-        setMode('out'); // レジ打ちのイメージに合わせて初期モードを出庫にする
-    }
 });

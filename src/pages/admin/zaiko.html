@@ -20,30 +20,6 @@
 
     <div class="content-wrapper">
       <div class="zaiko-container">
-        <div id="transaction-area">
-          <h2>在庫トランザクション</h2>
-          <div class="mode-buttons">
-            <button id="mode-in" class="active">入庫（在庫を増やす）</button>
-            <button id="mode-out" class="inactive">出庫（在庫を減らす）</button>
-          </div>
-          
-          <div class="input-group">
-            <label for="product-id">商品ID (QR/バーコードスキャン相当)</label>
-            <input type="text" id="product-id" placeholder="例: P001" required>
-          </div>
-          
-          <div class="input-group">
-            <label for="quantity">数量</label>
-            <input type="number" id="quantity" value="1" min="1" required>
-          </div>
-
-          <button id="process-button">在庫更新を実行</button>
-          
-          <div id="message"></div>
-        </div>
-
-        <hr>
-
         <h2>📦 現在の在庫一覧</h2>
         <div class="inventory-grid" id="inventory-grid">
           <!-- カードが動的に追加される -->
