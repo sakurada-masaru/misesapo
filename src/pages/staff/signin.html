@@ -246,13 +246,21 @@
             const base = document.querySelector('base');
             const basePath = base ? (base.getAttribute('href') || '/') : '/';
             
-            // 従業員ログイン後は全員管理ダッシュボードにリダイレクト
-            const redirectPath = '/admin/dashboard.html';
+            // URLパラメータからリダイレクト先を取得
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectParam = urlParams.get('redirect');
             
-            // ベースパスを考慮したリダイレクトURL
-            const redirectUrl = basePath === '/' 
-              ? redirectPath 
-              : basePath.replace(/\/$/, '') + redirectPath;
+            let redirectUrl;
+            if (redirectParam) {
+              // リダイレクトパラメータがある場合はそこに戻る
+              redirectUrl = decodeURIComponent(redirectParam);
+            } else {
+              // なければ管理ダッシュボードにリダイレクト
+              const redirectPath = '/admin/dashboard.html';
+              redirectUrl = basePath === '/' 
+                ? redirectPath 
+                : basePath.replace(/\/$/, '') + redirectPath;
+            }
             
             window.location.href = redirectUrl;
           } else {

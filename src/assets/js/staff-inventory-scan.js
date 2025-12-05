@@ -1,13 +1,79 @@
 // 清掃員在庫管理スキャン画面
 
 const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+const ALLOWED_EMAIL_DOMAIN = '@misesapo.co.jp';
 
 let cart = []; // カート内の商品
 let html5QrCode = null;
 let currentProduct = null;
+let currentUser = null;
 
-// Firebase ID Token取得
+// 認証チェック
+function checkAuthentication() {
+    const cognitoUser = localStorage.getItem('cognito_user');
+    const authData = localStorage.getItem('misesapo_auth');
+    
+    if (!cognitoUser && !authData) {
+        // 未ログイン → ログインページにリダイレクト
+        redirectToLogin();
+        return false;
+    }
+    
+    try {
+        // ユーザー情報を取得
+        let user = null;
+        if (cognitoUser) {
+            user = JSON.parse(cognitoUser);
+        } else if (authData) {
+            const parsed = JSON.parse(authData);
+            user = parsed.user || parsed;
+        }
+        
+        if (!user || !user.email) {
+            redirectToLogin();
+            return false;
+        }
+        
+        // @misesapo.co.jp のメールアドレスかチェック
+        if (!user.email.endsWith(ALLOWED_EMAIL_DOMAIN)) {
+            alert('このページは従業員専用です。\nThis page is for employees only.\n\n@misesapo.co.jp のアカウントでログインしてください。');
+            redirectToLogin();
+            return false;
+        }
+        
+        currentUser = user;
+        return true;
+        
+    } catch (e) {
+        console.error('Error checking authentication:', e);
+        redirectToLogin();
+        return false;
+    }
+}
+
+// ログインページにリダイレクト
+function redirectToLogin() {
+    const currentUrl = window.location.href;
+    const loginUrl = '/staff/signin.html?redirect=' + encodeURIComponent(currentUrl);
+    window.location.href = loginUrl;
+}
+
+// ID Token取得（認証済みユーザーから）
 async function getFirebaseIdToken() {
+    // Cognito認証の場合
+    const cognitoUser = localStorage.getItem('cognito_user');
+    if (cognitoUser) {
+        try {
+            const parsed = JSON.parse(cognitoUser);
+            if (parsed.idToken) {
+                return parsed.idToken;
+            }
+        } catch (e) {
+            console.error('Error parsing cognito user:', e);
+        }
+    }
+    
+    // misesapo_auth から取得
     const authData = localStorage.getItem('misesapo_auth');
     if (authData) {
         try {
@@ -19,7 +85,10 @@ async function getFirebaseIdToken() {
             console.error('Error parsing auth data:', e);
         }
     }
-    return 'mock-token';
+    
+    // 認証情報がない場合はログインページにリダイレクト
+    redirectToLogin();
+    return null;
 }
 
 // 商品情報を取得
@@ -412,6 +481,11 @@ async function checkUrlParams() {
 
 // イベントリスナーの設定
 document.addEventListener('DOMContentLoaded', function() {
+    // 認証チェック（未ログインの場合はここでリダイレクト）
+    if (!checkAuthentication()) {
+        return; // 認証失敗時は処理を中断
+    }
+    
     // URLパラメータをチェック
     checkUrlParams();
     
