@@ -436,12 +436,15 @@ function filterAndRender() {
     return matchStore && matchWorker && matchStatus;
   });
 
-  // 日付順ソート
+  // 日付順ソート（カレンダー表示と整合性を取る）
   filteredSchedules.sort((a, b) => {
-    const dateA = a.date || a.scheduled_date || '';
-    const dateB = b.date || b.scheduled_date || '';
-    const timeA = a.time_slot || a.scheduled_time || '00:00';
-    const timeB = b.time_slot || b.scheduled_time || '00:00';
+    // カレンダー表示と同じ方法で日付を取得
+    const normalizedA = DataUtils.normalizeSchedule(a);
+    const normalizedB = DataUtils.normalizeSchedule(b);
+    const dateA = normalizedA.date || a.date || a.scheduled_date || '';
+    const dateB = normalizedB.date || b.date || b.scheduled_date || '';
+    const timeA = normalizedA.time || a.time_slot || a.scheduled_time || '00:00';
+    const timeB = normalizedB.time || b.time_slot || b.scheduled_time || '00:00';
     return `${dateA} ${timeA}`.localeCompare(`${dateB} ${timeB}`);
   });
 
@@ -996,9 +999,10 @@ function renderCalendar() {
     dayNum.textContent = day;
     dayCell.appendChild(dayNum);
     
-    // その日のスケジュール（date または scheduled_date フィールドに対応）
+    // その日のスケジュール（カレンダー表示と整合性を取る）
     const daySchedules = allSchedules.filter(s => {
-      const scheduleDate = s.date || s.scheduled_date;
+      const normalized = DataUtils.normalizeSchedule(s);
+      const scheduleDate = normalized.date || s.date || s.scheduled_date;
       return scheduleDate === dateStr;
     });
     if (daySchedules.length > 0) {
