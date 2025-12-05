@@ -6,12 +6,13 @@
 }
 
 .admin-zaiko .zaiko-container {
-  max-width: 1000px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
   padding: 24px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .admin-zaiko h1 {
@@ -26,6 +27,12 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0 0 16px 0;
+  padding: 0 24px;
+}
+
+.admin-zaiko .content-wrapper {
+  padding: 0;
+  width: 100%;
 }
 /* トランザクション処理セクション */
 #transaction-area {
