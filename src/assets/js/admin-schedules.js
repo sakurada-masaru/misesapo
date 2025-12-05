@@ -436,11 +436,7 @@ function filterAndRender() {
     return matchStore && matchWorker && matchStatus;
   });
 
-  // 現在の日付から近い順にソート
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayTime = today.getTime();
-  
+  // 予定日順（時系列順）にソート
   filteredSchedules.sort((a, b) => {
     // カレンダー表示と同じ方法で日付を取得
     const normalizedA = DataUtils.normalizeSchedule(a);
@@ -448,34 +444,15 @@ function filterAndRender() {
     const dateA = normalizedA.date || a.date || a.scheduled_date || '';
     const dateB = normalizedB.date || b.date || b.scheduled_date || '';
     
-    // 日付をDateオブジェクトに変換
-    const dateObjA = dateA ? new Date(dateA) : null;
-    const dateObjB = dateB ? new Date(dateB) : null;
-    
-    if (!dateObjA || isNaN(dateObjA.getTime())) return 1;
-    if (!dateObjB || isNaN(dateObjB.getTime())) return -1;
-    
-    dateObjA.setHours(0, 0, 0, 0);
-    dateObjB.setHours(0, 0, 0, 0);
-    
-    // 現在の日付からの距離（絶対値）を計算
-    const diffA = Math.abs(dateObjA.getTime() - todayTime);
-    const diffB = Math.abs(dateObjB.getTime() - todayTime);
-    
-    // 距離が同じ場合は、日付が未来のものを優先（同じ距離なら未来優先）
-    if (diffA === diffB) {
-      // 同じ距離の場合、未来の日付を優先
-      if (dateObjA.getTime() !== dateObjB.getTime()) {
-        return dateObjA.getTime() - dateObjB.getTime();
-      }
-      // 同じ日付の場合は時間でソート
-      const timeA = normalizedA.time || a.time_slot || a.scheduled_time || '00:00';
-      const timeB = normalizedB.time || b.time_slot || b.scheduled_time || '00:00';
-      return timeA.localeCompare(timeB);
+    // 日付で比較（同じ日付の場合は時間で比較）
+    if (dateA !== dateB) {
+      return dateA.localeCompare(dateB);
     }
     
-    // 現在の日付に近い順（距離が小さい順）
-    return diffA - diffB;
+    // 同じ日付の場合は時間でソート
+    const timeA = normalizedA.time || a.time_slot || a.scheduled_time || '00:00';
+    const timeB = normalizedB.time || b.time_slot || b.scheduled_time || '00:00';
+    return timeA.localeCompare(timeB);
   });
 
   currentPage = 1;
