@@ -219,8 +219,10 @@ async function executeCartProcess(mode) {
 async function startScan() {
     try {
         const reader = document.getElementById('reader');
+        const placeholder = document.querySelector('.scan-placeholder');
+        
         reader.style.display = 'block';
-        document.querySelector('.scan-placeholder').style.display = 'none';
+        placeholder.style.display = 'none';
         
         html5QrCode = new Html5Qrcode("reader");
         
@@ -241,14 +243,38 @@ async function startScan() {
         );
     } catch (error) {
         console.error('Error starting scan:', error);
-        alert('カメラの起動に失敗しました: ' + error.message);
-        stopScan();
+        // スキャンエリアを元に戻す
+        const reader = document.getElementById('reader');
+        const placeholder = document.querySelector('.scan-placeholder');
+        reader.style.display = 'none';
+        placeholder.style.display = 'block';
+        
+        // エラーメッセージを表示
+        showScanError('カメラを起動できませんでした。商品IDを手入力してください。');
+    }
+}
+
+// スキャンエラーを表示
+function showScanError(message) {
+    const placeholder = document.querySelector('.scan-placeholder');
+    const errorDiv = document.getElementById('scan-error');
+    
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    } else {
+        // エラー表示用のdivを作成
+        const newErrorDiv = document.createElement('div');
+        newErrorDiv.id = 'scan-error';
+        newErrorDiv.className = 'scan-error-message';
+        newErrorDiv.textContent = message;
+        placeholder.insertBefore(newErrorDiv, placeholder.firstChild);
     }
 }
 
 // QRコードスキャンを停止
 function stopScan() {
-    if (html5QrCode) {
+    if (html5QrCode && html5QrCode.isScanning) {
         html5QrCode.stop().then(() => {
             html5QrCode.clear();
             html5QrCode = null;
@@ -258,8 +284,13 @@ function stopScan() {
     }
     
     const reader = document.getElementById('reader');
-    reader.style.display = 'none';
-    document.querySelector('.scan-placeholder').style.display = 'block';
+    if (reader) {
+        reader.style.display = 'none';
+    }
+    const placeholder = document.querySelector('.scan-placeholder');
+    if (placeholder) {
+        placeholder.style.display = 'block';
+    }
 }
 
 // スキャンされたコードを処理
