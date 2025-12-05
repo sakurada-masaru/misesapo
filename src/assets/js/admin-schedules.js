@@ -458,8 +458,21 @@ function renderTable() {
   const pageSchedules = filteredSchedules.slice(start, start + perPage);
 
   if (pageSchedules.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">該当するスケジュールがありません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">該当するスケジュールがありません</td></tr>';
     return;
+  }
+
+  // 法人名・ブランド名取得用のヘルパー関数
+  function getClientName(clientId) {
+    if (!clientId) return '';
+    const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId));
+    return client ? (client.name || client.company_name || '') : '';
+  }
+  
+  function getBrandName(brandId) {
+    if (!brandId) return '';
+    const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId));
+    return brand ? brand.name : '';
   }
 
   tbody.innerHTML = pageSchedules.map(schedule => {
@@ -471,9 +484,18 @@ function renderTable() {
     // worker_id または assigned_to に対応
     const workerId = normalized.worker_id || schedule.worker_id || schedule.assigned_to;
     const worker = allWorkers.find(w => w.id === workerId);
+    // 営業担当者を取得
+    const salesId = schedule.sales_id || normalized.sales_id;
+    const sales = salesId ? allWorkers.find(w => w.id === salesId) : null;
     const isDraft = schedule.status === 'draft';
     
     const displayStoreName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
+    
+    // 法人名・ブランド名を取得
+    const brandId = store.brand_id;
+    const brandName = getBrandName(brandId);
+    const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null);
+    const clientName = getClientName(clientId);
     
     return `
       <tr data-id="${schedule.id}" class="${isDraft ? 'draft-row' : ''}">
@@ -482,10 +504,24 @@ function renderTable() {
           <div style="font-size:0.85rem;color:#6b7280">${normalized.time || '-'} (${normalized.duration}分)</div>
         </td>
         <td>
+          <span class="client-name">${escapeHtml(clientName || '-')}</span>
+        </td>
+        <td>
+          <span class="brand-name">${escapeHtml(brandName || '-')}</span>
+        </td>
+        <td>
           <div class="store-info">
             <span class="store-name">${escapeHtml(displayStoreName)}</span>
             <span class="store-address">${escapeHtml(store.pref || '')}${escapeHtml(store.city || '')}</span>
           </div>
+        </td>
+        <td>
+          ${sales ? `
+            <div class="worker-info">
+              <span class="worker-avatar">${(sales.name || '?')[0]}</span>
+              <span>${escapeHtml(sales.name || '')}</span>
+            </div>
+          ` : '<span class="unassigned">未設定</span>'}
         </td>
         <td>
           ${worker ? `
