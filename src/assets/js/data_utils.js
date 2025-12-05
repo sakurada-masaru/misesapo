@@ -36,7 +36,7 @@
     CLIENT: 'CL',
     BRAND: 'BR',
     STORE: 'ST',
-    SCHEDULE: 'SCH',
+    SCHEDULE: 'SCH-',
     ESTIMATE: 'EST',
     REPORT: 'RPT',
     WORKER: 'W',
