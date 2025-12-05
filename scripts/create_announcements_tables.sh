@@ -4,8 +4,8 @@
 set -e
 
 REGION="ap-northeast-1"
-ANNOUNCEMENTS_TABLE="announcements"
-ANNOUNCEMENT_READS_TABLE="announcement-reads"
+ANNOUNCEMENTS_TABLE="business-announcements"
+ANNOUNCEMENT_READS_TABLE="business-announcement-reads"
 
 echo "=== Announcements DynamoDBテーブル作成を開始 ==="
 

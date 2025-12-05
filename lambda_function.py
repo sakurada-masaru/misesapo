@@ -79,8 +79,8 @@ s3_client = boto3.client('s3')
 
 # DynamoDBリソースの初期化
 dynamodb = boto3.resource('dynamodb')
-ANNOUNCEMENTS_TABLE = dynamodb.Table('announcements')
-ANNOUNCEMENT_READS_TABLE = dynamodb.Table('announcement-reads')
+ANNOUNCEMENTS_TABLE = dynamodb.Table('business-announcements')
+ANNOUNCEMENT_READS_TABLE = dynamodb.Table('business-announcement-reads')
 REPORTS_TABLE = dynamodb.Table('staff-reports')
 SCHEDULES_TABLE = dynamodb.Table('schedules')
 ESTIMATES_TABLE = dynamodb.Table('estimates')
