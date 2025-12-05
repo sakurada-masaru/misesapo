@@ -8,7 +8,7 @@ let html5QrCode = null;
 let currentProduct = null;
 let currentUser = null;
 
-// 認証チェック
+// 認証チェック（入庫/出庫時のみ実行）
 function checkAuthentication() {
     const cognitoUser = localStorage.getItem('cognito_user');
     const authData = localStorage.getItem('misesapo_auth');
@@ -16,7 +16,7 @@ function checkAuthentication() {
     
     // 認証情報がない場合はログインページにリダイレクト
     if (!cognitoUser && !authData && !cognitoIdToken) {
-        console.log('No auth data found, redirecting to login');
+        alert('入庫/出庫を行うにはログインが必要です。\nLogin is required to process inventory transactions.');
         redirectToLogin();
         return false;
     }
@@ -31,29 +31,26 @@ function checkAuthentication() {
             user = parsed.user || parsed;
         }
         
-        // ユーザー情報がなくてもトークンがあればOK（一時的に緩和）
+        // ユーザー情報がなくてもトークンがあればOK
         if (!user && cognitoIdToken) {
-            console.log('User info not found but token exists, proceeding...');
             currentUser = { email: 'unknown@misesapo.co.jp' };
             return true;
         }
         
         if (!user || !user.email) {
-            console.log('User or email not found, redirecting to login');
+            alert('ユーザー情報が見つかりません。再度ログインしてください。\nUser information not found. Please login again.');
             redirectToLogin();
             return false;
         }
         
-        // @misesapo.co.jp のメールアドレスかチェック（本番環境でのみ有効）
-        // TODO: 本番環境でコメントを外す
-        // if (!user.email.endsWith(ALLOWED_EMAIL_DOMAIN)) {
-        //     alert('このページは従業員専用です。\nThis page is for employees only.\n\n@misesapo.co.jp のアカウントでログインしてください。');
-        //     redirectToLogin();
-        //     return false;
-        // }
+        // @misesapo.co.jp のメールアドレスかチェック
+        if (!user.email.endsWith(ALLOWED_EMAIL_DOMAIN)) {
+            alert('この操作は従業員専用です。\nThis operation is for employees only.\n\n@misesapo.co.jp のアカウントでログインしてください。');
+            redirectToLogin();
+            return false;
+        }
         
         currentUser = user;
-        console.log('Authentication successful:', user.email);
         return true;
         
     } catch (e) {
@@ -63,6 +60,7 @@ function checkAuthentication() {
             currentUser = { email: 'unknown@misesapo.co.jp' };
             return true;
         }
+        alert('認証エラーが発生しました。再度ログインしてください。\nAuthentication error. Please login again.');
         redirectToLogin();
         return false;
     }
@@ -205,6 +203,11 @@ function updateCart() {
 
 // 直接入庫/出庫処理
 async function processStock(mode) {
+    // 入庫/出庫前に認証チェック
+    if (!checkAuthentication()) {
+        return; // 認証失敗時は処理を中断（リダイレクト済み）
+    }
+    
     if (!currentProduct) {
         alert('商品が選択されていません');
         return;
@@ -507,12 +510,7 @@ async function checkUrlParams() {
 
 // イベントリスナーの設定
 document.addEventListener('DOMContentLoaded', function() {
-    // 認証チェック（未ログインの場合はここでリダイレクト）
-    if (!checkAuthentication()) {
-        return; // 認証失敗時は処理を中断
-    }
-    
-    // URLパラメータをチェック
+    // URLパラメータをチェック（認証なしで商品情報を表示可能）
     checkUrlParams();
     
     // スキャン開始ボタン

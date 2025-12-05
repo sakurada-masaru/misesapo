@@ -256,10 +256,10 @@
               redirectUrl = decodeURIComponent(redirectParam);
             } else {
               // なければ管理ダッシュボードにリダイレクト
-              const redirectPath = '/admin/dashboard.html';
+            const redirectPath = '/admin/dashboard.html';
               redirectUrl = basePath === '/' 
-                ? redirectPath 
-                : basePath.replace(/\/$/, '') + redirectPath;
+              ? redirectPath 
+              : basePath.replace(/\/$/, '') + redirectPath;
             }
             
             window.location.href = redirectUrl;
