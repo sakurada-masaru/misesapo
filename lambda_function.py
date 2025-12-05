@@ -1207,22 +1207,50 @@ def get_announcements(headers):
 
 def verify_firebase_token(id_token):
     """
-    Firebase ID Tokenを検証（簡易版）
-    注意: 本番環境では、Firebase Admin SDKを使用して検証することを推奨
+    Cognito ID Tokenを検証（簡易版）
+    注意: 本番環境では、適切なJWT検証ライブラリを使用して署名検証を行うことを推奨
     """
-    # TODO: Firebase Admin SDKを使用した検証を実装
-    # 現状は簡易的にトークンの存在のみをチェック
     if not id_token:
-        return {'verified': False, 'error': 'No token provided'}
+        return None
     
-    # 簡易検証（本番ではFirebase Admin SDKを使用）
-    # ここでは、トークンが存在することを確認するだけ
-    return {
-        'verified': True,
-        'uid': 'admin-uid',  # 実際にはトークンから取得
-        'email': 'admin@example.com',
-        'role': 'admin'  # 実際にはCustom Claimsから取得
-    }
+    try:
+        # JWTトークンをデコード（署名検証なしの簡易版）
+        # JWTは3つの部分（header.payload.signature）に分かれている
+        parts = id_token.split('.')
+        if len(parts) != 3:
+            print(f"Invalid token format: expected 3 parts, got {len(parts)}")
+            return None
+        
+        # ペイロード部分をデコード
+        payload_part = parts[1]
+        # Base64URLデコード（パディングを追加）
+        padding = 4 - len(payload_part) % 4
+        if padding != 4:
+            payload_part += '=' * padding
+        
+        import base64
+        payload_json = base64.urlsafe_b64decode(payload_part)
+        payload = json.loads(payload_json)
+        
+        # ユーザー情報を取得
+        uid = payload.get('sub') or payload.get('cognito:username', '')
+        email = payload.get('email', '')
+        name = payload.get('name') or payload.get('given_name', '') or email.split('@')[0] if email else ''
+        
+        # ロールを取得（カスタムクレームから）
+        role = payload.get('custom:role') or payload.get('role', 'staff')
+        
+        return {
+            'uid': uid,
+            'cognito_sub': uid,
+            'email': email,
+            'name': name,
+            'role': role
+        }
+    except Exception as e:
+        print(f"Error verifying token: {str(e)}")
+        # エラー時はNoneを返す（認証失敗）
+        return None
 
 def check_admin_permission(user_info):
     """
