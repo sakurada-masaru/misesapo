@@ -294,6 +294,15 @@
   color: #111827;
   font-size: 0.9rem;
 }
+.schedule-id {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
 .worker-info {
   display: flex;
   align-items: center;
