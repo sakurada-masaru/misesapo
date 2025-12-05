@@ -275,30 +275,71 @@ document.addEventListener('DOMContentLoaded', function() {
         const btn = document.getElementById('satisfaction-submit');
         if (btn) btn.addEventListener('click', async () => {
             const reportId = getReportIdFromUrl();
-            const comment = document.getElementById('storeComment').value.trim();
+            const commentEl = document.getElementById('storeComment');
+            const comment = commentEl ? commentEl.value.trim() : '';
+            
+            // レポートIDの確認
+            if (!reportId) {
+                alert('レポートIDが取得できませんでした。ページを再読み込みしてください。');
+                console.error('Report ID not found in URL');
+                return;
+            }
+            
+            // 評価が選択されていない場合の警告（コメントのみでも送信可能）
+            if (rating === 0 && !comment) {
+                alert('評価またはコメントを入力してください。');
+                return;
+            }
+            
+            // ボタンを無効化
+            btn.disabled = true;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
             
             try {
+                const apiUrl = `${API_BASE_URL}/public/reports/${reportId}/feedback`;
+                const requestBody = {
+                    rating: rating || 0,
+                    comment: comment || ''
+                };
+                
+                console.log('[Feedback] Sending feedback:', { reportId, apiUrl, requestBody });
+                
                 // APIにフィードバックを送信
-                const response = await fetch(`https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod/public/reports/${reportId}/feedback`, {
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        rating: rating,
-                        comment: comment
-                    })
+                    body: JSON.stringify(requestBody)
                 });
                 
+                console.log('[Feedback] Response status:', response.status);
+                
                 if (!response.ok) {
-                    throw new Error('送信に失敗しました');
+                    let errorMessage = `送信に失敗しました (${response.status})`;
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.error || errorData.message || errorMessage;
+                        console.error('[Feedback] Error response:', errorData);
+                    } catch (e) {
+                        const errorText = await response.text();
+                        console.error('[Feedback] Error response text:', errorText);
+                        errorMessage = errorText || errorMessage;
+                    }
+                    throw new Error(errorMessage);
                 }
+                
+                const result = await response.json();
+                console.log('[Feedback] Success:', result);
                 
                 wrap.style.display = 'none';
                 if (thanks) thanks.style.display = 'block';
             } catch (error) {
-                console.error('Error submitting feedback:', error);
-                alert('送信に失敗しました。もう一度お試しください。');
+                console.error('[Feedback] Error submitting feedback:', error);
+                alert(`送信に失敗しました: ${error.message}\n\nもう一度お試しください。`);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
         });
     }
