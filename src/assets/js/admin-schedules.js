@@ -397,7 +397,10 @@ function setupCleaningItemsSearch() {
   };
   
   searchInput.addEventListener('input', updateCleaningItemsDropdown);
-  searchInput.addEventListener('focus', updateCleaningItemsDropdown);
+  searchInput.addEventListener('focus', function() {
+    // フォーカス時は検索クエリに関係なく全サービスを表示
+    updateCleaningItemsDropdown();
+  });
   if (categoryFilter) {
     categoryFilter.addEventListener('change', updateCleaningItemsDropdown);
   }
