@@ -12,10 +12,10 @@
 }
 
 .report-form {
-  margin-top: 0;
+  margin-top: 100px;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 50px); /* ヘッダー分を引く */
+  height: calc(100vh - 150px); /* ヘッダー分(50px) + マージン(100px)を引く */
   overflow: hidden;
 }
 
