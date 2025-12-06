@@ -239,6 +239,13 @@
   max-width: 100%;
   box-sizing: border-box;
   overflow: hidden;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 6px;
+}
+
+.schedule-card-container:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .schedule-card-field {
