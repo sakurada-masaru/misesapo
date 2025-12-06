@@ -112,6 +112,7 @@ async function loadData() {
       allSchedules = [];
     }
     
+    // データ読み込み後に顧客一覧を表示
     renderClientList();
   } catch (error) {
     console.error('Failed to load data:', error);
@@ -169,7 +170,16 @@ function setupClientTabs() {
 // 顧客一覧の表示
 function renderClientList() {
   const container = document.getElementById('client-list-container');
-  if (!container) return;
+  if (!container) {
+    console.warn('client-list-container not found');
+    return;
+  }
+  
+  // allStoresが空の場合は読み込み中を表示
+  if (!Array.isArray(allStores) || allStores.length === 0) {
+    container.innerHTML = '<div class="loading">読み込み中...</div>';
+    return;
+  }
   
   let filtered = allStores.filter(store => {
     // ステータスフィルター
@@ -204,15 +214,16 @@ function renderClientList() {
     const status = store.status || '稼働中';
     const clientName = getClientName(store.client_id) || '';
     const brandName = getBrandName(store.brand_id) || '';
+    const storeId = store.id || '';
     
     return `
-      <div class="client-card" onclick="viewClientDetail('${store.id}')">
+      <div class="client-card" onclick="viewClientDetail('${escapeHtml(storeId)}')">
         <div class="client-card-header">
           <div>
             <div class="client-store-name">${escapeHtml(store.name || '店舗名なし')}</div>
             <div class="client-company-name">${escapeHtml(clientName)}${brandName ? ' / ' + escapeHtml(brandName) : ''}</div>
           </div>
-          <span class="client-status-badge client-status-${status}">${status}</span>
+          <span class="client-status-badge client-status-${escapeHtml(status)}">${escapeHtml(status)}</span>
         </div>
         <div class="client-card-info">
           ${store.pref ? `<div class="client-info-item"><i class="fas fa-map-marker-alt"></i>${escapeHtml(store.pref)}</div>` : ''}
@@ -630,5 +641,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   setupClientTabs();
   await loadData();
+  // 初期表示時に顧客一覧を表示（顧客一覧タブがアクティブな場合）
+  const activeTab = document.querySelector('.client-tab.active');
+  if (activeTab && activeTab.dataset.clientTab === 'list') {
+    renderClientList();
+  }
 });
 

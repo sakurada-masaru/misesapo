@@ -223,9 +223,11 @@
 .client-list-view {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 200px);
+  min-height: 400px;
+  max-height: calc(100vh - 250px);
   background: #fff;
   border-radius: 0 0 12px 12px;
+  overflow: hidden;
 }
 
 .client-search-section {
@@ -408,7 +410,8 @@
 .client-detail-view {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 200px);
+  min-height: 400px;
+  max-height: calc(100vh - 250px);
   overflow-y: auto;
   background: #f9fafb;
   border-radius: 0 0 12px 12px;
@@ -710,11 +713,13 @@
   }
 
   .client-list-view {
-    height: calc(100vh - 180px);
+    min-height: 300px;
+    max-height: calc(100vh - 180px);
   }
 
   .client-detail-view {
-    height: calc(100vh - 180px);
+    min-height: 300px;
+    max-height: calc(100vh - 180px);
   }
 }
 
