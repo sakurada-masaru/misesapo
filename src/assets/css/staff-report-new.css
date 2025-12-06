@@ -1423,26 +1423,22 @@ body.dark-mode .modal-footer {
   
   .form-row.three-col-inline {
     gap: 6px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
   
   .form-row.three-col-inline .date-time-group {
-    flex: 1 1 calc(50% - 3px);
+    flex: 1;
     min-width: 0;
   }
   
-  .form-row.three-col-inline .date-time-group:last-child {
-    flex: 1 1 100%;
-  }
-  
   .date-time-label {
-    font-size: 0.8rem;
-    min-width: 50px;
+    font-size: 0.75rem;
+    min-width: 45px;
   }
   
   .date-time-input {
-    font-size: 0.85rem;
-    padding: 8px 10px;
+    font-size: 0.8rem;
+    padding: 8px 8px;
   }
   
   .form-input,
