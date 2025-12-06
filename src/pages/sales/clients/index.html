@@ -1,0 +1,166 @@
+@layout('layouts.base')
+@json('data/meta/sales_clients_title.json', $title)
+@json('data/meta/sales_clients_body_class.json', $body_class)
+
+<link rel="stylesheet" href="/css/sales-clients.css" />
+<script src="/js/data_utils.js"></script>
+
+<main id="main" class="container sales-clients">
+  <div class="page-header">
+    <a href="/sales/dashboard" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">顧客管理</h1>
+    <div class="header-actions">
+      <button type="button" class="btn btn-primary btn-sm" id="add-client-btn">
+        <i class="fas fa-plus"></i> 新規登録
+      </button>
+    </div>
+  </div>
+
+  <div class="client-tabs">
+    <button class="client-tab active" data-client-tab="register">
+      <i class="fas fa-user-plus"></i>
+      <span>顧客登録</span>
+    </button>
+    <button class="client-tab" data-client-tab="list">
+      <i class="fas fa-list"></i>
+      <span>顧客一覧</span>
+    </button>
+  </div>
+
+  <!-- 顧客登録タブ -->
+  <div class="client-tab-content active" data-client-content="register">
+    <div class="form-container">
+      <div class="form-group">
+        <label>企業名 / 個人名 <span class="req">*</span></label>
+        <input type="text" id="client-company" placeholder="例: 株式会社ABC" />
+      </div>
+      <div class="form-group">
+        <label>ブランド名 / 屋号</label>
+        <input type="text" id="client-brand" placeholder="例: カフェXYZ" />
+      </div>
+      <div class="form-group">
+        <label>店舗名 <span class="req">*</span></label>
+        <input type="text" id="client-store" placeholder="例: 渋谷店" />
+      </div>
+      <div class="form-row">
+        <div class="form-group half">
+          <label>郵便番号</label>
+          <input type="text" id="client-postcode" placeholder="123-4567" />
+        </div>
+        <div class="form-group half">
+          <label>都道府県</label>
+          <select id="client-pref">
+            <option value="">選択</option>
+            <option value="東京都">東京都</option>
+            <option value="神奈川県">神奈川県</option>
+            <option value="埼玉県">埼玉県</option>
+            <option value="千葉県">千葉県</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>住所</label>
+        <input type="text" id="client-address" placeholder="市区町村・番地" />
+      </div>
+      <div class="form-group">
+        <label>電話番号</label>
+        <input type="tel" id="client-phone" placeholder="03-1234-5678" />
+      </div>
+      <div class="form-group">
+        <label>担当者名</label>
+        <input type="text" id="client-contact" placeholder="山田太郎" />
+      </div>
+      <div class="form-group">
+        <label>メールアドレス</label>
+        <input type="email" id="client-email" placeholder="info@example.com" />
+      </div>
+      <div class="form-group">
+        <label>備考</label>
+        <textarea id="client-notes" rows="3" placeholder="特記事項があれば入力"></textarea>
+      </div>
+      <button class="btn-primary" onclick="submitClient()">
+        <i class="fas fa-save"></i> 登録する
+      </button>
+    </div>
+  </div>
+
+  <!-- 顧客一覧タブ -->
+  <div class="client-tab-content" data-client-content="list">
+    <!-- 顧客一覧ビュー -->
+    <div class="client-list-view" id="client-list-view">
+      <!-- 検索バー -->
+      <div class="client-search-section">
+        <div class="client-search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="店舗名・企業名で検索..." id="client-list-search" />
+        </div>
+      </div>
+
+      <!-- 統計 -->
+      <div class="client-stats-row">
+        <div class="client-stat-chip">
+          <span class="client-stat-num" id="client-total-count">0</span>
+          <span class="client-stat-label">全件</span>
+        </div>
+        <div class="client-stat-chip active">
+          <span class="client-stat-num" id="client-active-count">0</span>
+          <span class="client-stat-label">稼働中</span>
+        </div>
+      </div>
+
+      <!-- フィルタータブ -->
+      <div class="client-filter-tabs">
+        <button class="client-filter-tab active" data-client-filter="all">すべて</button>
+        <button class="client-filter-tab" data-client-filter="稼働中">稼働中</button>
+        <button class="client-filter-tab" data-client-filter="休止">休止</button>
+        <button class="client-filter-tab" data-client-filter="契約終了">終了</button>
+      </div>
+
+      <!-- 顧客リスト -->
+      <div class="client-list-container" id="client-list-container">
+        <div class="loading">読み込み中...</div>
+      </div>
+    </div>
+
+    <!-- 顧客詳細ビュー -->
+    <div class="client-detail-view" id="client-detail-view" style="display: none;">
+      <div class="client-detail-header">
+        <button type="button" class="client-detail-back-btn" onclick="showClientList()">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <h2 class="client-detail-title">顧客詳細</h2>
+        <button type="button" class="client-detail-edit-btn" id="client-detail-edit-btn" onclick="editClientDetail()">
+          <i class="fas fa-edit"></i>
+        </button>
+      </div>
+      <div class="client-detail-content" id="client-detail-content">
+        <div class="loading">読み込み中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ボトムタブナビゲーション -->
+  <nav class="bottom-tabs">
+    <button class="tab" onclick="window.location.href='/sales/dashboard'" data-screen="activity">
+      <i class="fas fa-bolt"></i>
+      <span>アクティビティ</span>
+    </button>
+    <button class="tab active" data-screen="client">
+      <i class="fas fa-user-plus"></i>
+      <span>顧客登録</span>
+    </button>
+    <button class="tab" onclick="window.location.href='/sales/schedules'" data-screen="schedule">
+      <i class="fas fa-calendar"></i>
+      <span>スケジュール</span>
+    </button>
+    <button class="tab" onclick="window.location.href='/sales/estimates'" data-screen="case">
+      <i class="fas fa-briefcase"></i>
+      <span>案件管理</span>
+    </button>
+  </nav>
+</main>
+
+<script src="/js/sales-clients.js"></script>
+
