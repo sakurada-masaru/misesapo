@@ -2633,27 +2633,51 @@
             const base64 = await blobToBase64(blob);
             
             // S3にアップロード
+            const requestBody = {
+              image: base64,
+              category: 'work',
+              cleaning_date: cleaningDate
+            };
+            
+            console.log('[uploadSectionImages] Uploading image:', {
+              imageId: img.imageId,
+              base64Length: base64?.length,
+              category: 'work',
+              cleaning_date: cleaningDate
+            });
+            
             const response = await fetch(`${REPORT_API}/staff/report-images`, {
               method: 'POST',
               headers: { 
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${await getFirebaseIdToken()}`
               },
-              body: JSON.stringify({
-                image: base64,
-                category: 'work',
-                cleaning_date: cleaningDate
-              })
+              body: JSON.stringify(requestBody)
             });
             
             if (!response.ok) {
-              const errorText = await response.text();
-              console.error('Upload failed:', response.status, errorText);
-              throw new Error(`Upload failed: ${response.status}`);
+              let errorText;
+              try {
+                errorText = await response.text();
+                const errorJson = JSON.parse(errorText);
+                console.error('[uploadSectionImages] Upload failed:', {
+                  status: response.status,
+                  statusText: response.statusText,
+                  error: errorJson
+                });
+              } catch (e) {
+                errorText = await response.text();
+                console.error('[uploadSectionImages] Upload failed:', {
+                  status: response.status,
+                  statusText: response.statusText,
+                  errorText: errorText
+                });
+              }
+              throw new Error(`Upload failed: ${response.status} - ${errorText}`);
             }
             
             const result = await response.json();
-            console.log('[uploadSectionImages] Image uploaded:', result);
+            console.log('[uploadSectionImages] Image uploaded successfully:', result);
             return result.image?.url || result.url || null;
           } catch (error) {
             console.error('Error uploading image:', error);
