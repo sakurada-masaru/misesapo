@@ -971,7 +971,17 @@
       if (!selectedBrandId) {
         storeSearchInput.placeholder = 'ブランド名を選択してください';
       } else {
-        storeSearchInput.placeholder = '②店舗名 *';
+        // ブランドに紐づく店舗があるか確認
+        const brandStores = stores.filter(store => {
+          const storeBrandId = store.brand_id || store.brandId;
+          return storeBrandId === selectedBrandId || String(storeBrandId) === String(selectedBrandId);
+        });
+        
+        if (brandStores.length === 0) {
+          storeSearchInput.placeholder = '該当なし';
+        } else {
+          storeSearchInput.placeholder = '②店舗名 *';
+        }
       }
     }
     
