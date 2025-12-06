@@ -1140,7 +1140,11 @@
           
           document.getElementById('report-store').value = id || '';
           document.getElementById('report-store-name').value = name || '';
-          storeSearchInput.value = name || '';
+          // セレクトボックスを更新
+          const storeSelect = document.getElementById('report-store-select');
+          if (storeSelect) {
+            storeSelect.value = id || '';
+          }
           closeStoreModal();
           
           // 店舗選択時にブランド名も自動設定（未設定の場合は設定しない）
@@ -1162,29 +1166,7 @@
       storeModalSearch.addEventListener('input', updateStoreModal);
     }
     
-    // 入力フィールドをクリックしたときにモーダルを開く
-    if (storeSearchInput) {
-      // readonly属性を設定（直接入力を無効化）
-      storeSearchInput.setAttribute('readonly', 'readonly');
-      // クリックイベント（readonlyでも発火する）
-      storeSearchInput.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        openStoreModal();
-      });
-      // フォーカスイベント
-      storeSearchInput.addEventListener('focus', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        openStoreModal();
-      });
-      // タッチイベント（モバイル対応）
-      storeSearchInput.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        openStoreModal();
-      });
-    }
+    // セレクトボックスを使用するため、モーダル関連のイベントリスナーは不要
     
     // モーダルの背景をクリックしたときに閉じる
     document.getElementById('brand-select-modal')?.addEventListener('click', function(e) {
