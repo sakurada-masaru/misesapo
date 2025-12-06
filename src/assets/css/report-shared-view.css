@@ -244,6 +244,7 @@ body {
     text-align: center;
     padding: 24px 0 0 0;
     margin-top: 24px;
+    background: transparent;
 }
 .thanks-image {
     max-width: 400px;
