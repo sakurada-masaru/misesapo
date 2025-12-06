@@ -1045,7 +1045,18 @@ function renderCalendar() {
         const normalized = DataUtils.normalizeSchedule(schedule);
         event.className = `day-event status-${normalized.status}`;
         const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
-        const displayName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
+        const store = DataUtils.findStore(allStores, storeId) || {};
+        
+        // ブランド名を取得
+        function getBrandName(brandId) {
+          if (!brandId) return '';
+          const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId));
+          return brand ? brand.name : '';
+        }
+        
+        const brandId = store.brand_id;
+        const brandName = getBrandName(brandId);
+        const displayName = brandName || DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
         event.textContent = displayName;
         event.title = `${normalized.time || ''} ${displayName}`;
         event.onclick = () => openEditDialog(schedule);
