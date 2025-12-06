@@ -903,6 +903,11 @@
         item.addEventListener('click', function() {
           const id = this.dataset.id;
           const name = this.dataset.name;
+          
+          // ブランドが変更されたかどうかを確認
+          const currentBrandId = document.getElementById('report-brand')?.value;
+          const brandChanged = currentBrandId !== id;
+          
           document.getElementById('report-brand').value = id;
           document.getElementById('report-brand-name').value = name;
           brandSearchInput.value = name;
@@ -913,23 +918,11 @@
             updateStorePlaceholder();
             updateStoreModal();
             
-            // ブランドに紐づく店舗が1つだけの場合、自動的に店舗名を設定
-            const brandStores = stores.filter(store => {
-              const storeBrandId = store.brand_id || store.brandId;
-              return storeBrandId === id || String(storeBrandId) === String(id);
-            });
-            
-            if (brandStores.length === 1) {
-              const store = brandStores[0];
-              const storeName = store.store_name || store.name || '';
-              const storeId = store.store_id || store.id || '';
-              
-              if (storeName && storeId) {
-                document.getElementById('report-store').value = storeId;
-                document.getElementById('report-store-name').value = storeName;
-                storeSearchInput.value = storeName;
-                console.log('[updateBrandModal] Auto-selected store:', { storeId, storeName });
-              }
+            // ブランドが変更された場合、店舗名をリセット
+            if (brandChanged) {
+              document.getElementById('report-store').value = '';
+              document.getElementById('report-store-name').value = '';
+              storeSearchInput.value = '';
             }
           }
         });
