@@ -544,26 +544,47 @@ function renderTable() {
           <span class="status-badge status-${normalized.status}">${getStatusLabel(normalized.status)}</span>
         </div>
         <div class="schedule-card-body">
-          <div class="schedule-card-row">
-            <span class="schedule-card-item">日付：${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</span>
-            <span class="schedule-card-separator">|</span>
-            <span class="schedule-card-item" title="${escapeHtml(clientName || '-')}">法人名：${truncateText(clientName || '-', 20)}</span>
+          <div class="schedule-card-grid">
+            <div class="schedule-card-container">
+              <div class="schedule-card-field">
+                <span class="field-label">日付：</span>
+                <span class="field-value">${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</span>
+              </div>
+              <div class="schedule-card-field">
+                <span class="field-label">時刻：</span>
+                <span class="field-value">${escapeHtml(formattedTime)}</span>
+              </div>
+            </div>
+            <div class="schedule-card-container">
+              <div class="schedule-card-field">
+                <span class="field-label">法人名：</span>
+                <span class="field-value" title="${escapeHtml(clientName || '-')}">${truncateText(clientName || '-', 20)}</span>
+              </div>
+              <div class="schedule-card-field-row">
+                <div class="schedule-card-field">
+                  <span class="field-label">ブランド名：</span>
+                  <span class="field-value" title="${escapeHtml(brandName || '-')}">${truncateText(brandName || '-', 15)}</span>
+                </div>
+                <div class="schedule-card-field">
+                  <span class="field-label">店舗名：</span>
+                  <span class="field-value" title="${escapeHtml(displayStoreName)}">${truncateText(displayStoreName, 15)}</span>
+                </div>
+              </div>
+            </div>
+            <div class="schedule-card-container">
+              <div class="schedule-card-field">
+                <span class="field-label">清掃内容：</span>
+                <span class="field-value" title="${escapeHtml(cleaningContent)}">${truncateText(cleaningContent, 20)}</span>
+              </div>
+            </div>
+            <div class="schedule-card-container">
+              <div class="schedule-card-field">
+                <span class="field-label">営業担当：</span>
+                <span class="field-value">${sales ? truncateText(sales.name || '', 15) : '-'}</span>
+              </div>
+            </div>
           </div>
-          <div class="schedule-card-row">
-            <span class="schedule-card-item">時刻：${escapeHtml(formattedTime)}</span>
-            <span class="schedule-card-separator">|</span>
-            <span class="schedule-card-item" title="${escapeHtml(brandName || '-')}">ブランド名：${truncateText(brandName || '-', 15)}</span>
-            <span class="schedule-card-separator">|</span>
-            <span class="schedule-card-item" title="${escapeHtml(displayStoreName)}">店舗名：${truncateText(displayStoreName, 15)}</span>
-          </div>
-          <div class="schedule-card-divider"></div>
-          <div class="schedule-card-row">
-            <span class="schedule-card-item" title="${escapeHtml(cleaningContent)}">清掃内容：${truncateText(cleaningContent, 20)}</span>
-            <span class="schedule-card-separator">|</span>
-            <span class="schedule-card-item">営業担当：${sales ? truncateText(sales.name || '', 15) : '-'}</span>
-          </div>
-          <div class="schedule-card-divider"></div>
-          <div class="schedule-card-row schedule-card-actions">
+          <div class="schedule-card-actions">
             <button class="action-btn edit" title="編集" onclick="editSchedule('${schedule.id}')">
               <i class="fas fa-edit"></i>
               <span>編集</span>

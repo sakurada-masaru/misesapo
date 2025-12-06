@@ -206,56 +206,59 @@
 .schedule-card-body {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 12px;
 }
 
-.schedule-card-row {
+.schedule-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 12px;
+}
+
+.schedule-card-container {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  padding: 6px 0;
-  align-items: center;
-  flex-wrap: wrap;
 }
 
-.schedule-card-item {
+.schedule-card-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.875rem;
-  color: #111827;
   line-height: 1.5;
+}
+
+.schedule-card-field-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.schedule-card-field-row .schedule-card-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-label {
+  color: #6b7280;
+  font-weight: 500;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.field-value {
+  color: #111827;
+  flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 0 1 auto;
-  min-width: 0;
-  max-width: 100%;
-}
-
-/* 各項目の最大幅を設定してレイアウトを安定させる */
-.schedule-card-row:first-child .schedule-card-item:first-child {
-  flex: 0 0 auto;
-  min-width: 100px;
-}
-
-.schedule-card-row:nth-child(2) .schedule-card-item:first-child {
-  flex: 0 0 auto;
-  min-width: 120px;
-}
-
-.schedule-card-row:nth-child(4) .schedule-card-item:first-child {
-  flex: 0 0 auto;
-  min-width: 140px;
-}
-
-.schedule-card-separator {
-  font-size: 0.875rem;
-  color: #d1d5db;
-  flex-shrink: 0;
-  margin: 0 4px;
-}
-
-.schedule-card-divider {
-  height: 1px;
-  background: #e5e7eb;
-  margin: 8px 0;
 }
 
 .schedule-card-actions {
@@ -1033,6 +1036,19 @@
 @media (max-width: 480px) {
   .schedule-card {
     padding: 12px;
+  }
+
+  .schedule-card-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .schedule-card-container {
+    padding: 10px;
+  }
+
+  .schedule-card-field {
+    font-size: 0.8rem;
   }
 
   .schedule-card-actions .action-btn {
