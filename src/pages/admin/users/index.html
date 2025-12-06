@@ -984,10 +984,7 @@
       // キャッシュを無効化するためにタイムスタンプを追加
       const timestamp = new Date().getTime();
       const response = await fetch(`${API_BASE}/workers?t=${timestamp}`, {
-        cache: 'no-cache',
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
+        cache: 'no-cache'
       });
       
       if (!response.ok) {

@@ -215,6 +215,31 @@
   }
 
   /**
+   * ロールに基づいてサイドバー要素の表示/非表示を制御
+   */
+  function toggleSidebarElementsByRole() {
+    const adminDashboardLink = document.querySelector('.nav-item-admin');
+    if (!adminDashboardLink) return;
+
+    if (window.Auth && window.Auth.getCurrentUser) {
+      const user = window.Auth.getCurrentUser();
+      if (user && user.role) {
+        const role = user.role;
+        // 管理者以上のロールのみ管理ダッシュボードを表示
+        if (['admin', 'developer', 'master'].includes(role)) {
+          adminDashboardLink.style.display = 'flex';
+        } else {
+          adminDashboardLink.style.display = 'none';
+        }
+      } else {
+        adminDashboardLink.style.display = 'none';
+      }
+    } else {
+      adminDashboardLink.style.display = 'none';
+    }
+  }
+
+  /**
    * マイページリンクを設定（AWS Cognito認証のみ使用）
    */
   async function setupMypageLink() {
