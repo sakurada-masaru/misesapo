@@ -260,12 +260,24 @@
     
     // 店舗名を取得（report.store_nameがなければstores配列から検索）
     let storeName = report.store_name || '';
-    if (storeId && !storeName) {
-      const store = stores.find(s => (s.store_id || s.id) === storeId || String(s.store_id || s.id) === String(storeId));
-      if (store) {
-        storeName = store.store_name || store.name || '';
+    if (storeId) {
+      // まずreport.store_nameを確認
+      if (!storeName) {
+        // stores配列から店舗を検索
+        const store = stores.find(s => {
+          const sId = s.store_id || s.id;
+          return sId === storeId || String(sId) === String(storeId);
+        });
+        if (store) {
+          storeName = store.store_name || store.name || '';
+          console.log('[loadReportToForm] Found store:', { storeId, storeName, store });
+        } else {
+          console.warn('[loadReportToForm] Store not found:', { storeId, storesCount: stores.length, sampleStore: stores[0] });
+        }
       }
     }
+    
+    console.log('[loadReportToForm] Store name:', { storeId, storeName, reportStoreName: report.store_name });
     
     document.getElementById('report-store-name').value = storeName;
     const storeSearchInput = document.getElementById('report-store-search');
@@ -277,7 +289,10 @@
     
     // ブランド情報を設定（店舗から取得）
     if (storeId) {
-      const store = stores.find(s => (s.store_id || s.id) === storeId || String(s.store_id || s.id) === String(storeId));
+      const store = stores.find(s => {
+        const sId = s.store_id || s.id;
+        return sId === storeId || String(sId) === String(storeId);
+      });
       if (store) {
         const brandId = store.brand_id || store.brandId;
         if (brandId) {
