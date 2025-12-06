@@ -294,6 +294,9 @@
       }
     }
     
+    // プレースホルダーを更新
+    updateStorePlaceholder();
+    
     document.getElementById('report-date').value = report.cleaning_date || '';
     document.getElementById('report-start').value = report.cleaning_start_time || '';
     document.getElementById('report-end').value = report.cleaning_end_time || '';
