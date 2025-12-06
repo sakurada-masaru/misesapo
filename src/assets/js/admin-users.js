@@ -806,30 +806,68 @@
 
   // 出退勤トグルスイッチのレンダリング
   function renderAttendanceSections() {
-    // ロール別にユーザーをグループ化
-    const usersByRole = {
-      staff: allUsers.filter(u => u.role === 'staff' && u.status === 'active'),
-      sales: allUsers.filter(u => u.role === 'sales' && u.status === 'active'),
-      office: allUsers.filter(u => u.role === 'office' && u.status === 'active'),
-      developer: allUsers.filter(u => u.role === 'developer' && u.status === 'active'),
-      admin: allUsers.filter(u => u.role === 'admin' && u.status === 'active'),
-      operation: allUsers.filter(u => u.role === 'operation' && u.status === 'active')
-    };
+    // 部署別にユーザーをグループ化
+    const activeUsers = allUsers.filter(u => u.status === 'active');
+    const usersByDepartment = {};
     
-    // 各ロールのセクションをレンダリング
-    renderAttendanceSection('staff', usersByRole.staff);
-    renderAttendanceSection('sales', usersByRole.sales);
-    renderAttendanceSection('office', usersByRole.office);
-    renderAttendanceSection('developer', usersByRole.developer);
-    renderAttendanceSection('admin', usersByRole.admin);
-    renderAttendanceSection('operation', usersByRole.operation);
+    activeUsers.forEach(user => {
+      const department = (user.department || user.team || '').trim() || '未設定';
+      if (!usersByDepartment[department]) {
+        usersByDepartment[department] = [];
+      }
+      usersByDepartment[department].push(user);
+    });
+    
+    // 部署名でソート（未設定を最後に）
+    const sortedDepartments = Object.keys(usersByDepartment).sort((a, b) => {
+      if (a === '未設定') return 1;
+      if (b === '未設定') return -1;
+      return a.localeCompare(b, 'ja');
+    });
+    
+    // 出退勤セクションのコンテナを取得
+    const attendanceSectionsContainer = document.querySelector('.attendance-sections');
+    if (!attendanceSectionsContainer) return;
+    
+    // 既存のセクションをクリア（ロールベースのセクションを削除）
+    attendanceSectionsContainer.innerHTML = '';
+    
+    // 各部署のセクションを動的に生成
+    sortedDepartments.forEach(department => {
+      const users = usersByDepartment[department];
+      if (users.length === 0) return;
+      
+      // 部署名をID用にエンコード（特殊文字を置換）
+      const departmentId = department.replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, '_');
+      
+      // セクションHTMLを生成
+      const sectionHtml = `
+        <div class="attendance-section" id="attendance-section-${departmentId}">
+          <div class="attendance-section-header">
+            <h3>
+              <i class="fas fa-building"></i>
+              ${escapeHtml(department)}
+              <span class="attendance-count" id="${departmentId}-attendance-count">0名</span>
+            </h3>
+          </div>
+          <div class="attendance-grid" id="attendance-grid-${departmentId}">
+            <!-- ユーザーのトグルスイッチがここに表示されます -->
+          </div>
+        </div>
+      `;
+      
+      attendanceSectionsContainer.insertAdjacentHTML('beforeend', sectionHtml);
+      
+      // セクションをレンダリング
+      renderAttendanceSection(departmentId, department, users);
+    });
   }
 
-  // 特定のロールの出退勤セクションをレンダリング
-  function renderAttendanceSection(role, users) {
-    const container = document.getElementById(`attendance-grid-${role}`);
-    const countEl = document.getElementById(`${role}-attendance-count`);
-    const sectionEl = document.getElementById(`attendance-section-${role}`);
+  // 特定の部署の出退勤セクションをレンダリング
+  function renderAttendanceSection(departmentId, departmentName, users) {
+    const container = document.getElementById(`attendance-grid-${departmentId}`);
+    const countEl = document.getElementById(`${departmentId}-attendance-count`);
+    const sectionEl = document.getElementById(`attendance-section-${departmentId}`);
     
     if (!container) return;
     
