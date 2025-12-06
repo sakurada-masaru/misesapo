@@ -6,7 +6,7 @@
 (function() {
   const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
   const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
-  const DEFAULT_NO_PHOTO_IMAGE = '/images-report/no-photo-default.png'; // デフォルト画像パス
+  const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg'; // デフォルト画像パス
 
   // データ
   let stores = [];
@@ -36,7 +36,82 @@
     setupTabs();
     setDefaultDate();
     loadRevisionRequests();
+    setupMobileKeyboardHandling();
   });
+  
+  // モバイルキーボード表示時のスクロール問題を修正
+  function setupMobileKeyboardHandling() {
+    // textareaのblurイベントでスクロール位置を調整
+    document.addEventListener('blur', function(e) {
+      if (e.target.classList.contains('section-textarea')) {
+        // キーボードが閉じた後にスクロール位置を調整
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          // アクティブなタブコンテンツのスクロール位置も調整
+          const activeTab = document.querySelector('.tab-content.active');
+          if (activeTab) {
+            activeTab.scrollTop = Math.max(0, activeTab.scrollTop - 100);
+          }
+        }, 300);
+      }
+    }, true);
+    
+    // Visual Viewport APIを使用してキーボードの表示/非表示を検知
+    if (window.visualViewport) {
+      let lastViewportHeight = window.visualViewport.height;
+      
+      window.visualViewport.addEventListener('resize', () => {
+        const currentHeight = window.visualViewport.height;
+        const heightDiff = lastViewportHeight - currentHeight;
+        
+        // キーボードが閉じた場合（高さが増えた場合）
+        if (heightDiff < -50) {
+          setTimeout(() => {
+            window.scrollTo(0, 0);
+            const activeTab = document.querySelector('.tab-content.active');
+            if (activeTab) {
+              // スクロール位置を調整して余白を解消
+              const scrollTop = activeTab.scrollTop;
+              if (scrollTop > 0) {
+                activeTab.scrollTop = Math.max(0, scrollTop - 200);
+              }
+            }
+          }, 100);
+        }
+        
+        lastViewportHeight = currentHeight;
+      });
+    }
+    
+    // textareaのフォーカスアウト時にスクロール位置を調整
+    document.addEventListener('focusout', function(e) {
+      if (e.target.classList.contains('section-textarea')) {
+        setTimeout(() => {
+          // キーボードが閉じるのを待ってからスクロール位置を調整
+          if (window.visualViewport) {
+            const viewportHeight = window.visualViewport.height;
+            const windowHeight = window.innerHeight;
+            
+            // キーボードが閉じた場合（ビューポートの高さが増えた場合）
+            if (viewportHeight > windowHeight * 0.8) {
+              window.scrollTo(0, 0);
+              const activeTab = document.querySelector('.tab-content.active');
+              if (activeTab) {
+                activeTab.scrollTop = Math.max(0, activeTab.scrollTop - 100);
+              }
+            }
+          } else {
+            // Visual Viewport APIが使えない場合のフォールバック
+            window.scrollTo(0, 0);
+            const activeTab = document.querySelector('.tab-content.active');
+            if (activeTab) {
+              activeTab.scrollTop = Math.max(0, activeTab.scrollTop - 100);
+            }
+          }
+        }, 300);
+      }
+    }, true);
+  }
 
   // 店舗読み込み
   async function loadStores() {
