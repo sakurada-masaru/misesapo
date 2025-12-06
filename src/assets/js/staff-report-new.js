@@ -42,7 +42,10 @@
   async function loadStores() {
     try {
       const res = await fetch(`${API_BASE}/stores`);
-      stores = await res.json();
+      const data = await res.json();
+      // APIが{items: [...]}形式で返す場合に対応
+      stores = Array.isArray(data) ? data : (data.items || []);
+      console.log('[loadStores] Loaded stores:', stores.length, stores.slice(0, 2));
     } catch (e) {
       console.error('Failed to load stores:', e);
     }
