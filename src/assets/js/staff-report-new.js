@@ -1624,6 +1624,11 @@
       if (newCard) {
         const newContainer = document.getElementById(`${sectionId}-${category}`);
         if (newContainer) {
+          // デフォルト画像（placeholder）を削除
+          const placeholder = newContainer.querySelector('.image-placeholder');
+          if (placeholder) {
+            placeholder.remove();
+          }
           const addBtn = newContainer.querySelector('.image-add-btn');
           const newThumb = createImageThumb(sectionId, category, imageData.blobUrl, imageData.id);
           newContainer.insertBefore(newThumb, addBtn);
@@ -1633,6 +1638,12 @@
       return;
     }
 
+    // デフォルト画像（placeholder）を削除
+    const placeholder = container.querySelector('.image-placeholder');
+    if (placeholder) {
+      placeholder.remove();
+    }
+    
     const addBtn = container.querySelector('.image-add-btn');
     const newThumb = createImageThumb(sectionId, category, imageData.blobUrl, imageData.id);
     container.insertBefore(newThumb, addBtn);
