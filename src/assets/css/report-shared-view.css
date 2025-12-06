@@ -446,6 +446,16 @@ body {
         grid-template-columns: 1fr;
         gap: 8px;
     }
+    .image-item {
+        aspect-ratio: 1;
+        min-height: 200px;
+    }
+    .default-no-photo-image {
+        width: 100%;
+        height: auto;
+        min-height: 200px;
+        object-fit: contain;
+    }
     .thanks-image-wrapper {
         padding: 24px 16px;
     }
