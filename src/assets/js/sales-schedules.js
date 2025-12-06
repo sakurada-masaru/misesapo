@@ -523,58 +523,60 @@ function renderTable() {
           <span class="status-badge status-${normalized.status}">${getStatusLabel(normalized.status)}</span>
         </div>
         <div class="schedule-card-body">
-          <div class="schedule-card-main-info">
-            <div class="schedule-card-date">
-              <i class="fas fa-calendar-alt"></i>
-              <div>
-                <div class="schedule-date-main">${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</div>
-                <div class="schedule-time">${normalized.time || schedule.time_slot || schedule.scheduled_time || '-'}${normalized.duration_minutes ? ` (${normalized.duration_minutes}分)` : ''}</div>
-              </div>
+          <div class="schedule-card-row">
+            <div class="schedule-card-cell">
+              <div class="cell-label">日付</div>
+              <div class="cell-value">${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</div>
             </div>
-            <div class="schedule-card-store">
-              <i class="fas fa-store"></i>
-              <div>
-                <div class="store-name">${escapeHtml(displayStoreName)}</div>
-                ${clientName || brandName ? `<div class="store-meta">${escapeHtml(clientName || '')}${clientName && brandName ? ' / ' : ''}${escapeHtml(brandName || '')}</div>` : ''}
-              </div>
+            <div class="schedule-card-cell">
+              <div class="cell-label">法人名</div>
+              <div class="cell-value">${escapeHtml(clientName || '-')}</div>
+            </div>
+            <div class="schedule-card-cell">
+              <div class="cell-label">ブランド名</div>
+              <div class="cell-value">${escapeHtml(brandName || '-')}</div>
             </div>
           </div>
-          ${(sales || worker || itemNames.length > 0) ? `
-            <div class="schedule-card-details">
-              ${sales || worker ? `
-                <div class="schedule-card-assignees">
-                  ${sales ? `
-                    <div class="assignee-item">
-                      <i class="fas fa-user-tie"></i>
-                      <span>${escapeHtml(sales.name || '')}</span>
-                    </div>
-                  ` : ''}
-                  ${worker ? `
-                    <div class="assignee-item">
-                      <i class="fas fa-user"></i>
-                      <span>${escapeHtml(worker.name || '')}</span>
-                    </div>
-                  ` : '<div class="assignee-item"><i class="fas fa-user"></i><span class="unassigned">未割当</span></div>'}
-                </div>
-              ` : ''}
-              ${itemNames.length > 0 ? `
-                <div class="schedule-card-cleaning">
-                  <i class="fas fa-broom"></i>
-                  <div class="cleaning-items">${itemNames.join(', ')}</div>
-                </div>
-              ` : ''}
+          <div class="schedule-card-row">
+            <div class="schedule-card-cell">
+              <div class="cell-label">時刻</div>
+              <div class="cell-value">${normalized.time || schedule.time_slot || schedule.scheduled_time || '-'}${normalized.duration_minutes ? ` (${normalized.duration_minutes}分)` : ''}</div>
             </div>
-          ` : ''}
-        </div>
-        <div class="schedule-card-actions">
-          <button class="action-btn edit" title="編集" onclick="editSchedule('${schedule.id}')">
-            <i class="fas fa-edit"></i>
-            <span>編集</span>
-          </button>
-          <button class="action-btn delete" title="削除" onclick="confirmDelete('${schedule.id}')">
-            <i class="fas fa-trash"></i>
-            <span>削除</span>
-          </button>
+            <div class="schedule-card-cell schedule-card-cell-store">
+              <div class="cell-label">店舗名</div>
+              <div class="cell-value">${escapeHtml(displayStoreName)}</div>
+            </div>
+          </div>
+          <div class="schedule-card-divider"></div>
+          <div class="schedule-card-row">
+            <div class="schedule-card-cell">
+              <div class="cell-label">清掃内容</div>
+              <div class="cell-value">${itemNames.length > 0 ? itemNames.join(', ') : '-'}</div>
+            </div>
+            <div class="schedule-card-cell">
+              <div class="cell-label">営業担当</div>
+              <div class="cell-value">${sales ? escapeHtml(sales.name || '') : '-'}</div>
+            </div>
+            <div class="schedule-card-cell">
+              <div class="cell-label">担当者氏名</div>
+              <div class="cell-value">${worker ? escapeHtml(worker.name || '') : '未割当'}</div>
+            </div>
+          </div>
+          <div class="schedule-card-divider"></div>
+          <div class="schedule-card-row schedule-card-actions">
+            <div class="schedule-card-cell schedule-card-cell-edit">
+              <button class="action-btn edit" title="編集" onclick="editSchedule('${schedule.id}')">
+                <i class="fas fa-edit"></i>
+                <span>編集</span>
+              </button>
+            </div>
+            <div class="schedule-card-cell schedule-card-cell-delete">
+              <button class="action-btn delete" title="削除" onclick="confirmDelete('${schedule.id}')">
+                <i class="fas fa-trash"></i>
+                <span>削除</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     `;
