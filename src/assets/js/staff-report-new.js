@@ -268,6 +268,8 @@
         </div>
       `;
       document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+      const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+      if (newCard) setupSectionDragAndDrop(newCard);
     });
     
     // セクションを追加
@@ -349,6 +351,8 @@
       </div>
     `;
     document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (newCard) setupSectionDragAndDrop(newCard);
   }
 
   function addCommentSectionWithData(section) {
@@ -373,6 +377,8 @@
       </div>
     `;
     document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (newCard) setupSectionDragAndDrop(newCard);
   }
 
   function addWorkContentSectionWithData(section) {
@@ -397,6 +403,194 @@
       </div>
     `;
     document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+  }
+
+  // セクションカードのドラッグ&ドロップ設定
+  function setupSectionDragAndDrop(sectionCard) {
+    if (!sectionCard || sectionCard.dataset.dragSetup) return;
+    sectionCard.dataset.dragSetup = 'true';
+    sectionCard.draggable = true;
+
+    const header = sectionCard.querySelector('.section-header');
+    if (!header) return;
+
+    // タッチイベント用の変数
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let isDragging = false;
+    let draggedCard = null;
+    let longPressTimer = null;
+    const LONG_PRESS_DURATION = 300; // 300msで長押し判定
+
+    // テキスト選択を防ぐ
+    header.addEventListener('selectstart', (e) => {
+      e.preventDefault();
+      return false;
+    });
+
+    // コンテキストメニューを防ぐ（長押しメニュー）
+    header.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      return false;
+    });
+
+    // タッチ開始（スマホ用）
+    header.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+      isDragging = false;
+      sectionCard.classList.add('touching');
+
+      // 長押しタイマー
+      longPressTimer = setTimeout(() => {
+        isDragging = true;
+        draggedCard = sectionCard;
+        sectionCard.classList.add('dragging');
+        sectionCard.classList.remove('touching');
+        
+        // 振動フィードバック（対応デバイスのみ）
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }, LONG_PRESS_DURATION);
+    }, { passive: true });
+
+    // タッチ移動（スマホ用）
+    header.addEventListener('touchmove', (e) => {
+      if (!isDragging && !draggedCard) {
+        const touchY = e.touches[0].clientY;
+        const deltaY = Math.abs(touchY - touchStartY);
+        
+        // 5px以上動いたら長押しをキャンセル
+        if (deltaY > 5) {
+          clearTimeout(longPressTimer);
+          sectionCard.classList.remove('touching');
+        }
+        return;
+      }
+
+      if (!isDragging || !draggedCard) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const touchY = e.touches[0].clientY;
+      const targetCard = document.elementFromPoint(e.touches[0].clientX, touchY)?.closest('.section-card');
+
+      if (targetCard && targetCard !== draggedCard) {
+        const allCards = document.querySelectorAll('.section-card');
+        allCards.forEach(card => {
+          if (card !== draggedCard) {
+            card.classList.remove('drag-over');
+          }
+        });
+        targetCard.classList.add('drag-over');
+      }
+    }, { passive: false });
+
+    // タッチ終了（スマホ用）
+    header.addEventListener('touchend', (e) => {
+      clearTimeout(longPressTimer);
+      sectionCard.classList.remove('touching');
+
+      if (!isDragging || !draggedCard) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const touchY = e.changedTouches[0].clientY;
+      const targetCard = document.elementFromPoint(e.changedTouches[0].clientX, touchY)?.closest('.section-card');
+
+      if (targetCard && targetCard !== draggedCard) {
+        const contentArea = document.getElementById('report-content');
+        const allCards = Array.from(contentArea.querySelectorAll('.section-card'));
+        const draggedIndex = allCards.indexOf(draggedCard);
+        const targetIndex = allCards.indexOf(targetCard);
+
+        if (draggedIndex < targetIndex) {
+          contentArea.insertBefore(draggedCard, targetCard.nextSibling);
+        } else {
+          contentArea.insertBefore(draggedCard, targetCard);
+        }
+      }
+
+      // クリーンアップ
+      const allCards = document.querySelectorAll('.section-card');
+      allCards.forEach(card => card.classList.remove('drag-over', 'dragging'));
+      isDragging = false;
+      draggedCard = null;
+    }, { passive: false });
+
+    // タッチキャンセル（スマホ用）
+    header.addEventListener('touchcancel', () => {
+      clearTimeout(longPressTimer);
+      sectionCard.classList.remove('touching', 'dragging');
+      isDragging = false;
+      draggedCard = null;
+      const allCards = document.querySelectorAll('.section-card');
+      allCards.forEach(card => card.classList.remove('drag-over'));
+    });
+
+    // ドラッグ開始（PC用）
+    sectionCard.addEventListener('dragstart', (e) => {
+      sectionCard.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', sectionCard.dataset.sectionId);
+    });
+
+    // ドラッグ終了（PC用）
+    sectionCard.addEventListener('dragend', (e) => {
+      sectionCard.classList.remove('dragging');
+      const allCards = document.querySelectorAll('.section-card');
+      allCards.forEach(card => card.classList.remove('drag-over'));
+    });
+
+    // ドラッグオーバー（PC用）
+    sectionCard.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      
+      const draggedId = e.dataTransfer.getData('text/plain');
+      if (draggedId && draggedId !== sectionCard.dataset.sectionId) {
+        sectionCard.classList.add('drag-over');
+      }
+    });
+
+    // ドラッグリーブ（PC用）
+    sectionCard.addEventListener('dragleave', (e) => {
+      sectionCard.classList.remove('drag-over');
+    });
+
+    // ドロップ（PC用）
+    sectionCard.addEventListener('drop', (e) => {
+      e.preventDefault();
+      sectionCard.classList.remove('drag-over');
+
+      const draggedId = e.dataTransfer.getData('text/plain');
+      if (!draggedId || draggedId === sectionCard.dataset.sectionId) return;
+
+      const draggedCard = document.querySelector(`[data-section-id="${draggedId}"]`);
+      if (!draggedCard) return;
+
+      const contentArea = document.getElementById('report-content');
+      const allCards = Array.from(contentArea.querySelectorAll('.section-card'));
+      const draggedIndex = allCards.indexOf(draggedCard);
+      const targetIndex = allCards.indexOf(sectionCard);
+
+      if (draggedIndex < targetIndex) {
+        contentArea.insertBefore(draggedCard, sectionCard.nextSibling);
+      } else {
+        contentArea.insertBefore(draggedCard, sectionCard);
+      }
+    });
+  }
+
+  // すべてのセクションカードにドラッグ&ドロップを設定
+  function setupAllSectionDragAndDrop() {
+    const contentArea = document.getElementById('report-content');
+    const allCards = contentArea.querySelectorAll('.section-card');
+    allCards.forEach(card => setupSectionDragAndDrop(card));
   }
 
   // イベントリスナー設定
@@ -468,6 +662,16 @@
     document.getElementById('add-comment').addEventListener('click', addCommentSection);
     document.getElementById('add-work-content').addEventListener('click', addWorkContentSection);
 
+    // セクションカードのドラッグ&ドロップ機能を初期設定
+    setupAllSectionDragAndDrop();
+    
+    // セクションが追加されたときにドラッグ&ドロップを設定するため、MutationObserverを使用
+    const contentArea = document.getElementById('report-content');
+    const observer = new MutationObserver(() => {
+      setupAllSectionDragAndDrop();
+    });
+    observer.observe(contentArea, { childList: true, subtree: true });
+
     // ヘルプボタン
     document.getElementById('help-btn').addEventListener('click', () => {
       document.getElementById('help-dialog').style.display = 'flex';
@@ -529,6 +733,8 @@
     `;
 
     document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (newCard) setupSectionDragAndDrop(newCard);
     updateCleaningItemsList();
   }
 
@@ -572,6 +778,8 @@
     `;
 
     document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (newCard) setupSectionDragAndDrop(newCard);
   }
 
   // コメントセクション追加
@@ -595,6 +803,8 @@
     `;
 
     document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (newCard) setupSectionDragAndDrop(newCard);
   }
 
   // 作業内容セクション追加
@@ -618,6 +828,8 @@
     `;
 
     document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (newCard) setupSectionDragAndDrop(newCard);
   }
 
   // セクション削除
