@@ -1227,6 +1227,56 @@
   font-size: 0.7rem;
 }
 
+/* 画像セクションタイプ選択モーダル */
+.image-section-type-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.image-section-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  gap: 8px;
+}
+
+.image-section-type-btn:hover {
+  border-color: #FF679C;
+  background: #fff5f8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 103, 156, 0.15);
+}
+
+.image-section-type-btn i {
+  font-size: 2rem;
+  color: #FF679C;
+  margin-bottom: 4px;
+}
+
+.image-section-type-btn .type-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.image-section-type-btn .type-description {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
 /* ヘルプモーダル */
 .help-section {
   margin-bottom: 16px;

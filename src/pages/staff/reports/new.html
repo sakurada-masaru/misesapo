@@ -245,6 +245,35 @@
     </div>
   </div>
 
+  <!-- 画像セクションタイプ選択モーダル -->
+  <div id="image-section-type-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>画像セクションの種類を選択</h3>
+        <button type="button" class="modal-close" onclick="closeImageSectionTypeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="image-section-type-options">
+          <button type="button" class="image-section-type-btn" onclick="addImageSectionBeforeAfter()">
+            <i class="fas fa-images"></i>
+            <div class="type-title">作業前・作業後</div>
+            <div class="type-description">作業前と作業後の写真を追加します</div>
+          </button>
+          <button type="button" class="image-section-type-btn" onclick="addImageSectionCompleted()">
+            <i class="fas fa-star"></i>
+            <div class="type-title">施工後</div>
+            <div class="type-description">施工完了後の写真を追加します</div>
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeImageSectionTypeModal()">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ヘルプモーダル -->
   <div id="help-dialog" class="modal-overlay" style="display:none;">
     <div class="modal-content">

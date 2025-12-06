@@ -368,96 +368,136 @@
   function addImageSectionWithData(section) {
     sectionCounter++;
     const sectionId = section.section_id || `section-${sectionCounter}`;
-    sections[sectionId] = {
-      type: 'image',
-      photos: section.photos || { before: [], after: [], completed: [] }
-    };
+    const photos = section.photos || {};
+    const imageType = section.image_type || (photos.completed && !photos.before && !photos.after ? 'completed' : 'before_after');
     
-    const html = `
-      <div class="section-card" data-section-id="${sectionId}">
-        <div class="section-header">
-          <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後・施工後）</span>
-          <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-        <div class="section-body">
-          <div class="image-grid">
-            <div class="image-category">
-              <div class="image-category-title before"><i class="fas fa-clock"></i> 作業前</div>
-              <div class="image-list" id="${sectionId}-before">
-                ${(section.photos?.before || []).map(url => `
-                  <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="before" data-image-url="${url}">
-                    <img src="${url}" alt="Before" draggable="false">
-                    <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'before', '${url}', '', this)">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                `).join('')}
-                <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'before')">
-                  <i class="fas fa-plus"></i>
-                  <span>追加</span>
-                </button>
-              </div>
-            </div>
-            <div class="image-category">
-              <div class="image-category-title after"><i class="fas fa-check-circle"></i> 作業後</div>
-              <div class="image-list" id="${sectionId}-after">
-                ${(section.photos?.after || []).map(url => `
-                  <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="after" data-image-url="${url}">
-                    <img src="${url}" alt="After" draggable="false">
-                    <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'after', '${url}', '', this)">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                `).join('')}
-                <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'after')">
-                  <i class="fas fa-plus"></i>
-                  <span>追加</span>
-                </button>
-              </div>
-            </div>
-            <div class="image-category">
-              <div class="image-category-title completed"><i class="fas fa-star"></i> 施工後</div>
-              <div class="image-list" id="${sectionId}-completed">
-                ${(section.photos?.completed || []).map(url => `
-                  <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="completed" data-image-url="${url}">
-                    <img src="${url}" alt="Completed" draggable="false">
-                    <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'completed', '${url}', '', this)">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                `).join('')}
-                <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'completed')">
-                  <i class="fas fa-plus"></i>
-                  <span>追加</span>
-                </button>
+    // セクションタイプに応じてデータを設定
+    if (imageType === 'completed') {
+      sections[sectionId] = {
+        type: 'image',
+        image_type: 'completed',
+        photos: { completed: photos.completed || [] }
+      };
+      
+      const html = `
+        <div class="section-card" data-section-id="${sectionId}">
+          <div class="section-header">
+            <span class="section-title"><i class="fas fa-image"></i> 画像（施工後）</span>
+            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="section-body">
+            <div class="image-grid">
+              <div class="image-category">
+                <div class="image-category-title completed"><i class="fas fa-star"></i> 施工後</div>
+                <div class="image-list" id="${sectionId}-completed">
+                  ${(photos.completed || []).map(url => `
+                    <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="completed" data-image-url="${url}">
+                      <img src="${url}" alt="Completed" draggable="false">
+                      <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'completed', '${url}', '', this)">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  `).join('')}
+                  <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'completed')">
+                    <i class="fas fa-plus"></i>
+                    <span>追加</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    `;
-    document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
-    const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
-    if (newCard) {
-      setupSectionDragAndDrop(newCard);
-      // 画像リストにドラッグ&ドロップを設定
-      const beforeList = document.getElementById(`${sectionId}-before`);
-      const afterList = document.getElementById(`${sectionId}-after`);
-      const completedList = document.getElementById(`${sectionId}-completed`);
-      if (beforeList) setupImageListDragAndDrop(beforeList, sectionId, 'before');
-      if (afterList) setupImageListDragAndDrop(afterList, sectionId, 'after');
-      if (completedList) setupImageListDragAndDrop(completedList, sectionId, 'completed');
-      // 既存の画像サムネイルにドラッグ&ドロップを設定
-      newCard.querySelectorAll('.image-thumb').forEach(thumb => {
-        const thumbSectionId = thumb.dataset.sectionId;
-        const thumbCategory = thumb.dataset.category;
-        const thumbUrl = thumb.dataset.imageUrl;
-        if (thumbSectionId && thumbCategory && thumbUrl) {
-          setupImageThumbDragAndDrop(thumb, thumbSectionId, thumbCategory, thumbUrl);
-        }
-      });
+      `;
+      document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+      const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+      if (newCard) {
+        setupSectionDragAndDrop(newCard);
+        const completedList = document.getElementById(`${sectionId}-completed`);
+        if (completedList) setupImageListDragAndDrop(completedList, sectionId, 'completed');
+        newCard.querySelectorAll('.image-thumb').forEach(thumb => {
+          const thumbSectionId = thumb.dataset.sectionId;
+          const thumbCategory = thumb.dataset.category;
+          const thumbUrl = thumb.dataset.imageUrl;
+          if (thumbSectionId && thumbCategory && thumbUrl) {
+            setupImageThumbDragAndDrop(thumb, thumbSectionId, thumbCategory, thumbUrl);
+          }
+        });
+      }
+    } else {
+      // 作業前・作業後タイプ
+      sections[sectionId] = {
+        type: 'image',
+        image_type: 'before_after',
+        photos: { before: photos.before || [], after: photos.after || [] }
+      };
+      
+      const html = `
+        <div class="section-card" data-section-id="${sectionId}">
+          <div class="section-header">
+            <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後）</span>
+            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="section-body">
+            <div class="image-grid">
+              <div class="image-category">
+                <div class="image-category-title before"><i class="fas fa-clock"></i> 作業前</div>
+                <div class="image-list" id="${sectionId}-before">
+                  ${(photos.before || []).map(url => `
+                    <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="before" data-image-url="${url}">
+                      <img src="${url}" alt="Before" draggable="false">
+                      <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'before', '${url}', '', this)">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  `).join('')}
+                  <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'before')">
+                    <i class="fas fa-plus"></i>
+                    <span>追加</span>
+                  </button>
+                </div>
+              </div>
+              <div class="image-category">
+                <div class="image-category-title after"><i class="fas fa-check-circle"></i> 作業後</div>
+                <div class="image-list" id="${sectionId}-after">
+                  ${(photos.after || []).map(url => `
+                    <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="after" data-image-url="${url}">
+                      <img src="${url}" alt="After" draggable="false">
+                      <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'after', '${url}', '', this)">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  `).join('')}
+                  <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'after')">
+                    <i class="fas fa-plus"></i>
+                    <span>追加</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+      const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+      if (newCard) {
+        setupSectionDragAndDrop(newCard);
+        const beforeList = document.getElementById(`${sectionId}-before`);
+        const afterList = document.getElementById(`${sectionId}-after`);
+        if (beforeList) setupImageListDragAndDrop(beforeList, sectionId, 'before');
+        if (afterList) setupImageListDragAndDrop(afterList, sectionId, 'after');
+        newCard.querySelectorAll('.image-thumb').forEach(thumb => {
+          const thumbSectionId = thumb.dataset.sectionId;
+          const thumbCategory = thumb.dataset.category;
+          const thumbUrl = thumb.dataset.imageUrl;
+          if (thumbSectionId && thumbCategory && thumbUrl) {
+            setupImageThumbDragAndDrop(thumb, thumbSectionId, thumbCategory, thumbUrl);
+          }
+        });
+      }
     }
   }
 
@@ -1068,7 +1108,7 @@
 
     // 追加ボタン
     document.getElementById('add-cleaning-item').addEventListener('click', addCleaningItemSection);
-    document.getElementById('add-image').addEventListener('click', () => addImageSection());
+    document.getElementById('add-image').addEventListener('click', openImageSectionTypeModal);
     document.getElementById('add-comment').addEventListener('click', addCommentSection);
     document.getElementById('add-work-content').addEventListener('click', addWorkContentSection);
 
@@ -1510,14 +1550,28 @@
   function addImageToSectionFromStock(imageData, sectionId, category) {
     // セクションが存在しない場合は作成
     if (!sections[sectionId]) {
-      sections[sectionId] = {
-        type: 'image',
-        photos: { before: [], after: [], completed: [] }
-      };
+      // カテゴリに応じて適切なセクションタイプを決定
+      if (category === 'completed') {
+        sections[sectionId] = {
+          type: 'image',
+          image_type: 'completed',
+          photos: { completed: [] }
+        };
+      } else {
+        sections[sectionId] = {
+          type: 'image',
+          image_type: 'before_after',
+          photos: { before: [], after: [] }
+        };
+      }
     }
 
     if (!sections[sectionId].photos) {
-      sections[sectionId].photos = { before: [], after: [], completed: [] };
+      if (category === 'completed') {
+        sections[sectionId].photos = { completed: [] };
+      } else {
+        sections[sectionId].photos = { before: [], after: [] };
+      }
     }
 
     if (!sections[sectionId].photos[category]) {
@@ -1544,8 +1598,12 @@
     // UIに追加
     const container = document.getElementById(`${sectionId}-${category}`);
     if (!container) {
-      // セクションが存在しない場合は作成
-      addImageSection();
+      // セクションが存在しない場合は作成（カテゴリに応じて適切なタイプを選択）
+      if (category === 'completed') {
+        addImageSectionCompleted();
+      } else {
+        addImageSectionBeforeAfter();
+      }
       const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
       if (newCard) {
         const newContainer = document.getElementById(`${sectionId}-${category}`);
@@ -1617,16 +1675,33 @@
     updateCleaningItemsList();
   }
 
-  // 画像セクション追加
-  function addImageSection() {
+  // 画像セクションタイプ選択モーダルを開く
+  window.openImageSectionTypeModal = function() {
+    const modal = document.getElementById('image-section-type-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+  };
+
+  // 画像セクションタイプ選択モーダルを閉じる
+  window.closeImageSectionTypeModal = function() {
+    const modal = document.getElementById('image-section-type-modal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  };
+
+  // 作業前・作業後セクション追加
+  window.addImageSectionBeforeAfter = function() {
+    closeImageSectionTypeModal();
     sectionCounter++;
     const sectionId = `section-${sectionCounter}`;
-    sections[sectionId] = { type: 'image', photos: { before: [], after: [], completed: [] } };
+    sections[sectionId] = { type: 'image', image_type: 'before_after', photos: { before: [], after: [] } };
 
     const html = `
       <div class="section-card" data-section-id="${sectionId}">
         <div class="section-header">
-          <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後・施工後）</span>
+          <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後）</span>
           <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
             <i class="fas fa-trash"></i>
           </button>
@@ -1651,6 +1726,40 @@
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (newCard) {
+      setupSectionDragAndDrop(newCard);
+      // 画像リストにドラッグ&ドロップを設定
+      const beforeList = document.getElementById(`${sectionId}-before`);
+      const afterList = document.getElementById(`${sectionId}-after`);
+      if (beforeList) setupImageListDragAndDrop(beforeList, sectionId, 'before');
+      if (afterList) setupImageListDragAndDrop(afterList, sectionId, 'after');
+    }
+  };
+
+  // 施工後セクション追加
+  window.addImageSectionCompleted = function() {
+    closeImageSectionTypeModal();
+    sectionCounter++;
+    const sectionId = `section-${sectionCounter}`;
+    sections[sectionId] = { type: 'image', image_type: 'completed', photos: { completed: [] } };
+
+    const html = `
+      <div class="section-card" data-section-id="${sectionId}">
+        <div class="section-header">
+          <span class="section-title"><i class="fas fa-image"></i> 画像（施工後）</span>
+          <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        <div class="section-body">
+          <div class="image-grid">
             <div class="image-category">
               <div class="image-category-title completed"><i class="fas fa-star"></i> 施工後</div>
               <div class="image-list" id="${sectionId}-completed">
@@ -1670,14 +1779,10 @@
     if (newCard) {
       setupSectionDragAndDrop(newCard);
       // 画像リストにドラッグ&ドロップを設定
-      const beforeList = document.getElementById(`${sectionId}-before`);
-      const afterList = document.getElementById(`${sectionId}-after`);
       const completedList = document.getElementById(`${sectionId}-completed`);
-      if (beforeList) setupImageListDragAndDrop(beforeList, sectionId, 'before');
-      if (afterList) setupImageListDragAndDrop(afterList, sectionId, 'after');
       if (completedList) setupImageListDragAndDrop(completedList, sectionId, 'completed');
     }
-  }
+  };
 
   // コメントセクション追加
   function addCommentSection() {
@@ -1855,7 +1960,12 @@
 
     // セクションに画像を追加
     if (!sections[sectionId]) {
-      sections[sectionId] = { type: 'image', photos: { before: [], after: [], completed: [] } };
+      // カテゴリに応じて適切なセクションタイプを決定
+      if (currentImageCategory === 'completed') {
+        sections[sectionId] = { type: 'image', image_type: 'completed', photos: { completed: [] } };
+      } else {
+        sections[sectionId] = { type: 'image', image_type: 'before_after', photos: { before: [], after: [] } };
+      }
     }
     
     // ストック画像の場合は、imageDataオブジェクトとして保存
@@ -2115,7 +2225,12 @@
     // データに追加
     if (!sections[targetSectionId]) return;
     if (!sections[targetSectionId].photos) {
-      sections[targetSectionId].photos = { before: [], after: [], completed: [] };
+      // カテゴリに応じて適切な構造を決定
+      if (targetCategory === 'completed') {
+        sections[targetSectionId].photos = { completed: [] };
+      } else {
+        sections[targetSectionId].photos = { before: [], after: [] };
+      }
     }
     if (!sections[targetSectionId].photos[targetCategory]) {
       sections[targetSectionId].photos[targetCategory] = [];
