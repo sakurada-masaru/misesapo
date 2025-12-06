@@ -164,7 +164,6 @@
     if (code === '3' || code === 3) return 'office';
     if (code === '4' || code === 4) return 'staff';
     if (code === '5' || code === 5) return 'developer';
-    if (code === '6' || code === 6) return 'designer';
     if (code === '7' || code === 7) return 'general_affairs';
     if (code === '8' || code === 8) return 'operation';
     if (code === '9' || code === 9) return 'contractor';
@@ -260,7 +259,6 @@
       office: '事務',
       admin: '管理者',
       developer: '開発者',
-      designer: 'デザイナー',
       general_affairs: '総務',
       operation: '運営',
       contractor: '外部委託',
