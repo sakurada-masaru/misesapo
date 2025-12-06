@@ -722,10 +722,22 @@
   gap: 12px;
 }
 
+/* 施工後セクションは中央に1列表示 */
+.image-grid-completed {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
 .image-category {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* 施工後カテゴリは中央揃え */
+.image-category-completed {
+  align-items: center;
+  max-width: 100%;
 }
 
 .image-category-title {
@@ -759,6 +771,42 @@
 .image-list.drag-over {
   background-color: #fdf2f8;
   border: 2px dashed #FF679C;
+}
+
+/* 施工後セクションは中央に1列表示 */
+.image-grid-completed {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+/* 施工後カテゴリは中央揃え */
+.image-category-completed {
+  align-items: center;
+  max-width: 100%;
+}
+
+/* 施工後リストは中央揃え */
+.image-list-completed {
+  justify-content: center;
+  align-items: center;
+}
+
+/* デフォルト画像（プレースホルダー） */
+.image-placeholder {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+}
+
+.default-no-photo-image {
+  max-width: 200px;
+  max-height: 200px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  opacity: 0.7;
 }
 
 .image-thumb {

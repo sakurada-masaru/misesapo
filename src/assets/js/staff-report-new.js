@@ -6,6 +6,7 @@
 (function() {
   const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
   const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+  const DEFAULT_NO_PHOTO_IMAGE = '/images-report/no-photo-default.png'; // デフォルト画像パス
 
   // データ
   let stores = [];
@@ -388,10 +389,15 @@
             </button>
           </div>
           <div class="section-body">
-            <div class="image-grid">
-              <div class="image-category">
+            <div class="image-grid image-grid-completed">
+              <div class="image-category image-category-completed">
                 <div class="image-category-title completed"><i class="fas fa-star"></i> 施工後</div>
-                <div class="image-list" id="${sectionId}-completed">
+                <div class="image-list image-list-completed" id="${sectionId}-completed">
+                  ${(photos.completed || []).length === 0 ? `
+                    <div class="image-placeholder">
+                      <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
+                    </div>
+                  ` : ''}
                   ${(photos.completed || []).map(url => `
                     <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="completed" data-image-url="${url}">
                       <img src="${url}" alt="Completed" draggable="false">
@@ -446,6 +452,11 @@
               <div class="image-category">
                 <div class="image-category-title before"><i class="fas fa-clock"></i> 作業前</div>
                 <div class="image-list" id="${sectionId}-before">
+                  ${(photos.before || []).length === 0 ? `
+                    <div class="image-placeholder">
+                      <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
+                    </div>
+                  ` : ''}
                   ${(photos.before || []).map(url => `
                     <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="before" data-image-url="${url}">
                       <img src="${url}" alt="Before" draggable="false">
@@ -463,6 +474,11 @@
               <div class="image-category">
                 <div class="image-category-title after"><i class="fas fa-check-circle"></i> 作業後</div>
                 <div class="image-list" id="${sectionId}-after">
+                  ${(photos.after || []).length === 0 ? `
+                    <div class="image-placeholder">
+                      <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
+                    </div>
+                  ` : ''}
                   ${(photos.after || []).map(url => `
                     <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="after" data-image-url="${url}">
                       <img src="${url}" alt="After" draggable="false">
@@ -1711,6 +1727,9 @@
             <div class="image-category">
               <div class="image-category-title before"><i class="fas fa-clock"></i> 作業前</div>
               <div class="image-list" id="${sectionId}-before">
+                <div class="image-placeholder">
+                  <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
+                </div>
                 <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'before')">
                   <i class="fas fa-plus"></i>
                   <span>追加</span>
@@ -1720,6 +1739,9 @@
             <div class="image-category">
               <div class="image-category-title after"><i class="fas fa-check-circle"></i> 作業後</div>
               <div class="image-list" id="${sectionId}-after">
+                <div class="image-placeholder">
+                  <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
+                </div>
                 <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'after')">
                   <i class="fas fa-plus"></i>
                   <span>追加</span>
@@ -1759,10 +1781,13 @@
           </button>
         </div>
         <div class="section-body">
-          <div class="image-grid">
-            <div class="image-category">
+          <div class="image-grid image-grid-completed">
+            <div class="image-category image-category-completed">
               <div class="image-category-title completed"><i class="fas fa-star"></i> 施工後</div>
-              <div class="image-list" id="${sectionId}-completed">
+              <div class="image-list image-list-completed" id="${sectionId}-completed">
+                <div class="image-placeholder">
+                  <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
+                </div>
                 <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'completed')">
                   <i class="fas fa-plus"></i>
                   <span>追加</span>
@@ -1993,6 +2018,12 @@
     // UIに画像を追加
     const container = document.getElementById(`${sectionId}-${category}`);
     const addBtn = container.querySelector('.image-add-btn');
+    
+    // デフォルト画像（placeholder）を削除
+    const placeholder = container.querySelector('.image-placeholder');
+    if (placeholder) {
+      placeholder.remove();
+    }
 
     images.forEach(blobUrl => {
       const imageData = imageStock.find(img => img.blobUrl === blobUrl);
@@ -2249,6 +2280,12 @@
     const targetContainer = document.getElementById(`${targetSectionId}-${targetCategory}`);
     if (!targetContainer) return;
 
+    // デフォルト画像（placeholder）を削除
+    const placeholder = targetContainer.querySelector('.image-placeholder');
+    if (placeholder) {
+      placeholder.remove();
+    }
+    
     const addBtn = targetContainer.querySelector('.image-add-btn');
     const newThumb = createImageThumb(targetSectionId, targetCategory, url);
     targetContainer.insertBefore(newThumb, addBtn);
@@ -2276,6 +2313,19 @@
       if (idx > -1) arr.splice(idx, 1);
     }
     btn.closest('.image-thumb').remove();
+    
+    // 画像がなくなった場合、デフォルト画像を表示
+    const container = document.getElementById(`${sectionId}-${category}`);
+    if (container && arr.length === 0) {
+      const placeholder = container.querySelector('.image-placeholder');
+      if (!placeholder) {
+        const addBtn = container.querySelector('.image-add-btn');
+        const placeholderDiv = document.createElement('div');
+        placeholderDiv.className = 'image-placeholder';
+        placeholderDiv.innerHTML = `<img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">`;
+        container.insertBefore(placeholderDiv, addBtn);
+      }
+    }
   };
 
   // フォーム送信
