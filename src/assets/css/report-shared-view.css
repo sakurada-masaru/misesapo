@@ -147,6 +147,8 @@ body {
     margin: 0 0 15px 0;
     color: #555;
     white-space: pre-wrap;
+    font-size: 1.1rem;
+    line-height: 1.8;
 }
 .image-grid {
     display: grid;
