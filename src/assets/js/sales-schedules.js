@@ -517,6 +517,27 @@ function renderTable() {
       return escapeHtml(name);
     }).filter(name => name) : [];
     
+    // 時刻フォーマット
+    const timeStr = normalized.time || schedule.time_slot || schedule.scheduled_time || '-';
+    let formattedTime = timeStr;
+    if (timeStr && timeStr !== '-' && !timeStr.includes('-')) {
+      // 単一の時刻の場合、終了時刻を計算（duration_minutesから）
+      const startTime = timeStr;
+      if (normalized.duration_minutes || schedule.duration_minutes) {
+        const duration = normalized.duration_minutes || schedule.duration_minutes;
+        const [hours, minutes] = startTime.split(':').map(Number);
+        const startDate = new Date();
+        startDate.setHours(hours, minutes, 0, 0);
+        const endDate = new Date(startDate.getTime() + duration * 60000);
+        const endHours = String(endDate.getHours()).padStart(2, '0');
+        const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+        formattedTime = `${startTime}-${endHours}:${endMinutes}`;
+      }
+    }
+    
+    // 清掃内容を結合
+    const cleaningContent = itemNames.length > 0 ? itemNames.join(', ') : '-';
+    
     return `
       <div class="schedule-card ${isDraft ? 'draft-card' : ''}" data-id="${schedule.id}">
         <div class="schedule-card-header">
@@ -524,58 +545,33 @@ function renderTable() {
         </div>
         <div class="schedule-card-body">
           <div class="schedule-card-row">
-            <div class="schedule-card-cell">
-              <div class="cell-label">日付</div>
-              <div class="cell-value">${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</div>
-            </div>
-            <div class="schedule-card-cell">
-              <div class="cell-label">法人名</div>
-              <div class="cell-value">${escapeHtml(clientName || '-')}</div>
-            </div>
-            <div class="schedule-card-cell">
-              <div class="cell-label">ブランド名</div>
-              <div class="cell-value">${escapeHtml(brandName || '-')}</div>
-            </div>
+            <span class="schedule-card-item">日付：${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</span>
+            <span class="schedule-card-separator">|</span>
+            <span class="schedule-card-item" title="${escapeHtml(clientName || '-')}">${truncateText(clientName || '-', 20)}</span>
           </div>
           <div class="schedule-card-row">
-            <div class="schedule-card-cell">
-              <div class="cell-label">時刻</div>
-              <div class="cell-value">${normalized.time || schedule.time_slot || schedule.scheduled_time || '-'}${normalized.duration_minutes ? ` (${normalized.duration_minutes}分)` : ''}</div>
-            </div>
-            <div class="schedule-card-cell schedule-card-cell-store">
-              <div class="cell-label">店舗名</div>
-              <div class="cell-value">${escapeHtml(displayStoreName)}</div>
-            </div>
+            <span class="schedule-card-item">時刻：${escapeHtml(formattedTime)}</span>
+            <span class="schedule-card-separator">|</span>
+            <span class="schedule-card-item" title="${escapeHtml(brandName || '-')}">${truncateText(brandName || '-', 15)}</span>
+            <span class="schedule-card-separator">|</span>
+            <span class="schedule-card-item" title="${escapeHtml(displayStoreName)}">${truncateText(displayStoreName, 15)}</span>
           </div>
           <div class="schedule-card-divider"></div>
           <div class="schedule-card-row">
-            <div class="schedule-card-cell">
-              <div class="cell-label">清掃内容</div>
-              <div class="cell-value">${itemNames.length > 0 ? itemNames.join(', ') : '-'}</div>
-            </div>
-            <div class="schedule-card-cell">
-              <div class="cell-label">営業担当</div>
-              <div class="cell-value">${sales ? escapeHtml(sales.name || '') : '-'}</div>
-            </div>
-            <div class="schedule-card-cell">
-              <div class="cell-label">担当者氏名</div>
-              <div class="cell-value">${worker ? escapeHtml(worker.name || '') : '未割当'}</div>
-            </div>
+            <span class="schedule-card-item" title="${escapeHtml(cleaningContent)}">清掃内容：${truncateText(cleaningContent, 20)}</span>
+            <span class="schedule-card-separator">|</span>
+            <span class="schedule-card-item">営業担当：${sales ? truncateText(sales.name || '', 15) : '-'}</span>
           </div>
           <div class="schedule-card-divider"></div>
           <div class="schedule-card-row schedule-card-actions">
-            <div class="schedule-card-cell schedule-card-cell-edit">
-              <button class="action-btn edit" title="編集" onclick="editSchedule('${schedule.id}')">
-                <i class="fas fa-edit"></i>
-                <span>編集</span>
-              </button>
-            </div>
-            <div class="schedule-card-cell schedule-card-cell-delete">
-              <button class="action-btn delete" title="削除" onclick="confirmDelete('${schedule.id}')">
-                <i class="fas fa-trash"></i>
-                <span>削除</span>
-              </button>
-            </div>
+            <button class="action-btn edit" title="編集" onclick="editSchedule('${schedule.id}')">
+              <i class="fas fa-edit"></i>
+              <span>編集</span>
+            </button>
+            <button class="action-btn delete" title="削除" onclick="confirmDelete('${schedule.id}')">
+              <i class="fas fa-trash"></i>
+              <span>削除</span>
+            </button>
           </div>
         </div>
       </div>
@@ -969,6 +965,14 @@ function formatDate(dateStr) {
   const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
   const date = new Date(dateStr);
   return `${m}/${d}(${weekdays[date.getDay()]})`;
+}
+
+// 文字数制限関数（最大文字数を超える場合は...表示）
+function truncateText(text, maxLength = 15) {
+  if (!text) return '-';
+  const str = String(text);
+  if (str.length <= maxLength) return str;
+  return str.substring(0, maxLength) + '...';
 }
 
 function getStatusLabel(status) {

@@ -211,39 +211,45 @@
 
 .schedule-card-row {
   display: flex;
-  gap: 12px;
-  padding: 8px 0;
-  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-.schedule-card-cell {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.schedule-card-cell-store {
-  flex: 2;
-}
-
-.schedule-card-cell-edit,
-.schedule-card-cell-delete {
-  flex: 1;
-}
-
-.cell-label {
-  font-size: 0.75rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.cell-value {
+.schedule-card-item {
   font-size: 0.875rem;
   color: #111827;
-  line-height: 1.4;
-  word-break: break-word;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* 各項目の最大幅を設定してレイアウトを安定させる */
+.schedule-card-row:first-child .schedule-card-item:first-child {
+  flex: 0 0 auto;
+  min-width: 100px;
+}
+
+.schedule-card-row:nth-child(2) .schedule-card-item:first-child {
+  flex: 0 0 auto;
+  min-width: 120px;
+}
+
+.schedule-card-row:nth-child(4) .schedule-card-item:first-child {
+  flex: 0 0 auto;
+  min-width: 140px;
+}
+
+.schedule-card-separator {
+  font-size: 0.875rem;
+  color: #d1d5db;
+  flex-shrink: 0;
+  margin: 0 4px;
 }
 
 .schedule-card-divider {
@@ -255,14 +261,11 @@
 .schedule-card-actions {
   padding: 0;
   gap: 8px;
-}
-
-.schedule-card-actions .schedule-card-cell {
-  padding: 0;
+  justify-content: space-between;
 }
 
 .schedule-card-actions .action-btn {
-  width: 100%;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
