@@ -2616,14 +2616,29 @@
               return null;
             }
             
-            // ArrayBufferをBlobに変換してBase64に変換
-            const blob = new Blob([imageData.blobData], { type: imageData.fileType || 'image/jpeg' });
+            let blob;
+            // blobDataが存在する場合はそれを使用、なければblobUrlから取得
+            if (imageData.blobData) {
+              blob = new Blob([imageData.blobData], { type: imageData.fileType || 'image/jpeg' });
+            } else if (imageData.blobUrl) {
+              // blobUrlからBlobを取得
+              const response = await fetch(imageData.blobUrl);
+              blob = await response.blob();
+            } else {
+              console.warn(`No blob data or blobUrl found for image: ${img.imageId}`);
+              return null;
+            }
+            
+            // Base64に変換
             const base64 = await blobToBase64(blob);
             
             // S3にアップロード
             const response = await fetch(`${REPORT_API}/staff/report-images`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${await getFirebaseIdToken()}`
+              },
               body: JSON.stringify({
                 image: base64,
                 category: 'work',
@@ -2632,11 +2647,14 @@
             });
             
             if (!response.ok) {
-              throw new Error('Upload failed');
+              const errorText = await response.text();
+              console.error('Upload failed:', response.status, errorText);
+              throw new Error(`Upload failed: ${response.status}`);
             }
             
             const result = await response.json();
-            return result.image.url;
+            console.log('[uploadSectionImages] Image uploaded:', result);
+            return result.image?.url || result.url || null;
           } catch (error) {
             console.error('Error uploading image:', error);
             return null;
