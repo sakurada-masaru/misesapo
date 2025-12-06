@@ -56,11 +56,13 @@ def create_worker(user_id, name, email, role='admin', role_code='1', department=
         )
         
         with urllib.request.urlopen(req) as response:
-            if response.status == 200:
+            if response.status in [200, 201]:
                 result = json.loads(response.read().decode())
                 print(f'✓ ユーザー {user_id} ({name}) を作成しました')
                 print(f'  メール: {email}')
                 print(f'  ロール: {role} (role_code: {role_code})')
+                if isinstance(result, dict) and 'worker' in result:
+                    print(f'  作成されたID: {result.get("worker", {}).get("id", user_id)}')
                 return True
             else:
                 error_body = response.read().decode()
