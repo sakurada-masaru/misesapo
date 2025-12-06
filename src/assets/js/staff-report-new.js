@@ -2669,11 +2669,16 @@
     return uploadedUrls.filter(url => url !== null);
   }
 
-  // BlobをBase64に変換
+  // BlobをBase64に変換（data:image/jpeg;base64,プレフィックスを除去）
   function blobToBase64(blob) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        // data:image/jpeg;base64,プレフィックスを除去
+        const base64 = dataUrl.split(',')[1];
+        resolve(base64);
+      };
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
