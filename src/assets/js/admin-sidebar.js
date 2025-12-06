@@ -215,7 +215,7 @@
   }
 
   /**
-   * マイページリンクを設定
+   * マイページリンクを設定（AWS Cognito認証のみ使用）
    */
   async function setupMypageLink() {
     const mypageLink = document.getElementById('sidebar-mypage-link');
@@ -252,30 +252,6 @@
           } else if (cognitoUser.email) {
             email = cognitoUser.email;
             console.log('[AdminSidebar] Using email from Cognito:', email);
-          }
-        }
-      }
-
-      // Firebase認証からIDまたはメールアドレスを取得（フォールバック）
-      if (!userId && !email && window.Auth && window.Auth.getCurrentUser) {
-        const user = window.Auth.getCurrentUser();
-        if (user) {
-          if (user.id) {
-            userId = user.id;
-          } else if (user.email) {
-            email = user.email;
-          }
-        }
-      }
-
-      // Auth.getAuthDataから取得（追加のフォールバック）
-      if (!userId && !email && window.Auth && window.Auth.getAuthData) {
-        const authData = window.Auth.getAuthData();
-        if (authData) {
-          if (authData.user?.id) {
-            userId = authData.user.id;
-          } else if (authData.user?.email || authData.email) {
-            email = authData.user?.email || authData.email;
           }
         }
       }
