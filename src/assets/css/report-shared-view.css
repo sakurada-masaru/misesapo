@@ -228,11 +228,17 @@ body {
 .work-content-section {
     padding: 16px 24px;
 }
+/* レポート承認セクション */
+.approval-section {
+    padding: 32px 24px;
+    border-top: 1px solid #eee;
+    background: #f9f9f9;
+}
 /* サンクス画像 */
 .thanks-image-wrapper {
     text-align: center;
-    padding: 32px 24px;
-    background: #fff;
+    padding: 24px 0 0 0;
+    margin-top: 24px;
 }
 .thanks-image {
     max-width: 400px;
@@ -240,12 +246,6 @@ body {
     height: auto;
     display: block;
     margin: 0 auto;
-}
-/* レポート承認セクション */
-.approval-section {
-    padding: 32px 24px;
-    border-top: 1px solid #eee;
-    background: #f9f9f9;
 }
 .approval-title {
     font-size: 1.3rem;
