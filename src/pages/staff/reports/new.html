@@ -284,22 +284,91 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <div class="modal-body">
-        <div class="help-section">
-          <h4><i class="fas fa-list"></i> 清掃項目</h4>
-          <p>実施した清掃項目を追加します（グリストラップ、レンジフードなど）</p>
-        </div>
-        <div class="help-section">
-          <h4><i class="fas fa-image"></i> 画像</h4>
-          <p>作業前・作業後の写真を追加します。カメラで撮影するか、画像倉庫から選択できます。</p>
-        </div>
-        <div class="help-section">
-          <h4><i class="fas fa-comment"></i> コメント</h4>
-          <p>特記事項やメモを追加します。</p>
-        </div>
-        <div class="help-section">
-          <h4><i class="fas fa-tasks"></i> 作業内容</h4>
-          <p>作業の詳細な内容を記載します。</p>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div class="help-content">
+          <section class="help-section">
+            <h4><i class="fas fa-info-circle"></i> 基本情報の入力</h4>
+            <div class="help-item">
+              <h5>1. ブランド名・店舗名</h5>
+              <ul>
+                <li>まずブランド名を選択してください</li>
+                <li>ブランド名を選択すると、そのブランドに紐づく店舗名がドロップダウンに表示されます</li>
+                <li>店舗名はドロップダウンから選択してください</li>
+                <li>ブランド名を変更すると、店舗名はリセットされます</li>
+              </ul>
+            </div>
+            <div class="help-item">
+              <h5>2. 清掃日時</h5>
+              <ul>
+                <li>清掃日を選択してください（必須）</li>
+                <li>開始時刻と終了時刻を入力してください</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="help-section">
+            <h4><i class="fas fa-list"></i> ボタン操作の概要</h4>
+            <div class="help-item">
+              <h5>1. 清掃項目を追加</h5>
+              <p>実施した清掃項目を追加します（グリストラップ、レンジフードなど）</p>
+              <ul>
+                <li>「清掃項目を追加」ボタンをクリック</li>
+                <li>ドロップダウンから既存の清掃項目を選択</li>
+                <li>「その他（自由入力）」を選択すると、自由に項目名を入力できます</li>
+                <li>タイプ（例: 床置き型）や個数（例: 2個）を指定できます</li>
+                <li>未入力の清掃項目は保存時に除外されます</li>
+              </ul>
+            </div>
+            <div class="help-item">
+              <h5>2. 画像を追加</h5>
+              <p>「画像を追加」ボタンをクリックすると、画像セクションの種類を選択できます：</p>
+              <ul>
+                <li><strong>作業前・作業後</strong>：清掃作業の前後の写真を追加</li>
+                <li><strong>施工後</strong>：施工完了後の写真を追加（中央配置で表示）</li>
+              </ul>
+              <p>各画像セクションでは、以下の方法で画像を追加できます：</p>
+              <ul>
+                <li><strong>画像ストック</strong>：一時保存した画像から選択（作業前・作業後・施工後に分類）</li>
+                <li><strong>画像倉庫</strong>：過去にアップロードした画像を日付やカテゴリで検索して選択</li>
+              </ul>
+              <p>画像がない場合は、自動的にデフォルト画像が表示されます。</p>
+            </div>
+            <div class="help-item">
+              <h5>3. コメントを追加</h5>
+              <p>自由形式のコメントを追加します。特記事項や補足情報を記載できます。</p>
+              <ul>
+                <li>空のコメントセクションは保存時に除外されます</li>
+              </ul>
+            </div>
+            <div class="help-item">
+              <h5>4. 作業内容を追加</h5>
+              <p>作業内容の詳細を追加します。実施した作業の詳細を記載できます。</p>
+              <ul>
+                <li>空の作業内容セクションは保存時に除外されます</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="help-section">
+            <h4><i class="fas fa-exclamation-triangle"></i> 注意事項</h4>
+            <ul class="help-warnings">
+              <li>ブランド名、店舗名、清掃日は必須項目です</li>
+              <li>少なくとも1つの項目（清掃項目、画像、コメント、作業内容のいずれか）を追加する必要があります</li>
+              <li>各セクションは右上の「削除」ボタンで個別に削除できます</li>
+              <li>セクションや画像はドラッグ&ドロップで順序を変更できます</li>
+              <li>画像は自動的にS3にアップロードされ、データベースに保存されます</li>
+              <li>画像ストックに保存した画像は、レポート送信時に自動的に画像倉庫に移動されます</li>
+            </ul>
+          </section>
+
+          <section class="help-section">
+            <h4><i class="fas fa-mobile-alt"></i> スマートフォンでの操作</h4>
+            <ul>
+              <li>画面の拡大縮小は無効化されています</li>
+              <li>作業内容やコメントの入力時、キーボードが表示されても画面が正しく調整されます</li>
+              <li>画像をタップすると、拡大表示されます</li>
+            </ul>
+          </section>
         </div>
       </div>
       <div class="modal-footer">
