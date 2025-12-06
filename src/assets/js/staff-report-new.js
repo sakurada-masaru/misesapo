@@ -842,9 +842,7 @@
           brandResults.style.display = 'none';
           
           // ブランド選択時に店舗リストを更新
-          if (storeSearchInput) {
-            updateStoreDropdown();
-          }
+          updateStoreSelect();
         });
       });
     }
@@ -918,15 +916,15 @@
           closeBrandModal();
           
           // ブランド選択時に店舗リストを更新
-          if (storeSearchInput) {
-            updateStorePlaceholder();
-            updateStoreModal();
-            
-            // ブランドが変更された場合、店舗名をリセット
-            if (brandChanged) {
-              document.getElementById('report-store').value = '';
-              document.getElementById('report-store-name').value = '';
-              storeSearchInput.value = '';
+          updateStoreSelect();
+          
+          // ブランドが変更された場合、店舗名をリセット
+          if (brandChanged) {
+            document.getElementById('report-store').value = '';
+            document.getElementById('report-store-name').value = '';
+            const storeSelect = document.getElementById('report-store-select');
+            if (storeSelect) {
+              storeSelect.value = '';
             }
           }
         });
@@ -963,85 +961,83 @@
       });
     }
 
-    // 店舗検索
-    const storeSearchInput = document.getElementById('report-store-search');
-    const storeResults = document.getElementById('store-search-results');
+    // 店舗セレクトボックス
+    const storeSelect = document.getElementById('report-store-select');
     
-    // 店舗名フィールドのプレースホルダーを更新
-    function updateStorePlaceholder() {
-      if (!storeSearchInput) return;
+    // 店舗セレクトボックスを更新する関数
+    function updateStoreSelect() {
+      if (!storeSelect) return;
+      
       const selectedBrandId = document.getElementById('report-brand')?.value;
+      const currentStoreId = document.getElementById('report-store')?.value;
+      
+      // 既存のオプションをクリア（最初のプレースホルダー以外）
+      while (storeSelect.children.length > 1) {
+        storeSelect.removeChild(storeSelect.lastChild);
+      }
       
       if (!selectedBrandId) {
-        storeSearchInput.placeholder = 'ブランド名を選択してください';
-      } else {
-        // ブランドに紐づく店舗があるか確認
-        const brandStores = stores.filter(store => {
-          const storeBrandId = store.brand_id || store.brandId;
-          return storeBrandId === selectedBrandId || String(storeBrandId) === String(selectedBrandId);
-        });
-        
-        if (brandStores.length === 0) {
-          storeSearchInput.placeholder = '該当なし';
-        } else {
-          storeSearchInput.placeholder = '②店舗名 *';
-        }
-      }
-    }
-    
-    // ドロップダウンを表示・更新する関数
-    function updateStoreDropdown() {
-      if (!storeSearchInput || !storeResults) return;
-      
-      const query = storeSearchInput.value.trim();
-      const selectedBrandId = document.getElementById('report-brand')?.value;
-      
-      // 部分一致で検索（空文字の場合は全店舗を表示）
-      let filtered = query.length === 0 
-        ? stores 
-        : stores.filter(store => {
-            const name = (store.store_name || store.name || '').toLowerCase();
-            return name.includes(query.toLowerCase());
-          });
-      
-      // ブランドが選択されている場合はフィルタリング
-      if (selectedBrandId) {
-        filtered = filtered.filter(store => {
-          const storeBrandId = store.brand_id || store.brandId;
-          return storeBrandId === selectedBrandId || String(storeBrandId) === String(selectedBrandId);
-        });
-      }
-      
-      if (filtered.length === 0) {
-        storeResults.innerHTML = '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
-        storeResults.style.display = 'block';
+        // ブランドが選択されていない場合
+        storeSelect.innerHTML = '<option value="">ブランド名を選択してください</option>';
+        storeSelect.disabled = true;
         return;
       }
       
-      storeResults.innerHTML = filtered.map(store => {
-        const name = store.store_name || store.name;
-        const id = store.store_id || store.id;
-        const brandId = store.brand_id || store.brandId;
-        return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}" data-brand-id="${brandId || ''}">${escapeHtml(name)}</div>`;
-      }).join('');
+      // ブランドに紐づく店舗をフィルタリング
+      const brandStores = stores.filter(store => {
+        const storeBrandId = store.brand_id || store.brandId;
+        return storeBrandId === selectedBrandId || String(storeBrandId) === String(selectedBrandId);
+      });
       
-      storeResults.style.display = 'block';
+      if (brandStores.length === 0) {
+        // 店舗がない場合
+        storeSelect.innerHTML = '<option value="">該当なし</option>';
+        storeSelect.disabled = true;
+        // 店舗IDと店舗名をクリア
+        document.getElementById('report-store').value = '';
+        document.getElementById('report-store-name').value = '';
+        return;
+      }
       
-      // クリックイベント
-      storeResults.querySelectorAll('.store-search-item').forEach(item => {
-        if (item.classList.contains('no-results')) return;
-        item.addEventListener('click', function() {
-          const id = this.dataset.id;
-          const name = this.dataset.name;
-          const brandId = this.dataset.brandId;
-          
-          document.getElementById('report-store').value = id;
-          document.getElementById('report-store-name').value = name;
-          storeSearchInput.value = name;
-          storeResults.style.display = 'none';
-          
-          // 店舗選択時にブランド名も自動設定
-          if (brandId && brandSearchInput) {
+      // 店舗がある場合
+      storeSelect.disabled = false;
+      storeSelect.innerHTML = '<option value="">②店舗名 *</option>';
+      
+      // 「未設定」オプションを追加
+      storeSelect.innerHTML += '<option value="">未設定</option>';
+      
+      // 店舗オプションを追加
+      brandStores.forEach(store => {
+        const name = store.store_name || store.name || '';
+        const id = store.store_id || store.id || '';
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = name;
+        if (id === currentStoreId || String(id) === String(currentStoreId)) {
+          option.selected = true;
+        }
+        storeSelect.appendChild(option);
+      });
+    }
+    
+    // セレクトボックスの変更イベント
+    if (storeSelect) {
+      storeSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const storeId = this.value;
+        const storeName = selectedOption.textContent;
+        
+        document.getElementById('report-store').value = storeId || '';
+        document.getElementById('report-store-name').value = (storeId && storeName !== '②店舗名 *' && storeName !== '未設定') ? storeName : '';
+        
+        // 店舗選択時にブランド名も自動設定（未設定の場合は設定しない）
+        if (storeId) {
+          const store = stores.find(s => {
+            const sId = s.store_id || s.id;
+            return sId === storeId || String(sId) === String(storeId);
+          });
+          if (store && store.brand_id && brandSearchInput) {
+            const brandId = store.brand_id || store.brandId;
             const brandName = getBrandName(brandId);
             if (brandName) {
               document.getElementById('report-brand').value = brandId;
@@ -1049,7 +1045,7 @@
               brandSearchInput.value = brandName;
             }
           }
-        });
+        }
       });
     }
     
@@ -1209,8 +1205,8 @@
       }
     });
 
-    // 初期化時に店舗名プレースホルダーを設定
-    updateStorePlaceholder();
+    // 初期化時に店舗セレクトボックスを設定
+    updateStoreSelect();
 
     // 追加ボタン
     document.getElementById('add-cleaning-item').addEventListener('click', addCleaningItemSection);
