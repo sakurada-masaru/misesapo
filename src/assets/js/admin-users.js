@@ -162,24 +162,31 @@
     if (code === '1' || code === 1) return 'admin';
     if (code === '2' || code === 2) return 'sales';
     if (code === '3' || code === 3) return 'office';
-    if (code === '4' || code === 4) return 'staff';
-    if (code === '5' || code === 5) return 'developer';
+    if (code === '4' || code === 4) return 'cleaning';
+    if (code === '5' || code === 5) return 'development';
+    if (code === '6' || code === 6) return 'designer';
     if (code === '7' || code === 7) return 'general_affairs';
-    if (code === '8' || code === 8) return 'operation';
+    if (code === '8' || code === 8) return 'director';
     if (code === '9' || code === 9) return 'contractor';
     if (code === '10' || code === 10) return 'accounting';
     if (code === '11' || code === 11) return 'human_resources';
-    return 'staff';
+    if (code === '12' || code === 12) return 'special_advisor';
+    if (code === '13' || code === 13) return 'field_sales';
+    if (code === '14' || code === 14) return 'inside_sales';
+    if (code === '15' || code === 15) return 'mechanic';
+    if (code === '16' || code === 16) return 'engineer';
+    if (code === '17' || code === 17) return 'part_time';
+    return 'cleaning';
   }
 
   function updateStats() {
     document.getElementById('stat-total').textContent = allUsers.length;
-    document.getElementById('stat-staff').textContent = allUsers.filter(u => u.role === 'staff').length;
+    document.getElementById('stat-staff').textContent = allUsers.filter(u => u.role === 'cleaning').length;
     document.getElementById('stat-sales').textContent = allUsers.filter(u => u.role === 'sales').length;
     document.getElementById('stat-office').textContent = allUsers.filter(u => u.role === 'office').length;
-    document.getElementById('stat-developer').textContent = allUsers.filter(u => u.role === 'developer').length;
+    document.getElementById('stat-developer').textContent = allUsers.filter(u => u.role === 'development').length;
     document.getElementById('stat-admin').textContent = allUsers.filter(u => u.role === 'admin').length;
-    document.getElementById('stat-operation').textContent = allUsers.filter(u => u.role === 'operation').length;
+    document.getElementById('stat-operation').textContent = allUsers.filter(u => u.role === 'director').length;
   }
 
   function filterAndRender() {
@@ -254,16 +261,23 @@
 
   function getRoleLabel(role) {
     const labels = {
-      staff: '清掃員',
+      admin: '管理者',
       sales: '営業',
       office: '事務',
-      admin: '管理者',
-      developer: '開発者',
+      cleaning: '清掃',
+      development: '開発',
+      designer: 'デザイナー',
       general_affairs: '総務',
-      operation: '運営',
+      director: '取締役',
       contractor: '外部委託',
       accounting: '経理',
       human_resources: '人事',
+      special_advisor: 'スペシャルバイザー',
+      field_sales: 'フィールドセールス',
+      inside_sales: 'インサイドセールス',
+      mechanic: 'メカニック',
+      engineer: 'エンジニア',
+      part_time: 'アルバイト',
       other: 'その他'
     };
     return labels[role] || role;
@@ -378,14 +392,20 @@
           'admin': '1',
           'sales': '2',
           'office': '3',
-          'staff': '4',
-          'developer': '5',
+          'cleaning': '4',
+          'development': '5',
           'designer': '6',
           'general_affairs': '7',
-          'operation': '8',
+          'director': '8',
           'contractor': '9',
           'accounting': '10',
-          'human_resources': '11'
+          'human_resources': '11',
+          'special_advisor': '12',
+          'field_sales': '13',
+          'inside_sales': '14',
+          'mechanic': '15',
+          'engineer': '16',
+          'part_time': '17'
         };
         data.role_code = roleCodeMap[data.role] || '4';
         
@@ -477,14 +497,20 @@
               'admin': '1',
               'sales': '2',
               'office': '3',
-              'staff': '4',
-              'developer': '5',
+              'cleaning': '4',
+              'development': '5',
               'designer': '6',
               'general_affairs': '7',
-              'operation': '8',
+              'director': '8',
               'contractor': '9',
               'accounting': '10',
-              'human_resources': '11'
+              'human_resources': '11',
+              'special_advisor': '12',
+              'field_sales': '13',
+              'inside_sales': '14',
+              'mechanic': '15',
+              'engineer': '16',
+              'part_time': '17'
             };
             data.role_code = roleCodeMap[data.role] || existingUser.role_code || '4';
           } else {
@@ -493,14 +519,20 @@
               'admin': '1',
               'sales': '2',
               'office': '3',
-              'staff': '4',
-              'developer': '5',
+              'cleaning': '4',
+              'development': '5',
               'designer': '6',
               'general_affairs': '7',
-              'operation': '8',
+              'director': '8',
               'contractor': '9',
               'accounting': '10',
-              'human_resources': '11'
+              'human_resources': '11',
+              'special_advisor': '12',
+              'field_sales': '13',
+              'inside_sales': '14',
+              'mechanic': '15',
+              'engineer': '16',
+              'part_time': '17'
             };
             data.role_code = roleCodeMap[data.role] || '4';
           }
@@ -511,14 +543,23 @@
             'admin': '1',
             'sales': '2',
             'office': '3',
-            'staff': '4',
-            'developer': '5',
+            'cleaning': '4',
+            'development': '5',
             'designer': '6',
             'general_affairs': '7',
-            'operation': '8',
+            'director': '8',
             'contractor': '9',
             'accounting': '10',
-            'human_resources': '11'
+            'human_resources': '11',
+            'special_advisor': '12',
+            'field_sales': '13',
+            'inside_sales': '14',
+            'mechanic': '15',
+            'engineer': '16',
+            'part_time': '17',
+            'staff': '4',
+            'developer': '5',
+            'operation': '8'
           };
           data.role_code = roleCodeMap[data.role] || '4';
         }
@@ -1033,14 +1074,20 @@
         admin: '1',
         sales: '2',
         office: '3',
-        staff: '4',
-        developer: '5',
+        cleaning: '4',
+        development: '5',
         designer: '6',
         general_affairs: '7',
-        operation: '8',
+        director: '8',
         contractor: '9',
         accounting: '10',
-        human_resources: '11'
+        human_resources: '11',
+        special_advisor: '12',
+        field_sales: '13',
+        inside_sales: '14',
+        mechanic: '15',
+        engineer: '16',
+        part_time: '17'
       };
 
       const roleCode = roleCodeMap[bulkRoleTarget] || '99';

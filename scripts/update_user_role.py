@@ -101,14 +101,20 @@ if __name__ == '__main__':
         'admin': '1',
         'sales': '2',
         'office': '3',
-        'staff': '4',
-        'developer': '5',
+        'cleaning': '4',
+        'development': '5',
         'designer': '6',
         'general_affairs': '7',
-        'operation': '8',
+        'director': '8',
         'contractor': '9',
         'accounting': '10',
-        'human_resources': '11'
+        'human_resources': '11',
+        'special_advisor': '12',
+        'field_sales': '13',
+        'inside_sales': '14',
+        'mechanic': '15',
+        'engineer': '16',
+        'part_time': '17'
     }
     
     role_code = role_code_map.get(role, '4')
