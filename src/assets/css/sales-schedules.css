@@ -205,9 +205,22 @@
 
 .schedule-card-header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.schedule-card-header .schedule-card-field {
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.schedule-card-header .field-label {
+  font-size: 0.75rem;
+}
+
+.schedule-card-header .field-value {
+  font-size: 0.75rem;
 }
 
 .schedule-card-body {
@@ -220,15 +233,13 @@
   overflow: hidden;
 }
 
-.schedule-card-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 8px;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
+.brand-store-row {
+  gap: 12px;
+}
+
+.brand-store-value {
+  font-size: 1rem !important;
+  font-weight: 500;
 }
 
 .schedule-card-container {
@@ -1073,10 +1084,6 @@
     padding: 12px;
   }
 
-  .schedule-card-grid {
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
 
   .schedule-card-field {
     font-size: 0.8rem;

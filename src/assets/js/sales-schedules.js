@@ -541,11 +541,27 @@ function renderTable() {
     return `
       <div class="schedule-card ${isDraft ? 'draft-card' : ''}" data-id="${schedule.id}">
         <div class="schedule-card-header">
+          <div class="schedule-card-field">
+            <span class="field-label">法人名：</span>
+            <span class="field-value" title="${escapeHtml(clientName || '-')}">${truncateText(clientName || '-', 20)}</span>
+          </div>
           <span class="status-badge status-${normalized.status}">${getStatusLabel(normalized.status)}</span>
         </div>
         <div class="schedule-card-body">
-          <div class="schedule-card-grid">
-            <div class="schedule-card-container">
+          <div class="schedule-card-container">
+            <div class="schedule-card-field-row brand-store-row">
+              <div class="schedule-card-field">
+                <span class="field-label">ブランド名：</span>
+                <span class="field-value brand-store-value" title="${escapeHtml(brandName || '-')}">${truncateText(brandName || '-', 15)}</span>
+              </div>
+              <div class="schedule-card-field">
+                <span class="field-label">店舗名：</span>
+                <span class="field-value brand-store-value" title="${escapeHtml(displayStoreName)}">${truncateText(displayStoreName, 15)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="schedule-card-container">
+            <div class="schedule-card-field-row">
               <div class="schedule-card-field">
                 <span class="field-label">日付：</span>
                 <span class="field-value">${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</span>
@@ -555,33 +571,17 @@ function renderTable() {
                 <span class="field-value">${escapeHtml(formattedTime)}</span>
               </div>
             </div>
-            <div class="schedule-card-container">
-              <div class="schedule-card-field">
-                <span class="field-label">法人名：</span>
-                <span class="field-value" title="${escapeHtml(clientName || '-')}">${truncateText(clientName || '-', 20)}</span>
-              </div>
-              <div class="schedule-card-field-row">
-                <div class="schedule-card-field">
-                  <span class="field-label">ブランド名：</span>
-                  <span class="field-value" title="${escapeHtml(brandName || '-')}">${truncateText(brandName || '-', 15)}</span>
-                </div>
-                <div class="schedule-card-field">
-                  <span class="field-label">店舗名：</span>
-                  <span class="field-value" title="${escapeHtml(displayStoreName)}">${truncateText(displayStoreName, 15)}</span>
-                </div>
-              </div>
+          </div>
+          <div class="schedule-card-container">
+            <div class="schedule-card-field">
+              <span class="field-label">清掃内容：</span>
+              <span class="field-value" title="${escapeHtml(cleaningContent)}">${truncateText(cleaningContent, 20)}</span>
             </div>
-            <div class="schedule-card-container">
-              <div class="schedule-card-field">
-                <span class="field-label">清掃内容：</span>
-                <span class="field-value" title="${escapeHtml(cleaningContent)}">${truncateText(cleaningContent, 20)}</span>
-              </div>
-            </div>
-            <div class="schedule-card-container">
-              <div class="schedule-card-field">
-                <span class="field-label">営業担当：</span>
-                <span class="field-value">${sales ? truncateText(sales.name || '', 15) : '-'}</span>
-              </div>
+          </div>
+          <div class="schedule-card-container">
+            <div class="schedule-card-field">
+              <span class="field-label">営業担当：</span>
+              <span class="field-value">${sales ? truncateText(sales.name || '', 15) : '-'}</span>
             </div>
           </div>
           <div class="schedule-card-actions">
