@@ -267,12 +267,14 @@
         setActiveNavItem();
         initSidebarToggle();
         updateRoleBadge();
+        toggleSidebarElementsByRole();
         setupMypageLink();
       });
     } else {
       setActiveNavItem();
       initSidebarToggle();
       updateRoleBadge();
+      toggleSidebarElementsByRole();
       setupMypageLink();
     }
   }
@@ -282,6 +284,9 @@
     init: init,
     setActiveNavItem: setActiveNavItem,
     updateRoleBadge: updateRoleBadge,
+    toggleSidebarElementsByRole: toggleSidebarElementsByRole,
+    getCurrentUserRole: getCurrentUserRole,
+    hasAdminAccess: hasAdminAccess,
     setupMypageLink: setupMypageLink
   };
 
