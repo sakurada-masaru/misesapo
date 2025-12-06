@@ -221,6 +221,21 @@
   color: #fef08a;
 }
 
+.date-time-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.date-time-icon {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
 .date-time-input {
   flex: 1;
   min-width: 0;
@@ -1462,9 +1477,23 @@ body.dark-mode .modal-footer {
     text-align: center;
   }
   
+  .date-time-input-wrapper {
+    gap: 4px;
+  }
+  
+  .date-time-icon {
+    font-size: 0.75rem;
+    color: #9ca3af;
+  }
+  
   .date-time-input {
     font-size: 0.8rem;
     padding: 8px 8px;
+  }
+  
+  .date-time-input::placeholder {
+    color: #9ca3af;
+    opacity: 0.7;
   }
   
   .form-input,
