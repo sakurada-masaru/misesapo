@@ -177,8 +177,8 @@ function renderReport(report) {
             
             const beforePhotosHtml = beforePhotos.length > 0
                 ? `<div class="image-list">
-                     ${beforePhotos.map(url => `
-                       <div class="image-item">
+                     ${beforePhotos.map((url, index) => `
+                       <div class="image-item" data-image-url="${url}">
                          <img src="${url}" alt="${beforeLabel}" loading="lazy" 
                               onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E画像エラー%3C/text%3E%3C/svg%3E';" />
                        </div>
@@ -188,8 +188,8 @@ function renderReport(report) {
             
             const afterPhotosHtml = afterPhotos.length > 0
                 ? `<div class="image-list">
-                     ${afterPhotos.map(url => `
-                       <div class="image-item">
+                     ${afterPhotos.map((url, index) => `
+                       <div class="image-item" data-image-url="${url}">
                          <img src="${url}" alt="${afterLabel}" loading="lazy" 
                               onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E画像エラー%3C/text%3E%3C/svg%3E';" />
                        </div>
@@ -200,7 +200,7 @@ function renderReport(report) {
             return `
               <section class="image-section">
                 <div class="section-header">
-                  <h4 class="section-title">📷 画像</h4>
+                  <h4 class="section-title">画像</h4>
                 </div>
                 <div class="image-grid">
                   <div class="image-category before-category">
@@ -219,7 +219,7 @@ function renderReport(report) {
             return `
               <section class="comment-section">
                 <div class="section-header">
-                  <h4 class="section-title">💬 コメント</h4>
+                  <h4 class="section-title">コメント</h4>
                 </div>
                 <div class="subsection">
                   <p style="white-space: pre-wrap;">${escapeHtml(section.content || '')}</p>
@@ -231,7 +231,7 @@ function renderReport(report) {
             return `
               <section class="work-content-section">
                 <div class="section-header">
-                  <h4 class="section-title">📋 作業内容</h4>
+                  <h4 class="section-title">作業内容</h4>
                 </div>
                 <div class="subsection">
                   <p style="white-space: pre-wrap;">${escapeHtml(section.content || '')}</p>
@@ -245,6 +245,72 @@ function renderReport(report) {
     // レポート本体を表示
     const reportMainEl = document.getElementById('report-main');
     reportMainEl.innerHTML = workItemsHtml + sectionsHtml;
+    
+    // 画像クリックイベントを設定
+    setupImageModal();
+}
+
+// 画像モーダル機能
+function setupImageModal() {
+    const imageItems = document.querySelectorAll('.image-item');
+    
+    imageItems.forEach(item => {
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', function() {
+            const img = this.querySelector('img');
+            if (img && img.src) {
+                openImageModal(img.src);
+            }
+        });
+    });
+}
+
+// 画像モーダルを開く
+function openImageModal(imageSrc) {
+    // モーダルが既に存在する場合は削除
+    const existingModal = document.getElementById('image-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // モーダル要素を作成
+    const modal = document.createElement('div');
+    modal.id = 'image-modal';
+    modal.className = 'image-modal';
+    modal.innerHTML = `
+        <div class="image-modal-overlay"></div>
+        <div class="image-modal-content">
+            <button class="image-modal-close" aria-label="閉じる">&times;</button>
+            <img src="${imageSrc}" alt="拡大画像" class="image-modal-img">
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 閉じるボタンのイベント
+    const closeBtn = modal.querySelector('.image-modal-close');
+    const overlay = modal.querySelector('.image-modal-overlay');
+    
+    const closeModal = () => {
+        modal.remove();
+    };
+    
+    closeBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', closeModal);
+    
+    // ESCキーで閉じる
+    const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+            document.removeEventListener('keydown', handleEsc);
+        }
+    };
+    document.addEventListener('keydown', handleEsc);
+    
+    // モーダルを表示
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
 }
 
 // 満足度評価の処理
