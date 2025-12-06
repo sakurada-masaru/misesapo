@@ -2609,7 +2609,8 @@ def create_schedule(event, headers):
             body_json = json.loads(body.decode('utf-8'))
         
         # スケジュールIDを生成（新形式: SCH-YYYYMMDD-NNN）
-        date_str = body_json.get('date', '')
+        # フロントエンドから送信されるフィールド名に対応（scheduled_date または date）
+        date_str = body_json.get('scheduled_date') or body_json.get('date', '')
         schedule_id = generate_schedule_id(date_str, SCHEDULES_TABLE)
         now = datetime.utcnow().isoformat() + 'Z'
         
@@ -2660,23 +2661,44 @@ def create_schedule(event, headers):
                     ESTIMATES_TABLE.put_item(Item=estimate_item)
                 
                 # DynamoDBに保存するアイテムを作成
+                # フロントエンドから送信されるフィールド名に対応
+                scheduled_date = body_json.get('scheduled_date') or body_json.get('date', '')
+                scheduled_time = body_json.get('scheduled_time') or body_json.get('time_slot', '')
+                store_id = body_json.get('store_id') or body_json.get('client_id')
+                
                 schedule_item = {
                     'id': schedule_id,  # 新形式のID（パーティションキー）
                     'created_at': now,
                     'updated_at': now,
-                    'date': body_json.get('date', ''),
-                    'time_slot': body_json.get('time_slot', ''),
+                    'date': scheduled_date,
+                    'scheduled_date': scheduled_date,  # フロントエンド用に追加
+                    'time_slot': scheduled_time,
+                    'scheduled_time': scheduled_time,  # フロントエンド用に追加
+                    'duration_minutes': body_json.get('duration_minutes', 60),
                     'order_type': body_json.get('order_type', 'regular'),
-                    'client_id': body_json.get('client_id'),
+                    'client_id': store_id,  # store_idをclient_idとして保存（既存のスキーマとの互換性）
+                    'store_id': store_id,  # フロントエンド用に追加
                     'client_name': body_json.get('client_name', ''),
                     'store_name': body_json.get('store_name', ''),
                     'address': body_json.get('address', ''),
                     'phone': body_json.get('phone', ''),
                     'email': body_json.get('email', ''),
                     'cleaning_items': body_json.get('cleaning_items', []),
+                    'work_content': body_json.get('work_content', ''),
                     'notes': body_json.get('notes', ''),
                     'status': body_json.get('status', 'draft'),  # draft, pending, assigned, in_progress, completed, cancelled
                 }
+                
+                # 営業担当者ID（sales_id）を追加
+                sales_id = body_json.get('sales_id')
+                if sales_id:
+                    schedule_item['sales_id'] = sales_id
+                
+                # 清掃員ID（worker_id）を追加
+                worker_id = body_json.get('worker_id')
+                if worker_id:
+                    schedule_item['worker_id'] = worker_id
+                    schedule_item['assigned_to'] = worker_id  # GSI用
                 
                 # 見積もりIDを紐付け（存在する場合）
                 if estimate_id:
