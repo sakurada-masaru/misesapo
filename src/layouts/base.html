@@ -75,6 +75,24 @@
         border-radius: 999px;
         border: 1px solid #e5e7eb;
       }
+      
+      /* Sales pages: hide global header and footer */
+      body[class*="sales-"] #default-header-wrapper,
+      body[class*="sales-"] #normal-header-wrapper,
+      body[class*="sales-"] footer {
+        display: none !important;
+      }
+      
+      /* Sales pages: ensure full height layout */
+      body[class*="sales-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="sales-"] #main {
+        margin: 0;
+        padding: 0;
+      }
     </style>
   </head>
   <body class="theme-pink {{ body_class }}">
