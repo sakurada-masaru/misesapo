@@ -1033,12 +1033,28 @@
         });
       }
       
+      // 結果のHTMLを構築（「未設定」オプションを先頭に追加）
+      let html = '';
+      
+      // ブランドが選択されている場合、「未設定」オプションを追加
+      if (selectedBrandId) {
+        html += `
+          <div class="store-search-item" data-id="" data-name="未設定" style="border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 8px;">
+            <div class="store-search-item-name" style="color: #6b7280; font-style: italic;">未設定</div>
+          </div>
+        `;
+      }
+      
       if (filtered.length === 0) {
-        modalResults.innerHTML = '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
+        if (!selectedBrandId) {
+          modalResults.innerHTML = '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
+        } else {
+          modalResults.innerHTML = html + '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
+        }
         return;
       }
       
-      modalResults.innerHTML = filtered.map(store => {
+      html += filtered.map(store => {
         const name = store.store_name || store.name;
         const id = store.store_id || store.id;
         const brandId = store.brand_id || store.brandId;

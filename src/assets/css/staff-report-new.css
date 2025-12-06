@@ -203,6 +203,11 @@
   gap: 6px;
 }
 
+/* 開始・終了のラベルとアイコンの間隔を密着 */
+.form-row.three-col-inline .date-time-group:not(:first-child) {
+  gap: 0;
+}
+
 .form-row.three-col-inline .date-time-group:last-child {
   border-right: none;
   padding-right: 0;
