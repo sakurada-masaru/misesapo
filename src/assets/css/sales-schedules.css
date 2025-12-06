@@ -207,13 +207,13 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .schedule-card-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -224,7 +224,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto auto;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -232,13 +232,9 @@
 }
 
 .schedule-card-container {
-  background: #fff;
-  border-radius: 8px;
-  padding: 12px;
-  border: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
@@ -250,7 +246,7 @@
   align-items: center;
   gap: 6px;
   font-size: 0.875rem;
-  line-height: 1.5;
+  line-height: 1.4;
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
@@ -258,7 +254,7 @@
 
 .schedule-card-field-row {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
   min-width: 0;
   max-width: 100%;
@@ -296,6 +292,7 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  margin-top: 4px;
 }
 
 .schedule-card-actions .action-btn {
@@ -1071,11 +1068,7 @@
 
   .schedule-card-grid {
     grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .schedule-card-container {
-    padding: 10px;
+    gap: 6px;
   }
 
   .schedule-card-field {
