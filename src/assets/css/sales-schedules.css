@@ -288,9 +288,14 @@
 }
 
 .schedule-card-actions {
+  display: flex;
+  flex-direction: row;
   padding: 0;
   gap: 8px;
   justify-content: space-between;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .schedule-card-actions .action-btn {
