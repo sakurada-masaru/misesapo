@@ -1,1111 +1,120 @@
 @layout('layouts.base')
 @json('data/meta/sales_schedules_new_title.json', $title)
 @json('data/meta/sales_schedules_new_body_class.json', $body_class)
-@json('data/clients.json', clients_data)
-@json('data/service_items.json', service_items_data)
 
-<!-- AWS Services API -->
+<link rel="stylesheet" href="/css/sales-schedules.css" />
+<script src="/js/data_utils.js"></script>
 <script src="/js/aws-services-api.js"></script>
 
 <main id="main" class="container sales-schedules-new">
   <div class="page-header">
-    <a href="/sales/dashboard" class="back-btn">
+    <a href="/sales/schedules" class="back-btn">
       <i class="fas fa-chevron-left"></i>
     </a>
     <h1 class="page-title">スケジュール作成</h1>
   </div>
 
-  <form id="schedule-form" class="schedule-form">
-    <!-- 基本情報 -->
-    <div class="form-section">
-      <h2 class="section-title">
-        <i class="fas fa-calendar-alt"></i>
-        基本情報
-      </h2>
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">日付 <span class="required">必須</span></label>
-          <input type="date" class="form-input" name="date" id="schedule-date" required />
-          <p class="form-hint">清掃予定日を選択してください</p>
-        </div>
-        <div class="form-group">
-          <label class="form-label">時間帯 <span class="required">必須</span></label>
-          <div class="time-slot-inputs">
-            <input type="time" class="form-input" name="start_time" id="start-time" required />
-            <span class="time-separator">〜</span>
-            <input type="time" class="form-input" name="end_time" id="end-time" required />
+  <form id="schedule-form" class="schedule-form-new">
+    <input type="hidden" id="schedule-id" name="id">
+    
+    <div class="form-row">
+      <div class="form-field">
+        <label for="schedule-store-search">店舗・ブランド・法人名 <span class="required">*</span></label>
+        <div class="store-search-wrapper">
+          <div class="store-search-controls">
+            <select id="store-category-filter" class="store-category-filter">
+              <option value="">全て</option>
+              <option value="store">店舗名</option>
+              <option value="brand">ブランド名</option>
+              <option value="client">法人名</option>
+            </select>
+            <input type="text" id="schedule-store-search" placeholder="店舗名、ブランド名、法人名で検索..." autocomplete="off" required>
           </div>
-          <p class="form-hint">作業開始時刻と終了時刻を入力してください</p>
-        </div>
-        <div class="form-group full-width">
-          <label class="form-label">案件タイプ <span class="required">必須</span></label>
-          <select class="form-select" name="order_type" id="order-type" required>
-            <option value="">選択してください</option>
-            <option value="regular">定期清掃</option>
-            <option value="spot">スポット清掃</option>
-            <option value="emergency">緊急対応</option>
-          </select>
-          <p class="form-hint">案件の種類を選択してください</p>
+          <input type="hidden" id="schedule-store" name="store_id">
+          <div class="store-search-results" id="schedule-store-results" style="display: none;"></div>
         </div>
       </div>
     </div>
-
-    <!-- 顧客・店舗情報 -->
-    <div class="form-section">
-      <h2 class="section-title">
-        <i class="fas fa-building"></i>
-        顧客・店舗情報
-      </h2>
-      <div class="form-grid">
-        <div class="form-group full-width">
-          <label class="form-label">顧客・店舗 <span class="required">必須</span></label>
-          <select class="form-select" name="client_id" id="client-select" required>
-            <option value="">顧客・店舗を選択</option>
-          </select>
-          <p class="form-hint">既存の顧客・店舗から選択してください</p>
-        </div>
-        <div class="form-group full-width" id="client-info-display" style="display: none;">
-          <div class="client-info-card">
-            <div class="client-info-item">
-              <span class="client-info-label">会社名:</span>
-              <span class="client-info-value" id="display-company-name">-</span>
-            </div>
-            <div class="client-info-item">
-              <span class="client-info-label">ブランド名:</span>
-              <span class="client-info-value" id="display-brand-name">-</span>
-            </div>
-            <div class="client-info-item">
-              <span class="client-info-label">店舗名:</span>
-              <span class="client-info-value" id="display-store-name">-</span>
-            </div>
-            <div class="client-info-item">
-              <span class="client-info-label">担当者:</span>
-              <span class="client-info-value" id="display-contact-person">-</span>
-            </div>
-            <div class="client-info-item">
-              <span class="client-info-label">メール:</span>
-              <span class="client-info-value" id="display-email">-</span>
-            </div>
-          </div>
-        </div>
-        <input type="hidden" name="client_name" id="client-name">
-        <input type="hidden" name="store_name" id="store-name">
-        <input type="hidden" name="address" id="address">
-        <input type="hidden" name="phone" id="phone">
-        <input type="hidden" name="email" id="email">
+    
+    <div class="form-row">
+      <div class="form-field half">
+        <label for="schedule-date">日付 <span class="required">*</span></label>
+        <input type="date" id="schedule-date" name="scheduled_date" required>
+      </div>
+      <div class="form-field half">
+        <label for="schedule-time">時間 <span class="required">*</span></label>
+        <input type="time" id="schedule-time" name="scheduled_time" required>
       </div>
     </div>
-
-    <!-- 作業内容・見積もり -->
-    <div class="form-section estimate-section-wrapper">
-      <div class="estimate-fixed-header">
-        <div class="estimate-total-bar">
-          <span class="total-label">合計</span>
-          <span class="total-value" id="estimate-total-new">¥0</span>
+    
+    <div class="form-row">
+      <div class="form-field half">
+        <label for="schedule-duration">作業時間（分）</label>
+        <input type="number" id="schedule-duration" name="duration_minutes" value="60" min="15" step="15">
       </div>
-      </div>
-      
-      <div class="estimate-scroll-content">
-        <div class="estimate-section">
-          <div class="section-label"><i class="fas fa-check-circle"></i> 選択中のサービス</div>
-          <div class="selected-services" id="selected-services-new">
-            <div class="empty-hint">
-              <i class="fas fa-hand-pointer"></i>
-              <span>下からサービスを選択</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="estimate-section">
-          <div class="section-label"><i class="fas fa-list"></i> サービス一覧</div>
-          <div class="service-list" id="service-list-new">
-            <div class="loading">読み込み中...</div>
-          </div>
-        </div>
-
-        <div class="estimate-section">
-          <div class="section-label"><i class="fas fa-sticky-note"></i> 見積もりメモ</div>
-          <textarea name="estimate_notes" id="estimate-notes-new" rows="2" placeholder="補足事項があれば入力"></textarea>
-        </div>
+      <div class="form-field half">
+        <label for="schedule-sales">営業担当者</label>
+        <select id="schedule-sales" name="sales_id">
+          <option value="">未設定</option>
+        </select>
       </div>
     </div>
-
-    <!-- 備考 -->
-    <div class="form-section">
-      <h2 class="section-title">
-        <i class="fas fa-sticky-note"></i>
-        備考
-      </h2>
-      <div class="form-grid">
-        <div class="form-group full-width">
-          <label class="form-label">備考・特記事項</label>
-          <textarea class="form-textarea" name="notes" rows="4" placeholder="スケジュールに関する備考や特記事項を入力してください"></textarea>
-          <p class="form-hint">管理者や清掃員への伝達事項があれば入力してください</p>
-        </div>
+    
+    <div class="form-row">
+      <div class="form-field half">
+        <label for="schedule-worker">担当清掃員</label>
+        <select id="schedule-worker" name="worker_id">
+          <option value="">全員（オープン）</option>
+        </select>
       </div>
     </div>
-
-    <!-- フォームアクション -->
+    
+    <div class="form-row">
+      <div class="form-field">
+        <label for="cleaning-items-search">清掃内容</label>
+        <div class="cleaning-items-search-wrapper">
+          <div class="store-search-controls">
+            <select id="cleaning-category-filter" class="store-category-filter">
+              <option value="">全て</option>
+              <option value="service">サービス名</option>
+            </select>
+            <input type="text" id="cleaning-items-search" placeholder="清掃内容（サービス）を検索..." autocomplete="off">
+          </div>
+          <div class="cleaning-items-results" id="cleaning-items-results" style="display: none;"></div>
+        </div>
+        <div class="cleaning-items-selected" id="cleaning-items-selected">
+          <div style="color: #9ca3af; font-size: 0.875rem; padding: 8px;">選択された清掃内容がありません</div>
+        </div>
+        <input type="hidden" id="selected-cleaning-items-json" name="cleaning_items">
+      </div>
+    </div>
+    
+    <div class="form-row">
+      <div class="form-field">
+        <label for="schedule-status">ステータス</label>
+        <select id="schedule-status" name="status">
+          <option value="draft">未確定</option>
+          <option value="scheduled">確定</option>
+          <option value="in_progress">作業中</option>
+          <option value="completed">完了</option>
+          <option value="cancelled">キャンセル</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="form-row">
+      <div class="form-field">
+        <label for="schedule-notes">備考</label>
+        <textarea id="schedule-notes" name="notes" rows="3" placeholder="特記事項があれば入力"></textarea>
+      </div>
+    </div>
+    
+    <div class="form-status" id="form-status"></div>
     <div class="form-actions">
-      <button type="button" class="btn btn-outline" onclick="window.location.href='/sales/dashboard'">
-        <i class="fas fa-times"></i>
-        キャンセル
-      </button>
-      <button type="submit" class="btn btn-primary">
-        <i class="fas fa-save"></i>
-        スケジュールを作成
-      </button>
+      <button type="button" class="btn btn-secondary" onclick="window.location.href='/sales/schedules'">キャンセル</button>
+      <button type="submit" class="btn btn-primary">保存</button>
     </div>
   </form>
-
-  <style>
-    .sales-schedules-new {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 24px;
-      background: #f9fafb;
-      min-height: 100vh;
-    }
-    .page-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #e5e7eb;
-    }
-    .back-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      color: #374151;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-    .back-btn:hover {
-      background: #f9fafb;
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-    .page-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #111827;
-      margin: 0;
-    }
-    .schedule-form {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 32px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .form-section {
-      margin-bottom: 32px;
-    }
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #111827;
-      margin: 0 0 24px 0;
-    }
-    .section-title i {
-      color: var(--primary);
-    }
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .form-group.full-width {
-      grid-column: 1 / -1;
-    }
-    .form-label {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #374151;
-    }
-    .required {
-      color: #ef4444;
-      font-size: 0.75rem;
-      margin-left: 4px;
-    }
-    .form-input,
-    .form-select,
-    .form-textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      transition: all 0.2s;
-      font-family: inherit;
-      box-sizing: border-box;
-    }
-    .form-input:focus,
-    .form-select:focus,
-    .form-textarea:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
-    }
-    .form-textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-    .form-hint {
-      font-size: 0.75rem;
-      color: #6b7280;
-      margin: 0;
-    }
-    .time-slot-inputs {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .time-slot-inputs .form-input {
-      flex: 1;
-    }
-    .time-separator {
-      color: #6b7280;
-      font-weight: 600;
-    }
-    .client-info-card {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .client-info-item {
-      display: flex;
-      gap: 12px;
-    }
-    .client-info-label {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #6b7280;
-      min-width: 80px;
-    }
-    .client-info-value {
-      font-size: 0.875rem;
-      color: #111827;
-    }
-    .cleaning-item {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .cleaning-item-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .cleaning-item-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #111827;
-    }
-    .cleaning-item-remove {
-      background: #ef4444;
-      color: #ffffff;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 12px;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .cleaning-item-remove:hover {
-      background: #dc2626;
-    }
-    .cleaning-item-details {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    .cleaning-item-detail {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .cleaning-item-detail label {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-    .cleaning-item-detail input,
-    .cleaning-item-detail textarea {
-      padding: 8px;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      font-size: 0.875rem;
-    }
-    .cleaning-item-detail textarea {
-      resize: vertical;
-      min-height: 60px;
-    }
-    .cleaning-item-detail.full-width {
-      grid-column: 1 / -1;
-    }
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 32px;
-      padding-top: 32px;
-      border-top: 1px solid #f3f4f6;
-    }
-    .form-actions .btn {
-      min-width: 140px;
-    }
-    .btn {
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      text-decoration: none;
-      cursor: pointer;
-      border: none;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .btn-primary {
-      background: var(--primary, #FF6BA6);
-      color: #ffffff;
-    }
-    .btn-primary:hover {
-      background: var(--primary-dark, #FF5A9A);
-    }
-    .btn-outline {
-      background: #ffffff;
-      color: #374151;
-      border: 1px solid #d1d5db;
-    }
-    .btn-outline:hover {
-      background: #f9fafb;
-    }
-    .btn-sm {
-      padding: 8px 16px;
-      font-size: 0.875rem;
-    }
-    /* 見積もりセクション（仮見積もりパネル形式） */
-    .estimate-section-wrapper {
-      display: flex;
-      flex-direction: column;
-      height: 600px;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #fff;
-    }
-    .estimate-fixed-header {
-      flex-shrink: 0;
-      padding: 12px 16px;
-      background: #fff;
-      border-bottom: 1px solid #eee;
-      z-index: 10;
-    }
-    .estimate-total-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 16px;
-      background: linear-gradient(135deg, var(--primary, #FF6BA6) 0%, #ff8fb3 100%);
-      border-radius: 12px;
-      color: #fff;
-    }
-    .total-label { font-size: 0.85rem; opacity: 0.9; }
-    .total-value { font-size: 1.5rem; font-weight: 700; }
-    .estimate-scroll-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px 16px;
-      padding-bottom: 20px;
-    }
-    .estimate-section {
-      margin-bottom: 16px;
-    }
-    .section-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #666;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .section-label i { color: var(--primary, #FF6BA6); }
-    .estimate-section textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      resize: none;
-    }
-    /* 選択済みサービス */
-    .selected-services {
-      min-height: 60px;
-      background: #f9f9f9;
-      border-radius: 12px;
-      padding: 10px;
-    }
-    .empty-hint {
-      text-align: center;
-      color: #999;
-      padding: 16px;
-      font-size: 0.8rem;
-    }
-    .empty-hint i { margin-right: 6px; }
-    
-    /* 選択されたサービスアイテム */
-    .selected-item {
-      background: #fff;
-      border-radius: 10px;
-      margin-bottom: 8px;
-      border-left: 3px solid var(--primary, #FF6BA6);
-      overflow: hidden;
-    }
-    .selected-item-main {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-    }
-    .selected-item-info {
-      flex: 1;
-      min-width: 0;
-    }
-    .selected-item-name {
-      font-size: 0.85rem;
-      color: #111;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .selected-item-base {
-      font-size: 0.7rem;
-      color: #999;
-    }
-    .selected-item-price {
-      font-weight: 700;
-      color: var(--primary, #FF6BA6);
-      font-size: 0.95rem;
-      margin-right: 8px;
-    }
-    .selected-item-remove {
-      width: 26px;
-      height: 26px;
-      border: none;
-      background: #fee2e2;
-      color: #ef4444;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 0.7rem;
-      flex-shrink: 0;
-    }
-    
-    /* 倍率セレクター */
-    .multiplier-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px 10px;
-      background: #f8f8f8;
-      border-top: 1px solid #eee;
-    }
-    .multiplier-btn {
-      padding: 4px 10px;
-      border: 1px solid #ddd;
-      background: #fff;
-      border-radius: 6px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: #666;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .multiplier-btn.active {
-      background: var(--primary, #FF6BA6);
-      border-color: var(--primary, #FF6BA6);
-      color: #fff;
-    }
-    .multiplier-btn:active {
-      transform: scale(0.95);
-    }
-
-    /* サービス一覧 */
-    .service-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .service-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      background: #fff;
-      border-radius: 10px;
-      border: 1px solid #eee;
-      cursor: pointer;
-    }
-    .service-item:active { background: #f9f9f9; }
-    .service-item.selected {
-      border-color: var(--primary, #FF6BA6);
-      background: rgba(255, 107, 156, 0.05);
-    }
-    .service-name { font-size: 0.85rem; color: #111; }
-    .service-price { font-weight: 600; color: #666; font-size: 0.85rem; }
-    @media (max-width: 768px) {
-      .sales-schedules-new {
-        padding: 16px;
-      }
-      .schedule-form {
-        padding: 24px;
-      }
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-      .time-slot-inputs {
-        flex-direction: column;
-      }
-      .time-separator {
-        display: none;
-      }
-      .cleaning-item-details {
-        grid-template-columns: 1fr;
-      }
-      .form-actions {
-        flex-direction: column-reverse;
-      }
-      .form-actions .btn {
-        width: 100%;
-      }
-    }
-  </style>
-
-  <script>
-    (function() {
-      // グローバル変数
-      let clients = [];       // 営業画面で使う「顧客・店舗」リスト
-      let serviceItems = [];  // サービスマスタ
-
-      // 管理画面と共通のAPIエンドポイント
-      const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-
-      // サービスマスタの読み込み
-      // AWS APIからサービス一覧を取得し、失敗した場合はローカルの service_items_data をフォールバックとして使用
-      async function loadServicesFromApi() {
-        // まずローカルの service_items_data をデフォルトとしてセット（フォールバック用）
-        let fallbackServices = [];
-        if (typeof service_items_data !== 'undefined' && Array.isArray(service_items_data)) {
-          fallbackServices = service_items_data;
-        }
-
-        try {
-          // AWSServicesAPI が読み込まれるまで待機（最大3秒）
-          let retries = 30;
-          while (!window.AWSServicesAPI && retries > 0) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            retries--;
-          }
-
-          if (!window.AWSServicesAPI || !window.AWSServicesAPI.loadServices) {
-            throw new Error('AWSServicesAPI が利用できません。ローカルデータを使用します。');
-          }
-
-          console.log('[sales/schedules/new] Loading services from AWS API...');
-          const data = await window.AWSServicesAPI.loadServices();
-          
-          // APIの戻り値が配列または { items: [] } のどちらでも対応
-          if (Array.isArray(data) && data.length > 0) {
-            serviceItems = data;
-            console.log(`[sales/schedules/new] Loaded ${serviceItems.length} services from AWS API`);
-          } else if (data && Array.isArray(data.items) && data.items.length > 0) {
-            serviceItems = data.items;
-            console.log(`[sales/schedules/new] Loaded ${serviceItems.length} services from AWS API (nested format)`);
-          } else {
-            // APIから空の配列が返された場合は、フォールバックを使用
-            console.warn('[sales/schedules/new] AWS API returned empty data, using fallback');
-            serviceItems = fallbackServices;
-          }
-        } catch (error) {
-          console.warn('[sales/schedules/new] Failed to load services from AWS API, using local fallback:', error);
-          serviceItems = fallbackServices;
-        }
-
-        // 最終的に serviceItems が空の場合は警告
-        if (serviceItems.length === 0) {
-          console.error('[sales/schedules/new] No services available (neither from API nor local data)');
-        } else {
-          console.log(`[sales/schedules/new] Using ${serviceItems.length} services (${serviceItems.length === fallbackServices.length ? 'local fallback' : 'AWS API'})`);
-        }
-      }
-
-      // 顧客・店舗データは、可能であればバックエンドAPIから取得し、
-      // 失敗した場合のみ既存の clients_data（スタブ）をフォールバックとして使用する
-      async function loadClientsFromApi() {
-        try {
-          const [storesRes, rawClientsRes, rawBrandsRes] = await Promise.all([
-            fetch(`${API_BASE}/stores`),
-            fetch(`${API_BASE}/clients`).catch(() => ({ ok: false })),
-            fetch(`${API_BASE}/brands`).catch(() => ({ ok: false }))
-          ]);
-
-          const storesData = await storesRes.json();
-          const stores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
-          
-          let allClients = [];
-          if (rawClientsRes && rawClientsRes.ok) {
-            const clientsData = await rawClientsRes.json();
-            allClients = Array.isArray(clientsData) ? clientsData : (clientsData.items || clientsData.clients || []);
-          }
-          
-          let allBrands = [];
-          if (rawBrandsRes && rawBrandsRes.ok) {
-            const brandsData = await rawBrandsRes.json();
-            allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
-          }
-
-          function getClientName(clientId) {
-            if (!clientId) return '';
-            // EntityFinderを使用してID形式の違いに対応
-            let c = null;
-            if (window.DataUtils?.EntityFinder?.findClient) {
-              c = window.DataUtils.EntityFinder.findClient(allClients, clientId);
-            } else {
-              c = allClients.find(x => x.id === clientId || String(x.id) === String(clientId));
-            }
-            return c ? (c.name || c.company_name || '') : '';
-          }
-
-          function getBrandName(brandId) {
-            if (!brandId) return '';
-            // EntityFinderを使用してID形式の違いに対応
-            let b = null;
-            if (window.DataUtils?.EntityFinder?.findBrand) {
-              b = window.DataUtils.EntityFinder.findBrand(allBrands, brandId);
-            } else {
-              b = allBrands.find(x => x.id === brandId || String(x.id) === String(brandId));
-            }
-            return b ? b.name : '';
-          }
-
-          // stores から営業画面用の clients 配列を組み立てる
-          clients = stores.map(store => ({
-            id: store.id,
-            company_name: getClientName(store.client_id) || store.group_id || store.name || '',
-            brand_name: getBrandName(store.brand_id) || '',
-            store_name: store.name || '',
-            contact_person: store.contact_person || '',
-            email: store.email || store.report_email || '',
-          }));
-        } catch (error) {
-          console.warn('[sales/schedules/new] Failed to load clients from API, using local clients_data if available:', error);
-      if (typeof clients_data !== 'undefined' && clients_data.clients) {
-        clients = clients_data.clients;
-          } else {
-            clients = [];
-      }
-        }
-      }
-
-      // 顧客選択ドロップダウンを初期化
-      function initClientSelect() {
-        const select = document.getElementById('client-select');
-        if (!select) return;
-
-        // 顧客リストを追加
-        clients.forEach(client => {
-          const option = document.createElement('option');
-          option.value = client.id;
-          option.textContent = `${client.company_name} - ${client.store_name}`;
-          if (client.brand_name) {
-            option.textContent = `${client.company_name} (${client.brand_name}) - ${client.store_name}`;
-          }
-          option.dataset.client = JSON.stringify(client);
-          select.appendChild(option);
-        });
-
-        // 顧客選択時の処理
-        select.addEventListener('change', function() {
-          const selectedOption = this.options[this.selectedIndex];
-          if (selectedOption.value) {
-            const client = JSON.parse(selectedOption.dataset.client);
-            displayClientInfo(client);
-          } else {
-            hideClientInfo();
-          }
-        });
-      }
-
-      // 顧客情報を表示
-      function displayClientInfo(client) {
-        document.getElementById('display-company-name').textContent = client.company_name || '-';
-        document.getElementById('display-brand-name').textContent = client.brand_name || '-';
-        document.getElementById('display-store-name').textContent = client.store_name || '-';
-        document.getElementById('display-contact-person').textContent = client.contact_person || '-';
-        document.getElementById('display-email').textContent = client.email || '-';
-
-        // 隠しフィールドに値を設定
-        document.getElementById('client-name').value = client.company_name || '';
-        document.getElementById('store-name').value = client.store_name || '';
-        document.getElementById('email').value = client.email || '';
-        // 住所と電話番号はclients.jsonにないため、空文字列
-        document.getElementById('address').value = '';
-        document.getElementById('phone').value = '';
-
-        document.getElementById('client-info-display').style.display = 'block';
-      }
-
-      // 顧客情報を非表示
-      function hideClientInfo() {
-        document.getElementById('client-info-display').style.display = 'none';
-      }
-
-      // 仮見積もりパネル形式のサービス選択機能
-      let selectedServicesNew = [];
-
-      // 価格を数値に変換する関数
-      function parsePrice(price) {
-        if (typeof price === 'number') {
-          return price;
-        }
-        if (typeof price === 'string') {
-          // 文字列から数値部分を抽出（¥、,、〜などを除去）
-          const numStr = price.replace(/[¥￥,\s〜~]/g, '').replace(/[^\d.]/g, '');
-          const num = parseFloat(numStr);
-          return isNaN(num) ? 0 : num;
-        }
-        return 0;
-      }
-
-      // 価格を表示用にフォーマットする関数
-      function formatPrice(price) {
-        const num = parsePrice(price);
-        return num.toLocaleString();
-      }
-
-      function renderServiceListNew() {
-        const container = document.getElementById('service-list-new');
-        if (!container) return;
-
-        if (serviceItems.length === 0) {
-          container.innerHTML = '<div class="empty-state">サービスがありません</div>';
-          return;
-        }
-
-        container.innerHTML = serviceItems.map(item => {
-          const isSelected = selectedServicesNew.some(s => String(s.id) === String(item.id));
-          const serviceName = item.title || item.name || '';
-          const priceNum = parsePrice(item.price);
-          const itemId = String(item.id); // IDを文字列に統一
-          return `
-            <div class="service-item ${isSelected ? 'selected' : ''}" onclick="toggleServiceNew('${itemId}')" data-service-id="${itemId}">
-              <span class="service-name">${escapeHtml(serviceName)}</span>
-              <span class="service-price">¥${formatPrice(priceNum)}</span>
-          </div>
-          `;
-        }).join('');
-      }
-      
-      window.toggleServiceNew = function(id) {
-        console.log('[sales/schedules/new] toggleServiceNew called with id:', id);
-        console.log('[sales/schedules/new] serviceItems:', serviceItems);
-        console.log('[sales/schedules/new] serviceItems.length:', serviceItems.length);
-        
-        // IDの型を統一（文字列と数値の両方に対応）
-        const item = serviceItems.find(s => String(s.id) === String(id));
-        if (!item) {
-          console.warn('[sales/schedules/new] Service item not found:', id, 'Available IDs:', serviceItems.map(s => s.id));
-          return;
-        }
-
-        console.log('[sales/schedules/new] Found service item:', item);
-
-        const index = selectedServicesNew.findIndex(s => String(s.id) === String(id));
-        if (index >= 0) {
-          selectedServicesNew.splice(index, 1);
-          console.log('[sales/schedules/new] Service removed from selection');
-        } else {
-          // 価格を数値として保存
-          const priceNum = parsePrice(item.price);
-          selectedServicesNew.push({ 
-            ...item, 
-            price: priceNum,  // 数値として保存
-            multiplier: 1 
-          });
-          console.log('[sales/schedules/new] Service added to selection:', selectedServicesNew);
-        }
-
-        renderSelectedServicesNew();
-        renderServiceListNew();
-        updateEstimateTotalNew();
-      };
-      
-      function renderSelectedServicesNew() {
-        const container = document.getElementById('selected-services-new');
-        if (!container) return;
-        
-        if (selectedServicesNew.length === 0) {
-          container.innerHTML = '<div class="empty-hint"><i class="fas fa-hand-pointer"></i><span>下からサービスを選択</span></div>';
-          return;
-        }
-          
-        const multipliers = [1, 1.5, 2, 3];
-
-        container.innerHTML = selectedServicesNew.map(item => {
-          const currentMultiplier = item.multiplier || 1;
-          const basePrice = typeof item.price === 'number' ? item.price : parsePrice(item.price);
-          const calculatedPrice = Math.round(basePrice * currentMultiplier);
-          const serviceName = item.title || item.name || '';
-          
-          return `
-            <div class="selected-item">
-              <div class="selected-item-main">
-                <div class="selected-item-info">
-                  <div class="selected-item-name">${escapeHtml(serviceName)}</div>
-                  <div class="selected-item-base">¥${formatPrice(basePrice)} × ${currentMultiplier}</div>
-            </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span class="selected-item-price">¥${formatPrice(calculatedPrice)}</span>
-                  <button type="button" class="selected-item-remove" onclick="removeServiceNew('${item.id}')">
-                    <i class="fas fa-times"></i>
-                  </button>
-            </div>
-            </div>
-              <div class="multiplier-row">
-                <span style="font-size: 0.7rem; color: #666; margin-right: 8px;">倍率:</span>
-                ${multipliers.map(m => `
-                  <button type="button" class="multiplier-btn ${currentMultiplier === m ? 'active' : ''}" 
-                          onclick="setMultiplierNew('${item.id}', ${m})">
-                    ${m}
-                  </button>
-                `).join('')}
-            </div>
-          </div>
-        `;
-        }).join('');
-      }
-      
-      window.removeServiceNew = function(id) {
-        selectedServicesNew = selectedServicesNew.filter(s => s.id !== id);
-        renderSelectedServicesNew();
-        renderServiceListNew();
-        updateEstimateTotalNew();
-      };
-      
-      window.setMultiplierNew = function(id, multiplier) {
-        const item = selectedServicesNew.find(s => s.id === id);
-        if (item) {
-          item.multiplier = multiplier;
-          renderSelectedServicesNew();
-          updateEstimateTotalNew();
-        }
-      };
-      
-      function updateEstimateTotalNew() {
-        const total = selectedServicesNew.reduce((sum, s) => {
-          const multiplier = s.multiplier || 1;
-          const price = typeof s.price === 'number' ? s.price : parsePrice(s.price);
-          return sum + Math.round(price * multiplier);
-        }, 0);
-        
-        const totalEl = document.getElementById('estimate-total-new');
-        if (totalEl) {
-          totalEl.textContent = `¥${formatPrice(total)}`;
-        }
-      }
-
-      // HTMLエスケープ関数
-      function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-        }
-
-      // フォーム送信
-      const form = document.getElementById('schedule-form');
-      if (form) {
-        // 管理画面と同じAPIエンドポイント
-        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-
-        form.addEventListener('submit', async function(e) {
-          e.preventDefault();
-
-          const formData = new FormData(form);
-          
-          // 時間帯を結合
-          const startTime = formData.get('start_time');
-          const endTime = formData.get('end_time');
-          const timeSlot = `${startTime}-${endTime}`;
-
-          // 作業項目を取得（仮見積もりパネル形式から）
-          const cleaningItemsData = [];
-          const estimateItems = [];
-          let estimateTotal = 0;
-          
-          // selectedServicesNewからデータを生成
-          selectedServicesNew.forEach((item, index) => {
-            const serviceName = item.title || item.name || '';
-            const multiplier = item.multiplier || 1;
-            const basePrice = typeof item.price === 'number' ? item.price : parsePrice(item.price);
-            const calculatedPrice = Math.round(basePrice * multiplier);
-            
-            // 作業項目データ
-            cleaningItemsData.push({
-              name: serviceName,
-              notes: [],
-              quantity: multiplier,
-              unit: null
-            });
-
-            // 見積もり用のアイテムデータ
-            if (calculatedPrice > 0) {
-              estimateItems.push({
-                id: item.id || `service-${index}`,
-                name: serviceName,
-                base_price: basePrice,
-                multiplier: multiplier,
-                price: calculatedPrice
-              });
-              estimateTotal += calculatedPrice;
-            }
-          });
-
-          // スケジュールデータを作成
-          const scheduleData = {
-            date: formData.get('date'),
-            time_slot: timeSlot,
-            order_type: formData.get('order_type'),
-            client_id: formData.get('client_id') || null,
-            client_name: formData.get('client_name') || '',
-            store_name: formData.get('store_name') || '',
-            address: formData.get('address') || '',
-            phone: formData.get('phone') || '',
-            email: formData.get('email') || '',
-            cleaning_items: cleaningItemsData,
-            notes: formData.get('notes') || '',
-            // ステータス: 仮押さえ（管理画面側では draft を仮押さえとして扱う）
-            status: 'draft',
-            created_by: 'sales'
-          };
-
-          // 見積もり情報が存在する場合は追加
-          const estimateNotes = document.getElementById('estimate-notes-new')?.value || '';
-          if (estimateItems.length > 0) {
-            scheduleData.estimate = {
-              items: estimateItems,
-              total: estimateTotal,
-              notes: estimateNotes
-            };
-          }
-
-          console.log('Schedule data (to POST):', scheduleData);
-
-          try {
-            const response = await fetch(`${API_BASE}/schedules`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(scheduleData)
-            });
-
-            if (!response.ok) {
-              const text = await response.text().catch(() => '');
-              console.error('Failed to create schedule:', response.status, text);
-              alert('スケジュールの作成に失敗しました。\n時間をおいて再度お試しください。');
-              return;
-            }
-
-            alert('スケジュール（仮押さえ）を作成しました。');
-            // ダッシュボードのスケジュール画面にリダイレクト
-            window.location.href = '/sales/dashboard#schedule-list';
-          } catch (error) {
-            console.error('Error while creating schedule:', error);
-            alert('スケジュールの作成中にエラーが発生しました。');
-          }
-        });
-      }
-
-      // 初期化
-      (async function initPage() {
-        // 顧客・店舗データをAPI（またはローカルJSON）から読み込み
-        await loadClientsFromApi();
-      initClientSelect();
-      
-        // サービスマスタをAPI（またはローカルJSON）から読み込み
-        await loadServicesFromApi();
-
-        // 仮見積もりパネル形式のサービス一覧を表示（サービス読み込み後に確実に実行）
-        console.log('[sales/schedules/new] Service items loaded:', serviceItems.length);
-        if (serviceItems && serviceItems.length > 0) {
-          renderServiceListNew();
-          renderSelectedServicesNew();
-          console.log('[sales/schedules/new] Service list rendered');
-        } else {
-          // サービスが読み込まれていない場合のエラー表示
-          const container = document.getElementById('service-list-new');
-          if (container) {
-            container.innerHTML = '<div class="empty-state">サービスを読み込み中...</div>';
-          }
-          console.warn('[sales/schedules/new] Service items not loaded yet');
-      }
-
-      // URLパラメータから日付を取得、なければ今日の日付をデフォルトに設定
-      const dateInput = document.getElementById('schedule-date');
-      if (dateInput) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const dateParam = urlParams.get('date');
-        if (dateParam) {
-          dateInput.value = dateParam;
-        } else {
-          const today = new Date();
-          const year = today.getFullYear();
-          const month = String(today.getMonth() + 1).padStart(2, '0');
-          const day = String(today.getDate()).padStart(2, '0');
-          dateInput.value = `${year}-${month}-${day}`;
-        }
-      }
-      })();
-    })();
-  </script>
 </main>
 
-
-
-
-
-
-
-
-
-
+<script src="/js/sales-schedules-new.js"></script>
