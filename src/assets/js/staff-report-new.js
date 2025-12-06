@@ -284,11 +284,13 @@
     console.log('[loadReportToForm] Store name:', { storeId, storeName, reportStoreName: report.store_name });
     
     document.getElementById('report-store-name').value = storeName;
-    const storeSearchInput = document.getElementById('report-store-search');
-    if (storeSearchInput) {
-      storeSearchInput.value = storeName;
-      // readonly属性を確実に設定（モーダルを開くため）
-      storeSearchInput.setAttribute('readonly', 'readonly');
+    const storeSelect = document.getElementById('report-store-select');
+    if (storeSelect) {
+      // セレクトボックスを更新してから値を設定
+      updateStoreSelect();
+      if (storeId) {
+        storeSelect.value = storeId;
+      }
     }
     
     // ブランド情報を設定（店舗から取得）
