@@ -1030,17 +1030,9 @@
           const role = w.role || (w.role_code !== undefined ? getRoleFromCode(w.role_code) : 'staff');
           if (role === 'customer') return false;
           
-          // 全てのユーザーを表示（フィルタリングを緩和）
-          // IDが存在する場合は表示
-          const workerId = String(w.id || w.user_id || '');
-          if (workerId && workerId !== 'N/A') {
-            return true;
-          }
-          
-          // IDがなくても、名前またはメールアドレスがあれば表示
-          const name = (w.name || w.display_name || '').trim();
-          const email = (w.email || w.email_address || '').trim();
-          if (name || email) {
+          // IDが存在する場合は表示（必須）
+          const workerId = String(w.id || w.user_id || '').trim();
+          if (workerId && workerId !== 'N/A' && workerId !== '') {
             return true;
           }
           
@@ -1054,19 +1046,15 @@
           }
           
           // IDを正規化（文字列として扱う）
-          // 5桁形式（W00001）に対応
-          const workerId = String(w.id || w.user_id || '');
-          // IDが存在しない場合は、一時的なIDを生成（表示用）
-          // メールアドレスがあればそれを使用、なければ一時ID
-          const displayId = workerId || (w.email ? `email_${w.email.replace(/[^a-zA-Z0-9]/g, '_')}` : `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+          const workerId = String(w.id || w.user_id || '').trim();
           
           return {
-            id: displayId,
-            name: w.name || w.display_name || '名前未設定',
-            email: w.email || w.email_address || '-',
-            phone: w.phone || w.phone_number || '-',
+            id: workerId,
+            name: (w.name || w.display_name || '').trim() || '名前未設定',
+            email: (w.email || w.email_address || '').trim() || '-',
+            phone: (w.phone || w.phone_number || '').trim() || '-',
             role: role,
-            department: w.department || w.team || '-',
+            department: (w.department || w.team || '').trim() || '-',
             team: w.team || '-',
             status: w.status || (w.active !== undefined ? (w.active ? 'active' : 'inactive') : 'active'),
             created_at: w.created_at || w.created_date,
@@ -1078,7 +1066,22 @@
             originalId: workerId || null
           };
         })
-        .filter(u => u !== null); // nullを除外
+        .filter(u => u !== null && u.id && u.id !== 'N/A' && u.id.trim() !== '') // nullとIDがないものを除外
+        .sort((a, b) => {
+          // IDでソート（W001, W002...の順）
+          const aId = a.id;
+          const bId = b.id;
+          
+          // Wで始まるIDの場合
+          if (aId.startsWith('W') && bId.startsWith('W')) {
+            const aNum = parseInt(aId.substring(1)) || 0;
+            const bNum = parseInt(bId.substring(1)) || 0;
+            return aNum - bNum;
+          }
+          
+          // 通常の文字列比較
+          return aId.localeCompare(bId);
+        });
       
       console.log('Users loaded:', allUsers.length);
       console.log('Sample user:', allUsers[0]);
@@ -1200,7 +1203,20 @@
   }
 
   function getRoleLabel(role) {
-    const labels = { staff: '清掃員', sales: '営業', admin: '管理者', other: 'その他' };
+    const labels = {
+      staff: '清掃員',
+      sales: '営業',
+      office: '事務',
+      admin: '管理者',
+      developer: '開発者',
+      designer: 'デザイナー',
+      general_affairs: '総務',
+      operation: '運営',
+      contractor: '外部委託',
+      accounting: '経理',
+      human_resources: '人事',
+      other: 'その他'
+    };
     return labels[role] || role;
   }
 

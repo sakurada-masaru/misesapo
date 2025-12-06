@@ -1038,12 +1038,13 @@
             const storedCognitoUser = localStorage.getItem('cognito_user');
             if (storedCognitoUser) {
               const parsedUser = JSON.parse(storedCognitoUser);
-              if (parsedUser.email) {
-                userEmail = parsedUser.email;
-                console.log('[Mypage] Using email from stored cognito_user:', userEmail);
-              } else if (parsedUser.id) {
+              // IDを優先（マイページはIDで紐付け）
+              if (parsedUser.id) {
                 userId = parsedUser.id;
                 console.log('[Mypage] Using ID from stored cognito_user:', userId);
+              } else if (parsedUser.email) {
+                userEmail = parsedUser.email;
+                console.log('[Mypage] Using email from stored cognito_user (fallback):', userEmail);
               }
             }
           } catch (e) {
@@ -1055,13 +1056,13 @@
             const cognitoUser = await window.CognitoAuth.getCurrentUser();
             console.log('[Mypage] Cognito user:', cognitoUser);
             if (cognitoUser) {
-              // メールアドレスを優先して使用（cognito_subでの検索がうまくいかない場合があるため）
-              if (cognitoUser.email) {
-                userEmail = cognitoUser.email;
-                console.log('[Mypage] Using email from Cognito:', userEmail);
-              } else if (cognitoUser.id) {
+              // IDを優先（マイページはIDで紐付け）
+              if (cognitoUser.id) {
                 userId = cognitoUser.id;  // DynamoDBのID
                 console.log('[Mypage] Using ID from Cognito:', userId);
+              } else if (cognitoUser.email) {
+                userEmail = cognitoUser.email;
+                console.log('[Mypage] Using email from Cognito (fallback):', userEmail);
               }
             }
           }

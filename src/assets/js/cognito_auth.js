@@ -82,9 +82,9 @@
             id: userInfo ? userInfo.id : cognitoSub,  // DynamoDBのID（重要！）
             cognito_sub: cognitoSub,  // Cognito Sub
             email: payload.email,
-            name: userInfo ? userInfo.name : (payload['custom:name'] || payload.email.split('@')[0]),
-            role: userInfo ? userInfo.role : (payload['custom:role'] || 'staff'),
-            department: userInfo ? userInfo.department : (payload['custom:department'] || '')
+            name: userInfo ? userInfo.name : payload.email.split('@')[0],  // DynamoDBから取得、フォールバックはメールアドレスのローカル部分
+            role: userInfo ? userInfo.role : (payload['custom:role'] || 'staff'),  // DynamoDBから取得、フォールバックはCognito属性
+            department: userInfo ? userInfo.department : (payload['custom:department'] || '')  // DynamoDBから取得、フォールバックはCognito属性
           };
 
           resolve({
@@ -206,12 +206,12 @@
         }
         
         const user = {
-          id: userInfo ? userInfo.id : cognitoSub,  // DynamoDBのID
+          id: userInfo ? userInfo.id : cognitoSub,  // DynamoDBのID（重要！）
           cognito_sub: cognitoSub,  // Cognito Sub
           email: userEmail,
-          name: userInfo ? userInfo.name : (payload['custom:name'] || userEmail.split('@')[0]),
-          role: userInfo ? userInfo.role : (payload['custom:role'] || 'staff'),
-          department: userInfo ? userInfo.department : (payload['custom:department'] || '')
+          name: userInfo ? userInfo.name : userEmail.split('@')[0],  // DynamoDBから取得、フォールバックはメールアドレスのローカル部分
+          role: userInfo ? userInfo.role : (payload['custom:role'] || 'staff'),  // DynamoDBから取得、フォールバックはCognito属性
+          department: userInfo ? userInfo.department : (payload['custom:department'] || '')  // DynamoDBから取得、フォールバックはCognito属性
         };
 
         resolve(user);
