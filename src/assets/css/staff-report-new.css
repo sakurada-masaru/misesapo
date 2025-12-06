@@ -159,6 +159,13 @@
   gap: 10px;
 }
 
+.form-row.three-col-inline {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+}
+
 .form-group {
   display: flex;
   flex-direction: row;

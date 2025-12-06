@@ -911,7 +911,9 @@
 
   // IndexedDBから画像ストックを読み込み
   async function loadImageStockFromDB() {
-    if (!stockDB) return;
+    if (!stockDB) {
+      await initImageStockDB();
+    }
     
     return new Promise((resolve, reject) => {
       const transaction = stockDB.transaction(['images'], 'readonly');
@@ -922,7 +924,10 @@
         imageStock = request.result || [];
         // Blob URLを再生成
         imageStock.forEach(item => {
-          if (item.blobData && !item.blobUrl) {
+          if (item.data && !item.blobUrl) {
+            const blob = new Blob([item.data], { type: item.type || 'image/jpeg' });
+            item.blobUrl = URL.createObjectURL(blob);
+          } else if (item.blobData && !item.blobUrl) {
             item.blobUrl = URL.createObjectURL(new Blob([item.blobData], { type: item.fileType || 'image/jpeg' }));
           }
         });
@@ -1019,6 +1024,11 @@
   function renderImageStock() {
     const stockGrid = document.getElementById('image-stock-grid');
     const clearStockBtn = document.getElementById('clear-stock-btn');
+    
+    if (!stockGrid) {
+      console.warn('image-stock-grid element not found');
+      return;
+    }
 
     if (imageStock.length === 0) {
       stockGrid.innerHTML = `
@@ -1028,19 +1038,25 @@
           <small>ドラッグ&ドロップで各セクションに配置できます</small>
         </div>
       `;
-      clearStockBtn.style.display = 'none';
+      if (clearStockBtn) clearStockBtn.style.display = 'none';
       return;
     }
 
-    clearStockBtn.style.display = 'flex';
-    stockGrid.innerHTML = imageStock.map((imageData, index) => `
-      <div class="image-stock-item" draggable="true" data-image-id="${imageData.id}" data-stock-index="${index}">
-        <img src="${imageData.blobUrl}" alt="Stock image" draggable="false">
-        <button type="button" class="image-stock-item-remove" onclick="removeFromStock('${imageData.id}')">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-    `).join('');
+    if (clearStockBtn) clearStockBtn.style.display = 'flex';
+    stockGrid.innerHTML = imageStock.map((imageData, index) => {
+      if (!imageData.blobUrl) {
+        console.warn('Image data missing blobUrl:', imageData);
+        return '';
+      }
+      return `
+        <div class="image-stock-item" draggable="true" data-image-id="${imageData.id}" data-stock-index="${index}">
+          <img src="${imageData.blobUrl}" alt="Stock image" draggable="false">
+          <button type="button" class="image-stock-item-remove" onclick="removeFromStock('${imageData.id}')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `;
+    }).filter(html => html).join('');
 
     // 各ストックアイテムにドラッグ&ドロップを設定
     stockGrid.querySelectorAll('.image-stock-item').forEach(item => {
