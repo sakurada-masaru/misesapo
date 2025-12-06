@@ -62,10 +62,7 @@
       // キャッシュを無効化するためにタイムスタンプを追加
       const timestamp = new Date().getTime();
       const response = await fetch(`${API_BASE}/workers?t=${timestamp}&_=${Date.now()}`, {
-        cache: 'no-store',
-        headers: {
-          'Pragma': 'no-cache'
-        }
+        cache: 'no-store'
       });
       
       if (!response.ok) {
