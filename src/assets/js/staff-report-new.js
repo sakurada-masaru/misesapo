@@ -254,7 +254,11 @@
     document.getElementById('report-store').value = report.store_id || '';
     document.getElementById('report-store-name').value = report.store_name || '';
     const storeSearchInput = document.getElementById('report-store-search');
-    if (storeSearchInput) storeSearchInput.value = report.store_name || '';
+    if (storeSearchInput) {
+      storeSearchInput.value = report.store_name || '';
+      // readonly属性を確実に設定（モーダルを開くため）
+      storeSearchInput.setAttribute('readonly', 'readonly');
+    }
     
     // ブランド情報を設定（店舗から取得）
     if (report.store_id) {
@@ -267,8 +271,24 @@
             document.getElementById('report-brand').value = brandId;
             document.getElementById('report-brand-name').value = brandName;
             const brandSearchInput = document.getElementById('report-brand-search');
-            if (brandSearchInput) brandSearchInput.value = brandName;
+            if (brandSearchInput) {
+              brandSearchInput.value = brandName;
+              // readonly属性を確実に設定（モーダルを開くため）
+              brandSearchInput.setAttribute('readonly', 'readonly');
+            }
           }
+        }
+      }
+    } else if (report.brand_id) {
+      // ブランドIDが直接指定されている場合
+      const brandName = getBrandName(report.brand_id);
+      if (brandName) {
+        document.getElementById('report-brand').value = report.brand_id;
+        document.getElementById('report-brand-name').value = brandName;
+        const brandSearchInput = document.getElementById('report-brand-search');
+        if (brandSearchInput) {
+          brandSearchInput.value = brandName;
+          brandSearchInput.setAttribute('readonly', 'readonly');
         }
       }
     }
