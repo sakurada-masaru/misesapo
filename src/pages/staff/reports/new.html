@@ -37,18 +37,16 @@
     <div class="report-header-section">
       <div class="form-row two-col">
         <div class="form-group store-search-group">
-          <span class="form-label-inline">ブランド名 <span class="required">*</span></span>
           <div class="store-search-wrapper">
-            <input type="text" id="report-brand-search" class="form-input" placeholder="ブランド名で検索..." autocomplete="off">
+            <input type="text" id="report-brand-search" class="form-input" placeholder="ブランド名 *" autocomplete="off">
             <input type="hidden" id="report-brand" name="brand_id">
             <input type="hidden" id="report-brand-name" name="brand_name">
             <div id="brand-search-results" class="store-search-results" style="display: none;"></div>
           </div>
         </div>
         <div class="form-group store-search-group">
-          <span class="form-label-inline">店舗名 <span class="required">*</span></span>
           <div class="store-search-wrapper">
-            <input type="text" id="report-store-search" class="form-input" placeholder="店舗名で検索..." autocomplete="off">
+            <input type="text" id="report-store-search" class="form-input" placeholder="店舗名 *" autocomplete="off">
             <input type="hidden" id="report-store" name="store_id">
             <input type="hidden" id="report-store-name" name="store_name">
             <div id="store-search-results" class="store-search-results" style="display: none;"></div>
@@ -57,16 +55,13 @@
       </div>
       <div class="form-row three-col-inline">
         <div class="form-group">
-          <span class="form-label-inline">清掃日 <span class="required">*</span></span>
-          <input type="date" id="report-date" name="cleaning_date" class="form-input" required>
+          <input type="date" id="report-date" name="cleaning_date" class="form-input" placeholder="清掃日 *" required>
         </div>
         <div class="form-group">
-          <span class="form-label-inline">開始</span>
-          <input type="time" id="report-start" name="cleaning_start_time" class="form-input">
+          <input type="time" id="report-start" name="cleaning_start_time" class="form-input" placeholder="開始時刻">
         </div>
         <div class="form-group">
-          <span class="form-label-inline">終了</span>
-          <input type="time" id="report-end" name="cleaning_end_time" class="form-input">
+          <input type="time" id="report-end" name="cleaning_end_time" class="form-input" placeholder="終了時刻">
         </div>
       </div>
     </div>
