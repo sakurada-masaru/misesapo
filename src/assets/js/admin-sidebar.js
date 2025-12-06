@@ -317,6 +317,29 @@
   }
 
   /**
+   * 現在のユーザーのロールを取得
+   * @returns {string|null} ロール名、取得できない場合はnull
+   */
+  function getCurrentUserRole() {
+    if (window.Auth && window.Auth.getCurrentUser) {
+      const user = window.Auth.getCurrentUser();
+      if (user && user.role) {
+        return user.role;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * 管理者アクセス権限があるかチェック
+   * @returns {boolean} 管理者以上のロールの場合はtrue
+   */
+  function hasAdminAccess() {
+    const role = getCurrentUserRole();
+    return role && ['admin', 'developer', 'master'].includes(role);
+  }
+
+  /**
    * 初期化
    */
   function init() {
