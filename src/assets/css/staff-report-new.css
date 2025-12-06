@@ -288,6 +288,11 @@
   min-width: 0;
 }
 
+.form-input[readonly] {
+  cursor: pointer;
+  background: rgba(255,255,255,0.95);
+}
+
 .form-input::placeholder {
   color: #9ca3af;
   opacity: 0.8;
