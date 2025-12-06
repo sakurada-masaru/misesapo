@@ -227,7 +227,8 @@ body {
     background: #fff;
 }
 .thanks-image {
-    max-width: 100%;
+    max-width: 400px;
+    width: 60%;
     height: auto;
     display: block;
     margin: 0 auto;
