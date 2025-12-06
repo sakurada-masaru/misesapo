@@ -912,6 +912,25 @@
           if (storeSearchInput) {
             updateStorePlaceholder();
             updateStoreModal();
+            
+            // ブランドに紐づく店舗が1つだけの場合、自動的に店舗名を設定
+            const brandStores = stores.filter(store => {
+              const storeBrandId = store.brand_id || store.brandId;
+              return storeBrandId === id || String(storeBrandId) === String(id);
+            });
+            
+            if (brandStores.length === 1) {
+              const store = brandStores[0];
+              const storeName = store.store_name || store.name || '';
+              const storeId = store.store_id || store.id || '';
+              
+              if (storeName && storeId) {
+                document.getElementById('report-store').value = storeId;
+                document.getElementById('report-store-name').value = storeName;
+                storeSearchInput.value = storeName;
+                console.log('[updateBrandModal] Auto-selected store:', { storeId, storeName });
+              }
+            }
           }
         });
       });
