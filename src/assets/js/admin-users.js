@@ -286,8 +286,56 @@
     return 'staff';
   }
 
+  // 部署名を正規化（組織図に合わせる）
+  function normalizeDepartmentName(department, role) {
+    const dept = (department || '').trim();
+    
+    // ロールに基づいて部署名を正規化
+    // 管理者ロール（admin）は総務部
+    if (role === 'admin') {
+      return '総務部';
+    }
+    
+    // 人事ロールは人事部
+    if (role === 'human_resources') {
+      return '人事部';
+    }
+    
+    // 開発ロールは開発部
+    if (role === 'developer' || role === 'designer' || role === 'engineer') {
+      return '開発部';
+    }
+    
+    // 営業ロールは営業部
+    if (role === 'sales' || role === 'field_sales' || role === 'inside_sales') {
+      return '営業部';
+    }
+    
+    // 事務ロールは営業事務
+    if (role === 'office') {
+      return '営業事務';
+    }
+    
+    // 清掃ロールは清掃員
+    if (role === 'staff') {
+      return '清掃員';
+    }
+    
+    // スペシャルバイザー
+    if (role === 'special_advisor') {
+      return 'スペシャルバイザー';
+    }
+    
+    // 運営ロールは運営本部（ただし表示から除外されているため、別の部署に変更が必要かも）
+    if (role === 'operation') {
+      return '運営本部';
+    }
+    
+    // 既存の部署名をそのまま使用
+    return dept;
+  }
+
   // 部署をセクションに割り当て（組織図に基づいて設定）
-  // TODO: 組織図が確定したら、ここに部署とセクションのマッピングを設定
   function getSectionForDepartment(department) {
     const dept = (department || '').trim();
     
@@ -296,24 +344,27 @@
       return null; // 表示しない
     }
     
-    // フロントオフィス: 営業
-    if (dept === '営業') {
+    // フロントオフィス: 営業事務、営業部（FS営業、IS営業）
+    if (dept === '営業事務' || dept === '営業' || dept === 'FS営業' || dept === 'IS営業') {
       return 'front-office';
     }
     
-    // ミドルオフィス: 営業事務、清掃
-    if (dept === '営業事務' || dept === '清掃') {
+    // ミドルオフィス: 開発部
+    if (dept === '開発' || dept === '開発部') {
       return 'middle-office';
     }
     
-    // バックオフィス: 開発、事務、スペシャルバイザー
-    if (dept === '開発' || dept === '事務' || dept === 'スペシャルバイザー') {
+    // バックオフィス: 人事部、総務部、広報・SNS対策部
+    if (dept === '人事' || dept === '人事部' || 
+        dept === '総務' || dept === '総務部' ||
+        dept === '広報・SNS対策部' || dept === '広報') {
       return 'back-office';
     }
     
-    // 運営本部: 人事、総務、経理、取締役
-    if (dept === '人事' || dept === '総務' || 
-        dept === '経理' || dept === '取締役') {
+    // 運営本部: 清掃員、スペシャルバイザー、取締役
+    if (dept === '清掃' || dept === '清掃員' ||
+        dept === 'スペシャルバイザー' ||
+        dept === '取締役' || dept === '代表取締役') {
       return 'board';
     }
     
