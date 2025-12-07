@@ -543,30 +543,11 @@
   }
 
   function getRoleLabel(role) {
-    const labels = {
-      admin: '管理者',
-      sales: '営業',
-      office: '事務',
-      cleaning: '清掃',
-      staff: '清掃員',
-      developer: '開発者',
-      public_relations: '広報',
-      designer: 'デザイナー',
-      general_affairs: '総務',
-      director: '取締役',
-      operation: '運営',
-      contractor: '外部委託',
-      accounting: '経理',
-      human_resources: '人事',
-      special_advisor: 'スペシャルバイザー',
-      field_sales: 'フィールドセールス',
-      inside_sales: 'インサイドセールス',
-      mechanic: 'メカニック',
-      engineer: 'エンジニア',
-      part_time: 'アルバイト',
-      other: 'その他'
-    };
-    return labels[role] || role;
+    // 管理者のみ表示、その他は空文字を返す
+    if (role === 'admin' || role === '管理者') {
+      return '管理者';
+    }
+    return '';
   }
 
   function renderPagination() {
