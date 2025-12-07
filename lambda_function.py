@@ -3226,42 +3226,53 @@ def get_workers(event, headers):
         firebase_uid = query_params.get('firebase_uid')
         cognito_sub = query_params.get('cognito_sub')
         
-        # スキャンまたはクエリを実行（強整合性読み取りを有効化）
+        # スキャンまたはクエリを実行（強整合性読み取りを有効化、ページネーション対応）
+        workers = []
+        scan_kwargs = {'ConsistentRead': True}
+        
         if cognito_sub:
             # Cognito Subでフィルタ（従業員ログイン用）
-            response = WORKERS_TABLE.scan(
-                FilterExpression=Attr('cognito_sub').eq(cognito_sub),
-                ConsistentRead=True
-            )
+            scan_kwargs['FilterExpression'] = Attr('cognito_sub').eq(cognito_sub)
         elif firebase_uid:
             # Firebase UIDでフィルタ（お客様ログイン用、後方互換性のため残す）
-            response = WORKERS_TABLE.scan(
-                FilterExpression=Attr('firebase_uid').eq(firebase_uid),
-                ConsistentRead=True
-            )
+            scan_kwargs['FilterExpression'] = Attr('firebase_uid').eq(firebase_uid)
         elif role:
             # ロールでフィルタ
-            response = WORKERS_TABLE.scan(
-                FilterExpression=Attr('role').eq(role),
-                ConsistentRead=True
-            )
+            scan_kwargs['FilterExpression'] = Attr('role').eq(role)
         elif status:
             # ステータスでフィルタ
-            response = WORKERS_TABLE.scan(
-                FilterExpression=Attr('status').eq(status),
-                ConsistentRead=True
-            )
+            scan_kwargs['FilterExpression'] = Attr('status').eq(status)
         elif email:
             # メールアドレスでフィルタ
-            response = WORKERS_TABLE.scan(
-                FilterExpression=Attr('email').eq(email),
-                ConsistentRead=True
-            )
-        else:
-            # 全件取得（強整合性読み取りを有効化）
-            response = WORKERS_TABLE.scan(ConsistentRead=True)
+            scan_kwargs['FilterExpression'] = Attr('email').eq(email)
         
-        workers = response.get('Items', [])
+        # フィルタがある場合は、ページネーションで全件取得
+        if 'FilterExpression' in scan_kwargs:
+            while True:
+                response = WORKERS_TABLE.scan(**scan_kwargs)
+                workers.extend(response.get('Items', []))
+                
+                # 次のページがあるか確認
+                if 'LastEvaluatedKey' not in response:
+                    break
+                
+                # 次のページを取得
+                scan_kwargs['ExclusiveStartKey'] = response['LastEvaluatedKey']
+        else:
+            # 全件取得（強整合性読み取りを有効化、ページネーション対応）
+            workers = []
+            scan_kwargs = {'ConsistentRead': True}
+            
+            while True:
+                response = WORKERS_TABLE.scan(**scan_kwargs)
+                workers.extend(response.get('Items', []))
+                
+                # 次のページがあるか確認
+                if 'LastEvaluatedKey' not in response:
+                    break
+                
+                # 次のページを取得
+                scan_kwargs['ExclusiveStartKey'] = response['LastEvaluatedKey']
         
         # レスポンス形式を統一（items配列で返す）
         return {
