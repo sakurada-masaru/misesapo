@@ -70,12 +70,16 @@
             所属情報
           </h3>
           <div class="info-item">
-            <span class="info-label">ロール</span>
+            <span class="info-label">ロール（役職）</span>
             <span class="info-value" id="info-role">-</span>
           </div>
           <div class="info-item">
             <span class="info-label">部署</span>
             <span class="info-value" id="info-department">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">担当業務</span>
+            <span class="info-value" id="info-job">-</span>
           </div>
           <div class="info-item">
             <span class="info-label">ステータス</span>
@@ -218,24 +222,22 @@
               <input type="tel" id="edit-phone" placeholder="090-1234-5678">
             </div>
             <div class="form-group">
-              <label for="edit-role">ロール <span class="required">*</span></label>
+              <label for="edit-role">ロール（役職） <span class="required">*</span></label>
               <select id="edit-role" required>
                 <option value="admin">管理者</option>
-                <option value="sales">営業</option>
-                <option value="office">事務</option>
-                <option value="staff">清掃員</option>
-                <option value="developer">開発者</option>
-                <option value="designer">デザイナー</option>
-                <option value="general_affairs">総務</option>
-                <option value="operation">運営</option>
-                <option value="contractor">外部委託</option>
-                <option value="accounting">経理</option>
-                <option value="human_resources">人事</option>
+                <option value="staff">なし（平社員）</option>
               </select>
+              <small class="form-hint">管理ダッシュボードへのアクセス権限を表します</small>
             </div>
             <div class="form-group">
               <label for="edit-department">部署</label>
-              <input type="text" id="edit-department" placeholder="例: 清掃員、FS営業、経理">
+              <input type="text" id="edit-department" placeholder="例: 取締役会、営業、事務、開発、現場、運営">
+              <small class="form-hint">ユーザー管理ページでカテゴリ分けするために使用します</small>
+            </div>
+            <div class="form-group full">
+              <label for="edit-job">担当業務</label>
+              <input type="text" id="edit-job" placeholder="例: FS営業・清掃、システム開発・プログラミング">
+              <small class="form-hint">ユーザーカードに表示されるバッジ（ステータス）です。複数の業務は「・」で区切ってください</small>
             </div>
             <div class="form-group">
               <label for="edit-status">ステータス <span class="required">*</span></label>
@@ -1129,22 +1131,11 @@
     }
 
     function getRoleLabel(role) {
-      const labels = { 
-        admin: '管理者',
-        sales: '営業', 
-        office: '事務',
-        staff: '清掃員',
-        developer: '開発者',
-        designer: 'デザイナー',
-        general_affairs: '総務',
-        operation: '運営',
-        contractor: '外部委託',
-        accounting: '経理',
-        human_resources: '人事',
-        master: 'マスター',
-        other: 'その他' 
-      };
-      return labels[role] || role;
+      // ロールは「管理者」と「なし」の2種類のみ
+      if (role === 'admin') {
+        return '管理者';
+      }
+      return 'なし';
     }
 
     // ユーザー情報を表示
@@ -1182,6 +1173,14 @@
       document.getElementById('info-phone').textContent = user.phone || '-';
       document.getElementById('info-role').textContent = roleLabel;
       document.getElementById('info-department').textContent = user.department || '-';
+      // 担当業務を表示（「・」で区切られた複数の業務を表示）
+      const jobInfo = user.job || '';
+      if (jobInfo) {
+        const jobs = jobInfo.split('・').map(j => j.trim()).filter(j => j);
+        document.getElementById('info-job').textContent = jobs.join('、');
+      } else {
+        document.getElementById('info-job').textContent = '-';
+      }
       document.getElementById('info-status').textContent = status === 'inactive' ? '無効' : '有効';
       document.getElementById('info-created-at').textContent = formatDate(user.created_at);
       
@@ -1250,8 +1249,10 @@
       document.getElementById('edit-name').value = currentUser.name || '';
       document.getElementById('edit-email').value = currentUser.email || '';
       document.getElementById('edit-phone').value = currentUser.phone || '';
-      document.getElementById('edit-role').value = currentUser.role || 'staff';
+      // ロールは「管理者」か「なし」の2種類のみ
+      document.getElementById('edit-role').value = (currentUser.role === 'admin') ? 'admin' : 'staff';
       document.getElementById('edit-department').value = currentUser.department || '';
+      document.getElementById('edit-job').value = currentUser.job || '';
       document.getElementById('edit-status').value = currentUser.status || 'active';
       document.getElementById('edit-scheduled-start-time').value = currentUser.scheduled_start_time || '09:00';
       document.getElementById('edit-scheduled-end-time').value = currentUser.scheduled_end_time || '18:00';
@@ -1301,27 +1302,15 @@
         phone: document.getElementById('edit-phone').value,
         role: document.getElementById('edit-role').value,
         department: document.getElementById('edit-department').value,
+        job: document.getElementById('edit-job').value,  // 担当業務を追加
         status: document.getElementById('edit-status').value,
         scheduled_start_time: document.getElementById('edit-scheduled-start-time').value,
         scheduled_end_time: document.getElementById('edit-scheduled-end-time').value,
         scheduled_work_hours: parseFloat(document.getElementById('edit-scheduled-work-hours').value) || 8.0
       };
       
-      // ロールコードを設定
-      const roleCodeMap = {
-        'admin': '1',
-        'sales': '2',
-        'office': '3',
-        'staff': '4',
-        'developer': '5',
-        'designer': '6',
-        'general_affairs': '7',
-        'operation': '8',
-        'contractor': '9',
-        'accounting': '10',
-        'human_resources': '11'
-      };
-      data.role_code = roleCodeMap[data.role] || '4';
+      // ロールコードを設定（管理者=1、それ以外=4）
+      data.role_code = (data.role === 'admin') ? '1' : '4';
       
       try {
         const response = await fetch(`${API_BASE}/workers/${currentUser.id}`, {
