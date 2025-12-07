@@ -131,20 +131,11 @@
         </div>
       </div>
       
-      <!-- タイムカードテーブル -->
+      <!-- タイムカードテーブル（水平方向） -->
       <div class="timecard-table-container">
-        <table class="timecard-table" id="timecard-table">
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>曜日</th>
-              <th>出勤</th>
-              <th>退勤</th>
-              <th>休憩</th>
-              <th>実労働</th>
-              <th>残業</th>
-              <th>状態</th>
-            </tr>
+        <table class="timecard-table timecard-table-horizontal" id="timecard-table">
+          <thead id="timecard-thead">
+            <!-- 動的に生成 -->
           </thead>
           <tbody id="timecard-tbody">
             <!-- 動的に生成 -->
@@ -667,6 +658,36 @@
     }
     .timecard-table tbody tr:hover {
       background: #f9fafb;
+    }
+    /* 水平方向タイムカード */
+    .timecard-table-horizontal th:first-child,
+    .timecard-table-horizontal td:first-child {
+      position: sticky;
+      left: 0;
+      background: #ffffff;
+      z-index: 1;
+      border-right: 2px solid #e5e7eb;
+      font-weight: 600;
+    }
+    .timecard-table-horizontal thead th:first-child {
+      background: #f9fafb;
+      z-index: 2;
+    }
+    .timecard-table-horizontal tbody tr:hover td:first-child {
+      background: #f9fafb;
+    }
+    .timecard-table-horizontal th {
+      text-align: center;
+      min-width: 80px;
+    }
+    .timecard-table-horizontal td {
+      text-align: center;
+    }
+    .timecard-table-horizontal .today-column {
+      background: #eff6ff !important;
+    }
+    .timecard-table-horizontal .today-column:hover {
+      background: #dbeafe !important;
     }
     .status-badge-timecard {
       display: inline-block;
@@ -1376,15 +1397,15 @@
       }
     }
     
-    // タイムカードを表示
+    // タイムカードを表示（水平方向）
     function renderTimecard() {
+      const thead = document.getElementById('timecard-thead');
       const tbody = document.getElementById('timecard-tbody');
-      if (!tbody) return;
+      if (!thead || !tbody) return;
       
       // 月の日数を取得
       const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-      const firstDay = new Date(currentYear, currentMonth, 1);
-      const lastDay = new Date(currentYear, currentMonth, daysInMonth);
+      const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
       
       // 出退勤記録を日付でマップ
       const attendanceMap = {};
@@ -1392,62 +1413,89 @@
         attendanceMap[record.date] = record;
       });
       
-      let html = '';
-      const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+      // ヘッダー行を生成
+      let headerHtml = '<tr><th>項目</th>';
+      const todayStr = new Date().toISOString().split('T')[0];
       
       for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(currentYear, currentMonth, day);
         const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const weekday = weekdays[date.getDay()];
-        const record = attendanceMap[dateStr];
+        const isToday = dateStr === todayStr;
+        const headerClass = isToday ? 'today-column' : '';
+        headerHtml += `<th class="${headerClass}">${day}日<br><span style="font-size: 0.75rem; font-weight: normal; color: #6b7280;">${weekday}</span></th>`;
+      }
+      headerHtml += '</tr>';
+      thead.innerHTML = headerHtml;
+      
+      // データ行を生成
+      const rows = [
+        { label: '出勤', key: 'clockIn' },
+        { label: '退勤', key: 'clockOut' },
+        { label: '休憩', key: 'breakTime' },
+        { label: '実労働', key: 'workHours' },
+        { label: '残業', key: 'overtime' },
+        { label: '状態', key: 'status' }
+      ];
+      
+      let bodyHtml = '';
+      rows.forEach(row => {
+        bodyHtml += `<tr><td style="font-weight: 600;">${row.label}</td>`;
         
-        const isToday = dateStr === new Date().toISOString().split('T')[0];
-        const rowClass = isToday ? 'today-row' : '';
-        
-        let statusBadge = '<span class="status-badge-timecard status-absent">未出勤</span>';
-        let clockIn = '-';
-        let clockOut = '-';
-        let breakTime = '-';
-        let workHours = '-';
-        let overtime = '-';
-        
-        if (record) {
-          clockIn = record.clock_in ? formatTime(record.clock_in) : '-';
-          clockOut = record.clock_out ? formatTime(record.clock_out) : '-';
-          breakTime = record.break_time ? `${record.break_time}h` : '-';
-          workHours = record.work_hours ? `${record.work_hours}h` : '-';
-          overtime = record.overtime_hours ? `${record.overtime_hours}h` : '-';
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const record = attendanceMap[dateStr];
+          const isToday = dateStr === todayStr;
+          const cellClass = isToday ? 'today-column' : '';
           
-          if (record.status === 'completed') {
-            if (record.is_late && record.is_early_leave) {
-              statusBadge = '<span class="status-badge-timecard status-late">遅刻・早退</span>';
-            } else if (record.is_late) {
-              statusBadge = `<span class="status-badge-timecard status-late">遅刻 ${record.late_minutes}分</span>`;
-            } else if (record.is_early_leave) {
-              statusBadge = `<span class="status-badge-timecard status-early-leave">早退 ${record.early_leave_minutes}分</span>`;
-            } else {
-              statusBadge = '<span class="status-badge-timecard status-completed">完了</span>';
+          let cellValue = '-';
+          
+          if (record) {
+            switch (row.key) {
+              case 'clockIn':
+                cellValue = record.clock_in ? formatTime(record.clock_in) : '-';
+                break;
+              case 'clockOut':
+                cellValue = record.clock_out ? formatTime(record.clock_out) : '-';
+                break;
+              case 'breakTime':
+                cellValue = record.break_time ? `${record.break_time}h` : '-';
+                break;
+              case 'workHours':
+                cellValue = record.work_hours ? `${record.work_hours}h` : '-';
+                break;
+              case 'overtime':
+                cellValue = record.overtime_hours ? `${record.overtime_hours}h` : '-';
+                break;
+              case 'status':
+                if (record.status === 'completed') {
+                  if (record.is_late && record.is_early_leave) {
+                    cellValue = '<span class="status-badge-timecard status-late">遅刻・早退</span>';
+                  } else if (record.is_late) {
+                    cellValue = `<span class="status-badge-timecard status-late">遅刻 ${record.late_minutes}分</span>`;
+                  } else if (record.is_early_leave) {
+                    cellValue = `<span class="status-badge-timecard status-early-leave">早退 ${record.early_leave_minutes}分</span>`;
+                  } else {
+                    cellValue = '<span class="status-badge-timecard status-completed">完了</span>';
+                  }
+                } else if (record.status === 'working') {
+                  cellValue = '<span class="status-badge-timecard status-working">勤務中</span>';
+                } else {
+                  cellValue = '<span class="status-badge-timecard status-absent">未出勤</span>';
+                }
+                break;
             }
-          } else if (record.status === 'working') {
-            statusBadge = '<span class="status-badge-timecard status-working">勤務中</span>';
+          } else if (row.key === 'status') {
+            cellValue = '<span class="status-badge-timecard status-absent">未出勤</span>';
           }
+          
+          bodyHtml += `<td class="${cellClass}">${cellValue}</td>`;
         }
         
-        html += `
-          <tr class="${rowClass}">
-            <td>${day}日</td>
-            <td>${weekday}</td>
-            <td>${clockIn}</td>
-            <td>${clockOut}</td>
-            <td>${breakTime}</td>
-            <td>${workHours}</td>
-            <td>${overtime}</td>
-            <td>${statusBadge}</td>
-          </tr>
-        `;
-      }
+        bodyHtml += '</tr>';
+      });
       
-      tbody.innerHTML = html;
+      tbody.innerHTML = bodyHtml;
       
       // 月表示を更新
       document.getElementById('month-display').textContent = `${currentYear}年${currentMonth + 1}月`;
