@@ -65,10 +65,13 @@
     async function loadStores() {
       try {
         const res = await fetch(`${API_BASE}/stores`);
-        allStores = await res.json();
+        const storesData = await res.json();
+        // レスポンスが配列でない場合の処理（itemsやstoresプロパティから取得）
+        allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
         populateStoreFilters();
       } catch (e) {
         console.error('Failed to load stores:', e);
+        allStores = []; // エラー時は空配列を設定
       }
     }
 
