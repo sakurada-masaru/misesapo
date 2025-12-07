@@ -246,8 +246,8 @@
           loadingEl.style.display = 'block';
           loadingEl.textContent = 'ユーザーが見つかりませんでした';
         }
-        // 出退勤セクションも空にする
-        renderAttendanceSections();
+        // 出退勤管理セクションは非表示
+        // renderAttendanceSections();
         return;
       }
       
@@ -1238,7 +1238,8 @@
     }
     
     saveAttendanceRecords();
-    renderAttendanceSections();
+    // 出退勤管理セクションは非表示
+    // renderAttendanceSections();
   };
 
   // 一括ロール割り当て
