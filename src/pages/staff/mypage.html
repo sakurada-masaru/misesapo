@@ -304,27 +304,41 @@
       align-items: start;
     }
     .draggable-section {
-      cursor: move;
+      cursor: default;
       transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .edit-mode .draggable-section {
+      cursor: move;
     }
     .draggable-section.dragging {
       opacity: 0.5;
       transform: scale(0.95);
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
     }
     .draggable-section.drag-over {
       border: 2px dashed var(--primary, #3b82f6);
       background: #eff6ff;
     }
     .drag-handle {
-      cursor: move;
+      cursor: default;
       user-select: none;
     }
-    .drag-handle:hover {
+    .edit-mode .drag-handle {
+      cursor: move;
+    }
+    .edit-mode .drag-handle:hover {
       background: #f3f4f6;
       border-radius: 6px;
       padding: 4px 8px;
       margin: -4px -8px;
+    }
+    .edit-mode .drag-handle .fa-grip-vertical {
+      opacity: 1;
+    }
+    .drag-handle .fa-grip-vertical {
+      opacity: 0;
+      transition: opacity 0.2s;
     }
     .loading {
       text-align: center;
@@ -3263,4 +3277,5 @@
     });
   </script>
 </main>
+
 
