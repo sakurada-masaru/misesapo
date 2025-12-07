@@ -61,31 +61,82 @@
           // ユーザー情報を取得
           const payload = result.getIdToken().payload;
           const cognitoSub = payload.sub;
+          const userEmail = payload.email;
           
-          // DynamoDBからユーザー情報を取得（Cognito Subで検索）
+          // DynamoDBからユーザー情報を取得（メールアドレスとCognito Subの両方で検索）
           let userInfo = null;
+          const apiBaseUrl = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+          const timestamp = new Date().getTime();
+          
           try {
-            const apiBaseUrl = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-            const response = await fetch(`${apiBaseUrl}/workers?cognito_sub=${encodeURIComponent(cognitoSub)}`);
-            if (response.ok) {
-              const workers = await response.json();
-              const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
-              if (workersArray.length > 0) {
-                userInfo = workersArray[0];
+            // まずメールアドレスで検索（キャッシュ無効化）
+            if (userEmail) {
+              const emailResponse = await fetch(`${apiBaseUrl}/workers?email=${encodeURIComponent(userEmail)}&t=${timestamp}&_=${Date.now()}`, {
+                cache: 'no-store'
+              });
+              if (emailResponse.ok) {
+                const workers = await emailResponse.json();
+                const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+                if (workersArray.length > 0) {
+                  // クライアント側でフィルタリング
+                  const matchingUser = workersArray.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
+                  if (matchingUser && matchingUser.id) {
+                    userInfo = matchingUser;
+                    console.log('[CognitoAuth] Found user by email from DynamoDB:', userInfo.name, 'ID:', userInfo.id);
+                  }
+                }
+              }
+            }
+            
+            // メールアドレスで見つからない場合、Cognito Subで検索
+            if (!userInfo && cognitoSub) {
+              const subResponse = await fetch(`${apiBaseUrl}/workers?cognito_sub=${encodeURIComponent(cognitoSub)}&t=${timestamp}&_=${Date.now()}`, {
+                cache: 'no-store'
+              });
+              if (subResponse.ok) {
+                const workers = await subResponse.json();
+                const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+                if (workersArray.length > 0) {
+                  // クライアント側でフィルタリング
+                  const matchingUser = workersArray.find(u => u.cognito_sub === cognitoSub);
+                  if (matchingUser && matchingUser.id) {
+                    userInfo = matchingUser;
+                    console.log('[CognitoAuth] Found user by cognito_sub from DynamoDB:', userInfo.name, 'ID:', userInfo.id);
+                  }
+                }
               }
             }
           } catch (error) {
-            console.warn('[CognitoAuth] Could not fetch user info from DynamoDB:', error);
+            console.error('[CognitoAuth] Error fetching user info from DynamoDB:', error);
+            reject({
+              success: false,
+              message: 'ユーザー情報の取得に失敗しました。しばらく待ってから再度お試しください。'
+            });
+            return;
           }
           
+          // ユーザー情報が取得できない場合はエラー
+          if (!userInfo || !userInfo.id) {
+            console.error('[CognitoAuth] User not found in DynamoDB. Email:', userEmail, 'CognitoSub:', cognitoSub);
+            reject({
+              success: false,
+              message: 'ユーザー情報が見つかりません。管理者にお問い合わせください。'
+            });
+            return;
+          }
+          
+          // DynamoDBから取得したIDを使用（重要！）
           const user = {
-            id: userInfo ? userInfo.id : cognitoSub,  // DynamoDBのID（重要！）
+            id: userInfo.id,  // DynamoDBのID（必須）
             cognito_sub: cognitoSub,  // Cognito Sub
-            email: payload.email,
-            name: userInfo ? userInfo.name : payload.email.split('@')[0],  // DynamoDBから取得、フォールバックはメールアドレスのローカル部分
-            role: userInfo ? userInfo.role : (payload['custom:role'] || 'staff'),  // DynamoDBから取得、フォールバックはCognito属性
-            department: userInfo ? userInfo.department : (payload['custom:department'] || '')  // DynamoDBから取得、フォールバックはCognito属性
+            email: userInfo.email || userEmail,
+            name: userInfo.name || userEmail.split('@')[0],
+            role: userInfo.role || (payload['custom:role'] || 'staff'),
+            department: userInfo.department || (payload['custom:department'] || '')
           };
+
+          // ユーザー情報をlocalStorageに保存（確実にIDを保存）
+          localStorage.setItem('cognito_user', JSON.stringify(user));
 
           resolve({
             success: true,
@@ -146,7 +197,7 @@
         const cognitoSub = payload.sub;
         const userEmail = payload.email;
         
-        // ユーザー情報を取得（ローカルJSONを優先、APIをフォールバック）
+        // ユーザー情報を取得（DynamoDBから確実に取得）
         let userInfo = null;
         const apiBaseUrl = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
         
@@ -154,7 +205,7 @@
           // キャッシュを無効化するためにタイムスタンプを追加
           const timestamp = new Date().getTime();
           
-          // まずAWS APIから最新データを取得
+          // まずメールアドレスで検索（キャッシュ無効化）
           if (userEmail) {
             const emailResponse = await fetch(`${apiBaseUrl}/workers?email=${encodeURIComponent(userEmail)}&t=${timestamp}&_=${Date.now()}`, {
               cache: 'no-store'
@@ -163,66 +214,93 @@
               const workers = await emailResponse.json();
               const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
               if (workersArray.length > 0) {
-                // APIがフィルタリングしない場合に備えてクライアント側でもフィルタリング
+                // クライアント側でフィルタリング
                 const matchingUser = workersArray.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
-                if (matchingUser) {
+                if (matchingUser && matchingUser.id) {
                   userInfo = matchingUser;
-                  console.log('[CognitoAuth] Found user by email from API:', userInfo.name);
+                  console.log('[CognitoAuth] Found user by email from DynamoDB:', userInfo.name, 'ID:', userInfo.id);
                 }
               }
             }
           }
           
-          // APIで取得できない場合のみ、ローカルのworkers.jsonをフォールバックとして使用
-          if (!userInfo && userEmail) {
-            console.warn('[CognitoAuth] API取得に失敗、ローカルのworkers.jsonを試行');
-            try {
-              const localResponse = await fetch(`/data/workers.json?t=${timestamp}&_=${Date.now()}`, {
-                cache: 'no-store'
-              });
-              if (localResponse.ok) {
-                const localWorkers = await localResponse.json();
-                if (Array.isArray(localWorkers) && localWorkers.length > 0) {
-                  const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
-                  if (matchingUser) {
-                    userInfo = matchingUser;
-                    console.log('[CognitoAuth] Found user from local data (fallback):', userInfo.name);
-                  }
-                }
-              }
-            } catch (localError) {
-              console.log('[CognitoAuth] Local workers.json also not available');
-            }
-          }
-          
-          // まだ見つからない場合、Cognito Subで検索
+          // メールアドレスで見つからない場合、Cognito Subで検索
           if (!userInfo && cognitoSub) {
-            const subResponse = await fetch(`${apiBaseUrl}/workers?cognito_sub=${encodeURIComponent(cognitoSub)}`);
+            const subResponse = await fetch(`${apiBaseUrl}/workers?cognito_sub=${encodeURIComponent(cognitoSub)}&t=${timestamp}&_=${Date.now()}`, {
+              cache: 'no-store'
+            });
             if (subResponse.ok) {
               const workers = await subResponse.json();
               const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
               if (workersArray.length > 0) {
                 // クライアント側でフィルタリング
                 const matchingUser = workersArray.find(u => u.cognito_sub === cognitoSub);
-                if (matchingUser) {
+                if (matchingUser && matchingUser.id) {
                   userInfo = matchingUser;
-                  console.log('[CognitoAuth] Found user by cognito_sub:', userInfo.name);
+                  console.log('[CognitoAuth] Found user by cognito_sub from DynamoDB:', userInfo.name, 'ID:', userInfo.id);
                 }
               }
             }
           }
+          
+          // まだ見つからない場合、ローカルストレージから取得（フォールバック）
+          if (!userInfo) {
+            try {
+              const storedCognitoUser = localStorage.getItem('cognito_user');
+              if (storedCognitoUser) {
+                const parsedUser = JSON.parse(storedCognitoUser);
+                if (parsedUser.id && parsedUser.id !== cognitoSub) {
+                  // ローカルストレージのIDがcognitoSubでない場合、そのIDで再検索
+                  const idResponse = await fetch(`${apiBaseUrl}/workers/${parsedUser.id}?t=${timestamp}&_=${Date.now()}`, {
+                    cache: 'no-store'
+                  });
+                  if (idResponse.ok) {
+                    userInfo = await idResponse.json();
+                    console.log('[CognitoAuth] Found user by stored ID from DynamoDB:', userInfo.name, 'ID:', userInfo.id);
+                  }
+                }
+              }
+            } catch (localError) {
+              console.warn('[CognitoAuth] Could not use stored user info:', localError);
+            }
+          }
         } catch (error) {
-          console.warn('[CognitoAuth] Could not fetch user info:', error);
+          console.error('[CognitoAuth] Error fetching user info from DynamoDB:', error);
         }
         
+        // ユーザー情報が取得できない場合は警告（ログイン時ではないため、エラーにはしない）
+        if (!userInfo || !userInfo.id) {
+          console.warn('[CognitoAuth] User not found in DynamoDB. Email:', userEmail, 'CognitoSub:', cognitoSub);
+          // ローカルストレージから取得を試みる（最後のフォールバック）
+          try {
+            const storedCognitoUser = localStorage.getItem('cognito_user');
+            if (storedCognitoUser) {
+              const parsedUser = JSON.parse(storedCognitoUser);
+              if (parsedUser.id) {
+                resolve(parsedUser);
+                return;
+              }
+            }
+          } catch (e) {
+            console.warn('[CognitoAuth] Could not parse stored user:', e);
+          }
+          // それでも見つからない場合はnullを返す
+          resolve(null);
+          return;
+        }
+        
+        // DynamoDBから取得したIDを使用（重要！）
         const user = {
-          id: userInfo ? userInfo.id : cognitoSub,  // DynamoDBのID（重要！）
+          id: userInfo.id,  // DynamoDBのID（必須）
           cognito_sub: cognitoSub,  // Cognito Sub
-          email: userEmail,
-          name: userInfo ? userInfo.name : userEmail.split('@')[0],  // DynamoDBから取得、フォールバックはメールアドレスのローカル部分
-          role: userInfo ? userInfo.role : (payload['custom:role'] || 'staff'),  // DynamoDBから取得、フォールバックはCognito属性
-          department: userInfo ? userInfo.department : (payload['custom:department'] || '')  // DynamoDBから取得、フォールバックはCognito属性
+          email: userInfo.email || userEmail,
+          name: userInfo.name || userEmail.split('@')[0],
+          role: userInfo.role || (payload['custom:role'] || 'staff'),
+          department: userInfo.department || (payload['custom:department'] || '')
         };
+        
+        // ユーザー情報をlocalStorageに保存（確実にIDを保存）
+        localStorage.setItem('cognito_user', JSON.stringify(user));
 
         resolve(user);
       });
