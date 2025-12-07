@@ -152,10 +152,14 @@
           return false;
         })
         .map(w => {
-          // roleの判定（role_codeやroleフィールドから）
-          let role = w.role || 'staff';
-          if (w.role_code !== undefined) {
-            role = getRoleFromCode(w.role_code);
+          // roleの判定（roleフィールドを優先、存在しない場合のみrole_codeから変換）
+          let role = w.role;
+          if (!role || role === '') {
+            if (w.role_code !== undefined && w.role_code !== null) {
+              role = getRoleFromCode(w.role_code);
+            } else {
+              role = 'staff';
+            }
           }
           
           // IDを正規化（文字列として扱う）
