@@ -3289,7 +3289,11 @@ def get_worker_detail(worker_id, headers):
     従業員詳細を取得
     """
     try:
-        response = WORKERS_TABLE.get_item(Key={'id': worker_id})
+        # 強整合性読み取りを有効化（常に最新データを取得）
+        response = WORKERS_TABLE.get_item(
+            Key={'id': worker_id},
+            ConsistentRead=True
+        )
         
         if 'Item' not in response:
             return {
