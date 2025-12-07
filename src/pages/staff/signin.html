@@ -260,7 +260,9 @@
             // 説明文を更新（認証情報がある場合）
             if (descriptionEl) {
               descriptionEl.innerHTML = `
-                認証コードを確認。<strong>${existingUser.name || existingUser.email}様</strong>ですね。ユーザー情報を入力しログインしてください。<br />
+                認証コードを確認。<br />
+                <strong>${existingUser.name || existingUser.email}様</strong>ですね。<br />
+                ユーザー情報を入力しログインしてください。<br />
                 <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
               `;
             }
@@ -270,13 +272,13 @@
             if (errorDiv) {
               errorDiv.innerHTML = `
                 <div style="margin-bottom: 8px;">
-                  <strong>既にログイン中です</strong>
+                  <strong>認証済。</strong>
                 </div>
                 <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 12px;">
-                  現在、<strong>${existingUser.name || existingUser.email}</strong> でログイン中です。
+                  現在<strong>${existingUser.name || existingUser.email}様</strong>でログイン中です。
                 </div>
                 <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 12px;">
-                  別のユーザーでログインする場合は、既存の認証情報をクリアしてください。
+                  別のユーザーでログインする際は、下記ボタンを押してください。
                 </div>
                 <button 
                   type="button" 
@@ -330,7 +332,8 @@
                   const descriptionElAfter = document.getElementById('signin-description');
                   if (descriptionElAfter) {
                     descriptionElAfter.innerHTML = `
-                      お疲れ様です。ユーザー情報を入力しログインしてください。<br />
+                      お疲れ様です。<br />
+                      ユーザー情報を入力しログインしてください。<br />
                       <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
                     `;
                   }
@@ -359,7 +362,8 @@
             // 認証情報がない場合、説明文を更新
             if (descriptionEl) {
               descriptionEl.innerHTML = `
-                お疲れ様です。ユーザー情報を入力しログインしてください。<br />
+                お疲れ様です。<br />
+                ユーザー情報を入力しログインしてください。<br />
                 <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
               `;
             }
@@ -368,7 +372,8 @@
           // 認証情報がない場合、説明文を更新
           if (descriptionEl) {
             descriptionEl.innerHTML = `
-              お疲れ様です。ユーザー情報を入力しログインしてください。<br />
+              お疲れ様です。<br />
+              ユーザー情報を入力しログインしてください。<br />
               <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
             `;
           }
@@ -379,7 +384,8 @@
         const descriptionEl = document.getElementById('signin-description');
         if (descriptionEl) {
           descriptionEl.innerHTML = `
-            お疲れ様です。ユーザー情報を入力しログインしてください。<br />
+            お疲れ様です。<br />
+            ユーザー情報を入力しログインしてください。<br />
             <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
           `;
         }
