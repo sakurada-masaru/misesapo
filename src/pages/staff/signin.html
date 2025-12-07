@@ -20,7 +20,12 @@
   }
   .signin-container {
     width: 100%;
-    max-width: 420px;
+    max-width: 500px;
+  }
+  @media (min-width: 768px) {
+    .signin-container {
+      max-width: 550px;
+    }
   }
   .signin-card {
     background: #fff;
@@ -61,6 +66,11 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
+  }
+  @media (min-width: 768px) {
+    .signin-description {
+      white-space: nowrap;
+    }
   }
   .signin-description strong {
     color: #111827;
