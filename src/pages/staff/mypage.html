@@ -1495,8 +1495,14 @@
               staff_name: record.staff_name || currentUser.name
             };
           }
+        } else if (response.status === 404) {
+          // 404エラーは正常（APIが実装されていない場合）
+          // ローカルストレージから読み込むため、エラーをログに出力しない
+        } else {
+          console.warn('APIからの勤怠記録取得に失敗しました:', response.status, response.statusText);
         }
       } catch (error) {
+        // ネットワークエラーなどの場合のみ警告を出力
         console.warn('APIからの勤怠記録取得に失敗しました。ローカルストレージから読み込みます:', error);
       }
       
@@ -2194,20 +2200,23 @@
           }
         });
         
-        if (!response.ok) {
-          throw new Error('業務連絡の取得に失敗しました');
+        if (response.ok) {
+          const data = await response.json();
+          const announcements = data.announcements || [];
+          renderAnnouncements(announcements);
+        } else if (response.status === 401) {
+          // 401エラーは認証が必要な場合（正常な動作）
+          // 空のリストを表示
+          renderAnnouncements([]);
+        } else {
+          // その他のエラー
+          console.warn('業務連絡の取得に失敗しました:', response.status, response.statusText);
+          renderAnnouncements([]);
         }
-        
-        const data = await response.json();
-        const announcements = data.announcements || [];
-        
-        renderAnnouncements(announcements);
       } catch (error) {
-        console.error('Error loading announcements:', error);
-        const announcementsEl = document.getElementById('announcements-list');
-        if (announcementsEl) {
-          announcementsEl.innerHTML = '<div class="empty-state">業務連絡の読み込みに失敗しました</div>';
-        }
+        // ネットワークエラーなどの場合のみ警告を出力
+        console.warn('Error loading announcements:', error);
+        renderAnnouncements([]);
       }
     }
 
@@ -2288,18 +2297,50 @@
     // Cognito ID Token取得（従業員認証用）
     async function getCognitoIdToken() {
       try {
-        // Cognito認証から取得
+        // 1. localStorageから直接取得
         const cognitoIdToken = localStorage.getItem('cognito_id_token');
         if (cognitoIdToken) {
           return cognitoIdToken;
         }
         
-        // misesapo_authから取得
+        // 2. CognitoAuthから取得
+        if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
+          try {
+            const cognitoUser = await window.CognitoAuth.getCurrentUser();
+            if (cognitoUser && cognitoUser.tokens && cognitoUser.tokens.idToken) {
+              return cognitoUser.tokens.idToken;
+            }
+          } catch (e) {
+            console.warn('Error getting token from CognitoAuth:', e);
+          }
+        }
+        
+        // 3. cognito_userから取得
+        const cognitoUser = localStorage.getItem('cognito_user');
+        if (cognitoUser) {
+          try {
+            const parsed = JSON.parse(cognitoUser);
+            if (parsed.tokens && parsed.tokens.idToken) {
+              return parsed.tokens.idToken;
+            }
+            if (parsed.idToken) {
+              return parsed.idToken;
+            }
+          } catch (e) {
+            console.warn('Error parsing cognito user:', e);
+          }
+        }
+        
+        // 4. misesapo_authから取得
         const authData = localStorage.getItem('misesapo_auth');
         if (authData) {
-          const parsed = JSON.parse(authData);
-          if (parsed.token) {
-            return parsed.token;
+          try {
+            const parsed = JSON.parse(authData);
+            if (parsed.token) {
+              return parsed.token;
+            }
+          } catch (e) {
+            console.warn('Error parsing auth data:', e);
           }
         }
         
