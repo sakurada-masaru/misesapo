@@ -104,7 +104,8 @@
   function renderAllSections() {
     updateStats();
     filterAndRender();
-    renderAttendanceSections();
+    // 出退勤管理セクションは非表示（組織構造レイアウトのみ表示）
+    // renderAttendanceSections();
   }
   
   // ============================================
@@ -253,7 +254,8 @@
       updateStats();
       updateDepartmentFilter(); // 部署フィルターを更新
       filterAndRender();
-      renderAttendanceSections();
+      // 出退勤管理セクションは非表示（組織構造レイアウトのみ表示）
+      // renderAttendanceSections();
     } catch (error) {
       console.error('Failed to load users:', error);
       console.error('Error details:', error.message, error.stack);
@@ -262,8 +264,8 @@
         loadingEl.style.display = 'block';
         loadingEl.textContent = `読み込みに失敗しました: ${error.message}`;
       }
-      // エラー時も出退勤セクションを表示（空の状態）
-      renderAttendanceSections();
+      // 出退勤管理セクションは非表示
+      // renderAttendanceSections();
     }
   }
 

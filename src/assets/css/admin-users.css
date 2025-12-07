@@ -679,7 +679,7 @@
 
 /* 出退勤管理セクション */
 .attendance-sections {
-  display: flex;
+  display: none; /* 出退勤管理セクションは非表示（組織構造レイアウトのみ表示） */
   flex-direction: column;
   gap: 24px;
   margin-bottom: 24px;
