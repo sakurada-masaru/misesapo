@@ -31,10 +31,74 @@
   const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
   /**
+   * 既存の認証情報をクリア
+   */
+  function clearAuthData() {
+    // Cognitoセッションをクリア
+    const cognitoUser = userPool.getCurrentUser();
+    if (cognitoUser) {
+      cognitoUser.signOut();
+    }
+    
+    // localStorageから認証情報を削除
+    localStorage.removeItem('cognito_id_token');
+    localStorage.removeItem('cognito_access_token');
+    localStorage.removeItem('cognito_refresh_token');
+    localStorage.removeItem('cognito_user');
+    localStorage.removeItem('misesapo_auth');
+    
+    // sessionStorageもクリア
+    sessionStorage.clear();
+  }
+
+  /**
+   * 既存のユーザー情報を取得（ログイン前のチェック用）
+   */
+  function getExistingUser() {
+    try {
+      const storedUser = localStorage.getItem('cognito_user');
+      if (storedUser) {
+        return JSON.parse(storedUser);
+      }
+    } catch (e) {
+      console.warn('[CognitoAuth] Error parsing stored user:', e);
+    }
+    return null;
+  }
+
+  /**
    * ログイン（USER_SRP_AUTHを使用）
    */
   async function login(email, password) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+      // 既存のユーザー情報をチェック
+      const existingUser = getExistingUser();
+      const isAuth = isAuthenticated();
+      
+      // 既に別のユーザーでログインしている場合
+      if (existingUser && isAuth) {
+        const existingEmail = existingUser.email;
+        if (existingEmail && existingEmail.toLowerCase() !== email.toLowerCase()) {
+          // 既存の認証情報をクリア
+          clearAuthData();
+          
+          // 少し待ってから再試行を促す
+          reject({
+            success: false,
+            message: '別のユーザーでログイン中です。認証情報をクリアしました。数秒待ってから再度ログインしてください。',
+            code: 'AUTH_CONFLICT',
+            requiresRetry: true
+          });
+          return;
+        }
+      }
+      
+      // 既存の認証情報をクリア（同じユーザーでも念のため）
+      clearAuthData();
+      
+      // 少し待ってからログイン処理を開始（クリア処理の完了を待つ）
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const authenticationData = {
         Username: email,
         Password: password
@@ -71,39 +135,61 @@
           try {
             // まずメールアドレスで検索（キャッシュ無効化）
             if (userEmail) {
+              console.log('[CognitoAuth] Searching for user by email:', userEmail);
               const emailResponse = await fetch(`${apiBaseUrl}/workers?email=${encodeURIComponent(userEmail)}&t=${timestamp}&_=${Date.now()}`, {
                 cache: 'no-store'
               });
+              console.log('[CognitoAuth] Email search response status:', emailResponse.status);
               if (emailResponse.ok) {
                 const workers = await emailResponse.json();
+                console.log('[CognitoAuth] Email search response:', workers);
                 const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+                console.log('[CognitoAuth] Workers array length:', workersArray.length);
                 if (workersArray.length > 0) {
                   // クライアント側でフィルタリング
                   const matchingUser = workersArray.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
+                  console.log('[CognitoAuth] Matching user by email:', matchingUser);
                   if (matchingUser && matchingUser.id) {
                     userInfo = matchingUser;
                     console.log('[CognitoAuth] Found user by email from DynamoDB:', userInfo.name, 'ID:', userInfo.id);
+                  } else {
+                    console.warn('[CognitoAuth] No matching user found by email in response');
                   }
+                } else {
+                  console.warn('[CognitoAuth] Empty workers array from email search');
                 }
+              } else {
+                console.warn('[CognitoAuth] Email search failed with status:', emailResponse.status);
               }
             }
             
             // メールアドレスで見つからない場合、Cognito Subで検索
             if (!userInfo && cognitoSub) {
+              console.log('[CognitoAuth] Searching for user by cognito_sub:', cognitoSub);
               const subResponse = await fetch(`${apiBaseUrl}/workers?cognito_sub=${encodeURIComponent(cognitoSub)}&t=${timestamp}&_=${Date.now()}`, {
                 cache: 'no-store'
               });
+              console.log('[CognitoAuth] Cognito sub search response status:', subResponse.status);
               if (subResponse.ok) {
                 const workers = await subResponse.json();
+                console.log('[CognitoAuth] Cognito sub search response:', workers);
                 const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+                console.log('[CognitoAuth] Workers array length:', workersArray.length);
                 if (workersArray.length > 0) {
                   // クライアント側でフィルタリング
                   const matchingUser = workersArray.find(u => u.cognito_sub === cognitoSub);
+                  console.log('[CognitoAuth] Matching user by cognito_sub:', matchingUser);
                   if (matchingUser && matchingUser.id) {
                     userInfo = matchingUser;
                     console.log('[CognitoAuth] Found user by cognito_sub from DynamoDB:', userInfo.name, 'ID:', userInfo.id);
+                  } else {
+                    console.warn('[CognitoAuth] No matching user found by cognito_sub in response');
                   }
+                } else {
+                  console.warn('[CognitoAuth] Empty workers array from cognito_sub search');
                 }
+              } else {
+                console.warn('[CognitoAuth] Cognito sub search failed with status:', subResponse.status);
               }
             }
           } catch (error) {
@@ -318,17 +404,38 @@
    * 認証状態をチェック
    */
   function isAuthenticated() {
+    // まず、localStorageにトークンがあるかチェック
     const idToken = getIdToken();
     if (!idToken) {
+      console.log('[CognitoAuth] No ID token found in localStorage');
       return false;
     }
 
-    // トークンの有効期限をチェック（簡易版）
+    // トークンの有効期限をチェック
     try {
       const payload = JSON.parse(atob(idToken.split('.')[1]));
       const exp = payload.exp * 1000; // ミリ秒に変換
-      return Date.now() < exp;
+      const isValid = Date.now() < exp;
+      if (!isValid) {
+        console.log('[CognitoAuth] ID token expired');
+        // 期限切れのトークンを削除
+        localStorage.removeItem('cognito_id_token');
+        localStorage.removeItem('cognito_access_token');
+        localStorage.removeItem('cognito_refresh_token');
+        return false;
+      }
+      
+      // トークンが有効な場合、Cognitoのセッションも確認
+      const cognitoUser = userPool.getCurrentUser();
+      if (!cognitoUser) {
+        console.log('[CognitoAuth] No Cognito user found, but token exists');
+        // トークンはあるがCognitoユーザーがない場合は、トークンが無効とみなす
+        return false;
+      }
+      
+      return true;
     } catch (e) {
+      console.warn('[CognitoAuth] Error parsing token:', e);
       return false;
     }
   }

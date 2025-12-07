@@ -92,6 +92,11 @@
   <div id="error-message" class="error-message" style="display: none;"></div>
   
   <div id="mypage-content" style="display: none;">
+    <!-- ページヘッダー（ユーザー名） -->
+    <div class="mypage-header">
+      <h1 class="mypage-user-name" id="mypage-user-name">-</h1>
+    </div>
+    
     <!-- メインコンテンツ -->
     <div class="mypage-grid stack-on-sm">
       <!-- 左サイドバー -->
@@ -215,6 +220,28 @@
 
       <!-- 右サイドバー -->
       <aside class="mypage-sidebar-right">
+        <!-- 今月のカレンダー -->
+        <section class="section calendar-section">
+          <h2 class="section-title">
+            <i class="fas fa-calendar-alt"></i>
+            カレンダー
+          </h2>
+          <div class="calendar-head">
+            <a class="calendar-nav" href="#" id="calendar-prev" aria-label="前へ">
+              <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            <div class="calendar-title" id="calendar-title">2025 06</div>
+            <a class="calendar-nav" href="#" id="calendar-next" aria-label="次へ">
+              <i class="fa-solid fa-chevron-right"></i>
+            </a>
+          </div>
+          <div class="card">
+            <div class="calendar-grid" id="calendar-grid">
+              <!-- カレンダーが動的に生成される -->
+            </div>
+          </div>
+        </section>
+
         <!-- 基本情報 -->
         <section class="section">
           <h2 class="section-title">
@@ -241,28 +268,6 @@
             <div class="info-item">
               <span class="info-item-label">登録日</span>
               <span class="info-item-value" id="info-created-at">-</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- 今月のカレンダー -->
-        <section class="section calendar-section">
-          <h2 class="section-title">
-            <i class="fas fa-calendar-alt"></i>
-            カレンダー
-          </h2>
-          <div class="calendar-head">
-            <a class="calendar-nav" href="#" id="calendar-prev" aria-label="前へ">
-              <i class="fa-solid fa-chevron-left"></i>
-            </a>
-            <div class="calendar-title" id="calendar-title">2025 06</div>
-            <a class="calendar-nav" href="#" id="calendar-next" aria-label="次へ">
-              <i class="fa-solid fa-chevron-right"></i>
-            </a>
-          </div>
-          <div class="card">
-            <div class="calendar-grid" id="calendar-grid">
-              <!-- カレンダーが動的に生成される -->
             </div>
           </div>
         </section>
@@ -293,6 +298,18 @@
       border-radius: 8px;
       margin-bottom: 24px;
       text-align: center;
+    }
+    .mypage-header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .mypage-user-name {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      padding: 0;
     }
     .mypage-grid {
       display: grid;
@@ -1151,9 +1168,24 @@
               console.log('[Mypage] Found user by ID from API:', currentUser.name);
             } else if (response.status === 404) {
               // 404エラーの場合、URLパラメータのIDが無効な可能性がある
-              console.warn('[Mypage] User not found by URL param ID:', userId, '- will try Cognito auth ID');
-              // URLパラメータのIDを無視して、Cognito認証から取得したIDを使用
+              console.warn('[Mypage] User not found by URL param ID:', userId, '- will try email or Cognito auth');
+              // URLパラメータのIDを無視して、メールアドレスまたはCognito認証から取得したIDを使用
               userId = null;
+              // メールアドレスを取得
+              if (!userEmail) {
+                try {
+                  const storedCognitoUser = localStorage.getItem('cognito_user');
+                  if (storedCognitoUser) {
+                    const parsedUser = JSON.parse(storedCognitoUser);
+                    if (parsedUser.email) {
+                      userEmail = parsedUser.email;
+                      console.log('[Mypage] Using email from stored cognito_user after 404:', userEmail);
+                    }
+                  }
+                } catch (e) {
+                  console.warn('[Mypage] Error parsing stored cognito_user:', e);
+                }
+              }
             }
           }
           
@@ -1353,6 +1385,12 @@
 
     // ユーザー情報を表示
     function renderUser(user) {
+      // ページヘッダーにユーザー名を表示
+      const userNameEl = document.getElementById('mypage-user-name');
+      if (userNameEl) {
+        userNameEl.textContent = user.name || '-';
+      }
+      
       // 基本情報
       document.getElementById('info-user-id').textContent = user.id || '-';
       document.getElementById('info-email').textContent = user.email || '-';

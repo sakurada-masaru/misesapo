@@ -55,7 +55,16 @@
     font-size: 0.875rem;
     color: #6b7280;
     margin-bottom: 24px;
-    line-height: 1.6;
+    line-height: 1.8;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .signin-description strong {
+    color: #111827;
+    font-weight: 600;
   }
   .signin-form .form-group {
     margin-bottom: 20px;
@@ -129,6 +138,23 @@
     color: #991b1b;
     font-size: 0.875rem;
     margin-bottom: 16px;
+    line-height: 1.6;
+    transition: all 0.3s ease;
+  }
+  .signin-error strong {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .signin-error button {
+    transition: all 0.2s ease;
+  }
+  .signin-error button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .signin-error button:active {
+    transform: translateY(0);
   }
   @media (max-width: 480px) {
     .signin-card {
@@ -147,10 +173,10 @@
 
       <div class="signin-divider"></div>
 
-      <p class="signin-description">
-      メールアドレスとパスワードを入力してログインしてください。<br />
+      <p class="signin-description" id="signin-description">
+        メールアドレスとパスワードを入力してログインしてください。<br />
         <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
-    </p>
+      </p>
 
       <form id="staff-signin-form" action="#" method="post" class="signin-form">
         <div class="form-group">
@@ -198,6 +224,168 @@
     }
   }
 
+  // ページ読み込み時に既存の認証情報をチェック
+  (async function() {
+    // CognitoAuthが読み込まれるまで待つ
+    if (typeof window.CognitoAuth === 'undefined') {
+      // CognitoAuthが読み込まれるまで待機
+      let retries = 0;
+      const checkCognitoAuth = setInterval(() => {
+        if (typeof window.CognitoAuth !== 'undefined' || retries > 20) {
+          clearInterval(checkCognitoAuth);
+          if (typeof window.CognitoAuth !== 'undefined') {
+            checkExistingAuth();
+          }
+        }
+        retries++;
+      }, 100);
+    } else {
+      checkExistingAuth();
+    }
+
+    async function checkExistingAuth() {
+      try {
+        const descriptionEl = document.getElementById('signin-description');
+        
+        // 既存の認証情報をチェック
+        if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+          const existingUser = await window.CognitoAuth.getCurrentUser();
+          if (existingUser) {
+            // 説明文を更新（認証情報がある場合）
+            if (descriptionEl) {
+              descriptionEl.innerHTML = `
+                お疲れ様です<strong>${existingUser.name || existingUser.email}</strong>様。<br />
+                下記にメールアドレスとパスワードを入力しログインしてください。<br />
+                <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
+              `;
+            }
+            
+            // 既にログインしている場合、警告を表示
+            const errorDiv = document.getElementById('signin-error');
+            if (errorDiv) {
+              errorDiv.innerHTML = `
+                <div style="margin-bottom: 8px;">
+                  <strong>既にログイン中です</strong>
+                </div>
+                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 12px;">
+                  現在、<strong>${existingUser.name || existingUser.email}</strong> でログイン中です。
+                </div>
+                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 12px;">
+                  別のユーザーでログインする場合は、既存の認証情報をクリアしてください。
+                </div>
+                <button 
+                  type="button" 
+                  id="clear-auth-btn" 
+                  style="
+                    width: 100%;
+                    padding: 8px 16px;
+                    background: #ef4444;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    margin-top: 8px;
+                  "
+                  onmouseover="this.style.background='#dc2626'"
+                  onmouseout="this.style.background='#ef4444'"
+                >
+                  認証情報をクリアして新規ログイン
+                </button>
+              `;
+              errorDiv.style.display = 'block';
+              errorDiv.style.background = '#fef3c7';
+              errorDiv.style.borderColor = '#fbbf24';
+              errorDiv.style.color = '#92400e';
+
+              // クリアボタンのイベントリスナー
+              const clearBtn = document.getElementById('clear-auth-btn');
+              if (clearBtn) {
+                clearBtn.addEventListener('click', async function() {
+                  // 認証情報をクリア
+                  if (window.CognitoAuth && window.CognitoAuth.clearAuthData) {
+                    window.CognitoAuth.clearAuthData();
+                  } else {
+                    // フォールバック: 手動でクリア
+                    localStorage.removeItem('cognito_id_token');
+                    localStorage.removeItem('cognito_access_token');
+                    localStorage.removeItem('cognito_refresh_token');
+                    localStorage.removeItem('cognito_user');
+                    localStorage.removeItem('misesapo_auth');
+                    sessionStorage.clear();
+                    
+                    // Cognitoセッションもクリア
+                    if (window.CognitoAuth && window.CognitoAuth.logout) {
+                      window.CognitoAuth.logout();
+                    }
+                  }
+                  
+                  // 説明文を更新（認証情報がない場合）
+                  const descriptionElAfter = document.getElementById('signin-description');
+                  if (descriptionElAfter) {
+                    descriptionElAfter.innerHTML = `
+                      お疲れ様です。<br />
+                      ユーザー情報を入力し下記からログインしてください。<br />
+                      <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
+                    `;
+                  }
+                  
+                  // メッセージを更新
+                  errorDiv.innerHTML = `
+                    <div style="margin-bottom: 8px;">
+                      <strong>認証情報をクリアしました</strong>
+                    </div>
+                    <div style="font-size: 0.875rem; color: #6b7280;">
+                      新しいユーザーでログインできます。
+                    </div>
+                  `;
+                  errorDiv.style.background = '#d1fae5';
+                  errorDiv.style.borderColor = '#10b981';
+                  errorDiv.style.color = '#065f46';
+                  
+                  // 3秒後にメッセージを非表示
+                  setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                  }, 3000);
+                });
+              }
+            }
+          } else {
+            // 認証情報がない場合、説明文を更新
+            if (descriptionEl) {
+              descriptionEl.innerHTML = `
+                お疲れ様です。<br />
+                ユーザー情報を入力し下記からログインしてください。<br />
+                <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
+              `;
+            }
+          }
+        } else {
+          // 認証情報がない場合、説明文を更新
+          if (descriptionEl) {
+            descriptionEl.innerHTML = `
+              お疲れ様です。<br />
+              ユーザー情報を入力し下記からログインしてください。<br />
+              <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
+            `;
+          }
+        }
+      } catch (error) {
+        console.warn('[Signin] Error checking existing auth:', error);
+        // エラー時もデフォルトの説明文を表示
+        const descriptionEl = document.getElementById('signin-description');
+        if (descriptionEl) {
+          descriptionEl.innerHTML = `
+            お疲れ様です。<br />
+            ユーザー情報を入力し下記からログインしてください。<br />
+            <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
+          `;
+        }
+      }
+    }
+  })();
+
   // ログインフォーム処理
   (function() {
     const signinForm = document.getElementById('staff-signin-form');
@@ -231,6 +419,8 @@
 
           const result = await window.CognitoAuth.login(email, password);
 
+          console.log('[Signin] Login result:', result);
+
           if (result.success) {
             errorDiv.style.display = 'none';
 
@@ -242,36 +432,47 @@
               user: result.user
             }));
 
+            console.log('[Signin] Login successful. User ID:', result.user.id, 'Role:', result.user.role);
+            console.log('[Signin] User object:', result.user);
+
             // ベースパスを取得（GitHub Pages対応）
             const base = document.querySelector('base');
             const basePath = base ? (base.getAttribute('href') || '/') : '/';
             
-            // URLパラメータからリダイレクト先を取得
-            const urlParams = new URLSearchParams(window.location.search);
-            const redirectParam = urlParams.get('redirect');
+            // 従業員ログインからログインした場合は、全員等しくマイページにリダイレクト
+            let defaultPath = '/staff/mypage.html';
             
-            let redirectUrl;
-            if (redirectParam) {
-              // リダイレクトパラメータがある場合はそこに戻る
-              redirectUrl = decodeURIComponent(redirectParam);
-            } else {
-              // 全員マイページにリダイレクト
-              let defaultPath = '/staff/mypage.html';
-              
-              // ユーザーIDをパラメータに追加
-              if (result.user.id) {
-                defaultPath += `?id=${encodeURIComponent(result.user.id)}`;
-              }
-              
-              redirectUrl = basePath === '/' 
-                ? defaultPath 
-                : basePath.replace(/\/$/, '') + defaultPath;
+            // ユーザーIDをパラメータに追加
+            if (result.user.id) {
+              defaultPath += `?id=${encodeURIComponent(result.user.id)}`;
             }
             
-            window.location.href = redirectUrl;
+            const redirectUrl = basePath === '/' 
+              ? defaultPath 
+              : basePath.replace(/\/$/, '') + defaultPath;
+            
+            console.log('[Signin] Redirecting to mypage:', redirectUrl);
+            
+            // 確実にマイページにリダイレクト（即座に実行）
+            window.location.replace(redirectUrl);
           } else {
-            errorDiv.textContent = result.message || 'ログインに失敗しました';
+            // エラーメッセージを表示
+            const errorMessage = result.message || 'ログインに失敗しました';
+            errorDiv.textContent = errorMessage;
             errorDiv.style.display = 'block';
+
+            // 認証競合の場合は特別な処理
+            if (result.code === 'AUTH_CONFLICT' && result.requiresRetry) {
+              // 3秒後に自動的に再試行を促す
+              setTimeout(() => {
+                errorDiv.innerHTML = `
+                  <div style="margin-bottom: 8px;">${errorMessage}</div>
+                  <div style="font-size: 0.875rem; color: #6b7280;">
+                    認証情報をクリアしました。再度ログインしてください。
+                  </div>
+                `;
+              }, 3000);
+            }
 
             if (submitButton) {
               submitButton.disabled = false;
@@ -280,7 +481,29 @@
           }
         } catch (error) {
           console.error('Login error:', error);
-          errorDiv.textContent = error.message || 'ログインに失敗しました';
+          
+          // エラーオブジェクトからメッセージを取得
+          let errorMessage = 'ログインに失敗しました';
+          if (error.message) {
+            errorMessage = error.message;
+          } else if (typeof error === 'string') {
+            errorMessage = error;
+          }
+          
+          // 認証競合の場合は特別な処理
+          if (error.code === 'AUTH_CONFLICT' && error.requiresRetry) {
+            errorDiv.innerHTML = `
+              <div style="margin-bottom: 8px;"><strong>ログイン情報が競合しています</strong></div>
+              <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 8px;">
+                ${errorMessage}
+              </div>
+              <div style="font-size: 0.875rem; color: #6b7280;">
+                認証情報をクリアしました。数秒待ってから再度ログインしてください。
+              </div>
+            `;
+          } else {
+            errorDiv.textContent = errorMessage;
+          }
           errorDiv.style.display = 'block';
 
           if (submitButton) {
