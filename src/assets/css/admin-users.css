@@ -388,6 +388,37 @@
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 12px;
+  align-items: center;
+}
+
+.attendance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.attendance-badge i {
+  font-size: 0.7rem;
+}
+
+.attendance-badge.attendance-working {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.attendance-badge.attendance-completed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.attendance-badge.attendance-absent {
+  background: #f3f4f6;
+  color: #6b7280;
 }
 
 .job-badges {

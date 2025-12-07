@@ -462,6 +462,9 @@
         
         // 管理者のみロールバッジを表示
         const roleBadge = isAdminRole(user.role) ? '<span class="role-badge role-admin">管理者</span>' : '';
+        
+        // 出退勤ステータスバッジを取得
+        const attendanceBadge = getAttendanceStatusBadge(user.id);
 
         return `
           <div class="user-card" data-role="${user.role}">
@@ -487,6 +490,7 @@
               <div class="user-card-footer">
                 ${roleBadge}
                 <span class="status-badge status-${user.status || 'active'}">${user.status === 'inactive' ? '無効' : '有効'}</span>
+                ${attendanceBadge}
               </div>
             </div>
             <div class="user-card-actions">
@@ -1060,6 +1064,31 @@
     return attendanceRecords[key] || { clockedIn: false, clockInTime: null, clockOutTime: null };
   }
 
+  // 出退勤ステータスのバッジHTMLを生成
+  function getAttendanceStatusBadge(userId) {
+    const status = getUserAttendanceStatus(userId);
+    
+    if (status.clockInTime && status.clockOutTime) {
+      // 退勤済み
+      const clockInTime = status.clockInTime ? new Date(status.clockInTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+      const clockOutTime = status.clockOutTime ? new Date(status.clockOutTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+      return `<span class="attendance-badge attendance-completed" title="出勤: ${clockInTime} / 退勤: ${clockOutTime}">
+        <i class="fas fa-check-circle"></i> 退勤済み
+      </span>`;
+    } else if (status.clockInTime) {
+      // 出勤中
+      const clockInTime = new Date(status.clockInTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+      return `<span class="attendance-badge attendance-working" title="出勤時刻: ${clockInTime}">
+        <i class="fas fa-clock"></i> 出勤中
+      </span>`;
+    } else {
+      // 未出勤
+      return `<span class="attendance-badge attendance-absent" title="未出勤">
+        <i class="fas fa-minus-circle"></i> 未出勤
+      </span>`;
+    }
+  }
+
   // 出退勤トグルスイッチのレンダリング
   function renderAttendanceSections() {
     // 部署別にユーザーをグループ化
@@ -1240,6 +1269,8 @@
     saveAttendanceRecords();
     // 出退勤管理セクションは非表示
     // renderAttendanceSections();
+    // カードを再レンダリングして出退勤ステータスを更新
+    filterAndRender();
   };
 
   // 一括ロール割り当て
