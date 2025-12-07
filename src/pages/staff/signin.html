@@ -255,27 +255,8 @@
               // リダイレクトパラメータがある場合はそこに戻る
               redirectUrl = decodeURIComponent(redirectParam);
             } else {
-              // ロールごとのデフォルトページにリダイレクト
-              let defaultPath = '/staff/mypage.html'; // デフォルトはマイページ
-              
-              // RoleConfigが利用可能な場合は、ロールに応じたページを取得
-              if (window.RoleConfig && window.RoleConfig.getDefaultPageForRole) {
-                const roleBasedPath = window.RoleConfig.getDefaultPageForRole(result.user.role);
-                if (roleBasedPath) {
-                  defaultPath = roleBasedPath.endsWith('.html') ? roleBasedPath : roleBasedPath + '.html';
-                }
-              } else {
-                // RoleConfigが利用できない場合のフォールバック
-                const userRole = result.user.role;
-                if (userRole === 'admin' || userRole === '管理者') {
-                  defaultPath = '/admin/dashboard.html';
-                } else if (userRole === 'sales' || userRole === 'concierge') {
-                  defaultPath = '/sales/dashboard.html';
-                } else {
-                  // その他のロール（staff、なしなど）はマイページ
-                  defaultPath = '/staff/mypage.html';
-                }
-              }
+              // 全員マイページにリダイレクト
+              let defaultPath = '/staff/mypage.html';
               
               // ユーザーIDをパラメータに追加
               if (result.user.id) {
