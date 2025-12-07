@@ -3226,35 +3226,40 @@ def get_workers(event, headers):
         firebase_uid = query_params.get('firebase_uid')
         cognito_sub = query_params.get('cognito_sub')
         
-        # スキャンまたはクエリを実行
+        # スキャンまたはクエリを実行（強整合性読み取りを有効化）
         if cognito_sub:
             # Cognito Subでフィルタ（従業員ログイン用）
             response = WORKERS_TABLE.scan(
-                FilterExpression=Attr('cognito_sub').eq(cognito_sub)
+                FilterExpression=Attr('cognito_sub').eq(cognito_sub),
+                ConsistentRead=True
             )
         elif firebase_uid:
             # Firebase UIDでフィルタ（お客様ログイン用、後方互換性のため残す）
             response = WORKERS_TABLE.scan(
-                FilterExpression=Attr('firebase_uid').eq(firebase_uid)
+                FilterExpression=Attr('firebase_uid').eq(firebase_uid),
+                ConsistentRead=True
             )
         elif role:
             # ロールでフィルタ
             response = WORKERS_TABLE.scan(
-                FilterExpression=Attr('role').eq(role)
+                FilterExpression=Attr('role').eq(role),
+                ConsistentRead=True
             )
         elif status:
             # ステータスでフィルタ
             response = WORKERS_TABLE.scan(
-                FilterExpression=Attr('status').eq(status)
+                FilterExpression=Attr('status').eq(status),
+                ConsistentRead=True
             )
         elif email:
             # メールアドレスでフィルタ
             response = WORKERS_TABLE.scan(
-                FilterExpression=Attr('email').eq(email)
+                FilterExpression=Attr('email').eq(email),
+                ConsistentRead=True
             )
         else:
-            # 全件取得
-            response = WORKERS_TABLE.scan()
+            # 全件取得（強整合性読み取りを有効化）
+            response = WORKERS_TABLE.scan(ConsistentRead=True)
         
         workers = response.get('Items', [])
         
@@ -3760,7 +3765,7 @@ def create_worker(event, headers):
             elif worker_data['role_code'] == '4':
                 worker_data['role'] = 'cleaning'
             elif worker_data['role_code'] == '5':
-                worker_data['role'] = 'development'
+                worker_data['role'] = 'public_relations'
             elif worker_data['role_code'] == '6':
                 worker_data['role'] = 'designer'
             elif worker_data['role_code'] == '7':

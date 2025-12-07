@@ -1103,93 +1103,109 @@
           throw new Error('ログインしてください。');
         }
         
-        // ユーザー情報を取得（ローカルJSONを優先、APIをフォールバック）
+        // ユーザー情報を取得（AWS APIを優先、ローカルJSONはフォールバック）
         try {
-          // まずローカルのworkers.jsonから検索（最新データ）
-          try {
-            const localResponse = await fetch('/data/workers.json');
-            if (localResponse.ok) {
-              const localWorkers = await localResponse.json();
-              if (Array.isArray(localWorkers) && localWorkers.length > 0) {
-                // メールアドレスで検索
-                if (userEmail) {
-                  const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
-                  if (matchingUser) {
-                    currentUser = matchingUser;
-                    console.log('[Mypage] Found user from local data:', matchingUser.name);
-                  }
-                }
-                // IDで検索
-                if (!currentUser && userId) {
-                  const matchingUser = localWorkers.find(u => u.id === userId);
-                  if (matchingUser) {
-                    currentUser = matchingUser;
-                    console.log('[Mypage] Found user by ID from local data:', matchingUser.name);
-                  }
-                }
-              }
-            }
-          } catch (localError) {
-            console.log('[Mypage] Local workers.json not available, trying API');
-          }
+          // キャッシュを無効化するためにタイムスタンプを追加
+          const timestamp = new Date().getTime();
           
-          // ローカルで見つからない場合、APIで検索
-          if (!currentUser || !currentUser.id) {
+          // まずAWS APIから最新データを取得
           let response = null;
           
           if (userId) {
-            // IDで取得を試みる
-            response = await fetch(`${API_BASE}/workers/${userId}`);
+            // IDで取得を試みる（キャッシュ無効化）
+            response = await fetch(`${API_BASE}/workers/${userId}?t=${timestamp}&_=${Date.now()}`, {
+              cache: 'no-store'
+            });
             if (response.ok) {
               currentUser = await response.json();
+              console.log('[Mypage] Found user by ID from API:', currentUser.name);
             }
           }
           
-            // IDで見つからない場合、メールアドレスで検索
+          // IDで見つからない場合、メールアドレスで検索
           if (!currentUser || !currentUser.id) {
             if (userEmail) {
-              response = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(userEmail)}`);
+              response = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(userEmail)}&t=${timestamp}&_=${Date.now()}`, {
+                cache: 'no-store'
+              });
               if (response && response.ok) {
                 const users = await response.json();
                 const items = users.items || users.workers || users;
                 if (Array.isArray(items) && items.length > 0) {
-                    const matchingUser = items.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
-                    if (matchingUser) {
-                      currentUser = matchingUser;
-                      console.log('[Mypage] Found user by email from API:', matchingUser.name);
-                    }
+                  const matchingUser = items.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
+                  if (matchingUser) {
+                    currentUser = matchingUser;
+                    console.log('[Mypage] Found user by email from API:', matchingUser.name);
                   }
-                }
                 }
               }
             }
+          }
+          
+          // まだ見つからない場合、Cognito SubまたはFirebase UIDで検索
+          if (!currentUser || !currentUser.id) {
+            let fallbackResponse = null;
             
-            // まだ見つからない場合、Cognito SubまたはFirebase UIDで検索（フォールバック）
-            if (!currentUser || !currentUser.id) {
-              let fallbackResponse = null;
-              
-              // Cognito Subで検索
-              if (window.CognitoAuth) {
-                const cognitoUser = await window.CognitoAuth.getCurrentUser();
-                if (cognitoUser && cognitoUser.cognito_sub) {
-                  fallbackResponse = await fetch(`${API_BASE}/workers?cognito_sub=${encodeURIComponent(cognitoUser.cognito_sub)}`);
+            // Cognito Subで検索
+            if (window.CognitoAuth) {
+              const cognitoUser = await window.CognitoAuth.getCurrentUser();
+              if (cognitoUser && cognitoUser.cognito_sub) {
+                fallbackResponse = await fetch(`${API_BASE}/workers?cognito_sub=${encodeURIComponent(cognitoUser.cognito_sub)}&t=${timestamp}&_=${Date.now()}`, {
+                  cache: 'no-store'
+                });
+              }
+            }
+            
+            // Firebase UIDで検索（フォールバック）
+            if ((!fallbackResponse || !fallbackResponse.ok) && !currentUser) {
+              const authData = window.Auth?.getAuthData?.();
+              if (authData && authData.user && authData.user.firebase_uid) {
+                fallbackResponse = await fetch(`${API_BASE}/workers?firebase_uid=${encodeURIComponent(authData.user.firebase_uid)}&t=${timestamp}&_=${Date.now()}`, {
+                  cache: 'no-store'
+                });
+              }
+            }
+            
+            if (fallbackResponse && fallbackResponse.ok) {
+              const users = await fallbackResponse.json();
+              const items = users.items || users.workers || users;
+              if (Array.isArray(items) && items.length > 0) {
+                currentUser = items[0];
+                console.log('[Mypage] Found user from fallback API:', currentUser.name);
+              }
+            }
+          }
+          
+          // APIで取得できない場合のみ、ローカルのworkers.jsonをフォールバックとして使用
+          if (!currentUser || !currentUser.id) {
+            console.warn('[Mypage] API取得に失敗、ローカルのworkers.jsonを試行');
+            try {
+              const localResponse = await fetch(`/data/workers.json?t=${timestamp}&_=${Date.now()}`, {
+                cache: 'no-store'
+              });
+              if (localResponse.ok) {
+                const localWorkers = await localResponse.json();
+                if (Array.isArray(localWorkers) && localWorkers.length > 0) {
+                  // メールアドレスで検索
+                  if (userEmail) {
+                    const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
+                    if (matchingUser) {
+                      currentUser = matchingUser;
+                      console.log('[Mypage] Found user from local data (fallback):', matchingUser.name);
+                    }
+                  }
+                  // IDで検索
+                  if (!currentUser && userId) {
+                    const matchingUser = localWorkers.find(u => u.id === userId);
+                    if (matchingUser) {
+                      currentUser = matchingUser;
+                      console.log('[Mypage] Found user by ID from local data (fallback):', matchingUser.name);
+                    }
+                  }
                 }
               }
-              
-              // Firebase UIDで検索（フォールバック）
-              if (!fallbackResponse || !fallbackResponse.ok) {
-                const authData = window.Auth?.getAuthData?.();
-                if (authData && authData.user && authData.user.firebase_uid) {
-                  fallbackResponse = await fetch(`${API_BASE}/workers?firebase_uid=${encodeURIComponent(authData.user.firebase_uid)}`);
-                }
-              }
-              
-              if (fallbackResponse && fallbackResponse.ok) {
-                const users = await fallbackResponse.json();
-                const items = users.items || users.workers || users;
-                if (Array.isArray(items) && items.length > 0) {
-                  currentUser = items[0];
-              }
+            } catch (localError) {
+              console.log('[Mypage] Local workers.json also not available');
             }
           }
         } catch (error) {

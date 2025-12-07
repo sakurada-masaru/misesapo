@@ -23,17 +23,21 @@ def get_all_workers():
 
 def normalize_worker(worker):
     """ユーザー情報を正規化"""
-    # role_codeからroleを判定
+    # roleフィールドを優先、存在しない場合のみrole_codeから判定
     role_code = worker.get('role_code')
-    role = worker.get('role', 'staff')
+    role = worker.get('role')
     
-    if role_code is not None:
-        role_code_map = {
-            '1': 'admin', '2': 'sales', '3': 'office', '4': 'staff',
-            '5': 'developer', '6': 'designer', '7': 'general_affairs',
-            '8': 'operation', '9': 'contractor', '10': 'accounting', '11': 'human_resources'
-        }
-        role = role_code_map.get(str(role_code), role)
+    # roleフィールドがない場合のみ、role_codeから変換
+    if not role or role == '':
+        if role_code is not None:
+            role_code_map = {
+                '1': 'admin', '2': 'sales', '3': 'office', '4': 'staff',
+                '5': 'developer', '6': 'designer', '7': 'general_affairs',
+                '8': 'operation', '9': 'contractor', '10': 'accounting', '11': 'human_resources'
+            }
+            role = role_code_map.get(str(role_code), 'staff')
+        else:
+            role = 'staff'
     
     return {
         'id': str(worker.get('id', '')),

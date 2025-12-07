@@ -585,10 +585,11 @@
           document.getElementById('form-status').textContent = '保存しました';
           document.getElementById('form-status').className = 'form-status success';
           
-          // 少し待ってからダイアログを閉じてリストを更新
+          // 少し待ってからダイアログを閉じてリストを更新（DynamoDBの反映を待つ）
           setTimeout(async () => {
             userDialog.close();
-            // キャッシュを無効化してリストを更新
+            // 少し待ってからキャッシュを無効化してリストを更新
+            await new Promise(resolve => setTimeout(resolve, 300));
             await loadUsers();
           }, 500);
         } else {

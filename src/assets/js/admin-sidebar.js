@@ -290,20 +290,48 @@
       // メールアドレスからIDを取得（IDが取得できなかった場合）
       if (!userId && email) {
         try {
-          // ローカルのworkers.jsonから検索
-          const localResponse = await fetch('/data/workers.json');
-          if (localResponse.ok) {
-            const localWorkers = await localResponse.json();
-            if (Array.isArray(localWorkers) && localWorkers.length > 0) {
-              const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+          // キャッシュを無効化するためにタイムスタンプを追加
+          const timestamp = new Date().getTime();
+          
+          // まずAWS APIから最新データを取得
+          const apiResponse = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(email)}&t=${timestamp}&_=${Date.now()}`, {
+            cache: 'no-store'
+          });
+          if (apiResponse.ok) {
+            const workers = await apiResponse.json();
+            const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+            if (workersArray.length > 0) {
+              const matchingUser = workersArray.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
               if (matchingUser && matchingUser.id) {
                 userId = matchingUser.id;
-                console.log('[AdminSidebar] Found ID from local workers.json:', userId);
+                console.log('[AdminSidebar] Found ID from API:', userId);
               }
             }
           }
+          
+          // APIで取得できない場合のみ、ローカルのworkers.jsonをフォールバックとして使用
+          if (!userId) {
+            console.warn('[AdminSidebar] API取得に失敗、ローカルのworkers.jsonを試行');
+            try {
+              const localResponse = await fetch(`/data/workers.json?t=${timestamp}&_=${Date.now()}`, {
+                cache: 'no-store'
+              });
+              if (localResponse.ok) {
+                const localWorkers = await localResponse.json();
+                if (Array.isArray(localWorkers) && localWorkers.length > 0) {
+                  const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+                  if (matchingUser && matchingUser.id) {
+                    userId = matchingUser.id;
+                    console.log('[AdminSidebar] Found ID from local workers.json (fallback):', userId);
+                  }
+                }
+              }
+            } catch (e) {
+              console.log('[AdminSidebar] Local workers.json also not available');
+            }
+          }
         } catch (e) {
-          console.log('[AdminSidebar] Could not fetch local workers.json, will use email');
+          console.log('[AdminSidebar] Error fetching user ID:', e);
         }
       }
 

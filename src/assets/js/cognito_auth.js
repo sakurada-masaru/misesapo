@@ -151,26 +151,14 @@
         const apiBaseUrl = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
         
         try {
-          // まずローカルのworkers.jsonから検索（最新データ）
-          try {
-            const localResponse = await fetch('/data/workers.json');
-            if (localResponse.ok) {
-              const localWorkers = await localResponse.json();
-              if (Array.isArray(localWorkers) && localWorkers.length > 0) {
-                const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
-                if (matchingUser) {
-                  userInfo = matchingUser;
-                  console.log('[CognitoAuth] Found user from local data:', userInfo.name);
-                }
-              }
-            }
-          } catch (localError) {
-            console.log('[CognitoAuth] Local workers.json not available, trying API');
-          }
+          // キャッシュを無効化するためにタイムスタンプを追加
+          const timestamp = new Date().getTime();
           
-          // ローカルで見つからない場合、APIで検索
-          if (!userInfo && userEmail) {
-            const emailResponse = await fetch(`${apiBaseUrl}/workers?email=${encodeURIComponent(userEmail)}`);
+          // まずAWS APIから最新データを取得
+          if (userEmail) {
+            const emailResponse = await fetch(`${apiBaseUrl}/workers?email=${encodeURIComponent(userEmail)}&t=${timestamp}&_=${Date.now()}`, {
+              cache: 'no-store'
+            });
             if (emailResponse.ok) {
               const workers = await emailResponse.json();
               const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
@@ -182,6 +170,28 @@
                   console.log('[CognitoAuth] Found user by email from API:', userInfo.name);
                 }
               }
+            }
+          }
+          
+          // APIで取得できない場合のみ、ローカルのworkers.jsonをフォールバックとして使用
+          if (!userInfo && userEmail) {
+            console.warn('[CognitoAuth] API取得に失敗、ローカルのworkers.jsonを試行');
+            try {
+              const localResponse = await fetch(`/data/workers.json?t=${timestamp}&_=${Date.now()}`, {
+                cache: 'no-store'
+              });
+              if (localResponse.ok) {
+                const localWorkers = await localResponse.json();
+                if (Array.isArray(localWorkers) && localWorkers.length > 0) {
+                  const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
+                  if (matchingUser) {
+                    userInfo = matchingUser;
+                    console.log('[CognitoAuth] Found user from local data (fallback):', userInfo.name);
+                  }
+                }
+              }
+            } catch (localError) {
+              console.log('[CognitoAuth] Local workers.json also not available');
             }
           }
           

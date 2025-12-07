@@ -1025,30 +1025,20 @@
         contentEl.style.display = 'none';
         errorEl.style.display = 'none';
 
-        // まずローカルのworkers.jsonから検索（最新データ）
+        // まずAPIから最新データを取得（キャッシュを無効化）
+        let response = null;
         try {
-          const localResponse = await fetch('/data/workers.json');
-          if (localResponse.ok) {
-            const localWorkers = await localResponse.json();
-            if (Array.isArray(localWorkers) && localWorkers.length > 0) {
-              const matchingUser = localWorkers.find(u => u.id === userId);
-              if (matchingUser) {
-                currentUser = matchingUser;
-                console.log('[UserDetail] Found user from local data:', matchingUser.name);
-              }
-            }
-          }
-        } catch (localError) {
-          console.log('[UserDetail] Local workers.json not available, trying API');
-        }
-
-        // ローカルで見つからない場合、APIで検索
-        if (!currentUser || !currentUser.id) {
-          const response = await fetch(`${API_BASE}/workers/${userId}`);
+          // キャッシュを無効化するためにタイムスタンプを追加
+          const timestamp = new Date().getTime();
+          response = await fetch(`${API_BASE}/workers/${userId}?t=${timestamp}&_=${Date.now()}`, {
+            cache: 'no-store'
+          });
           if (!response.ok) {
             if (response.status === 404) {
               // APIでも見つからない場合、メールアドレスや名前で検索を試みる
-              const allWorkersResponse = await fetch(`${API_BASE}/workers`);
+              const allWorkersResponse = await fetch(`${API_BASE}/workers?t=${timestamp}&_=${Date.now()}`, {
+                cache: 'no-store'
+              });
               if (allWorkersResponse.ok) {
                 const allWorkers = await allWorkersResponse.json();
                 const workersArray = Array.isArray(allWorkers) ? allWorkers : (allWorkers.items || allWorkers.workers || []);
@@ -1067,6 +1057,33 @@
           } else {
             currentUser = await response.json();
           }
+        } catch (apiError) {
+          console.warn('[UserDetail] API取得に失敗、ローカルのworkers.jsonを試行:', apiError);
+          // APIで取得できない場合のみ、ローカルのworkers.jsonをフォールバックとして使用
+          try {
+            const timestamp = new Date().getTime();
+            const localResponse = await fetch(`/data/workers.json?t=${timestamp}&_=${Date.now()}`, {
+              cache: 'no-store'
+            });
+            if (localResponse.ok) {
+              const localWorkers = await localResponse.json();
+              if (Array.isArray(localWorkers) && localWorkers.length > 0) {
+                const matchingUser = localWorkers.find(u => u.id === userId);
+                if (matchingUser) {
+                  currentUser = matchingUser;
+                  console.log('[UserDetail] Found user from local data (fallback):', matchingUser.name);
+                }
+              }
+            }
+          } catch (localError) {
+            console.log('[UserDetail] Local workers.json also not available');
+            throw apiError; // 元のAPIエラーを再スロー
+          }
+        }
+        
+        // APIで取得できなかった場合
+        if (!currentUser || !currentUser.id) {
+          throw new Error('ユーザー情報の取得に失敗しました');
         }
         
         // ロールを変換（roleフィールドを優先、存在しない場合のみrole_codeから変換）
@@ -1317,8 +1334,12 @@
           statusEl.textContent = '保存しました';
           statusEl.className = 'form-status success';
           
-          // ユーザー情報を再読み込み
+          // ユーザー情報を再読み込み（キャッシュを無効化）
           setTimeout(async () => {
+            // キャッシュをクリアして再読み込み
+            currentUser = null;
+            // 少し待ってから再読み込み（DynamoDBの反映を待つ）
+            await new Promise(resolve => setTimeout(resolve, 300));
             await loadUser();
             closeEditModal();
           }, 500);
