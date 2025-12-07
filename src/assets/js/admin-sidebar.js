@@ -292,7 +292,7 @@
 
       // 管理者ロールのみ管理ダッシュボードを表示
       if (userRole === 'admin' || userRole === '管理者') {
-        adminDashboardLink.style.display = 'flex';
+          adminDashboardLink.style.display = 'flex';
         if (navDivider) {
           navDivider.style.display = 'block';
         }
@@ -390,12 +390,12 @@
               const localResponse = await fetch(`/data/workers.json?t=${timestamp}&_=${Date.now()}`, {
                 cache: 'no-store'
               });
-              if (localResponse.ok) {
-                const localWorkers = await localResponse.json();
-                if (Array.isArray(localWorkers) && localWorkers.length > 0) {
-                  const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
-                  if (matchingUser && matchingUser.id) {
-                    userId = matchingUser.id;
+          if (localResponse.ok) {
+            const localWorkers = await localResponse.json();
+            if (Array.isArray(localWorkers) && localWorkers.length > 0) {
+              const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+              if (matchingUser && matchingUser.id) {
+                userId = matchingUser.id;
                     console.log('[AdminSidebar] Found ID from local workers.json (fallback):', userId);
                   }
                 }
@@ -449,7 +449,7 @@
           const parsedUser = JSON.parse(storedCognitoUser);
           if (parsedUser.role) {
             return parsedUser.role;
-          }
+      }
         }
       } catch (e) {
         console.warn('[AdminSidebar] Error parsing stored cognito_user:', e);

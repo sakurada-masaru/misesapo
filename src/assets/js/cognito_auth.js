@@ -129,7 +129,7 @@
           
           // DynamoDBからユーザー情報を取得（メールアドレスとCognito Subの両方で検索）
           let userInfo = null;
-          const apiBaseUrl = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+            const apiBaseUrl = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
           const timestamp = new Date().getTime();
           
           try {
@@ -173,9 +173,9 @@
               if (subResponse.ok) {
                 const workers = await subResponse.json();
                 console.log('[CognitoAuth] Cognito sub search response:', workers);
-                const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+              const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
                 console.log('[CognitoAuth] Workers array length:', workersArray.length);
-                if (workersArray.length > 0) {
+              if (workersArray.length > 0) {
                   // クライアント側でフィルタリング
                   const matchingUser = workersArray.find(u => u.cognito_sub === cognitoSub);
                   console.log('[CognitoAuth] Matching user by cognito_sub:', matchingUser);

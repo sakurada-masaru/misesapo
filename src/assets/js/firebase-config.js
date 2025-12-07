@@ -57,12 +57,12 @@
       
       if (!isStaffPage) {
         // 従業員ページ以外の場合のみログを表示
-        console.log('[Firebase] Initialized successfully');
+      console.log('[Firebase] Initialized successfully');
       }
     } catch (error) {
       if (!isStaffPage) {
         // 従業員ページ以外の場合のみエラーを表示
-        console.error('[Firebase] Initialization error:', error);
+      console.error('[Firebase] Initialization error:', error);
       }
     }
   } else if (!isStaffPage) {

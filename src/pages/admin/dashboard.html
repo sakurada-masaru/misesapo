@@ -995,10 +995,10 @@
       return; // アクセスが拒否された場合は処理を中断
     }
 
-    // 日付表示
-    const today = new Date();
-    const dateStr = today.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-    document.getElementById('header-date').textContent = dateStr;
+  // 日付表示
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+  document.getElementById('header-date').textContent = dateStr;
 
     // データ読み込み
     loadDashboard();
@@ -1034,11 +1034,11 @@
       
       const workersData = await workersRes.json();
       const workers = Array.isArray(workersData) ? workersData : (workersData.items || workersData.workers || []);
-
+      
       // レポートデータの取得（エラーハンドリング付き）
       let reports = [];
       if (reportsRes.ok) {
-        const reportsData = await reportsRes.json();
+      const reportsData = await reportsRes.json();
         reports = Array.isArray(reportsData) ? reportsData : (reportsData.items || reportsData.reports || []);
       } else {
         console.warn('Failed to load reports:', reportsRes.status);
@@ -1242,9 +1242,9 @@
       const authData = localStorage.getItem('misesapo_auth');
       if (authData) {
         try {
-          const parsed = JSON.parse(authData);
-          if (parsed.token) {
-            return parsed.token;
+        const parsed = JSON.parse(authData);
+        if (parsed.token) {
+          return parsed.token;
           }
         } catch (e) {
           console.warn('Error parsing auth data:', e);

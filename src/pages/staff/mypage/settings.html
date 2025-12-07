@@ -116,9 +116,9 @@
                   <i class="fas fa-moon"></i>
                   ダーク
                 </span>
-                <span class="theme-option auto" data-theme="auto">
-                  <i class="fas fa-adjust"></i>
-                  自動
+                <span class="theme-option misesapo" data-theme="misesapo">
+                  <i class="fas fa-heart"></i>
+                  ミセサポ
                 </span>
               </button>
             </div>
@@ -602,7 +602,7 @@
   const SETTINGS_KEY = 'staff_settings';
   let currentUser = null;
   let settings = {
-    theme: 'light',
+    theme: 'misesapo', // デフォルトはミセサポモード（ピンク）
     pushNotifications: false,
     emailNotifications: true,
     attendanceReminder: true,
@@ -682,13 +682,10 @@
   // テーマを適用
   function applyTheme() {
     const theme = settings.theme;
+    document.documentElement.setAttribute('data-theme', theme);
     
-    if (theme === 'auto') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-    } else {
-      document.documentElement.setAttribute('data-theme', theme);
-    }
+    // マイページにもテーマを適用（別タブで開いている場合）
+    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme } }));
 
     // テーマオプションのアクティブ状態を更新
     document.querySelectorAll('.theme-option').forEach(opt => {

@@ -1113,7 +1113,7 @@
       const roleBadge = document.getElementById('role-badge');
       if (roleBadge) {
         if (roleLabel) {
-          roleBadge.textContent = roleLabel;
+      roleBadge.textContent = roleLabel;
           roleBadge.className = 'role-badge role-admin';
           roleBadge.style.display = 'inline-block';
         } else {
@@ -1391,8 +1391,8 @@
           const cellClass = isToday ? 'today-column' : '';
           
           let cellValue = '-';
-          
-          if (record) {
+        
+        if (record) {
             switch (row.key) {
               case 'clockIn':
                 cellValue = record.clock_in ? formatTime(record.clock_in) : '-';
@@ -1410,17 +1410,17 @@
                 cellValue = record.overtime_hours ? `${record.overtime_hours}h` : '-';
                 break;
               case 'status':
-                if (record.status === 'completed') {
-                  if (record.is_late && record.is_early_leave) {
+          if (record.status === 'completed') {
+            if (record.is_late && record.is_early_leave) {
                     cellValue = '<span class="status-badge-timecard status-late">遅刻・早退</span>';
-                  } else if (record.is_late) {
+            } else if (record.is_late) {
                     cellValue = `<span class="status-badge-timecard status-late">遅刻 ${record.late_minutes}分</span>`;
-                  } else if (record.is_early_leave) {
+            } else if (record.is_early_leave) {
                     cellValue = `<span class="status-badge-timecard status-early-leave">早退 ${record.early_leave_minutes}分</span>`;
-                  } else {
+            } else {
                     cellValue = '<span class="status-badge-timecard status-completed">完了</span>';
-                  }
-                } else if (record.status === 'working') {
+            }
+          } else if (record.status === 'working') {
                   cellValue = '<span class="status-badge-timecard status-working">勤務中</span>';
                 } else {
                   cellValue = '<span class="status-badge-timecard status-absent">未出勤</span>';

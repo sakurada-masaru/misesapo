@@ -190,7 +190,7 @@
           let role = w.role;
           if (!role || role === '') {
             if (w.role_code !== undefined && w.role_code !== null) {
-              role = getRoleFromCode(w.role_code);
+            role = getRoleFromCode(w.role_code);
             } else {
               role = 'staff';
             }
@@ -455,7 +455,7 @@
           mypageUrl = `/staff/mypage.html?id=${encodeURIComponent(user.id)}`;
         } else if (user.email && user.email !== '-') {
           mypageUrl = `/staff/mypage.html?email=${encodeURIComponent(user.email)}`;
-        }
+      }
 
         // 担当業務をバッジとして表示（「・」で区切られた複数の業務を複数のバッジとして表示）
         const jobBadges = getUserJobBadges(user);
@@ -465,8 +465,8 @@
         
         // 出退勤ステータスバッジを取得
         const attendanceBadge = getAttendanceStatusBadge(user.id);
-
-        return `
+      
+      return `
           <div class="user-card" data-role="${user.role}">
             <div class="user-card-header">
               <div class="user-avatar-large">${(user.name || '?')[0]}</div>
@@ -498,15 +498,15 @@
                 <i class="fas fa-eye"></i>
               </a>
               <a href="${mypageUrl}" class="btn-icon" title="マイページ" target="_blank">
-                <i class="fas fa-external-link-alt"></i>
-              </a>
+              <i class="fas fa-external-link-alt"></i>
+            </a>
               <button class="btn-icon" title="編集" onclick="editUser('${user.id}')">
-                <i class="fas fa-edit"></i>
-              </button>
+              <i class="fas fa-edit"></i>
+            </button>
               <button class="btn-icon delete" title="削除" onclick="confirmDelete('${user.id}')">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
           </div>
         `;
       }).join('');
@@ -518,7 +518,7 @@
             ${userCards}
           </div>
         </div>
-      `;
+    `;
     }).join('');
   }
 
