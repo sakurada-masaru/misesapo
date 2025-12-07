@@ -286,41 +286,8 @@
     return 'staff';
   }
 
-  // ロールから部署を決定
-  function getDepartmentFromRole(role) {
-    const roleToDepartment = {
-      // フロントオフィス
-      'sales': '営業',
-      'field_sales': '営業',
-      'inside_sales': '営業',
-      
-      // ミドルオフィス
-      'office': '営業事務',
-      'staff': '清掃',
-      
-      // バックオフィス
-      'developer': '開発',
-      'designer': '開発',
-      'engineer': '開発',
-      'special_advisor': 'スペシャルバイザー',
-      
-      // 運営本部
-      'admin': '総務',
-      'human_resources': '人事',
-      'accounting': '経理',
-      'general_affairs': '総務',
-      'operation': '運営',
-      
-      // その他
-      'contractor': '事務',
-      'part_time': '事務',
-      'other': '事務'
-    };
-    
-    return roleToDepartment[role] || '事務';
-  }
-
-  // 部署をセクションに割り当て
+  // 部署をセクションに割り当て（組織図に基づいて設定）
+  // TODO: 組織図が確定したら、ここに部署とセクションのマッピングを設定
   function getSectionForDepartment(department) {
     const dept = (department || '').trim();
     
