@@ -1110,6 +1110,7 @@
           
           // まずAWS APIから最新データを取得
           let response = null;
+          let urlParamId = userId; // URLパラメータのIDを保存
           
           if (userId) {
             // IDで取得を試みる（キャッシュ無効化）
@@ -1119,10 +1120,42 @@
             if (response.ok) {
               currentUser = await response.json();
               console.log('[Mypage] Found user by ID from API:', currentUser.name);
+            } else if (response.status === 404) {
+              // 404エラーの場合、URLパラメータのIDが無効な可能性がある
+              console.warn('[Mypage] User not found by URL param ID:', userId, '- will try Cognito auth ID');
+              // URLパラメータのIDを無視して、Cognito認証から取得したIDを使用
+              userId = null;
             }
           }
           
-          // IDで見つからない場合、メールアドレスで検索
+          // IDで見つからない場合、Cognito認証から取得したIDを使用
+          if (!currentUser || !currentUser.id) {
+            // まずCognito認証から最新のユーザー情報を取得
+            if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+              try {
+                const cognitoUser = await window.CognitoAuth.getCurrentUser();
+                if (cognitoUser && cognitoUser.id && cognitoUser.id !== urlParamId) {
+                  // Cognito認証から取得したIDがURLパラメータのIDと異なる場合、そのIDで検索
+                  console.log('[Mypage] Trying Cognito auth ID:', cognitoUser.id);
+                  response = await fetch(`${API_BASE}/workers/${cognitoUser.id}?t=${timestamp}&_=${Date.now()}`, {
+                    cache: 'no-store'
+                  });
+                  if (response && response.ok) {
+                    currentUser = await response.json();
+                    console.log('[Mypage] Found user by Cognito auth ID from API:', currentUser.name);
+                    // URLを更新（古いIDを新しいIDに置き換え）
+                    const newUrl = new URL(window.location.href);
+                    newUrl.searchParams.set('id', cognitoUser.id);
+                    window.history.replaceState({}, '', newUrl.toString());
+                  }
+                }
+              } catch (cognitoError) {
+                console.warn('[Mypage] Error getting Cognito user:', cognitoError);
+              }
+            }
+          }
+          
+          // まだ見つからない場合、メールアドレスで検索
           if (!currentUser || !currentUser.id) {
             if (userEmail) {
               response = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(userEmail)}&t=${timestamp}&_=${Date.now()}`, {
@@ -1136,6 +1169,10 @@
                   if (matchingUser) {
                     currentUser = matchingUser;
                     console.log('[Mypage] Found user by email from API:', matchingUser.name);
+                    // URLを更新（正しいIDに置き換え）
+                    const newUrl = new URL(window.location.href);
+                    newUrl.searchParams.set('id', matchingUser.id);
+                    window.history.replaceState({}, '', newUrl.toString());
                   }
                 }
               }
@@ -1172,6 +1209,10 @@
               if (Array.isArray(items) && items.length > 0) {
                 currentUser = items[0];
                 console.log('[Mypage] Found user from fallback API:', currentUser.name);
+                // URLを更新（正しいIDに置き換え）
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.set('id', currentUser.id);
+                window.history.replaceState({}, '', newUrl.toString());
               }
             }
           }
