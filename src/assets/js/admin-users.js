@@ -261,11 +261,11 @@
     if (code === '1' || code === 1) return 'admin';
     if (code === '2' || code === 2) return 'sales';
     if (code === '3' || code === 3) return 'office';
-    if (code === '4' || code === 4) return 'cleaning';
-    if (code === '5' || code === 5) return 'public_relations';
+    if (code === '4' || code === 4) return 'staff';
+    if (code === '5' || code === 5) return 'developer';
     if (code === '6' || code === 6) return 'designer';
     if (code === '7' || code === 7) return 'general_affairs';
-    if (code === '8' || code === 8) return 'director';
+    if (code === '8' || code === 8) return 'operation';
     if (code === '9' || code === 9) return 'contractor';
     if (code === '10' || code === 10) return 'accounting';
     if (code === '11' || code === 11) return 'human_resources';
@@ -275,7 +275,56 @@
     if (code === '15' || code === 15) return 'mechanic';
     if (code === '16' || code === 16) return 'engineer';
     if (code === '17' || code === 17) return 'part_time';
-    return 'cleaning';
+    return 'staff';
+  }
+
+  // 部署をセクションに割り当て
+  function getSectionForDepartment(department) {
+    const dept = (department || '').trim();
+    
+    // フロントオフィス
+    if (dept === '営業' || dept === '現場清掃' || dept === '清掃') {
+      return 'front-office';
+    }
+    
+    // ミドルオフィス
+    if (dept === '運営') {
+      return 'middle-office';
+    }
+    
+    // バックオフィス
+    if (dept === '営業事務' || dept === '開発') {
+      return 'back-office';
+    }
+    
+    // 取締役会
+    if (dept === '経営本部') {
+      return 'board';
+    }
+    
+    // デフォルトはバックオフィス
+    return 'back-office';
+  }
+
+  // 権限の優先順位（数値が小さいほど権限が大きい）
+  function getRolePriority(role) {
+    const priorities = {
+      'admin': 1,
+      'special_advisor': 2,
+      'operation': 3,
+      'human_resources': 4,
+      'accounting': 5,
+      'general_affairs': 6,
+      'developer': 7,
+      'designer': 8,
+      'engineer': 9,
+      'sales': 10,
+      'office': 11,
+      'staff': 12,
+      'contractor': 13,
+      'part_time': 14
+    };
+    return priorities[role] || 99;
   }
 
   function updateStats() {
@@ -305,56 +354,133 @@
 
     currentPage = 1;
     renderTable();
-    renderPagination();
+    // ページネーションは新しいレイアウトでは不要
+    // renderPagination();
   }
 
   function renderTable() {
-    const start = (currentPage - 1) * perPage;
-    const pageUsers = filteredUsers.slice(start, start + perPage);
+    // 新しいレイアウト: 4セクション構造
+    renderOrganizationLayout();
+  }
 
-    if (pageUsers.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">該当するユーザーがいません</td></tr>';
+  function renderOrganizationLayout() {
+    const loadingEl = document.getElementById('loading-users');
+    if (loadingEl) {
+      loadingEl.style.display = 'none';
+    }
+
+    // ユーザーを部署ごとにグループ化
+    const usersByDepartment = {};
+    for (const user of filteredUsers) {
+      const dept = user.department || '未分類';
+      if (!usersByDepartment[dept]) {
+        usersByDepartment[dept] = [];
+      }
+      usersByDepartment[dept].push(user);
+    }
+
+    // 各部署内のユーザーを権限の大きい順にソート
+    for (const dept in usersByDepartment) {
+      usersByDepartment[dept].sort((a, b) => {
+        const priorityA = getRolePriority(a.role);
+        const priorityB = getRolePriority(b.role);
+        return priorityA - priorityB; // 数値が小さいほど権限が大きい
+      });
+    }
+
+    // セクションごとに部署を分類
+    const sections = {
+      'front-office': [],
+      'middle-office': [],
+      'back-office': [],
+      'board': []
+    };
+
+    for (const dept in usersByDepartment) {
+      const section = getSectionForDepartment(dept);
+      sections[section].push({
+        name: dept,
+        users: usersByDepartment[dept]
+      });
+    }
+
+    // 各セクションをレンダリング
+    renderSection('front-office-departments', sections['front-office']);
+    renderSection('middle-office-departments', sections['middle-office']);
+    renderSection('back-office-departments', sections['back-office']);
+    renderSection('board-departments', sections['board']);
+  }
+
+  function renderSection(containerId, departments) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (departments.length === 0) {
+      container.innerHTML = '<p class="no-departments">部署がありません</p>';
       return;
     }
 
-    tbody.innerHTML = pageUsers.map(u => {
-      // マイページリンクを生成（IDを優先、なければメールアドレス）
-      let mypageUrl = '/staff/mypage.html';
-      if (u.id && u.id !== 'N/A' && !u.id.startsWith('temp_')) {
-        mypageUrl = `/staff/mypage.html?id=${encodeURIComponent(u.id)}`;
-      } else if (u.email && u.email !== '-') {
-        mypageUrl = `/staff/mypage.html?email=${encodeURIComponent(u.email)}`;
-      }
-      
+    container.innerHTML = departments.map(dept => {
+      const userCards = dept.users.map(user => {
+        // マイページリンクを生成
+        let mypageUrl = '/staff/mypage.html';
+        if (user.id && user.id !== 'N/A' && !user.id.startsWith('temp_')) {
+          mypageUrl = `/staff/mypage.html?id=${encodeURIComponent(user.id)}`;
+        } else if (user.email && user.email !== '-') {
+          mypageUrl = `/staff/mypage.html?email=${encodeURIComponent(user.email)}`;
+        }
+
+        return `
+          <div class="user-card" data-role="${user.role}">
+            <div class="user-card-header">
+              <div class="user-avatar-large">${(user.name || '?')[0]}</div>
+              <div class="user-card-info">
+                <h4 class="user-name">
+                  <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}">${escapeHtml(user.name || '-')}</a>
+                </h4>
+                <div class="user-id">${escapeHtml(user.id)}</div>
+              </div>
+            </div>
+            <div class="user-card-body">
+              <div class="user-detail">
+                <i class="fas fa-envelope"></i>
+                <span>${escapeHtml(user.email || '-')}</span>
+              </div>
+              <div class="user-detail">
+                <i class="fas fa-phone"></i>
+                <span>${escapeHtml(user.phone || '-')}</span>
+              </div>
+              <div class="user-card-footer">
+                <span class="role-badge role-${user.role}">${getRoleLabel(user.role)}</span>
+                <span class="status-badge status-${user.status || 'active'}">${user.status === 'inactive' ? '無効' : '有効'}</span>
+              </div>
+            </div>
+            <div class="user-card-actions">
+              <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" class="btn-icon" title="詳細">
+                <i class="fas fa-eye"></i>
+              </a>
+              <a href="${mypageUrl}" class="btn-icon" title="マイページ" target="_blank">
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+              <button class="btn-icon" title="編集" onclick="editUser('${user.id}')">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn-icon delete" title="削除" onclick="confirmDelete('${user.id}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
       return `
-      <tr>
-        <td>${escapeHtml(u.id)}</td>
-        <td>
-          <div class="user-name-cell">
-            <span class="user-avatar">${(u.name || '?')[0]}</span>
-            <a href="/admin/users/detail?id=${encodeURIComponent(u.id)}" class="user-name-link">${escapeHtml(u.name || '-')}</a>
-            <a href="${mypageUrl}" class="user-mypage-link" title="マイページを開く" style="margin-left: 8px; color: #3b82f6; font-size: 0.875rem;" target="_blank">
-              <i class="fas fa-external-link-alt"></i>
-            </a>
+        <div class="department-group">
+          <h3 class="department-title">${escapeHtml(dept.name)} <span class="user-count">(${dept.users.length}名)</span></h3>
+          <div class="users-grid">
+            ${userCards}
           </div>
-        </td>
-        <td>${escapeHtml(u.email || '-')}</td>
-        <td>${escapeHtml(u.phone || '-')}</td>
-        <td><span class="role-badge role-${u.role}">${getRoleLabel(u.role)}</span></td>
-        <td>${escapeHtml(u.department || '-')}</td>
-        <td><span class="status-badge status-${u.status || 'active'}">${u.status === 'inactive' ? '無効' : '有効'}</span></td>
-        <td>
-          <div class="action-btns">
-            <button class="action-btn" title="編集" onclick="editUser('${u.id}')">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="action-btn delete" title="削除" onclick="confirmDelete('${u.id}')">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-        </td>
-      </tr>
-    `;
+        </div>
+      `;
     }).join('');
   }
 

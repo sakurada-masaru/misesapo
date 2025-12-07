@@ -54,7 +54,7 @@
       <div class="stat-mini-icon indigo"><i class="fas fa-code"></i></div>
       <div class="stat-mini-body">
         <div class="stat-mini-value" id="stat-developer">-</div>
-        <div class="stat-mini-label">開発者</div>
+        <div class="stat-mini-label">広報</div>
       </div>
     </div>
     <div class="stat-mini">
@@ -117,33 +117,52 @@
     <!-- 部署別のセクションはJavaScriptで動的に生成されます -->
   </div>
 
-  <!-- テーブル -->
-  <div class="table-container">
-    <table class="users-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>名前</th>
-          <th>メールアドレス</th>
-          <th>電話番号</th>
-          <th>ロール</th>
-          <th>部署</th>
-          <th>ステータス</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody id="users-tbody">
-        <tr>
-          <td colspan="8" class="loading-cell">
-            <i class="fas fa-spinner fa-spin"></i> 読み込み中...
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <!-- 組織構造レイアウト -->
+  <div class="organization-layout" id="organization-layout">
+    <div class="loading-cell" id="loading-users">
+      <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+    </div>
+    
+    <!-- フロントオフィス -->
+    <section class="office-section front-office">
+      <h2 class="section-title">
+        <i class="fas fa-store"></i> フロントオフィス
+      </h2>
+      <div class="departments-container" id="front-office-departments">
+        <!-- 部署が動的に追加されます -->
+      </div>
+    </section>
 
-  <!-- ページネーション -->
-  <div class="pagination" id="pagination"></div>
+    <!-- ミドルオフィス -->
+    <section class="office-section middle-office">
+      <h2 class="section-title">
+        <i class="fas fa-shield-alt"></i> ミドルオフィス
+      </h2>
+      <div class="departments-container" id="middle-office-departments">
+        <!-- 部署が動的に追加されます -->
+      </div>
+    </section>
+
+    <!-- バックオフィス -->
+    <section class="office-section back-office">
+      <h2 class="section-title">
+        <i class="fas fa-cogs"></i> バックオフィス
+      </h2>
+      <div class="departments-container" id="back-office-departments">
+        <!-- 部署が動的に追加されます -->
+      </div>
+    </section>
+
+    <!-- 取締役会 -->
+    <section class="office-section board-of-directors">
+      <h2 class="section-title">
+        <i class="fas fa-crown"></i> 取締役会
+      </h2>
+      <div class="departments-container" id="board-departments">
+        <!-- 部署が動的に追加されます -->
+      </div>
+    </section>
+  </div>
 
   <!-- 新規/編集モーダル -->
   <dialog id="user-dialog" class="user-dialog">
@@ -180,7 +199,7 @@
               <option value="sales">営業</option>
               <option value="office">事務</option>
               <option value="cleaning">清掃</option>
-              <option value="development">開発</option>
+              <option value="public_relations">広報</option>
               <option value="director">取締役</option>
               <option value="general_affairs">総務</option>
               <option value="accounting">経理</option>
