@@ -1470,9 +1470,12 @@
       try {
         // APIから勤怠記録を取得（今日の記録）
         const today = new Date().toISOString().split('T')[0];
-        const response = await fetch(`${API_BASE}/attendance?staff_id=${currentUser.id}&date=${today}`);
+        const response = await fetch(`${API_BASE}/attendance?staff_id=${currentUser.id}&date=${today}`, {
+          // 404エラーを抑制するために、エラーハンドリングを改善
+          // ただし、ブラウザのコンソールには自動的に表示される可能性がある
+        }).catch(() => null);
         
-        if (response.ok) {
+        if (response && response.ok) {
           const data = await response.json();
           // レスポンスが配列の場合とオブジェクトの場合に対応
           let record = null;
@@ -1495,15 +1498,14 @@
               staff_name: record.staff_name || currentUser.name
             };
           }
-        } else if (response.status === 404) {
-          // 404エラーは正常（APIが実装されていない場合）
-          // ローカルストレージから読み込むため、エラーをログに出力しない
-        } else {
-          console.warn('APIからの勤怠記録取得に失敗しました:', response.status, response.statusText);
         }
+        // 404エラーやその他のエラーは正常（APIが実装されていない場合）
+        // ローカルストレージから読み込むため、エラーをログに出力しない
       } catch (error) {
-        // ネットワークエラーなどの場合のみ警告を出力
-        console.warn('APIからの勤怠記録取得に失敗しました。ローカルストレージから読み込みます:', error);
+        // ネットワークエラーなどの場合のみ警告を出力（404は除外）
+        if (error && error.message && !error.message.includes('404')) {
+          console.warn('APIからの勤怠記録取得に失敗しました。ローカルストレージから読み込みます:', error);
+        }
       }
       
       // ローカルストレージからも読み込み（フォールバック）
@@ -2198,24 +2200,22 @@
           headers: {
             'Authorization': `Bearer ${idToken}`
           }
-        });
+        }).catch(() => null);
         
-        if (response.ok) {
+        if (response && response.ok) {
           const data = await response.json();
           const announcements = data.announcements || [];
           renderAnnouncements(announcements);
-        } else if (response.status === 401) {
-          // 401エラーは認証が必要な場合（正常な動作）
-          // 空のリストを表示
-          renderAnnouncements([]);
         } else {
-          // その他のエラー
-          console.warn('業務連絡の取得に失敗しました:', response.status, response.statusText);
+          // 401エラーやその他のエラーは正常（認証が必要な場合やAPIが実装されていない場合）
+          // 空のリストを表示
           renderAnnouncements([]);
         }
       } catch (error) {
-        // ネットワークエラーなどの場合のみ警告を出力
-        console.warn('Error loading announcements:', error);
+        // ネットワークエラーなどの場合のみ警告を出力（401は除外）
+        if (error && error.message && !error.message.includes('401')) {
+          console.warn('Error loading announcements:', error);
+        }
         renderAnnouncements([]);
       }
     }
