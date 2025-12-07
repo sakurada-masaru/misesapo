@@ -280,10 +280,18 @@
       width: 100%;
       max-width: none;
       margin: 0;
+      margin-left: var(--sidebar-width, 240px);
       padding: 24px;
       background: #f9fafb;
       min-height: 100vh;
       box-sizing: border-box;
+    }
+    .staff-mypage.main-content {
+      margin-left: var(--sidebar-width, 240px);
+    }
+    .sidebar.collapsed ~ .staff-mypage.main-content,
+    .sidebar.collapsed + .staff-mypage.main-content {
+      margin-left: var(--sidebar-width-collapsed, 64px);
     }
     .loading {
       text-align: center;
