@@ -79,7 +79,8 @@ def sync_workers_json():
             continue
         
         # 「ユーザー1」「ユーザー2」などのパターンを除外
-        if name and name.match(r'^ユーザー\d+$'):
+        import re
+        if name and re.match(r'^ユーザー\d+$', name):
             continue
         
         normalized_worker = normalize_worker(worker)

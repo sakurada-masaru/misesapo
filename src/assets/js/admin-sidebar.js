@@ -309,11 +309,11 @@
 
       // リンクを設定（IDを優先、なければメールアドレス）
       if (userId) {
-        mypageLink.href = `/staff/mypage?id=${encodeURIComponent(userId)}`;
+        mypageLink.href = `/staff/mypage.html?id=${encodeURIComponent(userId)}`;
         mypageLink.style.display = 'flex';
         console.log('[AdminSidebar] Mypage link set with ID:', userId);
       } else if (email) {
-        mypageLink.href = `/staff/mypage?email=${encodeURIComponent(email)}`;
+        mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
         mypageLink.style.display = 'flex';
         console.log('[AdminSidebar] Mypage link set with email:', email);
       }

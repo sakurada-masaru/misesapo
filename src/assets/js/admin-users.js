@@ -163,7 +163,7 @@
     if (code === '2' || code === 2) return 'sales';
     if (code === '3' || code === 3) return 'office';
     if (code === '4' || code === 4) return 'cleaning';
-    if (code === '5' || code === 5) return 'development';
+    if (code === '5' || code === 5) return 'public_relations';
     if (code === '6' || code === 6) return 'designer';
     if (code === '7' || code === 7) return 'general_affairs';
     if (code === '8' || code === 8) return 'director';
@@ -184,7 +184,7 @@
     document.getElementById('stat-staff').textContent = allUsers.filter(u => u.role === 'cleaning').length;
     document.getElementById('stat-sales').textContent = allUsers.filter(u => u.role === 'sales').length;
     document.getElementById('stat-office').textContent = allUsers.filter(u => u.role === 'office').length;
-    document.getElementById('stat-developer').textContent = allUsers.filter(u => u.role === 'development').length;
+    document.getElementById('stat-developer').textContent = allUsers.filter(u => u.role === 'public_relations').length;
     document.getElementById('stat-admin').textContent = allUsers.filter(u => u.role === 'admin').length;
     document.getElementById('stat-operation').textContent = allUsers.filter(u => u.role === 'director').length;
   }
@@ -220,11 +220,11 @@
 
     tbody.innerHTML = pageUsers.map(u => {
       // マイページリンクを生成（IDを優先、なければメールアドレス）
-      let mypageUrl = '/staff/mypage';
+      let mypageUrl = '/staff/mypage.html';
       if (u.id && u.id !== 'N/A' && !u.id.startsWith('temp_')) {
-        mypageUrl = `/staff/mypage?id=${encodeURIComponent(u.id)}`;
+        mypageUrl = `/staff/mypage.html?id=${encodeURIComponent(u.id)}`;
       } else if (u.email && u.email !== '-') {
-        mypageUrl = `/staff/mypage?email=${encodeURIComponent(u.email)}`;
+        mypageUrl = `/staff/mypage.html?email=${encodeURIComponent(u.email)}`;
       }
       
       return `
@@ -265,7 +265,7 @@
       sales: '営業',
       office: '事務',
       cleaning: '清掃',
-      development: '開発',
+      public_relations: '広報',
       designer: 'デザイナー',
       general_affairs: '総務',
       director: '取締役',
@@ -393,7 +393,7 @@
           'sales': '2',
           'office': '3',
           'cleaning': '4',
-          'development': '5',
+          'public_relations': '5',
           'designer': '6',
           'general_affairs': '7',
           'director': '8',
@@ -498,7 +498,7 @@
               'sales': '2',
               'office': '3',
               'cleaning': '4',
-              'development': '5',
+              'public_relations': '5',
               'designer': '6',
               'general_affairs': '7',
               'director': '8',
@@ -520,7 +520,7 @@
               'sales': '2',
               'office': '3',
               'cleaning': '4',
-              'development': '5',
+              'public_relations': '5',
               'designer': '6',
               'general_affairs': '7',
               'director': '8',
@@ -544,7 +544,7 @@
             'sales': '2',
             'office': '3',
             'cleaning': '4',
-            'development': '5',
+            'public_relations': '5',
             'designer': '6',
             'general_affairs': '7',
             'director': '8',
@@ -1075,7 +1075,7 @@
         sales: '2',
         office: '3',
         cleaning: '4',
-        development: '5',
+        public_relations: '5',
         designer: '6',
         general_affairs: '7',
         director: '8',
