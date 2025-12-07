@@ -335,20 +335,20 @@
       flex-direction: column;
       gap: 24px;
     }
-    /* メインコンテンツ：5×3グリッド（15マス） */
+    /* メインコンテンツ：10×6グリッド（60マス） */
     .mypage-main-grid-container {
       position: relative;
       padding: 0 16px;
     }
     .mypage-main-grid {
       display: grid !important;
-      grid-template-columns: repeat(5, 1fr);
-      grid-template-rows: repeat(3, minmax(200px, auto));
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(6, minmax(150px, auto));
       gap: 16px;
       width: 100%;
       align-items: start;
     }
-    /* 編集モード時にグリッドを可視化 */
+    /* 編集モード時にグリッドを可視化（ピンク色） */
     .edit-mode .mypage-main-grid::before {
       content: '';
       position: absolute;
@@ -357,8 +357,8 @@
       right: 0;
       bottom: 0;
       background-image: 
-        repeating-linear-gradient(0deg, transparent, transparent calc(100% / 3 - 1px), rgba(59, 130, 246, 0.1) calc(100% / 3 - 1px), rgba(59, 130, 246, 0.1) calc(100% / 3)),
-        repeating-linear-gradient(90deg, transparent, transparent calc(100% / 5 - 1px), rgba(59, 130, 246, 0.1) calc(100% / 5 - 1px), rgba(59, 130, 246, 0.1) calc(100% / 5));
+        repeating-linear-gradient(0deg, transparent, transparent calc(100% / 6 - 1px), rgba(255, 192, 203, 0.4) calc(100% / 6 - 1px), rgba(255, 192, 203, 0.4) calc(100% / 6)),
+        repeating-linear-gradient(90deg, transparent, transparent calc(100% / 10 - 1px), rgba(255, 192, 203, 0.4) calc(100% / 10 - 1px), rgba(255, 192, 203, 0.4) calc(100% / 10));
       pointer-events: none;
       z-index: 0;
     }
@@ -3251,8 +3251,9 @@
     function setGridPosition(section, col, row) {
       const cost = parseInt(section.dataset.sectionCost) || 1;
       // コストに応じて幅を決定（1マス=1列、2マス=2列、3マス=3列など）
-      const colSpan = Math.min(cost, 5); // 最大5列
-      const rowSpan = Math.ceil(cost / 5); // 必要に応じて複数行
+      // 10列グリッドなので、コストが10を超える場合は複数行にまたがる
+      const colSpan = Math.min(cost, 10); // 最大10列
+      const rowSpan = Math.ceil(cost / 10); // 必要に応じて複数行
       
       section.style.gridColumn = `${col} / ${col + colSpan}`;
       section.style.gridRow = `${row} / ${row + rowSpan}`;
@@ -3324,15 +3325,15 @@
       
       sections.forEach(section => {
         const cost = parseInt(section.dataset.sectionCost) || 1;
-        // 現在の行に収まるかチェック
-        if (currentCol + cost > 6) {
+        // 現在の行に収まるかチェック（10列グリッド）
+        if (currentCol + cost > 11) {
           currentRow++;
           currentCol = 1;
         }
         setGridPosition(section, currentCol, currentRow);
         currentCol += cost;
-        // 5列を超えたら次の行へ
-        if (currentCol > 5) {
+        // 10列を超えたら次の行へ
+        if (currentCol > 10) {
           currentRow++;
           currentCol = 1;
         }
@@ -3345,11 +3346,11 @@
       const gridX = x - rect.left;
       const gridY = y - rect.top;
       
-      const colWidth = rect.width / 5;
-      const rowHeight = rect.height / 3;
+      const colWidth = rect.width / 10; // 10列グリッド
+      const rowHeight = rect.height / 6; // 6行グリッド
       
-      const col = Math.min(Math.floor(gridX / colWidth) + 1, 5);
-      const row = Math.min(Math.floor(gridY / rowHeight) + 1, 3);
+      const col = Math.min(Math.floor(gridX / colWidth) + 1, 10);
+      const row = Math.min(Math.floor(gridY / rowHeight) + 1, 6);
       
       return { col, row };
     }
@@ -3357,11 +3358,11 @@
     // グリッド位置が有効かチェック（他のセクションと重複しないか）
     function isValidPosition(grid, section, col, row) {
       const cost = parseInt(section.dataset.sectionCost) || 1;
-      const colSpan = Math.min(cost, 5);
-      const rowSpan = Math.ceil(cost / 5);
+      const colSpan = Math.min(cost, 10); // 10列グリッド
+      const rowSpan = Math.ceil(cost / 10); // 6行グリッド
       
       // グリッド範囲外チェック
-      if (col + colSpan - 1 > 5 || row + rowSpan - 1 > 3) {
+      if (col + colSpan - 1 > 10 || row + rowSpan - 1 > 6) {
         return false;
       }
       
@@ -3374,8 +3375,8 @@
         if (!otherPos) continue;
         
         const otherCost = parseInt(other.dataset.sectionCost) || 1;
-        const otherColSpan = Math.min(otherCost, 5);
-        const otherRowSpan = Math.ceil(otherCost / 5);
+        const otherColSpan = Math.min(otherCost, 10); // 10列グリッド
+        const otherRowSpan = Math.ceil(otherCost / 10); // 6行グリッド
         
         // 重複チェック
         if (!(col + colSpan <= otherPos.col || col >= otherPos.col + otherColSpan ||
