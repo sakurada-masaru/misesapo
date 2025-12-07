@@ -331,6 +331,7 @@
   function filterAndRender() {
     const search = document.getElementById('search-input').value.toLowerCase();
     const roleFilter = document.getElementById('role-filter').value;
+    const departmentFilter = document.getElementById('department-filter')?.value || '';
     const statusFilter = document.getElementById('status-filter').value;
 
     filteredUsers = allUsers.filter(u => {
@@ -338,15 +339,52 @@
         (u.name && u.name.toLowerCase().includes(search)) ||
         (u.email && u.email.toLowerCase().includes(search)) ||
         (u.id && u.id.toLowerCase().includes(search));
-      const matchRole = !roleFilter || u.role === roleFilter;
+      
+      // ロールフィルター（管理者 or なし）
+      let matchRole = true;
+      if (roleFilter) {
+        if (roleFilter === 'admin') {
+          matchRole = isAdminRole(u.role);
+        } else if (roleFilter === 'staff') {
+          matchRole = !isAdminRole(u.role);
+        }
+      }
+      
+      // 部署フィルター
+      const matchDepartment = !departmentFilter || u.department === departmentFilter;
+      
       const matchStatus = !statusFilter || u.status === statusFilter;
-      return matchSearch && matchRole && matchStatus;
+      return matchSearch && matchRole && matchDepartment && matchStatus;
     });
 
     currentPage = 1;
     renderTable();
     // ページネーションは新しいレイアウトでは不要
     // renderPagination();
+  }
+  
+  // 部署フィルターのオプションを動的に生成
+  function updateDepartmentFilter() {
+    const departmentFilter = document.getElementById('department-filter');
+    if (!departmentFilter) return;
+    
+    // 既存のオプションをクリア（「すべての部署」以外）
+    const allOption = departmentFilter.querySelector('option[value=""]');
+    departmentFilter.innerHTML = '';
+    if (allOption) {
+      departmentFilter.appendChild(allOption);
+    }
+    
+    // ユニークな部署を取得
+    const departments = [...new Set(allUsers.map(u => u.department).filter(d => d && d !== '-'))].sort();
+    
+    // 部署オプションを追加
+    departments.forEach(dept => {
+      const option = document.createElement('option');
+      option.value = dept;
+      option.textContent = dept;
+      departmentFilter.appendChild(option);
+    });
   }
 
   function renderTable() {
