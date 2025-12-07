@@ -244,12 +244,16 @@
         </section>
 
         <!-- 今月のカレンダー -->
-        <section class="section calendar-section hide-sm">
+        <section class="section calendar-section">
+          <h2 class="section-title">
+            <i class="fas fa-calendar-alt"></i>
+            カレンダー
+          </h2>
           <div class="calendar-head">
             <a class="calendar-nav" href="#" id="calendar-prev" aria-label="前へ">
               <i class="fa-solid fa-chevron-left"></i>
             </a>
-            <h2 class="calendar-title" id="calendar-title">2025 06</h2>
+            <div class="calendar-title" id="calendar-title">2025 06</div>
             <a class="calendar-nav" href="#" id="calendar-next" aria-label="次へ">
               <i class="fa-solid fa-chevron-right"></i>
             </a>
@@ -290,8 +294,13 @@
     }
     .mypage-grid {
       display: grid;
-      grid-template-columns: 1fr 320px;
+      grid-template-columns: 1fr 360px;
       gap: 24px;
+    }
+    @media (max-width: 1024px) {
+      .mypage-grid {
+        grid-template-columns: 1fr;
+      }
     }
     .mypage-main {
       display: flex;
@@ -308,6 +317,9 @@
       border-radius: 12px;
       padding: 24px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .mypage-side .section {
+      padding: 20px;
     }
     .section-title {
       font-size: 1.25rem;
@@ -539,33 +551,36 @@
       overflow: hidden;
     }
     .calendar-section .card {
-      padding: 12px;
+      padding: 8px;
       overflow: hidden;
     }
     .calendar-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       padding: 0 4px;
     }
     .calendar-title {
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: 600;
       color: #111827;
       margin: 0;
+      text-align: center;
+      flex: 1;
     }
     .calendar-nav {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       background: #f3f4f6;
       color: #6b7280;
       text-decoration: none;
       transition: all 0.2s;
+      font-size: 0.75rem;
     }
     .calendar-nav:hover {
       background: var(--primary);
@@ -582,8 +597,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.8rem;
-      border-radius: 4px;
+      font-size: 0.7rem;
+      border-radius: 3px;
       min-width: 0;
     }
     .calendar-day-name {
