@@ -30,34 +30,6 @@
       </div>
     </div>
     <div class="stat-mini">
-      <div class="stat-mini-icon orange"><i class="fas fa-hard-hat"></i></div>
-      <div class="stat-mini-body">
-        <div class="stat-mini-value" id="stat-staff">-</div>
-        <div class="stat-mini-label">清掃員</div>
-      </div>
-    </div>
-    <div class="stat-mini">
-      <div class="stat-mini-icon green"><i class="fas fa-user-tie"></i></div>
-      <div class="stat-mini-body">
-        <div class="stat-mini-value" id="stat-sales">-</div>
-        <div class="stat-mini-label">営業</div>
-      </div>
-    </div>
-    <div class="stat-mini">
-      <div class="stat-mini-icon teal"><i class="fas fa-briefcase"></i></div>
-      <div class="stat-mini-body">
-        <div class="stat-mini-value" id="stat-office">-</div>
-        <div class="stat-mini-label">事務</div>
-      </div>
-    </div>
-    <div class="stat-mini">
-      <div class="stat-mini-icon indigo"><i class="fas fa-code"></i></div>
-      <div class="stat-mini-body">
-        <div class="stat-mini-value" id="stat-developer">-</div>
-        <div class="stat-mini-label">広報</div>
-      </div>
-    </div>
-    <div class="stat-mini">
       <div class="stat-mini-icon purple"><i class="fas fa-user-shield"></i></div>
       <div class="stat-mini-body">
         <div class="stat-mini-value" id="stat-admin">-</div>
@@ -65,10 +37,17 @@
       </div>
     </div>
     <div class="stat-mini">
-      <div class="stat-mini-icon pink"><i class="fas fa-cog"></i></div>
+      <div class="stat-mini-icon gray"><i class="fas fa-user"></i></div>
       <div class="stat-mini-body">
-        <div class="stat-mini-value" id="stat-operation">-</div>
-        <div class="stat-mini-label">運営</div>
+        <div class="stat-mini-value" id="stat-staff">-</div>
+        <div class="stat-mini-label">平社員</div>
+      </div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-icon green"><i class="fas fa-building"></i></div>
+      <div class="stat-mini-body">
+        <div class="stat-mini-value" id="stat-departments">-</div>
+        <div class="stat-mini-label">部署数</div>
       </div>
     </div>
   </div>
@@ -83,23 +62,11 @@
       <select class="filter-select" id="role-filter">
         <option value="">すべてのロール</option>
         <option value="admin">管理者</option>
-        <option value="sales">営業</option>
-        <option value="office">事務</option>
-        <option value="cleaning">清掃</option>
-        <option value="development">開発</option>
-        <option value="director">取締役</option>
-        <option value="general_affairs">総務</option>
-        <option value="accounting">経理</option>
-        <option value="human_resources">人事</option>
-        <option value="special_advisor">スペシャルバイザー</option>
-        <option value="field_sales">フィールドセールス</option>
-        <option value="inside_sales">インサイドセールス</option>
-        <option value="mechanic">メカニック</option>
-        <option value="engineer">エンジニア</option>
-        <option value="designer">デザイナー</option>
-        <option value="part_time">アルバイト</option>
-        <option value="contractor">外部委託</option>
-        <option value="other">その他</option>
+        <option value="staff">なし（平社員）</option>
+      </select>
+      <select class="filter-select" id="department-filter">
+        <option value="">すべての部署</option>
+        <!-- 部署フィルターはJavaScriptで動的に生成されます -->
       </select>
       <select class="filter-select" id="status-filter">
         <option value="">すべてのステータス</option>

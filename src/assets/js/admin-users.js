@@ -251,6 +251,7 @@
       }
       
       updateStats();
+      updateDepartmentFilter(); // 部署フィルターを更新
       filterAndRender();
       renderAttendanceSections();
     } catch (error) {
@@ -311,13 +312,20 @@
   }
 
   function updateStats() {
+    // 総ユーザー数
     document.getElementById('stat-total').textContent = allUsers.length;
-    document.getElementById('stat-staff').textContent = allUsers.filter(u => u.role === 'cleaning').length;
-    document.getElementById('stat-sales').textContent = allUsers.filter(u => u.role === 'sales').length;
-    document.getElementById('stat-office').textContent = allUsers.filter(u => u.role === 'office').length;
-    document.getElementById('stat-developer').textContent = allUsers.filter(u => u.role === 'public_relations').length;
-    document.getElementById('stat-admin').textContent = allUsers.filter(u => u.role === 'admin').length;
-    document.getElementById('stat-operation').textContent = allUsers.filter(u => u.role === 'director').length;
+    
+    // 管理者数
+    const adminCount = allUsers.filter(u => isAdminRole(u.role)).length;
+    document.getElementById('stat-admin').textContent = adminCount;
+    
+    // 平社員数（管理者以外）
+    const staffCount = allUsers.length - adminCount;
+    document.getElementById('stat-staff').textContent = staffCount;
+    
+    // 部署数（ユニークな部署の数）
+    const departments = new Set(allUsers.map(u => u.department).filter(d => d && d !== '-'));
+    document.getElementById('stat-departments').textContent = departments.size;
   }
 
   function filterAndRender() {
