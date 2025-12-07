@@ -141,6 +141,11 @@
           // IDが存在する場合は表示（必須）
           const workerId = String(w.id || w.user_id || '').trim();
           if (workerId && workerId !== 'N/A' && workerId !== '') {
+            // 無効なID（9999など）を除外
+            if (workerId === '9999') {
+              console.warn(`[UserManagement] 無効なIDを除外: ${workerId}`);
+              return false;
+            }
             return true;
           }
           
