@@ -907,10 +907,58 @@
   const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
   const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
   
-  // 日付表示
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-  document.getElementById('header-date').textContent = dateStr;
+  // アクセス制御：管理者ロールのみアクセス可能
+  async function checkAdminAccess() {
+    try {
+      // Cognito認証を確認
+      if (!window.CognitoAuth || !window.CognitoAuth.isAuthenticated()) {
+        console.warn('[Dashboard] Not authenticated, redirecting to login');
+        window.location.href = '/staff/signin.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return false;
+      }
+
+      // 現在のユーザー情報を取得
+      const cognitoUser = await window.CognitoAuth.getCurrentUser();
+      if (!cognitoUser) {
+        console.warn('[Dashboard] User not found, redirecting to login');
+        window.location.href = '/staff/signin.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return false;
+      }
+
+      // ロールを確認（管理者ロールのみ許可）
+      const userRole = cognitoUser.role;
+      if (userRole !== 'admin' && userRole !== '管理者') {
+        console.warn('[Dashboard] Access denied. User role:', userRole);
+        alert('このページにアクセスする権限がありません。管理者のみアクセス可能です。');
+        window.location.href = '/staff/mypage.html';
+        return false;
+      }
+
+      console.log('[Dashboard] Access granted for admin user:', cognitoUser.name);
+      return true;
+    } catch (error) {
+      console.error('[Dashboard] Error checking access:', error);
+      window.location.href = '/staff/signin.html?redirect=' + encodeURIComponent(window.location.pathname);
+      return false;
+    }
+  }
+
+  // ページ読み込み時にアクセス制御を実行
+  (async function() {
+    const hasAccess = await checkAdminAccess();
+    if (!hasAccess) {
+      return; // アクセスが拒否された場合は処理を中断
+    }
+
+    // 日付表示
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    document.getElementById('header-date').textContent = dateStr;
+
+    // データ読み込み
+    loadDashboard();
+    loadAnnouncements();
+  })();
 
   // データ読み込み
   async function loadDashboard() {
@@ -1302,8 +1350,6 @@
     return date.toLocaleDateString('ja-JP');
   }
 
-  loadDashboard();
-  loadAnnouncements();
 })();
 
 </script>

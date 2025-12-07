@@ -225,8 +225,8 @@
       const user = window.Auth.getCurrentUser();
       if (user && user.role) {
         const role = user.role;
-        // 管理者、運営、総務のみ管理ダッシュボードを表示
-        if (['admin', 'operation', 'general_affairs'].includes(role)) {
+        // 管理者ロールのみ管理ダッシュボードを表示
+        if (role === 'admin' || role === '管理者') {
           adminDashboardLink.style.display = 'flex';
         } else {
           adminDashboardLink.style.display = 'none';
@@ -370,7 +370,7 @@
    */
   function hasAdminAccess() {
     const role = getCurrentUserRole();
-    return role && ['admin', 'operation', 'general_affairs'].includes(role);
+    return role && (role === 'admin' || role === '管理者');
   }
 
   /**
