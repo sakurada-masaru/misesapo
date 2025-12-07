@@ -614,6 +614,7 @@
         phone: document.getElementById('user-phone').value,
         role: document.getElementById('user-role').value,
         department: document.getElementById('user-department').value,
+        job: document.getElementById('user-job')?.value || '',  // 担当業務を追加
         status: document.getElementById('user-status').value
       };
 
@@ -627,27 +628,8 @@
         // data.id = 'W' + Date.now(); // 削除: バックエンドで生成
         data.created_at = new Date().toISOString();
         
-        // ロールコードを設定
-        const roleCodeMap = {
-          'admin': '1',
-          'sales': '2',
-          'office': '3',
-          'cleaning': '4',
-          'public_relations': '5',
-          'designer': '6',
-          'general_affairs': '7',
-          'director': '8',
-          'contractor': '9',
-          'accounting': '10',
-          'human_resources': '11',
-          'special_advisor': '12',
-          'field_sales': '13',
-          'inside_sales': '14',
-          'mechanic': '15',
-          'engineer': '16',
-          'part_time': '17'
-        };
-        data.role_code = roleCodeMap[data.role] || '4';
+        // ロールコードを設定（管理者=1、それ以外=4）
+        data.role_code = (data.role === 'admin') ? '1' : '4';
         
         // 新規作成時はFirebaseユーザーも作成する
         if (!password) {

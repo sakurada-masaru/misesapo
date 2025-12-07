@@ -157,32 +157,25 @@
         </div>
         <div class="form-row">
           <div class="form-field half">
-            <label for="user-role">ロール <span class="required">*</span></label>
+            <label for="user-role">ロール（役職） <span class="required">*</span></label>
             <select id="user-role" name="role" required>
               <option value="">選択してください</option>
               <option value="admin">管理者</option>
-              <option value="sales">営業</option>
-              <option value="office">事務</option>
-              <option value="cleaning">清掃</option>
-              <option value="public_relations">広報</option>
-              <option value="director">取締役</option>
-              <option value="general_affairs">総務</option>
-              <option value="accounting">経理</option>
-              <option value="human_resources">人事</option>
-              <option value="special_advisor">スペシャルバイザー</option>
-              <option value="field_sales">フィールドセールス</option>
-              <option value="inside_sales">インサイドセールス</option>
-              <option value="mechanic">メカニック</option>
-              <option value="engineer">エンジニア</option>
-              <option value="designer">デザイナー</option>
-              <option value="part_time">アルバイト</option>
-              <option value="contractor">外部委託</option>
-              <option value="other">その他</option>
+              <option value="staff">なし（平社員）</option>
             </select>
+            <small class="form-hint">管理ダッシュボードへのアクセス権限を表します</small>
           </div>
           <div class="form-field half">
             <label for="user-department">部署</label>
-            <input type="text" id="user-department" name="department" placeholder="例: 清掃員、FS営業、経理">
+            <input type="text" id="user-department" name="department" placeholder="例: 取締役会、営業、事務、開発、現場、運営">
+            <small class="form-hint">ユーザー管理ページでカテゴリ分けするために使用します</small>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field full">
+            <label for="user-job">担当業務</label>
+            <input type="text" id="user-job" name="job" placeholder="例: FS営業・清掃、システム開発・プログラミング">
+            <small class="form-hint">ユーザーカードに表示されるバッジ（ステータス）です。複数の業務は「・」で区切ってください</small>
           </div>
         </div>
         <div class="form-row">
