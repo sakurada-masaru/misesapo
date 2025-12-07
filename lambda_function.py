@@ -3274,6 +3274,9 @@ def get_workers(event, headers):
                 # 次のページを取得
                 scan_kwargs['ExclusiveStartKey'] = response['LastEvaluatedKey']
         
+        # ID 9999を除外（削除済みだがAPIに残っている可能性があるため）
+        workers = [w for w in workers if str(w.get('id', '')).strip() != '9999']
+        
         # レスポンス形式を統一（items配列で返す）
         return {
             'statusCode': 200,
