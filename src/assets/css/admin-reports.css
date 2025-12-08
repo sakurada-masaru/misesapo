@@ -1124,3 +1124,10 @@
       .form-row { grid-template-columns: 1fr; }
       .table-container { overflow-x: auto; }
     }
+
+    /* ブランド選択・店舗選択モーダルを前面に表示 */
+    #brand-select-modal-admin,
+    #store-select-modal-admin,
+    #image-section-type-modal-admin {
+      z-index: 2000 !important;
+    }
