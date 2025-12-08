@@ -2935,6 +2935,11 @@
     delete sections[sectionId];
     const sectionElement = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (sectionElement) {
+      // セクションの下のプラスアイコンも削除
+      const addAfterElement = sectionElement.nextElementSibling;
+      if (addAfterElement && addAfterElement.classList.contains('section-add-after')) {
+        addAfterElement.remove();
+      }
       sectionElement.remove();
     }
     // 選択状態からも削除
