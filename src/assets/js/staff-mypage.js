@@ -2371,6 +2371,9 @@ function saveSectionLayout() {
   const containers = Array.from(grid.querySelectorAll('.draggable-container'));
   const gridWidth = grid.offsetWidth;
   const gridHeight = grid.offsetHeight;
+  // グリッドアンカーを計算（保存前に位置をスナップするため）
+  getGridAnchors(grid);
+  
   const layout = containers.map(container => {
     const pos = getAbsolutePosition(container);
     // 位置データが有効かチェック
@@ -2384,10 +2387,23 @@ function saveSectionLayout() {
         position: null
       };
     }
+    // 位置をアンカーにスナップしてから保存
+    if (pos) {
+      const snapped = findNearestAnchor(grid, pos.x, pos.y);
+      // スナップされた位置が異なる場合は、コンテナの位置も更新
+      if (snapped.x !== pos.x || snapped.y !== pos.y) {
+        setAbsolutePosition(container, snapped.x, snapped.y);
+      }
+      return {
+        id: container.dataset.containerId,
+        cost: parseInt(container.dataset.containerCost) || 1,
+        position: `${snapped.x},${snapped.y}`
+      };
+    }
     return {
       id: container.dataset.containerId,
       cost: parseInt(container.dataset.containerCost) || 1,
-      position: pos ? `${pos.x},${pos.y}` : null
+      position: null
     };
   });
   localStorage.setItem('mypage_section_layout', JSON.stringify(layout));
@@ -2448,7 +2464,9 @@ function restoreSectionLayout() {
             // 位置が有効な範囲内かチェック
             if (parts[0] >= 0 && parts[1] >= 0 && 
                 parts[0] < gridWidth && parts[1] < gridHeight) {
-              setAbsolutePosition(container, parts[0], parts[1]);
+              // 位置をアンカーにスナップ
+              const snapped = findNearestAnchor(grid, parts[0], parts[1]);
+              setAbsolutePosition(container, snapped.x, snapped.y);
             } else {
               console.warn('[Layout] Position out of bounds for container:', item.id, 'x:', parts[0], 'y:', parts[1]);
               hasInvalidPosition = true;
