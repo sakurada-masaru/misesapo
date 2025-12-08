@@ -798,41 +798,6 @@
       }
     };
 
-    // テストデータを全削除
-    async function clearAllTestReports() {
-      if (!confirm('すべてのテストレポートを削除しますか？\nこの操作は取り消せません。')) return;
-      
-      try {
-        const idToken = await getFirebaseIdToken();
-        let deletedCount = 0;
-        let failedCount = 0;
-        
-        // すべてのレポートを削除
-        for (const report of allReports) {
-          try {
-            const reportId = report.id || report.report_id;
-            await fetch(`${REPORT_API}/staff/reports/${reportId}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${idToken}` }
-            });
-            deletedCount++;
-          } catch (e) {
-            console.error(`Failed to delete report ${report.id}:`, e);
-            failedCount++;
-          }
-        }
-        
-        if (deletedCount > 0) {
-          alert(`${deletedCount}件のレポートを削除しました${failedCount > 0 ? `\n${failedCount}件の削除に失敗しました` : ''}`);
-          await loadReports();
-        } else {
-          alert('削除できるレポートがありませんでした');
-        }
-      } catch (e) {
-        console.error('Error clearing test reports:', e);
-        alert('テストデータの削除に失敗しました');
-      }
-    }
 
     // Firebase認証からIDトークンを取得
     async function getFirebaseIdToken() {
@@ -1041,9 +1006,6 @@
         addWorkItemModal();
         document.getElementById('new-dialog').showModal();
       });
-
-      // テストデータクリア
-      document.getElementById('btn-clear-test').addEventListener('click', clearAllTestReports);
 
       // モーダル用の変数と関数
       let modalWorkItemCounter = 0;
