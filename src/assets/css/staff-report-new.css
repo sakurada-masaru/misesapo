@@ -101,7 +101,7 @@
 
 .tab-content {
   display: none;
-  margin-top: 98px; /* ヘッダー(50px) + タブ(48px) */
+  margin-top: 48px;
   height: calc(100vh - 98px);
   height: calc(100dvh - 98px); /* 動的ビューポート高さ（キーボード対応） */
   overflow-y: auto;
