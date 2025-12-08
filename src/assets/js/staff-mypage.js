@@ -2664,22 +2664,79 @@ function isValidContainerSize(container, width, height) {
 }
 
 // 絶対位置が有効かチェック（他のコンテナと重複しないか、範囲内か）
-// 全てのマスに設置できるように、重複チェックを緩和
-// 自由な位置に配置できるように、制約を完全に緩和
+// 他のコンテナと重なっていない場所のみに配置可能
+// 画面からはみ出さないようにする
 function isValidAbsolutePosition(grid, container, x, y) {
-  // サイズ制約チェックのみ（位置の制約は完全に削除）
   const width = parseInt(container.dataset.containerWidth) || 3;
   const height = parseInt(container.dataset.containerHeight) || 3;
+  const CELL_SIZE = 80;
+  const containerWidth = width * CELL_SIZE;
+  const containerHeight = height * CELL_SIZE;
   
   // サイズ制約チェック
   if (!isValidContainerSize(container, width, height)) {
     return false;
   }
   
-  // 位置の制約を完全に削除
-  // グリッド範囲外でも、負の値でも、どこにでも配置可能
-  // ユーザーが完全に自由に配置できるようにする
+  // グリッドの範囲を取得
+  const gridWidth = grid.offsetWidth;
+  const gridHeight = grid.offsetHeight;
   
+  // 画面からはみ出さないようにチェック
+  // 左端・上端が範囲外の場合は無効
+  if (x < 0 || y < 0) {
+    return false;
+  }
+  
+  // 右端・下端が範囲外の場合は無効（コンテナが完全にグリッド内に収まる必要がある）
+  if (x + containerWidth > gridWidth || y + containerHeight > gridHeight) {
+    return false;
+  }
+  
+  // 新しい位置の矩形
+  const newRect = {
+    left: x,
+    top: y,
+    right: x + containerWidth,
+    bottom: y + containerHeight
+  };
+  
+  // グリッド内のすべてのコンテナを取得（ドラッグ中のコンテナを除く）
+  const allContainers = grid.querySelectorAll('.draggable-container');
+  
+  // 他のコンテナと重複していないかチェック
+  for (const otherContainer of allContainers) {
+    // ドラッグ中のコンテナはスキップ
+    if (otherContainer === container || otherContainer === draggedElement) {
+      continue;
+    }
+    
+    // 他のコンテナの位置とサイズを取得
+    const otherLeft = parseInt(otherContainer.style.left) || 0;
+    const otherTop = parseInt(otherContainer.style.top) || 0;
+    const otherWidth = parseInt(otherContainer.dataset.containerWidth) || 3;
+    const otherHeight = parseInt(otherContainer.dataset.containerHeight) || 3;
+    const otherContainerWidth = otherWidth * CELL_SIZE;
+    const otherContainerHeight = otherHeight * CELL_SIZE;
+    
+    const otherRect = {
+      left: otherLeft,
+      top: otherTop,
+      right: otherLeft + otherContainerWidth,
+      bottom: otherTop + otherContainerHeight
+    };
+    
+    // 矩形の重複チェック
+    if (newRect.left < otherRect.right &&
+        newRect.right > otherRect.left &&
+        newRect.top < otherRect.bottom &&
+        newRect.bottom > otherRect.top) {
+      // 重複している
+      return false;
+    }
+  }
+  
+  // 重複していない
   return true;
 }
 
@@ -2848,10 +2905,16 @@ function setupDragAndDrop() {
     
     console.log('[Drag] Drop position - x:', x, 'y:', y, 'gridWidth:', grid.offsetWidth, 'gridHeight:', grid.offsetHeight, 'dragOffset:', dragOffset);
     
-    // 位置の制約を完全に削除 - どこにでも配置可能
-    console.log('[Drag] Moving container to x:', x, 'y:', y);
-    setAbsolutePosition(draggedElement, x, y);
-    saveSectionLayout();
+    // 有効な位置（他のコンテナと重複していない）のみ配置
+    const isValid = isValidAbsolutePosition(grid, draggedElement, x, y);
+    if (isValid) {
+      console.log('[Drag] Valid position, moving container to x:', x, 'y:', y);
+      setAbsolutePosition(draggedElement, x, y);
+      saveSectionLayout();
+    } else {
+      console.log('[Drag] Invalid position - overlaps with another container at x:', x, 'y:', y);
+      // 無効な位置（重複している）の場合は配置しない
+    }
     
     // すべてのコンテナからdrag-overクラスを削除
     grid.querySelectorAll('.draggable-container').forEach(container => {
