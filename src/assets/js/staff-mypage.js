@@ -3172,8 +3172,48 @@ function setupContainerTooltips() {
   });
 }
 
+// localStorageの異常な位置データをクリア
+function validateAndClearInvalidLayout() {
+  try {
+    const savedLayout = localStorage.getItem('mypage_section_layout');
+    if (!savedLayout) return;
+    
+    const layout = JSON.parse(savedLayout);
+    const grid = document.getElementById('mypage-grid');
+    if (!grid) return;
+    
+    const gridWidth = grid.offsetWidth || 1920;
+    const gridHeight = grid.offsetHeight || 1080;
+    let hasInvalid = false;
+    
+    layout.forEach(item => {
+      if (item.position) {
+        const parts = item.position.split(',').map(Number);
+        if (parts.length === 2) {
+          if (isNaN(parts[0]) || isNaN(parts[1]) || 
+              !isFinite(parts[0]) || !isFinite(parts[1]) ||
+              Math.abs(parts[0]) > 100000 || Math.abs(parts[1]) > 100000 ||
+              (parts[0] >= 100 && (parts[0] < 0 || parts[0] >= gridWidth || parts[1] < 0 || parts[1] >= gridHeight))) {
+            hasInvalid = true;
+          }
+        }
+      }
+    });
+    
+    if (hasInvalid) {
+      console.warn('[Layout] Invalid layout data found in localStorage, clearing...');
+      localStorage.removeItem('mypage_section_layout');
+    }
+  } catch (error) {
+    console.warn('[Layout] Error validating layout data:', error);
+    localStorage.removeItem('mypage_section_layout');
+  }
+}
+
 // 初期化
 document.addEventListener('DOMContentLoaded', () => {
+  // ページ読み込み時にlocalStorageの異常なデータをクリア
+  setTimeout(validateAndClearInvalidLayout, 100);
   loadCurrentUser();
   setupAttendanceToggleButton();
   setupCorrectionRequestButton();
