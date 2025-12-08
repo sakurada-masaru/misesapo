@@ -38,7 +38,10 @@
       <div class="form-row two-col">
         <div class="form-group store-search-group">
           <div class="store-search-wrapper">
-            <input type="text" id="report-brand-search" class="form-input" placeholder="①ブランド名 *" autocomplete="off">
+            <select id="report-brand-select" class="form-select" name="brand_id">
+              <option value="">①ブランド名 *</option>
+            </select>
+            <input type="text" id="report-brand-search" class="form-input" placeholder="①ブランド名 *" autocomplete="off" style="display: none;">
             <input type="hidden" id="report-brand" name="brand_id">
             <input type="hidden" id="report-brand-name" name="brand_name">
             <div id="brand-search-results" class="store-search-results" style="display: none;"></div>
@@ -49,6 +52,7 @@
             <select id="report-store-select" class="form-select" name="store_id">
               <option value="">②店舗名 *</option>
             </select>
+            <input type="text" id="report-store-search" class="form-input" placeholder="②店舗名 *" autocomplete="off" style="display: none;">
             <input type="hidden" id="report-store" name="store_id">
             <input type="hidden" id="report-store-name" name="store_name">
           </div>

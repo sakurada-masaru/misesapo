@@ -2035,13 +2035,22 @@ function handleContainerDragStart(e) {
     return false;
   }
   
-  const container = e.currentTarget;
-  if (!container || !container.draggable) {
+  // ドラッグハンドルまたはコンテナ自体からドラッグを開始できるようにする
+  let container = e.currentTarget;
+  
+  // ドラッグハンドルからドラッグを開始した場合、親のコンテナを取得
+  if (container.classList.contains('drag-handle') || container.closest('.drag-handle')) {
+    container = container.closest('.draggable-container');
+  }
+  
+  // コンテナが見つからない、またはdraggableでない場合は中止
+  if (!container || !container.classList.contains('draggable-container') || !container.draggable) {
     e.preventDefault();
+    console.log('[Drag] Drag start prevented - container:', container, 'draggable:', container?.draggable);
     return false;
   }
   
-  console.log('[Drag] Drag start:', container.dataset.containerId);
+  console.log('[Drag] Drag start:', container.dataset.containerId, 'draggable:', container.draggable);
   
   draggedElement = container;
   draggedElement.classList.add('dragging');
@@ -2054,8 +2063,16 @@ function handleContainerDragStart(e) {
   draggedElement.style.setProperty('--dragging-height', `${rect.height}px`);
   
   // コンテナの左上からのマウスオフセットを保存
-  dragOffset.x = e.clientX - rect.left;
-  dragOffset.y = e.clientY - rect.top;
+  // グリッド線に合わせるため、オフセットを調整
+  const CELL_SIZE = 80;
+  const offsetX = e.clientX - rect.left;
+  const offsetY = e.clientY - rect.top;
+  
+  // オフセットをグリッド線内の相対位置に調整（0-80pxの範囲）
+  dragOffset.x = offsetX % CELL_SIZE;
+  dragOffset.y = offsetY % CELL_SIZE;
+  
+  console.log('[Drag] Drag offset calculated:', dragOffset.x, dragOffset.y, 'from:', offsetX, offsetY);
   
   return true;
 }
@@ -2194,30 +2211,46 @@ function toggleEditMode() {
     toggleBtn.classList.add('active');
     const span = toggleBtn.querySelector('span');
     if (span) span.textContent = '編集モード ON';
-    // メイングリッド内のコンテナのみドラッグ可能に
-    if (grid) {
-      grid.querySelectorAll('.draggable-container').forEach(container => {
-        container.setAttribute('draggable', 'true');
-        container.draggable = true;
-        console.log('[Drag] Set draggable=true for:', container.dataset.containerId, 'actual draggable:', container.draggable);
-        // ドラッグハンドルをクリック可能にする
-        const dragHandle = container.querySelector('.drag-handle');
-        if (dragHandle) {
-          dragHandle.style.cursor = 'move';
-        }
-      });
-      // イベントリスナーを再設定
-      setTimeout(() => {
-        if (window.attachDragListeners) {
-          window.attachDragListeners();
-        }
-      }, 50);
-    }
-    // グリッド線を描画
+    
+    // 現在の位置を保存してから復元（位置を維持）
+    saveSectionLayout();
     setTimeout(() => {
-      drawGridLines();
-    }, 100);
+      restoreSectionLayout();
+      
+      // メイングリッド内のコンテナのみドラッグ可能に
+      if (grid) {
+        grid.querySelectorAll('.draggable-container').forEach(container => {
+          // draggable属性とプロパティの両方を設定
+          container.setAttribute('draggable', 'true');
+          container.draggable = true;
+          // コンテナ全体にドラッグイベントを設定
+          container.style.cursor = 'move';
+          console.log('[Drag] Set draggable=true for:', container.dataset.containerId, 'actual draggable:', container.draggable, 'attribute:', container.getAttribute('draggable'));
+          // ドラッグハンドルをクリック可能にする
+          const dragHandle = container.querySelector('.drag-handle');
+          if (dragHandle) {
+            dragHandle.style.cursor = 'move';
+            // ドラッグハンドルにもdraggableを設定（親コンテナのドラッグを開始）
+            dragHandle.setAttribute('draggable', 'true');
+            dragHandle.draggable = true;
+          }
+        });
+        // イベントリスナーを再設定
+        setTimeout(() => {
+          if (window.attachDragListeners) {
+            window.attachDragListeners();
+          }
+        }, 50);
+      }
+      // グリッド線を描画
+      setTimeout(() => {
+        drawGridLines();
+      }, 100);
+    }, 50);
   } else {
+    // 編集モード終了時に現在の位置を保存
+    saveSectionLayout();
+    
     if (grid) grid.classList.remove('edit-mode');
     if (container) container.classList.remove('edit-mode');
     toggleBtn.classList.remove('active');
@@ -2527,6 +2560,7 @@ function clearGridPositionCache() {
 }
 
 // マウス位置から絶対位置（ピクセル）を計算（80px間隔のグリッド線にスナップ）
+// コンテナの左上を起点にして、グリッド線のマスの左上に配置
 function getAbsolutePositionFromMouse(grid, x, y) {
   try {
     // マウス位置をグリッド要素からの相対位置に変換
@@ -2534,14 +2568,15 @@ function getAbsolutePositionFromMouse(grid, x, y) {
     const gridX = x - rect.left;
     const gridY = y - rect.top;
     
-    // 80px間隔のグリッド線にスナップ
+    // 80px間隔のグリッド線にスナップ（マスの左上に配置）
     const CELL_SIZE = 80;
-    const snappedX = Math.round(gridX / CELL_SIZE) * CELL_SIZE;
-    const snappedY = Math.round(gridY / CELL_SIZE) * CELL_SIZE;
+    // Math.floorを使用して、マスの左上にスナップ（切り捨て）
+    const snappedX = Math.floor(gridX / CELL_SIZE) * CELL_SIZE;
+    const snappedY = Math.floor(gridY / CELL_SIZE) * CELL_SIZE;
     
-    // グリッド範囲内に制限
-    const clampedX = Math.max(0, Math.min(snappedX, grid.offsetWidth));
-    const clampedY = Math.max(0, Math.min(snappedY, grid.offsetHeight));
+    // グリッド範囲内に制限（負の値は0に）
+    const clampedX = Math.max(0, snappedX);
+    const clampedY = Math.max(0, snappedY);
     
     return {
       x: clampedX,
@@ -2554,11 +2589,11 @@ function getAbsolutePositionFromMouse(grid, x, y) {
     const CELL_SIZE = 80;
     const gridX = x - rect.left;
     const gridY = y - rect.top;
-    const snappedX = Math.round(gridX / CELL_SIZE) * CELL_SIZE;
-    const snappedY = Math.round(gridY / CELL_SIZE) * CELL_SIZE;
+    const snappedX = Math.floor(gridX / CELL_SIZE) * CELL_SIZE;
+    const snappedY = Math.floor(gridY / CELL_SIZE) * CELL_SIZE;
     return {
-      x: Math.max(0, Math.min(snappedX, grid.offsetWidth)),
-      y: Math.max(0, Math.min(snappedY, grid.offsetHeight))
+      x: Math.max(0, snappedX),
+      y: Math.max(0, snappedY)
     };
   }
 }
@@ -2636,6 +2671,7 @@ function isValidContainerSize(container, width, height) {
 }
 
 // 絶対位置が有効かチェック（他のコンテナと重複しないか、範囲内か）
+// 全てのマスに設置できるように、重複チェックを緩和
 function isValidAbsolutePosition(grid, container, x, y) {
   const width = parseInt(container.dataset.containerWidth) || 3;
   const height = parseInt(container.dataset.containerHeight) || 3;
@@ -2658,30 +2694,18 @@ function isValidAbsolutePosition(grid, container, x, y) {
   }
   
   // 右端・下端が範囲外の場合は無効（ただし、少しの余裕を持たせる）
-  if (x + containerWidth > gridWidth + 20 || y + containerHeight > gridHeight + 20) {
+  // コンテナが少しはみ出しても許容（スクロール可能な場合など）
+  if (x + containerWidth > gridWidth + 40 || y + containerHeight > gridHeight + 40) {
     return false;
   }
   
-  // 他のコンテナとの重複チェック（ピクセル単位）
-  const otherContainers = Array.from(grid.querySelectorAll('.draggable-container:not(.dragging)'));
-  for (const other of otherContainers) {
-    if (other === container) continue;
-    
-    const otherPos = getAbsolutePosition(other);
-    if (!otherPos) continue;
-    
-    const otherWidth = parseInt(other.dataset.containerWidth) || 3;
-    const otherHeight = parseInt(other.dataset.containerHeight) || 3;
-    const otherContainerWidth = otherWidth * CELL_SIZE;
-    const otherContainerHeight = otherHeight * CELL_SIZE;
-    
-    // 重複チェック（矩形の重複判定）
-    // 完全に重複している場合は無効
-    if (!(x + containerWidth <= otherPos.x || x >= otherPos.x + otherContainerWidth ||
-          y + containerHeight <= otherPos.y || y >= otherPos.y + otherContainerHeight)) {
-      return false;
-    }
+  // 位置が80pxの倍数（グリッド線に合っている）かチェック
+  if (x % CELL_SIZE !== 0 || y % CELL_SIZE !== 0) {
+    return false;
   }
+  
+  // 重複チェックは削除（全てのマスに設置できるように）
+  // ユーザーが自由に配置できるようにする
   
   return true;
 }
@@ -2704,6 +2728,14 @@ function attachDragListeners() {
     container.removeEventListener('dragstart', handleContainerDragStart);
     // 新しいリスナーを追加
     container.addEventListener('dragstart', handleContainerDragStart);
+    
+    // ドラッグハンドルにもイベントリスナーを追加
+    const dragHandle = container.querySelector('.drag-handle');
+    if (dragHandle) {
+      dragHandle.removeEventListener('dragstart', handleContainerDragStart);
+      dragHandle.addEventListener('dragstart', handleContainerDragStart);
+    }
+    
     console.log('[Drag] Attached listener to:', container.dataset.containerId, 'draggable:', container.draggable);
   });
 }
@@ -2722,10 +2754,22 @@ function setupDragAndDrop() {
   grid.addEventListener('dragend', (e) => {
     if (!editMode) return;
     
+    console.log('[Drag] Drag end event fired');
+    
     // プレビューガイドを削除
     hideDropPreview(grid);
     
     if (draggedElement) {
+      // ドラッグ終了時の位置を取得して更新（dropイベントが発火しない場合のフォールバック）
+      const lastPreview = grid.querySelector('.drop-preview-guide');
+      if (lastPreview) {
+        const previewX = parseInt(lastPreview.style.left) || 0;
+        const previewY = parseInt(lastPreview.style.top) || 0;
+        console.log('[Drag] Using preview position from dragend:', previewX, previewY);
+        setAbsolutePosition(draggedElement, previewX, previewY);
+        saveSectionLayout();
+      }
+      
       draggedElement.classList.remove('dragging');
       // ドラッグ中のサイズスタイルを削除
       draggedElement.style.removeProperty('--dragging-width');
@@ -2797,7 +2841,10 @@ function setupDragAndDrop() {
     e.preventDefault();
     e.stopPropagation();
     
+    console.log('[Drag] Drop event fired on document');
+    
     if (!editMode || !draggedElement) {
+      console.log('[Drag] Drop ignored - editMode:', editMode, 'draggedElement:', draggedElement);
       return;
     }
     
@@ -2806,14 +2853,17 @@ function setupDragAndDrop() {
     const mouseX = e.clientX;
     const mouseY = e.clientY;
     
+    console.log('[Drag] Drop position - mouseX:', mouseX, 'mouseY:', mouseY, 'gridRect:', gridRect);
+    
     // マウスがグリッドの範囲外の場合は処理しない
     if (mouseX < gridRect.left || mouseX > gridRect.right ||
         mouseY < gridRect.top || mouseY > gridRect.bottom) {
+      console.log('[Drag] Drop outside grid bounds');
       hideDropPreview(grid);
       return;
     }
     
-    console.log('[Drag] Drop event fired');
+    console.log('[Drag] Drop event processed');
     
     // プレビューガイドを削除
     hideDropPreview(grid);
@@ -2823,7 +2873,7 @@ function setupDragAndDrop() {
     const containerTopY = mouseY - dragOffset.y;
     const { x, y } = getAbsolutePositionFromMouse(grid, containerLeftX, containerTopY);
     
-    console.log('[Drag] Drop position - x:', x, 'y:', y, 'gridWidth:', grid.offsetWidth, 'gridHeight:', grid.offsetHeight);
+    console.log('[Drag] Drop position - x:', x, 'y:', y, 'gridWidth:', grid.offsetWidth, 'gridHeight:', grid.offsetHeight, 'dragOffset:', dragOffset);
     
     // 有効な位置なら配置（無効でも配置可能にする場合は、このチェックを削除）
     const isValid = isValidAbsolutePosition(grid, draggedElement, x, y);
@@ -2842,6 +2892,9 @@ function setupDragAndDrop() {
     grid.querySelectorAll('.draggable-container').forEach(container => {
       container.classList.remove('drag-over', 'drag-preview');
     });
+    
+    // draggedElementをクリア（dragendで再度クリアされるが、念のため）
+    // draggedElement = null;
   });
 }
 
@@ -2919,9 +2972,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (confirm('すべてのコンテナをデフォルト位置に戻しますか？')) {
         applyDefaultLayout();
         saveSectionLayout();
-        // 編集モードをOFFにする
+        // 編集モード中の場合、グリッド線を再描画
         if (editMode) {
-          toggleEditMode();
+          drawGridLines();
         }
       }
     });
