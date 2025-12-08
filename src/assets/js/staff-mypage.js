@@ -2809,6 +2809,11 @@ let gridAnchors = null;
 let gridAnchorsCacheTimestamp = 0;
 const ANCHOR_CACHE_DURATION = 1000; // 1秒間キャッシュ
 
+// グローバルスコープに公開（デバッグ用）
+window.getGridAnchors = function(grid) {
+  return getGridAnchors(grid);
+};
+
 function getGridAnchors(grid) {
   const now = Date.now();
   // キャッシュが有効な場合は再利用
