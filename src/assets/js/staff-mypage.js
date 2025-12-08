@@ -2359,8 +2359,21 @@ function saveSectionLayout() {
   if (!grid) return;
   
   const containers = Array.from(grid.querySelectorAll('.draggable-container'));
+  const gridWidth = grid.offsetWidth;
+  const gridHeight = grid.offsetHeight;
   const layout = containers.map(container => {
     const pos = getAbsolutePosition(container);
+    // 位置データが有効かチェック
+    if (pos && (isNaN(pos.x) || isNaN(pos.y) || !isFinite(pos.x) || !isFinite(pos.y) ||
+                Math.abs(pos.x) > 100000 || Math.abs(pos.y) > 100000 ||
+                pos.x < 0 || pos.y < 0 || pos.x >= gridWidth || pos.y >= gridHeight)) {
+      console.warn('[Layout] Skipping invalid position when saving:', container.dataset.containerId, 'x:', pos.x, 'y:', pos.y);
+      return {
+        id: container.dataset.containerId,
+        cost: parseInt(container.dataset.containerCost) || 1,
+        position: null
+      };
+    }
     return {
       id: container.dataset.containerId,
       cost: parseInt(container.dataset.containerCost) || 1,
