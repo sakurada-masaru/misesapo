@@ -2781,7 +2781,8 @@
       </div>
     `;
 
-    document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    const reportContent = document.getElementById('report-content');
+    reportContent.insertAdjacentHTML('beforeend', html);
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
@@ -2799,6 +2800,8 @@
       if (isSectionSelectMode) {
         updateSectionCardsForSelection();
       }
+      // セクションの下にプラスアイコンを追加
+      addSectionAddButtonAfter(newCard);
     }
   };
 
@@ -2836,7 +2839,8 @@
       </div>
     `;
 
-    document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    const reportContent = document.getElementById('report-content');
+    reportContent.insertAdjacentHTML('beforeend', html);
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
@@ -2852,6 +2856,8 @@
       if (isSectionSelectMode) {
         updateSectionCardsForSelection();
       }
+      // セクションの下にプラスアイコンを追加
+      addSectionAddButtonAfter(newCard);
     }
   };
 
@@ -2875,7 +2881,8 @@
       </div>
     `;
 
-    document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    const reportContent = document.getElementById('report-content');
+    reportContent.insertAdjacentHTML('beforeend', html);
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
@@ -2888,8 +2895,10 @@
       if (isSectionSelectMode) {
         updateSectionCardsForSelection();
       }
+      // セクションの下にプラスアイコンを追加
+      addSectionAddButtonAfter(newCard);
     }
-  }
+  };
 
   // 作業内容セクション追加
   function addWorkContentSection() {
@@ -2911,9 +2920,14 @@
       </div>
     `;
 
-    document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    const reportContent = document.getElementById('report-content');
+    reportContent.insertAdjacentHTML('beforeend', html);
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
-    if (newCard) setupSectionDragAndDrop(newCard);
+    if (newCard) {
+      setupSectionDragAndDrop(newCard);
+      // セクションの下にプラスアイコンを追加
+      addSectionAddButtonAfter(newCard);
+    }
   }
 
   // セクション削除
