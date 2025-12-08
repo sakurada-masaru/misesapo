@@ -2216,28 +2216,65 @@ function toggleEditMode() {
     setTimeout(() => {
       restoreSectionLayout();
       
-      // 復元後に、すべてのコンテナの位置をアンカーにスナップ
+      // 復元後に、すべてのコンテナを画面内に集める
       if (grid) {
         // グリッドアンカーを計算
         getGridAnchors(grid);
         
+        const gridWidth = grid.offsetWidth;
+        const gridHeight = grid.offsetHeight;
+        const CELL_SIZE = 80;
+        
         grid.querySelectorAll('.draggable-container').forEach(container => {
           const left = parseInt(container.style.left) || 0;
           const top = parseInt(container.style.top) || 0;
-          // 異常な値（負の値、NaN、無限大、極端に大きい値）が検出された場合はスタイルをクリア
+          const width = parseInt(container.dataset.containerWidth) || 3;
+          const height = parseInt(container.dataset.containerHeight) || 3;
+          const containerWidth = width * CELL_SIZE;
+          const containerHeight = height * CELL_SIZE;
+          
+          // 異常な値（負の値、NaN、無限大、極端に大きい値）が検出された場合
           if (isNaN(left) || isNaN(top) || !isFinite(left) || !isFinite(top) ||
-              Math.abs(left) > 100000 || Math.abs(top) > 100000 ||
-              left < 0 || top < 0) {
+              Math.abs(left) > 100000 || Math.abs(top) > 100000) {
             console.warn('[EditMode] Clearing invalid position for container:', container.dataset.containerId, 'left:', left, 'top:', top);
             container.style.removeProperty('left');
             container.style.removeProperty('top');
             container.dataset.absolutePosition = '';
           } else {
-            // 既存の位置をアンカーにスナップ
-            const snapped = findNearestAnchor(grid, left, top);
-            if (snapped.x !== left || snapped.y !== top) {
-              console.log('[EditMode] Snapping container to anchor:', container.dataset.containerId, 'from', left, top, 'to', snapped.x, snapped.y);
+            // 画面外にある場合は、画面内に収まるように調整
+            let adjustedX = left;
+            let adjustedY = top;
+            
+            // 右端が画面外に出ている場合
+            if (left + containerWidth > gridWidth) {
+              adjustedX = Math.max(0, gridWidth - containerWidth);
+            }
+            // 左端が画面外に出ている場合
+            if (left < 0) {
+              adjustedX = 0;
+            }
+            // 下端が画面外に出ている場合
+            if (top + containerHeight > gridHeight) {
+              adjustedY = Math.max(0, gridHeight - containerHeight);
+            }
+            // 上端が画面外に出ている場合
+            if (top < 0) {
+              adjustedY = 0;
+            }
+            
+            // 位置が調整された場合、または元の位置が異常な場合
+            if (adjustedX !== left || adjustedY !== top || left < 0 || top < 0) {
+              console.log('[EditMode] Moving container to screen:', container.dataset.containerId, 'from', left, top, 'to', adjustedX, adjustedY);
+              // 調整された位置をアンカーにスナップ
+              const snapped = findNearestAnchor(grid, adjustedX, adjustedY);
               setAbsolutePosition(container, snapped.x, snapped.y);
+            } else {
+              // 既存の位置をアンカーにスナップ
+              const snapped = findNearestAnchor(grid, left, top);
+              if (snapped.x !== left || snapped.y !== top) {
+                console.log('[EditMode] Snapping container to anchor:', container.dataset.containerId, 'from', left, top, 'to', snapped.x, snapped.y);
+                setAbsolutePosition(container, snapped.x, snapped.y);
+              }
             }
           }
         });
