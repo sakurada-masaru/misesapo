@@ -1067,14 +1067,20 @@
         photos: { completed: photos.completed || [] }
       };
       
-      const html = `
-        <div class="section-card" data-section-id="${sectionId}">
-          <div class="section-header">
-            <span class="section-title"><i class="fas fa-image"></i> 画像（施工後）</span>
-            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
+    const html = `
+      <div class="section-card" data-section-id="${sectionId}">
+        <div class="section-header">
+          <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
+          <span class="section-title"><i class="fas fa-image"></i> 画像（施工後）</span>
+          <div class="section-header-actions">
+            <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー">
+              <i class="fas fa-copy"></i>
+            </button>
+            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
               <i class="fas fa-trash"></i>
             </button>
           </div>
+        </div>
           <div class="section-body">
             <div class="image-grid image-grid-completed">
               <div class="image-category image-category-completed">
@@ -1876,8 +1882,11 @@
     
     if (sectionAddCommentBtn) {
       sectionAddCommentBtn.addEventListener('click', function() {
-        if (window.addCommentSection) {
-          window.addCommentSection();
+        // コメントアイコンは作業内容セクション（テキスト入力フォーム）を呼び出す
+        if (window.addWorkContentSection) {
+          window.addWorkContentSection();
+        } else if (addWorkContentSection) {
+          addWorkContentSection();
         }
         // アイコンを非表示にする
         if (sectionAddIcons) {
@@ -2705,10 +2714,16 @@
     const html = `
       <div class="section-card" data-section-id="${sectionId}">
         <div class="section-header">
+          <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
           <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
-          <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
-            <i class="fas fa-trash"></i>
-          </button>
+          <div class="section-header-actions">
+            <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー">
+              <i class="fas fa-copy"></i>
+            </button>
+            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
         </div>
         <div class="section-body">
           <select class="cleaning-item-select" onchange="updateCleaningItem('${sectionId}', this.value)">
@@ -2864,10 +2879,16 @@
     const html = `
       <div class="section-card" data-section-id="${sectionId}">
         <div class="section-header">
+          <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
           <span class="section-title"><i class="fas fa-image"></i> 画像（施工後）</span>
-          <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
-            <i class="fas fa-trash"></i>
-          </button>
+          <div class="section-header-actions">
+            <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー">
+              <i class="fas fa-copy"></i>
+            </button>
+            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
         </div>
         <div class="section-body">
           <div class="image-grid image-grid-completed">
@@ -3047,8 +3068,48 @@
     }
   };
 
+  // セクション選択のトグル（常に動作する）
+  window.toggleSectionSelection = function(sectionId) {
+    const checkbox = document.querySelector(`.section-select-checkbox[data-section-id="${sectionId}"]`);
+    if (!checkbox) return;
+    
+    if (checkbox.checked) {
+      selectedSectionIds.add(sectionId);
+    } else {
+      selectedSectionIds.delete(sectionId);
+    }
+    
+    // セクションカードの選択状態を更新
+    const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (sectionCard) {
+      if (checkbox.checked) {
+        sectionCard.classList.add('section-selected');
+      } else {
+        sectionCard.classList.remove('section-selected');
+      }
+    }
+    
+    // ボタンの表示を更新
+    const sectionCopyBtn = document.getElementById('section-copy-btn');
+    const sectionBulkDeleteBtn = document.getElementById('section-bulk-delete-btn');
+    if (sectionCopyBtn) {
+      if (selectedSectionIds.size > 0) {
+        sectionCopyBtn.innerHTML = `<i class="fas fa-copy"></i><span>コピー (${selectedSectionIds.size})</span>`;
+      } else {
+        sectionCopyBtn.innerHTML = '<i class="fas fa-copy"></i><span>コピー</span>';
+      }
+    }
+    if (sectionBulkDeleteBtn) {
+      if (selectedSectionIds.size > 0) {
+        sectionBulkDeleteBtn.innerHTML = `<i class="fas fa-trash"></i><span>削除 (${selectedSectionIds.size})</span>`;
+      } else {
+        sectionBulkDeleteBtn.innerHTML = '<i class="fas fa-trash"></i><span>削除</span>';
+      }
+    }
+  };
+
   // セクションをコピー
-  function copySection(sectionId) {
+  window.copySection = function(sectionId) {
     const originalSection = sections[sectionId];
     if (!originalSection) return;
     
@@ -3091,10 +3152,16 @@
       html = `
         <div class="section-card" data-section-id="${newSectionId}">
           <div class="section-header">
+            <input type="checkbox" class="section-select-checkbox" data-section-id="${newSectionId}" onchange="toggleSectionSelection('${newSectionId}')">
             <span class="section-title"><i class="fas fa-comment"></i> コメント</span>
-            <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')">
-              <i class="fas fa-trash"></i>
-            </button>
+            <div class="section-header-actions">
+              <button type="button" class="section-copy" onclick="copySection('${newSectionId}')" title="コピー">
+                <i class="fas fa-copy"></i>
+              </button>
+              <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')" title="削除">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
           </div>
           <div class="section-body">
             <textarea class="form-input section-textarea" placeholder="コメントを入力..." oninput="updateSectionContent('${newSectionId}', this.value)">${escapeHtml(newSection.content || '')}</textarea>
@@ -3105,10 +3172,16 @@
       html = `
         <div class="section-card" data-section-id="${newSectionId}">
           <div class="section-header">
+            <input type="checkbox" class="section-select-checkbox" data-section-id="${newSectionId}" onchange="toggleSectionSelection('${newSectionId}')">
             <span class="section-title"><i class="fas fa-tasks"></i> 作業内容</span>
-            <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')">
-              <i class="fas fa-trash"></i>
-            </button>
+            <div class="section-header-actions">
+              <button type="button" class="section-copy" onclick="copySection('${newSectionId}')" title="コピー">
+                <i class="fas fa-copy"></i>
+              </button>
+              <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')" title="削除">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
           </div>
           <div class="section-body">
             <textarea class="form-input section-textarea" placeholder="作業内容を入力..." oninput="updateSectionContent('${newSectionId}', this.value)">${escapeHtml(newSection.content || '')}</textarea>
@@ -3121,10 +3194,16 @@
         html = `
           <div class="section-card" data-section-id="${newSectionId}">
             <div class="section-header">
+              <input type="checkbox" class="section-select-checkbox" data-section-id="${newSectionId}" onchange="toggleSectionSelection('${newSectionId}')">
               <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後）</span>
-              <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')">
-                <i class="fas fa-trash"></i>
-              </button>
+              <div class="section-header-actions">
+                <button type="button" class="section-copy" onclick="copySection('${newSectionId}')" title="コピー">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')" title="削除">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
             </div>
             <div class="section-body">
               <div class="image-grid">
@@ -3162,10 +3241,16 @@
         html = `
           <div class="section-card" data-section-id="${newSectionId}">
             <div class="section-header">
+              <input type="checkbox" class="section-select-checkbox" data-section-id="${newSectionId}" onchange="toggleSectionSelection('${newSectionId}')">
               <span class="section-title"><i class="fas fa-star"></i> 画像（施工後）</span>
-              <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')">
-                <i class="fas fa-trash"></i>
-              </button>
+              <div class="section-header-actions">
+                <button type="button" class="section-copy" onclick="copySection('${newSectionId}')" title="コピー">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')" title="削除">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
             </div>
             <div class="section-body">
               <div class="image-grid image-grid-completed">
@@ -3217,47 +3302,41 @@
       const sectionId = card.dataset.sectionId;
       if (!sectionId) return;
       
-      if (isSectionSelectMode) {
-        // チェックボックスを追加
-        if (!card.querySelector('.section-select-checkbox')) {
-          const checkbox = document.createElement('div');
-          checkbox.className = 'section-select-checkbox';
-          checkbox.innerHTML = '<i class="fas fa-check-circle"></i>';
-          checkbox.onclick = (e) => {
-            e.stopPropagation();
-            toggleSectionSelection(sectionId);
-          };
-          card.querySelector('.section-header')?.insertBefore(checkbox, card.querySelector('.section-header').firstChild);
-        }
-        
-        // 選択状態を反映
-        if (selectedSectionIds.has(sectionId)) {
-          card.classList.add('section-selected');
-        } else {
-          card.classList.remove('section-selected');
-        }
+      // チェックボックスは常に表示される（HTMLに既に含まれている）
+      const checkbox = card.querySelector('.section-select-checkbox[data-section-id]');
+      if (checkbox) {
+        checkbox.checked = selectedSectionIds.has(sectionId);
+      }
+      
+      // 選択状態を反映
+      if (selectedSectionIds.has(sectionId)) {
+        card.classList.add('section-selected');
       } else {
-        // チェックボックスを削除
-        const checkbox = card.querySelector('.section-select-checkbox');
-        if (checkbox) {
-          checkbox.remove();
-        }
         card.classList.remove('section-selected');
       }
     });
   }
 
-  // セクション選択をトグル
-  function toggleSectionSelection(sectionId) {
-    if (!isSectionSelectMode) return;
-    
+  // セクション選択をトグル（常に動作する）
+  function toggleSectionSelectionInternal(sectionId) {
     if (selectedSectionIds.has(sectionId)) {
       selectedSectionIds.delete(sectionId);
     } else {
       selectedSectionIds.add(sectionId);
     }
     
-    updateSectionCardsForSelection();
+    // セクションカードの選択状態を更新
+    const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    const checkbox = document.querySelector(`.section-select-checkbox[data-section-id="${sectionId}"]`);
+    if (sectionCard) {
+      if (selectedSectionIds.has(sectionId)) {
+        sectionCard.classList.add('section-selected');
+        if (checkbox) checkbox.checked = true;
+      } else {
+        sectionCard.classList.remove('section-selected');
+        if (checkbox) checkbox.checked = false;
+      }
+    }
     
     // ボタンの表示を更新
     const sectionCopyBtn = document.getElementById('section-copy-btn');
