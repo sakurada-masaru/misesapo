@@ -56,11 +56,13 @@
             return name.includes(query);
           });
       
-      let html = '';
+      // 検索結果のHTMLを構築（一番上に「自由入力」オプションを追加）
+      let html = '<div class="store-search-item free-input-option" data-free-input="true"><i class="fas fa-edit"></i> 自由入力</div>';
+      
       if (filtered.length === 0) {
-        html = '<div class="store-search-item no-results">該当するブランドが見つかりません</div>';
+        html += '<div class="store-search-item no-results">該当するブランドが見つかりません</div>';
       } else {
-        html = filtered.map(brand => {
+        html += filtered.map(brand => {
           const name = brand.name;
           const id = brand.id;
           return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`;
@@ -69,20 +71,61 @@
       
       brandResults.innerHTML = html;
       
-      // クリックイベントを設定
-      brandResults.querySelectorAll('.store-search-item:not(.no-results)').forEach(item => {
+      // 「自由入力」オプションのクリックイベント
+      const freeInputOption = brandResults.querySelector('.free-input-option');
+      if (freeInputOption) {
+        freeInputOption.addEventListener('click', function() {
+          // 入力欄を編集可能にする
+          brandSearchInput.removeAttribute('readonly');
+          brandSearchInput.focus();
+          // ブランドIDをクリア（自由入力のため）
+          document.getElementById('report-brand').value = '';
+          document.getElementById('report-brand-name').value = '';
+          brandSearchInput.value = '';
+          brandResults.style.display = 'none';
+          
+          // 店舗選択を有効化
+          const storeSelect = document.getElementById('report-store-select');
+          if (storeSelect) {
+            storeSelect.disabled = false;
+          }
+        });
+      }
+      
+      // 通常のブランド選択のクリックイベント
+      brandResults.querySelectorAll('.store-search-item:not(.free-input-option):not(.no-results)').forEach(item => {
         item.addEventListener('click', function() {
           const id = this.dataset.id;
           const name = this.dataset.name;
+          
+          // ブランドが変更されたかどうかを確認
+          const currentBrandId = document.getElementById('report-brand')?.value;
+          const brandChanged = currentBrandId !== id;
+          
           document.getElementById('report-brand').value = id;
           document.getElementById('report-brand-name').value = name;
           brandSearchInput.value = name;
+          // ブランド選択時は入力欄をreadonlyにする
           brandSearchInput.setAttribute('readonly', 'readonly');
           brandResults.style.display = 'none';
           
-          // 店舗リストを更新
+          // ブランド選択時に店舗リストを更新
           if (typeof window.updateStoreSelect === 'function') {
             window.updateStoreSelect();
+          }
+          
+          // ブランドが変更された場合、店舗名をリセット
+          if (brandChanged) {
+            document.getElementById('report-store').value = '';
+            document.getElementById('report-store-name').value = '';
+            const storeSearchInput = document.getElementById('report-store-search');
+            if (storeSearchInput) {
+              storeSearchInput.value = '';
+            }
+            const storeSelect = document.getElementById('report-store-select');
+            if (storeSelect) {
+              storeSelect.value = '';
+            }
           }
         });
       });
@@ -105,7 +148,7 @@
       }, 200);
     });
     
-    // 入力フィールドをクリックしたとき：自由入力モードに切り替え
+    // 入力フィールドをクリックしたとき：検索結果を表示
     brandSearchInput.addEventListener('click', function(e) {
       // 下矢印ボタンがクリックされた場合は処理をスキップ
       if (isDropdownBtnClicked) {
@@ -116,25 +159,25 @@
         brandResults.style.display = 'none';
         return;
       }
-      // readonlyの場合は自由入力モードに切り替え
+      // readonlyの場合は検索結果を表示
       if (this.hasAttribute('readonly')) {
-        this.removeAttribute('readonly');
-        this.focus();
-        // ブランドIDをクリア
-        document.getElementById('report-brand').value = '';
-        document.getElementById('report-brand-name').value = '';
-        this.value = '';
-        // 店舗選択を有効化
-        const storeSelect = document.getElementById('report-store-select');
-        if (storeSelect) {
-          storeSelect.disabled = false;
-        }
+        updateBrandDropdown();
+        brandResults.style.display = 'block';
       }
     });
     
     // 入力フィールドで入力したとき：検索結果を更新
     brandSearchInput.addEventListener('input', function() {
       if (!this.hasAttribute('readonly')) {
+        // 自由入力モード：検索結果を表示
+        updateBrandDropdown();
+        brandResults.style.display = 'block';
+        // ブランド名を更新（自由入力の場合）
+        const inputValue = this.value.trim();
+        document.getElementById('report-brand-name').value = inputValue;
+        document.getElementById('report-brand').value = '';
+      } else {
+        // readonlyの場合は検索結果を更新（通常は発生しないが、念のため）
         updateBrandDropdown();
         brandResults.style.display = 'block';
       }
@@ -198,11 +241,13 @@
         });
       }
       
-      let html = '';
+      // 検索結果のHTMLを構築（一番上に「自由入力」オプションを追加）
+      let html = '<div class="store-search-item free-input-option" data-free-input="true"><i class="fas fa-edit"></i> 自由入力</div>';
+      
       if (filteredStores.length === 0) {
-        html = '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
+        html += '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
       } else {
-        html = filteredStores.map(store => {
+        html += filteredStores.map(store => {
           const name = store.store_name || store.name;
           const id = store.store_id || store.id;
           return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`;
@@ -211,8 +256,23 @@
       
       storeResults.innerHTML = html;
       
-      // クリックイベントを設定
-      storeResults.querySelectorAll('.store-search-item:not(.no-results)').forEach(item => {
+      // 「自由入力」オプションのクリックイベント
+      const freeInputOption = storeResults.querySelector('.free-input-option');
+      if (freeInputOption) {
+        freeInputOption.addEventListener('click', function() {
+          // 入力欄を編集可能にする
+          storeSearchInput.removeAttribute('readonly');
+          storeSearchInput.focus();
+          // 店舗IDをクリア（自由入力のため）
+          document.getElementById('report-store').value = '';
+          document.getElementById('report-store-name').value = '';
+          storeSearchInput.value = '';
+          storeResults.style.display = 'none';
+        });
+      }
+      
+      // 通常の店舗選択のクリックイベント
+      storeResults.querySelectorAll('.store-search-item:not(.free-input-option):not(.no-results)').forEach(item => {
         item.addEventListener('click', function() {
           const id = this.dataset.id;
           const name = this.dataset.name;
@@ -242,7 +302,7 @@
       }, 200);
     });
     
-    // 入力フィールドをクリックしたとき：自由入力モードに切り替え
+    // 入力フィールドをクリックしたとき：検索結果を表示
     storeSearchInput.addEventListener('click', function(e) {
       // 下矢印ボタンがクリックされた場合は処理をスキップ
       if (isStoreDropdownBtnClicked) {
@@ -253,18 +313,10 @@
         storeResults.style.display = 'none';
         return;
       }
-      // readonlyの場合は自由入力モードに切り替え
+      // readonlyの場合は検索結果を表示
       if (this.hasAttribute('readonly')) {
-        this.removeAttribute('readonly');
-        // 既存の店舗名を保持（hiddenフィールドから取得）
-        const existingStoreName = document.getElementById('report-store-name')?.value || '';
-        if (existingStoreName && !this.value) {
-          this.value = existingStoreName;
-        }
-        this.focus();
-        // 店舗IDをクリア（自由入力モードに切り替えるため）
-        document.getElementById('report-store').value = '';
-        // 店舗名は保持（ユーザーが編集できるように）
+        updateStoreDropdown();
+        storeResults.style.display = 'block';
       }
     });
     
