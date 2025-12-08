@@ -193,10 +193,14 @@
   gap: 8px;
 }
 
-.form-row.two-col .date-time-group {
+.form-row.two-col .date-time-group,
+.form-row.three-col .date-time-group {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  margin: 0;
+  padding: 0;
+  gap: 0;
 }
 
 .form-row.three-col {
@@ -270,9 +274,11 @@
   position: relative;
   width: 100%;
   height: 38px; /* ブランド名、開始時刻、終了時刻と高さを統一 */
+  margin: 0;
+  padding: 0;
 }
 
-/* time入力フィールドのプレースホルダー表示を改善 */
+/* 日付・時刻入力フィールドのプレースホルダー表示を統一 */
 .date-time-input-wrapper::before {
   content: attr(data-placeholder);
   position: absolute;
@@ -285,6 +291,7 @@
   z-index: 1;
   font-size: 0.9rem;
   white-space: nowrap;
+  line-height: 1.5;
 }
 
 .date-time-input-wrapper:has(input[value]:not([value=""]))::before,
@@ -298,6 +305,7 @@
   flex-shrink: 0;
 }
 
+/* 日付・時刻入力フィールドのスタイルを統一 */
 .date-time-input {
   flex: 1;
   min-width: 0;
@@ -308,15 +316,44 @@
   background: transparent;
   height: 38px; /* ブランド名、開始時刻、終了時刻と高さを統一 */
   line-height: 1.5;
+  font-size: 0.9rem;
+  margin: 0;
+  border: none;
+  outline: none;
 }
 
 .date-time-input::placeholder {
   color: rgba(255, 255, 255, 0.8);
   opacity: 1;
   font-weight: 500;
+  font-size: 0.9rem;
 }
 
-/* time入力フィールドの表示を改善 */
+/* date入力フィールドの表示を統一 */
+input[type="date"].date-time-input {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+input[type="date"].date-time-input::-webkit-datetime-edit-text {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+input[type="date"].date-time-input::-webkit-datetime-edit-month-field,
+input[type="date"].date-time-input::-webkit-datetime-edit-day-field,
+input[type="date"].date-time-input::-webkit-datetime-edit-year-field {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+input[type="date"].date-time-input:invalid::-webkit-datetime-edit-text {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 値が入力されていない場合の表示 */
+input[type="date"].date-time-input:invalid {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* time入力フィールドの表示を統一 */
 input[type="time"].date-time-input {
   color: rgba(255, 255, 255, 0.9);
 }
@@ -2382,18 +2419,21 @@ body.dark-mode .modal-footer {
     gap: 8px;
   }
   
+  /* 日付・時刻入力フィールドのスタイルを統一 */
   .date-time-input {
     font-size: 0.75rem;
-    padding: 10px 4px;
+    padding: 8px 12px;
+    height: 38px;
   }
   
-  /* プレースホルダーのフォントサイズを調整 */
+  /* プレースホルダーのフォントサイズを統一 */
   .date-time-input-wrapper::before {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
+    left: 12px;
   }
   
-  input[type="date"].date-time-input::placeholder {
-    font-size: 0.7rem;
+  .date-time-input::placeholder {
+    font-size: 0.75rem;
   }
   
   .form-input,
@@ -2481,18 +2521,21 @@ body.dark-mode .modal-footer {
     min-width: 50px;
   }
   
+  /* 日付・時刻入力フィールドのスタイルを統一 */
   .date-time-input {
     font-size: 0.8rem;
-    padding: 10px 6px;
+    padding: 8px 12px;
+    height: 38px;
   }
   
-  /* プレースホルダーのフォントサイズを調整 */
+  /* プレースホルダーのフォントサイズを統一 */
   .date-time-input-wrapper::before {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
+    left: 12px;
   }
   
-  input[type="date"].date-time-input::placeholder {
-    font-size: 0.75rem;
+  .date-time-input::placeholder {
+    font-size: 0.8rem;
   }
   
   .form-input,
