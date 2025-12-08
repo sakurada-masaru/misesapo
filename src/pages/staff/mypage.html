@@ -106,27 +106,27 @@
           <i class="fas fa-th"></i>
           <span>自動整列</span>
         </button>
-      </div>
-    </div>
-    
+            </div>
+          </div>
+
     <!-- メインコンテンツ -->
     <div class="mypage-main-grid-container" style="flex: 1; overflow: hidden; min-height: 0;">
         <div class="mypage-main-grid" id="mypage-grid">
-          <!-- 出退勤記録セクション -->
+        <!-- 出退勤記録セクション -->
           <section class="container draggable-container" data-container-id="attendance" data-container-width="3" data-container-height="1" data-container-cost="3" data-grid-position="1,1" draggable="false">
             <div class="container-section">
               <div class="container-header">
                 <h2 class="container-title drag-handle">
                   <i class="fas fa-grip-vertical"></i>
-                  <i class="fas fa-clock"></i>
-                  出退勤記録
-                </h2>
+            <i class="fas fa-clock"></i>
+            出退勤記録
+          </h2>
                 <button class="btn btn-text btn-sm" id="request-correction-btn">
                   <i class="fas fa-edit"></i>
                   <span>修正依頼</span>
                 </button>
               </div>
-              <div class="card attendance-card">
+          <div class="card attendance-card">
             <!-- 今日の出退勤状況 -->
             <div class="attendance-today-grid">
               <div class="attendance-status-box" id="attendance-status">
@@ -140,7 +140,7 @@
                 <button class="btn-attendance btn-clock-in" id="attendance-toggle-btn">
                   <i class="fas fa-sign-in-alt"></i>
                   <span id="toggle-btn-text">出勤</span>
-              </button>
+                </button>
               </div>
             </div>
             
@@ -206,20 +206,20 @@
                 <span class="basic-info-value" id="basic-info-phone">-</span>
               </div>
             </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- TODOリスト -->
+        <!-- TODOリスト -->
       <section class="container draggable-container" data-container-id="todo" data-container-width="2" data-container-height="4" data-container-cost="8" data-grid-position="1,3" draggable="false">
         <div class="container-section">
           <div class="container-header">
             <h2 class="container-title drag-handle">
               <i class="fas fa-grip-vertical"></i>
-              <i class="fas fa-tasks"></i>
-              TODOリスト
-              <span class="todo-count" id="todo-count">0</span>
-            </h2>
+            <i class="fas fa-tasks"></i>
+            TODOリスト
+            <span class="todo-count" id="todo-count">0</span>
+          </h2>
           </div>
           <div class="card todo-card">
             <div class="todo-input-wrapper">
@@ -236,29 +236,29 @@
               <button class="filter-btn" data-filter="active">未完了</button>
               <button class="filter-btn" data-filter="completed">完了</button>
             </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- 今週のスケジュール -->
+        <!-- 今週のスケジュール -->
       <section class="container draggable-container" data-container-id="weekly-schedule" data-container-width="2" data-container-height="2" data-container-cost="4" data-grid-position="4,1" draggable="false">
         <div class="container-section">
           <div class="container-header">
             <h2 class="container-title drag-handle">
               <i class="fas fa-grip-vertical"></i>
-              <i class="fas fa-calendar-alt"></i>
-              今週のスケジュール
-            </h2>
+            <i class="fas fa-calendar-alt"></i>
+            今週のスケジュール
+          </h2>
           </div>
           <div class="card">
             <div id="weekly-schedule">
               <div class="empty-state">予定はありません</div>
             </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- 今月のカレンダー -->
+        <!-- 今月のカレンダー -->
       <section class="container draggable-container calendar-section" data-container-id="calendar" data-container-width="3" data-container-height="3" data-container-cost="9" data-grid-position="4,3" draggable="false">
         <div class="container-section">
           <div class="container-header">
@@ -282,7 +282,7 @@
               <!-- カレンダーが動的に生成される -->
             </div>
           </div>
-        </div>
+    </div>
       </section>
 
       <!-- デジタル時計コンテナ -->
@@ -297,7 +297,7 @@
             <button class="btn btn-text btn-sm" id="clock-format-toggle" title="24時間/12時間切り替え">
               <i class="fas fa-exchange-alt"></i>
             </button>
-          </div>
+              </div>
           <div class="card digital-clock-card">
             <div class="digital-clock-display" id="digital-clock-display">00:00:00</div>
             <div class="digital-clock-date" id="digital-clock-date">-</div>
@@ -305,17 +305,17 @@
               <div class="alarm-status" id="alarm-status">
                 <i class="fas fa-bell"></i>
                 <span id="alarm-time-display">--:--</span>
-              </div>
+            </div>
               <button class="btn btn-sm btn-alarm-toggle" id="alarm-toggle-btn">
                 <i class="fas fa-bell-slash"></i>
               </button>
-            </div>
+          </div>
             <button class="btn btn-sm btn-alarm-set" id="alarm-set-btn">
               <i class="fas fa-plus"></i>
               アラーム設定
             </button>
-          </div>
-        </div>
+            </div>
+            </div>
       </section>
 
       <!-- 日報 -->
@@ -331,7 +331,7 @@
               <i class="fas fa-external-link-alt"></i>
               <span>詳細</span>
             </a>
-          </div>
+            </div>
           <div class="card daily-reports-card">
             <!-- 今日の日報入力フォーム -->
             <div class="daily-report-form-section">
@@ -355,14 +355,14 @@
                   <span>クリア</span>
                 </button>
               </div>
-            </div>
+              </div>
+              </div>
+              </div>
+      </section>
+              </div>
+              </div>
           </div>
         </div>
-      </section>
-        </div>
-      </div>
-    </div>
-  </div>
 </main>
 
 
