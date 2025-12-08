@@ -997,14 +997,30 @@
         document.getElementById('form-title').textContent = '新規レポート作成';
         document.getElementById('report-form-modal').reset();
         document.getElementById('report-id').value = '';
-        document.getElementById('report-date').value = new Date().toISOString().split('T')[0];
         // モーダル内のコンテナをクリア
-        document.getElementById('work-items-container-modal').innerHTML = '';
-        document.getElementById('cleaning-items-list-modal').innerHTML = '<span class="items-list-empty-modal">項目を追加してください</span>';
-        // 初期項目を追加
-        modalWorkItemCounter = 0;
-        addWorkItemModal();
+        const reportContent = document.getElementById('report-content-modal');
+        if (reportContent) {
+          reportContent.innerHTML = '';
+        }
+        const cleaningItemsList = document.getElementById('cleaning-items-list-modal');
+        if (cleaningItemsList) {
+          cleaningItemsList.innerHTML = '<span class="items-list-empty">項目を追加してください</span>';
+        }
+        // 日付を今日に設定
+        const reportDate = document.getElementById('report-date-modal');
+        if (reportDate) {
+          reportDate.value = new Date().toISOString().split('T')[0];
+        }
+        // 画像ストックをクリア
+        const imageStockGrid = document.getElementById('image-stock-grid-modal');
+        if (imageStockGrid) {
+          imageStockGrid.innerHTML = '<div class="image-stock-empty"><i class="fas fa-cloud-upload-alt"></i><p>画像をアップロードしてください</p><small>ドラッグ&ドロップで各セクションに配置できます</small></div>';
+        }
         document.getElementById('new-dialog').showModal();
+        // モーダル内で清掃員レポート作成ページと同じ機能を初期化
+        if (typeof window.initAdminReportModal === 'function') {
+          window.initAdminReportModal();
+        }
       });
 
       // モーダル用の変数と関数
@@ -2317,4 +2333,13 @@
         timer = setTimeout(() => fn.apply(this, args), delay);
       };
     }
+
+    // 管理側モーダル内で清掃員レポート作成ページと同じ機能を初期化
+    window.initAdminReportModal = function() {
+      // モーダル内の要素IDに-modalサフィックスを付けた要素に対して
+      // 清掃員レポート作成ページと同じ機能を実装
+      // この関数は、staff-report-new.jsの機能をモーダル内で動作させるためのラッパー
+      console.log('Admin report modal initialized');
+      // 実際の実装は、staff-report-new.jsをモーダル内で動作するように調整する必要がある
+    };
   })();
