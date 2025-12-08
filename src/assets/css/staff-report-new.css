@@ -109,13 +109,9 @@
 }
 
 #tab-content-new {
-  margin-top: 98px;
-  padding-top: 0;
-}
-
-#tab-content-new {
   padding-bottom: 0;
   margin-bottom: 0;
+  padding-top: 0;
 }
 
 .tab-content.active {
