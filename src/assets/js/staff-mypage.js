@@ -2665,39 +2665,20 @@ function isValidContainerSize(container, width, height) {
 
 // 絶対位置が有効かチェック（他のコンテナと重複しないか、範囲内か）
 // 全てのマスに設置できるように、重複チェックを緩和
-// 自由な位置に配置できるように、制約を緩和
+// 自由な位置に配置できるように、制約を完全に緩和
 function isValidAbsolutePosition(grid, container, x, y) {
+  // サイズ制約チェックのみ（位置の制約は完全に削除）
   const width = parseInt(container.dataset.containerWidth) || 3;
   const height = parseInt(container.dataset.containerHeight) || 3;
-  const CELL_SIZE = 80; // 固定80px（画面幅に関係なく常に80px）
-  const containerWidth = width * CELL_SIZE;
-  const containerHeight = height * CELL_SIZE;
   
   // サイズ制約チェック
   if (!isValidContainerSize(container, width, height)) {
     return false;
   }
   
-  // グリッド範囲外チェックを緩和（コンテナが少しはみ出しても許容）
-  const gridWidth = grid.offsetWidth;
-  const gridHeight = grid.offsetHeight;
-  
-  // 左端・上端が大きく範囲外の場合は無効（-20pxまで許容）
-  if (x < -20 || y < -20) {
-    return false;
-  }
-  
-  // 右端・下端が大きく範囲外の場合は無効（コンテナが少しはみ出しても許容）
-  // グリッドの幅・高さを超えても許容（スクロール可能な場合など）
-  if (x + containerWidth > gridWidth + 100 || y + containerHeight > gridHeight + 100) {
-    return false;
-  }
-  
-  // グリッドスナップチェックを削除（自由な位置に配置できるように）
-  // 位置が80pxの倍数でなくても配置可能にする
-  
-  // 重複チェックは削除（全てのマスに設置できるように）
-  // ユーザーが自由に配置できるようにする
+  // 位置の制約を完全に削除
+  // グリッド範囲外でも、負の値でも、どこにでも配置可能
+  // ユーザーが完全に自由に配置できるようにする
   
   return true;
 }
@@ -2867,18 +2848,10 @@ function setupDragAndDrop() {
     
     console.log('[Drag] Drop position - x:', x, 'y:', y, 'gridWidth:', grid.offsetWidth, 'gridHeight:', grid.offsetHeight, 'dragOffset:', dragOffset);
     
-    // 有効な位置なら配置（無効でも配置可能にする場合は、このチェックを削除）
-    const isValid = isValidAbsolutePosition(grid, draggedElement, x, y);
-    if (isValid) {
-      console.log('[Drag] Valid position, moving container to x:', x, 'y:', y);
-      setAbsolutePosition(draggedElement, x, y);
-      saveSectionLayout();
-    } else {
-      console.log('[Drag] Invalid position - x:', x, 'y:', y, 'but allowing drop anyway');
-      // 無効な位置でも配置を許可（重複や範囲外でも配置できるように）
-      setAbsolutePosition(draggedElement, x, y);
-      saveSectionLayout();
-    }
+    // 位置の制約を完全に削除 - どこにでも配置可能
+    console.log('[Drag] Moving container to x:', x, 'y:', y);
+    setAbsolutePosition(draggedElement, x, y);
+    saveSectionLayout();
     
     // すべてのコンテナからdrag-overクラスを削除
     grid.querySelectorAll('.draggable-container').forEach(container => {
