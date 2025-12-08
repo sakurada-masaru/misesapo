@@ -2721,7 +2721,16 @@
       </div>
     `;
 
-    document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+    const reportContent = document.getElementById('report-content');
+    const sectionAddIconsArea = document.getElementById('section-add-icons-area');
+    
+    // セクション追加アイコンエリアの前に挿入
+    if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
+      sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
+    } else {
+      reportContent.insertAdjacentHTML('beforeend', html);
+    }
+    
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
@@ -2734,9 +2743,17 @@
       if (isSectionSelectMode) {
         updateSectionCardsForSelection();
       }
+      // セクションの下にプラスアイコンを追加
+      addSectionAddButtonAfter(newCard);
     }
+    
+    // セクション追加アイコンエリアを常に最後に配置
+    if (sectionAddIconsArea && reportContent) {
+      reportContent.appendChild(sectionAddIconsArea);
+    }
+    
     updateCleaningItemsList();
-  }
+  };
 
   // 画像セクションタイプ選択モーダルを開く
   window.openImageSectionTypeModal = function() {
