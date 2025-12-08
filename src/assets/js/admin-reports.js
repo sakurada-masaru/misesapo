@@ -632,7 +632,7 @@
       }
 
       // 清掃項目をクリア
-      const workItemsContainer = document.getElementById('work-items-container-modal');
+      const workItemsContainer = document.getElementById('report-content-modal');
       if (workItemsContainer) {
         workItemsContainer.innerHTML = '';
       }
@@ -1126,7 +1126,12 @@
       // モーダル用: 清掃項目を追加
       window.addWorkItemModal = function(itemData = null) {
         modalWorkItemCounter++;
-        const container = document.getElementById('work-items-container-modal');
+        // モーダル内のreport-contentに追加
+        const container = document.getElementById('report-content-modal');
+        if (!container) {
+          console.error('[AdminReports] report-content-modal not found');
+          return;
+        }
         const itemIdValue = itemData?.item_id || `work-item-modal-${modalWorkItemCounter}`;
         const itemNameValue = itemData?.item_name || '';
         const details = itemData?.details || {};
@@ -1202,7 +1207,11 @@
       // モーダル用: 画像セクションを追加
       window.addImageSectionModal = function(type = 'work', existingSectionId = null) {
         modalWorkItemCounter++;
-        const container = document.getElementById('work-items-container-modal');
+        const container = document.getElementById('report-content-modal');
+        if (!container) {
+          console.error('[AdminReports] report-content-modal not found');
+          return;
+        }
         const sectionId = existingSectionId || `image-section-modal-${modalWorkItemCounter}`;
         
         const beforeLabel = type === 'work' ? '作業前（Before）' : '設置前（Before）';
@@ -1300,7 +1309,11 @@
       // モーダル用: コメントセクションを追加
       window.addCommentSectionModal = function(existingSectionId = null) {
         modalWorkItemCounter++;
-        const container = document.getElementById('work-items-container-modal');
+        const container = document.getElementById('report-content-modal');
+        if (!container) {
+          console.error('[AdminReports] report-content-modal not found');
+          return;
+        }
         const sectionId = existingSectionId || `comment-section-modal-${modalWorkItemCounter}`;
         
         const commentSection = document.createElement('section');
@@ -1328,7 +1341,11 @@
       // モーダル用: 作業内容セクションを追加
       window.addWorkContentSectionModal = function(existingSectionId = null) {
         modalWorkItemCounter++;
-        const container = document.getElementById('work-items-container-modal');
+        const container = document.getElementById('report-content-modal');
+        if (!container) {
+          console.error('[AdminReports] report-content-modal not found');
+          return;
+        }
         const sectionId = existingSectionId || `work-content-section-modal-${modalWorkItemCounter}`;
         
         const workContentSection = document.createElement('section');
@@ -2325,7 +2342,10 @@
           // フォームをリセット
           document.getElementById('report-form-modal').reset();
           document.getElementById('report-id').value = '';
-          document.getElementById('work-items-container-modal').innerHTML = '';
+          const workItemsContainer = document.getElementById('report-content-modal');
+          if (workItemsContainer) {
+            workItemsContainer.innerHTML = '';
+          }
           document.getElementById('cleaning-items-list-modal').innerHTML = '<span class="items-list-empty-modal">項目を追加してください</span>';
           modalWorkItemCounter = 0;
           document.getElementById('form-title').textContent = '新規レポート作成';

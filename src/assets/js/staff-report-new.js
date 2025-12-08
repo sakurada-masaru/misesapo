@@ -999,6 +999,14 @@
   // すべてのセクションカードにドラッグ&ドロップを設定
   function setupAllSectionDragAndDrop() {
     const contentArea = document.getElementById('report-content');
+    if (!contentArea) {
+      // admin-reports.jsから呼ばれる場合、モーダル用のIDを試す
+      const modalContentArea = document.getElementById('report-content-modal');
+      if (!modalContentArea) return;
+      const allCards = modalContentArea.querySelectorAll('.section-card');
+      allCards.forEach(card => setupSectionDragAndDrop(card));
+      return;
+    }
     const allCards = contentArea.querySelectorAll('.section-card');
     allCards.forEach(card => setupSectionDragAndDrop(card));
   }
