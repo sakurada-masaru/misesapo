@@ -2364,6 +2364,15 @@ body.dark-mode .modal-footer {
     gap: 8px;
   }
   
+  /* 単独の.form-row内の.date-time-groupの幅を確保 */
+  .form-row:not(.two-col):not(.three-col):not(.three-col-inline) .date-time-group {
+    width: 100%;
+  }
+  
+  .form-row:not(.two-col):not(.three-col):not(.three-col-inline) .form-group {
+    width: 100%;
+  }
+  
   .form-input,
   .form-select {
     font-size: 0.85rem;
@@ -2420,6 +2429,15 @@ body.dark-mode .modal-footer {
   .form-row.three-col-inline .date-time-group:last-child {
     border-bottom: none;
     padding-bottom: 0;
+  }
+  
+  /* 単独の.form-row内の.date-time-groupの幅を確保 */
+  .form-row:not(.two-col):not(.three-col):not(.three-col-inline) .date-time-group {
+    width: 100%;
+  }
+  
+  .form-row:not(.two-col):not(.three-col):not(.three-col-inline) .form-group {
+    width: 100%;
   }
   
   .date-time-label {
