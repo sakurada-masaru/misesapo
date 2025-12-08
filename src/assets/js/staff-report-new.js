@@ -1128,11 +1128,6 @@
             <div class="image-category">
               <div class="image-category-title before"><i class="fas fa-clock"></i> 作業前</div>
               <div class="image-list" id="${sectionId}-before">
-                  ${(photos.before || []).length === 0 ? `
-                    <div class="image-placeholder">
-                      <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
-                    </div>
-                  ` : ''}
                   ${(photos.before || []).map(url => `
                     <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="before" data-image-url="${url}">
                       <img src="${url}" alt="Before" draggable="false">
@@ -1150,11 +1145,6 @@
             <div class="image-category">
               <div class="image-category-title after"><i class="fas fa-check-circle"></i> 作業後</div>
               <div class="image-list" id="${sectionId}-after">
-                  ${(photos.after || []).length === 0 ? `
-                    <div class="image-placeholder">
-                      <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
-                    </div>
-                  ` : ''}
                   ${(photos.after || []).map(url => `
                     <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="after" data-image-url="${url}">
                       <img src="${url}" alt="After" draggable="false">
