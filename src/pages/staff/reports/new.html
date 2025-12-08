@@ -88,6 +88,37 @@
       </div>
     </div>
 
+    <!-- 実施清掃項目リスト -->
+    <div class="items-list-bar">
+      <span class="items-list-label">実施清掃項目</span>
+      <div class="items-list-items" id="cleaning-items-list">
+        <span class="items-list-empty">項目を追加してください</span>
+      </div>
+    </div>
+
+    <!-- コンテンツエリア -->
+    <div class="report-content" id="report-content">
+      <!-- セクションが動的に追加される -->
+      
+      <!-- セクション追加アイコンエリア -->
+      <div class="section-add-icons-area" id="section-add-icons-area">
+        <button type="button" class="section-add-toggle-btn" id="section-add-toggle-btn">
+          <i class="fas fa-plus"></i>
+        </button>
+        <div class="section-add-icons" id="section-add-icons" style="display: none;">
+          <button type="button" class="section-add-icon-btn" id="section-add-cleaning" data-section-type="cleaning" title="清掃項目">
+            <i class="fas fa-list"></i>
+          </button>
+          <button type="button" class="section-add-icon-btn" id="section-add-comment" data-section-type="comment" title="コメント">
+            <i class="fas fa-comment"></i>
+          </button>
+          <button type="button" class="section-add-icon-btn" id="section-add-image" data-section-type="image" title="画像">
+            <i class="fas fa-image"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 画像ストックエリア -->
     <div class="image-stock-section">
       <div class="image-stock-header">
@@ -120,37 +151,6 @@
           <i class="fas fa-cloud-upload-alt"></i>
           <p>画像をアップロードしてください</p>
           <small>ドラッグ&ドロップで各セクションに配置できます</small>
-        </div>
-      </div>
-    </div>
-
-    <!-- 実施清掃項目リスト -->
-    <div class="items-list-bar">
-      <span class="items-list-label">実施清掃項目</span>
-      <div class="items-list-items" id="cleaning-items-list">
-        <span class="items-list-empty">項目を追加してください</span>
-      </div>
-    </div>
-
-    <!-- コンテンツエリア -->
-    <div class="report-content" id="report-content">
-      <!-- セクションが動的に追加される -->
-      
-      <!-- セクション追加アイコンエリア -->
-      <div class="section-add-icons-area" id="section-add-icons-area">
-        <button type="button" class="section-add-toggle-btn" id="section-add-toggle-btn">
-          <i class="fas fa-plus"></i>
-        </button>
-        <div class="section-add-icons" id="section-add-icons" style="display: none;">
-          <button type="button" class="section-add-icon-btn" id="section-add-cleaning" data-section-type="cleaning" title="清掃項目">
-            <i class="fas fa-list"></i>
-          </button>
-          <button type="button" class="section-add-icon-btn" id="section-add-comment" data-section-type="comment" title="コメント">
-            <i class="fas fa-comment"></i>
-          </button>
-          <button type="button" class="section-add-icon-btn" id="section-add-image" data-section-type="image" title="画像">
-            <i class="fas fa-image"></i>
-          </button>
         </div>
       </div>
     </div>

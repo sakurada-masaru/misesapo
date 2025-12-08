@@ -1741,7 +1741,7 @@ input[type="time"].date-time-input:invalid {
   background: #fff;
   border-top: 1px solid #e5e7eb;
   padding: 8px 12px;
-  display: flex;
+  display: none !important; /* 画面下部のセクション呼び出しボタンを非表示 */
   gap: 6px;
   flex-shrink: 0;
 }
