@@ -2771,10 +2771,73 @@ function getGridCellPositions(grid) {
 function clearGridPositionCache() {
   gridPositionCache = null;
   gridPositionCacheTimestamp = 0;
+  // グリッドアンカーのキャッシュもクリア
+  gridAnchors = null;
+  gridAnchorsCacheTimestamp = 0;
 }
 
-// マウス位置から絶対位置（ピクセル）を計算（80px間隔のグリッド線にスナップ）
-// コンテナの左上を起点にして、グリッド線のマスの左上に配置
+// グリッドの交点（アンカー）を計算して記憶
+let gridAnchors = null;
+let gridAnchorsCacheTimestamp = 0;
+const ANCHOR_CACHE_DURATION = 1000; // 1秒間キャッシュ
+
+function getGridAnchors(grid) {
+  const now = Date.now();
+  // キャッシュが有効な場合は再利用
+  if (gridAnchors && (now - gridAnchorsCacheTimestamp) < ANCHOR_CACHE_DURATION) {
+    return gridAnchors;
+  }
+  
+  const CELL_SIZE = 80;
+  const gridWidth = grid.offsetWidth;
+  const gridHeight = grid.offsetHeight;
+  
+  // グリッドの交点（アンカー）を計算
+  const anchors = [];
+  const maxCols = Math.ceil(gridWidth / CELL_SIZE);
+  const maxRows = Math.ceil(gridHeight / CELL_SIZE);
+  
+  for (let row = 0; row <= maxRows; row++) {
+    for (let col = 0; col <= maxCols; col++) {
+      const x = col * CELL_SIZE;
+      const y = row * CELL_SIZE;
+      // グリッド範囲内のアンカーのみ追加
+      if (x <= gridWidth && y <= gridHeight) {
+        anchors.push({ x, y });
+      }
+    }
+  }
+  
+  gridAnchors = anchors;
+  gridAnchorsCacheTimestamp = now;
+  
+  console.log('[Grid] Calculated grid anchors:', anchors.length, 'anchors');
+  return anchors;
+}
+
+// 指定された位置に最も近いアンカーを見つける
+function findNearestAnchor(grid, x, y) {
+  const anchors = getGridAnchors(grid);
+  if (anchors.length === 0) {
+    return { x: 0, y: 0 };
+  }
+  
+  let nearestAnchor = anchors[0];
+  let minDistance = Math.sqrt(Math.pow(x - nearestAnchor.x, 2) + Math.pow(y - nearestAnchor.y, 2));
+  
+  for (const anchor of anchors) {
+    const distance = Math.sqrt(Math.pow(x - anchor.x, 2) + Math.pow(y - anchor.y, 2));
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestAnchor = anchor;
+    }
+  }
+  
+  return nearestAnchor;
+}
+
+// マウス位置から絶対位置（ピクセル）を計算（グリッドの交点（アンカー）にスナップ）
+// コンテナの左上角を基準点として、基準点がアンカーと重なるように配置
 function getAbsolutePositionFromMouse(grid, x, y) {
   try {
     // マウス位置をグリッド要素からの相対位置に変換
@@ -2782,15 +2845,16 @@ function getAbsolutePositionFromMouse(grid, x, y) {
     const gridX = x - rect.left;
     const gridY = y - rect.top;
     
-    // グリッドスナップを無効化（自由な位置に配置できるように）
-    // マウス位置をそのまま使用（ピクセル単位で配置可能）
-    // ただし、負の値は0に制限（グリッドの左上を超えないように）
+    // 負の値は0に制限
     const clampedX = Math.max(0, gridX);
     const clampedY = Math.max(0, gridY);
     
+    // 最も近いアンカーを見つけてスナップ
+    const nearestAnchor = findNearestAnchor(grid, clampedX, clampedY);
+    
     return {
-      x: clampedX,
-      y: clampedY
+      x: nearestAnchor.x,
+      y: nearestAnchor.y
     };
   } catch (error) {
     console.error('[Position] Error calculating absolute position:', error);
@@ -2798,9 +2862,12 @@ function getAbsolutePositionFromMouse(grid, x, y) {
     const rect = grid.getBoundingClientRect();
     const gridX = x - rect.left;
     const gridY = y - rect.top;
+    const clampedX = Math.max(0, gridX);
+    const clampedY = Math.max(0, gridY);
+    const nearestAnchor = findNearestAnchor(grid, clampedX, clampedY);
     return {
-      x: Math.max(0, gridX),
-      y: Math.max(0, gridY)
+      x: nearestAnchor.x,
+      y: nearestAnchor.y
     };
   }
 }
