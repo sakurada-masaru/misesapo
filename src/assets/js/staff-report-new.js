@@ -8,11 +8,15 @@
   const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
   const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg'; // デフォルト画像パス
 
-  // データ
-  let stores = [];
-  let brands = [];
-  let clients = [];
-  let serviceItems = [];
+  // データ（グローバルスコープに公開）
+  window.stores = [];
+  window.brands = [];
+  window.clients = [];
+  window.serviceItems = [];
+  let stores = window.stores;
+  let brands = window.brands;
+  let clients = window.clients;
+  let serviceItems = window.serviceItems;
   let sectionCounter = 0;
   let sections = {}; // セクションデータを保持
 
@@ -243,6 +247,7 @@
       const data = await res.json();
       // APIが{items: [...]}形式で返す場合に対応
       stores = Array.isArray(data) ? data : (data.items || []);
+      window.stores = stores; // グローバルスコープにも設定
       console.log('[loadStores] Loaded stores:', stores.length, stores.slice(0, 2));
     } catch (e) {
       console.error('Failed to load stores:', e);
@@ -254,6 +259,7 @@
     try {
       const res = await fetch(`${API_BASE}/brands`);
       brands = await res.json();
+      window.brands = brands; // グローバルスコープにも設定
     } catch (e) {
       console.error('Failed to load brands:', e);
     }
@@ -264,6 +270,7 @@
     try {
       const res = await fetch(`${API_BASE}/clients`);
       clients = await res.json();
+      window.clients = clients; // グローバルスコープにも設定
     } catch (e) {
       console.error('Failed to load clients:', e);
     }
@@ -275,6 +282,7 @@
       const res = await fetch('/data/service_items.json');
       const data = await res.json();
       serviceItems = data.items || data || [];
+      window.serviceItems = serviceItems; // グローバルスコープにも設定
     } catch (e) {
       console.error('Failed to load service items:', e);
       serviceItems = [
@@ -286,6 +294,7 @@
         { title: '窓清掃' },
         { title: 'トイレ清掃' }
       ];
+      window.serviceItems = serviceItems; // グローバルスコープにも設定
     }
   }
 

@@ -1016,6 +1016,9 @@
         if (imageStockGrid) {
           imageStockGrid.innerHTML = '<div class="image-stock-empty"><i class="fas fa-cloud-upload-alt"></i><p>画像をアップロードしてください</p><small>ドラッグ&ドロップで各セクションに配置できます</small></div>';
         }
+        // セクションカウンターとセクションをリセット
+        modalSectionCounter = 0;
+        modalSections = {};
         document.getElementById('new-dialog').showModal();
         // モーダル内で清掃員レポート作成ページと同じ機能を初期化
         if (typeof window.initAdminReportModal === 'function') {
@@ -2335,11 +2338,803 @@
     }
 
     // 管理側モーダル内で清掃員レポート作成ページと同じ機能を初期化
-    window.initAdminReportModal = function() {
+    window.initAdminReportModal = async function() {
       // モーダル内の要素IDに-modalサフィックスを付けた要素に対して
       // 清掃員レポート作成ページと同じ機能を実装
-      // この関数は、staff-report-new.jsの機能をモーダル内で動作させるためのラッパー
+      
+      // データが読み込まれていない場合は読み込む
+      if (!window.stores || window.stores.length === 0) {
+        await loadStoresForModal();
+      }
+      if (!window.brands || window.brands.length === 0) {
+        await loadBrandsForModal();
+      }
+      if (!window.serviceItems || window.serviceItems.length === 0) {
+        await loadServiceItemsForModal();
+      }
+      
+      // モーダル内のブランド選択を初期化
+      initBrandSelectModal();
+      
+      // モーダル内の店舗選択を初期化
+      initStoreSelectModal();
+      
+      // モーダル内のイベントリスナーを設定
+      setupModalEventListeners();
+      
+      // モーダル内の画像ストックを初期化
+      initImageStockModal();
+      
       console.log('Admin report modal initialized');
-      // 実際の実装は、staff-report-new.jsをモーダル内で動作するように調整する必要がある
     };
+
+    // モーダル用のデータ読み込み
+    async function loadStoresForModal() {
+      try {
+        const res = await fetch(`${API_BASE}/stores`);
+        const data = await res.json();
+        window.stores = Array.isArray(data) ? data : (data.items || []);
+      } catch (e) {
+        console.error('Failed to load stores for modal:', e);
+        window.stores = [];
+      }
+    }
+
+    async function loadBrandsForModal() {
+      try {
+        const res = await fetch(`${API_BASE}/brands`);
+        const data = await res.json();
+        window.brands = Array.isArray(data) ? data : (data.items || []);
+      } catch (e) {
+        console.error('Failed to load brands for modal:', e);
+        window.brands = [];
+      }
+    }
+
+    async function loadServiceItemsForModal() {
+      try {
+        const res = await fetch(`${API_BASE}/service-items`);
+        const data = await res.json();
+        window.serviceItems = Array.isArray(data) ? data : (data.items || []);
+      } catch (e) {
+        console.error('Failed to load service items for modal:', e);
+        window.serviceItems = [];
+      }
+    }
+
+    // モーダル内のブランド選択を初期化
+    function initBrandSelectModal() {
+      const brandSelect = document.getElementById('report-brand-select-modal');
+      const brandSearchInput = document.getElementById('report-brand-search-modal');
+      const brandDropdownBtn = document.getElementById('brand-dropdown-btn-modal');
+      if (!brandSelect || !brandSearchInput || !brandDropdownBtn) return;
+      
+      // ブランドオプションを追加
+      if (typeof window.brands !== 'undefined' && window.brands) {
+        brandSelect.innerHTML = '<option value="">①ブランド名 *</option>';
+        window.brands.forEach(brand => {
+          const option = document.createElement('option');
+          option.value = brand.id;
+          option.textContent = brand.name;
+          brandSelect.appendChild(option);
+        });
+      }
+      
+      // モーダルを開く関数
+      function openBrandModalAdmin() {
+        if (typeof window.openBrandModal === 'function') {
+          // 管理側用のモーダルIDを使用
+          const modal = document.getElementById('brand-select-modal-admin');
+          const modalSearch = document.getElementById('brand-modal-search-admin');
+          const modalResults = document.getElementById('brand-modal-results-admin');
+          
+          if (modal) {
+            modal.style.display = 'flex';
+            updateBrandModalAdmin();
+            setTimeout(() => {
+              if (modalSearch) modalSearch.focus();
+            }, 100);
+          }
+        }
+      }
+      
+      // ブランドモーダル内の検索結果を更新
+      function updateBrandModalAdmin() {
+        const modalSearch = document.getElementById('brand-modal-search-admin');
+        const modalResults = document.getElementById('brand-modal-results-admin');
+        
+        if (!modalSearch || !modalResults || typeof window.brands === 'undefined') return;
+        
+        const query = modalSearch.value.trim();
+        const filtered = query.length === 0 
+          ? window.brands 
+          : window.brands.filter(brand => {
+              const name = (brand.name || '').toLowerCase();
+              return name.includes(query.toLowerCase());
+            });
+        
+        let html = '<div class="store-search-item free-input-option" data-free-input="true"><i class="fas fa-edit"></i> 自由入力</div>';
+        
+        if (filtered.length === 0) {
+          html += '<div class="store-search-item no-results">該当するブランドが見つかりません</div>';
+        } else {
+          html += filtered.map(brand => {
+            const name = brand.name;
+            const id = brand.id;
+            return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`;
+          }).join('');
+        }
+        
+        modalResults.innerHTML = html;
+        
+        // クリックイベント
+        modalResults.querySelectorAll('.store-search-item:not(.no-results)').forEach(item => {
+          item.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+            
+            if (this.classList.contains('free-input-option')) {
+              brandSearchInput.removeAttribute('readonly');
+              brandSearchInput.focus();
+              document.getElementById('report-brand-modal').value = '';
+              document.getElementById('report-brand-name-modal').value = '';
+              brandSearchInput.value = '';
+            } else {
+              document.getElementById('report-brand-modal').value = id;
+              document.getElementById('report-brand-name-modal').value = name;
+              brandSearchInput.value = name;
+              brandSearchInput.setAttribute('readonly', 'readonly');
+            }
+            
+            closeBrandModalAdmin();
+          });
+        });
+      }
+      
+      // ブランドモーダルを閉じる
+      window.closeBrandModalAdmin = function() {
+        const modal = document.getElementById('brand-select-modal-admin');
+        if (modal) {
+          modal.style.display = 'none';
+          const modalSearch = document.getElementById('brand-modal-search-admin');
+          if (modalSearch) modalSearch.value = '';
+        }
+      };
+      
+      // モーダル内の検索フィールドのイベント
+      const brandModalSearch = document.getElementById('brand-modal-search-admin');
+      if (brandModalSearch) {
+        brandModalSearch.addEventListener('input', updateBrandModalAdmin);
+      }
+      
+      // イベントリスナー
+      brandDropdownBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        openBrandModalAdmin();
+      });
+      
+      brandSearchInput.addEventListener('click', function(e) {
+        if (this.hasAttribute('readonly')) {
+          e.preventDefault();
+          openBrandModalAdmin();
+        }
+      });
+      
+      brandSearchInput.addEventListener('input', function() {
+        if (!this.hasAttribute('readonly')) {
+          const inputValue = this.value.trim();
+          document.getElementById('report-brand-name-modal').value = inputValue;
+          document.getElementById('report-brand-modal').value = '';
+        }
+      });
+      
+      brandSearchInput.setAttribute('readonly', 'readonly');
+    }
+
+    // モーダル内の店舗選択を初期化
+    function initStoreSelectModal() {
+      const storeSelect = document.getElementById('report-store-select-modal');
+      const storeSearchInput = document.getElementById('report-store-search-modal');
+      const storeDropdownBtn = document.getElementById('store-dropdown-btn-modal');
+      if (!storeSelect || !storeSearchInput || !storeDropdownBtn) return;
+      
+      // モーダルを開く関数
+      function openStoreModalAdmin() {
+        const selectedBrandId = document.getElementById('report-brand-modal')?.value;
+        const brandNameInput = document.getElementById('report-brand-search-modal')?.value.trim() || '';
+        const brandNameHidden = document.getElementById('report-brand-name-modal')?.value || '';
+        const hasBrandName = brandNameInput || brandNameHidden;
+        
+        if (!selectedBrandId && !hasBrandName) {
+          alert('まずブランド名を選択または入力してください');
+          return;
+        }
+        
+        const modal = document.getElementById('store-select-modal-admin');
+        const modalSearch = document.getElementById('store-modal-search-admin');
+        const modalResults = document.getElementById('store-modal-results-admin');
+        
+        if (modal) {
+          modal.style.display = 'flex';
+          updateStoreModalAdmin();
+          setTimeout(() => {
+            if (modalSearch) modalSearch.focus();
+          }, 100);
+        }
+      }
+      
+      // 店舗モーダル内の検索結果を更新
+      function updateStoreModalAdmin() {
+        const modalSearch = document.getElementById('store-modal-search-admin');
+        const modalResults = document.getElementById('store-modal-results-admin');
+        
+        if (!modalSearch || !modalResults || typeof window.stores === 'undefined') return;
+        
+        const query = modalSearch.value.trim();
+        const selectedBrandId = document.getElementById('report-brand-modal')?.value;
+        const brandNameInput = document.getElementById('report-brand-search-modal')?.value.trim() || '';
+        const brandNameHidden = document.getElementById('report-brand-name-modal')?.value || '';
+        const hasBrandName = brandNameInput || brandNameHidden;
+        
+        let filtered = query.length === 0 
+          ? window.stores 
+          : window.stores.filter(store => {
+              const name = (store.store_name || store.name || '').toLowerCase();
+              return name.includes(query.toLowerCase());
+            });
+        
+        if (selectedBrandId) {
+          filtered = filtered.filter(store => {
+            const storeBrandId = store.brand_id || store.brandId;
+            return storeBrandId === selectedBrandId || String(storeBrandId) === String(selectedBrandId);
+          });
+        } else if (!hasBrandName) {
+          filtered = [];
+        }
+        
+        let html = '<div class="store-search-item free-input-option" data-free-input="true"><i class="fas fa-edit"></i> 自由入力</div>';
+        
+        if (filtered.length === 0) {
+          html += '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
+        } else {
+          html += filtered.map(store => {
+            const name = store.store_name || store.name;
+            const id = store.store_id || store.id;
+            const brandId = store.brand_id || store.brandId;
+            return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}" data-brand-id="${brandId || ''}">${escapeHtml(name)}</div>`;
+          }).join('');
+        }
+        
+        modalResults.innerHTML = html;
+        
+        // クリックイベント
+        modalResults.querySelectorAll('.store-search-item:not(.no-results)').forEach(item => {
+          item.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+            
+            if (this.classList.contains('free-input-option')) {
+              storeSearchInput.removeAttribute('readonly');
+              storeSearchInput.focus();
+              document.getElementById('report-store-modal').value = '';
+              document.getElementById('report-store-name-modal').value = '';
+              storeSearchInput.value = '';
+            } else {
+              document.getElementById('report-store-modal').value = id || '';
+              document.getElementById('report-store-name-modal').value = name || '';
+              storeSearchInput.value = name || '';
+              storeSearchInput.setAttribute('readonly', 'readonly');
+            }
+            
+            closeStoreModalAdmin();
+          });
+        });
+      }
+      
+      // 店舗モーダルを閉じる
+      window.closeStoreModalAdmin = function() {
+        const modal = document.getElementById('store-select-modal-admin');
+        if (modal) {
+          modal.style.display = 'none';
+          const modalSearch = document.getElementById('store-modal-search-admin');
+          if (modalSearch) modalSearch.value = '';
+        }
+      };
+      
+      // モーダル内の検索フィールドのイベント
+      const storeModalSearch = document.getElementById('store-modal-search-admin');
+      if (storeModalSearch) {
+        storeModalSearch.addEventListener('input', updateStoreModalAdmin);
+      }
+      
+      // イベントリスナー
+      storeDropdownBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        openStoreModalAdmin();
+      });
+      
+      storeSearchInput.addEventListener('click', function(e) {
+        if (this.hasAttribute('readonly')) {
+          e.preventDefault();
+          openStoreModalAdmin();
+        }
+      });
+      
+      storeSearchInput.addEventListener('input', function() {
+        if (!this.hasAttribute('readonly')) {
+          const inputValue = this.value.trim();
+          document.getElementById('report-store-name-modal').value = inputValue;
+          document.getElementById('report-store-modal').value = '';
+        }
+      });
+      
+      storeSearchInput.setAttribute('readonly', 'readonly');
+    }
+
+    // モーダル内のセクション管理用変数
+    let modalSectionCounter = 0;
+    let modalSections = {};
+
+    // モーダル内のイベントリスナーを設定
+    function setupModalEventListeners() {
+      // 追加ボタン
+      const addCleaningItem = document.getElementById('add-cleaning-item-modal');
+      const addImage = document.getElementById('add-image-modal');
+      const addComment = document.getElementById('add-comment-modal');
+      const addWorkContent = document.getElementById('add-work-content-modal');
+      
+      if (addCleaningItem) {
+        addCleaningItem.addEventListener('click', () => {
+          addCleaningItemSectionModal();
+        });
+      }
+      
+      if (addImage) {
+        addImage.addEventListener('click', () => {
+          openImageSectionTypeModalAdmin();
+        });
+      }
+      
+      if (addComment) {
+        addComment.addEventListener('click', () => {
+          addCommentSectionModal();
+        });
+      }
+      
+      if (addWorkContent) {
+        addWorkContent.addEventListener('click', () => {
+          addWorkContentSectionModal();
+        });
+      }
+      
+      // フォーム送信
+      const form = document.getElementById('report-form-modal');
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          handleModalFormSubmit();
+        });
+      }
+    }
+
+    // モーダル内の清掃項目セクション追加
+    function addCleaningItemSectionModal() {
+      modalSectionCounter++;
+      const sectionId = `modal-section-${modalSectionCounter}`;
+      modalSections[sectionId] = { type: 'cleaning', item_name: '' };
+
+      const serviceItems = window.serviceItems || [];
+      const options = serviceItems.map(item => 
+        `<option value="${escapeHtml(item.title)}">${escapeHtml(item.title)}</option>`
+      ).join('');
+
+      const html = `
+        <div class="section-card" data-section-id="${sectionId}">
+          <div class="section-header">
+            <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
+            <button type="button" class="section-delete" onclick="deleteSectionModal('${sectionId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="section-body">
+            <select class="cleaning-item-select" onchange="updateCleaningItemModal('${sectionId}', this.value)">
+              <option value="">項目を選択</option>
+              ${options}
+              <option value="__other__">その他（自由入力）</option>
+            </select>
+            <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:none; margin-top:8px;" oninput="updateCleaningItemModal('${sectionId}', this.value)">
+          </div>
+        </div>
+      `;
+
+      const reportContent = document.getElementById('report-content-modal');
+      if (reportContent) {
+        reportContent.insertAdjacentHTML('beforeend', html);
+        updateCleaningItemsListModal();
+      }
+    }
+
+    // モーダル内のコメントセクション追加
+    function addCommentSectionModal() {
+      modalSectionCounter++;
+      const sectionId = `modal-section-${modalSectionCounter}`;
+      modalSections[sectionId] = { type: 'comment', content: '' };
+
+      const html = `
+        <div class="section-card" data-section-id="${sectionId}">
+          <div class="section-header">
+            <span class="section-title"><i class="fas fa-comment"></i> コメント</span>
+            <button type="button" class="section-delete" onclick="deleteSectionModal('${sectionId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="section-body">
+            <textarea class="section-textarea" placeholder="コメントを入力..." oninput="updateSectionContentModal('${sectionId}', this.value)"></textarea>
+          </div>
+        </div>
+      `;
+
+      const reportContent = document.getElementById('report-content-modal');
+      if (reportContent) {
+        reportContent.insertAdjacentHTML('beforeend', html);
+      }
+    }
+
+    // モーダル内の作業内容セクション追加
+    function addWorkContentSectionModal() {
+      modalSectionCounter++;
+      const sectionId = `modal-section-${modalSectionCounter}`;
+      modalSections[sectionId] = { type: 'work_content', content: '' };
+
+      const html = `
+        <div class="section-card" data-section-id="${sectionId}">
+          <div class="section-header">
+            <span class="section-title"><i class="fas fa-tasks"></i> 作業内容</span>
+            <button type="button" class="section-delete" onclick="deleteSectionModal('${sectionId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="section-body">
+            <textarea class="section-textarea" placeholder="作業内容を入力..." oninput="updateSectionContentModal('${sectionId}', this.value)"></textarea>
+          </div>
+        </div>
+      `;
+
+      const reportContent = document.getElementById('report-content-modal');
+      if (reportContent) {
+        reportContent.insertAdjacentHTML('beforeend', html);
+      }
+    }
+
+    // モーダル内のセクション削除
+    window.deleteSectionModal = function(sectionId) {
+      delete modalSections[sectionId];
+      const card = document.querySelector(`[data-section-id="${sectionId}"]`);
+      if (card) card.remove();
+      updateCleaningItemsListModal();
+    };
+
+    // モーダル内の清掃項目更新
+    window.updateCleaningItemModal = function(sectionId, value) {
+      const card = document.querySelector(`[data-section-id="${sectionId}"]`);
+      if (!card) return;
+      
+      const customInput = card.querySelector('.cleaning-item-custom');
+      
+      if (value === '__other__') {
+        if (customInput) {
+          customInput.style.display = 'block';
+          customInput.focus();
+        }
+        modalSections[sectionId].item_name = '';
+      } else {
+        if (customInput) customInput.style.display = 'none';
+        modalSections[sectionId].item_name = value;
+      }
+      
+      updateCleaningItemsListModal();
+    };
+
+    // モーダル内のセクション内容更新
+    window.updateSectionContentModal = function(sectionId, value) {
+      if (modalSections[sectionId]) {
+        modalSections[sectionId].content = value;
+      }
+    };
+
+    // モーダル内の実施清掃項目リストを更新
+    function updateCleaningItemsListModal() {
+      const cleaningItemsList = document.getElementById('cleaning-items-list-modal');
+      if (!cleaningItemsList) return;
+
+      const cleaningSections = Object.values(modalSections).filter(s => s.type === 'cleaning' && s.item_name);
+      
+      if (cleaningSections.length === 0) {
+        cleaningItemsList.innerHTML = '<span class="items-list-empty">項目を追加してください</span>';
+      } else {
+        cleaningItemsList.innerHTML = cleaningSections.map(s => {
+          return `<span class="items-list-item">${escapeHtml(s.item_name)}</span>`;
+        }).join('');
+      }
+    }
+
+    // モーダル内の画像ストックを初期化
+    function initImageStockModal() {
+      const stockFileInput = document.getElementById('stock-file-input-modal');
+      const clearStockBtn = document.getElementById('clear-stock-btn-modal');
+      const imageStockGrid = document.getElementById('image-stock-grid-modal');
+      
+      if (!stockFileInput || !imageStockGrid) return;
+      
+      // 画像ストック用の変数
+      let modalImageStock = [];
+      
+      stockFileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+          if (file.type.startsWith('image/')) {
+            const id = `stock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const blobUrl = URL.createObjectURL(file);
+            modalImageStock.push({ id, file, blobUrl, fileName: file.name });
+            
+            const img = document.createElement('div');
+            img.className = 'image-stock-item';
+            img.dataset.stockId = id;
+            img.innerHTML = `
+              <img src="${blobUrl}" alt="${file.name}">
+              <button type="button" class="image-stock-remove" onclick="removeStockImage('${id}')">
+                <i class="fas fa-times"></i>
+              </button>
+            `;
+            
+            const empty = imageStockGrid.querySelector('.image-stock-empty');
+            if (empty) empty.remove();
+            imageStockGrid.appendChild(img);
+            
+            if (clearStockBtn) clearStockBtn.style.display = 'block';
+          }
+        });
+        
+        e.target.value = '';
+      });
+      
+      if (clearStockBtn) {
+        clearStockBtn.addEventListener('click', () => {
+          if (confirm('すべての画像を削除しますか？')) {
+            modalImageStock = [];
+            imageStockGrid.innerHTML = '<div class="image-stock-empty"><i class="fas fa-cloud-upload-alt"></i><p>画像をアップロードしてください</p><small>ドラッグ&ドロップで各セクションに配置できます</small></div>';
+            clearStockBtn.style.display = 'none';
+          }
+        });
+      }
+      
+      window.removeStockImage = function(id) {
+        modalImageStock = modalImageStock.filter(item => item.id !== id);
+        const item = imageStockGrid.querySelector(`[data-stock-id="${id}"]`);
+        if (item) {
+          URL.revokeObjectURL(item.querySelector('img').src);
+          item.remove();
+        }
+        if (modalImageStock.length === 0) {
+          imageStockGrid.innerHTML = '<div class="image-stock-empty"><i class="fas fa-cloud-upload-alt"></i><p>画像をアップロードしてください</p><small>ドラッグ&ドロップで各セクションに配置できます</small></div>';
+          if (clearStockBtn) clearStockBtn.style.display = 'none';
+        }
+      };
+    }
+
+    // 画像セクションタイプ選択モーダルを開く（管理側）
+    function openImageSectionTypeModalAdmin() {
+      const modal = document.getElementById('image-section-type-modal-admin');
+      if (modal) {
+        modal.style.display = 'flex';
+      }
+    }
+
+    // 画像セクションタイプ選択モーダルを閉じる（管理側）
+    window.closeImageSectionTypeModalAdmin = function() {
+      const modal = document.getElementById('image-section-type-modal-admin');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    };
+
+    // 画像セクションを追加（作業前・作業後）
+    window.addImageSectionBeforeAfterAdmin = function() {
+      closeImageSectionTypeModalAdmin();
+      modalSectionCounter++;
+      const sectionId = `modal-section-${modalSectionCounter}`;
+      modalSections[sectionId] = { type: 'image', image_type: 'before_after', photos: { before: [], after: [] } };
+
+      const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg';
+      const html = `
+        <div class="section-card" data-section-id="${sectionId}">
+          <div class="section-header">
+            <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後）</span>
+            <button type="button" class="section-delete" onclick="deleteSectionModal('${sectionId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="section-body">
+            <div class="image-grid">
+              <div class="image-category">
+                <div class="image-category-title before"><i class="fas fa-clock"></i> 作業前</div>
+                <div class="image-list" id="${sectionId}-before">
+                  <div class="image-placeholder">
+                    <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
+                  </div>
+                  <button type="button" class="image-add-btn" onclick="openImageDialogModal('${sectionId}', 'before')">
+                    <i class="fas fa-plus"></i>
+                    <span>追加</span>
+                  </button>
+                </div>
+              </div>
+              <div class="image-category">
+                <div class="image-category-title after"><i class="fas fa-check-circle"></i> 作業後</div>
+                <div class="image-list" id="${sectionId}-after">
+                  <div class="image-placeholder">
+                    <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
+                  </div>
+                  <button type="button" class="image-add-btn" onclick="openImageDialogModal('${sectionId}', 'after')">
+                    <i class="fas fa-plus"></i>
+                    <span>追加</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const reportContent = document.getElementById('report-content-modal');
+      if (reportContent) {
+        reportContent.insertAdjacentHTML('beforeend', html);
+      }
+    };
+
+    // 画像セクションを追加（施工後）
+    window.addImageSectionCompletedAdmin = function() {
+      closeImageSectionTypeModalAdmin();
+      modalSectionCounter++;
+      const sectionId = `modal-section-${modalSectionCounter}`;
+      modalSections[sectionId] = { type: 'image', image_type: 'completed', photos: { completed: [] } };
+
+      const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg';
+      const html = `
+        <div class="section-card" data-section-id="${sectionId}">
+          <div class="section-header">
+            <span class="section-title"><i class="fas fa-image"></i> 画像（施工後）</span>
+            <button type="button" class="section-delete" onclick="deleteSectionModal('${sectionId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="section-body">
+            <div class="image-grid image-grid-completed">
+              <div class="image-category image-category-completed">
+                <div class="image-category-title completed"><i class="fas fa-star"></i> 施工後</div>
+                <div class="image-list image-list-completed" id="${sectionId}-completed">
+                  <div class="image-placeholder">
+                    <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
+                  </div>
+                  <button type="button" class="image-add-btn" onclick="openImageDialogModal('${sectionId}', 'completed')">
+                    <i class="fas fa-plus"></i>
+                    <span>追加</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const reportContent = document.getElementById('report-content-modal');
+      if (reportContent) {
+        reportContent.insertAdjacentHTML('beforeend', html);
+      }
+    };
+
+    // モーダル内の画像ダイアログを開く
+    window.openImageDialogModal = function(sectionId, category) {
+      // 画像倉庫モーダルを開く
+      const modal = document.getElementById('warehouse-dialog-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        // TODO: 画像選択処理を実装
+      }
+    };
+
+    // モーダル内のフォーム送信処理
+    async function handleModalFormSubmit() {
+      const storeId = document.getElementById('report-store-modal')?.value || '';
+      const storeName = document.getElementById('report-store-name-modal')?.value || '';
+      const brandId = document.getElementById('report-brand-modal')?.value || '';
+      const brandName = document.getElementById('report-brand-name-modal')?.value || '';
+      const cleaningDate = document.getElementById('report-date-modal')?.value || '';
+      const startTime = document.getElementById('report-start-modal')?.value || '';
+      const endTime = document.getElementById('report-end-modal')?.value || '';
+
+      if (!storeId && !storeName) {
+        alert('店舗を選択または入力してください');
+        return;
+      }
+
+      if (!brandName) {
+        alert('ブランド名を入力してください');
+        return;
+      }
+
+      if (!cleaningDate) {
+        alert('清掃日を入力してください');
+        return;
+      }
+
+      // セクションデータを収集
+      const workItems = Object.values(modalSections)
+        .filter(s => s.type === 'cleaning' && s.item_name)
+        .map(s => ({
+          item_name: s.item_name,
+          item_id: s.item_name.toLowerCase().replace(/\s+/g, '-')
+        }));
+
+      const sections = Object.entries(modalSections).map(([id, section]) => {
+        if (section.type === 'cleaning') {
+          return {
+            type: 'cleaning',
+            item_name: section.item_name
+          };
+        } else if (section.type === 'image') {
+          return {
+            type: 'image',
+            image_type: section.image_type,
+            photos: section.photos || {}
+          };
+        } else if (section.type === 'comment') {
+          return {
+            type: 'comment',
+            content: section.content || ''
+          };
+        } else if (section.type === 'work_content') {
+          return {
+            type: 'work_content',
+            content: section.content || ''
+          };
+        }
+        return null;
+      }).filter(s => s !== null);
+
+      // APIに送信
+      try {
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/reports`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify({
+            store_id: storeId || null,
+            store_name: storeName,
+            brand_id: brandId || null,
+            brand_name: brandName,
+            cleaning_date: cleaningDate,
+            cleaning_start_time: startTime || null,
+            cleaning_end_time: endTime || null,
+            work_items: workItems,
+            sections: sections
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('レポートの作成に失敗しました');
+        }
+
+        alert('レポートを作成しました');
+        document.getElementById('new-dialog').close();
+        await loadReports();
+      } catch (error) {
+        console.error('Error creating report:', error);
+        alert('レポートの作成に失敗しました: ' + error.message);
+      }
+    }
   })();
