@@ -2436,6 +2436,9 @@ function restoreSectionLayout() {
       return;
     }
     
+    // グリッドアンカーを計算（復元前に計算）
+    getGridAnchors(grid);
+    
     const gridWidth = grid.offsetWidth;
     const gridHeight = grid.offsetHeight;
     let hasInvalidPosition = false;
@@ -2446,12 +2449,17 @@ function restoreSectionLayout() {
         // 旧形式（col,row）と新形式（x,y）の両方に対応
         const parts = item.position.split(',').map(Number);
         if (parts.length === 2) {
-          // 異常な値（NaN、無限大、極端に大きい/小さい値）をチェック
+          // 異常な値（NaN、無限大、極端に大きい/小さい値、負の値）をチェック
           if (isNaN(parts[0]) || isNaN(parts[1]) || 
               !isFinite(parts[0]) || !isFinite(parts[1]) ||
-              Math.abs(parts[0]) > 100000 || Math.abs(parts[1]) > 100000) {
+              Math.abs(parts[0]) > 100000 || Math.abs(parts[1]) > 100000 ||
+              parts[0] < -1000 || parts[1] < -1000) {
             console.warn('[Layout] Invalid position data for container:', item.id, 'position:', item.position);
             hasInvalidPosition = true;
+            // 異常な値の場合は位置をクリア
+            container.style.removeProperty('left');
+            container.style.removeProperty('top');
+            container.dataset.absolutePosition = '';
             return;
           }
           
@@ -2470,6 +2478,10 @@ function restoreSectionLayout() {
             } else {
               console.warn('[Layout] Position out of bounds for container:', item.id, 'x:', parts[0], 'y:', parts[1]);
               hasInvalidPosition = true;
+              // 範囲外の場合は位置をクリア
+              container.style.removeProperty('left');
+              container.style.removeProperty('top');
+              container.dataset.absolutePosition = '';
             }
           }
         }
