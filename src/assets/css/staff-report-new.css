@@ -1353,6 +1353,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   margin-top: 4px;
   animation: bounceHint 1.2s ease-in-out infinite;
   opacity: 1;
+  display: none; /* 初期状態では非表示 */
 }
 
 .section-add-hint span {
