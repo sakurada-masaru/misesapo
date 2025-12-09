@@ -1918,7 +1918,9 @@
     const sectionAddImageBtn = document.getElementById('section-add-image');
     
     if (sectionAddToggleBtn && sectionAddIcons) {
-      sectionAddToggleBtn.addEventListener('click', function() {
+      sectionAddToggleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         const isVisible = sectionAddIcons.style.display !== 'none';
         if (isVisible) {
           sectionAddIcons.style.display = 'none';
@@ -1928,12 +1930,18 @@
           sectionAddToggleBtn.classList.add('active');
         }
       });
+    } else {
+      console.warn('[SectionAdd] sectionAddToggleBtn or sectionAddIcons not found');
     }
     
     if (sectionAddCleaningBtn) {
-      sectionAddCleaningBtn.addEventListener('click', function() {
+      sectionAddCleaningBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         if (window.addCleaningItemSection) {
           window.addCleaningItemSection();
+        } else {
+          console.warn('[SectionAdd] addCleaningItemSection function not found');
         }
         // アイコンを非表示にする
         if (sectionAddIcons) {
@@ -1941,15 +1949,21 @@
           if (sectionAddToggleBtn) sectionAddToggleBtn.classList.remove('active');
         }
       });
+    } else {
+      console.warn('[SectionAdd] sectionAddCleaningBtn not found');
     }
     
     if (sectionAddCommentBtn) {
-      sectionAddCommentBtn.addEventListener('click', function() {
+      sectionAddCommentBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         // コメントアイコンは作業内容セクション（テキスト入力フォーム）を呼び出す
         if (window.addWorkContentSection) {
           window.addWorkContentSection();
         } else if (addWorkContentSection) {
           addWorkContentSection();
+        } else {
+          console.warn('[SectionAdd] addWorkContentSection function not found');
         }
         // アイコンを非表示にする
         if (sectionAddIcons) {
@@ -1957,17 +1971,29 @@
           if (sectionAddToggleBtn) sectionAddToggleBtn.classList.remove('active');
         }
       });
+    } else {
+      console.warn('[SectionAdd] sectionAddCommentBtn not found');
     }
     
     if (sectionAddImageBtn) {
-      sectionAddImageBtn.addEventListener('click', function() {
-        openImageSectionTypeModal();
+      sectionAddImageBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof openImageSectionTypeModal === 'function') {
+          openImageSectionTypeModal();
+        } else if (window.openImageSectionTypeModal) {
+          window.openImageSectionTypeModal();
+        } else {
+          console.warn('[SectionAdd] openImageSectionTypeModal function not found');
+        }
         // アイコンを非表示にする
         if (sectionAddIcons) {
           sectionAddIcons.style.display = 'none';
           if (sectionAddToggleBtn) sectionAddToggleBtn.classList.remove('active');
         }
       });
+    } else {
+      console.warn('[SectionAdd] sectionAddImageBtn not found');
     }
     
     // セクションが存在する場合は選択モードボタンを表示
@@ -3915,7 +3941,11 @@
 
   // 清掃項目リスト更新
   function updateCleaningItemsList() {
+    // items-list-barが削除されたため、この関数は何もしない
     const container = document.getElementById('cleaning-items-list');
+    if (!container) {
+      return; // 要素が存在しない場合は何もしない
+    }
     const items = Object.values(sections)
       .filter(s => s.type === 'cleaning' && s.item_name)
       .map(s => s.item_name);

@@ -330,7 +330,7 @@
 }
 
 /* 日付・時刻入力フィールドのプレースホルダー表示を統一 */
-.date-time-input-wrapper::before {
+.date-time-input-wrapper:has([data-placeholder])::before {
   content: attr(data-placeholder);
   position: absolute;
   left: 12px;
@@ -425,6 +425,24 @@ input[type="time"].date-time-input:invalid::-webkit-datetime-edit-text {
 /* 値が入力されていない場合の表示 */
 input[type="time"].date-time-input:invalid {
   color: rgba(255, 255, 255, 0.6);
+}
+
+/* time入力フィールドのプレースホルダーを非表示（data-placeholderがある場合） */
+.date-time-input-wrapper:has([data-placeholder]) input[type="time"].date-time-input::placeholder {
+  color: transparent;
+  opacity: 0;
+}
+
+.date-time-input-wrapper:has([data-placeholder]) input[type="time"].date-time-input::-webkit-datetime-edit-text,
+.date-time-input-wrapper:has([data-placeholder]) input[type="time"].date-time-input::-webkit-datetime-edit-hour-field,
+.date-time-input-wrapper:has([data-placeholder]) input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
+  color: transparent;
+}
+
+.date-time-input-wrapper:has([data-placeholder]) input[type="time"].date-time-input:invalid::-webkit-datetime-edit-text,
+.date-time-input-wrapper:has([data-placeholder]) input[type="time"].date-time-input:invalid::-webkit-datetime-edit-hour-field,
+.date-time-input-wrapper:has([data-placeholder]) input[type="time"].date-time-input:invalid::-webkit-datetime-edit-minute-field {
+  color: transparent;
 }
 
 .form-row.three-col-inline .date-time-group {
@@ -2648,7 +2666,7 @@ body.dark-mode .modal-footer {
   }
   
   /* プレースホルダーのフォントサイズを統一 */
-  .date-time-input-wrapper::before {
+  .date-time-input-wrapper:has([data-placeholder])::before {
     font-size: 0.75rem;
     left: 12px;
   }
@@ -2750,7 +2768,7 @@ body.dark-mode .modal-footer {
   }
   
   /* プレースホルダーのフォントサイズを統一 */
-  .date-time-input-wrapper::before {
+  .date-time-input-wrapper:has([data-placeholder])::before {
     font-size: 0.8rem;
     left: 12px;
   }
