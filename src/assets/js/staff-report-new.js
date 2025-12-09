@@ -3054,8 +3054,7 @@
       if (isSectionSelectMode) {
         updateSectionCardsForSelection();
       }
-      // セクションの下にプラスアイコンを追加
-      addSectionAddButtonAfter(newCard);
+      // セクション追加アイコンエリアは常に最後に配置されるため、個別に追加する必要はない
     }
     
     // セクション追加アイコンエリアを常に最後に配置
@@ -3163,8 +3162,7 @@
       if (isSectionSelectMode) {
         updateSectionCardsForSelection();
       }
-      // セクションの下にプラスアイコンを追加
-      addSectionAddButtonAfter(newCard);
+      // セクション追加アイコンエリアは常に最後に配置されるため、個別に追加する必要はない
     }
     
     // セクション追加アイコンエリアを常に最後に配置
@@ -3239,8 +3237,7 @@
       if (isSectionSelectMode) {
         updateSectionCardsForSelection();
       }
-      // セクションの下にプラスアイコンを追加
-      addSectionAddButtonAfter(newCard);
+      // セクション追加アイコンエリアは常に最後に配置されるため、個別に追加する必要はない
     }
     
     // セクション追加アイコンエリアを常に最後に配置
@@ -3297,8 +3294,7 @@
       if (isSectionSelectMode) {
         updateSectionCardsForSelection();
       }
-      // セクションの下にプラスアイコンを追加
-      addSectionAddButtonAfter(newCard);
+      // セクション追加アイコンエリアは常に最後に配置されるため、個別に追加する必要はない
     }
     
     // セクション追加アイコンエリアを常に最後に配置
@@ -3346,8 +3342,7 @@
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
-      // セクションの下にプラスアイコンを追加
-      addSectionAddButtonAfter(newCard);
+      // セクション追加アイコンエリアは常に最後に配置されるため、個別に追加する必要はない
     }
     
     // セクション追加アイコンエリアを常に最後に配置
