@@ -2186,18 +2186,6 @@
       });
     }
     
-    // セクションが存在する場合は選択モードボタンを表示
-    if (sectionSelectModeBtn && Object.keys(sections).length > 0) {
-      sectionSelectModeBtn.style.display = 'flex';
-    }
-
-    // セクションカードのドラッグ&ドロップ機能を初期設定
-    setupAllSectionDragAndDrop();
-    
-    // セクションが追加されたときにドラッグ&ドロップを設定するため、MutationObserverを使用
-    const contentArea = document.getElementById('report-content');
-    const sectionAddIconsArea = document.getElementById('section-add-icons-area');
-    
     // セクション追加アイコンエリアを常に最後に配置する関数
     function moveSectionAddIconsToBottom() {
       if (sectionAddIconsArea && contentArea) {
