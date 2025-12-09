@@ -414,9 +414,14 @@ input[type="date"].date-time-input:invalid::-webkit-datetime-edit-text {
   color: #111827;
 }
 
-/* 値が入力されていない場合の表示 */
+/* 値が入力されていない場合の表示（プレースホルダーが表示されるため、入力フィールド自体は透明に） */
 input[type="date"].date-time-input:invalid {
-  color: #9ca3af;
+  color: transparent; /* プレースホルダーが表示されるため、入力フィールド自体は透明に */
+}
+
+/* 値が入力されている場合は黒字で表示 */
+input[type="date"].date-time-input:valid {
+  color: #111827;
 }
 
 /* time入力フィールドの表示を統一 */
