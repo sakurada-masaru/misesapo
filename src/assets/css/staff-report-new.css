@@ -476,12 +476,16 @@ input[type="time"].date-time-input:valid {
 /* time入力フィールドのスピナーボタン（プラス/マイナス）を左側に配置 */
 input[type="time"].date-time-input::-webkit-inner-spin-button,
 input[type="time"].date-time-input::-webkit-outer-spin-button {
-  margin-left: 0;
-  margin-right: auto;
+  margin: 0;
+  padding: 0;
   position: absolute;
   left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   height: 20px;
   width: 20px;
+  opacity: 1;
+  cursor: pointer;
 }
 
 /* time入力フィールドのdatetime-edit要素を左寄せ（スピナーの後に配置） */
@@ -2969,14 +2973,19 @@ body.dark-mode .modal-footer {
   /* time入力フィールドのスピナーボタン（プラス/マイナス）を左側に配置（SP版） */
   input[type="time"].date-time-input::-webkit-inner-spin-button,
   input[type="time"].date-time-input::-webkit-outer-spin-button {
-    margin-left: 0;
-    margin-right: auto;
+    margin: 0 !important;
+    padding: 0 !important;
     position: absolute;
-    left: 12px;
-    height: 20px;
-    width: 20px;
+    left: 12px !important;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 20px !important;
+    width: 20px !important;
     opacity: 1 !important; /* SP版でも確実に表示 */
     display: block !important; /* SP版でも確実に表示 */
+    cursor: pointer !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
   }
   
   /* time入力フィールドのdatetime-edit要素を左寄せ（スピナーの後に配置）（SP版） */
