@@ -2145,90 +2145,20 @@
   }
   
   // セクション追加ボタンのイベントリスナーを設定する共通関数
-  function setupSectionAddButtons(toggleBtnId, iconsId, cleaningBtnId, commentBtnId, imageBtnId, hintId) {
+  function setupSectionAddButtons(toggleBtnId, tabType) {
     const sectionAddToggleBtn = document.getElementById(toggleBtnId);
-    const sectionAddIcons = document.getElementById(iconsId);
-    const sectionAddCleaningBtn = document.getElementById(cleaningBtnId);
-    const sectionAddCommentBtn = document.getElementById(commentBtnId);
-    const sectionAddImageBtn = document.getElementById(imageBtnId);
-    const sectionAddHint = document.getElementById(hintId);
     
-    // ヒントを表示/非表示にする関数
-    const toggleHint = (show) => {
-      if (sectionAddHint) {
-        sectionAddHint.style.display = show ? 'block' : 'none';
-      }
-    };
-    
-    if (sectionAddToggleBtn && sectionAddIcons) {
+    if (sectionAddToggleBtn) {
       sectionAddToggleBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        const isVisible = sectionAddIcons.style.display !== 'none' && sectionAddIcons.style.display !== '';
-        if (isVisible) {
-          sectionAddIcons.style.display = 'none';
-          sectionAddToggleBtn.classList.remove('active');
-          toggleHint(false); // ヒントを非表示
-        } else {
-          sectionAddIcons.style.display = 'flex';
-          sectionAddToggleBtn.classList.add('active');
-          toggleHint(true); // ヒントを表示
-        }
-      });
-    }
-    
-    if (sectionAddCleaningBtn) {
-      sectionAddCleaningBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
+        
+        // +ボタンを押したら直接清掃項目セクションを追加
         if (window.addCleaningItemSection) {
-          window.addCleaningItemSection();
-        }
-        // アイコンを非表示にする
-        if (sectionAddIcons) {
-          sectionAddIcons.style.display = 'none';
-          if (sectionAddToggleBtn) sectionAddToggleBtn.classList.remove('active');
-        }
-        toggleHint(false); // ヒントを非表示
-      });
-    }
-    
-    if (sectionAddCommentBtn) {
-      sectionAddCommentBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        // コメントアイコンは作業内容セクション（テキスト入力フォーム）を呼び出す
-        if (window.addWorkContentSection) {
-          window.addWorkContentSection();
-        } else if (addWorkContentSection) {
-          addWorkContentSection();
-        }
-        // アイコンを非表示にする
-        if (sectionAddIcons) {
-          sectionAddIcons.style.display = 'none';
-          if (sectionAddToggleBtn) sectionAddToggleBtn.classList.remove('active');
-        }
-        toggleHint(false); // ヒントを非表示
-      });
-    }
-    
-    if (sectionAddImageBtn) {
-      sectionAddImageBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (typeof openImageSectionTypeModal === 'function') {
-          openImageSectionTypeModal();
-        } else if (window.openImageSectionTypeModal) {
-          window.openImageSectionTypeModal();
+          window.addCleaningItemSection(tabType);
         } else {
-          console.warn('[SectionAdd] openImageSectionTypeModal function not found');
+          console.warn('[SectionAdd] addCleaningItemSection function not found');
         }
-        // アイコンを非表示にする
-        if (sectionAddIcons) {
-          sectionAddIcons.style.display = 'none';
-          if (sectionAddToggleBtn) sectionAddToggleBtn.classList.remove('active');
-        }
-        toggleHint(false); // ヒントを非表示
       });
     }
 
