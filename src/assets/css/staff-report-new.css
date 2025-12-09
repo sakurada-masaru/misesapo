@@ -1757,6 +1757,94 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   transform: scale(1.1);
 }
 
+/* セクション内画像コンテンツ */
+.cleaning-item-image-content {
+  margin-top: 16px;
+  position: relative;
+}
+
+.cleaning-item-image-content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.cleaning-item-image-content-delete {
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 103, 156, 0.9);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.cleaning-item-image-content-delete:hover {
+  background: rgba(255, 103, 156, 1);
+  transform: scale(1.1);
+}
+
+.cleaning-item-image-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.cleaning-item-image-grid .image-list {
+  min-height: 120px;
+  border: 2px dashed #e5e7eb;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.cleaning-item-image-grid .image-thumb {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.cleaning-item-image-grid .image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cleaning-item-image-grid .image-thumb-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 103, 156, 0.9);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  z-index: 10;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.cleaning-item-image-grid .image-thumb-remove:hover {
+  background: rgba(255, 103, 156, 1);
+  transform: scale(1.1);
+}
+
 .cleaning-item-text-field-delete:active {
   transform: scale(0.9);
 }
