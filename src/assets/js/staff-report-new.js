@@ -402,17 +402,7 @@
       });
     });
     
-    // 初期表示時の処理（アクティブなタブに対してセクションを追加）
-    const activeTab = document.querySelector('.tabs-navigation .tab-btn.active');
-    if (activeTab) {
-      const activeTabType = activeTab.dataset.tab;
-      if (activeTabType === 'new' || activeTabType === 'proposal') {
-        // 初期表示時は自動保存データを読み込まず、直接セクションを追加
-        if (Object.keys(sections).length === 0 && window.addCleaningItemSection) {
-          window.addCleaningItemSection();
-        }
-      }
-    }
+    // 初期表示時の処理はDOMContentLoadedイベントで行うため、ここでは削除
   }
 
   // 新規レポート作成時のフォームリセット
@@ -575,7 +565,10 @@
         
         return true;
       } else {
+        // キャンセル時は自動保存データをクリアし、セクションもクリア
         clearAutoSaveData();
+        sections = {};
+        sectionCounter = 0;
         return false;
       }
     } catch (error) {
