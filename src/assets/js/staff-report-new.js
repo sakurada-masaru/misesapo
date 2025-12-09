@@ -675,10 +675,54 @@
         
         // セクション内画像コンテンツのイベントリスナーを設定
         if (section.imageContents && section.imageContents.length > 0) {
-          section.imageContents.forEach(imageContent => {
-            const imageType = imageContent.imageType || 'before_after';
-            setupCleaningItemImageUpload(imageContent.id, sectionId, imageType);
-          });
+          setTimeout(() => {
+            section.imageContents.forEach(imageContent => {
+              const imageType = imageContent.imageType || 'before_after';
+              setupCleaningItemImageUpload(imageContent.id, sectionId, imageType);
+              
+              // ドラッグ&ドロップを設定
+              if (imageType === 'before_after') {
+                const beforeList = document.getElementById(`${imageContent.id}-before`);
+                const afterList = document.getElementById(`${imageContent.id}-after`);
+                if (beforeList) setupImageListDragAndDrop(beforeList, sectionId, 'before', imageContent.id);
+                if (afterList) setupImageListDragAndDrop(afterList, sectionId, 'after', imageContent.id);
+                
+                // 画像サムネイルにドラッグ&ドロップを設定
+                if (beforeList) {
+                  beforeList.querySelectorAll('.image-thumb').forEach(thumb => {
+                    const url = thumb.dataset.imageUrl;
+                    const imageId = thumb.dataset.imageId;
+                    if (url) {
+                      setupCleaningItemImageThumbDragAndDrop(thumb, sectionId, imageContent.id, 'before', url, imageId);
+                    }
+                  });
+                }
+                if (afterList) {
+                  afterList.querySelectorAll('.image-thumb').forEach(thumb => {
+                    const url = thumb.dataset.imageUrl;
+                    const imageId = thumb.dataset.imageId;
+                    if (url) {
+                      setupCleaningItemImageThumbDragAndDrop(thumb, sectionId, imageContent.id, 'after', url, imageId);
+                    }
+                  });
+                }
+              } else if (imageType === 'completed') {
+                const completedList = document.getElementById(`${imageContent.id}-completed`);
+                if (completedList) {
+                  setupImageListDragAndDrop(completedList, sectionId, 'completed', imageContent.id);
+                  
+                  // 画像サムネイルにドラッグ&ドロップを設定
+                  completedList.querySelectorAll('.image-thumb').forEach(thumb => {
+                    const url = thumb.dataset.imageUrl;
+                    const imageId = thumb.dataset.imageId;
+                    if (url) {
+                      setupCleaningItemImageThumbDragAndDrop(thumb, sectionId, imageContent.id, 'completed', url, imageId);
+                    }
+                  });
+                }
+              }
+            });
+          }, 0);
         }
       } else if (section.type === 'image') {
         // 画像セクション（簡易復元、画像は再読み込みが必要）
@@ -3749,6 +3793,48 @@
           newSection.imageContents.forEach(imageContent => {
             const imageType = imageContent.imageType || 'before_after';
             setupCleaningItemImageUpload(imageContent.id, newSectionId, imageType);
+            
+            // ドラッグ&ドロップを設定
+            if (imageType === 'before_after') {
+              const beforeList = document.getElementById(`${imageContent.id}-before`);
+              const afterList = document.getElementById(`${imageContent.id}-after`);
+              if (beforeList) setupImageListDragAndDrop(beforeList, newSectionId, 'before', imageContent.id);
+              if (afterList) setupImageListDragAndDrop(afterList, newSectionId, 'after', imageContent.id);
+              
+              // 画像サムネイルにドラッグ&ドロップを設定
+              if (beforeList) {
+                beforeList.querySelectorAll('.image-thumb').forEach(thumb => {
+                  const url = thumb.dataset.imageUrl;
+                  const imageId = thumb.dataset.imageId;
+                  if (url) {
+                    setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'before', url, imageId);
+                  }
+                });
+              }
+              if (afterList) {
+                afterList.querySelectorAll('.image-thumb').forEach(thumb => {
+                  const url = thumb.dataset.imageUrl;
+                  const imageId = thumb.dataset.imageId;
+                  if (url) {
+                    setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'after', url, imageId);
+                  }
+                });
+              }
+            } else if (imageType === 'completed') {
+              const completedList = document.getElementById(`${imageContent.id}-completed`);
+              if (completedList) {
+                setupImageListDragAndDrop(completedList, newSectionId, 'completed', imageContent.id);
+                
+                // 画像サムネイルにドラッグ&ドロップを設定
+                completedList.querySelectorAll('.image-thumb').forEach(thumb => {
+                  const url = thumb.dataset.imageUrl;
+                  const imageId = thumb.dataset.imageId;
+                  if (url) {
+                    setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'completed', url, imageId);
+                  }
+                });
+              }
+            }
           });
         }, 0);
       }
