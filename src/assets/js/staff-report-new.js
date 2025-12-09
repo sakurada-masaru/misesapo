@@ -582,11 +582,10 @@
                               </div>
                             `;
                             }).join('')}
-                            <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                              <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" data-category="before" style="display:none;">
+                            <button type="button" class="image-add-btn cleaning-item-image-add-btn" onclick="openCleaningItemImageAddModal('${sectionId}', '${imageContent.id}', 'before')" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem; background:transparent; padding:0;">
                               <i class="fas fa-plus"></i>
                               <span>追加</span>
-                            </label>
+                            </button>
                           </div>
                         </div>
                         <div class="image-category">
@@ -606,11 +605,10 @@
                               </div>
                             `;
                             }).join('')}
-                            <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                              <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" data-category="after" style="display:none;">
+                            <button type="button" class="image-add-btn cleaning-item-image-add-btn" onclick="openCleaningItemImageAddModal('${sectionId}', '${imageContent.id}', 'after')" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem; background:transparent; padding:0;">
                               <i class="fas fa-plus"></i>
                               <span>追加</span>
-                            </label>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -642,11 +640,10 @@
                               </div>
                             `;
                             }).join('')}
-                            <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                              <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" data-category="completed" style="display:none;">
+                            <button type="button" class="image-add-btn cleaning-item-image-add-btn" onclick="openCleaningItemImageAddModal('${sectionId}', '${imageContent.id}', 'completed')" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem; background:transparent; padding:0;">
                               <i class="fas fa-plus"></i>
                               <span>追加</span>
-                            </label>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -4120,11 +4117,10 @@
               <i class="fas fa-clock"></i> 作業前
             </div>
             <div class="image-list" id="${imageContentId}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
-              <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContentId}" data-category="before" style="display:none;">
+              <button type="button" class="image-add-btn cleaning-item-image-add-btn" onclick="openCleaningItemImageAddModal('${sectionId}', '${imageContentId}', 'before')" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem; background:transparent; padding:0;">
                 <i class="fas fa-plus"></i>
                 <span>追加</span>
-              </label>
+              </button>
             </div>
           </div>
           <div class="image-category">
@@ -4132,11 +4128,10 @@
               <i class="fas fa-check-circle"></i> 作業後
             </div>
             <div class="image-list" id="${imageContentId}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
-              <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContentId}" data-category="after" style="display:none;">
+              <button type="button" class="image-add-btn cleaning-item-image-add-btn" onclick="openCleaningItemImageAddModal('${sectionId}', '${imageContentId}', 'after')" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem; background:transparent; padding:0;">
                 <i class="fas fa-plus"></i>
                 <span>追加</span>
-              </label>
+              </button>
             </div>
           </div>
         </div>
@@ -4155,11 +4150,10 @@
               <i class="fas fa-star"></i> 施工後
             </div>
             <div class="image-list" id="${imageContentId}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
-              <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContentId}" data-category="completed" style="display:none;">
+              <button type="button" class="image-add-btn cleaning-item-image-add-btn" onclick="openCleaningItemImageAddModal('${sectionId}', '${imageContentId}', 'completed')" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem; background:transparent; padding:0;">
                 <i class="fas fa-plus"></i>
                 <span>追加</span>
-              </label>
+              </button>
             </div>
           </div>
         </div>
@@ -4210,32 +4204,287 @@
     autoSave();
   }
   
-  // セクション内画像コンテンツの画像アップロードを設定
-  function setupCleaningItemImageUpload(imageContentId, sectionId, imageType = 'before_after') {
-    if (imageType === 'before_after') {
-      const beforeInput = document.querySelector(`input.cleaning-item-image-file-input[data-image-content-id="${imageContentId}"][data-category="before"]`);
-      const afterInput = document.querySelector(`input.cleaning-item-image-file-input[data-image-content-id="${imageContentId}"][data-category="after"]`);
+  // セクション内画像コンテンツの画像追加モーダルを開く
+  window.openCleaningItemImageAddModal = function(sectionId, imageContentId, category) {
+    const modal = document.getElementById('cleaning-item-image-add-modal');
+    if (!modal) return;
+    
+    // モーダルに情報を保存
+    modal.dataset.sectionId = sectionId;
+    modal.dataset.imageContentId = imageContentId;
+    modal.dataset.category = category;
+    
+    // モーダルを表示
+    modal.style.display = 'flex';
+    
+    // 既存のイベントリスナーを削除（重複防止）
+    const existingButtons = modal.querySelectorAll('.btn-image-source');
+    existingButtons.forEach(btn => {
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+    });
+    
+    // イベントリスナーを設定
+    modal.querySelectorAll('.btn-image-source').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const source = this.dataset.source;
+        const modalSectionId = modal.dataset.sectionId;
+        const modalImageContentId = modal.dataset.imageContentId;
+        const modalCategory = modal.dataset.category;
+        
+        modal.style.display = 'none';
+        
+        if (source === 'warehouse') {
+          // AWS画像倉庫から選択
+          openCleaningItemImageWarehouseDialog(modalSectionId, modalImageContentId, modalCategory);
+        } else if (source === 'library') {
+          // ライブラリから選択
+          openCleaningItemImageLibraryPicker(modalSectionId, modalImageContentId, modalCategory);
+        } else if (source === 'camera') {
+          // カメラで撮影
+          openCleaningItemImageCamera(modalSectionId, modalImageContentId, modalCategory);
+        }
+      });
+    });
+  };
+  
+  // AWS画像倉庫から選択
+  function openCleaningItemImageWarehouseDialog(sectionId, imageContentId, category) {
+    // 既存のwarehouse-dialogを使用
+    const warehouseDialog = document.getElementById('warehouse-dialog');
+    if (!warehouseDialog) return;
+    
+    // ダイアログに情報を保存
+    warehouseDialog.dataset.cleaningItemSectionId = sectionId;
+    warehouseDialog.dataset.cleaningItemImageContentId = imageContentId;
+    warehouseDialog.dataset.cleaningItemCategory = category;
+    warehouseDialog.dataset.cleaningItemMode = 'true';
+    
+    // ダイアログを表示
+    warehouseDialog.style.display = 'flex';
+    
+    // 既存のsave-images-btnのイベントを確認
+    const saveBtn = document.getElementById('save-images-btn');
+    if (saveBtn) {
+      // 既存のイベントリスナーを削除して新しいものを追加
+      const newSaveBtn = saveBtn.cloneNode(true);
+      saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
       
-      if (beforeInput) {
-        beforeInput.addEventListener('change', function(e) {
-          handleCleaningItemImageUpload(e, sectionId, imageContentId, 'before');
+      newSaveBtn.addEventListener('click', function() {
+        // 選択された画像をセクション内画像コンテンツに追加
+        const selectedImages = document.querySelectorAll('#stock-selection-grid .stock-item.selected, #library-grid .library-item.selected');
+        if (selectedImages.length > 0) {
+          selectedImages.forEach(item => {
+            const imageId = item.dataset.imageId;
+            const imageUrl = item.querySelector('img')?.src;
+            if (imageId && imageUrl) {
+              addImageToCleaningItemFromWarehouse(sectionId, imageContentId, category, imageId, imageUrl);
+            }
+          });
+        }
+        warehouseDialog.style.display = 'none';
+      });
+    }
+  }
+  
+  // ライブラリから選択
+  function openCleaningItemImageLibraryPicker(sectionId, imageContentId, category) {
+    // ファイル入力を作成
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.style.display = 'none';
+    
+    input.addEventListener('change', function(e) {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) {
+        files.forEach(file => {
+          handleCleaningItemImageFileUpload(file, sectionId, imageContentId, category);
         });
       }
-      
-      if (afterInput) {
-        afterInput.addEventListener('change', function(e) {
-          handleCleaningItemImageUpload(e, sectionId, imageContentId, 'after');
+      document.body.removeChild(input);
+    });
+    
+    document.body.appendChild(input);
+    input.click();
+  }
+  
+  // カメラで撮影
+  function openCleaningItemImageCamera(sectionId, imageContentId, category) {
+    // ファイル入力を作成（カメラモード）
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment'; // カメラを起動
+    input.style.display = 'none';
+    
+    input.addEventListener('change', function(e) {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) {
+        files.forEach(file => {
+          handleCleaningItemImageFileUpload(file, sectionId, imageContentId, category);
         });
       }
-    } else if (imageType === 'completed') {
-      const completedInput = document.querySelector(`input.cleaning-item-image-file-input[data-image-content-id="${imageContentId}"][data-category="completed"]`);
-      
-      if (completedInput) {
-        completedInput.addEventListener('change', function(e) {
-          handleCleaningItemImageUpload(e, sectionId, imageContentId, 'completed');
+      document.body.removeChild(input);
+    });
+    
+    document.body.appendChild(input);
+    input.click();
+  }
+  
+  // セクション内画像コンテンツに画像ファイルをアップロード
+  async function handleCleaningItemImageFileUpload(file, sectionId, imageContentId, category) {
+    const imageList = document.getElementById(`${imageContentId}-${category}`);
+    if (!imageList) return;
+    
+    // 画像を最適化
+    const optimizedBlob = await optimizeImage(file);
+    const blobUrl = URL.createObjectURL(optimizedBlob);
+    
+    // 画像IDを生成
+    const imageId = `cleaning-item-image-${imageContentId}-${category}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // 画像をストックに追加
+    const imageData = {
+      id: imageId,
+      blobUrl: blobUrl,
+      fileName: file.name,
+      uploaded: false
+    };
+    
+    // 画像ストックに追加
+    if (window.addImagesToStock) {
+      await window.addImagesToStock([imageData]);
+    }
+    
+    // 画像を表示
+    const imageThumb = document.createElement('div');
+    imageThumb.className = 'image-thumb';
+    imageThumb.draggable = true;
+    imageThumb.dataset.imageUrl = blobUrl;
+    imageThumb.dataset.imageId = imageId;
+    imageThumb.dataset.category = category;
+    imageThumb.dataset.sectionId = sectionId;
+    imageThumb.dataset.imageContentId = imageContentId;
+    imageThumb.style.cssText = 'width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;';
+    
+    const img = document.createElement('img');
+    img.src = blobUrl;
+    img.alt = 'Photo';
+    img.draggable = false;
+    img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'image-thumb-remove';
+    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    removeBtn.style.cssText = 'position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;';
+    removeBtn.onclick = function() {
+      removeCleaningItemImage(sectionId, imageContentId, category, imageId, imageThumb);
+    };
+    
+    imageThumb.appendChild(img);
+    imageThumb.appendChild(removeBtn);
+    
+    // セクション内画像コンテンツ用のドラッグ&ドロップを設定
+    setupCleaningItemImageThumbDragAndDrop(imageThumb, sectionId, imageContentId, category, blobUrl, imageId);
+    
+    // 追加ボタンの前に挿入
+    const addBtn = imageList.querySelector('.cleaning-item-image-add-btn');
+    if (addBtn) {
+      imageList.insertBefore(imageThumb, addBtn);
+    } else {
+      imageList.appendChild(imageThumb);
+    }
+    
+    // データに保存
+    if (sections[sectionId] && sections[sectionId].imageContents) {
+      const imageContent = sections[sectionId].imageContents.find(ic => ic.id === imageContentId);
+      if (imageContent) {
+        if (!imageContent.photos[category]) {
+          imageContent.photos[category] = [];
+        }
+        imageContent.photos[category].push({
+          imageId: imageId,
+          blobUrl: blobUrl,
+          fileName: file.name,
+          uploaded: false
         });
       }
     }
+    
+    autoSave();
+  }
+  
+  // AWS画像倉庫からセクション内画像コンテンツに画像を追加
+  async function addImageToCleaningItemFromWarehouse(sectionId, imageContentId, category, imageId, imageUrl) {
+    const imageList = document.getElementById(`${imageContentId}-${category}`);
+    if (!imageList) return;
+    
+    // 画像を表示
+    const imageThumb = document.createElement('div');
+    imageThumb.className = 'image-thumb';
+    imageThumb.draggable = true;
+    imageThumb.dataset.imageUrl = imageUrl;
+    imageThumb.dataset.imageId = imageId;
+    imageThumb.dataset.category = category;
+    imageThumb.dataset.sectionId = sectionId;
+    imageThumb.dataset.imageContentId = imageContentId;
+    imageThumb.style.cssText = 'width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;';
+    
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.alt = 'Photo';
+    img.draggable = false;
+    img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'image-thumb-remove';
+    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    removeBtn.style.cssText = 'position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;';
+    removeBtn.onclick = function() {
+      removeCleaningItemImage(sectionId, imageContentId, category, imageId, imageThumb);
+    };
+    
+    imageThumb.appendChild(img);
+    imageThumb.appendChild(removeBtn);
+    
+    // セクション内画像コンテンツ用のドラッグ&ドロップを設定
+    setupCleaningItemImageThumbDragAndDrop(imageThumb, sectionId, imageContentId, category, imageUrl, imageId);
+    
+    // 追加ボタンの前に挿入
+    const addBtn = imageList.querySelector('.cleaning-item-image-add-btn');
+    if (addBtn) {
+      imageList.insertBefore(imageThumb, addBtn);
+    } else {
+      imageList.appendChild(imageThumb);
+    }
+    
+    // データに保存
+    if (sections[sectionId] && sections[sectionId].imageContents) {
+      const imageContent = sections[sectionId].imageContents.find(ic => ic.id === imageContentId);
+      if (imageContent) {
+        if (!imageContent.photos[category]) {
+          imageContent.photos[category] = [];
+        }
+        imageContent.photos[category].push({
+          imageId: imageId,
+          blobUrl: imageUrl,
+          warehouseUrl: imageUrl,
+          fileName: imageId,
+          uploaded: true
+        });
+      }
+    }
+    
+    autoSave();
+  }
+  
+  // セクション内画像コンテンツの画像アップロードを設定（後方互換性のため残す）
+  function setupCleaningItemImageUpload(imageContentId, sectionId, imageType = 'before_after') {
+    // モーダル方式に変更したため、この関数は不要になったが、後方互換性のため残す
   }
   
   // セクション内画像コンテンツの画像アップロード処理
