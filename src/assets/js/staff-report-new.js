@@ -360,6 +360,15 @@
           }
         }
         
+        // 次回ご提案タブに切り替えた場合はフォームと画像ストックをリセット（新規作成と同じ処理）
+        if (targetTab === 'proposal') {
+          await resetFormForNewReport('proposal');
+          // リセット後、セクションが空の場合はデフォルトで清掃項目セクションを追加
+          if (Object.keys(sections).length === 0 && window.addCleaningItemSection) {
+            window.addCleaningItemSection('proposal');
+          }
+        }
+        
         // 修正タブに切り替えた場合は再読み込み
         if (targetTab === 'edit') {
           loadRevisionRequests();
@@ -369,9 +378,12 @@
   }
 
   // 新規レポート作成時のフォームリセット
-  async function resetFormForNewReport() {
+  async function resetFormForNewReport(tabType = 'new') {
+    const formId = tabType === 'proposal' ? 'report-form-proposal' : 'report-form';
+    const reportContentId = tabType === 'proposal' ? 'report-content-proposal' : 'report-content';
+    
     // フォームをリセット
-    const form = document.getElementById('report-form');
+    const form = document.getElementById(formId);
     if (form) {
       form.reset();
       form.dataset.reportId = '';
@@ -380,7 +392,7 @@
     // セクションをクリア
     sections = {};
     sectionCounter = 0;
-    const reportContent = document.getElementById('report-content');
+    const reportContent = document.getElementById(reportContentId);
     if (reportContent) {
       reportContent.innerHTML = '';
     }

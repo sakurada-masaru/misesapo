@@ -23,6 +23,10 @@
       <i class="fas fa-plus-circle"></i>
       <span>新規作成</span>
     </button>
+    <button type="button" class="tab-btn" data-tab="proposal" id="tab-proposal">
+      <i class="fas fa-lightbulb"></i>
+      <span>次回ご提案</span>
+    </button>
     <button type="button" class="tab-btn" data-tab="edit" id="tab-edit">
       <i class="fas fa-edit"></i>
       <span>修正・編集</span>
@@ -170,6 +174,153 @@
         プレビュー
       </button>
       <button type="submit" class="btn-submit" id="submit-btn">
+        <i class="fas fa-paper-plane"></i>
+        レポートを提出
+       </button>
+    </div>
+  </form>
+  </div>
+
+  <!-- 次回ご提案タブ -->
+  <div id="tab-content-proposal" class="tab-content">
+    <form id="report-form-proposal" class="report-form">
+    <!-- 基本情報（ピンク背景） -->
+    <div class="report-header-section">
+      <div class="form-row two-col">
+        <div class="form-group store-search-group">
+          <div class="store-search-wrapper">
+            <div class="input-with-dropdown">
+              <input type="text" id="report-brand-search-proposal" class="form-input" placeholder="①ブランド名 *" autocomplete="off" readonly>
+              <button type="button" class="dropdown-arrow-btn" id="brand-dropdown-btn-proposal" aria-label="ドロップダウンを開く">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <select id="report-brand-select-proposal" class="form-select" name="brand_id" style="display: none;">
+                <option value="">①ブランド名 *</option>
+              </select>
+            </div>
+            <input type="hidden" id="report-brand-proposal" name="brand_id">
+            <input type="hidden" id="report-brand-name-proposal" name="brand_name">
+            <div id="brand-search-results-proposal" class="store-search-results" style="display: none;"></div>
+          </div>
+        </div>
+        <div class="form-group store-search-group">
+          <div class="store-search-wrapper">
+            <div class="input-with-dropdown">
+              <input type="text" id="report-store-search-proposal" class="form-input" placeholder="②店舗名 *" autocomplete="off" readonly>
+              <button type="button" class="dropdown-arrow-btn" id="store-dropdown-btn-proposal" aria-label="ドロップダウンを開く">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <select id="report-store-select-proposal" class="form-select" name="store_id" style="display: none;">
+                <option value="">②店舗名 *</option>
+              </select>
+            </div>
+            <input type="hidden" id="report-store-proposal" name="store_id">
+            <input type="hidden" id="report-store-name-proposal" name="store_name">
+            <div id="store-search-results-proposal" class="store-search-results" style="display: none;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-row three-col date-time-row">
+        <div class="form-group date-time-group">
+          <div class="date-time-input-wrapper">
+            <input type="date" id="report-date-proposal" name="cleaning_date" class="form-input date-time-input" required>
+          </div>
+        </div>
+        <div class="form-group date-time-group">
+          <div class="date-time-input-wrapper" data-placeholder="始--:--">
+            <input type="time" id="report-start-proposal" name="cleaning_start_time" class="form-input date-time-input">
+          </div>
+        </div>
+        <div class="form-group date-time-group">
+          <div class="date-time-input-wrapper" data-placeholder="終了時刻">
+            <input type="time" id="report-end-proposal" name="cleaning_end_time" class="form-input date-time-input" placeholder="終了時刻">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- コンテンツエリア -->
+    <div class="report-content" id="report-content-proposal">
+      <!-- セクションが動的に追加される -->
+      
+      <!-- セクション追加アイコンエリア -->
+      <div class="section-add-icons-area" id="section-add-icons-area-proposal">
+        <button type="button" class="section-add-toggle-btn" id="section-add-toggle-btn-proposal">
+          <i class="fas fa-plus"></i>
+        </button>
+        <div class="section-add-icons" id="section-add-icons-proposal" style="display: none;">
+          <button type="button" class="section-add-icon-btn" id="section-add-cleaning-proposal" data-section-type="cleaning" title="清掃項目">
+            <i class="fas fa-list"></i>
+          </button>
+          <button type="button" class="section-add-icon-btn" id="section-add-comment-proposal" data-section-type="comment" title="コメント">
+            <i class="fas fa-comment"></i>
+          </button>
+          <button type="button" class="section-add-icon-btn" id="section-add-image-proposal" data-section-type="image" title="画像">
+            <i class="fas fa-image"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 画像ストックエリア -->
+    <div class="image-stock-section">
+      <div class="image-stock-header">
+        <h3><i class="fas fa-images"></i> 画像ストック</h3>
+        <div class="image-stock-actions">
+          <label class="btn-upload-stock">
+            <input type="file" accept="image/*" multiple id="stock-file-input-proposal" style="display:none;">
+            <i class="fas fa-plus"></i>
+            <span>画像を追加</span>
+          </label>
+          <button type="button" class="btn-select-mode" id="select-mode-btn-proposal" style="display:none;">
+            <i class="fas fa-check-square"></i>
+            <span>選択モード</span>
+          </button>
+          <button type="button" class="btn-bulk-delete" id="bulk-delete-btn-proposal" style="display:none;">
+            <i class="fas fa-trash"></i>
+            <span>選択を削除</span>
+          </button>
+          <button type="button" class="btn-clear-stock" id="clear-stock-btn-proposal" style="display:none;">
+            <i class="fas fa-trash"></i>
+            <span>すべて削除</span>
+          </button>
+        </div>
+      </div>
+      <div class="image-stock-description">
+        <p>画像をまとめてアップロードして、後で各セクションに振り分けられます</p>
+      </div>
+      <div class="image-stock-grid" id="image-stock-grid-proposal">
+        <div class="image-stock-empty">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p>画像をアップロードしてください</p>
+          <small>ドラッグ&ドロップで各セクションに配置できます</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- 追加ボタン（固定フッター） -->
+    <div class="add-buttons-footer" id="add-buttons-footer-proposal" style="display: none;">
+      <button type="button" class="btn-section-select-mode" id="section-select-mode-btn-proposal" style="display:none;">
+        <i class="fas fa-check-square"></i>
+        <span>セクション選択</span>
+      </button>
+      <button type="button" class="btn-section-copy" id="section-copy-btn-proposal" style="display:none;">
+        <i class="fas fa-copy"></i>
+        <span>コピー</span>
+      </button>
+      <button type="button" class="btn-section-bulk-delete" id="section-bulk-delete-btn-proposal" style="display:none;">
+        <i class="fas fa-trash"></i>
+        <span>削除</span>
+      </button>
+    </div>
+
+    <!-- 送信ボタン -->
+    <div class="submit-section">
+      <button type="button" class="btn-preview" id="preview-btn-proposal">
+        <i class="fas fa-eye"></i>
+        プレビュー
+      </button>
+      <button type="submit" class="btn-submit" id="submit-btn-proposal">
         <i class="fas fa-paper-plane"></i>
         レポートを提出
        </button>
