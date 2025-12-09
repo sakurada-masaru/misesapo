@@ -3070,6 +3070,11 @@
 
   // 清掃項目セクション追加
   window.addCleaningItemSection = function() {
+    // 現在アクティブなタブを確認
+    const activeTab = document.querySelector('.tab-btn.active');
+    const isProposalTab = activeTab && activeTab.dataset.tab === 'proposal';
+    const reportContentId = isProposalTab ? 'report-content-proposal' : 'report-content';
+    
     sectionCounter++;
     const sectionId = `section-${sectionCounter}`;
     sections[sectionId] = { type: 'cleaning', item_name: '', textFields: [], subtitles: [], comments: [] };
