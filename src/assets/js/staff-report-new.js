@@ -2091,57 +2091,60 @@
     if (addCommentBtn) addCommentBtn.addEventListener('click', addCommentSection);
     if (addWorkContentBtn) addWorkContentBtn.addEventListener('click', addWorkContentSection);
     
-    // セクション追加アイコンエリアのイベントリスナー
-    const sectionAddToggleBtn = document.getElementById('section-add-toggle-btn');
-    const sectionAddIcons = document.getElementById('section-add-icons');
-    const sectionAddCleaningBtn = document.getElementById('section-add-cleaning');
-    const sectionAddCommentBtn = document.getElementById('section-add-comment');
-    const sectionAddImageBtn = document.getElementById('section-add-image');
+    // セクション追加アイコンエリアのイベントリスナー（新規作成タブ用）
+    setupSectionAddButtons('section-add-toggle-btn', 'section-add-icons', 'section-add-cleaning', 'section-add-comment', 'section-add-image', 'section-add-hint');
     
-    console.log('[SectionAdd] Elements found:', {
-      toggleBtn: !!sectionAddToggleBtn,
-      icons: !!sectionAddIcons,
-      cleaningBtn: !!sectionAddCleaningBtn,
-      commentBtn: !!sectionAddCommentBtn,
-      imageBtn: !!sectionAddImageBtn
-    });
+    // セクション追加アイコンエリアのイベントリスナー（次回ご提案タブ用）
+    setupSectionAddButtons('section-add-toggle-btn-proposal', 'section-add-icons-proposal', 'section-add-cleaning-proposal', 'section-add-comment-proposal', 'section-add-image-proposal', 'section-add-hint-proposal');
+  }
+  
+  // セクション追加ボタンのイベントリスナーを設定する共通関数
+  function setupSectionAddButtons(toggleBtnId, iconsId, cleaningBtnId, commentBtnId, imageBtnId, hintId) {
+    const sectionAddToggleBtn = document.getElementById(toggleBtnId);
+    const sectionAddIcons = document.getElementById(iconsId);
+    const sectionAddCleaningBtn = document.getElementById(cleaningBtnId);
+    const sectionAddCommentBtn = document.getElementById(commentBtnId);
+    const sectionAddImageBtn = document.getElementById(imageBtnId);
+    const sectionAddHint = document.getElementById(hintId);
+    
+    // ヒントを表示/非表示にする関数
+    const toggleHint = (show) => {
+      if (sectionAddHint) {
+        sectionAddHint.style.display = show ? 'block' : 'none';
+      }
+    };
     
     if (sectionAddToggleBtn && sectionAddIcons) {
       sectionAddToggleBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('[SectionAdd] Toggle button clicked');
         const isVisible = sectionAddIcons.style.display !== 'none' && sectionAddIcons.style.display !== '';
         if (isVisible) {
           sectionAddIcons.style.display = 'none';
           sectionAddToggleBtn.classList.remove('active');
+          toggleHint(false); // ヒントを非表示
         } else {
           sectionAddIcons.style.display = 'flex';
           sectionAddToggleBtn.classList.add('active');
+          toggleHint(true); // ヒントを表示
         }
       });
-    } else {
-      console.warn('[SectionAdd] sectionAddToggleBtn or sectionAddIcons not found');
     }
     
     if (sectionAddCleaningBtn) {
       sectionAddCleaningBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('[SectionAdd] Cleaning button clicked');
         if (window.addCleaningItemSection) {
           window.addCleaningItemSection();
-        } else {
-          console.warn('[SectionAdd] addCleaningItemSection function not found');
         }
         // アイコンを非表示にする
         if (sectionAddIcons) {
           sectionAddIcons.style.display = 'none';
           if (sectionAddToggleBtn) sectionAddToggleBtn.classList.remove('active');
         }
+        toggleHint(false); // ヒントを非表示
       });
-    } else {
-      console.warn('[SectionAdd] sectionAddCleaningBtn not found');
     }
     
     if (sectionAddCommentBtn) {
@@ -2153,17 +2156,14 @@
           window.addWorkContentSection();
         } else if (addWorkContentSection) {
           addWorkContentSection();
-        } else {
-          console.warn('[SectionAdd] addWorkContentSection function not found');
         }
         // アイコンを非表示にする
         if (sectionAddIcons) {
           sectionAddIcons.style.display = 'none';
           if (sectionAddToggleBtn) sectionAddToggleBtn.classList.remove('active');
         }
+        toggleHint(false); // ヒントを非表示
       });
-    } else {
-      console.warn('[SectionAdd] sectionAddCommentBtn not found');
     }
     
     if (sectionAddImageBtn) {
@@ -2182,9 +2182,8 @@
           sectionAddIcons.style.display = 'none';
           if (sectionAddToggleBtn) sectionAddToggleBtn.classList.remove('active');
         }
+        toggleHint(false); // ヒントを非表示
       });
-    } else {
-      console.warn('[SectionAdd] sectionAddImageBtn not found');
     }
     
     // セクションが存在する場合は選択モードボタンを表示
