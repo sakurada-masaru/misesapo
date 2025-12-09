@@ -6131,12 +6131,12 @@
     return errorMessage || 'エラーが発生しました';
   }
 
-  // プレビューモーダルを開く
-  function openPreviewModal() {
+  // プレビューモーダルを開く（レポートURL発行後の表示形式に合わせる）
+  async function openPreviewModal() {
     const previewContent = document.getElementById('preview-report-content');
     if (!previewContent) return;
     
-    // 現在のフォームデータからプレビューを生成
+    // 現在のフォームデータからレポートデータを準備（提出時と同じ形式）
     const brandName = document.getElementById('report-brand-search')?.value || 
                       document.getElementById('report-brand-name')?.value || '';
     const storeName = document.getElementById('report-store-search')?.value || 
@@ -6145,120 +6145,226 @@
     const startTime = document.getElementById('report-start')?.value || '';
     const endTime = document.getElementById('report-end')?.value || '';
     
-    // 日付フォーマット
+    // 日付フォーマット（report-shared-view.jsと同じ形式）
     const formatDate = (dateStr) => {
       if (!dateStr) return '';
       const date = new Date(dateStr);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}年${month}月${day}日`;
+      return date.toLocaleDateString('ja-JP', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     };
     
-    // 時間フォーマット
-    const formatTime = (timeStr) => {
-      if (!timeStr) return '';
-      return timeStr.substring(0, 5); // HH:MM形式
-    };
-    
-    // 清掃項目を取得
-    const cleaningItems = Object.values(sections)
+    // レポートデータを準備（提出時と同じ形式）
+    const workItems = Object.values(sections)
       .filter(s => s.type === 'cleaning' && s.item_name)
-      .map(s => s.item_name);
+      .map(s => ({
+        item_id: s.item_name.toLowerCase().replace(/\s+/g, '-'),
+        item_name: s.item_name,
+        details: {},
+        photos: {}
+      }));
     
-    // プレビューHTMLを生成
+    const reportSections = Object.values(sections)
+      .filter(s => s.type !== 'cleaning')
+      .map(section => {
+        if (section.type === 'image') {
+          return {
+            section_type: 'image',
+            image_type: section.image_type || 'work',
+            photos: section.photos || {}
+          };
+        } else if (section.type === 'comment') {
+          return {
+            section_type: 'comment',
+            content: section.content || ''
+          };
+        } else if (section.type === 'work_content') {
+          return {
+            section_type: 'work_content',
+            content: section.content || ''
+          };
+        }
+        return null;
+      })
+      .filter(s => s !== null);
+    
+    // レポートオブジェクトを作成（report-shared-view.jsのrenderReport関数と同じ形式）
+    const report = {
+      cleaning_date: date,
+      cleaning_start_time: startTime,
+      cleaning_end_time: endTime,
+      store_name: storeName,
+      brand_name: brandName,
+      work_items: workItems,
+      sections: reportSections
+    };
+    
+    // report-shared-view.jsのrenderReport関数と同じロジックでHTMLを生成
+    const dateStr = formatDate(report.cleaning_date);
+    const timeStr = report.cleaning_start_time && report.cleaning_end_time 
+      ? `${report.cleaning_start_time} - ${report.cleaning_end_time}`
+      : '';
+    
+    // デフォルト画像パス
+    const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg';
+    const resolvePath = (path) => {
+      if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+        return path;
+      }
+      return path.startsWith('/') ? path : '/' + path;
+    };
+    
     let html = `
       <div class="preview-report">
         <div class="preview-header">
-          <div class="preview-date">${formatDate(date)}</div>
-          <div class="preview-store">${escapeHtml(storeName)}</div>
-          ${brandName ? `<div class="preview-brand">${escapeHtml(brandName)}</div>` : ''}
-          ${startTime || endTime ? `<div class="preview-time">${formatTime(startTime)} - ${formatTime(endTime)}</div>` : ''}
+          <div class="preview-date">清掃日時: ${dateStr} ${timeStr}</div>
+          <div class="preview-store">${escapeHtml(report.store_name || '店舗名不明')}</div>
         </div>
         
-        ${cleaningItems.length > 0 ? `
-          <div class="preview-items-list">
-            <div class="preview-items-label">実施清掃項目</div>
-            <div class="preview-items-tags">
-              ${cleaningItems.map(item => `<span class="preview-item-tag">${escapeHtml(item)}</span>`).join('')}
-            </div>
+        <div class="preview-items-list">
+          <div class="preview-items-label">実施清掃項目</div>
+          <div class="preview-items-tags">
+            ${workItems.map(item => `<span class="preview-item-tag">${escapeHtml(item.item_name)}</span>`).join('')}
           </div>
-        ` : ''}
+        </div>
         
-        <div class="preview-sections">
+        <div class="preview-main">
     `;
     
-    // セクションを順番に表示
-    Object.keys(sections).forEach(sectionId => {
-      const section = sections[sectionId];
+    // 清掃項目の詳細（項目名と詳細のみ、写真は別のsectionsで表示）
+    const workItemsHtml = workItems.map(item => {
+      const details = item.details || {};
+      const tags = [];
+      if (details.type) tags.push(details.type);
+      if (details.count) tags.push(`${details.count}個`);
+      const tagsHtml = tags.map(tag => `<span class="detail-tag">${escapeHtml(tag)}</span>`).join('');
       
-      if (section.type === 'cleaning' && section.item_name) {
-        // 清掃項目セクション（既に上で表示済み）
-      } else if (section.type === 'image') {
+      return `
+        <section class="cleaning-section">
+          <div class="item-header">
+            <h3 class="item-title">〜 ${escapeHtml(item.item_name || item.item_id)} 〜</h3>
+            <div class="item-details">${tagsHtml}</div>
+          </div>
+        </section>
+      `;
+    }).join('');
+    
+    // セクション（画像、コメント、作業内容）を表示
+    const sectionsHtml = reportSections.map(section => {
+      if (section.section_type === 'image') {
         // 画像セクション
-        if (section.image_type === 'before_after') {
-          const beforePhotos = section.photos?.before || [];
-          const afterPhotos = section.photos?.after || [];
-          
-          html += `
-            <div class="preview-section preview-image-section">
-              <div class="preview-section-title">画像（作業前・作業後）</div>
-              <div class="preview-image-grid">
-                <div class="preview-image-category">
-                  <div class="preview-category-title">作業前</div>
-                  <div class="preview-image-list">
-                    ${beforePhotos.length > 0 ? 
-                      beforePhotos.map(url => `<img src="${url}" alt="作業前" class="preview-image">`).join('') :
-                      `<div class="preview-no-image">写真を撮り忘れました</div>`
-                    }
-                  </div>
-                </div>
-                <div class="preview-image-category">
-                  <div class="preview-category-title">作業後</div>
-                  <div class="preview-image-list">
-                    ${afterPhotos.length > 0 ? 
-                      afterPhotos.map(url => `<img src="${url}" alt="作業後" class="preview-image">`).join('') :
-                      `<div class="preview-no-image">写真を撮り忘れました</div>`
-                    }
+        const beforePhotos = section.photos?.before || [];
+        const afterPhotos = section.photos?.after || [];
+        const completedPhotos = section.photos?.completed || [];
+        const imageType = section.image_type || 'work';
+        const beforeLabel = imageType === 'work' ? '作業前（Before）' : '設置前（Before）';
+        const afterLabel = imageType === 'work' ? '作業後（After）' : '設置後（After）';
+        
+        if (imageType === 'completed' && completedPhotos.length > 0) {
+          // 施工後のみ
+          return `
+            <section class="image-section">
+              <div class="section-header">
+                <h4 class="section-title">画像</h4>
+              </div>
+              <div class="image-grid">
+                <div class="image-category completed-category">
+                  <h4 class="image-category-title">施工後（After）</h4>
+                  <div class="image-list">
+                    ${completedPhotos.map((url, index) => `
+                      <div class="image-item" data-image-url="${url}">
+                        <img src="${url}" alt="施工後" loading="lazy" 
+                             onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
+                      </div>
+                    `).join('')}
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
           `;
-        } else if (section.image_type === 'completed') {
-          const completedPhotos = section.photos?.completed || [];
+        } else {
+          // 作業前・作業後
+          const beforePhotosHtml = beforePhotos.length > 0
+            ? `<div class="image-list">
+                 ${beforePhotos.map((url, index) => `
+                   <div class="image-item" data-image-url="${url}">
+                     <img src="${url}" alt="${beforeLabel}" loading="lazy" 
+                          onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
+                   </div>
+                 `).join('')}
+               </div>`
+            : `<div class="image-list">
+                 <div class="image-item">
+                   <img src="${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}" alt="写真なし" class="default-no-photo-image" />
+                 </div>
+               </div>`;
           
-          html += `
-            <div class="preview-section preview-image-section">
-              <div class="preview-section-title">画像（施工後）</div>
-              <div class="preview-image-list">
-                ${completedPhotos.length > 0 ? 
-                  completedPhotos.map(url => `<img src="${url}" alt="施工後" class="preview-image">`).join('') :
-                  `<div class="preview-no-image">写真を撮り忘れました</div>`
-                }
+          const afterPhotosHtml = afterPhotos.length > 0
+            ? `<div class="image-list">
+                 ${afterPhotos.map((url, index) => `
+                   <div class="image-item" data-image-url="${url}">
+                     <img src="${url}" alt="${afterLabel}" loading="lazy" 
+                          onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
+                   </div>
+                 `).join('')}
+               </div>`
+            : `<div class="image-list">
+                 <div class="image-item">
+                   <img src="${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}" alt="写真なし" class="default-no-photo-image" />
+                 </div>
+               </div>`;
+          
+          return `
+            <section class="image-section">
+              <div class="section-header">
+                <h4 class="section-title">画像</h4>
               </div>
-            </div>
+              <div class="image-grid">
+                <div class="image-category before-category">
+                  <h4 class="image-category-title">${beforeLabel}</h4>
+                  ${beforePhotosHtml}
+                </div>
+                <div class="image-category after-category">
+                  <h4 class="image-category-title">${afterLabel}</h4>
+                  ${afterPhotosHtml}
+                </div>
+              </div>
+            </section>
           `;
         }
-      } else if (section.type === 'comment' && section.content) {
+      } else if (section.section_type === 'comment') {
         // コメントセクション
-        html += `
-          <div class="preview-section preview-comment-section">
-            <div class="preview-section-title">コメント</div>
-            <div class="preview-content">${escapeHtml(section.content).replace(/\n/g, '<br>')}</div>
-          </div>
+        return `
+          <section class="comment-section">
+            <div class="section-header">
+              <h4 class="section-title">コメント</h4>
+            </div>
+            <div class="subsection">
+              <p style="white-space: pre-wrap;">${escapeHtml(section.content || '')}</p>
+            </div>
+          </section>
         `;
-      } else if (section.type === 'work_content' && section.content) {
+      } else if (section.section_type === 'work_content') {
         // 作業内容セクション
-        html += `
-          <div class="preview-section preview-work-content-section">
-            <div class="preview-section-title">作業内容</div>
-            <div class="preview-content">${escapeHtml(section.content).replace(/\n/g, '<br>')}</div>
-          </div>
+        return `
+          <section class="work-content-section">
+            <div class="section-header">
+              <h4 class="section-title">作業内容</h4>
+            </div>
+            <div class="subsection">
+              <p style="white-space: pre-wrap;">${escapeHtml(section.content || '')}</p>
+            </div>
+          </section>
         `;
       }
-    });
+      return '';
+    }).filter(Boolean).join('');
     
+    html += workItemsHtml + sectionsHtml;
     html += `
         </div>
       </div>
