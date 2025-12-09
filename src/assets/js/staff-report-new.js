@@ -381,7 +381,7 @@
           await resetFormForNewReport('proposal');
           // リセット後、セクションが空の場合はデフォルトで清掃項目セクションを追加
           if (Object.keys(sections).length === 0 && window.addCleaningItemSection) {
-            window.addCleaningItemSection('proposal');
+            window.addCleaningItemSection();
           }
         }
         
