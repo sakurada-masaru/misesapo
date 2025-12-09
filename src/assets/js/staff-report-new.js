@@ -2311,7 +2311,8 @@
             // 最新の画像ストックから追加された画像を取得
             const latestImages = imageStock.slice(-files.length);
             latestImages.forEach(imageData => {
-              if (imageData && imageData.blobUrl) {
+              // warehouseUrlまたはblobUrlがあれば追加
+              if (imageData && (imageData.warehouseUrl || imageData.blobUrl)) {
                 addImageToSectionFromStock(imageData, sectionId, category);
               }
             });
