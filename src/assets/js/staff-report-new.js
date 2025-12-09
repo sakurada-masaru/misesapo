@@ -172,8 +172,14 @@
     initBrandSelect();
     initStoreSelect();
     
-    // 自動保存データの復元を試行（新規作成タブがアクティブな場合のみ）
+    // レポートヘッダーセクションの初期表示を設定
+    const sharedHeader = document.getElementById('shared-report-header');
     const newTab = document.getElementById('tab-new');
+    if (sharedHeader && newTab && newTab.classList.contains('active')) {
+      sharedHeader.style.display = 'block';
+    }
+    
+    // 自動保存データの復元を試行（新規作成タブがアクティブな場合のみ）
     if (newTab && newTab.classList.contains('active')) {
       const restored = await loadAutoSaveData();
       // 自動保存データが復元されなかった場合、デフォルトで清掃項目セクションを追加
