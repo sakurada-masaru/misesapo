@@ -4268,6 +4268,7 @@
     const commentId = `cleaning-item-comment-${sectionId}-${Date.now()}`;
     const commentContainer = document.createElement('div');
     commentContainer.className = 'cleaning-item-comment-container';
+    commentContainer.dataset.commentId = commentId;
     commentContainer.style.cssText = 'position:relative; margin-top:8px;';
     
     const commentField = document.createElement('textarea');
@@ -4292,6 +4293,8 @@
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.className = 'cleaning-item-comment-delete';
+    deleteBtn.dataset.sectionId = sectionId;
+    deleteBtn.dataset.commentId = commentId;
     deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
     deleteBtn.style.cssText = 'position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;';
     deleteBtn.onclick = function() {
@@ -4327,6 +4330,7 @@
     const subtitleId = `cleaning-item-subtitle-${sectionId}-${Date.now()}`;
     const subtitleContainer = document.createElement('div');
     subtitleContainer.className = 'cleaning-item-subtitle-container';
+    subtitleContainer.dataset.subtitleId = subtitleId;
     subtitleContainer.style.cssText = 'position:relative; margin-top:8px;';
     
     const subtitleField = document.createElement('input');
@@ -4352,6 +4356,8 @@
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.className = 'cleaning-item-subtitle-delete';
+    deleteBtn.dataset.sectionId = sectionId;
+    deleteBtn.dataset.subtitleId = subtitleId;
     deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
     deleteBtn.style.cssText = 'position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;';
     deleteBtn.onclick = function() {
@@ -4425,10 +4431,30 @@
     if (sections[sectionId] && sections[sectionId].subtitles) {
       sections[sectionId].subtitles = sections[sectionId].subtitles.filter(s => s.id !== subtitleId);
     }
-    // data属性を使用して要素を検索
-    const subtitleContainer = document.querySelector(`[data-section-id="${sectionId}"] .cleaning-item-subtitle-container[data-subtitle-id="${subtitleId}"]`);
-    if (subtitleContainer) {
-      subtitleContainer.remove();
+    // data属性を使用して要素を検索（複数の方法で試行）
+    const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (sectionCard) {
+      // 方法1: data-subtitle-id属性で検索
+      let subtitleContainer = sectionCard.querySelector(`.cleaning-item-subtitle-container[data-subtitle-id="${subtitleId}"]`);
+      // 方法2: 見つからない場合は、すべてのコンテナを検索してIDを確認
+      if (!subtitleContainer) {
+        const containers = sectionCard.querySelectorAll('.cleaning-item-subtitle-container');
+        containers.forEach(container => {
+          if (container.dataset.subtitleId === subtitleId) {
+            subtitleContainer = container;
+          }
+        });
+      }
+      // 方法3: ボタンの親要素を取得
+      if (!subtitleContainer) {
+        const deleteBtn = sectionCard.querySelector(`.cleaning-item-subtitle-delete[data-subtitle-id="${subtitleId}"]`);
+        if (deleteBtn) {
+          subtitleContainer = deleteBtn.closest('.cleaning-item-subtitle-container');
+        }
+      }
+      if (subtitleContainer) {
+        subtitleContainer.remove();
+      }
     }
     autoSave();
   };
