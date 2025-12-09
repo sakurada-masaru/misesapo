@@ -2459,13 +2459,16 @@
       
       request.onsuccess = () => {
         imageStock = request.result || [];
-        // Blob URLを再生成
+        // warehouseUrlがない場合のみBlob URLを再生成（AWSアップロード済みの場合は不要）
         imageStock.forEach(item => {
-          if (item.data && !item.blobUrl) {
-            const blob = new Blob([item.data], { type: item.type || 'image/jpeg' });
-            item.blobUrl = URL.createObjectURL(blob);
-          } else if (item.blobData && !item.blobUrl) {
-            item.blobUrl = URL.createObjectURL(new Blob([item.blobData], { type: item.fileType || 'image/jpeg' }));
+          if (!item.warehouseUrl) {
+            // ローカルのみの画像の場合、Blob URLを再生成
+            if (item.data && !item.blobUrl) {
+              const blob = new Blob([item.data], { type: item.type || 'image/jpeg' });
+              item.blobUrl = URL.createObjectURL(blob);
+            } else if (item.blobData && !item.blobUrl) {
+              item.blobUrl = URL.createObjectURL(new Blob([item.blobData], { type: item.fileType || 'image/jpeg' }));
+            }
           }
         });
         renderImageStock();
@@ -2480,10 +2483,18 @@
   async function saveImageToDB(imageData) {
     if (!stockDB) return;
     
+    // AWSアップロード済みの場合は、blobDataを保存しない（ストレージ節約）
+    const dataToSave = { ...imageData };
+    if (dataToSave.uploaded && dataToSave.warehouseUrl) {
+      // AWSアップロード済みの場合は、blobDataとblobUrlを削除
+      delete dataToSave.blobData;
+      delete dataToSave.blobUrl;
+    }
+    
     return new Promise((resolve, reject) => {
       const transaction = stockDB.transaction(['images'], 'readwrite');
       const store = transaction.objectStore('images');
-      const request = store.put(imageData);
+      const request = store.put(dataToSave);
       
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
@@ -2634,6 +2645,16 @@
             imageData.warehouseUrl = result.image?.url || result.url || null;
             imageData.uploaded = true;
             console.log('[ImageStock] Image uploaded to warehouse:', imageData.warehouseUrl);
+            
+            // AWSアップロード成功後、ローカルのblobDataを削除してストレージを節約
+            if (imageData.blobData) {
+              delete imageData.blobData;
+              // Blob URLも解放
+              if (imageData.blobUrl) {
+                URL.revokeObjectURL(imageData.blobUrl);
+                delete imageData.blobUrl; // warehouseUrlを使用するため削除
+              }
+            }
           } else {
             console.warn('[ImageStock] Failed to upload to warehouse:', response.status);
           }
@@ -2642,7 +2663,7 @@
           // エラーが発生しても画像ストックには追加する
         }
         
-        // IndexedDBに保存
+        // IndexedDBに保存（AWSアップロード済みの場合はblobDataなしで保存）
         await saveImageToDB(imageData);
         
         // メモリにも追加
@@ -2723,8 +2744,10 @@
     }
     
     stockGrid.innerHTML = imageStock.map((imageData, index) => {
-      if (!imageData.blobUrl) {
-        console.warn('Image data missing blobUrl:', imageData);
+      // warehouseUrlがあればそれを使用、なければblobUrlを使用
+      const imageUrl = imageData.warehouseUrl || imageData.blobUrl;
+      if (!imageUrl) {
+        console.warn('Image data missing both warehouseUrl and blobUrl:', imageData);
         return '';
       }
       const isSelected = selectedImageIds.has(imageData.id);
@@ -2735,7 +2758,7 @@
              data-image-id="${imageData.id}" 
              data-stock-index="${index}"
              ${isMultiSelectMode ? `onclick="toggleImageSelection('${imageData.id}')"` : ''}>
-          <img src="${imageData.blobUrl}" alt="Stock image" draggable="false">
+          <img src="${imageUrl}" alt="Stock image" draggable="false">
           ${isMultiSelectMode ? `
             <div class="image-stock-select-check">
               <i class="fas fa-check-circle"></i>
