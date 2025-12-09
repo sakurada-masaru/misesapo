@@ -432,7 +432,29 @@
     sectionCounter = 0;
     const reportContent = document.getElementById(reportContentId);
     if (reportContent) {
-      reportContent.innerHTML = '';
+      // セクション追加アイコンエリアを保持
+      const sectionAddIconsAreaId = tabType === 'proposal' ? 'section-add-icons-area-proposal' : 'section-add-icons-area';
+      const sectionAddIconsArea = document.getElementById(sectionAddIconsAreaId);
+      const sectionAddIconsAreaHTML = sectionAddIconsArea ? sectionAddIconsArea.outerHTML : '';
+      
+      // セクションカードだけを削除
+      const sectionCards = reportContent.querySelectorAll('.section-card');
+      sectionCards.forEach(card => card.remove());
+      
+      // セクション追加アイコンエリアが削除された場合は再追加
+      if (sectionAddIconsAreaHTML && !document.getElementById(sectionAddIconsAreaId)) {
+        reportContent.insertAdjacentHTML('beforeend', sectionAddIconsAreaHTML);
+        // イベントリスナーを再設定
+        const hintId = tabType === 'proposal' ? 'section-add-hint-proposal' : 'section-add-hint';
+        setupSectionAddButtons(
+          sectionAddIconsAreaId.replace('section-add-icons-area', 'section-add-toggle-btn'),
+          sectionAddIconsAreaId,
+          sectionAddIconsAreaId.replace('section-add-icons-area', 'section-add-cleaning'),
+          sectionAddIconsAreaId.replace('section-add-icons-area', 'section-add-comment'),
+          sectionAddIconsAreaId.replace('section-add-icons-area', 'section-add-image'),
+          hintId
+        );
+      }
     }
     
     // 清掃項目リストをリセット
