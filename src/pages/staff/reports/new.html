@@ -185,61 +185,6 @@
   <!-- 次回ご提案タブ -->
   <div id="tab-content-proposal" class="tab-content">
     <form id="report-form-proposal" class="report-form">
-    <!-- 基本情報（ピンク背景） -->
-    <div class="report-header-section">
-      <div class="form-row two-col">
-        <div class="form-group store-search-group">
-          <div class="store-search-wrapper">
-            <div class="input-with-dropdown">
-              <input type="text" id="report-brand-search-proposal" class="form-input" placeholder="①ブランド名 *" autocomplete="off" readonly>
-              <button type="button" class="dropdown-arrow-btn" id="brand-dropdown-btn-proposal" aria-label="ドロップダウンを開く">
-                <i class="fas fa-chevron-down"></i>
-              </button>
-              <select id="report-brand-select-proposal" class="form-select" name="brand_id" style="display: none;">
-                <option value="">①ブランド名 *</option>
-              </select>
-            </div>
-            <input type="hidden" id="report-brand-proposal" name="brand_id">
-            <input type="hidden" id="report-brand-name-proposal" name="brand_name">
-            <div id="brand-search-results-proposal" class="store-search-results" style="display: none;"></div>
-          </div>
-        </div>
-        <div class="form-group store-search-group">
-          <div class="store-search-wrapper">
-            <div class="input-with-dropdown">
-              <input type="text" id="report-store-search-proposal" class="form-input" placeholder="②店舗名 *" autocomplete="off" readonly>
-              <button type="button" class="dropdown-arrow-btn" id="store-dropdown-btn-proposal" aria-label="ドロップダウンを開く">
-                <i class="fas fa-chevron-down"></i>
-              </button>
-              <select id="report-store-select-proposal" class="form-select" name="store_id" style="display: none;">
-                <option value="">②店舗名 *</option>
-              </select>
-            </div>
-            <input type="hidden" id="report-store-proposal" name="store_id">
-            <input type="hidden" id="report-store-name-proposal" name="store_name">
-            <div id="store-search-results-proposal" class="store-search-results" style="display: none;"></div>
-          </div>
-        </div>
-      </div>
-      <div class="form-row three-col date-time-row">
-        <div class="form-group date-time-group">
-          <div class="date-time-input-wrapper">
-            <input type="date" id="report-date-proposal" name="cleaning_date" class="form-input date-time-input" required>
-          </div>
-        </div>
-        <div class="form-group date-time-group">
-          <div class="date-time-input-wrapper" data-placeholder="始--:--">
-            <input type="time" id="report-start-proposal" name="cleaning_start_time" class="form-input date-time-input">
-          </div>
-        </div>
-        <div class="form-group date-time-group">
-          <div class="date-time-input-wrapper" data-placeholder="終了時刻">
-            <input type="time" id="report-end-proposal" name="cleaning_end_time" class="form-input date-time-input" placeholder="終了時刻">
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- コンテンツエリア -->
     <div class="report-content" id="report-content-proposal">
       <!-- セクションが動的に追加される -->
