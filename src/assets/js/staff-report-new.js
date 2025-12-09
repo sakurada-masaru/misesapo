@@ -3627,6 +3627,10 @@
                   </div>
                 `;
               } else {
+                // 次回ご提案タブかどうかを判定
+                const activeTab = document.querySelector('.tab-btn.active');
+                const isProposal = activeTab && activeTab.dataset.tab === 'proposal';
+                const labelText = isProposal ? 'ご提案箇所' : '施工後';
                 return `
                   <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
                     <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
@@ -3637,7 +3641,7 @@
                     <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
                       <div class="image-category">
                         <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
-                          <i class="fas fa-star"></i> 施工後
+                          <i class="fas fa-star"></i> ${labelText}
                         </div>
                         <div class="image-list" id="${imageContent.id}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
                           ${(imageContent.photos?.completed || []).map(photo => `
