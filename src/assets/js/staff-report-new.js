@@ -4402,10 +4402,30 @@
     if (sections[sectionId] && sections[sectionId].comments) {
       sections[sectionId].comments = sections[sectionId].comments.filter(c => c.id !== commentId);
     }
-    // data属性を使用して要素を検索
-    const commentContainer = document.querySelector(`[data-section-id="${sectionId}"] .cleaning-item-comment-container[data-comment-id="${commentId}"]`);
-    if (commentContainer) {
-      commentContainer.remove();
+    // data属性を使用して要素を検索（複数の方法で試行）
+    const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (sectionCard) {
+      // 方法1: data-comment-id属性で検索
+      let commentContainer = sectionCard.querySelector(`.cleaning-item-comment-container[data-comment-id="${commentId}"]`);
+      // 方法2: 見つからない場合は、すべてのコンテナを検索してIDを確認
+      if (!commentContainer) {
+        const containers = sectionCard.querySelectorAll('.cleaning-item-comment-container');
+        containers.forEach(container => {
+          if (container.dataset.commentId === commentId) {
+            commentContainer = container;
+          }
+        });
+      }
+      // 方法3: ボタンの親要素を取得
+      if (!commentContainer) {
+        const deleteBtn = sectionCard.querySelector(`.cleaning-item-comment-delete[data-comment-id="${commentId}"]`);
+        if (deleteBtn) {
+          commentContainer = deleteBtn.closest('.cleaning-item-comment-container');
+        }
+      }
+      if (commentContainer) {
+        commentContainer.remove();
+      }
     }
     autoSave();
   };
