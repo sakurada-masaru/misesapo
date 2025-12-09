@@ -297,7 +297,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3>画像を選択</h3>
-        <button type="button" class="modal-close" onclick="document.getElementById('warehouse-dialog').style.display='none'">
+        <button type="button" class="modal-close" onclick="closeWarehouseDialog()">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -342,7 +342,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="document.getElementById('warehouse-dialog').style.display='none'">キャンセル</button>
+        <button type="button" class="btn btn-outline" onclick="closeWarehouseDialog()">キャンセル</button>
         <button type="button" class="btn btn-primary" id="save-images-btn">
           <i class="fas fa-check"></i> 選択を確定
         </button>

@@ -4350,10 +4350,28 @@
             }
           });
         }
-        warehouseDialog.style.display = 'none';
+        closeWarehouseDialog();
       });
     }
   }
+  
+  // 画像倉庫モーダルを閉じる（セクションが消えないように安全に閉じる）
+  window.closeWarehouseDialog = function() {
+    const warehouseDialog = document.getElementById('warehouse-dialog');
+    if (!warehouseDialog) return;
+    
+    // セクション内画像コンテンツモードの場合は、データ属性をクリアするだけ
+    if (warehouseDialog.dataset.cleaningItemMode === 'true') {
+      // データ属性をクリア
+      delete warehouseDialog.dataset.cleaningItemSectionId;
+      delete warehouseDialog.dataset.cleaningItemImageContentId;
+      delete warehouseDialog.dataset.cleaningItemCategory;
+      delete warehouseDialog.dataset.cleaningItemMode;
+    }
+    
+    // モーダルを閉じる
+    warehouseDialog.style.display = 'none';
+  };
   
   // ライブラリから選択
   function openCleaningItemImageLibraryPicker(sectionId, imageContentId, category) {
