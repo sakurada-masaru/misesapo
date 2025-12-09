@@ -2879,12 +2879,25 @@ body.dark-mode .modal-footer {
     padding: 12px;
   }
   
-  /* 日付・開始時刻・終了時刻を3列均等配置 */
+  /* 日付・開始時刻・終了時刻を2行に分けて配置（SP版） */
   .form-row.three-col.date-time-row {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr; /* 1列に変更 */
     gap: 8px;
     margin-bottom: 8px;
+  }
+  
+  /* 日付は1行目、開始時刻と終了時刻は2行目に配置 */
+  .form-row.three-col.date-time-row .date-time-group:first-child {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  
+  .form-row.three-col.date-time-row .date-time-group:nth-child(2),
+  .form-row.three-col.date-time-row .date-time-group:nth-child(3) {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 開始時刻と終了時刻を2列に */
+    gap: 8px;
   }
   
   .form-row.three-col.date-time-row .date-time-group {
@@ -2993,6 +3006,11 @@ body.dark-mode .modal-footer {
     text-align: left;
     margin-left: 32px; /* スピナーボタンの幅分右にずらす */
     padding-left: 0;
+  }
+  
+  /* time入力フィールドのpaddingを調整（SP版） */
+  input[type="time"].date-time-input {
+    padding-left: 12px !important; /* スピナーボタンのスペースを確保 */
   }
   
   input[type="time"].date-time-input::-webkit-datetime-edit-hour-field,
