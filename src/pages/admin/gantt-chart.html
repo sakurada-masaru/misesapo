@@ -481,14 +481,14 @@
             { id: '3.7', name: 'F-3: 搬入車両証・IDパス配布準備完了', assignee: '事務局', deadline: '1/17', startDate: '2025-01-12', endDate: '2025-01-17', level: 2 },
             { id: '4', name: '【最終ゴール】', assignee: '全員', deadline: '1/17', startDate: '2025-01-17', endDate: '2025-01-20' },
             { id: '4.1', name: '全準備完了', assignee: '全員', deadline: '1/17', startDate: '2025-01-17', endDate: '2025-01-17', level: 2, milestone: true },
-            { id: '4.2', name: '搬入・設営日', assignee: '制作', deadline: '1/19', startDate: '2025-01-19', endDate: '2025-01-19', level: 2, event: true },
-            { id: '4.3', name: 'イベント開催日', assignee: '全員', deadline: '1/20', startDate: '2025-01-20', endDate: '2025-01-20', level: 2, final: true }
+            { id: '4.2', name: '搬入作業', assignee: '制作', deadline: '12/19', startDate: '2024-12-19', endDate: '2024-12-19', level: 2, event: true },
+            { id: '4.3', name: 'イベント開催日', assignee: '全員', deadline: '12/20', startDate: '2024-12-20', endDate: '2024-12-20', level: 2, final: true }
         ];
 
-        // 日付の範囲を生成（12/10から01/20まで）
+        // 日付の範囲を生成（12/10から12/20まで）
         function generateDateRange() {
             const start = new Date('2024-12-10');
-            const end = new Date('2025-01-20');
+            const end = new Date('2024-12-20');
             const dates = [];
             const current = new Date(start);
             
@@ -742,7 +742,7 @@
 
         // カウントダウンを更新
         function updateCountdown() {
-            const eventDate = new Date('2025-01-20');
+            const eventDate = new Date('2024-12-20');
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             eventDate.setHours(0, 0, 0, 0);
@@ -767,8 +767,8 @@
             updateCountdown();
             renderGanttChartForTab('office');
             
-            // 毎日カウントダウンを更新
-            setInterval(updateCountdown, 1000 * 60 * 60); // 1時間ごとに更新
+            // カウントダウンを自動更新（1分ごと）
+            setInterval(updateCountdown, 1000 * 60); // 1分ごとに更新
         });
     </script>
 </body>
