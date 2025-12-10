@@ -209,7 +209,7 @@
 /* 基本情報セクション */
 .report-header-section {
   background: linear-gradient(135deg, #FF679C 0%, #FF8FB1 100%);
-  padding: 12px 16px;
+  padding: 16px;
   color: #fff;
   margin-top: 40px;
   margin-left: 0;
@@ -243,9 +243,9 @@
 }
 
 .form-row.two-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .form-row.two-col .date-time-group,
@@ -259,9 +259,15 @@
 }
 
 .form-row.three-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-row.three-col.date-time-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
 .form-row.three-col-inline {
@@ -306,16 +312,17 @@
 }
 
 .date-time-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  opacity: 0.9;
+  opacity: 0.95;
   white-space: nowrap;
   flex-shrink: 0;
   color: #fff;
   min-width: fit-content;
   text-align: left;
-  margin-bottom: 2px;
-  padding-left: 2px;
+  margin-bottom: 4px;
+  padding-left: 0;
+  display: block;
 }
 
 .date-time-label .required {
@@ -2826,13 +2833,20 @@ body.dark-mode .modal-footer {
   }
   
   .form-row.two-col {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 10px;
   }
   
   .form-row.three-col:not(.date-time-row) {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 10px;
+  }
+  
+  .form-row.three-col.date-time-row {
+    gap: 6px;
+  }
+  
+  .date-time-label {
+    font-size: 0.65rem;
+    margin-bottom: 3px;
   }
   
   /* 日付・時刻入力フィールドのスタイルを統一 */
@@ -2896,13 +2910,20 @@ body.dark-mode .modal-footer {
   }
   
   .form-row.two-col {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 12px;
   }
   
   .form-row.three-col:not(.date-time-row) {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 12px;
+  }
+  
+  .form-row.three-col.date-time-row {
+    gap: 8px;
+  }
+  
+  .date-time-label {
+    font-size: 0.7rem;
+    margin-bottom: 4px;
   }
   
   .form-row.three-col-inline {
