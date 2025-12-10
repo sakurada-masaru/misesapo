@@ -424,22 +424,41 @@
     </div>
   </div>
 
-  <!-- プレビューモーダル -->
-  <div id="preview-dialog" class="modal-overlay preview-modal" style="display:none;">
-    <div class="modal-content preview-content">
+  <!-- 保存確認ダイアログ -->
+  <dialog id="preview-save-dialog" class="modal-dialog">
+    <div class="modal-content">
       <div class="modal-header">
+        <h3>プレビュー前に保存</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('preview-save-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>プレビューを表示する前に、現在の状態を保存しますか？</p>
+        <p style="font-size: 0.9rem; color: #6c757d; margin-top: 8px;">保存することで、保存時点の状態でプレビューが表示されます。</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('preview-save-dialog').close()">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="preview-save-confirm-btn">保存してプレビュー</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- プレビューモーダル（report-shared-view.jsと同じ構造） -->
+  <div id="preview-dialog" class="modal-overlay preview-modal" style="display:none;">
+    <div class="modal-content preview-content" style="max-width: 100%; width: 100%; height: 100vh; margin: 0; border-radius: 0; padding: 0;">
+      <div class="modal-header" style="position: sticky; top: 0; z-index: 100; background: white; border-bottom: 1px solid #e5e7eb;">
         <h3>レポートプレビュー</h3>
         <button type="button" class="modal-close" onclick="closePreviewModal()">
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <div class="modal-body preview-body">
-        <div id="preview-report-content">
-          <!-- プレビュー内容がここに表示されます -->
+      <div class="modal-body preview-body" style="padding: 0; overflow-y: auto; height: calc(100vh - 60px);">
+        <div class="shared-report-container" id="preview-report-container" style="background: white;">
+          <div id="preview-report-content" style="display: block;">
+            <!-- report-shared-view.jsと同じ構造で表示 -->
+          </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="closePreviewModal()">閉じる</button>
       </div>
     </div>
   </div>

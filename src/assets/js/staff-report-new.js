@@ -2149,23 +2149,41 @@
     // プレビューボタンのイベントリスナー
     const previewBtn = document.getElementById('preview-btn');
     const previewBtnProposal = document.getElementById('preview-btn-proposal');
+    const previewSaveConfirmBtn = document.getElementById('preview-save-confirm-btn');
+    
+    // 保存確認ダイアログを表示する関数
+    const showPreviewSaveDialog = () => {
+      const dialog = document.getElementById('preview-save-dialog');
+      if (dialog) {
+        dialog.showModal();
+      }
+    };
+    
     if (previewBtn) {
       previewBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        if (window.openPreviewModal) {
-          window.openPreviewModal();
-        } else {
-          console.error('openPreviewModal function not found');
-        }
+        showPreviewSaveDialog();
       });
     }
     if (previewBtnProposal) {
       previewBtnProposal.addEventListener('click', (e) => {
         e.preventDefault();
+        showPreviewSaveDialog();
+      });
+    }
+    
+    // 保存してプレビューを表示
+    if (previewSaveConfirmBtn) {
+      previewSaveConfirmBtn.addEventListener('click', async () => {
+        const dialog = document.getElementById('preview-save-dialog');
+        if (dialog) {
+          dialog.close();
+        }
+        
+        // レポートを一時保存してからプレビューを表示
+        await saveReportForPreview();
         if (window.openPreviewModal) {
           window.openPreviewModal();
-        } else {
-          console.error('openPreviewModal function not found');
         }
       });
     }
@@ -6187,19 +6205,58 @@
     return errorMessage || 'エラーが発生しました';
   }
 
+  // レポートを一時保存してプレビュー用データを準備
+  async function saveReportForPreview() {
+    // 現在のフォームデータを一時保存（localStorageに保存）
+    const previewData = {
+      brandName: document.getElementById('report-brand-search')?.value || 
+                 document.getElementById('report-brand-name')?.value || '',
+      storeName: document.getElementById('report-store-search')?.value || 
+                 document.getElementById('report-store-name')?.value || '',
+      date: document.getElementById('report-date')?.value || '',
+      startTime: document.getElementById('report-start')?.value || '',
+      endTime: document.getElementById('report-end')?.value || '',
+      sections: JSON.parse(JSON.stringify(sections)), // ディープコピー
+      savedAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem('preview_report_data', JSON.stringify(previewData));
+    
+    // オートセーブも実行（念のため）
+    await autoSave();
+  }
+
   // プレビューモーダルを開く（レポートURL発行後の表示形式に合わせる）
   window.openPreviewModal = async function() {
     const previewContent = document.getElementById('preview-report-content');
     if (!previewContent) return;
     
-    // 現在のフォームデータからレポートデータを準備（提出時と同じ形式）
-    const brandName = document.getElementById('report-brand-search')?.value || 
-                      document.getElementById('report-brand-name')?.value || '';
-    const storeName = document.getElementById('report-store-search')?.value || 
-                      document.getElementById('report-store-name')?.value || '';
-    const date = document.getElementById('report-date')?.value || '';
-    const startTime = document.getElementById('report-start')?.value || '';
-    const endTime = document.getElementById('report-end')?.value || '';
+    // 保存されたプレビューデータを取得
+    const savedPreviewData = localStorage.getItem('preview_report_data');
+    let previewData;
+    
+    if (savedPreviewData) {
+      previewData = JSON.parse(savedPreviewData);
+    } else {
+      // 保存データがない場合は現在のフォームデータを使用
+      previewData = {
+        brandName: document.getElementById('report-brand-search')?.value || 
+                   document.getElementById('report-brand-name')?.value || '',
+        storeName: document.getElementById('report-store-search')?.value || 
+                   document.getElementById('report-store-name')?.value || '',
+        date: document.getElementById('report-date')?.value || '',
+        startTime: document.getElementById('report-start')?.value || '',
+        endTime: document.getElementById('report-end')?.value || '',
+        sections: sections
+      };
+    }
+    
+    const brandName = previewData.brandName;
+    const storeName = previewData.storeName;
+    const date = previewData.date;
+    const startTime = previewData.startTime;
+    const endTime = previewData.endTime;
+    const savedSections = previewData.sections || sections;
     
     // 日付フォーマット（report-shared-view.jsと同じ形式）
     const formatDate = (dateStr) => {
@@ -6220,8 +6277,8 @@
       }
     };
     
-    // レポートデータを準備（提出時と同じ形式）
-    const workItems = Object.values(sections)
+    // レポートデータを準備（提出時と同じ形式、保存されたセクションを使用）
+    const workItems = Object.values(savedSections)
       .filter(s => s.type === 'cleaning' && s.item_name)
       .map(s => ({
         item_id: s.item_name.toLowerCase().replace(/\s+/g, '-'),
@@ -6230,7 +6287,7 @@
         photos: {}
       }));
     
-    const reportSections = Object.values(sections)
+    const reportSections = Object.values(savedSections)
       .filter(s => s.type !== 'cleaning')
       .map(section => {
         if (section.type === 'image') {
@@ -6280,21 +6337,28 @@
       return path.startsWith('/') ? path : '/' + path;
     };
     
+    // report-shared-view.jsと同じHTML構造で生成
     let html = `
-      <div class="preview-report">
-        <div class="preview-header">
-          <div class="preview-date">清掃日時: ${dateStr} ${timeStr}</div>
-          <div class="preview-store">${escapeHtml(report.store_name || '店舗名不明')}</div>
+      <div class="report-header" id="preview-report-header">
+        <div class="report-header-logo">
+          <img src="/images/header-logo.jpg" alt="ミセサポ" onerror="this.style.display='none';">
         </div>
-        
-        <div class="preview-items-list">
-          <div class="preview-items-label">実施清掃項目</div>
-          <div class="preview-items-tags">
-            ${workItems.map(item => `<span class="preview-item-tag">${escapeHtml(item.item_name)}</span>`).join('')}
+        <div class="report-header-content">
+          <div class="report-date" id="preview-report-date">清掃日時: ${dateStr} ${timeStr}</div>
+          <div class="report-store" id="preview-report-store">${escapeHtml(report.store_name || '店舗名不明')}</div>
+        </div>
+      </div>
+      
+      <div class="items-list-bar">
+        <div class="items-list">
+          <span class="items-list-label">実施清掃項目</span>
+          <div class="items-list-items" id="preview-cleaning-items">
+            ${workItems.map(item => `<span class="items-list-item">${escapeHtml(item.item_name)}</span>`).join('')}
           </div>
         </div>
-        
-        <div class="preview-main">
+      </div>
+      
+      <div class="report-main" id="preview-report-main">
     `;
     
     // 清掃項目の詳細（項目名と詳細のみ、写真は別のsectionsで表示）
@@ -6428,17 +6492,77 @@
     
     html += workItemsHtml + sectionsHtml;
     html += `
-        </div>
       </div>
     `;
     
     previewContent.innerHTML = html;
+    
+    // 画像クリックイベントを設定（report-shared-view.jsと同じ）
+    setupPreviewImageModal();
     
     // モーダルを表示
     const previewDialog = document.getElementById('preview-dialog');
     if (previewDialog) {
       previewDialog.style.display = 'flex';
     }
+  }
+
+  // プレビュー用の画像モーダル機能（report-shared-view.jsと同じ）
+  function setupPreviewImageModal() {
+    const imageItems = document.querySelectorAll('#preview-report-content .image-item');
+    
+    imageItems.forEach(item => {
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', function() {
+        const img = this.querySelector('img');
+        if (img && img.src) {
+          openPreviewImageModal(img.src);
+        }
+      });
+    });
+  }
+
+  // プレビュー用の画像モーダルを開く（report-shared-view.jsと同じ）
+  function openPreviewImageModal(imageSrc) {
+    // モーダルが既に存在する場合は削除
+    const existingModal = document.getElementById('preview-image-modal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    // モーダル要素を作成
+    const modal = document.createElement('div');
+    modal.id = 'preview-image-modal';
+    modal.className = 'image-modal';
+    modal.innerHTML = `
+      <div class="image-modal-overlay"></div>
+      <div class="image-modal-content">
+        <button class="image-modal-close" aria-label="閉じる">&times;</button>
+        <img src="${imageSrc}" alt="拡大画像" class="image-modal-img">
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 閉じるボタンのイベント
+    const closeBtn = modal.querySelector('.image-modal-close');
+    const overlay = modal.querySelector('.image-modal-overlay');
+    
+    const closeModal = () => {
+      modal.remove();
+    };
+    
+    closeBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', closeModal);
+    
+    // ESCキーで閉じる
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        document.removeEventListener('keydown', handleEsc);
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
   }
 
   // プレビューモーダルを閉じる
