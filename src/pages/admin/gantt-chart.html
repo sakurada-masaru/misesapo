@@ -695,9 +695,13 @@
                         bar.style.left = `${startPos}px`;
                         bar.style.width = `${width}px`;
                         
-                        // 項目名（ID）のみを表示
+                        // タスク名のラベルのみを表示（フェーズ文言を削除）
                         if (!task.milestone && !task.event && !task.final) {
-                            bar.textContent = task.id;
+                            let label = task.name;
+                            // 【フェーズ I】などのフェーズ文言を削除
+                            label = label.replace(/【フェーズ [IVX]+】\s*/g, '');
+                            label = label.replace(/【最終ゴール】\s*/g, '');
+                            bar.textContent = label;
                         }
                         
                         barsArea.appendChild(bar);
