@@ -695,7 +695,7 @@
                         bar.style.left = `${startPos}px`;
                         bar.style.width = `${width}px`;
                         
-                        // タスク名のラベルのみを表示（フェーズ文言と記号・数字を削除）
+                        // タスク名の主となる要件のみを表示
                         if (!task.milestone && !task.event && !task.final) {
                             let label = task.name;
                             // 【フェーズ I】などのフェーズ文言を削除
@@ -703,6 +703,26 @@
                             label = label.replace(/【最終ゴール】\s*/g, '');
                             // F-1:、S-1:、A-1:などの記号・数字を削除
                             label = label.replace(/^[A-Z]-\d+:\s*/g, '');
+                            
+                            // 主となる要件だけを抽出（詳細説明を削除）
+                            // 「作成」「発注」「完了」「確定」「納品」「準備完了」などの動詞句を削除
+                            label = label.replace(/\s*（[^）]+）\s*/g, ''); // 括弧内の説明を削除
+                            label = label.replace(/\s*作成\s*/g, '');
+                            label = label.replace(/\s*発注\s*/g, '');
+                            label = label.replace(/\s*完了\s*/g, '');
+                            label = label.replace(/\s*確定\s*/g, '');
+                            label = label.replace(/\s*納品\s*/g, '');
+                            label = label.replace(/\s*準備完了\s*/g, '');
+                            label = label.replace(/\s*実行\s*/g, '');
+                            label = label.replace(/\s*進捗報告\s*/g, '');
+                            label = label.replace(/\s*経費連携\s*/g, '');
+                            label = label.replace(/\s*の\s*/g, '');
+                            label = label.replace(/\s*と\s*/g, '・');
+                            label = label.replace(/\s+/g, ''); // 余分な空白を削除
+                            
+                            // 前後の空白を削除
+                            label = label.trim();
+                            
                             bar.textContent = label;
                         }
                         
