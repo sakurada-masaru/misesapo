@@ -6574,13 +6574,12 @@
     // 画像クリックイベントを設定（report-shared-view.jsと同じ）
     setupPreviewImageModal();
     
-    // モーダルを表示
-    const previewDialog = document.getElementById('preview-dialog');
+    // モーダルを表示（既に取得済みのpreviewDialogを使用）
     if (previewDialog) {
-      // 既に開いている場合は何もしない
+      // 既に開いている場合は何もしない（二重チェック）
       const currentDisplay = previewDialog.style.display || window.getComputedStyle(previewDialog).display;
       if (currentDisplay === 'flex' || currentDisplay === 'block' || previewDialog.classList.contains('show')) {
-        console.log('[openPreviewModal] Modal is already open, skipping');
+        console.log('[openPreviewModal] Modal is already open at display stage, skipping');
         return;
       }
       // showクラスを追加して表示
