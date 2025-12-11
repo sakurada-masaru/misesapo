@@ -5873,57 +5873,98 @@
       return;
     }
 
-    // 清掃項目を収集
-    const workItems = Object.values(sections)
-      .filter(s => s.type === 'cleaning' && s.item_name)
-      .map(s => {
-        // item_nameからitem_idを生成（スラッグ化）
-        const itemId = s.item_name.toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^\w\-]+/g, '')
-          .replace(/\-\-+/g, '-')
-          .replace(/^-+/, '')
-          .replace(/-+$/, '');
-        
-        return {
-          item_id: itemId,
-          item_name: s.item_name,
-          details: {},
-          photos: { before: [], after: [] }
-        };
-      });
-
-    // アップロードが必要な画像の総数をカウント
+    // アップロードが必要な画像の総数をカウント（先にカウント）
     let totalImagesToUpload = 0;
     let uploadedImagesCount = 0;
+    
     Object.values(sections).forEach(s => {
       if (s.type === 'image') {
         const imageType = s.image_type || 'before_after';
         if (imageType === 'completed') {
-          totalImagesToUpload += (s.photos.completed || []).filter(img => 
-            typeof img === 'object' && img.imageId && !(img.uploaded && img.url)
+          totalImagesToUpload += (s.photos?.completed || []).filter(img => 
+            typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
           ).length;
         } else {
-          totalImagesToUpload += (s.photos.before || []).filter(img => 
-            typeof img === 'object' && img.imageId && !(img.uploaded && img.url)
+          totalImagesToUpload += (s.photos?.before || []).filter(img => 
+            typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
           ).length;
-          totalImagesToUpload += (s.photos.after || []).filter(img => 
-            typeof img === 'object' && img.imageId && !(img.uploaded && img.url)
+          totalImagesToUpload += (s.photos?.after || []).filter(img => 
+            typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
           ).length;
         }
+      } else if (s.type === 'cleaning' && s.imageContents) {
+        // cleaningセクション内のimageContentsから画像をカウント
+        s.imageContents.forEach(imageContent => {
+          const imageType = imageContent.imageType || 'before_after';
+          if (imageType === 'completed') {
+            totalImagesToUpload += (imageContent.photos?.completed || []).filter(img => 
+              typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
+            ).length;
+          } else {
+            totalImagesToUpload += (imageContent.photos?.before || []).filter(img => 
+              typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
+            ).length;
+            totalImagesToUpload += (imageContent.photos?.after || []).filter(img => 
+              typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
+            ).length;
+          }
+        });
       }
     });
+    
+    console.log('[Submit] Total images to upload:', totalImagesToUpload);
     
     // 画像アップロード進捗表示を開始
     if (totalImagesToUpload > 0) {
       showUploadProgress(0, totalImagesToUpload, '画像をアップロードしています...');
     }
     
-    // 進捗コールバック関数
-    const updateProgress = (current, total) => {
-      uploadedImagesCount = current;
-      showUploadProgress(uploadedImagesCount, totalImagesToUpload, '画像をアップロードしています...');
+    // 進捗コールバック関数（グローバルカウンターを使用）
+    const updateProgress = () => {
+      uploadedImagesCount++;
+      if (totalImagesToUpload > 0) {
+        showUploadProgress(uploadedImagesCount, totalImagesToUpload, '画像をアップロードしています...');
+      }
     };
+
+    // 清掃項目を収集（画像もアップロード）
+    const workItems = await Promise.all(
+      Object.values(sections)
+        .filter(s => s.type === 'cleaning' && s.item_name)
+        .map(async (s) => {
+          // item_nameからitem_idを生成（スラッグ化）
+          const itemId = s.item_name.toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^\w\-]+/g, '')
+            .replace(/\-\-+/g, '-')
+            .replace(/^-+/, '')
+            .replace(/-+$/, '');
+          
+          // imageContentsから画像をアップロード
+          const photos = { before: [], after: [] };
+          if (s.imageContents && Array.isArray(s.imageContents)) {
+            for (const imageContent of s.imageContents) {
+              const imageType = imageContent.imageType || 'before_after';
+              if (imageType === 'completed') {
+                const uploaded = await uploadSectionImages(imageContent.photos?.completed || [], cleaningDate, 'completed', updateProgress);
+                photos.after = photos.after.concat(uploaded.filter(Boolean));
+              } else {
+                const beforeUploaded = await uploadSectionImages(imageContent.photos?.before || [], cleaningDate, 'before', updateProgress);
+                const afterUploaded = await uploadSectionImages(imageContent.photos?.after || [], cleaningDate, 'after', updateProgress);
+                photos.before = photos.before.concat(beforeUploaded.filter(Boolean));
+                photos.after = photos.after.concat(afterUploaded.filter(Boolean));
+              }
+            }
+          }
+          
+          return {
+            item_id: itemId,
+            item_name: s.item_name,
+            details: {},
+            photos: photos
+          };
+        })
+    );
     
     // セクションを収集（画像をアップロード）
     const sectionData = await Promise.all(
@@ -5936,10 +5977,10 @@
             const uploadedPhotos = {};
             
             if (imageType === 'completed') {
-              uploadedPhotos.completed = await uploadSectionImages(s.photos.completed || [], cleaningDate, 'completed', updateProgress);
+              uploadedPhotos.completed = await uploadSectionImages(s.photos?.completed || [], cleaningDate, 'completed', updateProgress);
             } else {
-              uploadedPhotos.before = await uploadSectionImages(s.photos.before || [], cleaningDate, 'before', updateProgress);
-              uploadedPhotos.after = await uploadSectionImages(s.photos.after || [], cleaningDate, 'after', updateProgress);
+              uploadedPhotos.before = await uploadSectionImages(s.photos?.before || [], cleaningDate, 'before', updateProgress);
+              uploadedPhotos.after = await uploadSectionImages(s.photos?.after || [], cleaningDate, 'after', updateProgress);
             }
             
           return {
@@ -6130,123 +6171,132 @@
 
   // セクション内の画像をアップロード（ローカル画像のみ）
   async function uploadSectionImages(images, cleaningDate, category = 'after', onProgress = null) {
-    // アップロードが必要な画像数をカウント
-    const imagesToUpload = images.filter(img => {
-      if (typeof img === 'string') return false; // 既にURL
-      if (typeof img === 'object' && img.imageId) {
-        return !(img.uploaded && img.url); // 未アップロード
+    if (!images || images.length === 0) {
+      return [];
+    }
+    
+    // 順次処理でアップロード（進捗を正確に追跡するため）
+    const uploadedUrls = [];
+    for (const img of images) {
+      // 既にURLの場合はそのまま返す
+      if (typeof img === 'string') {
+        uploadedUrls.push(img);
+        continue;
       }
-      return false;
-    });
-    
-    let uploadedCount = 0;
-    const totalCount = imagesToUpload.length;
-    
-    const uploadedUrls = await Promise.all(
-      images.map(async (img) => {
-        // 既にURLの場合はそのまま返す
-        if (typeof img === 'string') {
-          return img;
+      
+      // 画像データオブジェクトの場合
+      if (typeof img === 'object' && img.imageId) {
+        // 既にアップロード済みの場合はURLを返す
+        if (img.uploaded && (img.url || img.warehouseUrl)) {
+          uploadedUrls.push(img.url || img.warehouseUrl);
+          continue;
         }
         
-        // 画像データオブジェクトの場合
-        if (typeof img === 'object' && img.imageId) {
-          // 既にアップロード済みの場合はURLを返す
-          if (img.uploaded && img.url) {
-            return img.url;
+        // ローカル画像をS3にアップロード
+        try {
+          const imageData = imageStock.find(stock => stock.id === img.imageId);
+          if (!imageData) {
+            console.warn(`[uploadSectionImages] Image not found in stock: ${img.imageId}`);
+            // warehouseUrlがあればそれを使用
+            if (img.warehouseUrl) {
+              uploadedUrls.push(img.warehouseUrl);
+            }
+            continue;
           }
           
-          // ローカル画像をS3にアップロード
-          try {
-            const imageData = imageStock.find(stock => stock.id === img.imageId);
-            if (!imageData) {
-              console.warn(`Image not found in stock: ${img.imageId}`);
-              return null;
+          let blob;
+          // blobDataが存在する場合はそれを使用、なければblobUrlから取得
+          if (imageData.blobData) {
+            blob = new Blob([imageData.blobData], { type: imageData.fileType || 'image/jpeg' });
+          } else if (imageData.blobUrl) {
+            // blobUrlからBlobを取得
+            const response = await fetch(imageData.blobUrl);
+            blob = await response.blob();
+          } else if (img.blobUrl) {
+            // セクション内のblobUrlから取得
+            const response = await fetch(img.blobUrl);
+            blob = await response.blob();
+          } else {
+            console.warn(`[uploadSectionImages] No blob data or blobUrl found for image: ${img.imageId}`);
+            // warehouseUrlがあればそれを使用
+            if (img.warehouseUrl || imageData.warehouseUrl) {
+              uploadedUrls.push(img.warehouseUrl || imageData.warehouseUrl);
             }
-            
-            let blob;
-            // blobDataが存在する場合はそれを使用、なければblobUrlから取得
-            if (imageData.blobData) {
-              blob = new Blob([imageData.blobData], { type: imageData.fileType || 'image/jpeg' });
-            } else if (imageData.blobUrl) {
-              // blobUrlからBlobを取得
-              const response = await fetch(imageData.blobUrl);
-              blob = await response.blob();
-            } else {
-              console.warn(`No blob data or blobUrl found for image: ${img.imageId}`);
-              return null;
+            continue;
+          }
+          
+          // Base64に変換
+          const base64 = await blobToBase64(blob);
+          
+          // categoryが'completed'の場合は'after'として扱う（APIの制約）
+          const apiCategory = category === 'completed' ? 'after' : category;
+          
+          // S3にアップロード
+          const requestBody = {
+            image: base64,
+            category: apiCategory,
+            cleaning_date: cleaningDate
+          };
+          
+          console.log('[uploadSectionImages] Uploading image:', {
+            imageId: img.imageId,
+            base64Length: base64?.length,
+            category: apiCategory,
+            originalCategory: category,
+            cleaning_date: cleaningDate
+          });
+          
+          const response = await fetch(`${REPORT_API}/staff/report-images`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            },
+            body: JSON.stringify(requestBody)
+          });
+          
+          if (!response.ok) {
+            let errorText;
+            try {
+              errorText = await response.text();
+              const errorJson = JSON.parse(errorText);
+              console.error('[uploadSectionImages] Upload failed:', {
+                status: response.status,
+                statusText: response.statusText,
+                error: errorJson
+              });
+            } catch (e) {
+              errorText = await response.text();
+              console.error('[uploadSectionImages] Upload failed:', {
+                status: response.status,
+                statusText: response.statusText,
+                errorText: errorText
+              });
             }
-            
-            // Base64に変換
-            const base64 = await blobToBase64(blob);
-            
-            // categoryが'completed'の場合は'after'として扱う（APIの制約）
-            const apiCategory = category === 'completed' ? 'after' : category;
-            
-            // S3にアップロード
-            const requestBody = {
-              image: base64,
-              category: apiCategory,
-              cleaning_date: cleaningDate
-            };
-            
-            console.log('[uploadSectionImages] Uploading image:', {
-              imageId: img.imageId,
-              base64Length: base64?.length,
-              category: apiCategory,
-              originalCategory: category,
-              cleaning_date: cleaningDate
-            });
-            
-            const response = await fetch(`${REPORT_API}/staff/report-images`, {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${await getFirebaseIdToken()}`
-              },
-              body: JSON.stringify(requestBody)
-            });
-            
-            if (!response.ok) {
-              let errorText;
-              try {
-                errorText = await response.text();
-                const errorJson = JSON.parse(errorText);
-                console.error('[uploadSectionImages] Upload failed:', {
-                  status: response.status,
-                  statusText: response.statusText,
-                  error: errorJson
-                });
-              } catch (e) {
-                errorText = await response.text();
-                console.error('[uploadSectionImages] Upload failed:', {
-                  status: response.status,
-                  statusText: response.statusText,
-                  errorText: errorText
-                });
-              }
-              throw new Error(`Upload failed: ${response.status} - ${errorText}`);
-            }
-            
-            const result = await response.json();
-            console.log('[uploadSectionImages] Image uploaded successfully:', result);
-            
-            // 進捗を更新
-            uploadedCount++;
-            if (onProgress) {
-              onProgress(uploadedCount, totalCount);
-            }
-            
-            return result.image?.url || result.url || null;
-          } catch (error) {
-            console.error('Error uploading image:', error);
-            return null;
+            throw new Error(`Upload failed: ${response.status} - ${errorText}`);
+          }
+          
+          const result = await response.json();
+          const uploadedUrl = result.image?.url || result.url || null;
+          console.log('[uploadSectionImages] Image uploaded successfully:', uploadedUrl);
+          
+          // 進捗を更新
+          if (onProgress) {
+            onProgress();
+          }
+          
+          if (uploadedUrl) {
+            uploadedUrls.push(uploadedUrl);
+          }
+        } catch (error) {
+          console.error('[uploadSectionImages] Error uploading image:', error);
+          // エラー時もwarehouseUrlがあればそれを使用
+          if (img.warehouseUrl) {
+            uploadedUrls.push(img.warehouseUrl);
           }
         }
-        
-        return null;
-      })
-    );
+      }
+    }
     
     // nullを除外
     return uploadedUrls.filter(url => url !== null);
@@ -6450,33 +6500,55 @@
     // アップロードが必要な画像の総数をカウント
     let totalImagesToUpload = 0;
     let uploadedImagesCount = 0;
+    
     Object.values(sections).forEach(s => {
       if (s.type === 'image') {
         const imageType = s.image_type || 'before_after';
         if (imageType === 'completed') {
-          totalImagesToUpload += (s.photos.completed || []).filter(img => 
-            typeof img === 'object' && img.imageId && !(img.uploaded && img.url)
+          totalImagesToUpload += (s.photos?.completed || []).filter(img => 
+            typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
           ).length;
         } else {
-          totalImagesToUpload += (s.photos.before || []).filter(img => 
-            typeof img === 'object' && img.imageId && !(img.uploaded && img.url)
+          totalImagesToUpload += (s.photos?.before || []).filter(img => 
+            typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
           ).length;
-          totalImagesToUpload += (s.photos.after || []).filter(img => 
-            typeof img === 'object' && img.imageId && !(img.uploaded && img.url)
+          totalImagesToUpload += (s.photos?.after || []).filter(img => 
+            typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
           ).length;
         }
+      } else if (s.type === 'cleaning' && s.imageContents) {
+        // cleaningセクション内のimageContentsから画像をカウント
+        s.imageContents.forEach(imageContent => {
+          const imageType = imageContent.imageType || 'before_after';
+          if (imageType === 'completed') {
+            totalImagesToUpload += (imageContent.photos?.completed || []).filter(img => 
+              typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
+            ).length;
+          } else {
+            totalImagesToUpload += (imageContent.photos?.before || []).filter(img => 
+              typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
+            ).length;
+            totalImagesToUpload += (imageContent.photos?.after || []).filter(img => 
+              typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
+            ).length;
+          }
+        });
       }
     });
+    
+    console.log('[Preview] Total images to upload:', totalImagesToUpload);
     
     // 画像アップロード進捗表示を開始
     if (totalImagesToUpload > 0) {
       showUploadProgress(0, totalImagesToUpload, '画像をアップロードしています...');
     }
     
-    // 進捗コールバック関数
-    const updateProgress = (current, total) => {
-      uploadedImagesCount = current;
-      showUploadProgress(uploadedImagesCount, totalImagesToUpload, '画像をアップロードしています...');
+    // 進捗コールバック関数（グローバルカウンターを使用）
+    const updateProgress = () => {
+      uploadedImagesCount++;
+      if (totalImagesToUpload > 0) {
+        showUploadProgress(uploadedImagesCount, totalImagesToUpload, '画像をアップロードしています...');
+      }
     };
     
     // 画像をアップロードしてからプレビュー用データを準備
@@ -6487,10 +6559,10 @@
         const uploadedPhotos = {};
         
         if (imageType === 'completed') {
-          uploadedPhotos.completed = await uploadSectionImages(s.photos.completed || [], cleaningDate, 'completed', updateProgress);
+          uploadedPhotos.completed = await uploadSectionImages(s.photos?.completed || [], cleaningDate, 'completed', updateProgress);
         } else {
-          uploadedPhotos.before = await uploadSectionImages(s.photos.before || [], cleaningDate, 'before', updateProgress);
-          uploadedPhotos.after = await uploadSectionImages(s.photos.after || [], cleaningDate, 'after', updateProgress);
+          uploadedPhotos.before = await uploadSectionImages(s.photos?.before || [], cleaningDate, 'before', updateProgress);
+          uploadedPhotos.after = await uploadSectionImages(s.photos?.after || [], cleaningDate, 'after', updateProgress);
         }
         
         previewSections[id] = {
