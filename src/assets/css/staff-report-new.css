@@ -3423,20 +3423,25 @@ html {
 }
 
 /* プレビューモーダル */
-.preview-modal {
+.modal-overlay.preview-modal {
   display: none !important; /* プレビューモーダルはデフォルトで非表示 */
-  background: rgba(255, 255, 255, 0.95) !important; /* 背景を白に */
+  background: rgba(255, 255, 255, 0.98) !important; /* 背景をほぼ白に */
+  backdrop-filter: blur(2px) !important; /* 軽いブラー効果 */
+  align-items: center !important; /* 中央配置 */
+  justify-content: center !important; /* 中央配置 */
 }
 
-.preview-modal.show {
+.modal-overlay.preview-modal.show {
   display: flex !important; /* showクラスが付いたときのみ表示 */
 }
 
-.preview-modal .modal-content {
+.modal-overlay.preview-modal .modal-content {
   max-width: 90vw;
   max-height: 90vh;
   width: 100%;
   background: white !important; /* モーダルコンテンツの背景も白に */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important; /* 軽い影で区別 */
+  border-radius: 0 !important; /* 角丸を削除 */
 }
 
 .preview-body {
