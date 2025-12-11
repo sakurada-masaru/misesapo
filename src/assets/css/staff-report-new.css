@@ -255,7 +255,7 @@
   min-width: 0;
   margin: 0;
   padding: 0;
-  gap: 4px;
+  gap: 2px; /* ラベルとプレースホルダーの間隔を狭める */
 }
 
 .form-row.three-col {
@@ -320,7 +320,7 @@
   color: #fff;
   min-width: fit-content;
   text-align: left;
-  margin-bottom: 4px;
+  margin-bottom: 2px; /* ラベルとプレースホルダーの間隔を狭める */
   padding-left: 0;
   display: block;
 }
@@ -2884,7 +2884,7 @@ body.dark-mode .modal-footer {
   
   .date-time-label {
     font-size: 0.65rem;
-    margin-bottom: 3px;
+    margin-bottom: 2px; /* ラベルとプレースホルダーの間隔を狭める */
   }
   
   /* 日付・時刻入力フィールドのスタイルを統一 */
@@ -2961,7 +2961,7 @@ body.dark-mode .modal-footer {
   
   .date-time-label {
     font-size: 0.7rem;
-    margin-bottom: 4px;
+    margin-bottom: 2px; /* ラベルとプレースホルダーの間隔を狭める */
   }
   
   .form-row.three-col-inline {
@@ -3218,7 +3218,7 @@ body.dark-mode .modal-footer {
   
   .date-time-label {
     font-size: 0.75rem;
-    margin-bottom: 4px;
+    margin-bottom: 2px; /* ラベルとプレースホルダーの間隔を狭める */
   }
   
   .form-row.three-col-inline {
