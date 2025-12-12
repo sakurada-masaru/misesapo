@@ -108,21 +108,23 @@
   
   <div id="mypage-content" style="display: none;">
     <!-- メインコンテンツ -->
-    <div class="mypage-main-container">
-        <div class="mypage-layout" id="mypage-grid">
+    <div class="mypage-main-grid-container" style="flex: 1; overflow: hidden; min-height: 0;">
+        <div class="mypage-main-grid" id="mypage-grid">
         <!-- 出退勤記録セクション -->
-          <section class="mypage-section mypage-section-featured" data-container-id="attendance">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-clock"></i>
-                出退勤記録
-              </h2>
-              <button class="btn btn-text btn-sm" id="request-correction-btn">
-                <i class="fas fa-edit"></i>
-                <span>修正依頼</span>
-              </button>
-            </div>
-          <div class="section-content card attendance-card">
+          <section class="container draggable-container" data-container-id="attendance" data-container-width="3" data-container-height="3" data-container-cost="9" data-container-min-width="1" data-container-max-width="5" data-container-min-height="1" data-container-max-height="5" data-grid-position="1,1" draggable="false">
+            <div class="container-section">
+              <div class="container-header">
+                <h2 class="container-title drag-handle">
+                  <i class="fas fa-grip-vertical"></i>
+            <i class="fas fa-clock"></i>
+            出退勤記録
+          </h2>
+                <button class="btn btn-text btn-sm" id="request-correction-btn">
+                  <i class="fas fa-edit"></i>
+                  <span>修正依頼</span>
+                </button>
+              </div>
+          <div class="card attendance-card">
             <!-- 今日の出退勤状況 -->
             <div class="attendance-today-grid">
               <div class="attendance-status-box" id="attendance-status">
@@ -156,14 +158,16 @@
           </section>
 
       <!-- 業務連絡通知セクション -->
-      <section class="mypage-section" data-container-id="announcements">
-        <div class="section-header">
-          <h2 class="section-title">
-            <i class="fas fa-bullhorn"></i>
-            業務連絡
-          </h2>
-        </div>
-        <div class="section-content card announcements-card">
+      <section class="container draggable-container announcements-section" data-container-id="announcements" data-container-width="3" data-container-height="3" data-container-cost="9" data-container-min-width="1" data-container-max-width="5" data-container-min-height="1" data-container-max-height="5" data-grid-position="4,1" draggable="false">
+        <div class="container-section">
+          <div class="container-header">
+            <h2 class="container-title drag-handle">
+              <i class="fas fa-grip-vertical"></i>
+              <i class="fas fa-bullhorn"></i>
+              業務連絡
+            </h2>
+          </div>
+          <div class="card announcements-card">
             <div id="announcements-list">
               <div class="empty-state">業務連絡はありません</div>
             </div>
@@ -172,14 +176,16 @@
       </section>
 
       <!-- 基本情報セクション -->
-      <section class="mypage-section" data-container-id="basic-info">
-        <div class="section-header">
-          <h2 class="section-title">
-            <i class="fas fa-user"></i>
-            基本情報
-          </h2>
-        </div>
-        <div class="section-content card basic-info-card">
+      <section class="container draggable-container" data-container-id="basic-info" data-container-width="3" data-container-height="3" data-container-cost="9" data-container-min-width="1" data-container-max-width="5" data-container-min-height="1" data-container-max-height="5" data-grid-position="6,1" draggable="false">
+        <div class="container-section">
+          <div class="container-header">
+            <h2 class="container-title drag-handle">
+              <i class="fas fa-grip-vertical"></i>
+              <i class="fas fa-user"></i>
+              基本情報
+            </h2>
+          </div>
+          <div class="card basic-info-card">
             <div id="basic-info-content">
               <div class="basic-info-item">
                 <span class="basic-info-label">名前</span>
@@ -203,15 +209,17 @@
         </section>
 
         <!-- TODOリスト -->
-      <section class="mypage-section" data-container-id="todo">
-        <div class="section-header">
-          <h2 class="section-title">
+      <section class="container draggable-container" data-container-id="todo" data-container-width="3" data-container-height="3" data-container-cost="9" data-container-min-width="1" data-container-max-width="5" data-container-min-height="1" data-container-max-height="5" data-grid-position="1,3" draggable="false">
+        <div class="container-section">
+          <div class="container-header">
+            <h2 class="container-title drag-handle">
+              <i class="fas fa-grip-vertical"></i>
             <i class="fas fa-tasks"></i>
             TODOリスト
             <span class="todo-count" id="todo-count">0</span>
           </h2>
-        </div>
-        <div class="section-content card todo-card">
+          </div>
+          <div class="card todo-card">
             <div class="todo-input-wrapper">
               <input type="text" id="todo-input" class="todo-input" placeholder="新しいタスクを追加..." />
               <button class="btn btn-primary btn-sm" id="add-todo-btn">
@@ -231,14 +239,16 @@
         </section>
 
         <!-- 今週のスケジュール -->
-      <section class="mypage-section" data-container-id="weekly-schedule">
-        <div class="section-header">
-          <h2 class="section-title">
+      <section class="container draggable-container" data-container-id="weekly-schedule" data-container-width="3" data-container-height="3" data-container-cost="9" data-container-min-width="1" data-container-max-width="5" data-container-min-height="1" data-container-max-height="5" data-grid-position="4,1" draggable="false">
+        <div class="container-section">
+          <div class="container-header">
+            <h2 class="container-title drag-handle">
+              <i class="fas fa-grip-vertical"></i>
             <i class="fas fa-calendar-alt"></i>
             今週のスケジュール
           </h2>
-        </div>
-        <div class="section-content card">
+          </div>
+          <div class="card">
             <div id="weekly-schedule">
               <div class="empty-state">予定はありません</div>
             </div>
@@ -247,14 +257,15 @@
         </section>
 
         <!-- 今月のカレンダー -->
-      <section class="mypage-section" data-container-id="calendar">
-        <div class="section-header">
-          <h2 class="section-title">
-            <i class="fas fa-calendar-alt"></i>
-            カレンダー
-          </h2>
-        </div>
-        <div class="section-content">
+      <section class="container draggable-container calendar-section" data-container-id="calendar" data-container-width="3" data-container-height="3" data-container-cost="9" data-container-min-width="1" data-container-max-width="5" data-container-min-height="1" data-container-max-height="5" data-grid-position="4,3" draggable="false">
+        <div class="container-section">
+          <div class="container-header">
+            <h2 class="container-title drag-handle">
+              <i class="fas fa-grip-vertical"></i>
+              <i class="fas fa-calendar-alt"></i>
+              カレンダー
+            </h2>
+          </div>
           <div class="calendar-head">
             <a class="calendar-nav" href="#" id="calendar-prev" aria-label="前へ">
               <i class="fa-solid fa-chevron-left"></i>
@@ -269,21 +280,23 @@
               <!-- カレンダーが動的に生成される -->
             </div>
           </div>
-        </div>
+    </div>
       </section>
 
       <!-- デジタル時計コンテナ -->
-      <section class="mypage-section" data-container-id="digital-clock">
-        <div class="section-header">
-          <h2 class="section-title">
-            <i class="fas fa-clock"></i>
-            時計
-          </h2>
-          <button class="btn btn-text btn-sm" id="clock-format-toggle" title="24時間/12時間切り替え">
-            <i class="fas fa-exchange-alt"></i>
-          </button>
-        </div>
-        <div class="section-content card digital-clock-card">
+      <section class="container draggable-container digital-clock-section" data-container-id="digital-clock" data-container-width="3" data-container-height="3" data-container-cost="9" data-container-min-width="1" data-container-max-width="5" data-container-min-height="1" data-container-max-height="5" data-grid-position="7,1" draggable="false">
+        <div class="container-section">
+          <div class="container-header">
+            <h2 class="container-title drag-handle">
+              <i class="fas fa-grip-vertical"></i>
+              <i class="fas fa-clock"></i>
+              時計
+            </h2>
+            <button class="btn btn-text btn-sm" id="clock-format-toggle" title="24時間/12時間切り替え">
+              <i class="fas fa-exchange-alt"></i>
+            </button>
+              </div>
+          <div class="card digital-clock-card">
             <div class="digital-clock-display" id="digital-clock-display">00:00:00</div>
             <div class="digital-clock-date" id="digital-clock-date">-</div>
             <div class="digital-clock-alarm" id="digital-clock-alarm-section" style="display: none;">
@@ -304,18 +317,20 @@
       </section>
 
       <!-- 日報 -->
-      <section class="mypage-section" data-container-id="daily-reports">
-        <div class="section-header">
-          <h2 class="section-title">
-            <i class="fas fa-file-alt"></i>
-            日報
-          </h2>
-          <a href="/staff/daily-reports" class="btn btn-text btn-sm" title="日報詳細">
-            <i class="fas fa-external-link-alt"></i>
-            <span>詳細</span>
-          </a>
-        </div>
-        <div class="section-content card daily-reports-card">
+      <section class="container draggable-container daily-reports-section" data-container-id="daily-reports" data-container-width="3" data-container-height="3" data-container-cost="9" data-container-min-width="1" data-container-max-width="5" data-container-min-height="1" data-container-max-height="5" data-grid-position="8,1" draggable="false">
+        <div class="container-section">
+          <div class="container-header">
+            <h2 class="container-title drag-handle">
+              <i class="fas fa-grip-vertical"></i>
+              <i class="fas fa-file-alt"></i>
+              日報
+            </h2>
+            <a href="/staff/daily-reports" class="btn btn-text btn-sm" title="日報詳細">
+              <i class="fas fa-external-link-alt"></i>
+              <span>詳細</span>
+            </a>
+            </div>
+          <div class="card daily-reports-card">
             <!-- 今日の日報入力フォーム -->
             <div class="daily-report-form-section">
               <div class="daily-report-form-header">

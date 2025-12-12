@@ -58,29 +58,25 @@
 }
 #mypage-content {
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
-  -webkit-overflow-scrolling: touch;
 }
-
-/* メインコンテンツ：モダンなカードベースレイアウト */
-.mypage-main-container {
+/* メインコンテンツ：10×6グリッド（60マス） */
+.mypage-main-grid-container {
+  position: relative;
+  padding: 0;
   flex: 1;
-  padding: 24px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   min-height: 0;
 }
-
-.mypage-layout {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+.mypage-main-grid {
+  display: block !important; /* グリッドレイアウトではなく、絶対配置の親要素として使用 */
+  width: 100%;
+  height: 100%;
+  position: relative; /* 絶対配置の子要素の基準点 */
+  overflow: hidden;
 }
 /* 編集モード時にグリッドを可視化（ピンク色） */
 .edit-mode .mypage-main-grid-container {
@@ -105,136 +101,31 @@
 /* 80x80px固定グリッドシステム */
 /* 画面幅に合わせて自動的にグリッドを敷き詰め、余ったスペースは中央揃えで調整 */
 
-/* セクションスタイル */
-.mypage-section {
+/* スマホ（〜599px）: 1列（縦積み） */
+@media (max-width: 599px) {
+  .mypage-main-grid {
+    grid-template-columns: 1fr !important;
+    grid-auto-rows: auto !important;
+    justify-content: stretch !important;
+  }
+}
+.draggable-container {
+  cursor: default;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: absolute; /* 絶対配置で自由に配置可能に */
   background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-  display: flex;
-  flex-direction: column;
-}
-
-.mypage-section:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-/* フィーチャーセクション（出退勤記録） */
-.mypage-section-featured {
-  grid-column: 1 / -1;
-  background: linear-gradient(135deg, #fff5f7 0%, #ffffff 100%);
-  border: 1px solid rgba(255, 103, 156, 0.1);
-}
-
-/* セクションヘッダー */
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #fafafa;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.section-title i {
-  color: #FF679C;
-  font-size: 1.1rem;
-}
-
-/* セクションコンテンツ */
-.section-content {
-  padding: 24px;
-  flex: 1;
-  overflow-y: auto;
-}
-
-/* 2カラムレイアウト（デスクトップ） */
-@media (min-width: 1024px) {
-  .mypage-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    align-items: start;
-  }
-  
-  .mypage-section-featured {
-    grid-column: 1 / -1;
-  }
-  
-  /* 左カラム */
-  .mypage-section[data-container-id="announcements"],
-  .mypage-section[data-container-id="todo"],
-  .mypage-section[data-container-id="daily-reports"] {
-    grid-column: 1;
-  }
-  
-  /* 右カラム */
-  .mypage-section[data-container-id="basic-info"],
-  .mypage-section[data-container-id="weekly-schedule"],
-  .mypage-section[data-container-id="calendar"],
-  .mypage-section[data-container-id="digital-clock"] {
-    grid-column: 2;
-  }
-}
-
-/* 3カラムレイアウト（大画面） */
-@media (min-width: 1400px) {
-  .mypage-layout {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
-  
-  .mypage-section-featured {
-    grid-column: 1 / -1;
-  }
-  
-  /* 左カラム */
-  .mypage-section[data-container-id="announcements"],
-  .mypage-section[data-container-id="todo"] {
-    grid-column: 1;
-  }
-  
-  /* 中央カラム */
-  .mypage-section[data-container-id="daily-reports"],
-  .mypage-section[data-container-id="weekly-schedule"] {
-    grid-column: 2;
-  }
-  
-  /* 右カラム */
-  .mypage-section[data-container-id="basic-info"],
-  .mypage-section[data-container-id="calendar"],
-  .mypage-section[data-container-id="digital-clock"] {
-    grid-column: 3;
-  }
-}
-
-/* モバイル（1カラム） */
-@media (max-width: 1023px) {
-  .mypage-main-container {
-    padding: 16px;
-  }
-  
-  .mypage-layout {
-    gap: 16px;
-  }
-  
-  .section-header {
-    padding: 16px 20px;
-  }
-  
-  .section-content {
-    padding: 20px;
-  }
+  box-sizing: border-box;
+  /* サイズはJavaScriptで設定される（80px × マス数） */
+  min-width: 0;
+  min-height: 0;
+  flex-shrink: 0;
+  flex-grow: 0;
+  /* サイズはJavaScriptで明示的に設定されるため、CSSでは指定しない */
+  /* サイズを強制（JavaScriptで設定したサイズを維持） */
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
 }
 .edit-mode .draggable-container {
   cursor: move;
@@ -497,30 +388,34 @@
   color: var(--primary);
 }
 .card {
-  background: transparent;
-  border-radius: 0;
-  padding: 0;
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 8px;
   flex: 1;
-  overflow: visible;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+.attendance-card {
+  padding: 20px;
 }
 /* 出退勤セクション */
 .attendance-card {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  height: 100%;
+  gap: 4px;
 }
 .attendance-today-grid {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  padding: 20px;
+  padding: 4px 6px;
   background: linear-gradient(135deg, #fef3f2 0%, #fff1f2 100%);
-  border-radius: 8px;
-  gap: 16px;
+  border-radius: 4px;
+  gap: 8px;
   flex: 1;
   min-height: 0;
 }
@@ -618,10 +513,10 @@
 .attendance-summary {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  background: transparent;
-  border-radius: 0;
-  overflow: visible;
+  gap: 1px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
   flex: 1;
   min-height: 0;
 }
@@ -814,12 +709,11 @@
   margin-left: 8px;
 }
 .todo-card {
-  padding: 0;
+  padding: 8px;
   flex: 1;
-  overflow: visible;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 16px;
   min-height: 0;
 }
 .todo-input-wrapper {
@@ -959,10 +853,11 @@
   margin-bottom: 24px;
 }
 .basic-info-card {
-  padding: 0;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  height: 100%;
+  gap: 4px;
 }
 .basic-info-item {
   display: flex;
@@ -986,9 +881,9 @@
   word-break: break-word;
 }
 .announcements-card {
-  padding: 0;
+  padding: 8px;
   flex: 1;
-  overflow-y: visible;
+  overflow-y: auto;
   min-height: 0;
 }
 .announcement-item {
