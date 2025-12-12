@@ -2145,7 +2145,8 @@ def get_nfc_tag_info(event, headers):
                     'location_id': tag_info.get('location_id'),
                     'facility_name': tag_info.get('facility_name'),
                     'location_name': tag_info.get('location_name'),
-                    'description': tag_info.get('description')
+                    'description': tag_info.get('description'),
+                    'product_id': tag_info.get('product_id')  # 在庫管理用
                 }, ensure_ascii=False, default=str)
             }
             

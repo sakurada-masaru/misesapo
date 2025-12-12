@@ -492,11 +492,103 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// URLパラメータから商品IDを取得して自動表示
+// NFCタグ情報を取得
+async function getNfcTagInfo(tagId) {
+    try {
+        const response = await fetch(`${REPORT_API}/staff/nfc/tag?tag_id=${encodeURIComponent(tagId)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('NFCタグ情報の取得に失敗しました');
+        }
+        
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error loading NFC tag info:', error);
+        throw error;
+    }
+}
+
+// NFCタグから商品情報を取得して表示
+async function handleNfcTag(tagId) {
+    try {
+        // NFCタグ情報を取得
+        const tagInfo = await getNfcTagInfo(tagId);
+        
+        // product_idが存在する場合
+        if (tagInfo.product_id) {
+            const product = await loadProduct(tagInfo.product_id);
+            showProduct(product);
+            
+            // トースト通知を表示
+            showToast(`NFCタグを読み取りました: ${tagInfo.description || tagInfo.location_name || tagId}`, 'success');
+        } else {
+            // product_idが存在しない場合はエラー
+            alert('このNFCタグは在庫管理用に設定されていません。\n商品IDが登録されていないタグです。');
+        }
+    } catch (error) {
+        console.error('Error handling NFC tag:', error);
+        alert('NFCタグの処理に失敗しました: ' + error.message);
+    }
+}
+
+// トースト通知を表示
+function showToast(message, type = 'info') {
+    // 既存のトーストがあれば削除
+    const existingToast = document.getElementById('toast-notification');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // トースト要素を作成
+    const toast = document.createElement('div');
+    toast.id = 'toast-notification';
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 10000;
+        font-size: 14px;
+        max-width: 90%;
+        text-align: center;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // 3秒後に自動削除
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// URLパラメータから商品IDまたはNFCタグIDを取得して自動表示
 async function checkUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('product_id');
+    const nfcTagId = urlParams.get('nfc_tag_id');
     
+    // NFCタグIDが指定されている場合（優先）
+    if (nfcTagId) {
+        await handleNfcTag(nfcTagId);
+        return;
+    }
+    
+    // 商品IDが指定されている場合
     if (productId) {
         try {
             const product = await loadProduct(productId);
