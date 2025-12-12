@@ -3508,12 +3508,59 @@ function validateAndClearInvalidLayout() {
     document.head.appendChild(style);
   }
 
+  // 認証チェック関数
+  async function checkAuthentication() {
+    const token = await getFirebaseIdToken();
+    
+    // dev-tokenの場合は認証されていない
+    if (token === 'dev-token') {
+      return false;
+    }
+    
+    // Cognitoユーザーを確認
+    const cognitoUser = localStorage.getItem('cognito_user');
+    if (cognitoUser) {
+      try {
+        const parsed = JSON.parse(cognitoUser);
+        if (parsed.username || parsed.email) {
+          return true;
+        }
+      } catch (e) {
+        console.warn('Error parsing cognito user:', e);
+      }
+    }
+    
+    // misesapo_authを確認
+    const authData = localStorage.getItem('misesapo_auth');
+    if (authData) {
+      try {
+        const parsed = JSON.parse(authData);
+        if (parsed.user || parsed.email) {
+          return true;
+        }
+      } catch (e) {
+        console.warn('Error parsing auth data:', e);
+      }
+    }
+    
+    return false;
+  }
+
   // ページ読み込み時にURLパラメータをチェック
   window.addEventListener('DOMContentLoaded', async function() {
     const urlParams = new URLSearchParams(window.location.search);
     const tagId = urlParams.get('nfc_tag_id');
 
     if (tagId) {
+      // 認証チェック
+      const isAuthenticated = await checkAuthentication();
+      if (!isAuthenticated) {
+        // ログインページにリダイレクト（NFCタグIDを保持）
+        const loginUrl = `/staff/signin.html?redirect=${encodeURIComponent(window.location.pathname)}&nfc_tag_id=${tagId}`;
+        window.location.href = loginUrl;
+        return;
+      }
+
       // URLパラメータを削除（履歴に残さない）
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);

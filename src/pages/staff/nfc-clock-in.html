@@ -32,9 +32,6 @@
             <i class="fas fa-mobile-alt" style="font-size: 4rem; color: #FF679C; margin-bottom: 16px;"></i>
             <p style="font-size: 1rem; color: #374151; margin-bottom: 8px;">NFCタグを読み取ってください</p>
             <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 24px;">iPhoneをNFCタグに近づけると自動的に打刻されます</p>
-            <button type="button" class="btn btn-outline" id="btn-manual-input" style="width: 100%; max-width: 300px; padding: 16px; font-size: 1rem;">
-              <i class="fas fa-keyboard"></i> 手動入力
-            </button>
           </div>
         </div>
         <div id="reader" style="display: none;"></div>
@@ -48,33 +45,6 @@
     </div>
   </div>
 
-  <!-- 手動入力モーダル -->
-  <div id="manual-input-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
-    <div class="modal-content" style="max-width:400px; width:90%; background:#fff; border-radius:12px; padding:0; overflow:hidden;" onclick="event.stopPropagation()">
-      <div class="modal-header" style="padding:20px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="margin:0; font-size:1.25rem; font-weight:600; color:#111827;">手動入力</h3>
-        <button type="button" class="modal-close" onclick="closeManualInputModal()" style="background:transparent; border:none; cursor:pointer; font-size:1.25rem; color:#6b7280; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body" style="padding:24px;">
-        <div style="display:flex; flex-direction:column; gap:16px;">
-          <div>
-            <label style="display:block; margin-bottom:8px; font-size:0.875rem; font-weight:600; color:#374151;">施設ID</label>
-            <input type="text" id="manual-facility-id" class="form-input" placeholder="例: ABC_001" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;">
-          </div>
-          <div>
-            <label style="display:block; margin-bottom:8px; font-size:0.875rem; font-weight:600; color:#374151;">場所ID</label>
-            <input type="text" id="manual-location-id" class="form-input" placeholder="例: TK_R01_TOILET_IN" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;">
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer" style="padding:16px 24px; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; gap:12px;">
-        <button type="button" class="btn btn-outline" onclick="closeManualInputModal()">キャンセル</button>
-        <button type="button" class="btn btn-primary" id="btn-confirm-manual-input">打刻する</button>
-      </div>
-    </div>
-  </div>
 
   <style>
     .back-btn {
@@ -318,22 +288,6 @@
         alert(`${message}\n\n時刻: ${timestamp}\n施設ID: ${result.facility_id || 'N/A'}\n場所ID: ${result.location_id || 'N/A'}`);
       }
 
-      // 手動入力で打刻（既存の関数を保持）
-      async function handleManualClockIn() {
-        const facilityId = document.getElementById('manual-facility-id').value.trim();
-        const locationId = document.getElementById('manual-location-id').value.trim();
-
-        if (!facilityId || !locationId) {
-          alert('施設IDと場所IDを入力してください');
-          return;
-        }
-
-        const success = await recordClockIn(facilityId, locationId);
-        if (success) {
-          closeManualInputModal();
-          loadClockInHistory();
-        }
-      }
 
       // QRコードスキャンを開始（将来の拡張用に保持）
       async function startScan() {
@@ -410,17 +364,6 @@
         }
       }
 
-      // 手動入力モーダルを開く
-      function openManualInputModal() {
-        document.getElementById('manual-input-modal').style.display = 'flex';
-      }
-
-      // 手動入力モーダルを閉じる
-      function closeManualInputModal() {
-        document.getElementById('manual-input-modal').style.display = 'none';
-        document.getElementById('manual-facility-id').value = '';
-        document.getElementById('manual-location-id').value = '';
-      }
 
 
       // 打刻履歴を読み込み
@@ -460,10 +403,6 @@
         }
       }
 
-      // イベントリスナー
-      document.getElementById('btn-manual-input').addEventListener('click', openManualInputModal);
-      document.getElementById('btn-confirm-manual-input').addEventListener('click', handleManualClockIn);
-      window.closeManualInputModal = closeManualInputModal;
 
       // ページを離れる時にスキャンを停止
       window.addEventListener('beforeunload', () => {

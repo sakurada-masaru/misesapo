@@ -449,13 +449,32 @@
               defaultPath += `?id=${encodeURIComponent(result.user.id)}`;
             }
             
-            const redirectUrl = basePath === '/' 
-              ? defaultPath 
-              : basePath.replace(/\/$/, '') + defaultPath;
+            // URLパラメータからリダイレクト先とNFCタグIDを取得
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectPath = urlParams.get('redirect');
+            const nfcTagId = urlParams.get('nfc_tag_id');
             
-            console.log('[Signin] Redirecting to mypage:', redirectUrl);
+            let redirectUrl;
+            if (redirectPath) {
+              // リダイレクト先が指定されている場合
+              redirectUrl = basePath === '/' 
+                ? redirectPath 
+                : basePath.replace(/\/$/, '') + redirectPath;
+              
+              // NFCタグIDがある場合は追加
+              if (nfcTagId) {
+                redirectUrl += (redirectUrl.includes('?') ? '&' : '?') + `nfc_tag_id=${nfcTagId}`;
+              }
+            } else {
+              // デフォルトのマイページにリダイレクト
+              redirectUrl = basePath === '/' 
+                ? defaultPath 
+                : basePath.replace(/\/$/, '') + defaultPath;
+            }
             
-            // 確実にマイページにリダイレクト（即座に実行）
+            console.log('[Signin] Redirecting to:', redirectUrl);
+            
+            // 確実にリダイレクト（即座に実行）
             window.location.replace(redirectUrl);
           } else {
             // エラーメッセージを表示
