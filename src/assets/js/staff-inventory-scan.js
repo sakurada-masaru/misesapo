@@ -119,18 +119,46 @@ async function getFirebaseIdToken() {
 async function loadProduct(productId) {
     try {
         const idToken = await getFirebaseIdToken();
+        
+        console.log('[Load Product] Fetching product:', productId);
+        console.log('[Load Product] Token available:', idToken !== null && idToken !== 'dev-token');
+        
         const response = await fetch(`${REPORT_API}/staff/inventory/items`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${idToken}`
+                'Authorization': `Bearer ${idToken}`,
+                'Content-Type': 'application/json'
             }
         });
         
+        console.log('[Load Product] Response status:', response.status);
+        console.log('[Load Product] Response ok:', response.ok);
+        
         if (!response.ok) {
-            throw new Error('商品情報の取得に失敗しました');
+            let errorMessage = `商品情報の取得に失敗しました (HTTP ${response.status})`;
+            try {
+                const errorText = await response.text();
+                console.error('[Load Product] Error response text:', errorText);
+                if (errorText) {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                }
+            } catch (e) {
+                console.error('[Load Product] Error parsing error response:', e);
+            }
+            throw new Error(errorMessage);
         }
         
-        const data = await response.json();
+        const responseText = await response.text();
+        console.log('[Load Product] Response text length:', responseText.length);
+        
+        if (!responseText || responseText.trim() === '') {
+            throw new Error('空のレスポンスが返されました');
+        }
+        
+        const data = JSON.parse(responseText);
+        console.log('[Load Product] Parsed data:', data);
+        
         const items = data.items || [];
         const product = items.find(item => item.product_id === productId);
         
@@ -140,7 +168,16 @@ async function loadProduct(productId) {
         
         return product;
     } catch (error) {
-        console.error('Error loading product:', error);
+        console.error('[Load Product] Error loading product:', error);
+        console.error('[Load Product] Error name:', error.name);
+        console.error('[Load Product] Error message:', error.message);
+        console.error('[Load Product] Error stack:', error.stack);
+        
+        // ネットワークエラーの場合
+        if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+            throw new Error('ネットワークエラー: サーバーに接続できませんでした。インターネット接続を確認してください。');
+        }
+        
         throw error;
     }
 }
