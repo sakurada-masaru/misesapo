@@ -1,0 +1,475 @@
+@layout('layouts.base')
+@json('data/meta/staff_nfc_clock_in_title.json', $title)
+@json('data/meta/staff_nfc_clock_in_body_class.json', $body_class)
+
+<link rel="stylesheet" href="/css/staff-inventory-scan.css" />
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<main class="staff-inventory-scan">
+  <div class="scan-container">
+    <header class="scan-header">
+      <a href="/staff/dashboard" class="back-btn">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+      <h1>NFCタグ打刻</h1>
+    </header>
+
+    <!-- QRコードスキャンエリア -->
+    <div class="scan-section">
+      <div class="scan-area" id="scan-area">
+        <div class="scan-placeholder">
+          <i class="fas fa-qrcode" style="font-size: 4rem; color: #FF679C; margin-bottom: 16px;"></i>
+          <div id="nfc-success" style="display: none; padding: 20px; background: #f0fdf4; border: 2px solid #22c55e; border-radius: 12px; margin-bottom: 24px;">
+            <i class="fas fa-check-circle" style="color: #22c55e; font-size: 2rem; margin-bottom: 12px;"></i>
+            <p style="font-size: 1.1rem; font-weight: 600; color: #166534; margin-bottom: 8px;">打刻が完了しました</p>
+            <p id="nfc-success-info" style="font-size: 0.9rem; color: #15803d;"></p>
+          </div>
+          <div id="nfc-loading" style="display: none; padding: 20px; text-align: center;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #FF679C; margin-bottom: 12px;"></i>
+            <p style="font-size: 1rem; color: #374151;">打刻を処理中...</p>
+          </div>
+          <div id="nfc-placeholder" class="scan-placeholder">
+            <i class="fas fa-mobile-alt" style="font-size: 4rem; color: #FF679C; margin-bottom: 16px;"></i>
+            <p style="font-size: 1rem; color: #374151; margin-bottom: 8px;">NFCタグを読み取ってください</p>
+            <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 24px;">iPhoneをNFCタグに近づけると自動的に打刻されます</p>
+            <button type="button" class="btn btn-outline" id="btn-manual-input" style="width: 100%; max-width: 300px; padding: 16px; font-size: 1rem;">
+              <i class="fas fa-keyboard"></i> 手動入力
+            </button>
+          </div>
+        </div>
+        <div id="reader" style="display: none;"></div>
+      </div>
+    </div>
+
+    <!-- 打刻履歴表示エリア -->
+    <div class="clock-in-history" id="clock-in-history" style="display: none; margin-top: 24px; padding: 16px; background: #fff; border-radius: 12px;">
+      <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; color: #111827;">最近の打刻履歴</h3>
+      <div id="history-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+    </div>
+  </div>
+
+  <!-- 手動入力モーダル -->
+  <div id="manual-input-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
+    <div class="modal-content" style="max-width:400px; width:90%; background:#fff; border-radius:12px; padding:0; overflow:hidden;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="padding:20px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0; font-size:1.25rem; font-weight:600; color:#111827;">手動入力</h3>
+        <button type="button" class="modal-close" onclick="closeManualInputModal()" style="background:transparent; border:none; cursor:pointer; font-size:1.25rem; color:#6b7280; padding:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:24px;">
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div>
+            <label style="display:block; margin-bottom:8px; font-size:0.875rem; font-weight:600; color:#374151;">施設ID</label>
+            <input type="text" id="manual-facility-id" class="form-input" placeholder="例: ABC_001" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;">
+          </div>
+          <div>
+            <label style="display:block; margin-bottom:8px; font-size:0.875rem; font-weight:600; color:#374151;">場所ID</label>
+            <input type="text" id="manual-location-id" class="form-input" placeholder="例: TK_R01_TOILET_IN" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding:16px 24px; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; gap:12px;">
+        <button type="button" class="btn btn-outline" onclick="closeManualInputModal()">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-manual-input">打刻する</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .scan-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .scan-header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+
+    .clock-in-history-item {
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border-left: 4px solid #FF679C;
+    }
+
+    .clock-in-history-item-time {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .clock-in-history-item-info {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+  </style>
+
+  <script>
+    (function() {
+      const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+      let html5QrCode = null;
+
+      // ページ読み込み時にURLパラメータをチェック（NFCタグから開かれた場合）
+      window.addEventListener('DOMContentLoaded', async function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tagId = urlParams.get('tag_id');
+
+        if (tagId) {
+          // NFCタグから開かれた場合、タグ情報を取得してから打刻を実行
+          await handleNFCTagTrigger(tagId);
+        } else {
+          // 通常のアクセスの場合、履歴を表示
+          loadClockInHistory();
+        }
+      });
+
+      // NFCタグトリガー処理
+      async function handleNFCTagTrigger(tagId) {
+        try {
+          // プレースホルダーを非表示、ローディングを表示
+          document.getElementById('nfc-placeholder').style.display = 'none';
+          document.getElementById('nfc-loading').style.display = 'block';
+          document.getElementById('nfc-success').style.display = 'none';
+
+          // タグ情報を取得
+          const response = await fetch(`${REPORT_API}/staff/nfc/tag?tag_id=${tagId}`, {
+            headers: {
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            }
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'タグ情報の取得に失敗しました');
+          }
+
+          const tagInfo = await response.json();
+
+          if (!tagInfo.facility_id || !tagInfo.location_id) {
+            throw new Error('タグ情報が不完全です');
+          }
+
+          // 打刻を実行
+          await handleNFCClockIn(tagInfo.facility_id, tagInfo.location_id, tagInfo);
+
+        } catch (error) {
+          console.error('NFC tag trigger error:', error);
+          document.getElementById('nfc-loading').style.display = 'none';
+          document.getElementById('nfc-placeholder').style.display = 'block';
+          alert('エラー: ' + error.message);
+        }
+      }
+
+      // IDトークン取得
+      async function getFirebaseIdToken() {
+        try {
+          const cognitoIdToken = localStorage.getItem('cognito_id_token');
+          if (cognitoIdToken) return cognitoIdToken;
+          
+          const cognitoUser = localStorage.getItem('cognito_user');
+          if (cognitoUser) {
+            try {
+              const parsed = JSON.parse(cognitoUser);
+              if (parsed.tokens && parsed.tokens.idToken) return parsed.tokens.idToken;
+              if (parsed.idToken) return parsed.idToken;
+            } catch (e) {
+              console.warn('Error parsing cognito user:', e);
+            }
+          }
+          
+          const authData = localStorage.getItem('misesapo_auth');
+          if (authData) {
+            try {
+              const parsed = JSON.parse(authData);
+              if (parsed.token) return parsed.token;
+            } catch (e) {
+              console.warn('Error parsing auth data:', e);
+            }
+          }
+          
+          return 'dev-token';
+        } catch (error) {
+          console.error('Error getting ID token:', error);
+          return 'dev-token';
+        }
+      }
+
+      // 現在のユーザーIDを取得
+      function getCurrentUserId() {
+        try {
+          const cognitoUser = localStorage.getItem('cognito_user');
+          if (cognitoUser) {
+            const parsed = JSON.parse(cognitoUser);
+            // ユーザーIDを取得（emailやusernameから）
+            return parsed.username || parsed.email?.split('@')[0] || 'WKR_001';
+          }
+          
+          const authData = localStorage.getItem('misesapo_auth');
+          if (authData) {
+            const parsed = JSON.parse(authData);
+            return parsed.user?.id || parsed.user?.email?.split('@')[0] || 'WKR_001';
+          }
+          
+          return 'WKR_001'; // デフォルト値
+        } catch (e) {
+          console.error('Error getting user ID:', e);
+          return 'WKR_001';
+        }
+      }
+
+      // NFCタグから開かれた場合の処理
+      async function handleNFCClockIn(facilityId, locationId, tagInfo = null) {
+        // プレースホルダーを非表示、ローディングを表示
+        document.getElementById('nfc-placeholder').style.display = 'none';
+        document.getElementById('nfc-loading').style.display = 'block';
+        document.getElementById('nfc-success').style.display = 'none';
+
+        const success = await recordClockIn(facilityId, locationId);
+
+        // ローディングを非表示
+        document.getElementById('nfc-loading').style.display = 'none';
+
+        if (success) {
+          // 成功メッセージを表示
+          document.getElementById('nfc-success').style.display = 'block';
+          const facilityName = tagInfo?.facility_name || facilityId;
+          const locationName = tagInfo?.location_name || locationId;
+          document.getElementById('nfc-success-info').textContent = 
+            `施設: ${facilityName} | 場所: ${locationName}`;
+          
+          // 履歴を更新
+          loadClockInHistory();
+
+          // 3秒後にダッシュボードに戻る（オプション）
+          setTimeout(() => {
+            if (confirm('ダッシュボードに戻りますか？')) {
+              window.location.href = '/staff/dashboard';
+            }
+          }, 3000);
+        }
+      }
+
+      // 打刻を実行
+      async function recordClockIn(facilityId, locationId) {
+        try {
+          const user_id = getCurrentUserId();
+          
+          const response = await fetch(`${REPORT_API}/staff/nfc/clock-in`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            },
+            body: JSON.stringify({
+              user_id: user_id,
+              facility_id: facilityId,
+              location_id: locationId
+            })
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.status === 'success') {
+            // 成功メッセージを表示
+            showSuccessMessage('打刻が完了しました', result);
+            // 履歴を更新
+            loadClockInHistory();
+            return true;
+          } else {
+            throw new Error(result.error || '打刻に失敗しました');
+          }
+        } catch (error) {
+          console.error('Clock-in error:', error);
+          alert('打刻に失敗しました: ' + error.message);
+          return false;
+        }
+      }
+
+      // 成功メッセージを表示（手動入力時など）
+      function showSuccessMessage(message, result) {
+        const timestamp = new Date(result.timestamp).toLocaleString('ja-JP');
+        alert(`${message}\n\n時刻: ${timestamp}\n施設ID: ${result.facility_id || 'N/A'}\n場所ID: ${result.location_id || 'N/A'}`);
+      }
+
+      // 手動入力で打刻（既存の関数を保持）
+      async function handleManualClockIn() {
+        const facilityId = document.getElementById('manual-facility-id').value.trim();
+        const locationId = document.getElementById('manual-location-id').value.trim();
+
+        if (!facilityId || !locationId) {
+          alert('施設IDと場所IDを入力してください');
+          return;
+        }
+
+        const success = await recordClockIn(facilityId, locationId);
+        if (success) {
+          closeManualInputModal();
+          loadClockInHistory();
+        }
+      }
+
+      // QRコードスキャンを開始（将来の拡張用に保持）
+      async function startScan() {
+        try {
+          const reader = document.getElementById('reader');
+          const placeholder = document.querySelector('.scan-placeholder');
+          
+          reader.style.display = 'block';
+          placeholder.style.display = 'none';
+          
+          html5QrCode = new Html5Qrcode("reader");
+          
+          await html5QrCode.start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 250 }
+            },
+            async (decodedText, decodedResult) => {
+              // QRコードが読み取られた
+              await handleScannedCode(decodedText);
+              stopScan();
+            },
+            (errorMessage) => {
+              // エラーは無視（継続スキャン）
+            }
+          );
+        } catch (error) {
+          console.error('Error starting scan:', error);
+          const reader = document.getElementById('reader');
+          const placeholder = document.querySelector('.scan-placeholder');
+          reader.style.display = 'none';
+          placeholder.style.display = 'block';
+          alert('カメラを起動できませんでした。手動入力を使用してください。');
+        }
+      }
+
+      // QRコードスキャンを停止
+      function stopScan() {
+        if (html5QrCode && html5QrCode.isScanning) {
+          html5QrCode.stop().then(() => {
+            html5QrCode.clear();
+            html5QrCode = null;
+          }).catch(err => {
+            console.error('Error stopping scan:', err);
+          });
+        }
+        
+        const reader = document.getElementById('reader');
+        if (reader) {
+          reader.style.display = 'none';
+        }
+        const placeholder = document.querySelector('.scan-placeholder');
+        if (placeholder) {
+          placeholder.style.display = 'block';
+        }
+      }
+
+      // スキャンされたコードを処理
+      async function handleScannedCode(code) {
+        try {
+          // QRコードからJSONをパース
+          const data = JSON.parse(code);
+          
+          if (!data.facility_id || !data.location_id) {
+            throw new Error('QRコードに必要な情報が含まれていません');
+          }
+
+          // 打刻を実行
+          await recordClockIn(data.facility_id, data.location_id);
+        } catch (error) {
+          console.error('Error handling scanned code:', error);
+          alert('QRコードの読み取りに失敗しました: ' + error.message);
+        }
+      }
+
+      // 手動入力モーダルを開く
+      function openManualInputModal() {
+        document.getElementById('manual-input-modal').style.display = 'flex';
+      }
+
+      // 手動入力モーダルを閉じる
+      function closeManualInputModal() {
+        document.getElementById('manual-input-modal').style.display = 'none';
+        document.getElementById('manual-facility-id').value = '';
+        document.getElementById('manual-location-id').value = '';
+      }
+
+
+      // 打刻履歴を読み込み
+      async function loadClockInHistory() {
+        try {
+          const user_id = getCurrentUserId();
+          const response = await fetch(`${REPORT_API}/staff/nfc/clock-in?user_id=${user_id}&limit=5`, {
+            headers: {
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            }
+          });
+
+          if (!response.ok) return;
+
+          const result = await response.json();
+          const logs = result.logs || [];
+
+          if (logs.length > 0) {
+            const historySection = document.getElementById('clock-in-history');
+            const historyList = document.getElementById('history-list');
+            
+            historySection.style.display = 'block';
+            historyList.innerHTML = logs.map(log => {
+              const timestamp = new Date(log.timestamp).toLocaleString('ja-JP');
+              return `
+                <div class="clock-in-history-item">
+                  <div class="clock-in-history-item-time">${timestamp}</div>
+                  <div class="clock-in-history-item-info">
+                    施設: ${log.facility_id || 'N/A'} | 場所: ${log.location_id || 'N/A'}
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+        } catch (error) {
+          console.error('Error loading history:', error);
+        }
+      }
+
+      // イベントリスナー
+      document.getElementById('btn-manual-input').addEventListener('click', openManualInputModal);
+      document.getElementById('btn-confirm-manual-input').addEventListener('click', handleManualClockIn);
+      window.closeManualInputModal = closeManualInputModal;
+
+      // ページを離れる時にスキャンを停止
+      window.addEventListener('beforeunload', () => {
+        stopScan();
+      });
+    })();
+  </script>
+</main>
+

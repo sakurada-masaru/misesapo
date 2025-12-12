@@ -396,7 +396,7 @@
             const parsed = JSON.parse(authData);
             if (parsed.token) {
               return parsed.token;
-            }
+        }
           } catch (e) {
             console.warn('Error parsing auth data:', e);
           }

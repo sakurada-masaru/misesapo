@@ -3,6 +3,7 @@ import boto3
 import base64
 import os
 import uuid
+import hashlib
 from datetime import datetime, timedelta, timezone
 from boto3.dynamodb.conditions import Key, Attr
 
@@ -353,6 +354,8 @@ dynamodb = boto3.resource('dynamodb')
 ANNOUNCEMENTS_TABLE = dynamodb.Table('business-announcements')
 ANNOUNCEMENT_READS_TABLE = dynamodb.Table('business-announcement-reads')
 REPORTS_TABLE = dynamodb.Table('staff-reports')
+CLEANING_LOGS_TABLE = dynamodb.Table('cleaning-logs')
+NFC_TAGS_TABLE = dynamodb.Table('nfc-tags')
 SCHEDULES_TABLE = dynamodb.Table('schedules')
 ESTIMATES_TABLE = dynamodb.Table('estimates')
 WORKERS_TABLE = dynamodb.Table('workers')
@@ -575,6 +578,12 @@ def lambda_handler(event, context):
             # 業務連絡一覧取得（清掃員向け）
             if method == 'GET':
                 return get_staff_announcements(event, headers)
+        elif normalized_path == '/staff/nfc/clock-in':
+            # NFCタグ打刻
+            if method == 'POST':
+                return handle_nfc_clock_in(event, headers)
+            elif method == 'GET':
+                return get_nfc_clock_in_logs(event, headers)
         elif normalized_path.startswith('/staff/announcements/') and normalized_path.endswith('/read'):
             # 業務連絡の既読マーク
             announcement_id = normalized_path.split('/')[-2]
@@ -1607,7 +1616,7 @@ def upload_photo_to_s3(base64_image, s3_key):
         print(f"Error uploading photo to S3: {str(e)}")
         raise
 
-def upload_report_photo_with_metadata(base64_image, category, cleaning_date, staff_id=None):
+def upload_report_photo_with_metadata(base64_image, category, cleaning_date, staff_id=None, folder_name=None, image_hash=None):
     """
     レポート用画像を日付単位でS3に保存し、メタデータをDynamoDBに保存
     
@@ -1616,11 +1625,41 @@ def upload_report_photo_with_metadata(base64_image, category, cleaning_date, sta
         category: 'before' または 'after'
         cleaning_date: 清掃日 (YYYY-MM-DD形式)
         staff_id: 清掃員ID（オプション）
+        folder_name: フォルダ名（オプション）
+        image_hash: 画像のハッシュ値（オプション、指定されない場合は計算）
     
     Returns:
-        dict: { image_id, url, category, date }
+        dict: { image_id, url, category, date, folder_name }
     """
     try:
+        # 画像データをデコード
+        if ',' in base64_image:
+            base64_image = base64_image.split(',')[-1]
+        image_data = base64.b64decode(base64_image)
+        
+        # ハッシュ値を計算（指定されていない場合）
+        if not image_hash:
+            image_hash = hashlib.sha256(image_data).hexdigest()
+        
+        # 重複チェック：同じハッシュ値の画像が既に存在するか確認
+        report_images_table = dynamodb.Table('report-images')
+        try:
+            response = report_images_table.scan(
+                FilterExpression=Attr('image_hash').eq(image_hash)
+            )
+            existing_images = response.get('Items', [])
+            
+            if existing_images:
+                # 既存の画像が見つかった場合、エラーを返す
+                existing_image = existing_images[0]
+                raise ValueError(f'この画像は既にアップロードされています（画像ID: {existing_image.get("image_id", "unknown")}）')
+        except Exception as e:
+            # 重複エラーの場合はそのまま再スロー
+            if '既にアップロードされています' in str(e):
+                raise
+            # その他のエラー（テーブルが存在しない、属性がないなど）は無視して続行
+            print(f"Warning: Could not check for duplicates: {str(e)}")
+        
         # 画像IDを生成（ユニークなUUID）
         image_id = str(uuid.uuid4())[:8]
         
@@ -1630,15 +1669,17 @@ def upload_report_photo_with_metadata(base64_image, category, cleaning_date, sta
         month = date_parts[1]
         day = date_parts[2]
         
-        # S3キーを生成（日付単位のパス）
-        # before/2025/12/04/abc12345.jpg
-        s3_key = f"{category}/{year}/{month}/{day}/{image_id}.jpg"
+        # S3キーを生成（フォルダ名がある場合は含める）
+        # before/2025/12/04/abc12345.jpg または
+        # before/2025/12/04/フォルダ名/abc12345.jpg
+        if folder_name:
+            # フォルダ名を安全な文字列に変換（スラッシュやスペースをアンダースコアに）
+            safe_folder_name = folder_name.replace('/', '_').replace(' ', '_')
+            s3_key = f"{category}/{year}/{month}/{day}/{safe_folder_name}/{image_id}.jpg"
+        else:
+            s3_key = f"{category}/{year}/{month}/{day}/{image_id}.jpg"
         
         # S3にアップロード
-        if ',' in base64_image:
-            base64_image = base64_image.split(',')[-1]
-        image_data = base64.b64decode(base64_image)
-        
         s3_client.put_object(
             Bucket=S3_BUCKET_NAME,
             Key=s3_key,
@@ -1650,7 +1691,6 @@ def upload_report_photo_with_metadata(base64_image, category, cleaning_date, sta
         photo_url = f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/{s3_key}"
         
         # メタデータをDynamoDBに保存
-        report_images_table = dynamodb.Table('report-images')
         metadata = {
             'image_id': image_id,
             'url': photo_url,
@@ -1659,29 +1699,44 @@ def upload_report_photo_with_metadata(base64_image, category, cleaning_date, sta
             'cleaning_date': cleaning_date,
             'staff_id': staff_id or 'unknown',
             'uploaded_at': datetime.now(timezone(timedelta(hours=9))).isoformat(),
-            'used_in_reports': []  # このカラムに使用されたレポートIDを追加
+            'used_in_reports': [],  # このカラムに使用されたレポートIDを追加
+            'image_hash': image_hash  # ハッシュ値を保存
         }
+        
+        # フォルダ名がある場合はメタデータに追加
+        if folder_name:
+            metadata['folder_name'] = folder_name
+        
         report_images_table.put_item(Item=metadata)
         
-        print(f"[upload_report_photo] Saved: {s3_key}")
+        print(f"[upload_report_photo] Saved: {s3_key} (hash: {image_hash[:16]}...)")
         
-        return {
+        result = {
             'image_id': image_id,
             'url': photo_url,
             'category': category,
             'date': cleaning_date
         }
+        
+        if folder_name:
+            result['folder_name'] = folder_name
+        
+        return result
+    except ValueError as e:
+        # 重複エラーはそのまま再スロー
+        raise
     except Exception as e:
         print(f"Error uploading report photo: {str(e)}")
         raise
 
-def get_report_images_by_date(cleaning_date, category=None):
+def get_report_images_by_date(cleaning_date, category=None, folder_name=None):
     """
     日付で画像を取得
     
     Args:
         cleaning_date: 清掃日 (YYYY-MM-DD形式)
         category: 'before', 'after', または None（両方）
+        folder_name: フォルダ名（オプション、指定された場合はそのフォルダのみ）
     
     Returns:
         list: 画像メタデータのリスト
@@ -1689,15 +1744,16 @@ def get_report_images_by_date(cleaning_date, category=None):
     try:
         report_images_table = dynamodb.Table('report-images')
         
-        # 日付でフィルタ
+        # フィルタ式を構築
+        filter_expr = Attr('cleaning_date').eq(cleaning_date)
+        
         if category:
-            response = report_images_table.scan(
-                FilterExpression=Attr('cleaning_date').eq(cleaning_date) & Attr('category').eq(category)
-            )
-        else:
-            response = report_images_table.scan(
-                FilterExpression=Attr('cleaning_date').eq(cleaning_date)
-            )
+            filter_expr = filter_expr & Attr('category').eq(category)
+        
+        if folder_name:
+            filter_expr = filter_expr & Attr('folder_name').eq(folder_name)
+        
+        response = report_images_table.scan(FilterExpression=filter_expr)
         
         images = response.get('Items', [])
         
@@ -1717,6 +1773,8 @@ def upload_report_image(event, headers):
         - image: Base64エンコードされた画像
         - category: 'before' または 'after'
         - cleaning_date: 清掃日 (YYYY-MM-DD形式)
+        - folder_name: フォルダ名（オプション）
+        - image_hash: 画像のハッシュ値（オプション）
     """
     try:
         body = json.loads(event.get('body', '{}'))
@@ -1725,6 +1783,8 @@ def upload_report_image(event, headers):
         category = body.get('category')
         cleaning_date = body.get('cleaning_date')
         staff_id = body.get('staff_id', 'unknown')
+        folder_name = body.get('folder_name')  # フォルダ名（オプション）
+        image_hash = body.get('image_hash')  # ハッシュ値（オプション）
         
         # バリデーション
         if not image_data:
@@ -1745,8 +1805,20 @@ def upload_report_image(event, headers):
             # 清掃日が指定されていない場合は今日の日付を使用
             cleaning_date = datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d')
         
+        # フォルダ名のバリデーション（空文字列の場合はNoneに変換）
+        if folder_name and folder_name.strip():
+            folder_name = folder_name.strip()
+            if len(folder_name) > 50:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'フォルダ名は50文字以内で指定してください'}, ensure_ascii=False)
+                }
+        else:
+            folder_name = None
+        
         # 画像をアップロード
-        result = upload_report_photo_with_metadata(image_data, category, cleaning_date, staff_id)
+        result = upload_report_photo_with_metadata(image_data, category, cleaning_date, staff_id, folder_name, image_hash)
         
         return {
             'statusCode': 200,
@@ -1757,12 +1829,308 @@ def upload_report_image(event, headers):
             }, ensure_ascii=False)
         }
         
+    except ValueError as e:
+        # 重複エラー
+        error_message = str(e)
+        return {
+            'statusCode': 409,  # Conflict
+            'headers': headers,
+            'body': json.dumps({'error': error_message}, ensure_ascii=False)
+        }
     except Exception as e:
         print(f"Error uploading report image: {str(e)}")
         return {
             'statusCode': 500,
             'headers': headers,
             'body': json.dumps({'error': str(e)}, ensure_ascii=False)
+        }
+
+def handle_nfc_clock_in(event, headers):
+    """
+    NFCタグ打刻処理
+    
+    Request Body:
+        {
+            "user_id": "WKR_001",
+            "facility_id": "ABC_001",
+            "location_id": "TK_R01_TOILET_IN"
+        }
+    
+    Returns:
+        - 200: 打刻成功
+        - 400: 入力データ不足
+        - 500: サーバーエラー
+    """
+    try:
+        # リクエストボディを取得
+        body = event.get('body', '{}')
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = body
+        
+        # 必須パラメータの取得
+        user_id = body_json.get('user_id')
+        facility_id = body_json.get('facility_id')
+        location_id = body_json.get('location_id')
+        
+        # バリデーション
+        if not user_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'user_id is required'
+                }, ensure_ascii=False)
+            }
+        
+        if not facility_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'facility_id is required'
+                }, ensure_ascii=False)
+            }
+        
+        if not location_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'location_id is required'
+                }, ensure_ascii=False)
+            }
+        
+        # 現在時刻をUTC形式で取得
+        timestamp = datetime.now(timezone.utc).isoformat()
+        
+        # 打刻ログIDを生成（UUID）
+        log_id = str(uuid.uuid4())
+        
+        # DynamoDBに保存するデータ
+        log_item = {
+            'log_id': log_id,  # パーティションキー
+            'timestamp': timestamp,  # ソートキー
+            'user_id': user_id,
+            'facility_id': facility_id,
+            'location_id': location_id,
+            'created_at': timestamp
+        }
+        
+        # DynamoDBに保存
+        CLEANING_LOGS_TABLE.put_item(Item=log_item)
+        
+        print(f"[NFC Clock-in] Recorded: user_id={user_id}, facility_id={facility_id}, location_id={location_id}, timestamp={timestamp}")
+        
+        # 成功レスポンス
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'Clock-in recorded',
+                'log_id': log_id,
+                'timestamp': timestamp
+            }, ensure_ascii=False)
+        }
+        
+    except json.JSONDecodeError as e:
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'Invalid JSON format',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error handling NFC clock-in: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'Internal server error',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_nfc_clock_in_logs(event, headers):
+    """
+    NFCタグ打刻ログを取得
+    
+    Query Parameters:
+        - user_id: ユーザーID（オプション）
+        - facility_id: 施設ID（オプション）
+        - location_id: 場所ID（オプション）
+        - start_date: 開始日時（ISO 8601形式、オプション）
+        - end_date: 終了日時（ISO 8601形式、オプション）
+        - limit: 取得件数（デフォルト: 100、最大: 1000）
+    
+    Returns:
+        - 200: ログ取得成功
+        - 500: サーバーエラー
+    """
+    try:
+        # クエリパラメータを取得
+        params = event.get('queryStringParameters') or {}
+        user_id = params.get('user_id')
+        facility_id = params.get('facility_id')
+        location_id = params.get('location_id')
+        start_date = params.get('start_date')
+        end_date = params.get('end_date')
+        limit = int(params.get('limit', 100))
+        
+        # リミットの最大値を制限
+        if limit > 1000:
+            limit = 1000
+        if limit < 1:
+            limit = 100
+        
+        # フィルタ式を構築
+        filter_expressions = []
+        
+        if user_id:
+            filter_expressions.append(Attr('user_id').eq(user_id))
+        if facility_id:
+            filter_expressions.append(Attr('facility_id').eq(facility_id))
+        if location_id:
+            filter_expressions.append(Attr('location_id').eq(location_id))
+        if start_date:
+            filter_expressions.append(Attr('timestamp').gte(start_date))
+        if end_date:
+            filter_expressions.append(Attr('timestamp').lte(end_date))
+        
+        # スキャンまたはクエリを実行
+        if filter_expressions:
+            # フィルタがある場合はスキャン
+            filter_expr = filter_expressions[0]
+            for expr in filter_expressions[1:]:
+                filter_expr = filter_expr & expr
+            
+            response = CLEANING_LOGS_TABLE.scan(
+                FilterExpression=filter_expr,
+                Limit=limit
+            )
+        else:
+            # フィルタがない場合は全件スキャン（リミット付き）
+            response = CLEANING_LOGS_TABLE.scan(Limit=limit)
+        
+        logs = response.get('Items', [])
+        
+        # timestampでソート（新しい順）
+        logs.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
+        print(f"[NFC Clock-in Logs] Retrieved {len(logs)} logs")
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'count': len(logs),
+                'logs': logs
+            }, ensure_ascii=False, default=str)
+        }
+        
+    except Exception as e:
+        print(f"Error getting NFC clock-in logs: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'Internal server error',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_nfc_tag_info(event, headers):
+    """
+    NFCタグ情報を取得（トリガー用）
+    
+    Query Parameters:
+        - tag_id: NFCタグID（必須）
+    
+    Returns:
+        - 200: タグ情報取得成功
+        - 404: タグが見つからない
+        - 400: tag_idが指定されていない
+        - 500: サーバーエラー
+    """
+    try:
+        # クエリパラメータを取得
+        params = event.get('queryStringParameters') or {}
+        tag_id = params.get('tag_id')
+        
+        if not tag_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'tag_id is required'
+                }, ensure_ascii=False)
+            }
+        
+        # DynamoDBからタグ情報を取得
+        try:
+            response = NFC_TAGS_TABLE.get_item(
+                Key={'tag_id': tag_id}
+            )
+            
+            if 'Item' not in response:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': 'NFC tag not found',
+                        'tag_id': tag_id
+                    }, ensure_ascii=False)
+                }
+            
+            tag_info = response['Item']
+            
+            print(f"[NFC Tag Info] Retrieved: tag_id={tag_id}, facility_id={tag_info.get('facility_id')}, location_id={tag_info.get('location_id')}")
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'status': 'success',
+                    'tag_id': tag_id,
+                    'facility_id': tag_info.get('facility_id'),
+                    'location_id': tag_info.get('location_id'),
+                    'facility_name': tag_info.get('facility_name'),
+                    'location_name': tag_info.get('location_name'),
+                    'description': tag_info.get('description')
+                }, ensure_ascii=False, default=str)
+            }
+            
+        except Exception as db_error:
+            print(f"Error querying NFC tag: {str(db_error)}")
+            return {
+                'statusCode': 500,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'Failed to retrieve NFC tag information',
+                    'message': str(db_error)
+                }, ensure_ascii=False)
+            }
+        
+    except Exception as e:
+        print(f"Error getting NFC tag info: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'Internal server error',
+                'message': str(e)
+            }, ensure_ascii=False)
         }
 
 def get_report_images(event, headers):
@@ -1772,19 +2140,25 @@ def get_report_images(event, headers):
     Query Parameters:
         - date: 清掃日 (YYYY-MM-DD形式)
         - category: 'before', 'after', または指定なし（両方）
+        - folder_name: フォルダ名（オプション、指定された場合はそのフォルダのみ）
     """
     try:
         # クエリパラメータを取得
         params = event.get('queryStringParameters') or {}
         cleaning_date = params.get('date')
         category = params.get('category')
+        folder_name = params.get('folder_name')  # フォルダ名（オプション）
         
         if not cleaning_date:
             # 日付が指定されていない場合は今日の日付を使用
             cleaning_date = datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d')
         
+        # フォルダ名が空文字列の場合はNoneに変換
+        if folder_name and not folder_name.strip():
+            folder_name = None
+        
         # 画像を取得
-        images = get_report_images_by_date(cleaning_date, category)
+        images = get_report_images_by_date(cleaning_date, category, folder_name)
         
         return {
             'statusCode': 200,
@@ -1792,6 +2166,7 @@ def get_report_images(event, headers):
             'body': json.dumps({
                 'date': cleaning_date,
                 'category': category,
+                'folder_name': folder_name,
                 'images': images,
                 'count': len(images)
             }, ensure_ascii=False, default=str)

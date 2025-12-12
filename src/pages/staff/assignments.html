@@ -19,6 +19,20 @@
     </label>
   </div>
 
+  <!-- フォルダ選択・作成 -->
+  <div class="folder-section">
+    <div class="folder-select-wrapper">
+      <label for="folder-select" class="folder-label">フォルダ:</label>
+      <select id="folder-select" class="folder-select">
+        <option value="">全てのフォルダ</option>
+      </select>
+      <button type="button" class="btn-create-folder" id="btn-create-folder">
+        <i class="fas fa-folder-plus"></i>
+        <span>新規フォルダ</span>
+      </button>
+    </div>
+  </div>
+
   <!-- フィルター -->
   <div class="filter-tabs">
     <button class="tab-btn active" data-filter="all">全て</button>
@@ -34,6 +48,29 @@
       <p>読み込み中...</p>
       </div>
     </div>
+
+  <!-- 新規フォルダ作成モーダル -->
+  <div id="create-folder-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>新規フォルダを作成</h3>
+        <button type="button" class="modal-close" onclick="closeCreateFolderModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="new-folder-name">フォルダ名</label>
+          <input type="text" id="new-folder-name" class="form-input" placeholder="例: 案件A、店舗名など" maxlength="50">
+          <p class="form-hint">フォルダ名を入力してください（最大50文字）</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeCreateFolderModal()">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="confirm-create-folder-btn">作成</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 画像プレビューモーダル -->
   <div id="image-preview-modal" class="modal-overlay" style="display:none;">
@@ -173,6 +210,115 @@
       margin-left: auto;
     }
 
+    .folder-section {
+      margin-bottom: 20px;
+      padding: 12px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .folder-select-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .folder-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      white-space: nowrap;
+    }
+
+    .folder-select {
+      flex: 1;
+      min-width: 150px;
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      font-size: 0.875rem;
+      color: #374151;
+      cursor: pointer;
+    }
+
+    .folder-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+
+    .btn-create-folder {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: #10b981;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-create-folder:hover {
+      background: #059669;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-create-folder i {
+      font-size: 0.875rem;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      color: #374151;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+
+    .form-hint {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #FF5A9A;
+    }
+
     .media-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -267,6 +413,18 @@
       justify-content: center;
       z-index: 10000;
       padding: 20px;
+      cursor: pointer;
+    }
+
+    .modal-content {
+      max-width: 500px;
+      width: 100%;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: default;
     }
 
     .image-preview-content {
@@ -277,6 +435,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      cursor: default;
     }
 
     .modal-header {
@@ -389,6 +548,8 @@
       let currentImages = [];
       let currentFilter = 'all';
       let currentDate = '';
+      let currentFolder = '';
+      let availableFolders = [];
       let selectedImageId = null;
 
       // IDトークン取得（Cognito/localStorageから取得）
@@ -448,6 +609,14 @@
         }
       }
 
+      // 画像のハッシュ値を計算（SHA-256）
+      async function calculateImageHash(blob) {
+        const arrayBuffer = await blob.arrayBuffer();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+
       // 画像をBase64に変換
       function blobToBase64(blob) {
         return new Promise((resolve, reject) => {
@@ -499,17 +668,62 @@
         });
       }
 
+      // 画像の重複チェック（簡易版：既存の画像一覧と比較）
+      async function checkDuplicateImage(imageHash) {
+        // 現在の日付の画像一覧を取得してハッシュ値を比較
+        const cleaningDate = currentDate || new Date().toISOString().split('T')[0];
+        let url = `${REPORT_API}/staff/report-images?date=${cleaningDate}`;
+        
+        try {
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const images = data.images || [];
+            // 既存の画像のハッシュ値と比較
+            return images.some(img => img.image_hash === imageHash);
+          }
+        } catch (error) {
+          console.warn('Duplicate check error:', error);
+          // エラーが発生してもアップロードは続行
+        }
+        return false;
+      }
+
       // 画像をアップロード
       async function uploadImage(file) {
         try {
           const optimizedBlob = await optimizeImage(file);
+          
+          // 画像のハッシュ値を計算
+          const imageHash = await calculateImageHash(optimizedBlob);
+          
+          // 重複チェック
+          const isDuplicate = await checkDuplicateImage(imageHash);
+          if (isDuplicate) {
+            throw new Error('この画像は既にアップロードされています');
+          }
+          
           const base64 = await blobToBase64(optimizedBlob);
           const cleaningDate = currentDate || new Date().toISOString().split('T')[0];
+          const folderName = currentFolder || null;
+          
+          // 選択中のカテゴリを取得（'all'の場合は'after'をデフォルトに）
+          let category = currentFilter;
+          if (category === 'all') {
+            category = 'after'; // デフォルトは作業後
+          }
 
           const requestBody = {
             image: base64,
-            category: 'after',
-            cleaning_date: cleaningDate
+            category: category,
+            cleaning_date: cleaningDate,
+            folder_name: folderName,
+            image_hash: imageHash  // ハッシュ値を送信
           };
 
           const response = await fetch(`${REPORT_API}/staff/report-images`, {
@@ -522,7 +736,11 @@
           });
 
           if (!response.ok) {
-            throw new Error('アップロードに失敗しました');
+            const errorData = await response.json().catch(() => ({}));
+            if (errorData.error && errorData.error.includes('重複')) {
+              throw new Error('この画像は既にアップロードされています');
+            }
+            throw new Error(errorData.error || 'アップロードに失敗しました');
           }
 
           const result = await response.json();
@@ -533,15 +751,75 @@
         }
       }
 
+      // フォルダ一覧を取得
+      async function loadFolders() {
+        try {
+          const cleaningDate = currentDate || new Date().toISOString().split('T')[0];
+          let url = `${REPORT_API}/staff/report-images?date=${cleaningDate}`;
+          
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error('フォルダの取得に失敗しました');
+          }
+
+          const data = await response.json();
+          const images = data.images || [];
+          
+          // フォルダ名の一意リストを取得
+          const folderSet = new Set();
+          images.forEach(img => {
+            if (img.folder_name) {
+              folderSet.add(img.folder_name);
+            }
+          });
+          
+          availableFolders = Array.from(folderSet).sort();
+          updateFolderSelect();
+        } catch (error) {
+          console.error('Load folders error:', error);
+        }
+      }
+
+      // フォルダ選択を更新
+      function updateFolderSelect() {
+        const select = document.getElementById('folder-select');
+        const currentValue = select.value;
+        
+        // 「全てのフォルダ」オプションを保持
+        select.innerHTML = '<option value="">全てのフォルダ</option>';
+        
+        // フォルダオプションを追加
+        availableFolders.forEach(folder => {
+          const option = document.createElement('option');
+          option.value = folder;
+          option.textContent = folder;
+          select.appendChild(option);
+        });
+        
+        // 以前の選択を復元
+        if (currentValue && availableFolders.includes(currentValue)) {
+          select.value = currentValue;
+        }
+      }
+
       // 画像一覧を取得
       async function loadImages() {
         const grid = document.getElementById('media-grid');
         grid.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>読み込み中...</p></div>';
 
         try {
-          let url = `${REPORT_API}/staff/report-images?date=${currentDate || new Date().toISOString().split('T')[0]}`;
+          const cleaningDate = currentDate || new Date().toISOString().split('T')[0];
+          let url = `${REPORT_API}/staff/report-images?date=${cleaningDate}`;
           if (currentFilter !== 'all') {
             url += `&category=${currentFilter}`;
+          }
+          if (currentFolder) {
+            url += `&folder_name=${encodeURIComponent(currentFolder)}`;
           }
 
           const response = await fetch(url, {
@@ -600,8 +878,10 @@
           previewImg.src = imageUrl;
           const date = new Date(image.cleaning_date).toLocaleDateString('ja-JP');
           const categoryLabel = image.category === 'before' ? '作業前' : '作業後';
+          const folderName = image.folder_name || 'フォルダなし';
           imageInfo.innerHTML = `
             <div><strong>カテゴリ:</strong> ${categoryLabel}</div>
+            <div><strong>フォルダ:</strong> ${folderName}</div>
             <div><strong>日付:</strong> ${date}</div>
             <div><strong>アップロード日時:</strong> ${new Date(image.uploaded_at).toLocaleString('ja-JP')}</div>
           `;
@@ -649,6 +929,61 @@
         }
       }
 
+      // 新規フォルダ作成モーダルを開く
+      window.openCreateFolderModal = function() {
+        const modal = document.getElementById('create-folder-modal');
+        const input = document.getElementById('new-folder-name');
+        input.value = '';
+        modal.style.display = 'flex';
+        input.focus();
+      };
+
+      // 新規フォルダ作成モーダルを閉じる
+      window.closeCreateFolderModal = function() {
+        const modal = document.getElementById('create-folder-modal');
+        modal.style.display = 'none';
+      };
+
+      // モーダルの背景クリックで閉じる
+      document.getElementById('create-folder-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'create-folder-modal') {
+          closeCreateFolderModal();
+        }
+      });
+
+      // 新規フォルダを作成
+      async function createFolder() {
+        const folderName = document.getElementById('new-folder-name').value.trim();
+        
+        if (!folderName) {
+          alert('フォルダ名を入力してください');
+          return;
+        }
+
+        if (folderName.length > 50) {
+          alert('フォルダ名は50文字以内で入力してください');
+          return;
+        }
+
+        // 既存のフォルダ名と重複チェック
+        if (availableFolders.includes(folderName)) {
+          alert('このフォルダ名は既に存在します');
+          return;
+        }
+
+        // フォルダを追加（実際のAPIは後で実装）
+        availableFolders.push(folderName);
+        availableFolders.sort();
+        updateFolderSelect();
+        
+        // 作成したフォルダを選択
+        document.getElementById('folder-select').value = folderName;
+        currentFolder = folderName;
+        
+        closeCreateFolderModal();
+        loadImages();
+      }
+
       // イベントリスナー
       document.getElementById('media-file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
@@ -660,6 +995,8 @@
 
         let successCount = 0;
         let errorCount = 0;
+        let duplicateCount = 0;
+        const errorMessages = [];
 
         for (const file of files) {
           try {
@@ -668,14 +1005,35 @@
           } catch (error) {
             console.error('Upload error:', error);
             errorCount++;
+            const errorMessage = error.message || 'アップロードに失敗しました';
+            
+            if (errorMessage.includes('既にアップロードされています') || errorMessage.includes('重複')) {
+              duplicateCount++;
+            } else {
+              errorMessages.push(`${file.name}: ${errorMessage}`);
+            }
           }
         }
 
         e.target.value = '';
+        loadFolders();
         loadImages();
 
-        if (errorCount > 0) {
-          alert(`${successCount}件の画像をアップロードしました（${errorCount}件失敗）`);
+        // 結果を表示
+        if (errorCount > 0 || duplicateCount > 0) {
+          let message = `${successCount}件の画像をアップロードしました`;
+          if (duplicateCount > 0) {
+            message += `\n${duplicateCount}件の画像は既にアップロード済みのためスキップしました`;
+          }
+          if (errorMessages.length > 0) {
+            message += `\n\nエラー:\n${errorMessages.slice(0, 3).join('\n')}`;
+            if (errorMessages.length > 3) {
+              message += `\n...他${errorMessages.length - 3}件`;
+            }
+          }
+          alert(message);
+        } else if (successCount > 0) {
+          alert(`${successCount}件の画像をアップロードしました`);
         }
       });
 
@@ -690,7 +1048,25 @@
 
       document.getElementById('media-date-filter').addEventListener('change', (e) => {
         currentDate = e.target.value;
+        currentFolder = ''; // 日付変更時はフォルダ選択をリセット
+        document.getElementById('folder-select').value = '';
+        loadFolders();
         loadImages();
+      });
+
+      document.getElementById('folder-select').addEventListener('change', (e) => {
+        currentFolder = e.target.value;
+        loadImages();
+      });
+
+      document.getElementById('btn-create-folder').addEventListener('click', openCreateFolderModal);
+      document.getElementById('confirm-create-folder-btn').addEventListener('click', createFolder);
+
+      // フォルダ作成モーダルでEnterキーを押したら作成
+      document.getElementById('new-folder-name').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          createFolder();
+        }
       });
 
       document.getElementById('delete-image-btn').addEventListener('click', () => {
@@ -702,6 +1078,7 @@
       // 初期化
       document.getElementById('media-date-filter').value = new Date().toISOString().split('T')[0];
       currentDate = new Date().toISOString().split('T')[0];
+      loadFolders();
       loadImages();
     })();
   </script>

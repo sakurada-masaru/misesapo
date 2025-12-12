@@ -4617,9 +4617,9 @@
         
         modal.style.display = 'none';
         
-        if (source === 'warehouse') {
-          // AWS画像倉庫から選択
-          openCleaningItemImageWarehouseDialog(modalSectionId, modalImageContentId, modalCategory);
+        if (source === 'media') {
+          // メディアから選択
+          openMediaSelectionDialog(modalSectionId, modalImageContentId, modalCategory);
         } else if (source === 'library') {
           // スマホから写真を選択
           openCleaningItemImageLibraryPicker(modalSectionId, modalImageContentId, modalCategory);
@@ -4628,7 +4628,322 @@
     });
   };
   
-  // AWS画像倉庫から選択
+  // メディア選択ダイアログを開く
+  function openMediaSelectionDialog(sectionId, imageContentId, category) {
+    const mediaDialog = document.getElementById('media-selection-dialog');
+    if (!mediaDialog) return;
+    
+    // 既存の画像リストを保存（キャンセル時に復元するため）
+    const imageList = document.getElementById(`${imageContentId}-${category}`);
+    if (imageList) {
+      mediaDialog.dataset.originalImageListHTML = imageList.innerHTML;
+    }
+    
+    // ダイアログに情報を保存
+    mediaDialog.dataset.sectionId = sectionId;
+    mediaDialog.dataset.imageContentId = imageContentId;
+    mediaDialog.dataset.category = category;
+    
+    // 日付を今日に設定
+    const dateInput = document.getElementById('media-selection-date');
+    if (dateInput) {
+      const today = new Date().toISOString().split('T')[0];
+      dateInput.value = today;
+    }
+    
+    // フォルダ一覧を読み込み
+    loadMediaFolders();
+    
+    // 画像を読み込み
+    loadMediaImages();
+    
+    // ダイアログを表示
+    mediaDialog.style.display = 'flex';
+    
+    // 保存ボタンのイベントリスナーを設定
+    const saveBtn = document.getElementById('save-media-selection-btn');
+    if (saveBtn) {
+      const newSaveBtn = saveBtn.cloneNode(true);
+      saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+      
+      newSaveBtn.addEventListener('click', function() {
+        const selectedImages = document.querySelectorAll('#media-selection-grid .media-item.selected');
+        if (selectedImages.length > 0) {
+          selectedImages.forEach(item => {
+            const imageId = item.dataset.imageId;
+            const imageUrl = item.querySelector('img')?.src;
+            const imageData = item.dataset.imageData ? JSON.parse(item.dataset.imageData) : null;
+            if (imageId && imageUrl) {
+              addImageToCleaningItemFromMedia(sectionId, imageContentId, category, imageId, imageUrl, imageData);
+            }
+          });
+        }
+        closeMediaSelectionDialog();
+      });
+    }
+    
+    // フィルター変更時のイベントリスナー
+    const dateInputEl = document.getElementById('media-selection-date');
+    const folderSelectEl = document.getElementById('media-selection-folder');
+    const categorySelectEl = document.getElementById('media-selection-category');
+    
+    if (dateInputEl) {
+      const newDateInput = dateInputEl.cloneNode(true);
+      dateInputEl.parentNode.replaceChild(newDateInput, dateInputEl);
+      newDateInput.addEventListener('change', () => {
+        loadMediaFolders();
+        loadMediaImages();
+      });
+    }
+    
+    if (folderSelectEl) {
+      const newFolderSelect = folderSelectEl.cloneNode(true);
+      folderSelectEl.parentNode.replaceChild(newFolderSelect, folderSelectEl);
+      newFolderSelect.addEventListener('change', loadMediaImages);
+    }
+    
+    if (categorySelectEl) {
+      const newCategorySelect = categorySelectEl.cloneNode(true);
+      categorySelectEl.parentNode.replaceChild(newCategorySelect, categorySelectEl);
+      newCategorySelect.addEventListener('change', loadMediaImages);
+    }
+  }
+  
+  // メディアフォルダ一覧を読み込み
+  async function loadMediaFolders() {
+    try {
+      const dateInput = document.getElementById('media-selection-date');
+      const cleaningDate = dateInput?.value || new Date().toISOString().split('T')[0];
+      const url = `${REPORT_API}/staff/report-images?date=${cleaningDate}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${await getFirebaseIdToken()}`
+        }
+      });
+      
+      if (!response.ok) return;
+      
+      const data = await response.json();
+      const images = data.images || [];
+      
+      // フォルダ名の一意リストを取得
+      const folderSet = new Set();
+      images.forEach(img => {
+        if (img.folder_name) {
+          folderSet.add(img.folder_name);
+        }
+      });
+      
+      const folders = Array.from(folderSet).sort();
+      const folderSelect = document.getElementById('media-selection-folder');
+      if (folderSelect) {
+        const currentValue = folderSelect.value;
+        folderSelect.innerHTML = '<option value="">全てのフォルダ</option>';
+        folders.forEach(folder => {
+          const option = document.createElement('option');
+          option.value = folder;
+          option.textContent = folder;
+          folderSelect.appendChild(option);
+        });
+        if (currentValue && folders.includes(currentValue)) {
+          folderSelect.value = currentValue;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading media folders:', error);
+    }
+  }
+  
+  // メディア画像を読み込み
+  async function loadMediaImages() {
+    const grid = document.getElementById('media-selection-grid');
+    if (!grid) return;
+    
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#6b7280;"><i class="fas fa-spinner fa-spin" style="font-size:2rem; margin-bottom:12px;"></i><p>読み込み中...</p></div>';
+    
+    try {
+      const dateInput = document.getElementById('media-selection-date');
+      const folderSelect = document.getElementById('media-selection-folder');
+      const categorySelect = document.getElementById('media-selection-category');
+      
+      const cleaningDate = dateInput?.value || new Date().toISOString().split('T')[0];
+      let url = `${REPORT_API}/staff/report-images?date=${cleaningDate}`;
+      
+      const category = categorySelect?.value;
+      if (category) {
+        url += `&category=${category}`;
+      }
+      
+      const folderName = folderSelect?.value;
+      if (folderName) {
+        url += `&folder_name=${encodeURIComponent(folderName)}`;
+      }
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${await getFirebaseIdToken()}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('画像の取得に失敗しました');
+      }
+      
+      const data = await response.json();
+      const images = data.images || [];
+      
+      if (images.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#9ca3af;"><i class="fas fa-images" style="font-size:3rem; margin-bottom:16px; opacity:0.5;"></i><p>画像がありません</p></div>';
+        updateMediaSelectionInfo(0);
+        return;
+      }
+      
+      grid.innerHTML = images.map(img => {
+        const categoryLabel = img.category === 'before' ? '作業前' : '作業後';
+        const folderLabel = img.folder_name || 'フォルダなし';
+        const date = new Date(img.cleaning_date).toLocaleDateString('ja-JP');
+        const imageData = JSON.stringify({
+          image_id: img.image_id,
+          url: img.url,
+          category: img.category,
+          folder_name: img.folder_name,
+          cleaning_date: img.cleaning_date,
+          uploaded_at: img.uploaded_at
+        });
+        
+        return `
+          <div class="media-item" data-image-id="${img.image_id}" data-image-data='${imageData.replace(/'/g, "&apos;")}' style="position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid #e5e7eb; transition:all 0.2s;">
+            <img src="${img.url}" alt="Media" style="width:100%; height:100%; object-fit:cover;" loading="lazy">
+            <div class="media-item-overlay" style="position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s;">
+              <i class="fas fa-check-circle" style="color:#fff; font-size:2rem;"></i>
+            </div>
+            <div class="media-item-badge" style="position:absolute; top:4px; right:4px; padding:4px 8px; background:rgba(255,103,156,0.9); color:#fff; border-radius:4px; font-size:0.7rem; font-weight:600;">${categoryLabel}</div>
+          </div>
+        `;
+      }).join('');
+      
+      // クリックイベントを設定
+      grid.querySelectorAll('.media-item').forEach(item => {
+        item.addEventListener('click', function() {
+          this.classList.toggle('selected');
+          const overlay = this.querySelector('.media-item-overlay');
+          if (overlay) {
+            overlay.style.opacity = this.classList.contains('selected') ? '1' : '0';
+          }
+          updateMediaSelectionInfo();
+        });
+      });
+      
+      updateMediaSelectionInfo(images.length);
+    } catch (error) {
+      console.error('Error loading media images:', error);
+      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#ef4444;"><i class="fas fa-exclamation-circle" style="font-size:2rem; margin-bottom:12px;"></i><p>画像の読み込みに失敗しました</p></div>';
+    }
+  }
+  
+  // メディア選択情報を更新
+  function updateMediaSelectionInfo(totalCount) {
+    const infoEl = document.getElementById('media-selection-info');
+    if (!infoEl) return;
+    
+    const selectedCount = document.querySelectorAll('#media-selection-grid .media-item.selected').length;
+    if (totalCount !== undefined) {
+      infoEl.textContent = `全${totalCount}件中${selectedCount}件選択中`;
+    } else {
+      const total = document.querySelectorAll('#media-selection-grid .media-item').length;
+      infoEl.textContent = `全${total}件中${selectedCount}件選択中`;
+    }
+  }
+  
+  // メディア選択ダイアログを閉じる
+  window.closeMediaSelectionDialog = function() {
+    const mediaDialog = document.getElementById('media-selection-dialog');
+    if (!mediaDialog) return;
+    
+    // 画像が選択されていない場合（キャンセル時）は、元の画像リストを復元
+    const imageContentId = mediaDialog.dataset.imageContentId;
+    const category = mediaDialog.dataset.category;
+    const originalHTML = mediaDialog.dataset.originalImageListHTML;
+    
+    if (originalHTML !== undefined && imageContentId && category) {
+      const imageList = document.getElementById(`${imageContentId}-${category}`);
+      if (imageList) {
+        const currentImages = imageList.querySelectorAll('.image-thumb');
+        if (currentImages.length === 0) {
+          imageList.innerHTML = originalHTML;
+        }
+      }
+    }
+    
+    // データ属性をクリア
+    delete mediaDialog.dataset.sectionId;
+    delete mediaDialog.dataset.imageContentId;
+    delete mediaDialog.dataset.category;
+    delete mediaDialog.dataset.originalImageListHTML;
+    
+    // 選択状態をリセット
+    mediaDialog.querySelectorAll('.media-item.selected').forEach(item => {
+      item.classList.remove('selected');
+      const overlay = item.querySelector('.media-item-overlay');
+      if (overlay) overlay.style.opacity = '0';
+    });
+    
+    // モーダルを閉じる
+    mediaDialog.style.display = 'none';
+  };
+  
+  // メディアから選択した画像をセクションに追加
+  function addImageToCleaningItemFromMedia(sectionId, imageContentId, category, imageId, imageUrl, imageData) {
+    const imageList = document.getElementById(`${imageContentId}-${category}`);
+    if (!imageList) return;
+    
+    // 画像サムネイルを作成
+    const imageThumb = document.createElement('div');
+    imageThumb.className = 'image-thumb';
+    imageThumb.dataset.imageId = imageId;
+    imageThumb.dataset.imageUrl = imageUrl;
+    
+    // メディア情報を表示
+    const folderName = imageData?.folder_name || 'フォルダなし';
+    const categoryLabel = imageData?.category === 'before' ? '作業前' : '作業後';
+    const date = imageData?.cleaning_date ? new Date(imageData.cleaning_date).toLocaleDateString('ja-JP') : '';
+    
+    imageThumb.innerHTML = `
+      <img src="${imageUrl}" alt="Selected from media" loading="lazy">
+      <div class="image-thumb-info" style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); padding:8px; color:#fff; font-size:0.7rem;">
+        <div style="font-weight:600;">${folderName}</div>
+        <div style="opacity:0.9;">${categoryLabel} ${date}</div>
+      </div>
+      <button type="button" class="image-remove" onclick="removeImageFromSection('${imageContentId}', '${category}', '${imageId}')">
+        <i class="fas fa-times"></i>
+      </button>
+    `;
+    
+    // 追加ボタンの前に挿入
+    const addBtn = imageList.querySelector('.image-add-btn');
+    if (addBtn) {
+      imageList.insertBefore(imageThumb, addBtn);
+    } else {
+      imageList.appendChild(imageThumb);
+    }
+    
+    // セクションデータを更新
+    if (sections[sectionId]) {
+      const section = sections[sectionId];
+      if (!section.images) section.images = {};
+      if (!section.images[category]) section.images[category] = [];
+      
+      section.images[category].push({
+        id: imageId,
+        url: imageUrl,
+        source: 'media',
+        media_info: imageData
+      });
+    }
+  }
+  
+  // AWS画像倉庫から選択（旧関数、互換性のため残す）
   function openCleaningItemImageWarehouseDialog(sectionId, imageContentId, category) {
     // 既存のwarehouse-dialogを使用
     const warehouseDialog = document.getElementById('warehouse-dialog');
@@ -5986,6 +6301,41 @@
     autoSave();
   }
 
+  // セクション内画像コンテンツから画像を削除
+  window.removeImageFromSection = function(imageContentId, category, imageId) {
+    const imageList = document.getElementById(`${imageContentId}-${category}`);
+    if (!imageList) return;
+    
+    const imageThumb = imageList.querySelector(`.image-thumb[data-image-id="${imageId}"]`);
+    if (imageThumb) {
+      imageThumb.remove();
+    }
+    
+    // セクションデータからも削除
+    const sectionId = imageList.closest('.section')?.dataset?.sectionId;
+    if (sectionId && sections[sectionId]) {
+      const section = sections[sectionId];
+      if (section.images && section.images[category]) {
+        section.images[category] = section.images[category].filter(img => img.id !== imageId);
+      }
+    }
+    
+    // 画像がなくなった場合、デフォルト画像を表示
+    const remainingImages = imageList.querySelectorAll('.image-thumb');
+    if (remainingImages.length === 0) {
+      const addBtn = imageList.querySelector('.image-add-btn');
+      if (addBtn && !imageList.querySelector('.image-placeholder')) {
+        const placeholderDiv = document.createElement('div');
+        placeholderDiv.className = 'image-placeholder';
+        placeholderDiv.innerHTML = `<img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">`;
+        imageList.insertBefore(placeholderDiv, addBtn);
+      }
+    }
+    
+    // 自動保存
+    autoSave();
+  };
+  
   // 画像削除
   window.removeImage = function(sectionId, category, url, imageId, btn) {
     const arr = sections[sectionId].photos[category];

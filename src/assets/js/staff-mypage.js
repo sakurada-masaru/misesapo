@@ -3362,6 +3362,205 @@ function validateAndClearInvalidLayout() {
   }
 }
 
+// NFCタグ打刻処理（バックグラウンド）
+(function() {
+  const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+  // IDトークン取得
+  async function getFirebaseIdToken() {
+    try {
+      const cognitoIdToken = localStorage.getItem('cognito_id_token');
+      if (cognitoIdToken) return cognitoIdToken;
+      
+      const cognitoUser = localStorage.getItem('cognito_user');
+      if (cognitoUser) {
+        try {
+          const parsed = JSON.parse(cognitoUser);
+          if (parsed.tokens && parsed.tokens.idToken) return parsed.tokens.idToken;
+          if (parsed.idToken) return parsed.idToken;
+        } catch (e) {
+          console.warn('Error parsing cognito user:', e);
+        }
+      }
+      
+      const authData = localStorage.getItem('misesapo_auth');
+      if (authData) {
+        try {
+          const parsed = JSON.parse(authData);
+          if (parsed.token) return parsed.token;
+        } catch (e) {
+          console.warn('Error parsing auth data:', e);
+        }
+      }
+      
+      return 'dev-token';
+    } catch (error) {
+      console.error('Error getting ID token:', error);
+      return 'dev-token';
+    }
+  }
+
+  // 現在のユーザーIDを取得
+  function getCurrentUserId() {
+    try {
+      const cognitoUser = localStorage.getItem('cognito_user');
+      if (cognitoUser) {
+        const parsed = JSON.parse(cognitoUser);
+        return parsed.username || parsed.email?.split('@')[0] || 'WKR_001';
+      }
+      
+      const authData = localStorage.getItem('misesapo_auth');
+      if (authData) {
+        const parsed = JSON.parse(authData);
+        return parsed.user?.id || parsed.user?.email?.split('@')[0] || 'WKR_001';
+      }
+      
+      return 'WKR_001';
+    } catch (e) {
+      console.error('Error getting user ID:', e);
+      return 'WKR_001';
+    }
+  }
+
+  // 打刻を実行
+  async function recordClockIn(facilityId, locationId) {
+    try {
+      const user_id = getCurrentUserId();
+      
+      const response = await fetch(`${REPORT_API}/staff/nfc/clock-in`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getFirebaseIdToken()}`
+        },
+        body: JSON.stringify({
+          user_id: user_id,
+          facility_id: facilityId,
+          location_id: locationId
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.status === 'success') {
+        return { success: true, result: result };
+      } else {
+        throw new Error(result.error || '打刻に失敗しました');
+      }
+    } catch (error) {
+      console.error('Clock-in error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // トースト通知を表示
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${type === 'success' ? '#22c55e' : '#ef4444'};
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 10000;
+      font-size: 0.875rem;
+      font-weight: 500;
+      animation: slideIn 0.3s ease-out;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.animation = 'slideOut 0.3s ease-out';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  // スタイルを追加
+  if (!document.getElementById('nfc-toast-styles')) {
+    const style = document.createElement('style');
+    style.id = 'nfc-toast-styles';
+    style.textContent = `
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // ページ読み込み時にURLパラメータをチェック
+  window.addEventListener('DOMContentLoaded', async function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tagId = urlParams.get('nfc_tag_id');
+
+    if (tagId) {
+      // URLパラメータを削除（履歴に残さない）
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+
+      // タグ情報を取得
+      try {
+        const tagResponse = await fetch(`${REPORT_API}/staff/nfc/tag?tag_id=${tagId}`, {
+          headers: {
+            'Authorization': `Bearer ${await getFirebaseIdToken()}`
+          }
+        });
+
+        if (!tagResponse.ok) {
+          throw new Error('タグ情報の取得に失敗しました');
+        }
+
+        const tagInfo = await tagResponse.json();
+
+        if (!tagInfo.facility_id || !tagInfo.location_id) {
+          throw new Error('タグ情報が不完全です');
+        }
+
+        // バックグラウンドで打刻を実行
+        const clockInResult = await recordClockIn(tagInfo.facility_id, tagInfo.location_id);
+
+        if (clockInResult.success) {
+          const facilityName = tagInfo.facility_name || tagInfo.facility_id;
+          const locationName = tagInfo.location_name || tagInfo.location_id;
+          showToast(`打刻完了: ${facilityName} - ${locationName}`, 'success');
+          
+          // 出退勤記録を再読み込み（もし表示されている場合）
+          if (typeof loadAttendanceRecords === 'function') {
+            setTimeout(() => {
+              loadAttendanceRecords();
+            }, 1000);
+          }
+        } else {
+          showToast(`打刻失敗: ${clockInResult.error}`, 'error');
+        }
+      } catch (error) {
+        console.error('NFC tag processing error:', error);
+        showToast(`エラー: ${error.message}`, 'error');
+      }
+    }
+  });
+})();
+
 // 初期化
 document.addEventListener('DOMContentLoaded', () => {
   // ページ読み込み時にlocalStorageの異常なデータをクリア
