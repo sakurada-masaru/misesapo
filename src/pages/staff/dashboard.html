@@ -2413,7 +2413,15 @@
             })
           });
 
-          const result = await response.json();
+          let result;
+          try {
+            const responseText = await response.text();
+            console.log('[NFC Clock-in] Clock-in response text:', responseText);
+            result = JSON.parse(responseText);
+          } catch (parseError) {
+            console.error('[NFC Clock-in] JSON parse error:', parseError);
+            throw new Error('打刻レスポンスの解析に失敗しました');
+          }
 
           if (response.ok && result.status === 'success') {
             return { success: true, result: result };
@@ -2550,7 +2558,15 @@
               throw new Error('タグ情報の取得に失敗しました');
             }
 
-            const tagInfo = await tagResponse.json();
+            let tagInfo;
+            try {
+              const responseText = await tagResponse.text();
+              console.log('[NFC Clock-in] Tag response text:', responseText);
+              tagInfo = JSON.parse(responseText);
+            } catch (parseError) {
+              console.error('[NFC Clock-in] JSON parse error:', parseError);
+              throw new Error('タグ情報の解析に失敗しました');
+            }
 
             if (!tagInfo.facility_id || !tagInfo.location_id) {
               throw new Error('タグ情報が不完全です');
