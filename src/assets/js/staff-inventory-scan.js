@@ -497,6 +497,8 @@ async function getNfcTagInfo(tagId) {
     try {
         // tagIdの前後のスペースを削除
         const cleanTagId = tagId.trim();
+        console.log('[NFC Tag Info] Fetching tag info for:', cleanTagId);
+        
         const response = await fetch(`${REPORT_API}/staff/nfc/tag?tag_id=${encodeURIComponent(cleanTagId)}`, {
             method: 'GET',
             headers: {
@@ -504,14 +506,45 @@ async function getNfcTagInfo(tagId) {
             }
         });
         
+        console.log('[NFC Tag Info] Response status:', response.status);
+        console.log('[NFC Tag Info] Response ok:', response.ok);
+        
         if (!response.ok) {
-            throw new Error('NFCタグ情報の取得に失敗しました');
+            let errorMessage = `NFCタグ情報の取得に失敗しました (HTTP ${response.status})`;
+            try {
+                const errorText = await response.text();
+                console.error('[NFC Tag Info] Error response text:', errorText);
+                if (errorText) {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                }
+            } catch (e) {
+                console.error('[NFC Tag Info] Error parsing error response:', e);
+            }
+            throw new Error(errorMessage);
         }
         
-        const data = await response.json();
+        const responseText = await response.text();
+        console.log('[NFC Tag Info] Response text:', responseText);
+        
+        if (!responseText || responseText.trim() === '') {
+            throw new Error('空のレスポンスが返されました');
+        }
+        
+        const data = JSON.parse(responseText);
+        console.log('[NFC Tag Info] Parsed data:', data);
         return data;
     } catch (error) {
-        console.error('Error loading NFC tag info:', error);
+        console.error('[NFC Tag Info] Error loading NFC tag info:', error);
+        console.error('[NFC Tag Info] Error name:', error.name);
+        console.error('[NFC Tag Info] Error message:', error.message);
+        console.error('[NFC Tag Info] Error stack:', error.stack);
+        
+        // ネットワークエラーの場合
+        if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+            throw new Error('ネットワークエラー: サーバーに接続できませんでした。インターネット接続を確認してください。');
+        }
+        
         throw error;
     }
 }
@@ -526,23 +559,40 @@ async function handleNfcTag(tagId) {
         console.log('[NFC Tag Info] Full response:', tagInfo);
         
         // レスポンスの構造を確認（statusフィールドがある場合）
-        const productId = tagInfo.product_id || (tagInfo.status === 'success' ? tagInfo.product_id : null);
+        let productId = null;
+        if (tagInfo.status === 'success') {
+            productId = tagInfo.product_id;
+        } else if (tagInfo.product_id) {
+            productId = tagInfo.product_id;
+        }
+        
+        console.log('[NFC Tag Info] Extracted product_id:', productId);
         
         // product_idが存在する場合
         if (productId) {
-            const product = await loadProduct(productId);
-            showProduct(product);
-            
-            // トースト通知を表示
-            showToast(`NFCタグを読み取りました: ${tagInfo.description || tagInfo.location_name || tagId}`, 'success');
+            try {
+                const product = await loadProduct(productId);
+                showProduct(product);
+                
+                // トースト通知を表示
+                showToast(`NFCタグを読み取りました: ${tagInfo.description || tagInfo.location_name || tagId}`, 'success');
+            } catch (productError) {
+                console.error('[NFC Tag Info] Error loading product:', productError);
+                showToast(`商品情報の読み込みに失敗しました: ${productError.message}`, 'error');
+            }
         } else {
             // product_idが存在しない場合はエラー
             console.error('[NFC Tag Info] No product_id found. Response:', tagInfo);
-            alert('このNFCタグは在庫管理用に設定されていません。\n商品IDが登録されていないタグです。');
+            showToast('このNFCタグは在庫管理用に設定されていません。\n商品IDが登録されていないタグです。', 'error');
         }
     } catch (error) {
-        console.error('Error handling NFC tag:', error);
-        alert('NFCタグの処理に失敗しました: ' + error.message);
+        console.error('[NFC Tag Info] Error handling NFC tag:', error);
+        console.error('[NFC Tag Info] Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        showToast(`NFCタグの処理に失敗しました: ${error.message}`, 'error');
     }
 }
 
