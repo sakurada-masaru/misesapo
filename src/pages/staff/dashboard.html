@@ -2340,6 +2340,9 @@
           loadClockInHistory();
         }, 1000);
       });
+
+      // グローバルスコープに公開（他のIIFEからアクセス可能にする）
+      window.loadClockInHistory = loadClockInHistory;
     })();
 
     // NFCタグ打刻処理（バックグラウンド）
@@ -2618,7 +2621,9 @@
             // エラーが発生した場合でも、履歴を読み込んでみる
             setTimeout(() => {
               try {
-                loadClockInHistory();
+                if (window.loadClockInHistory) {
+                  window.loadClockInHistory();
+                }
               } catch (historyError) {
                 console.error('Error loading history after NFC error:', historyError);
               }

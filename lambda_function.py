@@ -584,6 +584,10 @@ def lambda_handler(event, context):
                 return handle_nfc_clock_in(event, headers)
             elif method == 'GET':
                 return get_nfc_clock_in_logs(event, headers)
+        elif normalized_path == '/staff/nfc/tag':
+            # NFCタグ情報取得
+            if method == 'GET':
+                return get_nfc_tag_info(event, headers)
         elif normalized_path.startswith('/staff/announcements/') and normalized_path.endswith('/read'):
             # 業務連絡の既読マーク
             announcement_id = normalized_path.split('/')[-2]
