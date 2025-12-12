@@ -16,6 +16,7 @@ FACILITY_NAME="${4:-テスト店舗}"
 LOCATION_NAME="${5:-トイレ入口}"
 DESCRIPTION="${6:-テスト用NFCタグ}"
 PRODUCT_ID="${7:-}"  # 在庫管理用（オプション）
+TAG_UID="${8:-}"  # NFCタグの物理UID（オプション、例: 04:E5:DD:31:C3:2A:81）
 
 echo "=========================================="
 echo "NFCタグ情報をDynamoDBに登録"
@@ -32,6 +33,9 @@ echo "  場所名: $LOCATION_NAME"
 echo "  説明: $DESCRIPTION"
 if [ -n "$PRODUCT_ID" ]; then
     echo "  商品ID: $PRODUCT_ID (在庫管理用)"
+fi
+if [ -n "$TAG_UID" ]; then
+    echo "  UID: $TAG_UID (物理シリアルナンバー)"
 fi
 echo ""
 
@@ -58,6 +62,12 @@ if [ -n "$PRODUCT_ID" ]; then
     \"product_id\": {\"S\": \"$PRODUCT_ID\"}"
 fi
 
+# uidが指定されている場合は追加
+if [ -n "$TAG_UID" ]; then
+    ITEM_JSON="$ITEM_JSON,
+    \"uid\": {\"S\": \"$TAG_UID\"}"
+fi
+
 ITEM_JSON="$ITEM_JSON
 }"
 
@@ -71,11 +81,11 @@ echo ""
 echo "✓ NFCタグ情報を登録しました"
 echo ""
 echo "使用方法:"
-echo "  ./scripts/register_nfc_tag.sh [TAG_ID] [FACILITY_ID] [LOCATION_ID] [FACILITY_NAME] [LOCATION_NAME] [DESCRIPTION] [PRODUCT_ID]"
+echo "  ./scripts/register_nfc_tag.sh [TAG_ID] [FACILITY_ID] [LOCATION_ID] [FACILITY_NAME] [LOCATION_NAME] [DESCRIPTION] [PRODUCT_ID] [UID]"
 echo ""
 echo "例（打刻用）:"
-echo "  ./scripts/register_nfc_tag.sh TAG_001 ABC_001 TK_R01_TOILET_IN \"新宿店\" \"トイレ入口\" \"1階トイレ入口\""
+echo "  ./scripts/register_nfc_tag.sh TAG_001 ABC_001 TK_R01_TOILET_IN \"新宿店\" \"トイレ入口\" \"1階トイレ入口\" \"\" \"04:E5:DD:31:C3:2A:81\""
 echo ""
 echo "例（在庫管理用）:"
-echo "  ./scripts/register_nfc_tag.sh INVENTORY_001 ABC_001 LOC_001 \"新宿店\" \"倉庫\" \"在庫管理用タグ\" P001"
+echo "  ./scripts/register_nfc_tag.sh INVENTORY_001 ABC_001 LOC_001 \"新宿店\" \"倉庫\" \"在庫管理用タグ\" P001 \"04:D1:3E:AD:46:02:89\""
 

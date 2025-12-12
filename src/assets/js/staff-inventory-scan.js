@@ -495,7 +495,9 @@ function escapeHtml(str) {
 // NFCタグ情報を取得
 async function getNfcTagInfo(tagId) {
     try {
-        const response = await fetch(`${REPORT_API}/staff/nfc/tag?tag_id=${encodeURIComponent(tagId)}`, {
+        // tagIdの前後のスペースを削除
+        const cleanTagId = tagId.trim();
+        const response = await fetch(`${REPORT_API}/staff/nfc/tag?tag_id=${encodeURIComponent(cleanTagId)}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -579,8 +581,8 @@ function showToast(message, type = 'info') {
 // URLパラメータから商品IDまたはNFCタグIDを取得して自動表示
 async function checkUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('product_id');
-    const nfcTagId = urlParams.get('nfc_tag_id');
+    const productId = urlParams.get('product_id')?.trim();
+    const nfcTagId = urlParams.get('nfc_tag_id')?.trim();
     
     // NFCタグIDが指定されている場合（優先）
     if (nfcTagId) {
