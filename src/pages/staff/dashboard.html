@@ -2276,6 +2276,9 @@
 
         } catch (error) {
           console.error('[Clock-in History] Error:', error);
+          console.error('[Clock-in History] Error name:', error.name);
+          console.error('[Clock-in History] Error message:', error.message);
+          console.error('[Clock-in History] Error stack:', error.stack);
           
           // エラーの詳細を取得
           let errorMessage = '打刻履歴の読み込みに失敗しました';
@@ -2283,10 +2286,12 @@
           
           if (error.message) {
             errorMessage = error.message;
+          } else if (error.toString && error.toString() !== '[object Object]') {
+            errorMessage = error.toString();
           }
           
           // ネットワークエラーの場合
-          if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          if (error.name === 'TypeError' && error.message && error.message.includes('fetch')) {
             errorDetail = 'ネットワークエラー: サーバーに接続できませんでした';
           }
           // HTTPエラーの場合
@@ -2299,6 +2304,9 @@
           // その他のエラー
           else {
             errorDetail = error.toString();
+            if (error.stack) {
+              errorDetail += `\n${error.stack.split('\n').slice(0, 3).join('\n')}`;
+            }
           }
           
           // 403エラーの場合は認証エラーとして表示
@@ -2311,8 +2319,8 @@
             <div class="error-state" style="text-align: center; padding: 20px; color: #ef4444; background: #fef2f2; border-radius: 8px;">
               <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 8px;"></i>
               <p style="margin: 0; font-size: 0.875rem; margin-bottom: 8px; font-weight: 600;">打刻履歴の読み込みに失敗しました</p>
-              <p style="margin: 0; font-size: 0.75rem; color: #dc2626; margin-bottom: 4px;">${errorMessage}</p>
-              ${errorDetail ? `<p style="margin: 0; font-size: 0.7rem; color: #9ca3af; word-break: break-all; margin-bottom: 8px;">${errorDetail}</p>` : ''}
+              <p style="margin: 0; font-size: 0.75rem; color: #dc2626; margin-bottom: 4px;">${errorMessage || 'エラーが発生しました'}</p>
+              ${errorDetail ? `<p style="margin: 0; font-size: 0.7rem; color: #9ca3af; word-break: break-all; margin-bottom: 8px; white-space: pre-wrap;">${errorDetail}</p>` : ''}
               <button type="button" onclick="location.reload()" style="margin-top: 12px; padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
                 再読み込み
               </button>
