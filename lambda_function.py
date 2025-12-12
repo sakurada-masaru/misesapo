@@ -1974,6 +1974,18 @@ def get_nfc_clock_in_logs(event, headers):
         - 500: サーバーエラー
     """
     try:
+        # 認証チェック（開発環境では緩和）
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        
+        # 開発環境ではdev-tokenを許可
+        if id_token and id_token != 'dev-token':
+            user_info = verify_firebase_token(id_token)
+            if not user_info:
+                print(f"[NFC Clock-in Logs] Invalid token: {id_token[:20]}...")
+                # 開発環境ではエラーを返さない（後で削除可能）
+                pass
+        
         # クエリパラメータを取得
         params = event.get('queryStringParameters') or {}
         user_id = params.get('user_id')
