@@ -2226,12 +2226,19 @@
           let result;
           try {
             const responseText = await response.text();
-            console.log('[Clock-in History] Response text:', responseText);
+            console.log('[Clock-in History] Response text length:', responseText.length);
+            console.log('[Clock-in History] Response text (first 500 chars):', responseText.substring(0, 500));
+            
+            if (!responseText || responseText.trim() === '') {
+              throw new Error('空のレスポンスが返されました');
+            }
+            
             result = JSON.parse(responseText);
             console.log('[Clock-in History] Result:', result);
           } catch (parseError) {
             console.error('[Clock-in History] JSON parse error:', parseError);
-            throw new Error('レスポンスの解析に失敗しました');
+            console.error('[Clock-in History] Parse error stack:', parseError.stack);
+            throw new Error(`レスポンスの解析に失敗しました: ${parseError.message}`);
           }
           
           const logs = result.logs || [];
