@@ -2573,7 +2573,33 @@
             }
           } catch (error) {
             console.error('NFC tag processing error:', error);
-            showToast(`エラー: ${error.message}`, 'error');
+            console.error('NFC tag processing error stack:', error.stack);
+            
+            // エラーの詳細を取得
+            let errorMessage = '打刻処理中にエラーが発生しました';
+            if (error.message) {
+              errorMessage = error.message;
+            }
+            
+            // ネットワークエラーの場合
+            if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+              errorMessage = 'ネットワークエラー: サーバーに接続できませんでした。インターネット接続を確認してください。';
+            }
+            // 認証エラーの場合
+            else if (error.message && (error.message.includes('認証') || error.message.includes('Unauthorized'))) {
+              errorMessage = '認証エラー: ログインが必要です。ページを再読み込みしてください。';
+            }
+            
+            showToast(`エラー: ${errorMessage}`, 'error');
+            
+            // エラーが発生した場合でも、履歴を読み込んでみる
+            setTimeout(() => {
+              try {
+                loadClockInHistory();
+              } catch (historyError) {
+                console.error('Error loading history after NFC error:', historyError);
+              }
+            }, 1000);
           }
         }
       });
