@@ -393,6 +393,57 @@
   color: #6b7280;
 }
 
+/* サイドパネル内の画像ストック */
+.side-panel-content .image-stock-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+  background: transparent;
+}
+
+.side-panel-content .image-stock-header {
+  margin-bottom: 12px;
+}
+
+.side-panel-content .image-stock-header h3 {
+  font-size: 0.95rem;
+}
+
+.side-panel-content .image-stock-actions {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.side-panel-content .btn-upload-stock {
+  font-size: 0.8rem;
+  padding: 5px 10px;
+}
+
+.side-panel-content .image-stock-description {
+  margin-bottom: 10px;
+}
+
+.side-panel-content .image-stock-description p {
+  font-size: 0.75rem;
+}
+
+.side-panel-content .image-stock-grid {
+  max-height: 400px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.side-panel-content .image-stock-item {
+  width: 60px;
+  height: 60px;
+}
+
+.side-panel-content .image-stock-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* パネル内の日時・時刻を別々の行に */
 .side-panel-content .report-header-section .form-row.three-col.date-time-row {
   display: flex !important;
