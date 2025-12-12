@@ -2202,9 +2202,21 @@
           console.log('[Clock-in History] Response status:', response.status);
 
           if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
+            let errorData = {};
+            try {
+              const text = await response.text();
+              errorData = text ? JSON.parse(text) : {};
+            } catch (e) {
+              errorData = { error: `HTTP ${response.status}`, message: response.statusText };
+            }
+            
             console.error('[Clock-in History] Error response:', errorData);
-            throw new Error(errorData.message || errorData.error || `HTTP ${response.status}: 打刻履歴の取得に失敗しました`);
+            
+            // エラー情報を含むオブジェクトを作成
+            const error = new Error(errorData.message || errorData.error || `HTTP ${response.status}: 打刻履歴の取得に失敗しました`);
+            error.response = { status: response.status, statusText: response.statusText };
+            error.errorData = errorData;
+            throw error;
           }
 
           const result = await response.json();
@@ -2245,12 +2257,37 @@
 
         } catch (error) {
           console.error('[Clock-in History] Error:', error);
-          const errorMessage = error.message || '打刻履歴の読み込みに失敗しました';
+          
+          // エラーの詳細を取得
+          let errorMessage = '打刻履歴の読み込みに失敗しました';
+          let errorDetail = '';
+          
+          if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          // ネットワークエラーの場合
+          if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            errorDetail = 'ネットワークエラー: サーバーに接続できませんでした';
+          }
+          // HTTPエラーの場合
+          else if (error.response) {
+            errorDetail = `HTTP ${error.response.status}: ${error.response.statusText}`;
+          }
+          // その他のエラー
+          else {
+            errorDetail = error.toString();
+          }
+          
           historyList.innerHTML = `
             <div class="error-state" style="text-align: center; padding: 20px; color: #ef4444; background: #fef2f2; border-radius: 8px;">
               <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 8px;"></i>
-              <p style="margin: 0; font-size: 0.875rem; margin-bottom: 4px;">打刻履歴の読み込みに失敗しました</p>
-              <p style="margin: 0; font-size: 0.75rem; color: #9ca3af;">${errorMessage}</p>
+              <p style="margin: 0; font-size: 0.875rem; margin-bottom: 8px; font-weight: 600;">打刻履歴の読み込みに失敗しました</p>
+              <p style="margin: 0; font-size: 0.75rem; color: #dc2626; margin-bottom: 4px;">${errorMessage}</p>
+              ${errorDetail ? `<p style="margin: 0; font-size: 0.7rem; color: #9ca3af; word-break: break-all;">${errorDetail}</p>` : ''}
+              <button type="button" onclick="location.reload()" style="margin-top: 12px; padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
+                再読み込み
+              </button>
             </div>
           `;
         }
