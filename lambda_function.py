@@ -2044,20 +2044,32 @@ def get_nfc_clock_in_logs(event, headers):
         # エラーの種類に応じて適切なステータスコードを返す
         error_message = str(e)
         status_code = 500
+        error_type = 'Internal server error'
         
         # DynamoDBのリソースが見つからない場合
         if 'ResourceNotFoundException' in error_message or 'does not exist' in error_message:
             status_code = 404
+            error_type = 'Resource not found'
             error_message = '打刻ログテーブルが見つかりません。テーブルが作成されているか確認してください。'
+        # 権限エラーの場合
+        elif 'AccessDeniedException' in error_message or 'UnauthorizedOperation' in error_message:
+            status_code = 403
+            error_type = 'Access denied'
+            error_message = 'DynamoDBへのアクセス権限がありません。IAMポリシーを確認してください。'
+        # クライアントエラーの場合
+        elif 'ClientError' in error_message or 'ValidationException' in error_message:
+            status_code = 400
+            error_type = 'Bad request'
         
         return {
             'statusCode': status_code,
             'headers': headers,
             'body': json.dumps({
                 'status': 'error',
-                'error': 'Internal server error',
-                'message': error_message
-            }, ensure_ascii=False)
+                'error': error_type,
+                'message': error_message,
+                'details': traceback_str if status_code == 500 else None
+            }, ensure_ascii=False, default=str)
         }
 
 def get_nfc_tag_info(event, headers):
