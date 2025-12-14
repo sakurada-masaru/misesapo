@@ -2431,180 +2431,11 @@
             background: #FF679C;
         }
 
-        .event-campaign-hub {
-            background: #fff;
-        }
-
-        .event-campaign-hub .wrapper,
         .faq-section .wrapper {
             max-width: 100%;
             width: 100%;
             padding: 0 clamp(16px, 4vw, 48px);
             margin: 0 auto;
-        }
-
-        .event-campaign-head {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .event-campaign-head h2 {
-            font-size: clamp(2.4rem, 4vw, 3.4rem);
-            margin: 1.2rem 0 0.8rem;
-            color: #162735;
-        }
-
-        .event-campaign-head p {
-            color: #555;
-            line-height: 1.8;
-            font-size: 1.4rem;
-        }
-
-        .event-campaign-grid {
-            display: grid;
-            gap: clamp(2rem, 3vw, 3.6rem);
-            width: 100%;
-        }
-
-        @media (min-width: 960px) {
-            .event-campaign-grid {
-                grid-template-columns: 1.3fr 1fr;
-                align-items: start;
-            }
-        }
-
-        .event-column,
-        .campaign-column {
-            display: flex;
-            flex-direction: column;
-            gap: clamp(1.6rem, 2vw, 2.4rem);
-            width: 100%;
-        }
-
-        .event-card,
-        .campaign-panel {
-            background: #fff;
-            border: 1px solid rgba(255, 103, 156, 0.2);
-            border-radius: 18px;
-            padding: clamp(1.6rem, 2.6vw, 3.2rem);
-            box-shadow: 0 25px 60px rgba(255, 0, 140, 0.08);
-            height: 100%;
-        }
-
-        .event-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.8rem;
-            font-size: 1.3rem;
-            color: #FF679C;
-            font-weight: 600;
-        }
-
-        .event-date {
-            background: rgba(255, 103, 156, 0.12);
-            border-radius: 999px;
-            padding: 0.3rem 1.2rem;
-        }
-
-        .event-location {
-            color: #162735;
-            font-size: 1.3rem;
-            font-weight: 500;
-        }
-
-        .event-card h3 {
-            font-size: 1.8rem;
-            margin: 1.4rem 0 0.8rem;
-            color: #162735;
-        }
-
-        .event-card p {
-            color: #555;
-            line-height: 1.7;
-            font-size: 1.4rem;
-        }
-
-        .event-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-top: 1.4rem;
-        }
-
-        .event-link {
-            flex: 1 1 150px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0.9rem 1.6rem;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 1.4rem;
-            transition: var(--normal-transition);
-        }
-
-        .event-link.primary {
-            background: var(--main-bg-color);
-            color: var(--white);
-            box-shadow: 0 12px 24px rgba(255, 0, 140, 0.3);
-        }
-
-        .event-link.secondary {
-            border: 1px solid rgba(22, 39, 53, 0.15);
-            color: #162735;
-            background: #fff;
-        }
-
-        .event-link.secondary:hover {
-            border-color: rgba(255, 0, 140, 0.3);
-            color: #FF008C;
-        }
-
-        .campaign-panel {
-            background: linear-gradient(135deg, rgba(255, 103, 156, 0.1), rgba(255, 255, 255, 0.95));
-        }
-
-        .campaign-panel h3 {
-            font-size: 1.8rem;
-            color: #162735;
-            margin-bottom: 0.8rem;
-        }
-
-        .campaign-panel p {
-            color: #555;
-            line-height: 1.7;
-            font-size: 1.4rem;
-        }
-
-        .campaign-highlights {
-            display: flex;
-            flex-direction: column;
-            gap: 1.2rem;
-            margin-top: 1.6rem;
-        }
-
-        .highlight-item {
-            display: flex;
-            gap: 1rem;
-            align-items: flex-start;
-        }
-
-        .highlight-item span {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            background: #FF679C;
-            color: #fff;
-            font-weight: 700;
-            font-size: 1.3rem;
-        }
-
-        .highlight-item p {
-            margin: 0;
-            line-height: 1.6;
         }
 
         .flyer-downloads {
@@ -2731,17 +2562,13 @@
             width: min(320px, 100%);
         }
 
-        /* 追加セクション（導入事例・声・資料・対応エリア） */
+        /* 追加セクション（導入事例・対応エリア） */
         .case-study-section,
-        .customer-voice-section,
-        .download-section,
         .area-coverage-section {
             background: #fff;
         }
 
         .case-study-section .wrapper,
-        .customer-voice-section .wrapper,
-        .download-section .wrapper,
         .area-coverage-section .wrapper {
             max-width: 100%;
             width: 100%;
@@ -2749,9 +2576,7 @@
             margin: 0 auto;
         }
 
-        .case-study-grid,
-        .voice-grid,
-        .download-grid {
+        .case-study-grid {
             display: grid;
             gap: clamp(1.6rem, 2vw, 2.8rem);
             width: 100%;
@@ -2761,19 +2586,9 @@
             .case-study-grid {
                 grid-template-columns: repeat(3, minmax(0, 1fr));
             }
-
-            .voice-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-
-            .download-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
         }
 
-        .case-card,
-        .voice-card,
-        .download-card {
+        .case-card {
             border-radius: 20px;
             border: 1px solid rgba(22, 39, 53, 0.08);
             box-shadow: 0 20px 40px rgba(15, 15, 15, 0.06);
@@ -2785,9 +2600,7 @@
             height: 100%;
         }
 
-        .case-card h3,
-        .download-card h3,
-        .voice-card h3 {
+        .case-card h3 {
             font-size: 1.6rem;
             color: #162735;
             margin: 0;
@@ -2847,46 +2660,6 @@
             background: rgba(255, 0, 140, 0.08);
         }
 
-        .voice-card blockquote {
-            margin: 0;
-            padding: 0;
-            font-size: 1.4rem;
-            line-height: 1.8;
-            color: #555;
-        }
-
-        .voice-person {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #162735;
-        }
-
-        .voice-role {
-            font-size: 1.2rem;
-            color: #888;
-        }
-
-        .download-card p {
-            font-size: 1.3rem;
-            color: #555;
-            line-height: 1.7;
-        }
-
-        .download-card ul {
-            padding-left: 1.2rem;
-            margin: 0.4rem 0 0;
-            color: #555;
-            font-size: 1.3rem;
-        }
-
-        .download-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.8rem;
-            font-weight: 600;
-            color: #FF008C;
-            margin-top: auto;
-        }
 
         .area-coverage-content {
             display: flex;
@@ -3200,6 +2973,38 @@
     </section>
     <!-- ご利用イメージ end -->
 
+    <!-- FAQ セクション -->
+    <section id="faq" class="section-box faq-section">
+        <div class="wrapper">
+            <div class="faq-head">
+                <p class="section-tag-label">FAQ</p>
+                <h2>よくあるご質問</h2>
+                <p>イベント会場や LP で多くいただく質問をピックアップしました。詳細はカスタマーズサポートで随時アップデートします。</p>
+            </div>
+            <div class="faq-list">
+                <article class="faq-item">
+                    <h3 class="faq-question">Q. イベントで相談した内容はどのくらいで見積もりが届きますか？</h3>
+                    <p class="faq-answer">最短で翌営業日に概算をご案内します。LP でもご紹介している通り、STEP01 の現地調査が完了していれば 72 時間以内に詳細プランを提出できます。</p>
+                </article>
+                <article class="faq-item">
+                    <h3 class="faq-question">Q. 定期清掃とスポット依頼をまとめて発注できますか？</h3>
+                    <p class="faq-answer">はい。ミセサポでは定期契約とスポット対応を同じ担当窓口で受け付け、5S 活動やスタッフ教育まで一括でご提案しています。</p>
+                </article>
+                <article class="faq-item">
+                    <h3 class="faq-question">Q. チラシや資料の原本を追加で送ってもらえますか？</h3>
+                    <p class="faq-answer">PDF ダウンロードのほか、郵送希望も承ります。フォームから「資料希望」と記載いただければ、最新セットをお送りします。</p>
+                </article>
+                <article class="faq-item">
+                    <h3 class="faq-question">Q. 複数店舗それぞれでキャンペーン価格を適用できますか？</h3>
+                    <p class="faq-answer">対象期間内であれば適用可能です。アカウント毎にマイページを発行し、レポートを店舗単位で確認できるように設定します。</p>
+                </article>
+            </div>
+            <div class="faq-cta">
+                <a class="gradient-link web-link" href="/customers-support-desk">FAQをもっと見る</a>
+            </div>
+        </div>
+    </section>
+
     <!-- キャンペーンセクション -->
     <section class="service-sections campaign-sections">
         <div class="service-sections-header">
@@ -3268,182 +3073,6 @@
         </div>
     </section>
 
-    <!-- イベントセクション -->
-    <section class="service-sections event-sections">
-        <div class="service-sections-header">
-            <p class="section-tag-label">Event</p>
-        <h2 class="service-sections-title">イベント</h2>
-        </div>
-        
-        <!-- イベントスライダーコンテナ -->
-        <div class="container">
-            <!-- スライダー（コンテナ内で完結） -->
-            <div class="slider-container">
-                <div class="slider-wrapper" id="eventSliderWrapper">
-                    <!-- スライド1: イベント1（セクション） -->
-                    <section class="slider-slide section">
-                        <img src="/images-admin/hero-image001.png" alt="イベント1" class="section-content-image">
-                        <div class="section-content-text">
-                            <h2 class="service-slide-title">春の清掃キャンペーン</h2>
-                            <p class="service-slide-description">
-                                新年度を迎えるこの時期、店舗の大掃除はいかがでしょうか。<br>
-                                春の清掃キャンペーン実施中！お得な料金で徹底清掃を提供します。
-                            </p>
-                            <a href="/service" class="service-slide-link">詳細を見る</a>
-                        </div>
-                    </section>
-                    
-                    <!-- スライド2: イベント2（セクション） -->
-                    <section class="slider-slide section">
-                        <img src="/images-admin/hero-image002.png" alt="イベント2" class="section-content-image">
-                        <div class="section-content-text">
-                            <h2 class="service-slide-title">定期契約キャンペーン</h2>
-                            <p class="service-slide-description">
-                                定期契約でさらにお得に！初回契約特典として<br>
-                                通常料金から20%OFFでご提供いたします。
-                            </p>
-                            <a href="/service" class="service-slide-link">詳細を見る</a>
-                        </div>
-                    </section>
-                    
-                    <!-- スライド3: イベント3（セクション） -->
-                    <section class="slider-slide section">
-                        <img src="/images-admin/hero-image003.png" alt="イベント3" class="section-content-image">
-                        <div class="section-content-text">
-                            <h2 class="service-slide-title">新規開店応援キャンペーン</h2>
-                            <p class="service-slide-description">
-                                新規開店をサポート！開店前の徹底清掃を<br>
-                                特別価格でご提供。お気軽にお問い合わせください。
-                            </p>
-                            <a href="/service" class="service-slide-link">詳細を見る</a>
-                        </div>
-                    </section>
-                </div>
-                
-                <!-- スライダーコントロール -->
-                <div class="slider-controls">
-                    <button class="slider-btn" id="eventPrevBtn">← 前へ</button>
-                    <button class="slider-btn" id="eventNextBtn">次へ →</button>
-                </div>
-                
-                <!-- スライダーインジケーター -->
-                <div class="slider-indicators" id="eventSliderIndicators">
-                    <button class="slider-indicator active" data-slide="0"></button>
-                    <button class="slider-indicator" data-slide="1"></button>
-                    <button class="slider-indicator" data-slide="2"></button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 代表者挨拶セクション -->
-    <section class="service-sections greeting-sections">
-        <div class="service-sections-header">
-            <p class="section-tag-label">Message</p>
-        <h2 class="service-sections-title">代表者挨拶</h2>
-        </div>
-        
-        <!-- 代表者挨拶コンテナ -->
-        <div class="container">
-            <section class="section greeting-section">
-                <div class="section-content-text">
-                    <h2 class="service-slide-title">代表取締役 山田太郎</h2>
-                    <p class="service-slide-description">
-                        ミセサポは、店舗の清掃・メンテナンスを通じて、お客様のビジネスをサポートすることを使命としております。<br>
-                        プロフェッショナルな技術と丁寧なサービスで、常に清潔で快適な環境を提供いたします。<br>
-                        お客様の成功が私たちの喜びです。今後ともよろしくお願いいたします。
-                    </p>
-                    <a href="/greeting" class="service-slide-link">代表あいさつを見る</a>
-                </div>
-                <img src="/images-admin/hero-image001.png" alt="代表者" class="section-content-image">
-            </section>
-        </div>
-    </section>
-
-    <!-- イベント＆キャンペーン連動セクション -->
-    <section id="event-campaign-hub" class="section-box event-campaign-hub">
-        <div class="wrapper">
-            <div class="event-campaign-head">
-                <p class="section-tag-label">Event & Campaign</p>
-                <h2>イベント出店と紙媒体キャンペーンをWebでも公開</h2>
-                <p>LPや各種チラシでご案内している内容を、公式サイトでも同じトーンで確認できるよう整理しました。来場予約や資料ダウンロードをそのままオンラインに接続し、オフライン施策との連動を高めます。</p>
-            </div>
-            <div class="event-campaign-grid">
-                <div class="event-column">
-                    <article class="event-card">
-                        <div class="event-meta">
-                            <span class="event-date">12.05 THU</span>
-                            <span class="event-location">幕張メッセ｜ブース B-12</span>
-                        </div>
-                        <h3>フードサービスソリューション EXPO</h3>
-                        <p>厨房設備と清掃 DX をテーマに、LP で紹介している「丸投げでOK」プランや 5S 支援の実績を展示します。現場担当者向けのクイック見積も会場で受付中です。</p>
-                        <div class="event-actions">
-                            <a href="/announcements#event-20241205" class="event-link primary">詳細を見る</a>
-                            <a href="/contact" class="event-link secondary">来場予約</a>
-                        </div>
-                    </article>
-                    <article class="event-card">
-                        <div class="event-meta">
-                            <span class="event-date">12.18 WED</span>
-                            <span class="event-location">大阪｜なんばスカイオ 7F</span>
-                        </div>
-                        <h3>店舗衛生アップデート相談会</h3>
-                        <p>定期清掃・スポット対応・設備保守をまとめて相談できる小規模イベント。レポート機能やマイページ連携など、既存システムと組み合わせたい方向けの内容です。</p>
-                        <div class="event-actions">
-                            <a href="/customers-support-desk#events" class="event-link primary">参加申し込み</a>
-                            <a href="/teikiseisou" class="event-link secondary">定期清掃を見る</a>
-                        </div>
-                    </article>
-                    <article class="event-card">
-                        <div class="event-meta">
-                            <span class="event-date">毎週開催</span>
-                            <span class="event-location">オンライン相談（Zoom）</span>
-                        </div>
-                        <h3>資料連動オンラインブリーフィング</h3>
-                        <p>イベントやチラシ配布で紹介したプログラムを、オンラインで再度ご説明します。複数店舗を担当される方や、遠方のパートナー向けの恒常企画です。</p>
-                        <div class="event-actions">
-                            <a href="/sales/dashboard" class="event-link primary">日程を確認</a>
-                            <a href="/customers-support-desk" class="event-link secondary">サポート窓口へ</a>
-                        </div>
-                    </article>
-                </div>
-                <div class="campaign-column">
-                    <article class="campaign-panel">
-                        <h3>キャンペーン & 配布物ハイライト</h3>
-                        <p>清掃会社 LP と統一デザインの化粧ヘッダーに合わせ、紙媒体の訴求ポイントを 3 つのトピックで整理しました。会場やチラシで受け取った内容をすぐに復習できます。</p>
-                        <div class="campaign-highlights">
-                            <div class="highlight-item">
-                                <span>1</span>
-                                <p>春の定期清掃キャンペーン：厨房・空調・フロアの一括依頼で初回 20%OFF。LP の導入ステップに沿ってスムーズに着手できます。</p>
-                            </div>
-                            <div class="highlight-item">
-                                <span>2</span>
-                                <p>新規開店応援パック：開店前後の清掃と設備調整をセットで実施。レポート機能でビフォーアフターを共有し、スタッフ教育を省力化。</p>
-                            </div>
-                            <div class="highlight-item">
-                                <span>3</span>
-                                <p>DX サポート：レポートID発行やマイページ連携など、既存システムと繋ぐオプションを特別価格で提供中。</p>
-                            </div>
-                        </div>
-                        <div class="flyer-downloads">
-                            <article class="flyer-card">
-                                <p class="flyer-tag">PDF</p>
-                                <h4>ミセサポ サービスガイド</h4>
-                                <p>イベント会場で配布している総合チラシ。対応サービス一覧と料金イメージをまとめています。</p>
-                                <a href="/images-banner/banner.png" class="flyer-link" download>チラシをDL</a>
-                            </article>
-                            <article class="flyer-card">
-                                <p class="flyer-tag">PDF</p>
-                                <h4>季節キャンペーンリーフレット</h4>
-                                <p>春・夏の特別プランやクーポンコードを収録。紙のチラシと同じ情報を即時に共有できます。</p>
-                                <a href="/images-admin/banner-pickup.png" class="flyer-link" download>リーフレットをDL</a>
-                            </article>
-                        </div>
-                    </article>
-                </div>
-            </div>
-        </div>
-    </section>
     
     <!-- 導入事例セクション -->
     <section id="case-study" class="section-box case-study-section">
@@ -3499,84 +3128,6 @@
         </div>
     </section>
 
-    <!-- お客様の声セクション -->
-    <section id="customer-voice" class="section-box customer-voice-section">
-        <div class="wrapper">
-            <div class="service-sections-header">
-                <p class="section-tag-label">Voice</p>
-                <h2 class="service-sections-title">お客様の声</h2>
-            </div>
-            <div class="voice-grid">
-                <article class="voice-card">
-                    <h3>渋谷・和食店 店長様</h3>
-                    <div class="voice-role">月次定期＋スポット対応</div>
-                    <blockquote>繁忙期でも大掃除を諦めなくて済むようになりました。担当コーディネーターが現場の要望を拾ってくれるので、スタッフの表情が明るくなりました。</blockquote>
-                    <div class="voice-person">Y.O. 様</div>
-                </article>
-                <article class="voice-card">
-                    <h3>外食チェーン オペレーション本部</h3>
-                    <div class="voice-role">多店舗展開サポート</div>
-                    <blockquote>「写真付きレポート」が本部レビューに最適で、改善指示も即日で現場へ共有できます。巡回スタッフの教育もお任せできる点が助かっています。</blockquote>
-                    <div class="voice-person">S.M. 様</div>
-                </article>
-                <article class="voice-card">
-                    <h3>コワーキング施設 運営事務局</h3>
-                    <div class="voice-role">夜間スポット＋設備保守</div>
-                    <blockquote>営業時間外に完結させたい清掃・補修をまるっとお願いでき、利用者からのフィードバックが改善しました。鍵管理や入退室レポートも一元化されています。</blockquote>
-                    <div class="voice-person">H.K. 様</div>
-                </article>
-            </div>
-            <div class="faq-cta">
-                <a class="gradient-link web-link" href="/voice">お客様の声をもっと見る</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- 資料ダウンロードセクション -->
-    <section id="download" class="section-box download-section">
-        <div class="wrapper">
-            <div class="service-sections-header">
-                <p class="section-tag-label">Download</p>
-                <h2 class="service-sections-title">資料ダウンロード</h2>
-            </div>
-            <div class="download-grid">
-                <article class="download-card">
-                    <span class="flyer-tag">PDF</span>
-                    <h3>サービスガイドブック</h3>
-                    <p>対応メニュー／料金目安／導入ステップを 12 ページに整理。イベント配布版と同内容です。</p>
-                    <ul>
-                        <li>対応範囲一覧</li>
-                        <li>スタッフ教育フロー</li>
-                        <li>よくある質問</li>
-                    </ul>
-                    <a class="download-link" href="/images-banner/banner.png" download>ダウンロード</a>
-                </article>
-                <article class="download-card">
-                    <span class="flyer-tag">PDF</span>
-                    <h3>季節キャンペーン資料</h3>
-                    <p>春・夏の特別プランとクーポンコード、イベント出店スケジュールをまとめた販促資料です。</p>
-                    <ul>
-                        <li>キャンペーン概要</li>
-                        <li>実施スケジュール</li>
-                        <li>来場特典</li>
-                    </ul>
-                    <a class="download-link" href="/images-admin/banner-pickup.png" download>ダウンロード</a>
-                </article>
-                <article class="download-card">
-                    <span class="flyer-tag">PDF</span>
-                    <h3>DX 連携セット</h3>
-                    <p>レポート機能やマイページの画面イメージ、API 連携概要をまとめた技術者向け資料です。</p>
-                    <ul>
-                        <li>API 連携方法</li>
-                        <li>レポート仕様</li>
-                        <li>セキュリティポリシー抜粋</li>
-                    </ul>
-                    <a class="download-link" href="/modal_manager.js" download>ドキュメントを取得</a>
-                </article>
-            </div>
-        </div>
-    </section>
-
     <!-- 対応エリアセクション -->
     <section id="area" class="section-box area-coverage-section">
         <div class="wrapper">
@@ -3603,38 +3154,6 @@
                     </div>
                     <p class="area-description">エリア外の案件もお気軽にご相談ください。全国対応するパートナー網と、AWS 上の運用基盤で同品質のサービスを提供します。</p>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ セクション -->
-    <section id="faq" class="section-box faq-section">
-        <div class="wrapper">
-            <div class="faq-head">
-                <p class="section-tag-label">FAQ</p>
-                <h2>よくあるご質問</h2>
-                <p>イベント会場や LP で多くいただく質問をピックアップしました。詳細はカスタマーズサポートで随時アップデートします。</p>
-            </div>
-            <div class="faq-list">
-                <article class="faq-item">
-                    <h3 class="faq-question">Q. イベントで相談した内容はどのくらいで見積もりが届きますか？</h3>
-                    <p class="faq-answer">最短で翌営業日に概算をご案内します。LP でもご紹介している通り、STEP01 の現地調査が完了していれば 72 時間以内に詳細プランを提出できます。</p>
-                </article>
-                <article class="faq-item">
-                    <h3 class="faq-question">Q. 定期清掃とスポット依頼をまとめて発注できますか？</h3>
-                    <p class="faq-answer">はい。ミセサポでは定期契約とスポット対応を同じ担当窓口で受け付け、5S 活動やスタッフ教育まで一括でご提案しています。</p>
-                </article>
-                <article class="faq-item">
-                    <h3 class="faq-question">Q. チラシや資料の原本を追加で送ってもらえますか？</h3>
-                    <p class="faq-answer">PDF ダウンロードのほか、郵送希望も承ります。フォームから「資料希望」と記載いただければ、最新セットをお送りします。</p>
-                </article>
-                <article class="faq-item">
-                    <h3 class="faq-question">Q. 複数店舗それぞれでキャンペーン価格を適用できますか？</h3>
-                    <p class="faq-answer">対象期間内であれば適用可能です。アカウント毎にマイページを発行し、レポートを店舗単位で確認できるように設定します。</p>
-                </article>
-            </div>
-            <div class="faq-cta">
-                <a class="gradient-link web-link" href="/customers-support-desk">FAQをもっと見る</a>
             </div>
         </div>
     </section>
@@ -4943,58 +4462,5 @@
             })();
         </script>
 
-        <!-- イベントスライダーJavaScript -->
-        <script>
-            // スライダー機能（コンテナ内で完結）
-            (function() {
-                const sliderWrapper = document.getElementById('eventSliderWrapper');
-                const prevBtn = document.getElementById('eventPrevBtn');
-                const nextBtn = document.getElementById('eventNextBtn');
-                const indicators = document.querySelectorAll('#eventSliderIndicators .slider-indicator');
-                
-                if (!sliderWrapper || !prevBtn || !nextBtn) return;
-                
-                let currentSlide = 0;
-                const totalSlides = 3;
-                
-                // スライドを移動
-                function goToSlide(index) {
-                    if (index < 0) index = totalSlides - 1;
-                    if (index >= totalSlides) index = 0;
-                    
-                    currentSlide = index;
-                    sliderWrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
-                    
-                    // インジケーターを更新
-                    indicators.forEach((indicator, i) => {
-                        indicator.classList.toggle('active', i === currentSlide);
-                    });
-                    
-                    // ボタンの状態を更新
-                    prevBtn.disabled = false;
-                    nextBtn.disabled = false;
-                }
-                
-                // 前のスライドへ
-                prevBtn.addEventListener('click', () => {
-                    goToSlide(currentSlide - 1);
-                });
-                
-                // 次のスライドへ
-                nextBtn.addEventListener('click', () => {
-                    goToSlide(currentSlide + 1);
-                });
-                
-                // インジケーターをクリック
-                indicators.forEach((indicator, index) => {
-                    indicator.addEventListener('click', () => {
-                        goToSlide(index);
-                    });
-                });
-                
-                // 初期化
-                goToSlide(0);
-            })();
-        </script>
     </body>
 </html>
