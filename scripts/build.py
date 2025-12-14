@@ -272,7 +272,36 @@ def render_page(path: Path, preset_context: Optional[Dict[str, object]] = None) 
     text = render_foreach_blocks(text, context)
     text = process_jsonvar_directives(text, context)
 
-    # 2.5) if layout specified, render layout and inject page content into {{ content }}
+    # 2.5) Generate meta tags if meta data exists
+    meta_tags_html = ""
+    if "meta" in context and isinstance(context["meta"], dict):
+        meta = context["meta"]
+        meta_tags_html = f'''    <meta name="description" content="{meta.get('description', '')}">
+    <meta name="keywords" content="{meta.get('keywords', '')}">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{meta.get('og_url', '')}">
+    <meta property="og:title" content="{meta.get('og_title', '')}">
+    <meta property="og:description" content="{meta.get('og_description', '')}">
+    <meta property="og:image" content="https://misesapo.co.jp/images/logo_144x144.png">
+    <meta property="og:site_name" content="ミセサポ">
+    <meta property="og:locale" content="ja_JP">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="{meta.get('og_url', '')}">
+    <meta name="twitter:title" content="{meta.get('og_title', '')}">
+    <meta name="twitter:description" content="{meta.get('og_description', '')}">
+    <meta name="twitter:image" content="https://misesapo.co.jp/images/logo_144x144.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{meta.get('canonical', '')}">
+'''
+    context["meta_tags"] = meta_tags_html
+
+    # 2.6) if layout specified, render layout and inject page content into {{ content }}
     if layout_path is not None:
         layout_html = read_text(layout_path)
         layout_html = render_includes(layout_html)
