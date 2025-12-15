@@ -616,6 +616,26 @@
     // 編集
     window.editReport = async function(id, forceIsProposal = false) {
       try {
+        // 新規ウィンドウで編集画面を開く
+        const editUrl = `/admin/reports/new-pc.html?edit=${id}${forceIsProposal ? '&proposal=true' : ''}`;
+        const editWindow = window.open(editUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+        
+        if (!editWindow) {
+          alert('ポップアップがブロックされています。ブラウザの設定でポップアップを許可してください。');
+          return;
+        }
+        
+        // ウィンドウが閉じられたときにレポート一覧を更新
+        const checkClosed = setInterval(() => {
+          if (editWindow.closed) {
+            clearInterval(checkClosed);
+            loadReports();
+          }
+        }, 500);
+        
+        return;
+        
+        // 以下はモーダル用のコード（将来の互換性のため残す）
         // APIからレポート詳細を取得
         const idToken = await getFirebaseIdToken();
         const response = await fetch(`${REPORT_API}/staff/reports/${id}`, {

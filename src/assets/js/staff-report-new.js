@@ -165,12 +165,29 @@
     setupEventListeners();
     setupTabs();
     setDefaultDate();
-    loadRevisionRequests();
+    
+    // 管理画面側では修正・編集タブの機能を無効化
+    const isAdminPage = window.location.pathname.includes('/admin/reports/new-pc') || 
+                       window.location.pathname.includes('/admin/reports/new');
+    if (!isAdminPage) {
+      loadRevisionRequests();
+    }
+    
     setupMobileKeyboardHandling();
     setupScrollIndicator(); // スクロール位置インジケーターを設定
     // ブランド名と店舗名のselect要素を初期化
     initBrandSelect();
     initStoreSelect();
+    
+    // URLパラメータからレポートIDを取得して編集モードで開く
+    const urlParams = new URLSearchParams(window.location.search);
+    const editReportId = urlParams.get('edit');
+    const isProposal = urlParams.get('proposal') === 'true';
+    
+    if (editReportId) {
+      // 編集モードで開く
+      await loadReportForEdit(editReportId, isProposal);
+    }
     
     // レポートヘッダーセクションの初期表示を設定（サイドパネル内に移動）
     const sharedHeader = document.getElementById('shared-report-header');
@@ -1233,7 +1250,41 @@
     }
   }
 
-  // レポートを編集モードで開く
+  // URLパラメータからレポートIDを取得して編集モードで開く
+  async function loadReportForEdit(reportId, isProposal = false) {
+    try {
+      const idToken = await getFirebaseIdToken();
+      const response = await fetch(`${REPORT_API}/staff/reports/${reportId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${idToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('レポートの取得に失敗しました');
+      }
+      
+      const data = await response.json();
+      const report = data.report || data;
+      
+      // 次回提案の場合は次回ご提案タブに切り替え、それ以外は新規作成タブに切り替え
+      if (isProposal || report.proposal_type === 'proposal' || report.type === 'proposal') {
+        document.getElementById('tab-proposal').click();
+      } else {
+        document.getElementById('tab-new').click();
+      }
+      
+      // フォームにデータを読み込む
+      await loadReportToForm(report);
+      
+    } catch (error) {
+      console.error('Error loading report for edit:', error);
+      showError('レポートの読み込みに失敗しました: ' + getErrorMessage(error));
+    }
+  }
+
+  // レポートを編集モードで開く（清掃員側の修正・編集タブ用）
   window.editReport = async function(reportId) {
     try {
       const idToken = await getFirebaseIdToken();
