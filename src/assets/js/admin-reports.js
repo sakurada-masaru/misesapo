@@ -614,7 +614,7 @@
     };
 
     // 編集
-    window.editReport = async function(id) {
+    window.editReport = async function(id, forceIsProposal = false) {
       try {
         // APIからレポート詳細を取得
         const idToken = await getFirebaseIdToken();
@@ -629,8 +629,8 @@
         const data = await response.json();
         const report = data.report || data;
 
-        // 次回提案かどうかを判定
-        const isProposal = report.proposal_type === 'proposal' || report.type === 'proposal';
+        // 次回提案かどうかを判定（forceIsProposalがtrueの場合は強制的にtrue）
+        const isProposal = forceIsProposal || report.proposal_type === 'proposal' || report.type === 'proposal';
         
         // タイトルを設定
         const formTitle = document.getElementById('form-title');
@@ -1019,22 +1019,8 @@
         document.getElementById('report-form-modal').reset();
         document.getElementById('report-id').value = '';
         
-        // レポートデータをモーダルに読み込む
-        await window.editReport(id);
-        
-        // 提案タイプを設定（モーダル内にhidden inputを追加するか、データに含める）
-        const proposalTypeInput = document.getElementById('proposal-type-modal');
-        if (!proposalTypeInput) {
-          const form = document.getElementById('report-form-modal');
-          const hiddenInput = document.createElement('input');
-          hiddenInput.type = 'hidden';
-          hiddenInput.id = 'proposal-type-modal';
-          hiddenInput.name = 'proposal_type';
-          hiddenInput.value = 'proposal';
-          form.appendChild(hiddenInput);
-        } else {
-          proposalTypeInput.value = 'proposal';
-        }
+        // レポートデータをモーダルに読み込む（forceIsProposal=trueで次回提案として扱う）
+        await window.editReport(id, true);
 
         document.getElementById('new-dialog').showModal();
       } catch (error) {

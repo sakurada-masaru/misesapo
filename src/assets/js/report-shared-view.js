@@ -372,7 +372,12 @@ function openImageModal(imageSrc) {
 
 // レポート承認の処理
 document.addEventListener('DOMContentLoaded', function() {
-    loadReportDetail();
+    // 必要な要素が存在する場合のみloadReportDetailを実行
+    const loadingEl = document.getElementById('loading');
+    const contentEl = document.getElementById('report-content');
+    if (loadingEl || contentEl) {
+        loadReportDetail();
+    }
     
     // レポート承認ボタンの処理
     const approvalButton = document.getElementById('approval-button');
