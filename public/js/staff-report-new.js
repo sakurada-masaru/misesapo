@@ -20,6 +20,7 @@
   let sectionCounter = 0;
   let sections = {}; // セクションデータを保持（タブごとに分ける）
   let sectionsByTab = { new: {}, proposal: {}, edit: {} }; // タブごとのセクションデータ
+  let currentActiveTab = 'new'; // 現在アクティブなタブを追跡
 
   // 画像倉庫用
   let warehouseImages = [];
@@ -441,13 +442,16 @@
         // タブ切り替え時に、そのタブのセクションデータを保存・復元
         if (targetTab === 'new' || targetTab === 'proposal' || targetTab === 'edit') {
           // 現在のタブのセクションデータを保存（sectionsオブジェクトをそのまま保存）
-          const previousActiveTab = Array.from(tabButtons).find(btn => btn.classList.contains('active'))?.dataset.tab;
+          const previousActiveTab = currentActiveTab || Array.from(tabButtons).find(btn => btn.classList.contains('active'))?.dataset.tab;
           if (previousActiveTab && (previousActiveTab === 'new' || previousActiveTab === 'proposal' || previousActiveTab === 'edit')) {
             sectionsByTab[previousActiveTab] = { ...sections };
           }
           
           // 切り替え先のタブのセクションデータを復元
           sections = { ...sectionsByTab[targetTab] };
+          
+          // currentActiveTabを更新
+          currentActiveTab = targetTab;
           
           // セクションカウンターを調整（既存のセクションIDから最大値を取得）
           const existingSectionIds = Object.keys(sections).map(id => {
