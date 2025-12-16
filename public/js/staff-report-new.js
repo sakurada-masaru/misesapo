@@ -5275,13 +5275,30 @@
         if (!imageContent.photos[category]) {
           imageContent.photos[category] = [];
         }
-        imageContent.photos[category].push({
+        const imageData = {
           imageId: imageId,
           blobUrl: blobUrl,
           fileName: file.name,
           uploaded: false
+        };
+        imageContent.photos[category].push(imageData);
+        console.log('[ImageUpload] Image added to section:', {
+          sectionId,
+          imageContentId,
+          category,
+          imageData,
+          allPhotos: imageContent.photos
         });
+        console.log('[ImageUpload] Full section data:', sections[sectionId]);
+      } else {
+        console.warn('[ImageUpload] ImageContent not found:', imageContentId, 'in section:', sectionId);
       }
+    } else {
+      console.warn('[ImageUpload] Section or imageContents not found:', {
+        sectionId,
+        hasSection: !!sections[sectionId],
+        hasImageContents: !!(sections[sectionId] && sections[sectionId].imageContents)
+      });
     }
     
     autoSave();
@@ -5339,14 +5356,30 @@
         if (!imageContent.photos[category]) {
           imageContent.photos[category] = [];
         }
-        imageContent.photos[category].push({
+        const imageData = {
           imageId: imageId,
           blobUrl: imageUrl,
           warehouseUrl: imageUrl,
           fileName: imageId,
           uploaded: true
+        };
+        imageContent.photos[category].push(imageData);
+        console.log('[ImageUpload] Image added to section (warehouse):', {
+          sectionId,
+          imageContentId,
+          category,
+          imageData,
+          allPhotos: imageContent.photos
         });
+      } else {
+        console.warn('[ImageUpload] ImageContent not found (warehouse):', imageContentId, 'in section:', sectionId);
       }
+    } else {
+      console.warn('[ImageUpload] Section or imageContents not found (warehouse):', {
+        sectionId,
+        hasSection: !!sections[sectionId],
+        hasImageContents: !!(sections[sectionId] && sections[sectionId].imageContents)
+      });
     }
     
     autoSave();
@@ -5426,21 +5459,37 @@
         imageList.appendChild(imageThumb);
       }
       
-      // データに保存
-      if (sections[sectionId] && sections[sectionId].imageContents) {
-        const imageContent = sections[sectionId].imageContents.find(ic => ic.id === imageContentId);
-        if (imageContent) {
-          if (!imageContent.photos[category]) {
-            imageContent.photos[category] = [];
-          }
-          imageContent.photos[category].push({
-            imageId: imageId,
-            blobUrl: blobUrl,
-            fileName: file.name,
-            uploaded: false
-          });
+    // データに保存
+    if (sections[sectionId] && sections[sectionId].imageContents) {
+      const imageContent = sections[sectionId].imageContents.find(ic => ic.id === imageContentId);
+      if (imageContent) {
+        if (!imageContent.photos[category]) {
+          imageContent.photos[category] = [];
         }
+        const imageData = {
+          imageId: imageId,
+          blobUrl: blobUrl,
+          fileName: file.name,
+          uploaded: false
+        };
+        imageContent.photos[category].push(imageData);
+        console.log('[ImageUpload] Image added to section (file upload):', {
+          sectionId,
+          imageContentId,
+          category,
+          imageData,
+          allPhotos: imageContent.photos
+        });
+      } else {
+        console.warn('[ImageUpload] ImageContent not found (file upload):', imageContentId, 'in section:', sectionId);
       }
+    } else {
+      console.warn('[ImageUpload] Section or imageContents not found (file upload):', {
+        sectionId,
+        hasSection: !!sections[sectionId],
+        hasImageContents: !!(sections[sectionId] && sections[sectionId].imageContents)
+      });
+    }
     }
     
     autoSave();
@@ -7476,12 +7525,20 @@
     // デバッグ: sectionsの構造を確認
     console.log('[Preview] savedSections:', savedSections);
     console.log('[Preview] sections (current):', sections);
+    console.log('[Preview] sections keys:', Object.keys(savedSections));
     Object.keys(savedSections).forEach(sectionId => {
       const section = savedSections[sectionId];
+      console.log('[Preview] Section:', sectionId, 'type:', section.type, 'full data:', section);
       if (section.type === 'cleaning') {
         console.log('[Preview] Cleaning section:', sectionId, section);
         if (section.imageContents) {
           console.log('[Preview] imageContents:', section.imageContents);
+          section.imageContents.forEach((ic, idx) => {
+            console.log('[Preview] imageContent[' + idx + ']:', ic);
+            console.log('[Preview] imageContent[' + idx + '] photos:', ic.photos);
+          });
+        } else {
+          console.warn('[Preview] No imageContents in cleaning section:', sectionId);
         }
       }
     });
