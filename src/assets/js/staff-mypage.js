@@ -1372,8 +1372,8 @@ async function loadAnnouncements() {
   }
   
   try {
-    // REPORT_APIエンドポイントはgetFirebaseIdToken()を使用
-    const idToken = await getFirebaseIdToken();
+    // Cognitoトークンを優先的に使用（REPORT_APIエンドポイントはCognitoトークンを受け入れる）
+    const idToken = await getCognitoIdToken();
     // トークンがない場合はAPI呼び出しをスキップ
     if (!idToken) {
       console.log('[Announcements] No token available, skipping API call');

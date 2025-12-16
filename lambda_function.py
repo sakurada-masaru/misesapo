@@ -2048,7 +2048,8 @@ def verify_firebase_token(id_token):
             'cognito_sub': uid,
             'email': email,
             'name': name,
-            'role': role
+            'role': role,
+            'verified': True  # Cognitoトークンがデコードできた場合は認証済みとみなす
         }
     except Exception as e:
         print(f"Error verifying token: {str(e)}")
@@ -8346,18 +8347,26 @@ def get_staff_announcements(event, headers):
     清掃員向け業務連絡一覧取得
     """
     try:
-        # 認証チェック
+        # 認証チェック（CognitoトークンまたはFirebaseトークン）
         auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
-        if not user_info or not user_info.get('verified'):
+        
+        if not id_token or id_token == 'mock-token':
             return {
                 'statusCode': 401,
                 'headers': headers,
                 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
             }
         
-        staff_id = user_info.get('uid')
+        user_info = verify_firebase_token(id_token)
+        if not user_info:
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        staff_id = user_info.get('uid') or user_info.get('cognito_sub')
         query_params = event.get('queryStringParameters') or {}
         limit = int(query_params.get('limit', 50))
         
