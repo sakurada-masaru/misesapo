@@ -1453,10 +1453,14 @@
         document.getElementById('search-input').value = '';
         document.getElementById('filter-status').value = '';
         document.getElementById('filter-store').value = '';
-        document.getElementById('filter-date-from').value = '';
-        document.getElementById('filter-date-to').value = '';
-        filterAndRender();
-      });
+          if (searchInput) searchInput.value = '';
+          if (filterStatus) filterStatus.value = '';
+          if (filterStore) filterStore.value = '';
+          if (filterDateFrom) filterDateFrom.value = '';
+          if (filterDateTo) filterDateTo.value = '';
+          filterAndRender();
+        });
+      }
 
       // モーダル内のセクション追加ボタンのイベントリスナーを設定
       function setupModalSectionAddButton() {
@@ -1484,10 +1488,15 @@
       }
 
       // 新規作成
-      document.getElementById('btn-new-report').addEventListener('click', () => {
-        // PC版レポート作成画面を新規ウィンドウで開く
-        window.open('/admin/reports/new-pc.html', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
-      });
+      const btnNewReport = document.getElementById('btn-new-report');
+      if (btnNewReport) {
+        btnNewReport.addEventListener('click', () => {
+          // PC版レポート作成画面を新規ウィンドウで開く
+          window.open('/admin/reports/new-pc.html', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+        });
+      } else {
+        console.warn('[AdminReports] btn-new-report button not found');
+      }
 
       // モーダル用の変数と関数
       let modalWorkItemCounter = 0;
