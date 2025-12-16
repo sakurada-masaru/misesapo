@@ -62,133 +62,136 @@ async function loadProposalReport(reportId, reportData = null) {
     const proposalItemsBarEl = document.getElementById('proposal-items-bar');
     const proposalMainEl = document.getElementById('proposal-report-main');
     
-    try {
-        // ローディング表示
-        if (proposalLoadingEl) proposalLoadingEl.style.display = 'block';
-        if (proposalEmptyEl) proposalEmptyEl.style.display = 'none';
+    // ローディング表示
+    if (proposalLoadingEl) proposalLoadingEl.style.display = 'block';
+    if (proposalEmptyEl) proposalEmptyEl.style.display = 'none';
+    if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'none';
+    if (proposalMainEl) proposalMainEl.style.display = 'none';
+    
+    // 既に取得済みのレポートデータがある場合はそれを使用
+    let report = reportData;
+    
+    // レポートデータがない場合は取得を試みる（CORSエラーの可能性があるため、短いタイムアウトで試行）
+    if (!report) {
+        try {
+            // タイムアウト付きでfetchを実行
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒でタイムアウト
+            
+            const response = await fetch(`${API_BASE_URL}/public/reports/${reportId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+                const data = await response.json();
+                report = data.report || data;
+            }
+        } catch (fetchError) {
+            // CORSエラーやネットワークエラー、タイムアウトの場合は次回ご提案を取得できない
+            // エラーを無視して、次回ご提案がない場合として扱う
+        }
+    }
+    
+    // レポートデータがない場合は次回ご提案も取得できない
+    if (!report) {
+        if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
+        if (proposalEmptyEl) proposalEmptyEl.style.display = 'block';
         if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'none';
         if (proposalMainEl) proposalMainEl.style.display = 'none';
-        
-        // APIから次回ご提案レポートを取得
+        return;
+    }
+    
+    // 次回ご提案レポートを探す（parent_report_idまたはstore_id + cleaning_dateで検索）
+    let proposalReport = null;
+    
+    // 方法1: parent_report_idで検索（CORSエラーの可能性があるため、タイムアウト付きで試行）
+    if (report.report_id || report.id) {
         try {
-            // まず、元のレポートを取得（既に取得済みの場合はそれを使用）
-            let report = reportData;
-            if (!report) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒でタイムアウト
+            
+            const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?parent_report_id=${report.report_id || report.id}&proposal_type=proposal`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (proposalResponse && proposalResponse.ok) {
                 try {
-                    const response = await fetch(`${API_BASE_URL}/public/reports/${reportId}`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        report = data.report || data;
-                    } else {
-                        // レポートが取得できない場合は次回ご提案も取得できない
-                        throw new Error('レポートが見つかりませんでした');
+                    const proposalData = await proposalResponse.json();
+                    if (proposalData.reports && proposalData.reports.length > 0) {
+                        proposalReport = proposalData.reports[0];
+                    } else if (proposalData.items && proposalData.items.length > 0) {
+                        proposalReport = proposalData.items[0];
+                    } else if (proposalData.report) {
+                        proposalReport = proposalData.report;
                     }
-                } catch (fetchError) {
-                    // CORSエラーやネットワークエラーの場合は次回ご提案を取得できない
-                    // エラーを再スローせず、次回ご提案がない場合として扱う
-                    throw fetchError;
+                } catch (jsonError) {
+                    // JSON解析エラーは無視
                 }
             }
-            
-            if (!report) {
-                throw new Error('レポートデータが取得できませんでした');
-            }
-            
-            // 次回ご提案レポートを探す（parent_report_idまたはstore_id + cleaning_dateで検索）
-            let proposalReport = null;
-            
-            // 方法1: parent_report_idで検索
-            if (report.report_id || report.id) {
-                try {
-                    // mode: 'no-cors'は使えない（レスポンスが読めない）ので、通常のfetchを使用
-                    // CORSエラーが発生する可能性があるが、catchで処理する
-                    const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?parent_report_id=${report.report_id || report.id}&proposal_type=proposal`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        // CORSエラーを抑制するため、modeを指定しない（デフォルトのcorsを使用）
-                    }).catch(() => null); // fetch自体が失敗した場合はnullを返す
-                    
-                    if (proposalResponse && proposalResponse.ok) {
-                        try {
-                            const proposalData = await proposalResponse.json();
-                            if (proposalData.reports && proposalData.reports.length > 0) {
-                                proposalReport = proposalData.reports[0];
-                            } else if (proposalData.items && proposalData.items.length > 0) {
-                                proposalReport = proposalData.items[0];
-                            } else if (proposalData.report) {
-                                proposalReport = proposalData.report;
-                            }
-                        } catch (jsonError) {
-                            // JSON解析エラーは無視
-                        }
-                    }
-                } catch (fetchError) {
-                    // CORSエラーやネットワークエラーの場合は静かに失敗
-                    // エラーログは出力しない（ブラウザが自動的に表示するため）
-                }
-            }
-            
-            // 方法2: store_id + cleaning_dateで検索（parent_report_idがない場合）
-            if (!proposalReport && report.store_id && report.cleaning_date) {
-                try {
-                    const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?store_id=${report.store_id}&cleaning_date=${report.cleaning_date}&proposal_type=proposal`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    }).catch(() => null); // fetch自体が失敗した場合はnullを返す
-                    
-                    if (proposalResponse && proposalResponse.ok) {
-                        try {
-                            const proposalData = await proposalResponse.json();
-                            if (proposalData.reports && proposalData.reports.length > 0) {
-                                proposalReport = proposalData.reports[0];
-                            } else if (proposalData.items && proposalData.items.length > 0) {
-                                proposalReport = proposalData.items[0];
-                            } else if (proposalData.report) {
-                                proposalReport = proposalData.report;
-                            }
-                        } catch (jsonError) {
-                            // JSON解析エラーは無視
-                        }
-                    }
-                } catch (fetchError) {
-                    // CORSエラーやネットワークエラーの場合は静かに失敗
-                    // エラーログは出力しない（ブラウザが自動的に表示するため）
-                }
-            }
-            
-            if (proposalReport) {
-                // 次回ご提案を表示
-                renderProposalReport(proposalReport);
-                if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
-                if (proposalEmptyEl) proposalEmptyEl.style.display = 'none';
-                if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'flex';
-                if (proposalMainEl) proposalMainEl.style.display = 'block';
-            } else {
-                // 次回ご提案がない場合
-                if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
-                if (proposalEmptyEl) proposalEmptyEl.style.display = 'block';
-                if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'none';
-                if (proposalMainEl) proposalMainEl.style.display = 'none';
-            }
-        } catch (apiError) {
-            // CORSエラーやネットワークエラーの場合は静かに失敗（警告ログは出さない）
-            // 次回ご提案がない場合として扱う
-            if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
-            if (proposalEmptyEl) proposalEmptyEl.style.display = 'block';
-            if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'none';
-            if (proposalMainEl) proposalMainEl.style.display = 'none';
+        } catch (fetchError) {
+            // CORSエラーやネットワークエラー、タイムアウトの場合は静かに失敗
+            // エラーログは出力しない（ブラウザが自動的に表示するため）
         }
-    } catch (error) {
-        // エラーが発生した場合は静かに失敗（次回ご提案がない場合として扱う）
+    }
+    
+    // 方法2: store_id + cleaning_dateで検索（parent_report_idがない場合）
+    if (!proposalReport && report.store_id && report.cleaning_date) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒でタイムアウト
+            
+            const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?store_id=${report.store_id}&cleaning_date=${report.cleaning_date}&proposal_type=proposal`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (proposalResponse && proposalResponse.ok) {
+                try {
+                    const proposalData = await proposalResponse.json();
+                    if (proposalData.reports && proposalData.reports.length > 0) {
+                        proposalReport = proposalData.reports[0];
+                    } else if (proposalData.items && proposalData.items.length > 0) {
+                        proposalReport = proposalData.items[0];
+                    } else if (proposalData.report) {
+                        proposalReport = proposalData.report;
+                    }
+                } catch (jsonError) {
+                    // JSON解析エラーは無視
+                }
+            }
+        } catch (fetchError) {
+            // CORSエラーやネットワークエラー、タイムアウトの場合は静かに失敗
+            // エラーログは出力しない（ブラウザが自動的に表示するため）
+        }
+    }
+    
+    // 結果を表示
+    if (proposalReport) {
+        // 次回ご提案を表示
+        renderProposalReport(proposalReport);
+        if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
+        if (proposalEmptyEl) proposalEmptyEl.style.display = 'none';
+        if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'flex';
+        if (proposalMainEl) proposalMainEl.style.display = 'block';
+    } else {
+        // 次回ご提案がない場合
         if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
         if (proposalEmptyEl) proposalEmptyEl.style.display = 'block';
         if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'none';
