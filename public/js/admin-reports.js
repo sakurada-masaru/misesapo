@@ -269,9 +269,17 @@
           : allStores.find(s => s.id === r.store_id) || {};
         
         // ブランド名を取得
-        const brandId = store.brand_id || r.brand_id;
+        // storeオブジェクトの構造を確認（brand_id, brandId, brandなど様々な可能性）
+        const brandId = store.brand_id || store.brandId || store.brand || r.brand_id || r.brandId || r.brand;
         if (!brandId) {
-          console.warn('[renderTable] No brandId found for report:', r.id || r.report_id, 'store:', store);
+          console.warn('[renderTable] No brandId found for report:', r.id || r.report_id);
+          console.warn('[renderTable] store object:', store);
+          console.warn('[renderTable] store.brand_id:', store.brand_id);
+          console.warn('[renderTable] store.brandId:', store.brandId);
+          console.warn('[renderTable] store.brand:', store.brand);
+          console.warn('[renderTable] r.brand_id:', r.brand_id);
+          console.warn('[renderTable] r.brandId:', r.brandId);
+          console.warn('[renderTable] r.brand:', r.brand);
         }
         const brand = (window.DataUtils && window.DataUtils.findBrand && brandId)
           ? window.DataUtils.findBrand(allBrands, brandId) || {}
