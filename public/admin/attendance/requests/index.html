@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title></title>
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+    <link rel="stylesheet" href="/css/admin-sidebar.css" />
+    <!-- DataUtils スクリプト（schedulesページで使用） -->
+    <script src="/js/data_utils.js"></script>
+  </head>
+  <body class="theme-pink ">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+    
+
+
+
+<main id="main" class="admin-attendance-requests">
+  <!-- モバイルメニューボタン -->
+<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+  <i class="fas fa-bars"></i>
+</button>
+
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/admin/dashboard" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <!-- ロール表示 -->
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">管理者</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <!-- マイページ（目立たせる） -->
+    <a href="/staff/mypage" class="nav-item nav-item-mypage" data-page="mypage" id="sidebar-mypage-link">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <div class="nav-divider"></div>
+    <!-- 管理メニュー -->
+    <a href="/admin/dashboard" class="nav-item" data-page="dashboard">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">アクティビティ</span>
+    </a>
+    <a href="/admin/schedules/" class="nav-item" data-page="schedules">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/admin/customers/" class="nav-item" data-page="customers">
+      <i class="fas fa-store"></i>
+      <span class="nav-label">顧客管理</span>
+    </a>
+    <a href="/admin/reports/" class="nav-item" data-page="reports">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">レポート</span>
+    </a>
+    <a href="/admin/estimates/" class="nav-item" data-page="estimates">
+      <i class="fas fa-file-invoice-dollar"></i>
+      <span class="nav-label">見積もり</span>
+    </a>
+    <a href="/admin/orders" class="nav-item" data-page="orders">
+      <i class="fas fa-shopping-cart"></i>
+      <span class="nav-label">発注管理</span>
+    </a>
+    <a href="/admin/partners" class="nav-item" data-page="partners">
+      <i class="fas fa-handshake"></i>
+      <span class="nav-label">パートナー企業</span>
+    </a>
+    <a href="/admin/users/" class="nav-item" data-page="users">
+      <i class="fas fa-users"></i>
+      <span class="nav-label">ユーザー管理</span>
+    </a>
+    <a href="/admin/attendance/errors" class="nav-item" data-page="attendance-errors">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span class="nav-label">勤怠管理</span>
+    </a>
+    <a href="/admin/services/" class="nav-item" data-page="services">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">サービス管理</span>
+    </a>
+    <a href="/admin/analytics/" class="nav-item" data-page="analytics">
+      <i class="fas fa-chart-bar"></i>
+      <span class="nav-label">分析</span>
+    </a>
+    <a href="/admin/images/" class="nav-item" data-page="images">
+      <i class="fas fa-images"></i>
+      <span class="nav-label">メディア</span>
+    </a>
+    <a href="/admin/zaiko" class="nav-item" data-page="zaiko">
+      <i class="fas fa-boxes"></i>
+      <span class="nav-label">在庫管理</span>
+    </a>
+    <a href="/admin/announcements" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">業務連絡</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/wiki" class="nav-item" data-page="wiki">
+      <i class="fas fa-book-open"></i>
+      <span class="nav-label">WIKI</span>
+    </a>
+    <a href="/admin/sitemap" class="nav-item" data-page="sitemap">
+      <i class="fas fa-sitemap"></i>
+      <span class="nav-label">サイトマップ</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="staffLogout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+  </nav>
+
+  <!-- トグルボタン -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<script>
+  // 従業員用ログアウト関数（グローバル）
+  function staffLogout() {
+    // Cognitoからログアウト
+    if (window.CognitoAuth && typeof window.CognitoAuth.logout === 'function') {
+      window.CognitoAuth.logout();
+    }
+    // ローカルストレージをクリア
+    localStorage.removeItem('cognito_user');
+    localStorage.removeItem('misesapo_auth');
+    localStorage.removeItem('cognito_id_token');
+    localStorage.removeItem('cognito_access_token');
+    localStorage.removeItem('cognito_refresh_token');
+    // 従業員ログイン画面にリダイレクト
+    window.location.href = '/staff/signin.html';
+  }
+</script>
+
+
+  <!-- メインコンテンツ -->
+  <div class="main-content">
+    <!-- トップバー -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>出退勤修正申請</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-outline btn-sm" id="refresh-btn">
+          <i class="fas fa-sync-alt"></i> 更新
+        </button>
+      </div>
+    </header>
+
+    <!-- フィルター -->
+    <div class="filter-section">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>スタッフID</label>
+          <input type="text" id="staff-id-filter" placeholder="スタッフIDで検索..." class="filter-input">
+        </div>
+        <div class="filter-group">
+          <label>ステータス</label>
+          <select id="status-filter" class="filter-select">
+            <option value="">すべて</option>
+            <option value="pending">承認待ち</option>
+            <option value="approved">承認済み</option>
+            <option value="rejected">却下</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" id="apply-filters">
+          <i class="fas fa-filter"></i> フィルター適用
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" id="reset-filters">
+          <i class="fas fa-undo"></i> リセット
+        </button>
+      </div>
+    </div>
+
+    <!-- 統計カード -->
+    <div class="stats-row">
+      <div class="stat-mini">
+        <div class="stat-mini-icon blue"><i class="fas fa-clipboard-list"></i></div>
+        <div class="stat-mini-body">
+          <div class="stat-mini-value" id="stat-total">-</div>
+          <div class="stat-mini-label">総申請数</div>
+        </div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon orange"><i class="fas fa-clock"></i></div>
+        <div class="stat-mini-body">
+          <div class="stat-mini-value" id="stat-pending">-</div>
+          <div class="stat-mini-label">承認待ち</div>
+        </div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon green"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-mini-body">
+          <div class="stat-mini-value" id="stat-approved">-</div>
+          <div class="stat-mini-label">承認済み</div>
+        </div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon red"><i class="fas fa-times-circle"></i></div>
+        <div class="stat-mini-body">
+          <div class="stat-mini-value" id="stat-rejected">-</div>
+          <div class="stat-mini-label">却下</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 申請一覧テーブル -->
+    <div class="table-container">
+      <table class="requests-table">
+        <thead>
+          <tr>
+            <th>申請日時</th>
+            <th>スタッフ</th>
+            <th>日付</th>
+            <th>現在の時刻</th>
+            <th>修正後の時刻</th>
+            <th>修正理由</th>
+            <th>ステータス</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="requests-tbody">
+          <tr>
+            <td colspan="8" class="loading-cell">
+              <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ページネーション -->
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- 承認/却下モーダル -->
+  <div id="approval-modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeApprovalModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="approval-modal-title">申請を承認</h2>
+        <button class="modal-close" onclick="closeApprovalModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="approval-request-detail"></div>
+        <div style="margin-top: 20px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 500;">コメント（任意）</label>
+          <textarea id="approval-comment" placeholder="コメントを入力..." style="
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+          "></textarea>
+        </div>
+        <div class="modal-actions" style="margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeApprovalModal()">キャンセル</button>
+          <button type="button" class="btn btn-danger" id="reject-btn" onclick="processRequest('rejected')">却下</button>
+          <button type="button" class="btn btn-primary" id="approve-btn" onclick="processRequest('approved')">承認</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    :root {
+      --sidebar-width: 240px;
+      --sidebar-width-collapsed: 64px;
+    }
+
+    .admin-attendance-requests {
+      display: flex;
+      min-height: 100vh;
+      background: #f9fafb;
+    }
+
+          padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+    }
+    .logo-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .logo-img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      white-space: nowrap;
+      transition: opacity 0.3s ease;
+    }
+          padding: 6px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      transition: opacity 0.3s ease;
+    }
+          padding: 3px 10px;
+      background: #e0e7ff;
+      color: #3730a3;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+          gap: 1px;
+      overflow-y: auto;
+    }
+          padding: 8px 10px;
+      color: #6b7280;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+          width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .nav-label {
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+      font-size: 0.8125rem;
+    }
+
+    .sidebar.collapsed 
+    .nav-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 8px 12px;
+    }
+
+    /* メインコンテンツ */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 24px;
+      background: #f9fafb;
+    
+      transition: margin-left 0.3s ease;}
+    .sidebar.collapsed ~ .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 24px;
+      background: #f9fafb;
+    
+      transition: margin-left 0.3s ease;}
+
+    /* トップバー */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .topbar-left h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* フィルター */
+    .filter-section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .filter-row {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      min-width: 200px;
+    }
+    .filter-group label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+    }
+    .filter-input,
+    .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+    .filter-input:focus,
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary, #3b82f6);
+    }
+
+    /* 統計カード */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-mini {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .stat-mini-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .stat-mini-icon.blue {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+    .stat-mini-icon.orange {
+      background: #fed7aa;
+      color: #ea580c;
+    }
+    .stat-mini-icon.green {
+      background: #d1fae5;
+      color: #059669;
+    }
+    .stat-mini-icon.red {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+    .stat-mini-body {
+      flex: 1;
+    }
+    .stat-mini-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .stat-mini-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    /* テーブル */
+    .table-container {
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .requests-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .requests-table thead {
+      background: #f9fafb;
+    }
+    .requests-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .requests-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.875rem;
+      color: #111827;
+    }
+    .requests-table tbody tr:hover {
+      background: #f9fafb;
+    }
+    .loading-cell {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .status-badge.pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-badge.approved {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-badge.rejected {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .time-comparison {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    .time-comparison .current {
+      text-decoration: line-through;
+      color: #9ca3af;
+    }
+    .time-comparison .requested {
+      color: #059669;
+      font-weight: 500;
+    }
+
+    /* モーダル */
+    #approval-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      position: relative;
+      background: #fff;
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-body {
+      margin-bottom: 20px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    /* ページネーション */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    .pagination button {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pagination button:hover:not(:disabled) {
+      background: #f3f4f6;
+      border-color: var(--primary, #3b82f6);
+    }
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .pagination button.active {
+      background: var(--primary, #3b82f6);
+      color: #fff;
+      border-color: var(--primary, #3b82f6);
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 24px;
+      background: #f9fafb;
+    
+      transition: margin-left 0.3s ease;}
+      
+      .sidebar.collapsed {
+        transform: translateX(0);
+      }
+      .filter-row {
+        flex-direction: column;
+      }
+      .filter-group {
+        min-width: 100%;
+      }
+    }
+  </style>
+
+  <script>
+    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    let allRequests = [];
+    let filteredRequests = [];
+    let currentPage = 1;
+    let currentRequestId = null;
+    const itemsPerPage = 20;
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', () => {
+      loadRequests();
+      setupFilters();
+      initSidebar();
+        
+  });
+
+    // 申請一覧を読み込み
+    async function loadRequests() {
+      const tbody = document.getElementById('requests-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" class="loading-cell"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</td></tr>';
+
+      try {
+        const response = await fetch(`${API_BASE}/attendance/requests?limit=1000`);
+        if (response.ok) {
+          const data = await response.json();
+          allRequests = data.requests || [];
+          filteredRequests = [...allRequests];
+          renderRequests();
+          updateStats();
+        } else {
+          throw new Error('申請一覧の取得に失敗しました');
+        }
+      } catch (error) {
+        console.error('Error loading requests:', error);
+        tbody.innerHTML = `<tr><td colspan="8" class="loading-cell" style="color: #dc2626;">エラー: ${error.message}</td></tr>`;
+      }
+    }
+
+    // フィルター設定
+    function setupFilters() {
+      document.getElementById('apply-filters').addEventListener('click', applyFilters);
+      document.getElementById('reset-filters').addEventListener('click', resetFilters);
+      document.getElementById('refresh-btn').addEventListener('click', loadRequests);
+    }
+
+    // フィルター適用
+    function applyFilters() {
+      const staffId = document.getElementById('staff-id-filter').value.trim();
+      const status = document.getElementById('status-filter').value;
+
+      filteredRequests = allRequests.filter(request => {
+        if (staffId && !request.staff_id?.includes(staffId)) return false;
+        if (status && request.status !== status) return false;
+        return true;
+      });
+
+      currentPage = 1;
+      renderRequests();
+      updateStats();
+    }
+
+    // フィルターリセット
+    function resetFilters() {
+      document.getElementById('staff-id-filter').value = '';
+      document.getElementById('status-filter').value = '';
+      filteredRequests = [...allRequests];
+      currentPage = 1;
+      renderRequests();
+      updateStats();
+    }
+
+    // 申請一覧をレンダリング
+    function renderRequests() {
+      const tbody = document.getElementById('requests-tbody');
+      
+      if (filteredRequests.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">申請が見つかりません</td></tr>';
+        return;
+      }
+
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const pageRequests = filteredRequests.slice(start, end);
+
+      tbody.innerHTML = pageRequests.map(request => {
+        const createdAt = new Date(request.created_at).toLocaleString('ja-JP');
+        const statusClass = request.status || 'pending';
+        const statusText = request.status === 'approved' ? '承認済み' :
+                          request.status === 'rejected' ? '却下' : '承認待ち';
+        
+        const formatTime = (timeStr) => {
+          if (!timeStr) return '-';
+          return new Date(timeStr).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+        };
+
+        const currentTimes = [];
+        if (request.current_clock_in) currentTimes.push(`出勤: ${formatTime(request.current_clock_in)}`);
+        if (request.current_clock_out) currentTimes.push(`退勤: ${formatTime(request.current_clock_out)}`);
+        
+        const requestedTimes = [];
+        if (request.requested_clock_in) requestedTimes.push(`出勤: ${formatTime(request.requested_clock_in)}`);
+        if (request.requested_clock_out) requestedTimes.push(`退勤: ${formatTime(request.requested_clock_out)}`);
+
+        return `
+          <tr>
+            <td>${createdAt}</td>
+            <td>${escapeHtml(request.staff_name || request.staff_id || '-')}</td>
+            <td>${request.date || '-'}</td>
+            <td>
+              ${currentTimes.length > 0 ? currentTimes.join('<br>') : '-'}
+            </td>
+            <td>
+              ${requestedTimes.length > 0 ? requestedTimes.join('<br>') : '-'}
+            </td>
+            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(request.reason || '-')}">
+              ${escapeHtml(request.reason || '-')}
+            </td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>
+              ${request.status === 'pending' ? `
+                <button class="btn btn-sm btn-primary" onclick="openApprovalModal('${request.id}')">
+                  <i class="fas fa-check"></i> 処理
+                </button>
+              ` : `
+                <button class="btn btn-sm btn-outline" onclick="viewRequestDetail('${request.id}')">
+                  <i class="fas fa-eye"></i> 詳細
+                </button>
+              `}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      renderPagination();
+    }
+
+    // ページネーションをレンダリング
+    function renderPagination() {
+      const pagination = document.getElementById('pagination');
+      const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+
+      if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      if (currentPage > 1) {
+        html += `<button onclick="changePage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+      }
+
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+          html += `<button class="${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+          html += `<span>...</span>`;
+        }
+      }
+
+      if (currentPage < totalPages) {
+        html += `<button onclick="changePage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+      }
+
+      pagination.innerHTML = html;
+    }
+
+    // ページ変更
+    window.changePage = function(page) {
+      currentPage = page;
+      renderRequests();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // 承認モーダルを開く
+    window.openApprovalModal = function(requestId) {
+      const request = allRequests.find(r => r.id === requestId);
+      if (!request) return;
+
+      currentRequestId = requestId;
+      const modal = document.getElementById('approval-modal');
+      const detailEl = document.getElementById('approval-request-detail');
+      
+      const formatTime = (timeStr) => {
+        if (!timeStr) return '-';
+        return new Date(timeStr).toLocaleString('ja-JP', { 
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      };
+
+      detailEl.innerHTML = `
+        <div style="margin-bottom: 16px;">
+          <strong>スタッフ:</strong> ${escapeHtml(request.staff_name || request.staff_id || '-')}
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>日付:</strong> ${request.date || '-'}
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>現在の時刻:</strong><br>
+          ${request.current_clock_in ? `出勤: ${formatTime(request.current_clock_in)}` : ''}<br>
+          ${request.current_clock_out ? `退勤: ${formatTime(request.current_clock_out)}` : ''}
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>修正後の時刻:</strong><br>
+          ${request.requested_clock_in ? `出勤: ${formatTime(request.requested_clock_in)}` : ''}<br>
+          ${request.requested_clock_out ? `退勤: ${formatTime(request.requested_clock_out)}` : ''}
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>修正理由:</strong><br>
+          ${escapeHtml(request.reason || '-')}
+        </div>
+      `;
+
+      document.getElementById('approval-comment').value = '';
+      modal.style.display = 'flex';
+    };
+
+    // 承認モーダルを閉じる
+    window.closeApprovalModal = function() {
+      document.getElementById('approval-modal').style.display = 'none';
+      currentRequestId = null;
+    };
+
+    // 申請を処理（承認/却下）
+    window.processRequest = async function(status) {
+      if (!currentRequestId) return;
+
+      const comment = document.getElementById('approval-comment').value.trim();
+      const adminId = window.Auth?.getCurrentUser?.()?.id || 'admin';
+
+      try {
+        const response = await fetch(`${API_BASE}/attendance/requests/${currentRequestId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: status,
+            admin_comment: comment,
+            admin_id: adminId
+          })
+        });
+
+        if (response.ok) {
+          closeApprovalModal();
+          await loadRequests();
+          alert(status === 'approved' ? '申請を承認しました' : '申請を却下しました');
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          alert(errorData.error || '処理に失敗しました');
+        }
+      } catch (error) {
+        console.error('Error processing request:', error);
+        alert('処理に失敗しました');
+      }
+    };
+
+    // 申請詳細を表示
+    window.viewRequestDetail = function(requestId) {
+      const request = allRequests.find(r => r.id === requestId);
+      if (!request) return;
+
+      const detail = `
+申請ID: ${request.id}
+申請日時: ${new Date(request.created_at).toLocaleString('ja-JP')}
+スタッフ: ${request.staff_name || request.staff_id || '-'}
+日付: ${request.date || '-'}
+現在の時刻:
+  ${request.current_clock_in ? `出勤: ${new Date(request.current_clock_in).toLocaleString('ja-JP')}` : ''}
+  ${request.current_clock_out ? `退勤: ${new Date(request.current_clock_out).toLocaleString('ja-JP')}` : ''}
+修正後の時刻:
+  ${request.requested_clock_in ? `出勤: ${new Date(request.requested_clock_in).toLocaleString('ja-JP')}` : ''}
+  ${request.requested_clock_out ? `退勤: ${new Date(request.requested_clock_out).toLocaleString('ja-JP')}` : ''}
+修正理由: ${request.reason || '-'}
+ステータス: ${request.status === 'approved' ? '承認済み' : request.status === 'rejected' ? '却下' : '承認待ち'}
+${request.admin_comment ? `管理者コメント: ${request.admin_comment}` : ''}
+      `;
+
+      alert(detail);
+    };
+
+    // 統計を更新
+    function updateStats() {
+      const total = filteredRequests.length;
+      const pending = filteredRequests.filter(r => r.status === 'pending').length;
+      const approved = filteredRequests.filter(r => r.status === 'approved').length;
+      const rejected = filteredRequests.filter(r => r.status === 'rejected').length;
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-pending').textContent = pending;
+      document.getElementById('stat-approved').textContent = approved;
+      document.getElementById('stat-rejected').textContent = rejected;
+    }
+
+    // HTMLエスケープ
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // サイドバーの初期化（共通サイドバーを使用しているため、個別の初期化は不要）
+    function initSidebar() {
+      // 共通サイドバーのJavaScriptが処理するため、ここでは何もしない
+    }
+  </script>
+</main>
+
+
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- AWS SDK and Cognito -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+    <script src="/js/cognito_config.js"></script>
+    <script src="/js/cognito_auth.js"></script>
+    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script src="/js/admin-sidebar.js"></script>
+    <!-- Page-specific scripts (injected by page content) -->
+    <script>
+      // 管理画面では共通ヘッダーを持たないため追加スクリプトは不要
+    </script>
+  </body>
+</html>
+

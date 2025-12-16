@@ -1,0 +1,544 @@
+/* --- 在庫管理ページ CSS --- */
+.admin-zaiko {
+  display: flex;
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.admin-zaiko .zaiko-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 24px;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.admin-zaiko h1 {
+  color: #111827;
+  border-bottom: none;
+  padding-bottom: 0;
+    margin: 0;
+}
+
+.admin-zaiko h2 {
+  color: #374151;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  padding: 0 24px;
+}
+
+.admin-zaiko .content-wrapper {
+  padding: 0;
+  width: 100%;
+}
+/* トランザクション処理セクション */
+#transaction-area {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+}
+.mode-buttons button {
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+.mode-buttons .active {
+    background-color: #28a745; /* 入庫（緑） */
+    color: white;
+}
+.mode-buttons .inactive {
+    background-color: #dc3545; /* 出庫（赤） */
+    color: white;
+}
+/* 入力フォーム */
+.input-group {
+    margin-bottom: 16px;
+}
+
+.input-group label {
+    display: block;
+    margin-top: 0;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #374151;
+}
+.input-group input {
+    width: 100%;
+    padding: 10px 12px;
+    margin-top: 0;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+.input-group input:focus {
+    outline: none;
+    border-color: #FF679C;
+    box-shadow: 0 0 0 3px rgba(255, 107, 156, 0.1);
+}
+#process-button {
+    background-color: #FF679C;
+    color: white;
+    padding: 12px 24px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+#process-button:hover {
+    background-color: #e91e63;
+}
+#process-button:active {
+    transform: scale(0.98);
+}
+/* 在庫カードグリッド */
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+    padding: 0;
+}
+
+.inventory-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-height: 160px;
+    position: relative;
+}
+
+.inventory-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.inventory-card:active {
+    transform: translateY(0);
+}
+
+/* 在庫ステータス別の色分け */
+.inventory-card.stock-safe {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.inventory-card.stock-warning {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+}
+
+.inventory-card.stock-danger {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.inventory-card.stock-safe .card-icon {
+    color: #10b981;
+}
+
+.inventory-card.stock-warning .card-icon {
+    color: #f59e0b;
+}
+
+.inventory-card.stock-danger .card-icon {
+    color: #ef4444;
+}
+
+.card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.card-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.3;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 2.6em;
+}
+
+.card-id {
+    font-size: 0.7rem;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.card-stock {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+    margin: 8px 0;
+}
+
+.stock-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.inventory-card.stock-safe .stock-number {
+    color: #10b981;
+}
+
+.inventory-card.stock-warning .stock-number {
+    color: #f59e0b;
+}
+
+.inventory-card.stock-danger .stock-number {
+    color: #ef4444;
+}
+
+.stock-unit {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.card-status {
+    margin-top: auto;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge.stock-safe {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.stock-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.stock-danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+/* メッセージエリア */
+#message {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+.success { 
+    background-color: #d1fae5; 
+    color: #065f46; 
+    border: 1px solid #a7f3d0; 
+}
+.error { 
+    background-color: #fee2e2; 
+    color: #991b1b; 
+    border: 1px solid #fecaca; 
+}
+
+/* 管理ダッシュボードとの統合 */
+.admin-zaiko hr {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 24px 0;
+}
+
+/* モーダルスタイル */
+.modal-dialog {
+    border: none;
+    border-radius: 16px;
+    padding: 0;
+    max-width: 500px;
+    width: 90vw;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+}
+
+.modal-dialog-large {
+    max-width: 900px;
+}
+
+.modal-body-scrollable {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.modal-dialog:not([open]) {
+    display: none;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 8px;
+    color: #6b7280;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.modal-close:hover {
+    background: #e5e7eb;
+}
+
+.modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* ヘルプコンテンツ */
+.help-content {
+    line-height: 1.6;
+}
+
+.help-content h4 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 20px;
+}
+
+.help-content h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+    margin-top: 24px;
+    margin-bottom: 12px;
+}
+
+.help-section {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.help-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.help-content ul,
+.help-content ol {
+    margin: 8px 0;
+    padding-left: 24px;
+}
+
+.help-content li {
+    margin-bottom: 8px;
+    color: #4b5563;
+}
+
+.help-content strong {
+    color: #111827;
+    font-weight: 600;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.product-detail-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.detail-value {
+    font-weight: 600;
+    color: #111827;
+    font-size: 0.95rem;
+}
+
+.modal-transaction-area h4 {
+    margin: 0 0 16px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.modal-transaction-area .mode-buttons {
+    margin-bottom: 16px;
+}
+
+.modal-transaction-area .mode-buttons button {
+    padding: 8px 16px;
+    margin: 0 4px;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.modal-transaction-area .mode-buttons .active {
+    background-color: #28a745;
+    color: white;
+}
+
+.modal-transaction-area .mode-buttons .inactive {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-process {
+    width: 100%;
+    padding: 12px 24px;
+    margin-top: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.2s;
+}
+
+.btn-process:hover {
+    opacity: 0.9;
+}
+
+.btn-process:active {
+    transform: scale(0.98);
+}
+
+.btn-outline {
+    padding: 10px 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-outline:hover {
+    background: #f9fafb;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 1200px) {
+    .inventory-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+}
+
+@media (max-width: 900px) {
+    .inventory-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .inventory-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .inventory-card {
+        padding: 12px;
+        min-height: 140px;
+    }
+    
+    .card-icon {
+        font-size: 2rem;
+    }
+    
+    .stock-number {
+        font-size: 1.25rem;
+    }
+}

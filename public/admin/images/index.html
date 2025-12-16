@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title></title>
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+    <link rel="stylesheet" href="/css/admin-sidebar.css" />
+    <!-- DataUtils スクリプト（schedulesページで使用） -->
+    <script src="/js/data_utils.js"></script>
+  </head>
+  <body class="theme-pink page-admin-services">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+    
+
+
+
+<main id="main" class="admin-images-v2">
+  <!-- モバイルメニューボタン -->
+<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+  <i class="fas fa-bars"></i>
+</button>
+
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/admin/dashboard" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <!-- ロール表示 -->
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">管理者</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <!-- マイページ（目立たせる） -->
+    <a href="/staff/mypage" class="nav-item nav-item-mypage" data-page="mypage" id="sidebar-mypage-link">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <div class="nav-divider"></div>
+    <!-- 管理メニュー -->
+    <a href="/admin/dashboard" class="nav-item" data-page="dashboard">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">アクティビティ</span>
+    </a>
+    <a href="/admin/schedules/" class="nav-item" data-page="schedules">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/admin/customers/" class="nav-item" data-page="customers">
+      <i class="fas fa-store"></i>
+      <span class="nav-label">顧客管理</span>
+    </a>
+    <a href="/admin/reports/" class="nav-item" data-page="reports">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">レポート</span>
+    </a>
+    <a href="/admin/estimates/" class="nav-item" data-page="estimates">
+      <i class="fas fa-file-invoice-dollar"></i>
+      <span class="nav-label">見積もり</span>
+    </a>
+    <a href="/admin/orders" class="nav-item" data-page="orders">
+      <i class="fas fa-shopping-cart"></i>
+      <span class="nav-label">発注管理</span>
+    </a>
+    <a href="/admin/partners" class="nav-item" data-page="partners">
+      <i class="fas fa-handshake"></i>
+      <span class="nav-label">パートナー企業</span>
+    </a>
+    <a href="/admin/users/" class="nav-item" data-page="users">
+      <i class="fas fa-users"></i>
+      <span class="nav-label">ユーザー管理</span>
+    </a>
+    <a href="/admin/attendance/errors" class="nav-item" data-page="attendance-errors">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span class="nav-label">勤怠管理</span>
+    </a>
+    <a href="/admin/services/" class="nav-item" data-page="services">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">サービス管理</span>
+    </a>
+    <a href="/admin/analytics/" class="nav-item" data-page="analytics">
+      <i class="fas fa-chart-bar"></i>
+      <span class="nav-label">分析</span>
+    </a>
+    <a href="/admin/images/" class="nav-item" data-page="images">
+      <i class="fas fa-images"></i>
+      <span class="nav-label">メディア</span>
+    </a>
+    <a href="/admin/zaiko" class="nav-item" data-page="zaiko">
+      <i class="fas fa-boxes"></i>
+      <span class="nav-label">在庫管理</span>
+    </a>
+    <a href="/admin/announcements" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">業務連絡</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/wiki" class="nav-item" data-page="wiki">
+      <i class="fas fa-book-open"></i>
+      <span class="nav-label">WIKI</span>
+    </a>
+    <a href="/admin/sitemap" class="nav-item" data-page="sitemap">
+      <i class="fas fa-sitemap"></i>
+      <span class="nav-label">サイトマップ</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="staffLogout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+  </nav>
+
+  <!-- トグルボタン -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<script>
+  // 従業員用ログアウト関数（グローバル）
+  function staffLogout() {
+    // Cognitoからログアウト
+    if (window.CognitoAuth && typeof window.CognitoAuth.logout === 'function') {
+      window.CognitoAuth.logout();
+    }
+    // ローカルストレージをクリア
+    localStorage.removeItem('cognito_user');
+    localStorage.removeItem('misesapo_auth');
+    localStorage.removeItem('cognito_id_token');
+    localStorage.removeItem('cognito_access_token');
+    localStorage.removeItem('cognito_refresh_token');
+    // 従業員ログイン画面にリダイレクト
+    window.location.href = '/staff/signin.html';
+  }
+</script>
+
+
+  <!-- メインコンテンツ -->
+  <div class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">
+          <i class="fas fa-images"></i>
+          メディア管理
+        </h1>
+      </div>
+
+      <!-- タブナビゲーション -->
+      <div class="media-tabs">
+        <button class="tab-btn active" data-tab="service-images">
+          <i class="fas fa-image"></i>
+          <span>サービス画像</span>
+        </button>
+        <button class="tab-btn" data-tab="report-images">
+          <i class="fas fa-folder-open"></i>
+          <span>レポート画像</span>
+        </button>
+      </div>
+
+      <!-- サービス画像タブ -->
+      <div id="tab-content-service-images" class="tab-content active">
+        <div class="header-actions">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="image-search" class="search-input" placeholder="画像名で検索..." />
+          </div>
+          <select id="image-filter" class="filter-select">
+            <option value="">すべての形式</option>
+            <option value="png">PNG</option>
+            <option value="jpg">JPG</option>
+            <option value="jpeg">JPEG</option>
+            <option value="svg">SVG</option>
+          </select>
+          <button type="button" class="btn btn-primary" id="btn-upload-image">
+            <i class="fas fa-upload"></i> 画像をアップロード
+          </button>
+        </div>
+
+        <div class="images-stats" id="images-stats">
+          <div class="stat-card">
+            <i class="fas fa-images"></i>
+            <div class="stat-content">
+              <strong id="total-count">0</strong>
+              <span>件の画像</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="images-grid" id="images-grid">
+          <!-- 画像はJavaScriptで動的に読み込まれます -->
+        </div>
+      </div>
+
+      <!-- レポート画像タブ -->
+      <div id="tab-content-report-images" class="tab-content">
+        <!-- アップロードボタン -->
+        <div class="media-upload-section">
+          <label class="btn-upload-media">
+            <input type="file" accept="image/*" multiple id="report-media-file-input" style="display:none;">
+            <i class="fas fa-plus"></i>
+            <span>画像を追加</span>
+          </label>
+        </div>
+
+        <!-- フォルダ選択・作成 -->
+        <div class="folder-section">
+          <div class="folder-select-wrapper">
+            <label for="report-folder-select" class="folder-label">フォルダ:</label>
+            <select id="report-folder-select" class="folder-select">
+              <option value="">全てのフォルダ</option>
+            </select>
+            <button type="button" class="btn-create-folder" id="btn-create-report-folder">
+              <i class="fas fa-folder-plus"></i>
+              <span>新規フォルダ</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- フィルター -->
+        <div class="filter-tabs">
+          <button class="filter-tab-btn active" data-filter="all">全て</button>
+          <button class="filter-tab-btn" data-filter="before">作業前</button>
+          <button class="filter-tab-btn" data-filter="after">作業後</button>
+          <input type="date" id="report-media-date-filter" class="date-filter-input">
+        </div>
+
+        <!-- 画像グリッド -->
+        <div class="report-media-grid" id="report-media-grid">
+          <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>読み込み中...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- アップロードモーダル（サービス画像用） -->
+      <div id="upload-modal" class="upload-modal hidden">
+        <div class="upload-modal-overlay"></div>
+        <div class="upload-modal-content">
+          <button class="upload-modal-close" id="upload-modal-close" aria-label="閉じる">
+            <i class="fas fa-times"></i>
+          </button>
+          <div class="upload-modal-header">
+            <h3 class="upload-modal-title">画像をアップロード</h3>
+          </div>
+          <div class="upload-modal-body">
+            <div class="upload-dropzone" id="upload-dropzone">
+              <input type="file" id="upload-file-input" accept="image/*" multiple hidden />
+              <i class="fas fa-cloud-upload-alt"></i>
+              <p>ここにファイルをドラッグ&ドロップ</p>
+              <p class="upload-hint">または</p>
+              <button type="button" class="btn btn-primary" id="btn-select-files">
+                ファイルを選択
+              </button>
+              <p class="upload-formats">対応形式: PNG, JPG, JPEG, GIF, WebP</p>
+            </div>
+            <div class="upload-preview-list" id="upload-preview-list">
+              <!-- アップロード待ちのファイルがここに表示される -->
+            </div>
+          </div>
+          <div class="upload-modal-footer">
+            <button type="button" class="btn btn-outline" id="btn-cancel-upload">キャンセル</button>
+            <button type="button" class="btn btn-primary" id="btn-confirm-upload" disabled>
+              <i class="fas fa-upload"></i> アップロード
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 画像プレビューモーダル（サービス画像用） -->
+      <div id="image-modal" class="image-modal hidden">
+        <div class="image-modal-overlay"></div>
+        <div class="image-modal-content">
+          <button class="image-modal-close" id="image-modal-close" aria-label="閉じる">
+            <i class="fas fa-times"></i>
+          </button>
+          <div class="image-modal-header">
+            <h3 id="image-modal-title" class="image-modal-title"></h3>
+            <div class="image-modal-path" id="image-modal-path"></div>
+          </div>
+          <div class="image-modal-body">
+            <img id="image-modal-img" src="" alt="" />
+          </div>
+          <div class="image-modal-footer">
+            <button type="button" class="btn btn-primary" id="image-copy-path">
+              <i class="fas fa-copy"></i> パスをコピー
+            </button>
+            <a id="image-download-link" href="" download class="btn btn-outline">
+              <i class="fas fa-download"></i> ダウンロード
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 新規フォルダ作成モーダル（レポート画像用） -->
+      <div id="create-report-folder-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>新規フォルダを作成</h3>
+            <button type="button" class="modal-close" onclick="closeCreateReportFolderModal()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="new-report-folder-name">フォルダ名</label>
+              <input type="text" id="new-report-folder-name" class="form-input" placeholder="例: 案件A、店舗名など" maxlength="50">
+              <p class="form-hint">フォルダ名を入力してください（最大50文字）</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeCreateReportFolderModal()">キャンセル</button>
+            <button type="button" class="btn btn-primary" id="confirm-create-report-folder-btn">作成</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 画像プレビューモーダル（レポート画像用） -->
+      <div id="report-image-preview-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content image-preview-content">
+          <div class="modal-header">
+            <h3>画像プレビュー</h3>
+            <button type="button" class="modal-close" onclick="closeReportImagePreview()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <img id="preview-report-image" src="" alt="Preview" style="max-width:100%; height:auto;">
+            <div class="image-info" id="report-image-info"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeReportImagePreview()">閉じる</button>
+            <button type="button" class="btn btn-danger" id="delete-report-image-btn">削除</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="/js/admin-media.js"></script>
+
+<style>
+  :root {
+    --sidebar-width: 240px;
+    --sidebar-width-collapsed: 64px;
+    --topbar-height: 64px;
+    --primary: #3b82f6;
+  }
+
+  .admin-images-v2 {
+    display: flex;
+    min-height: 100vh;
+    background: #f9fafb;
+  }
+
+  .main-content {
+    margin-left: var(--sidebar-width);
+    padding: 24px;
+    background: #f9fafb;
+    transition: margin-left 0.3s ease;
+  }
+
+  .sidebar.collapsed ~ .main-content {
+    margin-left: var(--sidebar-width-collapsed);
+  }
+
+  .admin-images-v2 > .main-content > .container {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* タブナビゲーション */
+  .media-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -2px;
+  }
+
+  .tab-btn:hover {
+    color: var(--primary);
+    background: #f3f4f6;
+  }
+
+  .tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-box i {
+    position: absolute;
+    left: 12px;
+    color: #6b7280;
+  }
+
+  .search-input {
+    padding: 8px 12px 8px 36px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    min-width: 250px;
+  }
+
+  .filter-select {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background: #fff;
+  }
+
+  .images-stats {
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+  }
+
+  .stat-card i {
+    font-size: 1.5rem;
+    color: #3b82f6;
+  }
+
+  .stat-content {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .stat-content strong {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .stat-content span {
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+
+  .images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
+
+  .image-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .image-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .image-card-thumb {
+    position: relative;
+    width: 100%;
+    padding-top: 75%;
+    background: #f9fafb;
+    overflow: hidden;
+  }
+
+  .image-card-thumb img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .image-card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .image-card:hover .image-card-overlay {
+    opacity: 1;
+  }
+
+  .image-card-overlay i {
+    color: #fff;
+    font-size: 2rem;
+  }
+
+  .image-card-info {
+    padding: 12px;
+  }
+
+  .image-card-name {
+    font-weight: 600;
+    color: #111827;
+    font-size: 0.875rem;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .image-card-path {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .image-card-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background: #e5e7eb;
+    color: #6b7280;
+    border-radius: 4px;
+    font-size: 0.625rem;
+    font-weight: 600;
+  }
+
+  /* レポート画像タブのスタイル */
+  .media-upload-section {
+    margin-bottom: 20px;
+  }
+
+  .btn-upload-media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 16px;
+    background: #FF679C;
+    color: #fff;
+    border-radius: 12px;
+    cursor: pointer;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .btn-upload-media:hover {
+    background: #FF5A9A;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 103, 156, 0.3);
+  }
+
+  .btn-upload-media i {
+    font-size: 1.25rem;
+  }
+
+  .folder-section {
+    margin-bottom: 20px;
+    padding: 12px;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .folder-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .folder-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    white-space: nowrap;
+  }
+
+  .folder-select {
+    flex: 1;
+    min-width: 150px;
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 0.875rem;
+    color: #374151;
+    cursor: pointer;
+  }
+
+  .btn-create-folder {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #10b981;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-create-folder:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  }
+
+  .filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+    align-items: center;
+  }
+
+  .filter-tab-btn {
+    padding: 8px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-tab-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .filter-tab-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+  }
+
+  .date-filter-input {
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 0.875rem;
+    margin-left: auto;
+  }
+
+  .report-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+
+  .report-media-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid #e5e7eb;
+    transition: all 0.2s;
+  }
+
+  .report-media-item:hover {
+    border-color: #FF679C;
+    transform: scale(1.05);
+  }
+
+  .report-media-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .report-media-item-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .report-media-item:hover .report-media-item-overlay {
+    opacity: 1;
+  }
+
+  .report-media-item-category {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    padding: 4px 8px;
+    background: rgba(255, 103, 156, 0.9);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  .loading-spinner {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
+  }
+
+  .loading-spinner i {
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: #9ca3af;
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  /* モーダル */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    cursor: pointer;
+  }
+
+  .modal-content {
+    max-width: 500px;
+    width: 100%;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: default;
+  }
+
+  .image-preview-content {
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+
+  .modal-close:hover {
+    background: #f3f4f6;
+    color: #111827;
+  }
+
+  .modal-body {
+    padding: 20px;
+    overflow: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .image-info {
+    margin-top: 16px;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 16px 20px;
+    border-top: 1px solid #e5e7eb;
+    justify-content: flex-end;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #374151;
+    box-sizing: border-box;
+  }
+
+  .form-hint {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .btn:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+  }
+
+  .btn-primary {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+  }
+
+  .btn-primary:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+
+  .btn-outline {
+    background: #fff;
+    color: #374151;
+    border-color: #d1d5db;
+  }
+
+  .btn-danger {
+    background: #ef4444;
+    color: #fff;
+  }
+
+  .btn-danger:hover {
+    background: #dc2626;
+  }
+
+  .error-message {
+    text-align: center;
+    padding: 48px;
+    color: #dc2626;
+  }
+
+  .error-message i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+  }
+
+  /* アップロードモーダル */
+  .upload-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+
+  .upload-modal.hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .upload-modal.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .upload-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+  }
+
+  .upload-modal-content {
+    position: relative;
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    z-index: 1001;
+  }
+
+  .upload-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: #f3f4f6;
+    color: #6b7280;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 1002;
+  }
+
+  .upload-modal-close:hover {
+    background: #e5e7eb;
+    color: #374151;
+  }
+
+  .upload-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .upload-modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+
+  .upload-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .upload-dropzone {
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 40px 24px;
+    text-align: center;
+    transition: all 0.2s;
+    background: #f9fafb;
+  }
+
+  .upload-dropzone.dragover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+  }
+
+  .upload-dropzone i {
+    font-size: 3rem;
+    color: #9ca3af;
+    margin-bottom: 16px;
+  }
+
+  .upload-dropzone p {
+    margin: 0 0 8px 0;
+    color: #6b7280;
+  }
+
+  .upload-hint {
+    font-size: 0.875rem;
+    color: #9ca3af !important;
+  }
+
+  .upload-formats {
+    font-size: 0.75rem;
+    color: #9ca3af !important;
+    margin-top: 16px !important;
+  }
+
+  .upload-preview-list {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .upload-preview-item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+  }
+
+  .upload-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .upload-preview-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    padding: 4px 8px;
+  }
+
+  .upload-preview-name {
+    color: #fff;
+    font-size: 0.625rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+  }
+
+  .upload-preview-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .upload-preview-remove:hover {
+    background: #dc2626;
+  }
+
+  .upload-modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+
+  /* 画像モーダル */
+  .image-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+
+  .image-modal.hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .image-modal.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .image-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    cursor: pointer;
+  }
+
+  .image-modal-content {
+    position: relative;
+    background: #fff;
+    border-radius: 16px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    z-index: 1001;
+  }
+
+  .image-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    font-size: 1.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 1002;
+  }
+
+  .image-modal-close:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.1);
+  }
+
+  .image-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .image-modal-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 4px 0;
+  }
+
+  .image-modal-path {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-family: monospace;
+  }
+
+  .image-modal-body {
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-height: 60vh;
+    overflow: auto;
+  }
+
+  .image-modal-body img {
+    max-width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  .image-modal-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  @media (max-width: 768px) {
+    .report-media-grid {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+    }
+  }
+</style>
+
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- AWS SDK and Cognito -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+    <script src="/js/cognito_config.js"></script>
+    <script src="/js/cognito_auth.js"></script>
+    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script src="/js/admin-sidebar.js"></script>
+    <!-- Page-specific scripts (injected by page content) -->
+    <script>
+      // 管理画面では共通ヘッダーを持たないため追加スクリプトは不要
+    </script>
+  </body>
+</html>
+

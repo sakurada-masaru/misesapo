@@ -1,0 +1,2905 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title>出勤履歴 | ミセサポ</title>
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+    <style>
+      /* Staff signin page: hide all headers */
+      body.page-staff-signin #default-header-wrapper,
+      body.page-staff-signin #normal-header-wrapper {
+        display: none !important;
+      }
+      
+      /* Staff pages: hide global header and footer */
+      body[class*="page-staff-"] #default-header-wrapper,
+      body[class*="page-staff-"] #normal-header-wrapper,
+      body[class*="page-staff-"] footer {
+        display: none !important;
+      }
+      
+      /* Staff pages: ensure full height layout */
+      body[class*="page-staff-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="page-staff-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Admin pages: hide global header while keeping auth buttons */
+      body[class*="page-admin-"] #default-header-wrapper {
+        height: 0;
+        overflow: visible;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .site-header {
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        min-height: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .inner {
+        justify-content: flex-end;
+        padding: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-left,
+      body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
+      body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
+      body[class*="page-admin-"] #default-header-wrapper .spacer,
+      body[class*="page-admin-"] #default-header-wrapper .role-badge {
+        display: none !important;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right {
+        position: fixed;
+        top: 16px;
+        right: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 18px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.18);
+        z-index: 300;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
+        font-weight: 600;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+      }
+      
+      /* Sales pages: hide global header and footer */
+      body[class*="sales-"] #default-header-wrapper,
+      body[class*="sales-"] #normal-header-wrapper,
+      body[class*="sales-"] footer {
+        display: none !important;
+      }
+      
+      /* Sales pages: ensure full height layout */
+      body[class*="sales-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="sales-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body class="theme-pink page-staff-attendance-history">
+    <div id="default-header-wrapper">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+<header id="header-guest" class="site-header" data-role="guest">
+  <div class="inner wide">
+    <div class="nav-left">
+      <a class="brand brand-logo" href="/" aria-label="ミセサポ ホーム">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+      </a>
+      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+    </div>
+    <div class="spacer"></div>
+    <nav class="nav-right hide-sm" aria-label="User">
+      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+      <a class="nav-link" href="/signin">ログイン</a>
+      <a class="nav-link primary" href="/signup">新規登録</a>
+      <button class="icon-btn" aria-label="通知">
+        <i class="fas fa-bell"></i>
+      </button>
+      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </nav>
+    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+  <!-- スマホ版ナビゲーションメニュー -->
+  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
+    <div class="mobile-nav-content">
+      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+      <nav class="mobile-nav-user" aria-label="User">
+        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+        <a class="mobile-nav-link" href="/signin">ログイン</a>
+        <a class="mobile-nav-link primary" href="/signup">新規登録</a>
+      </nav>
+    </div>
+  </nav>
+</header>
+
+    </div>
+    <!-- 通常ヘッダー（ログイン画面用） -->
+    <div id="normal-header-wrapper" style="display: none;">
+    <!-- 通常ヘッダー -->
+<header class="normal-header">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+            </a>
+                </div>
+        <nav class="normal-header-nav">
+            <a href="/">TOP</a>
+            <a href="/service">対応可能サービス</a>
+            <a href="/lp#voice">お客様の声</a>
+            <a href="/customers-support-desk">カスタマーズサポート</a>
+            <a href="/announcements">お知らせ</a>
+            <a href="/privacy-policy">規約＆ポリシー</a>
+        </nav>
+        <div class="normal-header-actions">
+            <a href="/signin" class="normal-header-login">ログイン</a>
+        </div>
+            </div>
+</header>
+
+
+    </div>
+    <main id="main">
+      
+
+
+<link rel="stylesheet" href="/css/admin-sidebar.css">
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/js/cognito_config.js"></script>
+<script src="/js/cognito_auth.js"></script>
+<script src="/js/client_auth.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/staff/mypage" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">従業員</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/staff/mypage" class="nav-item" data-page="mypage">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <a href="/staff/attendance-history" class="nav-item active" data-page="attendance-history">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">出勤履歴</span>
+    </a>
+    <a href="/staff/daily-reports" class="nav-item" data-page="daily-reports">
+      <i class="fas fa-edit"></i>
+      <span class="nav-label">日報</span>
+    </a>
+    <a href="/staff/schedule" class="nav-item" data-page="schedule">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/staff/reports" class="nav-item" data-page="reports">
+      <i class="fas fa-clipboard-list"></i>
+      <span class="nav-label">レポート一覧</span>
+    </a>
+    <a href="/cleaning-manual" class="nav-item" data-page="cleaning-manual">
+      <i class="fas fa-book"></i>
+      <span class="nav-label">清掃マニュアル</span>
+    </a>
+    <a href="/announcements" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">お知らせ</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/staff/mypage/settings" class="nav-item" data-page="settings">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">設定</span>
+    </a>
+    <button class="nav-item logout-btn" id="logout-btn">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+  </nav>
+
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<main id="main" class="container staff-page main-content">
+  <div id="loading" class="loading-state">
+    <div class="loading-spinner"></div>
+    <p>読み込み中...</p>
+  </div>
+
+  <div id="error-message" class="error-state" style="display: none;">
+    <i class="fas fa-exclamation-circle"></i>
+    <p id="error-text">エラーが発生しました</p>
+    <button class="btn btn-primary" onclick="location.reload()">再読み込み</button>
+  </div>
+
+  <div id="page-content" class="attendance-history-page" style="display: none;">
+    <!-- ヘッダー -->
+    <div class="page-header">
+      <h1 class="page-title">
+        <i class="fas fa-history"></i>
+        出勤履歴
+      </h1>
+      <div class="month-selector">
+        <button class="btn btn-icon" id="prev-month">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <span class="current-month" id="current-month">2025年12月</span>
+        <button class="btn btn-icon" id="next-month">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- サマリーカード -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="summary-icon working">
+          <i class="fas fa-briefcase"></i>
+        </div>
+        <div class="summary-content">
+          <span class="summary-value" id="total-work-days">0</span>
+          <span class="summary-label">出勤日数</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon off">
+          <i class="fas fa-bed"></i>
+        </div>
+        <div class="summary-content">
+          <span class="summary-value" id="total-off-days">0</span>
+          <span class="summary-label">休日</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon time">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="summary-content">
+          <span class="summary-value" id="total-work-hours">0h</span>
+          <span class="summary-label">総労働時間</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon avg">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="summary-content">
+          <span class="summary-value" id="avg-work-hours">0h</span>
+          <span class="summary-label">平均労働時間</span>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- タイムカードセクション -->
+    <div class="attendance-section">
+      <div class="section-header">
+        <h3 class="section-title">
+          <i class="fas fa-clock"></i>
+          タイムカード
+        </h3>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button class="btn btn-primary btn-sm" id="upload-timecard-btn" title="ローカルストレージの出勤履歴をDBにアップロード">
+            <i class="fas fa-upload"></i>
+            タイムカードを更新
+          </button>
+          <div class="month-selector">
+            <button class="btn-icon" id="prev-month-btn" title="前月">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="month-display" id="month-display">2025年12月</span>
+            <button class="btn-icon" id="next-month-btn" title="次月">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 月間サマリー -->
+      <div class="monthly-summary" id="monthly-summary">
+        <div class="summary-card">
+          <div class="summary-label">出勤日数</div>
+          <div class="summary-value" id="summary-work-days">-</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">総労働時間</div>
+          <div class="summary-value" id="summary-total-hours">-</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">残業時間</div>
+          <div class="summary-value" id="summary-overtime-hours">-</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">遅刻回数</div>
+          <div class="summary-value" id="summary-late-count">-</div>
+        </div>
+      </div>
+      
+      <!-- タイムカードテーブル（水平方向） -->
+      <div class="timecard-table-container">
+        <table class="timecard-table timecard-table-horizontal" id="timecard-table">
+          <thead id="timecard-thead">
+            <!-- 動的に生成 -->
+          </thead>
+          <tbody id="timecard-tbody">
+            <!-- 動的に生成 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- カレンダービュー -->
+    <div class="calendar-view card" style="display:none;">
+      <div class="calendar-header">
+        <div class="day-name">日</div>
+        <div class="day-name">月</div>
+        <div class="day-name">火</div>
+        <div class="day-name">水</div>
+        <div class="day-name">木</div>
+        <div class="day-name">金</div>
+        <div class="day-name">土</div>
+      </div>
+      <div class="calendar-body" id="calendar-body">
+        <!-- カレンダーが動的に生成される -->
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- 編集モーダル -->
+<div id="edit-timecard-modal" class="modal" style="display: none;">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3>出退勤記録を編集</h3>
+      <button class="modal-close" onclick="closeEditModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="edit-timecard-form">
+        <input type="hidden" id="edit-date" />
+        <div class="form-group">
+          <label for="edit-clock-in">出勤時刻</label>
+          <input type="datetime-local" id="edit-clock-in" class="form-control" required />
+        </div>
+        <div class="form-group">
+          <label for="edit-clock-out">退勤時刻</label>
+          <input type="datetime-local" id="edit-clock-out" class="form-control" />
+          <small class="form-text text-muted">未入力の場合は出勤のみ記録されます</small>
+        </div>
+        <div class="form-group">
+          <label>休憩時間（時間）</label>
+          <input type="number" id="edit-break-hours" class="form-control" min="0" step="0.5" value="1" />
+          <small class="form-text text-muted">合計休憩時間を時間単位で入力してください（例: 1 = 1時間、0.5 = 30分）</small>
+        </div>
+        <div class="form-group">
+          <label for="edit-reason">修正理由 <span style="color: red;">*</span></label>
+          <textarea id="edit-reason" class="form-control" rows="3" required placeholder="修正理由を入力してください"></textarea>
+        </div>
+        <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: space-between;">
+          <button type="button" class="btn btn-danger" id="delete-request-btn" style="display: none;">削除依頼</button>
+          <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn btn-secondary" onclick="closeEditModal()">キャンセル</button>
+            <button type="submit" class="btn btn-primary">保存</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    padding: 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-close:hover {
+    color: #374151;
+  }
+  .modal-body {
+    padding: 20px;
+  }
+  .form-group {
+    margin-bottom: 16px;
+  }
+  .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #374151;
+  }
+  .form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    box-sizing: border-box;
+  }
+  .form-control:focus {
+    outline: none;
+    border-color: #FF679C;
+    box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+  }
+  .form-text {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+  .btn-edit-timecard:hover {
+    background: #E35687;
+    color: white;
+  }
+</style>
+
+<style>
+  .staff-page {
+    width: 100%;
+    max-width: none;
+    min-height: 100vh;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+
+  .loading-state, .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: #6b7280;
+  }
+
+  .loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #e5e7eb;
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .error-state i {
+    font-size: 48px;
+    color: #ef4444;
+    margin-bottom: 16px;
+  }
+
+  /* ページヘッダー */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .page-title i {
+    color: var(--primary);
+  }
+
+  .month-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-icon:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  .current-month {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    min-width: 120px;
+    text-align: center;
+  }
+
+  /* サマリーカード */
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .summary-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .summary-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+  }
+
+  .summary-icon.working {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+
+  .summary-icon.off {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  .summary-icon.time {
+    background: #d1fae5;
+    color: #059669;
+  }
+
+  .summary-icon.avg {
+    background: #ede9fe;
+    color: #7c3aed;
+  }
+
+  .summary-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .summary-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  /* detail.htmlのタイムカードスタイル */
+  .attendance-section {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 24px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+  .section-title {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+  }
+  .section-title i {
+    color: var(--primary);
+  }
+  .month-selector {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    padding: 6px 10px;
+  }
+  .month-display {
+    font-weight: 600;
+    color: #111827;
+  }
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #fff;
+    color: #6b7280;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .btn-icon:hover {
+    background: #f3f4f6;
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .monthly-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .monthly-summary .summary-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .monthly-summary .summary-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 8px;
+  }
+  .monthly-summary .summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+  }
+  .timecard-table-container {
+    overflow-x: auto;
+    margin-top: 16px;
+  }
+  .timecard-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .timecard-table thead {
+    background: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  .timecard-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    white-space: nowrap;
+  }
+  .timecard-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .timecard-table tbody tr:hover {
+    background: #f9fafb;
+  }
+  .timecard-table-horizontal th:first-child,
+  .timecard-table-horizontal td:first-child {
+    position: sticky;
+    left: 0;
+    background: #ffffff;
+    z-index: 1;
+    border-right: 2px solid #e5e7eb;
+    font-weight: 600;
+    min-width: 120px;
+    width: 120px;
+  }
+  .timecard-table-horizontal thead th:first-child {
+    background: #f9fafb;
+    z-index: 2;
+  }
+  .timecard-table-horizontal tbody tr:hover td:first-child {
+    background: #f9fafb;
+  }
+  .timecard-table-horizontal th {
+    text-align: center;
+    min-width: 80px;
+  }
+  .timecard-table-horizontal td {
+    text-align: center;
+  }
+  .timecard-table-horizontal .today-column {
+    background: #eff6ff !important;
+  }
+  .timecard-table-horizontal .today-column:hover {
+    background: #dbeafe !important;
+  }
+  .status-badge-timecard {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .status-completed { background: #d1fae5; color: #065f46; }
+  .status-working { background: #dbeafe; color: #1e40af; }
+  .status-absent { background: #fee2e2; color: #991b1b; }
+  .status-late { background: #fef3c7; color: #92400e; }
+  .status-early-leave { background: #fce7f3; color: #9f1239; }
+  .today-row {
+    background: #eff6ff !important;
+    font-weight: 600;
+  }
+  .today-row:hover {
+    background: #dbeafe !important;
+  }
+
+  /* カレンダービュー */
+  .calendar-view {
+    margin-bottom: 24px;
+    padding: 20px;
+  }
+
+  .calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .day-name {
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b7280;
+    padding: 8px;
+  }
+
+  .day-name:first-child {
+    color: #ef4444;
+  }
+
+  .day-name:last-child {
+    color: #3b82f6;
+  }
+
+  .calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .calendar-day {
+    aspect-ratio: 1;
+    min-height: 80px;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s;
+  }
+
+  .calendar-day.other-month {
+    opacity: 0.4;
+  }
+
+  .calendar-day.today {
+    border-color: var(--primary);
+    border-width: 2px;
+  }
+
+  .calendar-day.worked {
+    background: #d1fae5;
+    border-color: #10b981;
+  }
+
+  .calendar-day.off {
+    background: #fef3c7;
+    border-color: #f59e0b;
+  }
+
+  .calendar-day.late {
+    background: #fee2e2;
+    border-color: #ef4444;
+  }
+
+  .calendar-day-date {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .calendar-day:first-child .calendar-day-date,
+  .calendar-day:nth-child(7n+1) .calendar-day-date {
+    color: #ef4444;
+  }
+
+  .calendar-day:nth-child(7n) .calendar-day-date {
+    color: #3b82f6;
+  }
+
+  .calendar-day-hours {
+    margin-top: auto;
+    font-size: 0.75rem;
+    color: #059669;
+    font-weight: 600;
+  }
+
+  .calendar-day-status {
+    font-size: 0.625rem;
+    margin-top: 4px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .calendar-day-status.late {
+    background: #fecaca;
+    color: #dc2626;
+  }
+
+  /* 履歴テーブル */
+  .history-list {
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .card-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .history-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .history-table th {
+    background: #f9fafb;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+  }
+
+  .history-table td {
+    font-size: 0.875rem;
+    color: #374151;
+  }
+
+  .history-table tr:hover {
+    background: #f9fafb;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .status-badge.worked {
+    background: #d1fae5;
+    color: #059669;
+  }
+
+  .status-badge.off {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  .status-badge.late {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .empty-state {
+    padding: 48px;
+    text-align: center;
+    color: #9ca3af;
+  }
+
+  .empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  /* レスポンシブ */
+  @media (max-width: 1024px) {
+    .summary-cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .staff-page.main-content {
+      margin-left: 0 !important;
+      width: 100% !important;
+      padding: 16px;
+    }
+
+    .page-header {
+      flex-direction: column;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .summary-cards {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .calendar-day {
+      min-height: 60px;
+      padding: 4px;
+    }
+
+    .calendar-day-date {
+      font-size: 0.75rem;
+    }
+
+    .calendar-day-hours {
+      font-size: 0.625rem;
+    }
+
+    .history-table th,
+    .history-table td {
+      padding: 8px;
+      font-size: 0.75rem;
+    }
+  }
+</style>
+
+<script>
+  const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+  let currentUser = null;
+  let currentDate = new Date();
+  let attendanceData = [];
+  let currentMonth = new Date().getMonth();
+  let currentYear = new Date().getFullYear();
+  let monthlyAttendance = [];
+  let attendanceRequests = []; // 編集申請の一覧
+  let attendanceMap = {}; // タイムカード表示用のマップ（グローバルスコープ）
+
+  // ポーリング用のタイマー
+  let pollingTimer = null;
+  let lastPollTime = Date.now();
+
+  // 初期化
+  document.addEventListener('DOMContentLoaded', async () => {
+    await loadCurrentUser();
+    setupEventListeners();
+    setupMonthNavigation();
+    
+    // 承認待ちの申請がある場合、定期的にタイムカードを再読み込み
+    startPollingForApprovedRequests();
+  });
+
+  // 承認待ちの申請をチェックして、承認されたらタイムカードを更新
+  function startPollingForApprovedRequests() {
+    // 既存のタイマーをクリア
+    if (pollingTimer) {
+      clearInterval(pollingTimer);
+    }
+    
+    // 30秒ごとにチェック
+    pollingTimer = setInterval(async () => {
+      const hasPendingRequests = attendanceRequests.some(r => r.status === 'pending' && r.staff_id === currentUser?.id);
+      if (hasPendingRequests) {
+        console.log('[AttendanceHistory] Checking for approved requests...');
+        const beforeCount = attendanceRequests.filter(r => r.status === 'approved' && r.staff_id === currentUser?.id).length;
+        
+        // 申請一覧を再読み込み
+        await loadAttendanceRequests();
+        
+        const afterCount = attendanceRequests.filter(r => r.status === 'approved' && r.staff_id === currentUser?.id).length;
+        
+        // 承認された申請が増えた場合、タイムカードを再読み込み
+        if (afterCount > beforeCount) {
+          console.log('[AttendanceHistory] New approved request detected, reloading timecard...');
+          // 承認された申請の詳細をログ出力
+          const approvedRequests = attendanceRequests.filter(r => r.status === 'approved' && r.staff_id === currentUser?.id);
+          approvedRequests.forEach(req => {
+            console.log('[AttendanceHistory] Approved request:', req.date, 'clock_in:', req.requested_clock_in, 'clock_out:', req.requested_clock_out);
+          });
+          // 少し遅延を入れてから再読み込み（APIの反映を待つ）
+          setTimeout(async () => {
+            await loadTimecard();
+            console.log('[AttendanceHistory] Timecard reloaded after approval');
+            // 再読み込み後の記録を確認
+            const reloadedRecord = attendanceMap[approvedRequests[0]?.date];
+            if (reloadedRecord) {
+              console.log('[AttendanceHistory] Reloaded record:', reloadedRecord.date, 'clock_in:', reloadedRecord.clock_in, 'clock_out:', reloadedRecord.clock_out);
+            }
+          }, 3000); // 3秒待つ（APIの反映を確実に待つ）
+        }
+      }
+    }, 30000); // 30秒ごと
+  }
+
+  // ページを離れるときにタイマーをクリア
+  window.addEventListener('beforeunload', () => {
+    if (pollingTimer) {
+      clearInterval(pollingTimer);
+    }
+  });
+
+  // ユーザー情報を読み込み
+  async function loadCurrentUser() {
+    const loadingEl = document.getElementById('loading');
+    const contentEl = document.getElementById('page-content');
+    const errorEl = document.getElementById('error-message');
+
+    try {
+      // Cognito認証を確認
+      if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+        const cognitoUser = await window.CognitoAuth.getCurrentUser();
+        if (cognitoUser) {
+          currentUser = cognitoUser;
+        }
+      }
+
+      if (!currentUser || !currentUser.id) {
+        throw new Error('ログインしてください。');
+      }
+
+      // サイドバーのロールバッジを更新
+      const roleBadge = document.getElementById('sidebar-role-badge');
+      if (roleBadge && currentUser.department) {
+        roleBadge.textContent = currentUser.department;
+      }
+
+      // 出勤データを読み込み
+      await loadAttendanceData();
+      // タイムカード（detail.html準拠）を読み込み
+      currentMonth = currentDate.getMonth();
+      currentYear = currentDate.getFullYear();
+      await loadTimecard();
+
+      loadingEl.style.display = 'none';
+      contentEl.style.display = 'block';
+
+    } catch (error) {
+      console.error('Error loading user:', error);
+      loadingEl.style.display = 'none';
+      errorEl.style.display = 'flex';
+      document.getElementById('error-text').textContent = error.message;
+    }
+  }
+
+  // 出勤データを読み込み
+  async function loadAttendanceData() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    attendanceData = [];
+    
+    console.log('[AttendanceHistory] loadAttendanceData called for year:', year, 'month:', month + 1);
+
+    // 1. まずローカルストレージからデータを読み込む（マイページと同じデータソース）
+    try {
+      const stored = localStorage.getItem('attendanceRecords');
+      if (stored) {
+        const allRecords = JSON.parse(stored);
+        
+        // 該当月のデータを抽出
+        for (const dateStr in allRecords) {
+          const date = new Date(dateStr);
+          if (date.getFullYear() === year && date.getMonth() === month) {
+            const userRecord = allRecords[dateStr][currentUser.id];
+            if (userRecord) {
+              attendanceData.push({
+                date: dateStr,
+                staff_id: currentUser.id,
+                clock_in: userRecord.clock_in,
+                clock_out: userRecord.clock_out,
+                breaks: userRecord.breaks || [],
+                work_hours: userRecord.work_hours,
+                is_late: userRecord.is_late
+              });
+            }
+          }
+        }
+        console.log('[AttendanceHistory] Loaded from localStorage:', attendanceData.length, 'records');
+      }
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+    }
+
+    // 2. APIからもデータを取得してマージ（ローカルにないデータを補完）
+    try {
+      const idToken = await getCognitoIdToken();
+      const headers = {};
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+      const apiUrl = `${API_BASE}/attendance?staff_id=${currentUser.id}&year=${year}&month=${month + 1}`;
+      console.log('[AttendanceHistory] Fetching attendance data from API:', apiUrl);
+      const response = await fetch(apiUrl, { headers: headers });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[AttendanceHistory] API response:', data);
+        let rawApiRecords = Array.isArray(data) ? data : (data.items || data.attendance || []);
+        console.log('[AttendanceHistory] API records (raw):', rawApiRecords.length, 'records');
+        
+        // 同じ日付のレコードが複数ある場合、最新のものを優先（updated_atまたはcreated_atでソート）
+        const apiRecordsByDate = {};
+        rawApiRecords.forEach(record => {
+          if (!record.date) return;
+          const date = record.date;
+          if (!apiRecordsByDate[date]) {
+            apiRecordsByDate[date] = record;
+          } else {
+            // 既存のレコードと比較して、より新しいものを選択
+            const existing = apiRecordsByDate[date];
+            const existingTime = existing.updated_at || existing.created_at || '';
+            const newTime = record.updated_at || record.created_at || '';
+            if (newTime > existingTime) {
+              console.log(`[AttendanceHistory] 日付 ${date} の重複レコードを検出。最新のレコードを選択:`, record);
+              apiRecordsByDate[date] = record;
+            }
+          }
+        });
+        const apiRecords = Object.values(apiRecordsByDate);
+        console.log('[AttendanceHistory] API records (after deduplication):', apiRecords.length, 'records');
+        
+        // APIデータをマージ（既存の日付の場合はAPIデータで上書き、新しい日付の場合は追加）
+        const existingDates = new Set(attendanceData.map(r => r.date));
+        apiRecords.forEach(record => {
+          const existingIndex = attendanceData.findIndex(r => r.date === record.date);
+          if (existingIndex >= 0) {
+            // 既存のデータをAPIデータで更新（APIデータを優先）
+            console.log('[AttendanceHistory] Updating existing record for date:', record.date);
+            console.log('[AttendanceHistory]   Existing:', attendanceData[existingIndex]);
+            console.log('[AttendanceHistory]   New (from API):', record);
+            attendanceData[existingIndex] = record;
+          } else {
+            // 新しい日付のデータを追加
+            console.log('[AttendanceHistory] Adding new record for date:', record.date);
+            attendanceData.push(record);
+          }
+        });
+        console.log('[AttendanceHistory] After API merge:', attendanceData.length, 'records');
+        console.log('[AttendanceHistory] Merged data:', attendanceData);
+        
+        // 今日の日付のレコードを確認
+        const today = new Date().toISOString().split('T')[0];
+        const todayRecord = attendanceData.find(r => r.date === today);
+        if (todayRecord) {
+          console.log('[AttendanceHistory] 今日の出退勤記録（loadAttendanceData後）:', todayRecord);
+          console.log('[AttendanceHistory] 出勤時刻:', todayRecord.clock_in || 'なし');
+          console.log('[AttendanceHistory] 退勤時刻:', todayRecord.clock_out || 'なし');
+        } else {
+          console.log('[AttendanceHistory] 今日の出退勤記録が見つかりませんでした（loadAttendanceData後）');
+        }
+      } else {
+        console.warn('[AttendanceHistory] API response not OK:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Error loading from API:', error);
+    }
+
+    // 日付でソート（新しい順）
+    attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    renderPage();
+  }
+
+  // detail.htmlのタイムカード表示と同等の処理
+  async function loadTimecard() {
+    if (!currentUser) return;
+    try {
+      const year = currentYear;
+      const month = String(currentMonth + 1).padStart(2, '0');
+      const idToken = await getCognitoIdToken();
+      const headers = {};
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+      // キャッシュを無効化して最新データを取得
+      const response = await fetch(`${API_BASE}/attendance?staff_id=${currentUser.id}&year=${year}&month=${month}&limit=1000&_t=${Date.now()}`, {
+        headers: headers,
+        cache: 'no-cache'
+      });
+      if (!response.ok) {
+        console.warn('[AttendanceHistory] Timecard API response not OK:', response.status, response.statusText);
+        throw new Error('タイムカードの取得に失敗しました');
+      }
+      const data = await response.json();
+      console.log('[AttendanceHistory] Timecard API response:', data);
+      // APIレスポンスの形式に対応（配列、items、attendance）
+      let rawAttendance = [];
+      if (Array.isArray(data)) {
+        rawAttendance = data;
+      } else if (data.items && Array.isArray(data.items)) {
+        rawAttendance = data.items;
+      } else if (data.attendance && Array.isArray(data.attendance)) {
+        rawAttendance = data.attendance;
+      }
+      
+      // 同じ日付のレコードが複数ある場合、最新のものを優先（updated_atまたはcreated_atでソート）
+      const attendanceByDate = {};
+      rawAttendance.forEach(record => {
+        if (!record.date) return;
+        const date = record.date;
+        if (!attendanceByDate[date]) {
+          attendanceByDate[date] = record;
+        } else {
+          // 既存のレコードと比較して、より新しいものを選択
+          const existing = attendanceByDate[date];
+          const existingTime = existing.updated_at || existing.created_at || '';
+          const newTime = record.updated_at || record.created_at || '';
+          
+          // デバッグログ
+          console.log(`[AttendanceHistory] 日付 ${date} の重複レコードを検出:`, {
+            existing: { clock_in: existing.clock_in, clock_out: existing.clock_out, updated_at: existingTime },
+            new: { clock_in: record.clock_in, clock_out: record.clock_out, updated_at: newTime }
+          });
+          
+          // 時刻の比較（文字列比較でOK、ISO形式なので）
+          if (newTime > existingTime) {
+            console.log(`[AttendanceHistory] 最新のレコードを選択（newTime: ${newTime} > existingTime: ${existingTime}）`);
+            attendanceByDate[date] = record;
+          } else if (newTime < existingTime) {
+            console.log(`[AttendanceHistory] 既存のレコードを保持（existingTime: ${existingTime} > newTime: ${newTime}）`);
+          } else {
+            // 時刻が同じ場合、clock_outがある方を優先（より完全なデータ）
+            if (record.clock_out && !existing.clock_out) {
+              console.log(`[AttendanceHistory] 新しいレコードを選択（clock_outがあるため）`);
+              attendanceByDate[date] = record;
+            } else if (!record.clock_out && existing.clock_out) {
+              console.log(`[AttendanceHistory] 既存のレコードを保持（clock_outがあるため）`);
+            } else {
+              // どちらもclock_outがある、またはどちらもない場合は、IDが大きい方を優先（より新しいID）
+              const existingId = existing.id || '';
+              const newId = record.id || '';
+              if (newId > existingId) {
+                console.log(`[AttendanceHistory] 新しいレコードを選択（IDが大きいため）`);
+                attendanceByDate[date] = record;
+              } else {
+                console.log(`[AttendanceHistory] 既存のレコードを保持（IDが大きいため）`);
+              }
+            }
+          }
+        }
+      });
+      
+      // オブジェクトを配列に変換
+      monthlyAttendance = Object.values(attendanceByDate);
+      
+      // attendanceMapも更新（グローバルスコープ）
+      attendanceMap = { ...attendanceByDate };
+      
+      console.log('[AttendanceHistory] Monthly attendance loaded:', monthlyAttendance.length, 'records (after deduplication)');
+      console.log('[AttendanceHistory] Monthly attendance data:', monthlyAttendance);
+      console.log('[AttendanceHistory] Attendance map updated with', Object.keys(attendanceMap).length, 'dates');
+      
+      // 各記録の詳細をログ出力（デバッグ用）
+      monthlyAttendance.forEach(record => {
+        if (record.date) {
+          console.log(`[AttendanceHistory] Final record for ${record.date}:`, {
+            clock_in: record.clock_in,
+            clock_out: record.clock_out,
+            break_time: record.break_time,
+            work_hours: record.work_hours,
+            updated_at: record.updated_at
+          });
+        }
+      });
+      
+      // 今日の日付のレコードを確認
+      const today = new Date().toISOString().split('T')[0];
+      const todayRecord = monthlyAttendance.find(r => r.date === today);
+      if (todayRecord) {
+        console.log('[AttendanceHistory] 今日の出退勤記録:', todayRecord);
+        console.log('[AttendanceHistory] 出勤時刻:', todayRecord.clock_in || 'なし');
+        console.log('[AttendanceHistory] 退勤時刻:', todayRecord.clock_out || 'なし');
+      } else {
+        console.log('[AttendanceHistory] 今日の出退勤記録が見つかりませんでした');
+      }
+      
+      // 各レコードのclock_outを確認
+      monthlyAttendance.forEach(record => {
+        if (record.clock_in && !record.clock_out) {
+          console.log(`[AttendanceHistory] Missing clock_out for date ${record.date}:`, record);
+        } else if (record.clock_in && record.clock_out) {
+          console.log(`[AttendanceHistory] Record for date ${record.date} has clock_out:`, record.clock_out);
+        }
+      });
+      
+      // 編集申請一覧を読み込み
+      await loadAttendanceRequests();
+      
+      // ポーリングを再開
+      startPollingForApprovedRequests();
+      
+      renderTimecard();
+      renderMonthlySummary();
+    } catch (error) {
+      console.error('Error loading timecard:', error);
+      monthlyAttendance = [];
+      attendanceRequests = [];
+      renderTimecard();
+      renderMonthlySummary();
+    }
+  }
+
+  function renderTimecard() {
+    const thead = document.getElementById('timecard-thead');
+    const tbody = document.getElementById('timecard-tbody');
+    if (!thead || !tbody) return;
+
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+
+      // グローバルスコープのattendanceMapを更新
+      attendanceMap = {};
+      monthlyAttendance.forEach(record => {
+        if (record.date) {
+          attendanceMap[record.date] = record;
+          // デバッグ: 記録の詳細をログ出力
+          console.log(`[Timecard] Record for ${record.date}:`, {
+            clock_in: record.clock_in,
+            clock_out: record.clock_out,
+            break_time: record.break_time,
+            work_hours: record.work_hours,
+            updated_at: record.updated_at
+          });
+        }
+      });
+    console.log('[Timecard] Attendance map created with', Object.keys(attendanceMap).length, 'dates');
+
+    let headerHtml = '<tr><th>項目</th>';
+    const todayStr = new Date().toISOString().split('T')[0];
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(currentYear, currentMonth, day);
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const weekday = weekdays[date.getDay()];
+      const isToday = dateStr === todayStr;
+      const headerClass = isToday ? 'today-column' : '';
+      headerHtml += `<th class="${headerClass}">${day}日<br><span style="font-size: 0.75rem; font-weight: normal; color: #6b7280;">${weekday}</span></th>`;
+    }
+    headerHtml += '</tr>';
+    thead.innerHTML = headerHtml;
+
+    const rows = [
+      { label: '出勤', key: 'clockIn' },
+      { label: '退勤', key: 'clockOut' },
+      { label: '休憩', key: 'breakTime' },
+      { label: '実労働', key: 'workHours' },
+      { label: '残業', key: 'overtime' },
+      { label: '状態', key: 'status' }
+    ];
+
+    let bodyHtml = '';
+    rows.forEach(row => {
+      bodyHtml += `<tr><td style="font-weight: 600;">${row.label}</td>`;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        let record = attendanceMap[dateStr];
+        const isToday = dateStr === todayStr;
+        const cellClass = isToday ? 'today-column' : '';
+        let cellValue = '-';
+
+        // 申請中のリクエストまたは承認済みのリクエストを確認（申請内容を優先的に表示）
+        const request = attendanceRequests.find(r => r.date === dateStr && r.staff_id === currentUser?.id && (r.status === 'pending' || r.status === 'approved'));
+        const isPendingRequest = request && request.status === 'pending';
+        const isApprovedRequest = request && request.status === 'approved';
+        
+        // デバッグ: 記録とリクエストの状態をログ出力
+        if (record || request) {
+          console.log(`[Timecard] Rendering ${dateStr}:`, {
+            record: record ? { clock_in: record.clock_in, clock_out: record.clock_out, break_time: record.break_time } : null,
+            request: request ? { status: request.status, clock_in: request.requested_clock_in, clock_out: request.requested_clock_out } : null
+          });
+        }
+        
+        // 申請中または承認済みのリクエストがある場合、申請内容を仮想的なrecordとして使用
+        if (request) {
+          // requested_break_hoursは時間単位で保存されている
+          // undefined/nullの場合は既存のrecordのbreak_timeを使用、それもなければ1時間（デフォルト）
+          let breakTime = 1; // デフォルト1時間
+          if (request.requested_break_hours !== undefined && request.requested_break_hours !== null) {
+            const requestedBreakHours = toNumber(request.requested_break_hours);
+            breakTime = requestedBreakHours > 0 ? requestedBreakHours : 1; // 0の場合は1時間
+          } else if (record?.break_time !== undefined && record?.break_time !== null) {
+            const recordBreakTime = toNumber(record.break_time);
+            breakTime = recordBreakTime > 0 ? recordBreakTime : 1; // 0の場合は1時間
+          }
+          
+          const virtualRecord = {
+            clock_in: request.requested_clock_in || record?.clock_in,
+            clock_out: request.requested_clock_out || record?.clock_out,
+            break_time: breakTime,
+            work_hours: null, // 申請中/承認済みは計算しない
+            overtime_hours: null, // 申請中/承認済みは計算しない
+            status: record?.status,
+            is_late: record?.is_late,
+            is_early_leave: record?.is_early_leave,
+            late_minutes: record?.late_minutes,
+            early_leave_minutes: record?.early_leave_minutes,
+            breaks: record?.breaks
+          };
+          
+          console.log('[Timecard] Using request data for', dateStr, 'status:', request.status, 'break_time:', breakTime, 'from requested_break_hours:', request.requested_break_hours);
+          
+          // 申請中または承認済みのリクエストがある場合、申請内容を表示
+          record = virtualRecord;
+        } else if (record && (record.break_time === undefined || record.break_time === null || toNumber(record.break_time) === 0)) {
+          // 申請中のリクエストがなく、既存の記録の休憩時間が0または未設定の場合、デフォルトで1時間を設定
+          record = {
+            ...record,
+            break_time: 1
+          };
+        }
+
+        if (record) {
+          // デバッグログ（必要に応じて）
+          if (row.key === 'clockOut' && !record.clock_out && record.clock_in) {
+            console.log(`[Timecard] Missing clock_out for date ${dateStr}:`, record);
+          }
+          
+          switch (row.key) {
+            case 'clockIn':
+              cellValue = record.clock_in ? formatTime(record.clock_in) : '-';
+              break;
+            case 'clockOut':
+              // clock_outが存在するか確認
+              if (record.clock_out) {
+                cellValue = formatTime(record.clock_out);
+              } else {
+                cellValue = '-';
+              }
+              break;
+            case 'breakTime':
+              // break_timeフィールドを優先的に使用（0の場合も含む）
+              if (record.break_time !== undefined && record.break_time !== null) {
+                const breakHours = toNumber(record.break_time);
+                cellValue = formatHours(breakHours);
+              } else if (record.breaks && record.breaks.length > 0) {
+                const breakHours = calculateTotalBreakTime(record.breaks);
+                cellValue = breakHours > 0 ? formatHours(breakHours) : '-';
+              } else {
+                cellValue = '-';
+              }
+              break;
+            case 'workHours':
+              // 出勤時刻と退勤時刻がある場合、その差から休憩時間を引いて計算
+              if (record.clock_in && record.clock_out) {
+                const hours = calculateWorkHours(record);
+                cellValue = formatHours(hours);
+              } else if (record.work_hours) {
+                // work_hoursフィールドがある場合はそれを使用（フォールバック）
+                const hours = toNumber(record.work_hours);
+                cellValue = formatHours(hours);
+              } else {
+                cellValue = '-';
+              }
+              break;
+            case 'overtime':
+              // 実労働時間が8時間を超えた分を残業時間として計算
+              if (record.clock_in && record.clock_out) {
+                const workHours = calculateWorkHours(record);
+                const overtimeHours = Math.max(0, workHours - 8); // 8時間を超えた分
+                if (overtimeHours > 0) {
+                  cellValue = formatHours(overtimeHours);
+                } else {
+                  cellValue = '-';
+                }
+              } else if (record.overtime_hours) {
+                // フォールバック: overtime_hoursフィールドがある場合はそれを使用
+                const hours = toNumber(record.overtime_hours);
+                cellValue = formatHours(hours);
+              } else {
+                cellValue = '-';
+              }
+              break;
+            case 'status':
+              // 申請中または承認済みの場合は申請内容に基づいてステータスを表示
+              if (request) {
+                if (record.clock_in && !record.clock_out) {
+                  cellValue = '<span class="status-badge-timecard status-working">勤務中</span>';
+                } else if (record.clock_in && record.clock_out) {
+                  cellValue = '<span class="status-badge-timecard status-completed">完了</span>';
+                } else {
+                  cellValue = '<span class="status-badge-timecard status-absent">未出勤</span>';
+                }
+              } else {
+                // マイページと同じロジック: clock_inとclock_outで判定
+                if (record.clock_in && !record.clock_out) {
+                  // 出勤中
+                  cellValue = '<span class="status-badge-timecard status-working">勤務中</span>';
+                } else if (record.clock_in && record.clock_out) {
+                  // 退勤済み（ステータスフィールドがあればそれを使用）
+                  if (record.status === 'completed') {
+                    if (record.is_late && record.is_early_leave) {
+                      cellValue = '<span class="status-badge-timecard status-late">遅刻・早退</span>';
+                    } else if (record.is_late) {
+                      cellValue = `<span class="status-badge-timecard status-late">遅刻 ${record.late_minutes || 0}分</span>`;
+                    } else if (record.is_early_leave) {
+                      cellValue = `<span class="status-badge-timecard status-early-leave">早退 ${record.early_leave_minutes || 0}分</span>`;
+                    } else {
+                      cellValue = '<span class="status-badge-timecard status-completed">完了</span>';
+                    }
+                  } else {
+                    cellValue = '<span class="status-badge-timecard status-completed">完了</span>';
+                  }
+                } else {
+                  // 未出勤
+                  cellValue = '<span class="status-badge-timecard status-absent">未出勤</span>';
+                }
+              }
+              break;
+          }
+        } else if (row.key === 'status') {
+          cellValue = '<span class="status-badge-timecard status-absent">未出勤</span>';
+        }
+
+        bodyHtml += `<td class="${cellClass}">${cellValue}</td>`;
+      }
+      bodyHtml += '</tr>';
+    });
+
+    // 編集申請行を追加
+    bodyHtml += '<tr><td style="font-weight: 600;">編集申請</td>';
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const record = attendanceMap[dateStr];
+      const isToday = dateStr === todayStr;
+      const cellClass = isToday ? 'today-column' : '';
+      
+      // 該当日付の編集申請を確認
+      const request = attendanceRequests.find(r => r.date === dateStr && r.staff_id === currentUser?.id);
+      const requestStatus = request?.status;
+      
+      // 全ての日に申請ボタンまたはステータスを表示
+      if (requestStatus === 'pending') {
+        // 申請中（削除ボタン付き）
+        const escapedRequestId = request.id.replace(/'/g, "\\'");
+        bodyHtml += `<td class="${cellClass}">
+          <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+            <span style="padding: 4px 8px; font-size: 0.875rem; background: #fef3c7; border: none; border-radius: 4px; color: #d97706; display: inline-block;">申請中</span>
+            <button class="btn-delete-request" onclick="deleteAttendanceRequest('${escapedRequestId}')" title="削除" style="padding: 2px 6px; font-size: 0.75rem; background: #fee2e2; border: 1px solid #dc2626; border-radius: 4px; cursor: pointer; color: #dc2626; display: inline-flex; align-items: center; gap: 2px;">
+              <i class="fas fa-trash" style="font-size: 0.7rem;"></i>
+            </button>
+          </div>
+        </td>`;
+      } else if (requestStatus === 'approved') {
+        // 承認済み
+        bodyHtml += `<td class="${cellClass}"><span style="padding: 4px 8px; font-size: 0.875rem; background: #d1fae5; border: none; border-radius: 4px; color: #059669; display: inline-block;">承認済み</span></td>`;
+      } else if (requestStatus === 'rejected') {
+        // 却下
+        bodyHtml += `<td class="${cellClass}"><span style="padding: 4px 8px; font-size: 0.875rem; background: #fee2e2; border: none; border-radius: 4px; color: #dc2626; display: inline-block;">却下</span></td>`;
+      } else {
+        // 申請ボタン（記録がない日も含めて全ての日に表示）
+        // dateStrを確実にエスケープして渡す
+        const escapedDateStr = dateStr.replace(/'/g, "\\'");
+        bodyHtml += `<td class="${cellClass}"><button class="btn-edit-timecard" onclick="openEditModal('${escapedDateStr}')" title="編集申請" style="padding: 4px 8px; font-size: 0.875rem; background: #FF679C; border: none; border-radius: 4px; cursor: pointer; color: white;">申請</button></td>`;
+      }
+    }
+    bodyHtml += '</tr>';
+
+    tbody.innerHTML = bodyHtml;
+    document.getElementById('month-display').textContent = `${currentYear}年${currentMonth + 1}月`;
+  }
+
+  // 編集申請一覧を読み込み
+  async function loadAttendanceRequests() {
+    if (!currentUser) return;
+    
+    try {
+      const idToken = await getCognitoIdToken();
+      const headers = {};
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+      
+      const response = await fetch(`${API_BASE}/attendance/requests?staff_id=${currentUser.id}&limit=1000`, {
+        headers: headers
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        attendanceRequests = data.requests || [];
+        console.log('[AttendanceHistory] Loaded attendance requests:', attendanceRequests.length, 'requests');
+        // デバッグ: 申請中のリクエストの休憩時間を確認
+        attendanceRequests.forEach(req => {
+          if (req.status === 'pending') {
+            console.log('[AttendanceHistory] Pending request:', req.date, 'requested_break_hours:', req.requested_break_hours, 'type:', typeof req.requested_break_hours);
+          }
+        });
+      } else {
+        console.warn('[AttendanceHistory] Failed to load attendance requests:', response.status, response.statusText);
+        attendanceRequests = [];
+      }
+    } catch (error) {
+      console.error('[AttendanceHistory] Error loading attendance requests:', error);
+      attendanceRequests = [];
+    }
+  }
+
+  // Decimal型や文字列を数値に変換するヘルパー関数
+  function toNumber(value) {
+    if (value == null || value === undefined) return 0;
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const num = parseFloat(value);
+      return isNaN(num) ? 0 : num;
+    }
+    // Decimal型やその他のオブジェクトの場合
+    if (typeof value === 'object' && value !== null) {
+      if (typeof value.toNumber === 'function') {
+        return value.toNumber();
+      }
+      if (typeof value.toString === 'function') {
+        const num = parseFloat(value.toString());
+        return isNaN(num) ? 0 : num;
+      }
+    }
+    return 0;
+  }
+
+  function renderMonthlySummary() {
+    let workDays = 0;
+    let totalHours = 0;
+    let overtimeHours = 0;
+    let lateCount = 0;
+
+    // タイムカードと同じロジックで統計を計算
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      let record = attendanceMap[dateStr];
+      
+      // 申請中または承認済みのリクエストを確認（申請内容を優先的に使用）
+      const request = attendanceRequests.find(r => r.date === dateStr && r.staff_id === currentUser?.id && (r.status === 'pending' || r.status === 'approved'));
+      
+      // 申請中または承認済みのリクエストがある場合、申請内容を仮想的なrecordとして使用
+      if (request) {
+        let breakTime = 1; // デフォルト1時間
+        if (request.requested_break_hours !== undefined && request.requested_break_hours !== null) {
+          const requestedBreakHours = toNumber(request.requested_break_hours);
+          breakTime = requestedBreakHours > 0 ? requestedBreakHours : 1;
+        } else if (record?.break_time !== undefined && record?.break_time !== null) {
+          const recordBreakTime = toNumber(record.break_time);
+          breakTime = recordBreakTime > 0 ? recordBreakTime : 1;
+        }
+        
+        record = {
+          clock_in: request.requested_clock_in || record?.clock_in,
+          clock_out: request.requested_clock_out || record?.clock_out,
+          break_time: breakTime,
+          status: record?.status,
+          is_late: record?.is_late,
+          breaks: record?.breaks
+        };
+      } else if (record && (record.break_time === undefined || record.break_time === null || toNumber(record.break_time) === 0)) {
+        record = {
+          ...record,
+          break_time: 1
+        };
+      }
+      
+      // タイムカードと同じロジックで実労働時間と残業時間を計算
+      if (record && record.clock_in && record.clock_out) {
+        workDays++;
+        
+        // タイムカードと同じロジックで実労働時間を計算
+        const workHours = calculateWorkHours(record);
+        totalHours += workHours;
+        
+        // タイムカードと同じロジックで残業時間を計算（8時間を超えた分）
+        const overtime = Math.max(0, workHours - 8);
+        overtimeHours += overtime;
+        
+        // 遅刻カウント
+        if (record.is_late) {
+          lateCount++;
+        }
+      }
+    }
+
+    document.getElementById('summary-work-days').textContent = `${workDays}日`;
+    document.getElementById('summary-total-hours').textContent = `${Number(totalHours).toFixed(1)}h`;
+    document.getElementById('summary-overtime-hours').textContent = `${Number(overtimeHours).toFixed(1)}h`;
+    document.getElementById('summary-late-count').textContent = `${lateCount}回`;
+  }
+
+  function setupMonthNavigation() {
+    const prevBtn = document.getElementById('prev-month-btn');
+    const nextBtn = document.getElementById('next-month-btn');
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        currentMonth--;
+        if (currentMonth < 0) {
+          currentMonth = 11;
+          currentYear--;
+        }
+        loadTimecard();
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        currentMonth++;
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear++;
+        }
+        loadTimecard();
+      });
+    }
+  }
+
+  // ページをレンダリング
+  function renderPage() {
+    updateMonthDisplay();
+    renderSummary();
+    renderCalendar();
+  }
+
+  // 月表示を更新
+  function updateMonthDisplay() {
+    const monthEl = document.getElementById('current-month');
+    monthEl.textContent = `${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月`;
+  }
+
+  // サマリーをレンダリング
+  function renderSummary() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    let workDays = 0;
+    let totalHours = 0;
+
+    // タイムカードと同じロジックで統計を計算
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      let record = attendanceMap[dateStr];
+      
+      // 申請中または承認済みのリクエストを確認（申請内容を優先的に使用）
+      const request = attendanceRequests.find(r => r.date === dateStr && r.staff_id === currentUser?.id && (r.status === 'pending' || r.status === 'approved'));
+      
+      // 申請中または承認済みのリクエストがある場合、申請内容を仮想的なrecordとして使用
+      if (request) {
+        let breakTime = 1; // デフォルト1時間
+        if (request.requested_break_hours !== undefined && request.requested_break_hours !== null) {
+          const requestedBreakHours = toNumber(request.requested_break_hours);
+          breakTime = requestedBreakHours > 0 ? requestedBreakHours : 1;
+        } else if (record?.break_time !== undefined && record?.break_time !== null) {
+          const recordBreakTime = toNumber(record.break_time);
+          breakTime = recordBreakTime > 0 ? recordBreakTime : 1;
+        }
+        
+        record = {
+          clock_in: request.requested_clock_in || record?.clock_in,
+          clock_out: request.requested_clock_out || record?.clock_out,
+          break_time: breakTime,
+          breaks: record?.breaks
+        };
+      } else if (record && (record.break_time === undefined || record.break_time === null || toNumber(record.break_time) === 0)) {
+        record = {
+          ...record,
+          break_time: 1
+        };
+      }
+      
+      // タイムカードと同じロジックで実労働時間を計算
+      if (record && record.clock_in && record.clock_out) {
+        workDays++;
+        const hours = calculateWorkHours(record);
+        totalHours += hours;
+      }
+    }
+
+    // 休日計算（土日 + 祝日を除く）
+    let offDays = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month, d);
+      const dayOfWeek = date.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        offDays++;
+      }
+    }
+
+    const avgHours = workDays > 0 ? (totalHours / workDays) : 0;
+
+    document.getElementById('total-work-days').textContent = workDays + '日';
+    document.getElementById('total-off-days').textContent = offDays + '日';
+    document.getElementById('total-work-hours').textContent = formatHours(totalHours);
+    document.getElementById('avg-work-hours').textContent = formatHours(avgHours);
+  }
+
+  // カレンダーをレンダリング
+  function renderCalendar() {
+    const calendarBody = document.getElementById('calendar-body');
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDay = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    // 出勤データをマップに変換
+    const attendanceMap = {};
+    attendanceData.forEach(record => {
+      attendanceMap[record.date] = record;
+    });
+
+    let html = '';
+
+    // 前月の日付
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = startDay - 1; i >= 0; i--) {
+      html += `<div class="calendar-day other-month">
+        <span class="calendar-day-date">${prevMonthLastDay - i}</span>
+      </div>`;
+    }
+
+    // 今月の日付
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const record = attendanceMap[dateStr];
+      const isToday = dateStr === todayStr;
+
+      let dayClass = 'calendar-day';
+      if (isToday) dayClass += ' today';
+
+      let hoursHtml = '';
+      let statusHtml = '';
+
+      if (record && record.clock_in) {
+        if (record.clock_out) {
+          dayClass += ' worked';
+          const hours = record.work_hours ? toNumber(record.work_hours) : calculateWorkHours(record);
+          hoursHtml = `<span class="calendar-day-hours">${formatHours(hours)}</span>`;
+        }
+        if (record.is_late) {
+          dayClass += ' late';
+          statusHtml = `<span class="calendar-day-status late">遅刻</span>`;
+        }
+      }
+
+      html += `<div class="${dayClass}">
+        <span class="calendar-day-date">${d}</span>
+        ${hoursHtml}
+        ${statusHtml}
+      </div>`;
+    }
+
+    // 翌月の日付
+    const remainingDays = 42 - (startDay + daysInMonth);
+    for (let d = 1; d <= remainingDays; d++) {
+      html += `<div class="calendar-day other-month">
+        <span class="calendar-day-date">${d}</span>
+      </div>`;
+    }
+
+    calendarBody.innerHTML = html;
+  }
+
+  // 履歴テーブルをレンダリング
+  function renderHistoryTable() {
+    const tbody = document.getElementById('history-table-body');
+    const noData = document.getElementById('no-data');
+
+    if (attendanceData.length === 0) {
+      tbody.innerHTML = '';
+      noData.style.display = 'block';
+      return;
+    }
+
+    noData.style.display = 'none';
+
+    const sortedData = [...attendanceData].sort((a, b) => 
+      new Date(b.date) - new Date(a.date)
+    );
+
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+
+    let html = '';
+    sortedData.forEach(record => {
+      const date = new Date(record.date);
+      const dayOfWeek = dayNames[date.getDay()];
+      const dayClass = date.getDay() === 0 ? 'color: #ef4444;' : 
+                       date.getDay() === 6 ? 'color: #3b82f6;' : '';
+
+      const clockIn = record.clock_in ? formatTime(record.clock_in) : '-';
+      const clockOut = record.clock_out ? formatTime(record.clock_out) : '-';
+      // 休憩時間の表示: break_timeフィールドを優先、なければbreaks配列から計算
+      let breakTime = '-';
+      if (record.break_time) {
+        const breakHours = toNumber(record.break_time);
+        breakTime = formatHours(breakHours);
+      } else if (record.breaks && record.breaks.length > 0) {
+        breakTime = formatBreakTime(record.breaks);
+      }
+      const workHours = record.clock_out ? formatHours(record.work_hours ? toNumber(record.work_hours) : calculateWorkHours(record)) : '-';
+
+      let status = '';
+      if (record.clock_out) {
+        if (record.is_late) {
+          status = '<span class="status-badge late"><i class="fas fa-exclamation-circle"></i> 遅刻</span>';
+        } else {
+          status = '<span class="status-badge worked"><i class="fas fa-check"></i> 出勤</span>';
+        }
+      } else if (record.clock_in) {
+        status = '<span class="status-badge" style="background:#dbeafe;color:#2563eb;"><i class="fas fa-briefcase"></i> 勤務中</span>';
+      }
+
+      html += `<tr>
+        <td>${formatDate(record.date)}</td>
+        <td style="${dayClass}">${dayOfWeek}</td>
+        <td>${clockIn}</td>
+        <td>${clockOut}</td>
+        <td>${breakTime}</td>
+        <td><strong>${workHours}</strong></td>
+        <td>${status}</td>
+      </tr>`;
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  // イベントリスナーを設定
+  function setupEventListeners() {
+    document.getElementById('prev-month').addEventListener('click', () => {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      loadAttendanceData();
+    });
+
+    document.getElementById('next-month').addEventListener('click', () => {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      loadAttendanceData();
+    });
+
+    // タイムカード更新ボタン
+    const uploadBtn = document.getElementById('upload-timecard-btn');
+    if (uploadBtn) {
+      uploadBtn.addEventListener('click', async () => {
+        await uploadAttendanceToDB();
+      });
+    }
+
+    // ログアウト
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      if (window.CognitoAuth) {
+        await window.CognitoAuth.signOut();
+      }
+      window.location.href = '/staff/signin.html';
+    });
+  }
+
+  // ローカルストレージの出勤履歴をDBにアップロード
+  async function uploadAttendanceToDB() {
+    if (!currentUser) {
+      alert('ユーザー情報が取得できませんでした。ページを再読み込みしてください。');
+      return;
+    }
+
+    const STAFF_ID = currentUser.id;
+    const STAFF_NAME = currentUser.name || '櫻田傑';
+    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    const btn = document.getElementById('upload-timecard-btn');
+    
+    // ボタンを無効化
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> アップロード中...';
+    }
+
+    try {
+      // Cognito IDトークンを取得（先に取得してAPIからデータを取得するため）
+      async function getCognitoIdToken() {
+        try {
+          const idToken = localStorage.getItem('cognito_id_token');
+          if (idToken) return idToken;
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.includes('idToken')) {
+              const token = localStorage.getItem(key);
+              if (token && token.startsWith('eyJ')) {
+                return token;
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error getting Cognito ID token:', error);
+        }
+        return null;
+      }
+
+      const idToken = await getCognitoIdToken();
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+
+      // タイムカードに表示されているデータを使用
+      // monthlyAttendance（実際の出勤記録）とattendanceRequests（編集申請）の両方から取得
+      console.log('[Upload] タイムカードのデータを使用');
+      console.log('[Upload] monthlyAttendanceの件数:', monthlyAttendance.length);
+      console.log('[Upload] monthlyAttendanceの日付一覧:', monthlyAttendance.map(r => r.date).sort());
+      
+      // monthlyAttendanceが空の場合は、loadTimecard()を実行してデータを取得
+      if (monthlyAttendance.length === 0) {
+        console.log('[Upload] monthlyAttendanceが空のため、loadTimecard()を実行');
+        await loadTimecard();
+        console.log('[Upload] loadTimecard()実行後のmonthlyAttendanceの件数:', monthlyAttendance.length);
+      }
+      
+      // attendanceRequestsも読み込む（承認済みの申請データも含めるため）
+      if (attendanceRequests.length === 0) {
+        console.log('[Upload] attendanceRequestsが空のため、loadAttendanceRequests()を実行');
+        await loadAttendanceRequests();
+        console.log('[Upload] loadAttendanceRequests()実行後のattendanceRequestsの件数:', attendanceRequests.length);
+      }
+      
+      // monthlyAttendanceのデータをベースにする
+      const apiRecords = [...monthlyAttendance];
+      
+      // 承認済みの申請データも追加（実際の出勤記録がない日付の場合）
+      const existingDates = new Set(apiRecords.map(r => r.date));
+      const approvedRequests = attendanceRequests.filter(r => r.status === 'approved' && r.staff_id === STAFF_ID);
+      console.log('[Upload] 承認済みの申請数:', approvedRequests.length);
+      
+      for (const request of approvedRequests) {
+        if (request.date && !existingDates.has(request.date)) {
+          console.log(`[Upload] 承認済みの申請データを追加: ${request.date}`);
+          apiRecords.push({
+            date: request.date,
+            staff_id: request.staff_id || STAFF_ID,
+            staff_name: request.staff_name || STAFF_NAME,
+            clock_in: request.requested_clock_in,
+            clock_out: request.requested_clock_out,
+            breaks: request.requested_break_hours ? [{ break_duration: request.requested_break_hours }] : [],
+            work_hours: null, // 計算が必要
+            status: 'completed'
+          });
+          existingDates.add(request.date);
+        }
+      }
+      
+      console.log('[Upload] マージ後のapiRecordsの件数:', apiRecords.length);
+      console.log('[Upload] マージ後の日付一覧:', apiRecords.map(r => r.date).sort());
+
+      // ローカルストレージから出勤履歴を取得
+      let attendanceRecords = {};
+      try {
+        const stored = localStorage.getItem('attendanceRecords');
+        if (stored) {
+          attendanceRecords = JSON.parse(stored);
+          console.log('[Upload] ローカルストレージから取得したデータ:', attendanceRecords);
+          console.log('[Upload] 日付キーの一覧:', Object.keys(attendanceRecords));
+        } else {
+          console.warn('[Upload] ローカルストレージにデータがありません');
+        }
+      } catch (error) {
+        console.error('Error reading from localStorage:', error);
+      }
+
+      // APIから取得したデータとローカルストレージのデータをマージ
+      const userRecords = {};
+      
+      // APIから取得したデータの日付を確認
+      const apiDates = new Set();
+      for (const record of apiRecords) {
+        if (record.date) {
+          apiDates.add(record.date);
+        }
+      }
+      console.log('[Upload] APIから取得したデータに含まれる日付一覧:', Array.from(apiDates).sort());
+      console.log('[Upload] APIから取得したデータのサンプル（最初の3件）:', apiRecords.slice(0, 3));
+      
+      // APIから取得したデータを追加（重複を避けるため、最新のレコードを優先）
+      const apiRecordsByDate = {};
+      for (const record of apiRecords) {
+        if (record.date && (!record.staff_id || record.staff_id === STAFF_ID)) {
+          const date = record.date;
+          // 既存のレコードがない場合、またはより新しいレコードの場合に更新
+          if (!apiRecordsByDate[date] || 
+              (record.updated_at && apiRecordsByDate[date].updated_at && 
+               record.updated_at > apiRecordsByDate[date].updated_at)) {
+            apiRecordsByDate[date] = record;
+          }
+        }
+      }
+      
+      // 日付ごとに1つのレコードを追加
+      for (const date in apiRecordsByDate) {
+        const record = apiRecordsByDate[date];
+        console.log(`[Upload] APIレコードを追加: ${date}`);
+        userRecords[date] = {
+          clock_in: record.clock_in,
+          clock_out: record.clock_out,
+          breaks: record.breaks || [],
+          work_hours: record.work_hours,
+          staff_id: record.staff_id || STAFF_ID,
+          staff_name: record.staff_name || STAFF_NAME
+        };
+      }
+      
+      console.log('[Upload] APIデータ追加後のuserRecords:', Object.keys(userRecords).length, '件');
+      console.log('[Upload] APIデータ追加後の日付一覧:', Object.keys(userRecords).sort());
+      
+      // ローカルストレージのデータで上書き（ローカルストレージの方が新しい可能性があるため）
+      for (const date in attendanceRecords) {
+        if (attendanceRecords[date] && typeof attendanceRecords[date] === 'object') {
+          if (attendanceRecords[date][STAFF_ID]) {
+            console.log(`[Upload] ローカルストレージのデータで上書き: ${date}`);
+            userRecords[date] = attendanceRecords[date][STAFF_ID];
+          }
+        }
+      }
+
+      console.log('[Upload] マージ後のユーザー記録:', userRecords);
+      console.log('[Upload] マージ後の日付一覧:', Object.keys(userRecords).sort());
+
+      if (Object.keys(userRecords).length === 0) {
+        alert('アップロード対象の記録が見つかりませんでした。');
+        return;
+      }
+
+
+      const dates = Object.keys(userRecords).sort();
+      console.log('[Upload] アップロード対象の日付一覧:', dates);
+      console.log('[Upload] アップロード対象の日付数:', dates.length);
+      
+      let successCount = 0;
+      let failCount = 0;
+      const errors = [];
+
+      // 順次アップロード
+      for (const date of dates) {
+        const record = userRecords[date];
+        console.log(`[Upload] アップロード処理開始: ${date}`, record);
+        
+        // clock_inまたはclock_outが存在する場合のみアップロード
+        if (!record.clock_in && !record.clock_out) {
+          console.log(`[Upload] ${date}: clock_inもclock_outもないためスキップ`);
+          continue;
+        }
+        
+        const data = {
+          staff_id: STAFF_ID,
+          staff_name: STAFF_NAME,
+          date: date,
+          clock_in: record.clock_in || null,
+          clock_out: record.clock_out || null
+        };
+
+        if (record.breaks && Array.isArray(record.breaks)) {
+          data.breaks = record.breaks;
+        }
+        
+        console.log(`[Upload] ${date} のアップロードデータ:`, data);
+
+        try {
+          const response = await fetch(`${API_BASE}/attendance`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(data)
+          });
+
+          if (response.ok) {
+            successCount++;
+            console.log(`✅ ${date}: アップロード成功`);
+          } else {
+            failCount++;
+            const errorData = await response.json().catch(() => ({}));
+            errors.push(`${date}: ${errorData.error || 'アップロード失敗'}`);
+            console.error(`❌ ${date}: アップロード失敗`, response.status, errorData);
+          }
+        } catch (error) {
+          failCount++;
+          errors.push(`${date}: ${error.message || 'エラー'}`);
+          console.error(`❌ ${date}: エラー`, error);
+        }
+
+        // 少し待機（APIの負荷を軽減）
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
+      // 結果を表示
+      if (failCount === 0) {
+        alert(`✅ アップロード完了\n\n成功: ${successCount}件`);
+      } else {
+        alert(`⚠️ アップロード完了\n\n成功: ${successCount}件\n失敗: ${failCount}件\n\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}`);
+      }
+
+      // タイムカードを再読み込み
+      await loadTimecard();
+    } catch (error) {
+      console.error('Error uploading attendance:', error);
+      alert('アップロード中にエラーが発生しました: ' + error.message);
+    } finally {
+      // ボタンを再有効化
+      const btn = document.getElementById('upload-timecard-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-upload"></i> タイムカードを更新';
+      }
+    }
+  }
+
+  // ユーティリティ関数
+  // 総休憩時間を計算（マイページと同じロジック）
+  function calculateTotalBreakTime(breaks) {
+    if (!breaks || !Array.isArray(breaks)) return 0;
+    return breaks.reduce((total, b) => {
+      if (b.break_duration) {
+        return total + toNumber(b.break_duration);
+      } else if (b.break_start && b.break_end) {
+        const start = new Date(b.break_start);
+        const end = new Date(b.break_end);
+        return total + (end - start) / (1000 * 60 * 60);
+      } else if (b.start && b.end) {
+        // フォールバック: start/end形式
+        const start = new Date(b.start);
+        const end = new Date(b.end);
+        return total + (end - start) / (1000 * 60 * 60);
+      }
+      return total;
+    }, 0);
+  }
+
+  function calculateWorkHours(record) {
+    if (!record.clock_in || !record.clock_out) return 0;
+    const start = new Date(record.clock_in);
+    const end = new Date(record.clock_out);
+    const totalHours = (end - start) / (1000 * 60 * 60);
+
+    // 休憩時間を取得（break_timeフィールドを優先、なければbreaks配列から計算）
+    let breakTime = 0;
+    if (record.break_time !== undefined && record.break_time !== null) {
+      // break_timeフィールドが存在する場合はそれを使用（時間単位）
+      breakTime = toNumber(record.break_time);
+    } else if (record.breaks && record.breaks.length > 0) {
+      // breaks配列から計算（時間単位）
+      breakTime = calculateTotalBreakTime(record.breaks);
+    }
+    
+    // 出勤時刻と退勤時刻の差から休憩時間を引く
+    const workHours = Math.max(0, totalHours - breakTime);
+
+    return Math.round(workHours * 100) / 100; // 小数点第2位まで
+  }
+
+  function formatHours(hours) {
+    if (!hours || hours === 0) return '0h';
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    if (m === 0) return `${h}h`;
+    return `${h}h${m}m`;
+  }
+  
+  // マイページと同じ形式の労働時間フォーマット（オプション）
+  function formatWorkHours(hours) {
+    if (!hours || hours === 0) return '0時間';
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    if (m === 0) {
+      return `${h}時間`;
+    }
+    return `${h}時間${m}分`;
+  }
+
+  function formatTime(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+
+  function formatBreakTime(breaks) {
+    if (!breaks || breaks.length === 0) return '-';
+    let totalHours = 0;
+    breaks.forEach(b => {
+      if (b.break_duration) {
+        totalHours += toNumber(b.break_duration);
+      } else if (b.duration) {
+        totalHours += toNumber(b.duration);
+      } else if (b.start && b.end) {
+        const start = new Date(b.start);
+        const end = new Date(b.end);
+        totalHours += (end - start) / (1000 * 60 * 60);
+      } else if (b.break_start && b.break_end) {
+        const start = new Date(b.break_start);
+        const end = new Date(b.break_end);
+        totalHours += (end - start) / (1000 * 60 * 60);
+      }
+    });
+    if (totalHours === 0) return '-';
+    return formatHours(totalHours);
+  }
+
+  // Cognito ID Token取得（従業員認証用）
+  async function getCognitoIdToken() {
+    try {
+      // 1. localStorageから直接取得
+      const cognitoIdToken = localStorage.getItem('cognito_id_token');
+      if (cognitoIdToken) {
+        return cognitoIdToken;
+      }
+      
+      // 2. CognitoAuthから取得
+      if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
+        try {
+          const cognitoUser = await window.CognitoAuth.getCurrentUser();
+          if (cognitoUser && cognitoUser.tokens && cognitoUser.tokens.idToken) {
+            return cognitoUser.tokens.idToken;
+          }
+        } catch (e) {
+          console.warn('Error getting token from CognitoAuth:', e);
+        }
+      }
+      
+      // 3. cognito_userから取得
+      const cognitoUser = localStorage.getItem('cognito_user');
+      if (cognitoUser) {
+        try {
+          const parsed = JSON.parse(cognitoUser);
+          if (parsed.tokens && parsed.tokens.idToken) {
+            return parsed.tokens.idToken;
+          }
+          if (parsed.idToken) {
+            return parsed.idToken;
+          }
+        } catch (e) {
+          console.warn('Error parsing cognito user:', e);
+        }
+      }
+      
+      // 4. misesapo_authから取得
+      const authData = localStorage.getItem('misesapo_auth');
+      if (authData) {
+        try {
+          const parsed = JSON.parse(authData);
+          if (parsed.token) {
+            return parsed.token;
+          }
+        } catch (e) {
+          console.warn('Error parsing auth data:', e);
+        }
+      }
+      
+      console.warn('No authentication token found');
+      return null;
+    } catch (error) {
+      console.error('Error getting Cognito ID token:', error);
+      return null;
+    }
+  }
+</script>
+
+
+    </main>
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script>
+      // ログイン画面では通常ヘッダーを表示
+      (function() {
+        const path = window.location.pathname || '';
+        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
+        
+        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
+        if (isSigninPage) {
+          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
+          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
+          if (defaultHeaderWrapper) {
+            defaultHeaderWrapper.style.display = 'none';
+          }
+          if (normalHeaderWrapper) {
+            normalHeaderWrapper.style.display = 'block';
+            // ログイン画面では通常ヘッダーを常に表示
+            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
+            if (normalHeader) {
+              normalHeader.classList.add('visible');
+            }
+          }
+        }
+      })();
+    </script>
+
+    <script>
+      // 編集モーダルを開く
+      window.openEditModal = function(dateStr) {
+        const modal = document.getElementById('edit-timecard-modal');
+        if (!modal) {
+          console.error('[EditTimecard] Modal not found');
+          return;
+        }
+        const form = document.getElementById('edit-timecard-form');
+        const dateInput = document.getElementById('edit-date');
+        const clockInInput = document.getElementById('edit-clock-in');
+        const clockOutInput = document.getElementById('edit-clock-out');
+        const breakHoursInput = document.getElementById('edit-break-hours');
+        
+        // 現在の記録を取得（attendanceMap、monthlyAttendance、またはattendanceDataから）
+        let record = attendanceMap[dateStr];
+        if (!record) {
+          record = monthlyAttendance.find(r => r.date === dateStr);
+        }
+        if (!record) {
+          record = attendanceData.find(r => r.date === dateStr);
+        }
+        
+        console.log('[EditTimecard] Opening modal for date:', dateStr, 'Record found:', record);
+        
+        // 日付を確実に設定
+        if (!dateStr || typeof dateStr !== 'string') {
+          console.error('[EditTimecard] Invalid dateStr:', dateStr);
+          return;
+        }
+        
+        dateInput.value = dateStr;
+        
+        if (record && record.clock_in) {
+          // ISO形式からdatetime-local形式に変換
+          const clockInDate = new Date(record.clock_in);
+          const clockInLocal = new Date(clockInDate.getTime() - clockInDate.getTimezoneOffset() * 60000);
+          clockInInput.value = clockInLocal.toISOString().slice(0, 16);
+        } else {
+          // 日付の00:00をデフォルト値として設定（dateStrを確実に使用）
+          const date = new Date(dateStr + 'T00:00:00');
+          if (isNaN(date.getTime())) {
+            console.error('[EditTimecard] Invalid date string:', dateStr);
+            // フォールバック: 現在の日付を使用
+            const today = new Date();
+            const fallbackDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            dateInput.value = fallbackDateStr;
+            const fallbackDate = new Date(fallbackDateStr + 'T00:00:00');
+            const localDate = new Date(fallbackDate.getTime() - fallbackDate.getTimezoneOffset() * 60000);
+            clockInInput.value = localDate.toISOString().slice(0, 16);
+          } else {
+            const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+            clockInInput.value = localDate.toISOString().slice(0, 16);
+          }
+        }
+        
+        if (record && record.clock_out) {
+          const clockOutDate = new Date(record.clock_out);
+          const clockOutLocal = new Date(clockOutDate.getTime() - clockOutDate.getTimezoneOffset() * 60000);
+          clockOutInput.value = clockOutLocal.toISOString().slice(0, 16);
+        } else {
+          clockOutInput.value = '';
+        }
+        
+        // 休憩時間を時間単位で設定
+        if (record) {
+          if (record.break_time) {
+            const breakHours = toNumber(record.break_time);
+            breakHoursInput.value = breakHours;
+          } else if (record.breaks && record.breaks.length > 0) {
+            const breakHours = calculateTotalBreakTime(record.breaks);
+            breakHoursInput.value = breakHours;
+          } else {
+            breakHoursInput.value = 1; // デフォルト1時間
+          }
+        } else {
+          breakHoursInput.value = 1; // デフォルト1時間
+        }
+        
+        // 修正理由フィールドをクリア
+        const reasonInput = document.getElementById('edit-reason');
+        if (reasonInput) {
+          reasonInput.value = '';
+        }
+        
+        // 削除依頼ボタンの表示/非表示を制御（記録がある場合のみ表示）
+        const deleteRequestBtn = document.getElementById('delete-request-btn');
+        if (deleteRequestBtn) {
+          if (record && (record.clock_in || record.clock_out)) {
+            deleteRequestBtn.style.display = 'block';
+            deleteRequestBtn.onclick = () => submitDeleteRequest(dateStr, record);
+          } else {
+            deleteRequestBtn.style.display = 'none';
+          }
+        }
+        
+        modal.style.display = 'flex';
+      };
+      
+      // 編集モーダルを閉じる
+      window.closeEditModal = function() {
+        const modal = document.getElementById('edit-timecard-modal');
+        modal.style.display = 'none';
+      };
+      
+      // 削除依頼を送信
+      async function submitDeleteRequest(dateStr, record) {
+        const reason = prompt('削除理由を入力してください:');
+        if (!reason || reason.trim() === '') {
+          return;
+        }
+        
+        if (!confirm('この出退勤記録の削除依頼を送信しますか？管理者の承認が必要です。')) {
+          return;
+        }
+        
+        try {
+          const idToken = await getCognitoIdToken();
+          const headers = {
+            'Content-Type': 'application/json'
+          };
+          if (idToken) {
+            headers['Authorization'] = `Bearer ${idToken}`;
+          }
+          
+          const attendanceId = record?.id || `${dateStr}_${currentUser.id}`;
+          const currentClockIn = record?.clock_in || null;
+          const currentClockOut = record?.clock_out || null;
+          
+          const requestData = {
+            staff_id: currentUser.id,
+            staff_name: currentUser.name,
+            attendance_id: attendanceId,
+            date: dateStr,
+            reason: reason.trim(),
+            current_clock_in: currentClockIn,
+            current_clock_out: currentClockOut,
+            requested_clock_in: null, // 削除依頼の場合はnull
+            requested_clock_out: null, // 削除依頼の場合はnull
+            requested_break_hours: 0,
+            action: 'delete' // 削除依頼であることを示すフラグ
+          };
+          
+          console.log('[EditTimecard] Submitting delete request:', requestData);
+          
+          const response = await fetch(`${API_BASE}/attendance/requests`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(requestData)
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            console.log('[EditTimecard] Delete request submitted:', result);
+            
+            // モーダルを閉じる
+            closeEditModal();
+            
+            // 編集申請一覧を再読み込み
+            await loadAttendanceRequests();
+            
+            // 最新の勤怠データを再取得してタイムカードを再表示
+            setTimeout(async () => {
+              await loadTimecard();
+              console.log('[EditTimecard] Timecard reloaded after delete request submission');
+            }, 1000);
+            
+            // ポーリングを再開（新しい申請が追加されたため）
+            startPollingForApprovedRequests();
+            
+            alert('削除依頼を送信しました。管理者の承認をお待ちください。');
+          } else {
+            const errorData = await response.json().catch(() => ({ error: response.statusText }));
+            console.error('[EditTimecard] Error submitting delete request:', errorData);
+            alert(`エラー: ${errorData.message || errorData.error || '削除依頼の送信に失敗しました'}`);
+          }
+        } catch (error) {
+          console.error('[EditTimecard] Error:', error);
+          alert('削除依頼の送信中にエラーが発生しました');
+        }
+      }
+      
+      // モーダルの外側をクリックで閉じる
+      document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('edit-timecard-modal');
+        if (modal) {
+          modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+              closeEditModal();
+            }
+          });
+        }
+        
+        // フォーム送信処理
+        const form = document.getElementById('edit-timecard-form');
+        if (form) {
+          form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const dateStr = document.getElementById('edit-date').value;
+            const clockInValue = document.getElementById('edit-clock-in').value;
+            const clockOutValue = document.getElementById('edit-clock-out').value;
+            const breakHours = parseFloat(document.getElementById('edit-break-hours').value) || 0;
+            const reason = document.getElementById('edit-reason').value.trim();
+            
+            if (!clockInValue) {
+              alert('出勤時刻を入力してください');
+              return;
+            }
+            
+            if (!reason) {
+              alert('修正理由を入力してください');
+              return;
+            }
+            
+            // datetime-local形式をISO形式に変換
+            const requestedClockIn = new Date(clockInValue).toISOString();
+            const requestedClockOut = clockOutValue ? new Date(clockOutValue).toISOString() : null;
+            
+            // バリデーション
+            if (requestedClockOut && new Date(requestedClockOut) <= new Date(requestedClockIn)) {
+              alert('退勤時刻は出勤時刻より後である必要があります');
+              return;
+            }
+            
+            // 現在の記録を取得
+            let record = monthlyAttendance.find(r => r.date === dateStr);
+            if (!record) {
+              record = attendanceData.find(r => r.date === dateStr);
+            }
+            
+            const currentClockIn = record?.clock_in || null;
+            const currentClockOut = record?.clock_out || null;
+            const attendanceId = record?.id || `${dateStr}_${currentUser.id}`;
+            
+            // 修正申請を送信
+            try {
+              const idToken = await getCognitoIdToken();
+              const headers = {
+                'Content-Type': 'application/json'
+              };
+              if (idToken) {
+                headers['Authorization'] = `Bearer ${idToken}`;
+              }
+              
+              // 休憩時間は時間単位で送信（0の場合は1時間に設定）
+              const requestedBreakHours = breakHours > 0 ? breakHours : 1;
+              
+              const requestData = {
+                staff_id: currentUser.id,
+                staff_name: currentUser.name,
+                attendance_id: attendanceId,
+                date: dateStr,
+                reason: reason,
+                current_clock_in: currentClockIn,
+                current_clock_out: currentClockOut,
+                requested_clock_in: requestedClockIn,
+                requested_clock_out: requestedClockOut,
+                requested_break_hours: requestedBreakHours
+              };
+              
+              console.log('[EditTimecard] Submitting correction request:', requestData);
+              
+              const response = await fetch(`${API_BASE}/attendance/requests`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(requestData)
+              });
+              
+              if (response.ok) {
+                const result = await response.json();
+                console.log('[EditTimecard] Correction request submitted:', result);
+                
+                // モーダルを閉じる
+                closeEditModal();
+                
+                // 編集申請一覧を再読み込み
+                await loadAttendanceRequests();
+                
+                // 最新の勤怠データを再取得してタイムカードを再表示
+                // 少し遅延を入れてから再読み込み（APIの反映を待つ）
+                setTimeout(async () => {
+                  await loadTimecard();
+                  console.log('[EditTimecard] Timecard reloaded after request submission');
+                }, 1000);
+                
+                // ポーリングを再開（新しい申請が追加されたため）
+                startPollingForApprovedRequests();
+                
+                alert('編集申請を送信しました。管理者の承認をお待ちください。承認されると自動的にタイムカードが更新されます。');
+              } else {
+                const errorData = await response.json().catch(() => ({ error: response.statusText }));
+                console.error('[EditTimecard] Error submitting request:', errorData);
+                alert(`エラー: ${errorData.message || errorData.error || '編集申請の送信に失敗しました'}`);
+              }
+            } catch (error) {
+              console.error('[EditTimecard] Error:', error);
+              alert('編集申請の送信中にエラーが発生しました');
+            }
+          });
+        }
+      });
+
+      // 編集申請を削除
+      window.deleteAttendanceRequest = async function(requestId) {
+        if (!confirm('この編集申請を削除しますか？この操作は取り消せません。')) return;
+        
+        try {
+          const idToken = await getCognitoIdToken();
+          const headers = {
+            'Content-Type': 'application/json'
+          };
+          if (idToken) {
+            headers['Authorization'] = `Bearer ${idToken}`;
+          }
+          
+          const response = await fetch(`${API_BASE}/attendance/requests/${requestId}`, {
+            method: 'DELETE',
+            headers: headers
+          });
+
+          if (response.ok) {
+            alert('編集申請を削除しました');
+            // 申請一覧を再読み込み
+            await loadAttendanceRequests();
+            // タイムカードを再表示
+            renderTimecard();
+            renderMonthlySummary();
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            alert(errorData.error || '削除に失敗しました');
+          }
+        } catch (error) {
+          console.error('[AttendanceHistory] Error deleting request:', error);
+          alert('削除中にエラーが発生しました');
+        }
+      };
+    </script>
+  </body>
+  </html>
+
+

@@ -1,0 +1,76 @@
+/* ============================================
+   ヒーローセクション CSS（アニメーションなし版）
+   WordPress用
+============================================ */
+
+/* フルスクリーン画像セクション（アニメーションなし） */
+.fullscreen-image-section.no-animation {
+    width: 100vw;
+    height: auto;
+    position: relative;
+    overflow: hidden;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    z-index: 1;
+}
+
+.fullscreen-image-section.no-animation .fullscreen-image-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* アニメーションなしの画像 */
+.fullscreen-image-section.no-animation .fullscreen-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    opacity: 1;
+    /* アニメーションを削除 */
+    animation: none;
+    transition: none;
+    z-index: 1;
+}
+
+/* 静的画像（常に表示） */
+.fullscreen-image-section.no-animation .fullscreen-image-static {
+    opacity: 1;
+    transform: scale(1);
+    /* アニメーションなし */
+    animation: none;
+}
+
+/* マスク画像 */
+.fullscreen-image-section.no-animation .hero-mask {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    z-index: 50;
+    pointer-events: none;
+    margin: 0 auto;
+}
+
+.fullscreen-image-section.no-animation .hero-mask-image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+/* スクロールヒントは表示しない（アニメーションなし版では不要） */
+.fullscreen-image-section.no-animation .hero_scroll_down {
+    display: none;
+}
+

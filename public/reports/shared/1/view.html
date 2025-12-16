@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清掃レポート | ミセサポ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .shared-report-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        .error-message {
+            padding: 24px;
+            background: #fee2e2;
+            color: #991b1b;
+            text-align: center;
+            border-radius: 8px;
+            margin: 20px;
+        }
+        .report-header {
+            background: #FF679C;
+            color: #fff;
+            padding: 16px 24px;
+        }
+        .report-header-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .report-date {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .report-store {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        .items-list-bar {
+            background: #f9f9f9;
+            padding: 12px 24px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .items-list {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .items-list-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        .items-list-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .items-list-item {
+            font-size: 0.9rem;
+            color: #333;
+            padding: 6px 12px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+        }
+        .cleaning-section {
+            padding: 24px;
+            border-bottom: 1px solid #eee;
+        }
+        .cleaning-section:last-child {
+            border-bottom: none;
+        }
+        .item-header {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .item-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #222;
+            margin: 0;
+        }
+        .item-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 5px;
+        }
+        .detail-tag {
+            background: #f0f4f8;
+            color: #555;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        .subsection {
+            margin-top: 20px;
+        }
+        .subsection-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .subsection p {
+            margin: 0 0 15px 0;
+            color: #555;
+            white-space: pre-wrap;
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .image-category {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+        .image-category-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #444;
+            margin: 0;
+            text-align: center;
+            width: 100%;
+        }
+        .image-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            width: 100%;
+            max-width: 100%;
+        }
+        .image-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background: #fafafa;
+        }
+        .image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        /* 満足度アンケートフォーム */
+        .satisfaction-form {
+            padding: 24px;
+            border-top: 1px solid #eee;
+        }
+        .form-question {
+            font-weight: 700;
+            color: #333;
+            margin: 6px 0 12px;
+            text-align: center;
+        }
+        .rating-stars {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .rating-label {
+            font-size: 0.95rem;
+            color: #555;
+            flex-shrink: 0;
+        }
+        .stars {
+            display: flex;
+            gap: 5px;
+            justify-content: flex-start;
+        }
+        .star {
+            font-size: 1.8rem;
+            color: #ccc;
+            cursor: pointer;
+            line-height: 1;
+            user-select: none;
+        }
+        .star.filled {
+            color: #FF679C;
+        }
+        .comment-section {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        .comment-label {
+            display: block;
+            font-weight: 600;
+            margin: 0 0 6px;
+            color: #555;
+        }
+        .comment-textarea {
+            width: 100%;
+            min-height: 96px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font: inherit;
+        }
+        .comment-textarea:focus {
+            outline: none;
+            border-color: #FF679C;
+            box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+        }
+        .submit-button-wrapper {
+            text-align: center;
+            margin-top: 16px;
+        }
+        .submit-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 40px;
+            padding: 0 16px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            background: #FF679C;
+            color: #fff;
+            box-shadow: 0 1px 2px rgba(0,0,0,.06);
+            cursor: pointer;
+        }
+        .submit-button:hover {
+            background: #e55a8a;
+        }
+        .submit-button svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+        .satisfaction-thanks {
+            display: none;
+            text-align: center;
+            padding: 48px 24px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .satisfaction-thanks.show {
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .shared-report-container {
+                margin: 0;
+                border-radius: 0;
+            }
+            .items-list-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px;
+            }
+            .cleaning-section {
+                padding: 20px 15px;
+            }
+            .item-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .item-title {
+                font-size: 1.4rem;
+            }
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+            .image-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shared-report-container">
+        <div class="loading" id="loading">読み込み中...</div>
+        <div id="report-content" style="display: none;">
+            <header class="report-header" id="report-header">
+                <div class="report-header-content">
+                    <div class="report-date" id="report-date"></div>
+                    <div class="report-store" id="report-store"></div>
+                </div>
+            </header>
+            
+            <div class="items-list-bar">
+                <div class="items-list">
+                    <span class="items-list-label">実施清掃項目</span>
+                    <div class="items-list-items" id="cleaning-items"></div>
+                </div>
+            </div>
+            
+            <div class="report-main" id="report-main">
+                <!-- 清掃項目が動的に追加される -->
+            </div>
+
+            <!-- 満足度アンケートフォーム -->
+            <div id="satisfaction-wrap" class="satisfaction-form">
+                <div class="form-question">今回の作業の満足度はいかがでしたか？</div>
+                <div class="rating-stars">
+                    <span class="rating-label">良い</span>
+                    <div class="stars" aria-label="5段階評価" role="radiogroup">
+                        <span class="star" data-value="1" role="radio" aria-label="1" aria-checked="false" tabindex="0">☆</span>
+                        <span class="star" data-value="2" role="radio" aria-label="2" aria-checked="false" tabindex="0">☆</span>
+                        <span class="star" data-value="3" role="radio" aria-label="3" aria-checked="false" tabindex="0">☆</span>
+                        <span class="star" data-value="4" role="radio" aria-label="4" aria-checked="false" tabindex="0">☆</span>
+                        <span class="star" data-value="5" role="radio" aria-label="5" aria-checked="false" tabindex="0">☆</span>
+                    </div>
+                    <span class="rating-label">悪い</span>
+                </div>
+                <div class="comment-section">
+                    <label for="storeComment" class="comment-label">店舗担当者コメント</label>
+                    <textarea id="storeComment" class="comment-textarea" placeholder="コメントを入力してください"></textarea>
+                </div>
+                <div class="submit-button-wrapper">
+                    <button id="satisfaction-submit" type="button" class="submit-button">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                        コメントを送る
+                    </button>
+                </div>
+            </div>
+            <div id="satisfaction-thanks" class="satisfaction-thanks">コメントをお寄せいただきありがとうございました。</div>
+        </div>
+        <div id="error-message" class="error-message" style="display: none;"></div>
+    </div>
+
+    <script>
+        // APIエンドポイント（将来的に実装）
+        const API_BASE_URL = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+        
+        // URLからレポートIDを取得
+        function getReportIdFromUrl() {
+            const path = window.location.pathname;
+            // /reports/shared/{id}/view の形式からIDを取得
+            const match = path.match(/\/reports\/shared\/([^\/]+)\/view/);
+            return match ? match[1] : null;
+        }
+
+        // 日付フォーマット
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ja-JP', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // レポート詳細を取得
+        async function loadReportDetail() {
+            const loadingEl = document.getElementById('loading');
+            const contentEl = document.getElementById('report-content');
+            const errorEl = document.getElementById('error-message');
+            
+            const reportId = getReportIdFromUrl();
+            if (!reportId) {
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                errorEl.textContent = 'レポートIDが取得できませんでした';
+                return;
+            }
+
+            try {
+                loadingEl.style.display = 'block';
+                contentEl.style.display = 'none';
+                errorEl.style.display = 'none';
+                
+                // レポートデータを取得（まずはJSONファイルから）
+                try {
+                    const reportsResponse = await fetch('/data/cleaning_reports.json');
+                    const reportsData = await reportsResponse.json();
+                    const report = reportsData.reports.find(r => r.id == reportId);
+                    
+                    if (!report) {
+                        throw new Error('レポートが見つかりませんでした');
+                    }
+                    
+                    // データ形式を変換
+                    // cleaning_datetimeは "2023年11月6日(日)8:00-11:30" 形式なので、ISO形式に変換
+                    let cleaningDate = new Date().toISOString();
+                    if (report.cleaning_datetime) {
+                        // "2023年11月6日(日)8:00-11:30" から日付を抽出
+                        const match = report.cleaning_datetime.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+                        if (match) {
+                            const year = parseInt(match[1]);
+                            const month = parseInt(match[2]) - 1; // 月は0ベース
+                            const day = parseInt(match[3]);
+                            cleaningDate = new Date(year, month, day).toISOString();
+                        }
+                    }
+                    
+                    const formattedReport = {
+                        report_id: report.id,
+                        cleaning_date: cleaningDate,
+                        cleaning_start_time: '08:00',
+                        cleaning_end_time: '11:30',
+                        store_name: 'テスト店舗',
+                        work_items: (report.detail || []).map(item => ({
+                            item_name: item.cleaning_item,
+                            work_content: item.work_content,
+                            work_memo: item.work_memo,
+                            photos: {
+                                before: item.images ? [item.images[0]] : [],
+                                after: item.images ? [item.images[1]] : []
+                            }
+                        }))
+                    };
+                    
+                    // レポート情報を表示
+                    renderReport(formattedReport);
+                } catch (fetchError) {
+                    // フォールバック: モックデータを使用
+                    console.warn('Failed to load report data, using mock:', fetchError);
+                    const mockReport = {
+                        report_id: reportId,
+                        cleaning_date: new Date().toISOString(),
+                        cleaning_start_time: '10:00',
+                        cleaning_end_time: '12:00',
+                        store_name: 'サンプル店舗',
+                        work_items: [
+                            {
+                                item_name: '床清掃',
+                                work_content: 'フロア全体の清掃を行いました。',
+                                work_memo: '特に汚れがひどかった箇所を重点的に清掃しました。',
+                                photos: {
+                                    before: ['/images/reports/floor_before_cleaning.png'],
+                                    after: ['/images/reports/floor_after_cleaning.png']
+                                }
+                            }
+                        ]
+                    };
+                    renderReport(mockReport);
+                }
+                
+                loadingEl.style.display = 'none';
+                contentEl.style.display = 'block';
+            } catch (error) {
+                console.error('Error loading report:', error);
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                errorEl.textContent = `エラー: ${error.message}`;
+            }
+        }
+
+        // レポートを表示
+        function renderReport(report) {
+            // ヘッダー
+            const dateStr = formatDate(report.cleaning_date);
+            const timeStr = report.cleaning_start_time && report.cleaning_end_time 
+                ? `${report.cleaning_start_time} - ${report.cleaning_end_time}`
+                : '';
+            document.getElementById('report-date').textContent = `清掃日時: ${dateStr} ${timeStr}`;
+            document.getElementById('report-store').textContent = report.store_name || '店舗名不明';
+            
+            // 清掃項目リスト
+            const cleaningItemsEl = document.getElementById('cleaning-items');
+            const items = report.work_items || [];
+            const itemNames = items.map(item => item.item_name || item.item_id).filter(Boolean);
+            cleaningItemsEl.innerHTML = itemNames.map(name => 
+                `<span class="items-list-item">${name}</span>`
+            ).join('');
+            
+            // 清掃項目の詳細
+            const reportMainEl = document.getElementById('report-main');
+            reportMainEl.innerHTML = items.map(item => {
+                const details = item.details || {};
+                const tags = [];
+                if (details.type) tags.push(details.type);
+                if (details.count) tags.push(`${details.count}個`);
+                const tagsHtml = tags.map(tag => `<span class="detail-tag">${tag}</span>`).join('');
+                
+                // 写真の表示
+                const beforePhotos = item.photos?.before || [];
+                const afterPhotos = item.photos?.after || [];
+                
+                const beforePhotosHtml = beforePhotos.length > 0
+                    ? `<div class="image-list">
+                         ${beforePhotos.map(url => `
+                           <div class="image-item">
+                             <img src="${url}" alt="作業前" loading="lazy" />
+                           </div>
+                         `).join('')}
+                       </div>`
+                    : '<p style="color: #999; font-style: italic;">写真なし</p>';
+                
+                const afterPhotosHtml = afterPhotos.length > 0
+                    ? `<div class="image-list">
+                         ${afterPhotos.map(url => `
+                           <div class="image-item">
+                             <img src="${url}" alt="作業後" loading="lazy" />
+                           </div>
+                         `).join('')}
+                       </div>`
+                    : '<p style="color: #999; font-style: italic;">写真なし</p>';
+                
+                return `
+                  <section class="cleaning-section">
+                    <div class="item-header">
+                      <h3 class="item-title">${item.item_name || item.item_id}</h3>
+                      <div class="item-details">${tagsHtml}</div>
+                    </div>
+                    ${item.work_content ? `
+                      <div class="subsection">
+                        <h4 class="subsection-title">作業内容</h4>
+                        <p>${item.work_content}</p>
+                      </div>
+                    ` : ''}
+                    <div class="image-grid">
+                      <div class="image-category">
+                        <h4 class="image-category-title">作業前</h4>
+                        ${beforePhotosHtml}
+                      </div>
+                      <div class="image-category">
+                        <h4 class="image-category-title">作業後</h4>
+                        ${afterPhotosHtml}
+                      </div>
+                    </div>
+                    ${item.work_memo ? `
+                      <div class="subsection">
+                        <h4 class="subsection-title">作業メモ</h4>
+                        <p>${item.work_memo}</p>
+                      </div>
+                    ` : ''}
+                  </section>
+                `;
+            }).join('');
+        }
+
+        // 満足度評価の処理
+        document.addEventListener('DOMContentLoaded', function() {
+            loadReportDetail();
+            
+            // 満足度評価の星
+            const wrap = document.getElementById('satisfaction-wrap');
+            const thanks = document.getElementById('satisfaction-thanks');
+            if (wrap) {
+                const stars = Array.from(wrap.querySelectorAll('.star'));
+                let rating = 0;
+                function render() {
+                    stars.forEach((s, i) => {
+                        const filled = (i + 1) <= rating;
+                        s.classList.toggle('filled', filled);
+                        s.setAttribute('aria-checked', String(filled && (i + 1) === rating));
+                    });
+                }
+                stars.forEach((s) => {
+                    s.addEventListener('click', () => { rating = Number(s.dataset.value || '0'); render(); });
+                    s.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); rating = Number(s.dataset.value || '0'); render(); }
+                        if (e.key === 'ArrowRight') { e.preventDefault(); rating = Math.min(5, rating + 1) || 1; render(); }
+                        if (e.key === 'ArrowLeft') { e.preventDefault(); rating = Math.max(1, rating - 1) || 1; render(); }
+                    });
+                });
+                const btn = document.getElementById('satisfaction-submit');
+                if (btn) btn.addEventListener('click', () => {
+                    const reportId = getReportIdFromUrl();
+                    const comment = document.getElementById('storeComment').value.trim();
+                    
+                    // TODO: 実際のAPI呼び出しに置き換え
+                    // 現在はローカルストレージに保存
+                    const feedbackData = {
+                        report_id: reportId,
+                        rating: rating,
+                        comment: comment,
+                        submitted_at: new Date().toISOString()
+                    };
+                    localStorage.setItem(`report_feedback_${reportId}`, JSON.stringify(feedbackData));
+                    
+                    wrap.style.display = 'none';
+                    if (thanks) thanks.style.display = 'block';
+                });
+            }
+        });
+
+    </script>
+</body>
+</html>
+

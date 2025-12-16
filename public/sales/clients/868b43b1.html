@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title>顧客詳細 | ミセサポ</title>
+    
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+    <style>
+      /* Staff signin page: hide all headers */
+      body.page-staff-signin #default-header-wrapper,
+      body.page-staff-signin #normal-header-wrapper {
+        display: none !important;
+      }
+      
+      /* Staff pages: hide global header and footer */
+      body[class*="page-staff-"] #default-header-wrapper,
+      body[class*="page-staff-"] #normal-header-wrapper,
+      body[class*="page-staff-"] footer {
+        display: none !important;
+      }
+      
+      /* Staff pages: ensure full height layout */
+      body[class*="page-staff-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="page-staff-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Admin pages: hide global header while keeping auth buttons */
+      body[class*="page-admin-"] #default-header-wrapper {
+        height: 0;
+        overflow: visible;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .site-header {
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        min-height: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .inner {
+        justify-content: flex-end;
+        padding: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-left,
+      body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
+      body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
+      body[class*="page-admin-"] #default-header-wrapper .spacer,
+      body[class*="page-admin-"] #default-header-wrapper .role-badge {
+        display: none !important;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right {
+        position: fixed;
+        top: 16px;
+        right: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 18px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.18);
+        z-index: 300;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
+        font-weight: 600;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+      }
+      
+      /* Sales pages: hide global header and footer */
+      body[class*="sales-"] #default-header-wrapper,
+      body[class*="sales-"] #normal-header-wrapper,
+      body[class*="sales-"] footer {
+        display: none !important;
+      }
+      
+      /* Sales pages: ensure full height layout */
+      body[class*="sales-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="sales-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body class="theme-pink page-sales-client-detail">
+    <div id="default-header-wrapper">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+<header id="header-guest" class="site-header" data-role="guest">
+  <div class="inner wide">
+    <div class="nav-left">
+      <a class="brand brand-logo" href="/" aria-label="ミセサポ ホーム">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+      </a>
+      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+    </div>
+    <div class="spacer"></div>
+    <nav class="nav-right hide-sm" aria-label="User">
+      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+      <a class="nav-link" href="/signin">ログイン</a>
+      <a class="nav-link primary" href="/signup">新規登録</a>
+      <button class="icon-btn" aria-label="通知">
+        <i class="fas fa-bell"></i>
+      </button>
+      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </nav>
+    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+  <!-- スマホ版ナビゲーションメニュー -->
+  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
+    <div class="mobile-nav-content">
+      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+      <nav class="mobile-nav-user" aria-label="User">
+        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+        <a class="mobile-nav-link" href="/signin">ログイン</a>
+        <a class="mobile-nav-link primary" href="/signup">新規登録</a>
+      </nav>
+    </div>
+  </nav>
+</header>
+
+    </div>
+    <!-- 通常ヘッダー（ログイン画面用） -->
+    <div id="normal-header-wrapper" style="display: none;">
+    <!-- 通常ヘッダー -->
+<header class="normal-header">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+            </a>
+                </div>
+        <nav class="normal-header-nav">
+            <a href="/">TOP</a>
+            <a href="/service">対応可能サービス</a>
+            <a href="/lp#voice">お客様の声</a>
+            <a href="/customers-support-desk">カスタマーズサポート</a>
+            <a href="/announcements">お知らせ</a>
+            <a href="/privacy-policy">規約＆ポリシー</a>
+        </nav>
+        <div class="normal-header-actions">
+            <a href="/signin" class="normal-header-login">ログイン</a>
+        </div>
+            </div>
+</header>
+
+
+    </div>
+    <main id="main">
+      
+
+
+<script src="/js/client_auth.js"></script>
+
+<main id="main" class="container sales-client-detail">
+  <div class="page-header">
+    <a href="/sales/dashboard#client" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">顧客詳細</h1>
+    <a href="/sales/clients/868b43b1/edit" class="btn btn-outline btn-sm">
+      <i class="fas fa-edit"></i> 編集
+    </a>
+  </div>
+
+  <!-- Client Info Card -->
+  <div class="info-card">
+    <div class="card-header">
+      <div class="client-main-info">
+        <h2 class="client-company">株式会社小肥羊ジャパン</h2>
+        <div class="client-store">銀座店</div>
+        <div class="client-brand">火鍋 小肥羊</div>
+      </div>
+      <span class="status-badge status-稼働中">稼働中</span>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-section">
+        <h3 class="section-title">
+          <i class="fas fa-building"></i>
+          基本情報
+        </h3>
+        <div class="info-item">
+          <span class="info-label">会社名</span>
+          <span class="info-value">株式会社小肥羊ジャパン</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">ブランド名</span>
+          <span class="info-value">火鍋 小肥羊</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">店舗名</span>
+          <span class="info-value">銀座店</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">店舗数</span>
+          <span class="info-value">20店舗</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">ステータス</span>
+          <span class="info-value status-稼働中">稼働中</span>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3 class="section-title">
+          <i class="fas fa-user"></i>
+          担当者情報
+        </h3>
+        <div class="info-item">
+          <span class="info-label">担当者名</span>
+          <span class="info-value">梶原部長</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">メールアドレス</span>
+          <span class="info-value">
+            <a href="mailto:"></a>
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">営業担当</span>
+          <span class="info-value">正田和輝</span>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3 class="section-title">
+          <i class="fas fa-calendar-alt"></i>
+          清掃情報
+        </h3>
+        <div class="info-item">
+          <span class="info-label">次回清掃日時</span>
+          <span class="info-value"></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">清掃頻度</span>
+          <span class="info-value">毎月清掃</span>
+        </div>
+      </div>
+
+      <div class="info-section" id="url-section" style="display: none;">
+        <h3 class="section-title">
+          <i class="fas fa-link"></i>
+          関連リンク
+        </h3>
+        <div class="info-item">
+          <span class="info-label">URL</span>
+          <span class="info-value">
+            <a href="" target="_blank" rel="noopener noreferrer">
+              
+              <i class="fas fa-external-link-alt"></i>
+            </a>
+          </span>
+        </div>
+      </div>
+
+      <div class="info-section full-width" id="notes-section" style="display: none;">
+        <h3 class="section-title">
+          <i class="fas fa-sticky-note"></i>
+          メモ
+        </h3>
+        <div class="info-memo">ネズミ駆除、6月〜7月、撲滅してから考える。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="actions-section">
+    <h3 class="section-title">クイックアクション</h3>
+    <div class="action-buttons">
+      <a href="/sales/estimates/new?client_id=868b43b1" class="action-btn">
+        <i class="fas fa-file-invoice"></i>
+        <span>見積もり作成</span>
+      </a>
+      <a href="/sales/orders?client_id=868b43b1" class="action-btn">
+        <i class="fas fa-shopping-cart"></i>
+        <span>発注履歴</span>
+      </a>
+      <a href="mailto:" class="action-btn">
+        <i class="fas fa-envelope"></i>
+        <span>メール送信</span>
+      </a>
+      <a href="" target="_blank" class="action-btn" id="url-action-btn" style="display: none;">
+        <i class="fas fa-external-link-alt"></i>
+        <span>URL確認</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-section">
+    <a href="/sales/dashboard#client" class="btn btn-outline btn-block">
+      <i class="fas fa-list"></i> 顧客一覧に戻る
+    </a>
+  </div>
+
+  <style>
+    .sales-client-detail {
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+      flex-wrap: wrap;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      flex: 1;
+    }
+    .info-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+    .client-main-info {
+      flex: 1;
+    }
+    .client-company {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 8px 0;
+    }
+    .client-store {
+      font-size: 1.125rem;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .client-brand {
+      font-size: 0.875rem;
+      color: #9ca3af;
+    }
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-left: 16px;
+    }
+    .status-稼働中 {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-休止 {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-契約終了 {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .info-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .info-section.full-width {
+      grid-column: 1 / -1;
+    }
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title i {
+      color: var(--primary);
+    }
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    .info-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .info-value {
+      font-size: 0.95rem;
+      color: #111827;
+      font-weight: 500;
+    }
+    .info-value a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .info-value a:hover {
+      text-decoration: underline;
+    }
+    .info-memo {
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: #374151;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .actions-section {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+    .action-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #374151;
+      transition: all 0.2s;
+    }
+    .action-btn:hover {
+      background: #ffffff;
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .action-btn i {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+    .action-btn span {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .nav-section {
+      margin-bottom: 24px;
+    }
+    @media (max-width: 768px) {
+      .sales-client-detail {
+        padding: 12px;
+      }
+      .info-card {
+        padding: 16px;
+      }
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+      .action-buttons {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+
+  <script>
+    // Show/hide URL and notes sections based on content
+    (function() {
+      const url = '';
+      const notes = 'ネズミ駆除、6月〜7月、撲滅してから考える。';
+      
+      const urlSection = document.getElementById('url-section');
+      const urlActionBtn = document.getElementById('url-action-btn');
+      const notesSection = document.getElementById('notes-section');
+      
+      if (url && url.trim() && urlSection) {
+        urlSection.style.display = 'block';
+      }
+      if (url && url.trim() && urlActionBtn) {
+        urlActionBtn.style.display = 'flex';
+      }
+      
+      if (notes && notes.trim() && notesSection) {
+        notesSection.style.display = 'block';
+      }
+    })();
+  </script>
+</main>
+
+
+    </main>
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script>
+      // ログイン画面では通常ヘッダーを表示
+      (function() {
+        const path = window.location.pathname || '';
+        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
+        
+        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
+        if (isSigninPage) {
+          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
+          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
+          if (defaultHeaderWrapper) {
+            defaultHeaderWrapper.style.display = 'none';
+          }
+          if (normalHeaderWrapper) {
+            normalHeaderWrapper.style.display = 'block';
+            // ログイン画面では通常ヘッダーを常に表示
+            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
+            if (normalHeader) {
+              normalHeader.classList.add('visible');
+            }
+          }
+        }
+      })();
+    </script>
+  </body>
+  </html>
+
+

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>定期清掃 | ミセサポ</title>
+        <!--GoogleFonts(Noto Sans JP)-->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        <!--GoogleFonts(Noto Sans JP) end-->
+        <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+        <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+        <link rel="stylesheet" href="/css/style.css">
+        <link rel="stylesheet" href="/css/header.css">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: #FDEDED;
+                color: #333;
+                line-height: 1.8;
+            }
+
+            .teikiseisou-page {
+                padding-top: 100px;
+            }
+
+            .teikiseisou-hero {
+                width: 100%;
+                overflow: hidden;
+            }
+
+            .teikiseisou-hero img {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+
+            .teikiseisou-overview {
+                max-width: 1000px;
+                margin: 0 auto;
+                padding: 60px 20px 40px;
+                background: #fff;
+            }
+
+            .teikiseisou-overview__title {
+                font-size: 24px;
+                font-weight: 700;
+                color: #333;
+                margin-bottom: 25px;
+                line-height: 1.6;
+            }
+
+            .teikiseisou-overview__text {
+                font-size: 16px;
+                line-height: 1.8;
+                color: #555;
+                margin-bottom: 20px;
+            }
+
+            .teikiseisou-overview__text:last-child {
+                margin-bottom: 0;
+            }
+
+            .teikiseisou-overview__highlight {
+                color: #FF679C;
+                font-weight: 600;
+            }
+
+            .teikiseisou-top-image {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .teikiseisou-top-image img {
+                width: 80%;
+                height: auto;
+                display: block;
+            }
+
+            .teikiseisou-container {
+                max-width: 1000px;
+                margin: 0 auto;
+                padding: 60px 20px;
+            }
+
+            .breadcrumb {
+                font-size: 14px;
+                color: #666;
+                margin-bottom: 30px;
+            }
+
+            .breadcrumb a {
+                color: #666;
+                text-decoration: none;
+                transition: color 0.3s ease;
+            }
+
+            .breadcrumb a:hover {
+                color: #FF679C;
+            }
+
+            .breadcrumb span {
+                margin: 0 8px;
+                color: #999;
+            }
+
+            .breadcrumb .current {
+                color: #333;
+                font-weight: 500;
+            }
+
+            .breadcrumb-inner {
+                display: inline-block;
+                padding-bottom: 8px;
+                border-bottom: 1px solid #e5e5e5;
+            }
+
+            .section-title {
+                font-size: 28px;
+                font-weight: 700;
+                color: #333;
+                margin: 50px 0 30px;
+                padding-bottom: 15px;
+                border-bottom: 3px solid #FF679C;
+            }
+
+            .section-title:first-of-type {
+                margin-top: 0;
+            }
+
+            .subsection-title {
+                font-size: 22px;
+                font-weight: 700;
+                color: #333;
+                margin: 40px 0 20px;
+                padding-left: 15px;
+                border-left: 4px solid #FF679C;
+            }
+
+            .subsection-subtitle {
+                font-size: 18px;
+                font-weight: 600;
+                color: #555;
+                margin: 25px 0 15px;
+            }
+
+            .content-text {
+                font-size: 16px;
+                line-height: 1.8;
+                color: #555;
+                margin-bottom: 20px;
+            }
+
+            .content-list {
+                list-style: none;
+                padding: 0;
+                margin: 20px 0;
+            }
+
+            .content-list li {
+                font-size: 16px;
+                line-height: 1.8;
+                color: #555;
+                padding: 10px 0;
+                padding-left: 28px;
+                position: relative;
+            }
+
+            .content-list li:before {
+                content: "•";
+                position: absolute;
+                left: 0;
+                color: #FF679C;
+                font-weight: bold;
+                font-size: 20px;
+            }
+
+            .highlight-box {
+                background: #fff;
+                border-left: 4px solid #FF679C;
+                padding: 20px 25px;
+                margin: 25px 0;
+                border-radius: 4px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            }
+
+            .highlight-box strong {
+                color: #FF679C;
+                font-weight: 700;
+            }
+
+            .equipment-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 15px;
+                margin: 25px 0;
+            }
+
+            .equipment-item {
+                background: #fff;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            }
+
+            .equipment-item strong {
+                color: #FF679C;
+                display: block;
+                margin-bottom: 8px;
+            }
+
+            .importance-box {
+                background: linear-gradient(135deg, #fff5f8 0%, #ffeef2 100%);
+                border: 2px solid #FF679C;
+                padding: 30px;
+                margin: 40px 0;
+                border-radius: 8px;
+            }
+
+            .importance-box p {
+                font-size: 16px;
+                line-height: 1.8;
+                color: #333;
+            }
+
+            .subsection-wrapper {
+                display: flex;
+                align-items: flex-start;
+                gap: 40px;
+                margin: 30px 0;
+                width: 100%;
+            }
+
+            .subsection-image {
+                flex: 1;
+                min-width: 0;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .subsection-image img {
+                width: 100%;
+                height: auto;
+                display: block;
+                border-radius: 8px;
+            }
+
+            .subsection-content {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .image-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                flex: 1;
+                min-width: 0;
+            }
+
+            .image-grid-item {
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .image-grid-item img {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+
+            @media (max-width: 768px) {
+
+                .section-title {
+                    font-size: 24px;
+                }
+
+                .subsection-title {
+                    font-size: 20px;
+                }
+
+                .teikiseisou-container {
+                    padding: 40px 15px;
+                }
+
+                .subsection-wrapper {
+                    flex-direction: column;
+                    gap: 20px;
+                }
+
+                .image-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            /* コピーライトスタイル */
+            body.page-teikiseisou .site-footer {
+                background: #FF679C;
+                color: #ffffff;
+            }
+
+            body.page-teikiseisou .site-footer p {
+                color: #ffffff;
+            }
+        </style>
+    </head>
+    <body class="page-teikiseisou">
+        <!-- 通常ヘッダー -->
+        <header class="normal-header visible">
+            <div class="normal-header-inner">
+                <div class="normal-header-logo">
+                    <a href="/">
+                        <img src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+                    </a>
+                </div>
+                <nav class="normal-header-nav">
+                    <a href="/">TOP</a>
+                    <a href="/lp">ミセサポとは？</a>
+                    <a href="/service">対応可能サービス</a>
+                    <a href="/lp#voice">お客様の声</a>
+                    <a href="/recruit">求人情報</a>
+                    <a href="/recruit/privacy">採用における個人情報の取り扱いについて</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="teikiseisou-page">
+            <div class="teikiseisou-hero">
+                <img src="/images-admin/teikiseisoutopimage.png" alt="定期清掃">
+            </div>
+
+            <!-- 概要セクション -->
+            <div class="teikiseisou-overview">
+                <p class="teikiseisou-overview__title">
+                    あなたの店舗やオフィスには、見えない<span class="teikiseisou-overview__highlight">「リスク」</span>が蓄積し続けています。
+                </p>
+                <p class="teikiseisou-overview__text">
+                    例えば、グリストラップの汚泥は悪臭と管詰まりのリスクに、排気ファンのベルトの劣化は突然の故障リスクにつながり、すべてが営業停止や余計な修繕費という形で現れます。
+                </p>
+                <p class="teikiseisou-overview__text">
+                    ミセサポでは、月１、隔月、３ヶ月、半年、年１の安心でお得な定期清掃を行っております。
+                </p>
+            </div>
+
+            <!-- TOP画像 -->
+            <div class="teikiseisou-top-image">
+                <img src="/images-admin/misesapoteiki.png" alt="ミセサポ定期清掃">
+            </div>
+
+            <div class="teikiseisou-container">
+                <!-- パンくずリスト -->
+                <div class="breadcrumb">
+                    <div class="breadcrumb-inner">
+                        <a href="/">TOP</a>
+                        <span>></span>
+                        <span class="current">定期清掃</span>
+                    </div>
+                </div>
+
+                <h2 class="section-title">定期清掃 理由</h2>
+
+                <h3 class="subsection-title">1. 床清掃</h3>
+                <div class="subsection-wrapper">
+                    <div class="subsection-image">
+                        <img src="/images-admin/teikiseisou.png" alt="床清掃・ポリッシャー洗浄">
+                    </div>
+                    <div class="subsection-content">
+                        <div class="content-text">
+                            <strong>ポリッシャー洗浄：定期的な洗浄とワックス施工　月１で実施</strong>
+                        </div>
+                        <div class="content-text">
+                            やる目的は日常清掃では落ちない汚れや傷を落とす　古いワックスを落とす
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>清掃品質の向上</strong>
+                    <p>ポリッシャー洗浄は、手作業による清掃と比較して、より高品質な清掃結果を得ることができます。</p>
+                    <ul class="content-list">
+                        <li>均一な洗浄：ポリッシャーは床を均一に磨くことができるため、手作業では避けられない磨きムラを防ぐことができます</li>
+                        <li>頑固な汚れの除去：強力なモーターと回転ブラシにより、日常清掃では落としきれない頑固な汚れや軽微な傷を効果的に除去できます</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>効率性の向上</strong>
+                    <p>ポリッシャー洗浄は、清掃作業の効率を大幅に向上させます。</p>
+                    <ul class="content-list">
+                        <li>作業時間の短縮：特に広い面積の床を磨く場合、手作業に比べて作業時間を大幅に短縮できます</li>
+                        <li>労力の軽減：清掃スタッフの身体への負担を軽減し、作業効率を向上させることができます</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>衛生管理の強化</strong>
+                    <p>特に病院や学校などの施設では、ポリッシャー洗浄による衛生管理の強化が重要です。</p>
+                    <ul class="content-list">
+                        <li>感染症対策：床面の清潔さは感染症対策に直結するため、ポリッシャーによる徹底的な洗浄が必要です</li>
+                        <li>洗浄効果の向上：ポリッシャーを使用することで、床に付着している汚れをより効果的に除去することができます</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>コスト削減</strong>
+                    <p>長期的な視点では、ポリッシャー洗浄はコスト削減にもつながります。</p>
+                    <ul class="content-list">
+                        <li>メンテナンスコストの削減：定期的なポリッシャー洗浄により、床の磨耗を防ぎ、床の寿命を延ばすことができます</li>
+                        <li>洗剤使用量の削減：ポリッシャーを使用することで、水や洗剤の使用量を削減でき、環境にも配慮した清掃が可能になります</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>美観の維持</strong>
+                    <p>施設の美観維持は、利用者の快適性や満足度に直結します。</p>
+                    <ul class="content-list">
+                        <li>床の輝きの回復：ポリッシャーで磨かれた床は輝きを取り戻し、施設全体の清潔感を高めることができます</li>
+                        <li>印象の向上：清潔で美しい床は、施設の印象を向上させ、利用者に快適な環境を提供します</li>
+                        <li>対応可能な床材：石床、木床、コンクリート床、リノリウムなど</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsection-title">2. 厨房清掃</h3>
+                <div class="subsection-wrapper">
+                    <div class="image-grid">
+                        <div class="image-grid-item">
+                            <img src="/images-admin/use01.jpg" alt="厨房清掃">
+                        </div>
+                        <div class="image-grid-item">
+                            <img src="/images-admin/use02.jpg" alt="厨房清掃">
+                        </div>
+                    </div>
+                    <div class="subsection-content">
+                        <ul class="content-list">
+                            <li>油膜や油脂の塊の除去</li>
+                            <li>排水口や排水管の清掃</li>
+                            <li>グリストラップの清掃</li>
+                            <li>カビの除去</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="subsection-title">3. 排気設備清掃</h3>
+                <div class="subsection-wrapper">
+                    <div class="subsection-image">
+                        <img src="/images-admin/use03.jpg" alt="排気設備清掃">
+                    </div>
+                    <div class="subsection-content">
+                        <ul class="content-list">
+                            <li>ダクト等の清掃工事</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="subsection-title">4. 害虫対策</h3>
+                <div class="subsection-wrapper">
+                    <div class="subsection-image">
+                        <img src="/images-admin/gaichukujo.png" alt="害虫対策">
+                    </div>
+                    <div class="subsection-content">
+                        <ul class="content-list">
+                            <li>アルコール除菌や害虫予防薬剤の処置</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="subsection-title">5. エアコンクリーニング</h3>
+                <div class="subsection-wrapper">
+                    <div class="image-grid">
+                        <div class="image-grid-item">
+                            <img src="/images-admin/use04.jpeg" alt="エアコンクリーニング">
+                        </div>
+                        <div class="image-grid-item">
+                            <img src="/images-admin/use05.jpeg" alt="エアコンクリーニング">
+                        </div>
+                    </div>
+                    <div class="subsection-content">
+                        <ul class="content-list">
+                            <li>業務用エアコンの分解清掃</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="subsection-title">6. 排水設備清掃</h3>
+                <div class="subsection-wrapper">
+                    <div class="subsection-image">
+                        <img src="/images-admin/use01.jpg" alt="排水設備清掃">
+                    </div>
+                    <div class="subsection-content">
+                        <ul class="content-list">
+                            <li>グリストラップクリーニング</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="subsection-title">7. トイレ・洗面所クリーニング</h3>
+                <div class="subsection-wrapper">
+                    <div class="subsection-image">
+                        <img src="/images-admin/use02.jpg" alt="トイレ・洗面所クリーニング">
+                    </div>
+                    <div class="subsection-content">
+                        <p class="content-text">トイレ・洗面所の徹底的な清掃を行います。</p>
+                    </div>
+                </div>
+
+                <h3 class="subsection-title">8. ガラスクリーニング</h3>
+                <div class="subsection-wrapper">
+                    <div class="subsection-image">
+                        <img src="/images-admin/use03.jpg" alt="ガラスクリーニング">
+                    </div>
+                    <div class="subsection-content">
+                        <p class="content-text">ガラス面の専門的な清掃を行います。</p>
+                    </div>
+                </div>
+
+                <div class="content-text">
+                    これらの清掃は、スポット清掃（単発）や定期清掃（デイリー、ウィークリー、マンスリーなど）として提供されています
+                </div>
+
+                <h2 class="section-title">使用機器・用品</h2>
+                <div class="content-text">
+                    効率的な清掃のために以下の機器や用品が使用されることがあります
+                </div>
+                <div class="equipment-list">
+                    <div class="equipment-item">
+                        <strong>高圧洗浄機</strong>
+                        <span>油汚れやこびりついた汚れの除去</span>
+                    </div>
+                    <div class="equipment-item">
+                        <strong>スチームクリーナー</strong>
+                        <span>化学薬品を使わない安全な清掃</span>
+                    </div>
+                    <div class="equipment-item">
+                        <strong>電動ポリッシャー</strong>
+                        <span>床のワックスがけや剥離作業</span>
+                    </div>
+                    <div class="equipment-item">
+                        <strong>マイクロファイバークロス</strong>
+                        <span>効果的な拭き掃除</span>
+                    </div>
+                    <div class="equipment-item">
+                        <strong>業務用洗剤</strong>
+                        <span>様々な汚れに対応</span>
+                    </div>
+                </div>
+
+                <div class="importance-box">
+                    <p>
+                        <strong>飲食店の清掃は、食中毒予防、悪臭・害虫対策、火災やCO中毒などの事故予防のために重要です</strong>
+                    </p>
+                </div>
+            </div>
+        </main>
+
+        <script>
+            // 通常ヘッダーを常時表示
+            document.addEventListener('DOMContentLoaded', function() {
+                const normalHeader = document.querySelector('.normal-header');
+                if (normalHeader) {
+                    normalHeader.classList.add('visible');
+                    const originalRemove = normalHeader.classList.remove;
+                    normalHeader.classList.remove = function(...args) {
+                        if (args[0] !== 'visible') {
+                            originalRemove.apply(this, args);
+                        }
+                    };
+                }
+            });
+        </script>
+        <script src="/js/header.js"></script>
+    </body>
+</html>
+

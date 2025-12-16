@@ -1,0 +1,298 @@
+/* ============================================
+   ヒーローセクション CSS
+   WordPress用に追加
+============================================ */
+
+/* フルスクリーン画像セクション */
+.fullscreen-image-section {
+    width: 100vw;
+    height: auto;
+    position: relative;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+}
+
+.fullscreen-image-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.fullscreen-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    opacity: 0;
+    animation: fullscreenFade 24s infinite, kenBurnsZoom 24s infinite;
+    transition: opacity 2s ease-in-out;
+    z-index: 1;
+}
+
+/* 1枚目：0-8秒表示（最初から表示） */
+.fullscreen-image-1 {
+    animation-delay: 0s;
+    opacity: 1;
+}
+
+/* 2枚目：8-16秒表示 */
+.fullscreen-image-2 {
+    animation-delay: 8s;
+}
+
+/* 3枚目：16-24秒表示 */
+.fullscreen-image-3 {
+    animation-delay: 16s;
+}
+
+/* ディゾルブ（フェードイン・フェードアウト）アニメーション */
+@keyframes fullscreenFade {
+    0% {
+        opacity: 0;
+    }
+    4% {
+        opacity: 1;
+    }
+    30% {
+        opacity: 1;
+    }
+    34% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+/* ケンボーナス効果（ズームイン） */
+@keyframes kenBurnsZoom {
+    0% {
+        transform: scale(1);
+    }
+    100% {
+        transform: scale(1.1);
+    }
+}
+
+/* マスク画像 */
+.hero-mask {
+    position: relative;
+    width: 100%;
+    height: auto;
+    z-index: 50;
+    pointer-events: none;
+}
+
+.hero-mask-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* スクロールヒント（左側、縦書き） */
+.hero_scroll_down {
+    position: fixed !important;
+    top: 50% !important;
+    left: 0 !important;
+    transform: translateY(-50%) !important;
+    width: 50px !important;
+    z-index: 99999 !important;
+    color: #FF008C;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: center;
+    height: auto;
+    font-weight: 500;
+    gap: 25px;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.scroll-line {
+    position: relative;
+    width: 1px;
+    height: 80px;
+    background: rgba(255, 0, 140, 0.5);
+    margin: 0;
+    margin-top: 2px;
+}
+
+.scroll-circle {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: #FF008C;
+    border-radius: 50%;
+    animation: scroll-circle-move 3s infinite ease-in-out;
+}
+
+.hero_scroll_down p {
+    margin: 0;
+    padding: 0;
+    animation: scroll-down 3s infinite ease-in-out;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    position: relative;
+    transform: translateY(0);
+}
+
+@keyframes scroll-down {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    50% {
+        opacity: 0.3;
+        transform: translateY(15px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scroll-circle-move {
+    0% {
+        top: 0;
+        opacity: 1;
+    }
+    50% {
+        top: calc(100% - 6px);
+        opacity: 0.5;
+    }
+    100% {
+        top: 0;
+        opacity: 1;
+    }
+}
+
+/* 化粧ヘッダー */
+.cosmetic-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 200px;
+    background: transparent;
+    box-shadow: none;
+    z-index: 10000;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease-out;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.cosmetic-header.hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cosmetic-header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 20px 30px;
+    transform: translateY(-40px);
+}
+
+.cosmetic-logo img {
+    height: 80px;
+    width: auto;
+}
+
+.cosmetic-nav {
+    display: flex;
+    gap: 20px;
+}
+
+.cosmetic-nav a {
+    color: #333;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.cosmetic-nav a:hover {
+    color: #FF679C;
+    background-color: rgba(255, 103, 156, 0.08);
+}
+
+/* 通常ヘッダー */
+.normal-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    box-shadow: none;
+    z-index: 9998;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(-100%);
+    border-radius: 0 0 12px 12px;
+}
+
+.normal-header.visible {
+    transform: translateY(0);
+}
+
+.normal-header.hidden {
+    transform: translateY(-100%);
+}
+
+.normal-header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 16px 40px;
+}
+
+.normal-header-logo img {
+    height: 50px;
+    width: auto;
+}
+
+.normal-header-nav {
+    display: flex;
+    gap: 8px;
+}
+
+.normal-header-nav a {
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.normal-header-nav a:hover {
+    color: #FF679C;
+    background-color: rgba(255, 103, 156, 0.08);
+}
+

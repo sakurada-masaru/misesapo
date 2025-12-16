@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MISESAPO 清掃基準マニュアル</title>
+    <!--GoogleFonts(Noto Sans JP)-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <!--GoogleFonts(Noto Sans JP) end-->
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/script.js" defer></script>
+    <style>
+        /* ベーススタイル */
+        body {
+            font-family: 'Noto Sans JP', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        /* 標準ヘッダーの調整（標準CSSのposition: fixedを維持） */
+        /* カテゴリタブ */
+        .category-tabs {
+            position: fixed;
+            top: 6.4rem; /* 標準ヘッダーの高さ（6.4rem）に合わせて調整 */
+            left: 0;
+            width: 100%;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+            padding: 10px 0;
+            flex-wrap: wrap;
+        }
+        .category-tab {
+            background-color: #f0f0f0;
+            color: #333;
+            border: none;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+        .category-tab:hover {
+            background-color: #ffe6f5;
+        }
+        .category-tab.active {
+            background-color: #ff008c;
+            color: white;
+        }
+        /* メインコンテンツエリア */
+        #content {
+            padding: calc(6.4rem + 60px) 0 80px 0; /* ヘッダー（6.4rem）+ タブ（約60px）+ フッター（80px）の高さ分を確保 */
+        }
+        /* 各マニュアルページ */
+        .manual-page {
+            display: none;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+            min-height: calc(100vh - 200px);
+        }
+        .manual-page.active {
+            display: block;
+        }
+        /* 項目タイトル */
+        .page-title {
+            color: #ff008c; /* パーソナルカラー */
+            border-bottom: 3px solid #ff008c; /* パーソナルカラー */
+            padding-bottom: 5px;
+            margin-top: 0;
+            font-size: 1.6em;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background-color: #ffe6f5; /* パーソナルカラーの薄いバージョン */
+            border-left: 5px solid #ff008c; /* パーソナルカラー */
+        }
+        
+        /* 良い例・悪い例 */
+        .example-box {
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .bad-example {
+            background-color: #fbe5e6; /* 赤系 */
+            border: 1px solid #d9534f;
+        }
+        .good-example {
+            background-color: #e6f7e9; /* 緑系 */
+            border: 1px solid #5cb85c;
+        }
+        .example-box strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        /* 画像表示 */
+        .example-image {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            margin: 10px 0;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: block;
+        }
+        .example-image-container {
+            text-align: center;
+            margin: 10px 0;
+        }
+        /* Q&Aセクション */
+        .qa-section {
+            margin-top: 30px;
+            border-top: 2px dashed #ccc;
+            padding-top: 15px;
+        }
+        .qa-section p {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+        .qa-question {
+            font-weight: bold;
+            color: #ff008c; /* パーソナルカラー */
+        }
+        .qa-answer {
+            padding-left: 10px;
+            border-left: 3px solid #ff008c; /* パーソナルカラー */
+        }
+        /* フッターナビゲーション */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #333;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            box-sizing: border-box;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        .nav-button {
+            background-color: #ff008c; /* パーソナルカラー */
+            color: white; /* 白文字に変更 */
+            border: none;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9em;
+            flex-grow: 1;
+            margin: 0 5px;
+            text-align: center;
+        }
+        .nav-button:disabled {
+            background-color: #999;
+            color: #eee;
+            cursor: not-allowed;
+        }
+        .index-button {
+            background-color: #ff008c; /* パーソナルカラー */
+            color: white;
+        }
+        /* 目次ページ */
+        .index-page {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+            min-height: calc(100vh - 200px);
+        }
+        .index-page h2 {
+            font-size: 1.4em;
+            color: #ff008c; /* パーソナルカラー */
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+            margin-top: 20px;
+        }
+        .index-page ol {
+            list-style: none;
+            padding: 0;
+        }
+        .index-page li {
+            margin-bottom: 10px;
+        }
+        .index-page li a {
+            display: block;
+            background-color: #f0f0f0;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        .index-page li a:hover {
+            background-color: #e0e0e0;
+        }
+        .category-separator {
+            font-weight: bold;
+            color: #ff008c; /* パーソナルカラー */
+            padding: 10px 0 5px;
+            font-size: 1.1em;
+            border-bottom: 1px solid #ccc;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-flex wrapper">
+            <h1 class="header-logo">
+                <a href="/"><img src="/images/header-logo.jpg" alt="ミセサポ"></a>
+            </h1>
+            <button class="btn"><span></span><span></span><span></span></button>
+            <nav id="g-nav">
+                <div id="g-nav-list">
+                    <ul>
+                        <li><a href="/">トップページ</a></li>
+                        <li><a href="/mypage.html">マイページ</a></li>
+                        <li><a href="/report.html">作業報告</a></li>
+                        <li><a href="/schedule.html">スケジュール</a></li>
+                        <li><a href="#" class="login-button">ログイン</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="category-tabs">
+        <button class="category-tab active" onclick="filterByCategory('all')">すべて</button>
+        <button class="category-tab" onclick="filterByCategory('厨房設備')">厨房設備 (12)</button>
+        <button class="category-tab" onclick="filterByCategory('空調設備')">空調設備 (2)</button>
+        <button class="category-tab" onclick="filterByCategory('フロア')">フロア (8)</button>
+        <button class="category-tab" onclick="filterByCategory('その他')">その他 (12)</button>
+    </div>
+
+    <div id="content">
+        <div id="page-0-all" class="manual-page active" data-category="all">
+            <div class="index-page">
+                <h2>全カテゴリ項目（34件）</h2>
+                <ol id="index-list-all"></ol>
+            </div>
+        </div>
+        <div id="page-0-kitchen" class="manual-page" data-category="厨房設備">
+            <div class="index-page">
+                <h2>厨房設備カテゴリ（12件）</h2>
+                <ol id="index-list-kitchen"></ol>
+            </div>
+        </div>
+        <div id="page-0-aircon" class="manual-page" data-category="空調設備">
+            <div class="index-page">
+                <h2>空調設備カテゴリ（2件）</h2>
+                <ol id="index-list-aircon"></ol>
+            </div>
+        </div>
+        <div id="page-0-floor" class="manual-page" data-category="フロア">
+            <div class="index-page">
+                <h2>フロアカテゴリ（8件）</h2>
+                <ol id="index-list-floor"></ol>
+            </div>
+        </div>
+        <div id="page-0-other" class="manual-page" data-category="その他">
+            <div class="index-page">
+                <h2>その他カテゴリ（12件）</h2>
+                <ol id="index-list-other"></ol>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <button class="nav-button" id="prev-button" onclick="navigate(-1)" disabled>◀ 前へ</button>
+        <button class="nav-button index-button" onclick="showIndex()">目次</button>
+        <button class="nav-button" id="next-button" onclick="navigate(1)">次へ ▶</button>
+    </footer>
+
+    <script>
+        // 厨房設備カテゴリのデータ
+        const kitchenData = [
+            {
+                title: "1. グリストラップ", category: "厨房設備",
+                risk: "管詰まり/悪臭リスクの構造的排除",
+                bad: "上層の浮上油と残渣のみ回収し、壁面や底面の付着物（悪臭の根源）を残す。",
+                good: "３層構造の完全除去: 浮上油、沈殿物、汚水全てを回収。壁面・底面を油脂分解剤で徹底洗浄し、根本リスクを排除する。",
+                badImage: "../assets/images-service/service01.jpg",
+                goodImage: "../assets/images-service/service35.jpg",
+                qa1q: "Q: グリストラップ清掃の最重要リスクは？",
+                qa1a: "A: 壁面や底面に残る油脂による悪臭と、それが固着した際の管詰まり。",
+                qa2q: "Q: 洗浄後に最も確認すべき点は？",
+                qa2a: "A: 排水がスムーズに流れるか、トラップ内の水が透明に近づいているか、そして壁面にヌメリが残っていないか。"
+            },
+            {
+                title: "2. U字溝・グレーチング", category: "厨房設備",
+                risk: "異臭/害虫発生源の根絶",
+                bad: "溝内の残渣と汚水のみ除去し、グレーチング裏側や側面のヌメリ（異臭・害虫のリスク）を残す。",
+                good: "ヌメリの殺菌・防臭処理: 残渣除去後、側面のヌメリを殺菌・洗浄。グレーチング裏側も徹底ブラッシングし、異臭・害虫の発生源を根絶する。",
+                badImage: "../assets/images-service/service02.jpg",
+                goodImage: "../assets/images-service/service36.jpg",
+                qa1q: "Q: U字溝清掃で異臭再発を防ぐ鍵は？",
+                qa1a: "A: 残渣ではなく、側面に形成されるバイオフィルム（ヌメリ）の殺菌と、その後の防臭処理。",
+                qa2q: "Q: グレーチングを元に戻す前のチェックは？",
+                qa2a: "A: 裏側にヌメリが残っていないか、また設置後にズレがないか（安全リスク）。"
+            },
+            {
+                title: "3. 配管高圧洗浄", category: "厨房設備",
+                risk: "予防とデータに基づく管理",
+                bad: "詰まりが発生してから依頼を受け、見える範囲のみ洗浄し、予防措置を提案しない。",
+                good: "リスク分析と予防提案: 定期的な内視鏡チェックを提案。洗浄後には洗浄水のデータを記録し、管内環境の悪化を構造的に予防する。",
+                badImage: "../assets/images-service/service03.jpg",
+                goodImage: "../assets/images-service/service37.jpg",
+                qa1q: "Q: 定期的な高圧洗浄の目的は？",
+                qa1a: "A: 詰まり発生後の対応ではなく、未然の管内環境悪化をデータで把握し予防すること。",
+                qa2q: "Q: 顧客に提出する報告書に記載すべきデータは？",
+                qa2a: "A: 洗浄前後の圧力データ、または洗浄水の透明度・回収量など。"
+            },
+            {
+                title: "4. レンジフード洗浄", category: "厨房設備",
+                risk: "火災リスクの排除",
+                bad: "フィルター表面のみ拭き取り、内部のシロッコファンやケーシングの油（火災リスク）を残す。",
+                good: "分解・浸け置き洗浄: シロッコファンを完全分解し、専用洗剤に浸け置き。火災の直接原因となる油の堆積をゼロにする。",
+                badImage: "../assets/images-service/service04.jpg",
+                goodImage: "../assets/images-service/service38.jpg",
+                qa1q: "Q: レンジフードの清掃基準が特に厳しい理由は？",
+                qa1a: "A: 内部に溜まった油が最も引火しやすい状態であり、厨房火災の主要な原因となるため。",
+                qa2q: "Q: シロッコファンを分解洗浄する際の注意点は？",
+                qa2a: "A: 洗浄後の水滴や洗剤残りを完全除去し、乾燥させること（モーター故障と錆のリスク）。"
+            },
+            {
+                title: "5. ダクト洗浄", category: "厨房設備",
+                risk: "隠れた火災リスクの可視化と除去",
+                bad: "外部の清掃のみで、ダクト内部の油脂が堆積した曲がり角（火災リスク）を放置する。",
+                good: "内視鏡確認とスクレーピング: 内視鏡で油脂堆積を確認し、火災リスクの高いポイントを特定・除去する。清掃後の状態を写真記録。",
+                badImage: "../assets/images-service/service05.jpg",
+                goodImage: "../assets/images-service/service39.jpg",
+                qa1q: "Q: ダクト洗浄における「リスク対策」とは？",
+                qa1a: "A: 外部から見えない曲がり角や接続部の油脂堆積を特定し、除去すること。",
+                qa2q: "Q: 清掃後の写真記録の重要性は？",
+                qa2a: "A: 顧客への作業完了証明と、P（統合基盤）への法令遵守記録として。"
+            },
+            {
+                title: "6. 防火シャッター清掃", category: "厨房設備",
+                risk: "緊急時作動不全リスクの排除",
+                bad: "シャッター表面の埃を拭き取るのみで、ガイドレール内部の埃・異物（作動不全リスク）を放置する。",
+                good: "緊急作動試験前の清掃: レール内部を徹底清掃し、緊急時の作動不全リスクを排除。作動油の塗布量を調整し、動作性を確保する。",
+                badImage: "../assets/images-service/service06.jpg",
+                goodImage: "../assets/images-service/service40.jpg",
+                qa1q: "Q: 防火シャッター清掃の目的は？",
+                qa1a: "A: 美観ではなく、火災時における迅速で確実な作動を保証すること。",
+                qa2q: "Q: レール清掃で確認すべき点は？",
+                qa2a: "A: 埃だけでなく、レールの歪みや異物がないか（作動不全に直結）。"
+            },
+            {
+                title: "7. 換気扇洗浄", category: "厨房設備",
+                risk: "故障・異音リスクの予防",
+                bad: "ファンブレード（羽根）の見える範囲のみ清掃し、モーター軸の埃や油（故障・異音リスク）を放置する。",
+                good: "モーター軸の防塵処理: ファンを分解し、羽根だけでなくケーシングやモーター軸の埃を徹底除去。専用の防塵剤を塗布し、故障や異音のリスクを予防する。",
+                badImage: "../assets/images-service/service07.jpg",
+                goodImage: "../assets/images-service/service41.jpg",
+                qa1q: "Q: 換気扇の清掃が不十分だと起こるリスクは？",
+                qa1a: "A: 排気効率の低下に加え、モーター軸への負荷増大による故障や異音。",
+                qa2q: "Q: 防塵剤を塗布する際の注意点は？",
+                qa2a: "A: モーターや電気系統にかからないよう細心の注意を払うこと。"
+            },
+            {
+                title: "8. 排気ファン清掃", category: "厨房設備",
+                risk: "カビ・錆リスクの予防",
+                bad: "ファン表面の埃・油を除去するのみで、ファンカバー内部の結露・水滴（カビ・錆リスク）を放置する。",
+                good: "内部乾燥と防錆処置: 分解洗浄後、ファンカバー内部の結露や水滴を完全に除去し、防錆剤を塗布。湿気によるカビ・錆のリスクを構造的に予防する。",
+                badImage: "../assets/images-service/service08.jpg",
+                goodImage: "../assets/images-service/service42.jpg",
+                qa1q: "Q: 排気ファンのカビ・錆リスクが高い箇所は？",
+                qa1a: "A: 湿気が溜まりやすいファンカバー内部と、結露が発生しやすい箇所。",
+                qa2q: "Q: 防錆処理の意義は？",
+                qa2a: "A: 頻繁な交換が難しいファンシステムの耐用年数を延ばし、店舗運営コストを削減すること。"
+            },
+            {
+                title: "9. 排気ファンベルト交換調整", category: "厨房設備",
+                risk: "データに基づく調整と記録",
+                bad: "ベルトの亀裂や切断が発生してから交換し、交換後の張力調整を感覚で行う。",
+                good: "データに基づく調整と記録: 交換前にベルト張力の測定を行い、新品交換後も規定値に調整。調整記録をO（最良化）のためにP（統合基盤）に記録する。",
+                badImage: "../assets/images-service/service09.jpg",
+                goodImage: "../assets/images-service/service43.jpg",
+                qa1q: "Q: ベルト交換後の「感覚的な調整」の危険性は？",
+                qa1a: "A: 張力が強すぎるとモーターに過負荷、弱すぎるとスリップによる効率低下が起こる。",
+                qa2q: "Q: P（統合基盤）に記録する意義は？",
+                qa2a: "A: メンテナンスサイクルのO（最良化）のため、交換時期や調整データをデータ駆動で管理すること。"
+            },
+            {
+                title: "10. 厨房機器洗浄", category: "厨房設備",
+                risk: "食中毒・害虫の発生源の除去",
+                bad: "機器表面や操作パネルの見える部分を拭き取るのみで、機器の隙間や裏側（害虫・食中毒リスク）を放置する。",
+                good: "分解・移動と裏側洗浄: 可能な限り機器を移動し、裏側・壁との隙間の汚染源を洗浄。拭き残しがないか照明で確認する。",
+                badImage: "../assets/images-service/service10.jpeg",
+                goodImage: "../assets/images-service/service44.png",
+                qa1q: "Q: 機器洗浄で最も重要視すべき点は？",
+                qa1a: "A: 表面の美観ではなく、壁や床との隙間に溜まった食品残渣という害虫の温床の除去。",
+                qa2q: "Q: 洗浄後に照明で確認する理由は？",
+                qa2a: "A: 肉眼では見えにくい微細な油膜や洗剤残りなどをチェックし、S（標準化）を担保するため。"
+            },
+            {
+                title: "11. 壁清掃", category: "厨房設備",
+                risk: "異臭/変色リスクの予防",
+                bad: "油が垂れた箇所を拭き取るのみで、広範囲にわたる微細な油膜（異臭・カビリスク）を見逃す。",
+                good: "全面のスチーム洗浄と中和: 油膜や水垢をスチーム洗浄で浮かせ、専用の中和剤で処理。壁材の変色リスクを回避し、衛生状態を均一化する。",
+                badImage: "../assets/images-service/service11.jpeg",
+                goodImage: "../assets/images-service/service35.jpg",
+                qa1q: "Q: 厨房の壁の汚れがもたらすリスクは？",
+                qa1a: "A: 微細な油膜に雑菌が繁殖することによる異臭と、放置による壁材の変色・劣化。",
+                qa2q: "Q: 中和剤を使用する理由は？",
+                qa2a: "A: 強アルカリ性の洗剤を中和し、壁材を保護するとともに、洗剤残りのリスクを排除すること。"
+            },
+            {
+                title: "12. シンク洗浄", category: "厨房設備",
+                risk: "水周りからの悪臭・衛生リスクの抑制",
+                bad: "シンク表面を磨くのみで、排水口の内部やオーバーフロー穴のヌメリ（悪臭・衛生リスク）を放置する。",
+                good: "排水口内部とオーバーフロー穴の完全殺菌: 排水口内部、ヌメリが溜まりやすいオーバーフロー穴を徹底洗浄。水垢防止剤を塗布し、衛生状態の維持を保証する。",
+                badImage: "../assets/images-service/service12.jpeg",
+                goodImage: "../assets/images-service/service36.jpg",
+                qa1q: "Q: シンク洗浄で最も見逃されやすいリスク箇所は？",
+                qa1a: "A: 排水口だけでなく、オーバーフロー穴（ヌメリが溜まりやすく、悪臭源となりやすい）。",
+                qa2q: "Q: 水垢防止剤を塗布する目的は？",
+                qa2a: "A: 清掃後の衛生状態を長期間維持し、次の清掃までの衛生リスクの発生を抑制すること。"
+            }
+        ];
+
+        // 空調設備カテゴリのデータ
+        const airconData = [
+            {
+                title: "13. エアコンフィルター洗浄", category: "空調設備",
+                risk: "エネルギー効率とカビ・アレルギーリスクの予防",
+                bad: "フィルター表面を水洗いするのみで、乾燥が不十分なまま戻し、内部のカビ発生を促す。",
+                good: "完全乾燥と殺菌: 洗浄後、完全に乾燥させてから設置。洗浄データを記録し、I（接続機構）を通じて顧客にエネルギー効率の改善を報告する。",
+                badImage: "../assets/images-service/service13.jpg",
+                goodImage: "../assets/images-service/service37.jpg",
+                qa1q: "Q: フィルター清掃の最重要リスクは？",
+                qa1a: "A: 汚れによる送風効率の低下（エネルギーコスト増）と、不十分な乾燥によるカビの再発（健康リスク）。",
+                qa2q: "Q: 乾燥が不十分なまま設置するリスクは？",
+                qa2a: "A: 残留水分がエアコン内部で蒸発し、ドレンパンやファンにカビを再繁殖させる主要な原因となる。"
+            },
+            {
+                title: "14. エアコン分解洗浄", category: "空調設備",
+                risk: "アレルゲンと故障リスクの構造的排除",
+                bad: "内部のフィン洗浄が不十分で、ドレンパンや送風ファンに付着したカビや埃（アレルギー・故障リスク）を残す。",
+                good: "ドレンパン脱着と殺菌コーティング: ドレンパンを脱着・洗浄し、ファン内部のカビ胞子を完全に殺菌。洗浄後、防カビコーティングを施し、長期的な空気質の安全を担保する。",
+                badImage: "../assets/images-service/service14.jpg",
+                goodImage: "../assets/images-service/service38.jpg",
+                qa1q: "Q: なぜ分解洗浄が必要なのか？",
+                qa1a: "A: フィルターでは除去できないドレンパンやファン内部の微生物・カビこそが、アレルギー源と故障の直接原因だから。",
+                qa2q: "Q: 防カビコーティングの意義は？",
+                qa2a: "A: 清掃後の衛生状態を保ち、次の清掃までの期間におけるカビの再繁殖リスクを構造的に抑制すること。"
+            }
+        ];
+
+        // フロアカテゴリのデータ
+        const floorData = [
+            {
+                title: "15. 床清掃", category: "フロア",
+                risk: "滑り・転倒リスクと衛生状態の維持",
+                bad: "表面の汚れを拭き取るのみで、床材の隙間やコーキング部分の汚れ（滑り・衛生リスク）を残す。",
+                good: "隙間洗浄と防滑処理: 床材の隙間やコーキング部分を徹底洗浄。洗浄後、防滑剤を適切に塗布し、滑り・転倒リスクを構造的に排除する。",
+                badImage: "../assets/images-service/service15.jpeg",
+                goodImage: "../assets/images-service/service39.jpg",
+                qa1q: "Q: 床清掃で最も重要なリスク対策は？",
+                qa1a: "A: 見た目の清潔さではなく、床材の隙間に溜まった汚れによる滑り・転倒リスクの排除。",
+                qa2q: "Q: 防滑処理の重要性は？",
+                qa2a: "A: 清掃後の床が滑りやすくなることを防ぎ、従業員や顧客の安全を確保すること。"
+            },
+            {
+                title: "16. フローリング清掃", category: "フロア",
+                risk: "傷・変色リスクの予防",
+                bad: "強力な洗剤で一気に洗浄し、床材の表面を傷つけ、変色を引き起こす。",
+                good: "適切な洗剤選択と保護: 床材に適した洗剤を選択し、洗浄後は保護剤を塗布。床材の寿命を延ばし、美観を維持する。",
+                badImage: "../assets/images-service/service16.jpg",
+                goodImage: "../assets/images-service/service40.jpg",
+                qa1q: "Q: フローリング清掃で注意すべき点は？",
+                qa1a: "A: 床材の種類に応じた適切な洗剤の選択と、過度な洗浄による表面の損傷を防ぐこと。",
+                qa2q: "Q: 保護剤を塗布する理由は？",
+                qa2a: "A: 清掃後の床材を保護し、次の清掃までの期間における傷や変色のリスクを抑制すること。"
+            },
+            {
+                title: "17. タイル清掃", category: "フロア",
+                risk: "目地のカビ・変色リスクの排除",
+                bad: "タイル表面のみ清掃し、目地部分のカビや汚れ（衛生・美観リスク）を放置する。",
+                good: "目地の徹底洗浄と防カビ処理: 目地部分を専用ブラシで徹底洗浄し、カビを完全除去。洗浄後、防カビ剤を塗布し、再発を予防する。",
+                badImage: "../assets/images-service/service17.jpeg",
+                goodImage: "../assets/images-service/service41.jpg",
+                qa1q: "Q: タイル清掃で最も見逃されやすい箇所は？",
+                qa1a: "A: タイル表面ではなく、目地部分に溜まったカビや汚れ。",
+                qa2q: "Q: 防カビ処理の意義は？",
+                qa2a: "A: 清掃後の目地部分の衛生状態を保ち、カビの再発を構造的に抑制すること。"
+            },
+            {
+                title: "18. カーペット清掃", category: "フロア",
+                risk: "アレルゲンと悪臭リスクの除去",
+                bad: "表面の汚れを吸引するのみで、カーペット内部のダニやカビ（アレルギー・悪臭リスク）を残す。",
+                good: "深部洗浄と除菌処理: スチーム洗浄で深部まで洗浄し、ダニやカビを除去。洗浄後、除菌剤を散布し、アレルゲンと悪臭の発生源を根絶する。",
+                badImage: "../assets/images-service/service18.jpeg",
+                goodImage: "../assets/images-service/service42.jpg",
+                qa1q: "Q: カーペット清掃で最も重要な点は？",
+                qa1a: "A: 表面の汚れではなく、カーペット内部に潜むダニやカビの除去。",
+                qa2q: "Q: 除菌処理の重要性は？",
+                qa2a: "A: 清掃後のカーペット内部の衛生状態を保ち、アレルゲンと悪臭の再発を防ぐこと。"
+            },
+            {
+                title: "19. ワックスがけ", category: "フロア",
+                risk: "保護と美観の両立",
+                bad: "下地処理をせずにワックスを塗布し、剥がれや変色を引き起こす。",
+                good: "下地処理と適切な塗布: 床面を完全に清掃・乾燥させてから下地処理を行い、適切な厚みでワックスを塗布。保護と美観を両立する。",
+                badImage: "../assets/images-service/service19.jpeg",
+                goodImage: "../assets/images-service/service43.jpg",
+                qa1q: "Q: ワックスがけで最も重要な工程は？",
+                qa1a: "A: 下地処理。下地処理が不十分だと、ワックスが剥がれやすくなり、床面の保護効果が低下する。",
+                qa2q: "Q: 適切なワックスの厚みとは？",
+                qa2a: "A: 床材の種類に応じた適切な厚みで、薄すぎると保護効果が低く、厚すぎると剥がれやすくなる。"
+            },
+            {
+                title: "20. コーティング処理", category: "フロア",
+                risk: "長期的な保護とメンテナンス性",
+                bad: "コーティング剤を一気に塗布し、ムラや剥がれを引き起こす。",
+                good: "段階的な塗布と均一化: コーティング剤を段階的に塗布し、均一に仕上げる。塗布後、十分な乾燥時間を確保し、保護効果を最大化する。",
+                badImage: "../assets/images-service/service20.jpeg",
+                goodImage: "../assets/images-service/service44.png",
+                qa1q: "Q: コーティング処理の目的は？",
+                qa1a: "A: 床面を長期的に保護し、日常的なメンテナンスを容易にすること。",
+                qa2q: "Q: 段階的な塗布が重要な理由は？",
+                qa2a: "A: 一気に塗布するとムラが生じやすく、剥がれの原因となるため。"
+            },
+            {
+                title: "21. 床面除菌", category: "フロア",
+                risk: "衛生リスクの構造的排除",
+                bad: "清掃後に除菌剤を散布するのみで、床材の隙間やコーキング部分の除菌が不十分。",
+                good: "徹底的な除菌と記録: 床材の隙間やコーキング部分まで徹底的に除菌。除菌データを記録し、衛生状態の維持を保証する。",
+                badImage: "../assets/images-service/service21.jpg",
+                goodImage: "../assets/images-service/service35.jpg",
+                qa1q: "Q: 床面除菌で最も重要な点は？",
+                qa1a: "A: 表面だけでなく、床材の隙間やコーキング部分まで徹底的に除菌すること。",
+                qa2q: "Q: 除菌データを記録する意義は？",
+                qa2a: "A: 衛生状態の維持をデータで証明し、顧客に安心を提供すること。"
+            },
+            {
+                title: "22. 床面保護", category: "フロア",
+                risk: "損傷リスクの予防",
+                bad: "保護処理をせずに清掃を終了し、床面の損傷リスクを放置する。",
+                good: "適切な保護剤の選択と塗布: 床材に適した保護剤を選択し、適切な方法で塗布。床面の損傷リスクを構造的に予防する。",
+                badImage: "../assets/images-service/service22.jpg",
+                goodImage: "../assets/images-service/service36.jpg",
+                qa1q: "Q: 床面保護の重要性は？",
+                qa1a: "A: 清掃後の床面を保護し、日常的な使用による損傷を防ぐこと。",
+                qa2q: "Q: 保護剤の選択基準は？",
+                qa2a: "A: 床材の種類と使用環境に応じた適切な保護剤を選択すること。"
+            }
+        ];
+
+        // その他カテゴリのデータ
+        const otherData = [
+            {
+                title: "23. 窓清掃", category: "その他",
+                risk: "視認性と美観の維持",
+                bad: "窓ガラス表面のみ拭き取り、サッシ部分の汚れやカビ（美観・衛生リスク）を残す。",
+                good: "サッシの徹底洗浄と防カビ処理: サッシ部分を徹底洗浄し、カビを除去。洗浄後、防カビ剤を塗布し、再発を予防する。",
+                badImage: "../assets/images-service/service23.jpg",
+                goodImage: "../assets/images-service/service37.jpg",
+                qa1q: "Q: 窓清掃で最も見逃されやすい箇所は？",
+                qa1a: "A: 窓ガラスではなく、サッシ部分に溜まった汚れやカビ。",
+                qa2q: "Q: 防カビ処理の意義は？",
+                qa2a: "A: 清掃後のサッシ部分の衛生状態を保ち、カビの再発を構造的に抑制すること。"
+            },
+            {
+                title: "24. ドア清掃", category: "その他",
+                risk: "衛生と美観の維持",
+                bad: "ドア表面のみ拭き取り、ドアノブや隙間部分の汚れ（衛生リスク）を残す。",
+                good: "ドアノブと隙間の徹底洗浄: ドアノブを除菌洗浄し、ドアと壁の隙間部分も徹底洗浄。衛生と美観を両立する。",
+                badImage: "../assets/images-service/service24.jpg",
+                goodImage: "../assets/images-service/service38.jpg",
+                qa1q: "Q: ドア清掃で最も重要な点は？",
+                qa1a: "A: ドアノブの除菌。ドアノブは多くの人が触れるため、衛生リスクが高い。",
+                qa2q: "Q: 隙間部分の洗浄が重要な理由は？",
+                qa2a: "A: 隙間部分に溜まった汚れが、害虫の温床となる可能性があるため。"
+            },
+            {
+                title: "25. 照明器具清掃", category: "その他",
+                risk: "照度低下と火災リスクの予防",
+                bad: "照明器具の表面のみ拭き取り、内部の埃や虫の死骸（照度低下・火災リスク）を放置する。",
+                good: "内部清掃と点検: 照明器具を分解し、内部の埃や虫の死骸を除去。点検も同時に行い、火災リスクを排除する。",
+                badImage: "../assets/images-service/service25.jpeg",
+                goodImage: "../assets/images-service/service39.jpg",
+                qa1q: "Q: 照明器具清掃で最も重要な点は？",
+                qa1a: "A: 内部の清掃。内部に溜まった埃や虫の死骸が、照度低下や火災の原因となる。",
+                qa2q: "Q: 点検を同時に行う理由は？",
+                qa2a: "A: 清掃時に内部を確認できるため、故障や火災リスクを早期に発見できる。"
+            },
+            {
+                title: "26. 換気口清掃", category: "その他",
+                risk: "空気質とカビリスクの予防",
+                bad: "換気口の表面のみ拭き取り、内部の埃やカビ（空気質・健康リスク）を残す。",
+                good: "内部の徹底洗浄と防カビ処理: 換気口を分解し、内部の埃やカビを除去。洗浄後、防カビ剤を塗布し、再発を予防する。",
+                badImage: "../assets/images-service/service26.jpeg",
+                goodImage: "../assets/images-service/service40.jpg",
+                qa1q: "Q: 換気口清掃で最も重要な点は？",
+                qa1a: "A: 内部の清掃。内部に溜まった埃やカビが、空気質の悪化や健康リスクの原因となる。",
+                qa2q: "Q: 防カビ処理の意義は？",
+                qa2a: "A: 清掃後の換気口内部の衛生状態を保ち、カビの再発を構造的に抑制すること。"
+            },
+            {
+                title: "27. トイレ清掃", category: "その他",
+                risk: "衛生と悪臭リスクの排除",
+                bad: "便器表面のみ清掃し、便器の裏側や床面の汚れ（衛生・悪臭リスク）を残す。",
+                good: "徹底的な除菌と防臭処理: 便器の裏側や床面まで徹底的に除菌洗浄。洗浄後、防臭剤を塗布し、悪臭の発生源を根絶する。",
+                badImage: "../assets/images-service/service27.jpg",
+                goodImage: "../assets/images-service/service41.jpg",
+                qa1q: "Q: トイレ清掃で最も重要な点は？",
+                qa1a: "A: 便器の裏側や床面の清掃。これらの箇所に溜まった汚れが、悪臭の主要な原因となる。",
+                qa2q: "Q: 防臭処理の意義は？",
+                qa2a: "A: 清掃後のトイレの衛生状態を保ち、悪臭の再発を構造的に抑制すること。"
+            },
+            {
+                title: "28. 手洗い場清掃", category: "その他",
+                risk: "衛生と水垢リスクの予防",
+                bad: "手洗い場の表面のみ清掃し、排水口や蛇口の内部の汚れ（衛生・水垢リスク）を残す。",
+                good: "排水口と蛇口の徹底洗浄: 排水口の内部や蛇口の内部まで徹底的に洗浄。洗浄後、水垢防止剤を塗布し、衛生状態を維持する。",
+                badImage: "../assets/images-service/service28.jpeg",
+                goodImage: "../assets/images-service/service42.jpg",
+                qa1q: "Q: 手洗い場清掃で最も見逃されやすい箇所は？",
+                qa1a: "A: 排水口の内部や蛇口の内部。これらの箇所に溜まった汚れが、衛生リスクの原因となる。",
+                qa2q: "Q: 水垢防止剤を塗布する理由は？",
+                qa2a: "A: 清掃後の手洗い場の衛生状態を保ち、水垢の発生を抑制すること。"
+            },
+            {
+                title: "29. 鏡清掃", category: "その他",
+                risk: "視認性と美観の維持",
+                bad: "鏡面のみ拭き取り、鏡の縁や壁との隙間の汚れ（美観リスク）を残す。",
+                good: "縁と隙間の徹底洗浄: 鏡の縁や壁との隙間まで徹底的に洗浄。洗浄後、保護剤を塗布し、美観を維持する。",
+                badImage: "../assets/images-service/service29.jpg",
+                goodImage: "../assets/images-service/service43.jpg",
+                qa1q: "Q: 鏡清掃で最も見逃されやすい箇所は？",
+                qa1a: "A: 鏡の縁や壁との隙間。これらの箇所に溜まった汚れが、美観を損なう。",
+                qa2q: "Q: 保護剤を塗布する理由は？",
+                qa2a: "A: 清掃後の鏡面を保護し、汚れの付着を抑制すること。"
+            },
+            {
+                title: "30. 壁面清掃", category: "その他",
+                risk: "美観とカビリスクの予防",
+                bad: "壁面の見える部分のみ清掃し、壁の上部や隙間部分の汚れやカビ（美観・健康リスク）を残す。",
+                good: "全面の徹底洗浄と防カビ処理: 壁面の上部や隙間部分まで徹底的に洗浄。洗浄後、防カビ剤を塗布し、再発を予防する。",
+                badImage: "../assets/images-service/service30.jpeg",
+                goodImage: "../assets/images-service/service44.png",
+                qa1q: "Q: 壁面清掃で最も見逃されやすい箇所は？",
+                qa1a: "A: 壁の上部や隙間部分。これらの箇所に溜まった汚れやカビが、美観や健康リスクの原因となる。",
+                qa2q: "Q: 防カビ処理の意義は？",
+                qa2a: "A: 清掃後の壁面の衛生状態を保ち、カビの再発を構造的に抑制すること。"
+            },
+            {
+                title: "31. 天井清掃", category: "その他",
+                risk: "埃の落下とカビリスクの予防",
+                bad: "天井の見える部分のみ清掃し、天井の上部や隙間部分の埃やカビ（落下・健康リスク）を残す。",
+                good: "上部と隙間の徹底清掃: 天井の上部や隙間部分まで徹底的に清掃。洗浄後、防カビ剤を塗布し、再発を予防する。",
+                badImage: "../assets/images-service/service31.jpg",
+                goodImage: "../assets/images-service/service35.jpg",
+                qa1q: "Q: 天井清掃で最も重要な点は？",
+                qa1a: "A: 天井の上部や隙間部分の清掃。これらの箇所に溜まった埃やカビが、落下や健康リスクの原因となる。",
+                qa2q: "Q: 防カビ処理の意義は？",
+                qa2a: "A: 清掃後の天井の衛生状態を保ち、カビの再発を構造的に抑制すること。"
+            },
+            {
+                title: "32. エレベーター清掃", category: "その他",
+                risk: "衛生と安全リスクの排除",
+                bad: "エレベーター内部の表面のみ清掃し、ドアの隙間や床面の汚れ（衛生・安全リスク）を残す。",
+                good: "隙間と床面の徹底洗浄: ドアの隙間や床面まで徹底的に洗浄。洗浄後、除菌剤を塗布し、衛生状態を維持する。",
+                badImage: "../assets/images-service/service32.jpeg",
+                goodImage: "../assets/images-service/service36.jpg",
+                qa1q: "Q: エレベーター清掃で最も重要な点は？",
+                qa1a: "A: ドアの隙間や床面の清掃。これらの箇所に溜まった汚れが、衛生や安全リスクの原因となる。",
+                qa2q: "Q: 除菌処理の意義は？",
+                qa2a: "A: 清掃後のエレベーター内部の衛生状態を保ち、細菌の繁殖を抑制すること。"
+            },
+            {
+                title: "33. 階段清掃", category: "その他",
+                risk: "滑り・転倒リスクの排除",
+                bad: "階段の表面のみ清掃し、段差部分や手すりの汚れ（滑り・転倒リスク）を残す。",
+                good: "段差と手すりの徹底洗浄: 段差部分や手すりまで徹底的に洗浄。洗浄後、防滑剤を塗布し、滑り・転倒リスクを排除する。",
+                badImage: "../assets/images-service/service33.jpg",
+                goodImage: "../assets/images-service/service37.jpg",
+                qa1q: "Q: 階段清掃で最も重要な点は？",
+                qa1a: "A: 段差部分や手すりの清掃。これらの箇所に溜まった汚れが、滑り・転倒リスクの原因となる。",
+                qa2q: "Q: 防滑処理の意義は？",
+                qa2a: "A: 清掃後の階段の安全性を確保し、滑り・転倒リスクを構造的に排除すること。"
+            },
+            {
+                title: "34. ゴミ箱清掃", category: "その他",
+                risk: "悪臭と害虫リスクの排除",
+                bad: "ゴミ箱の表面のみ清掃し、内部や蓋の汚れ（悪臭・害虫リスク）を残す。",
+                good: "内部と蓋の徹底洗浄と除菌: ゴミ箱の内部や蓋まで徹底的に洗浄。洗浄後、除菌剤を塗布し、悪臭と害虫の発生源を根絶する。",
+                badImage: "../assets/images-service/service34.jpg",
+                goodImage: "../assets/images-service/service38.jpg",
+                qa1q: "Q: ゴミ箱清掃で最も重要な点は？",
+                qa1a: "A: 内部や蓋の清掃。これらの箇所に溜まった汚れが、悪臭や害虫の主要な原因となる。",
+                qa2q: "Q: 除菌処理の意義は？",
+                qa2a: "A: 清掃後のゴミ箱の衛生状態を保ち、悪臭や害虫の再発を構造的に抑制すること。"
+            }
+        ];
+
+        const manualData = [...kitchenData, ...airconData, ...floorData, ...otherData]; // 全てのデータを結合
+        
+        let currentPage = 'page-0-all';
+        let currentCategory = 'all';
+        const totalPages = manualData.length;
+        const contentDiv = document.getElementById('content');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+
+        // カテゴリごとのリストページIDマッピング
+        const categoryListPageMap = {
+            'all': 'page-0-all',
+            '厨房設備': 'page-0-kitchen',
+            '空調設備': 'page-0-aircon',
+            'フロア': 'page-0-floor',
+            'その他': 'page-0-other'
+        };
+
+        // マニュアルページを生成しDOMに追加
+        function createManualPages() {
+            const fragment = document.createDocumentFragment();
+            const indexListAll = document.getElementById('index-list-all');
+            const indexListKitchen = document.getElementById('index-list-kitchen');
+            const indexListAircon = document.getElementById('index-list-aircon');
+            const indexListFloor = document.getElementById('index-list-floor');
+            const indexListOther = document.getElementById('index-list-other');
+            
+            let lastCategory = '';
+            
+            manualData.forEach((data, index) => {
+                const pageIndex = index + 1; // ページ番号は1から開始
+
+                // ページコンテンツのHTMLを生成
+                const pageHtml = `
+                    <div id="page-${pageIndex}" class="manual-page" data-category="${data.category}">
+                        <h2 class="page-title">【${data.category}】${data.title}</h2>
+                        <div class="section-title">【MISESAPOの理念】リスク対策</div>
+                        <p><strong>${data.category}カテゴリ</strong>：${data.risk}</p>
+                        
+                        <div class="section-title bad-example-title">❌ ダメな例（リスク行為：減点対象）</div>
+                        <div class="example-box bad-example">
+                            <strong>リスクを残す行為</strong>
+                            ${data.bad}
+                            ${data.badImage ? `<div class="example-image-container"><img src="${data.badImage}" alt="ダメな例" class="example-image" /></div>` : ''}
+                        </div>
+                        
+                        <div class="section-title good-example-title">✅ 模範例（リスク対策行為：MISESAPO基準）</div>
+                        <div class="example-box good-example">
+                            <strong>リスクを排除し価値を提供する行為</strong>
+                            ${data.good}
+                            ${data.goodImage ? `<div class="example-image-container"><img src="${data.goodImage}" alt="模範例" class="example-image" /></div>` : ''}
+                        </div>
+
+                        <div class="qa-section">
+                            <div class="section-title">研修・営業用 Q&A</div>
+                            <p><span class="qa-question">${data.qa1q}</span></p>
+                            <p class="qa-answer">${data.qa1a}</p>
+                            <p><span class="qa-question">${data.qa2q}</span></p>
+                            <p class="qa-answer">${data.qa2a}</p>
+                        </div>
+                    </div>
+                `;
+
+                const pageDiv = document.createElement('div');
+                pageDiv.innerHTML = pageHtml.trim();
+                fragment.appendChild(pageDiv.firstChild);
+
+                // 全カテゴリの目次リストを生成
+                if (data.category !== lastCategory) {
+                    const separator = document.createElement('li');
+                    separator.className = 'category-separator';
+                    separator.textContent = `--- ${data.category} ---`;
+                    indexListAll.appendChild(separator);
+                    lastCategory = data.category;
+                }
+                const listItemAll = document.createElement('li');
+                listItemAll.innerHTML = `<a href="#" onclick="showPage('page-${pageIndex}')">${data.title}</a>`;
+                indexListAll.appendChild(listItemAll);
+
+                // カテゴリ別の目次リストを生成
+                let targetList = null;
+                if (data.category === '厨房設備') {
+                    targetList = indexListKitchen;
+                } else if (data.category === '空調設備') {
+                    targetList = indexListAircon;
+                } else if (data.category === 'フロア') {
+                    targetList = indexListFloor;
+                } else if (data.category === 'その他') {
+                    targetList = indexListOther;
+                }
+
+                if (targetList) {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `<a href="#" onclick="showPage('page-${pageIndex}')">${data.title}</a>`;
+                    targetList.appendChild(listItem);
+                }
+            });
+
+            contentDiv.appendChild(fragment);
+        }
+
+        // カテゴリでフィルタリング
+        function filterByCategory(category) {
+            currentCategory = category;
+            
+            // タブのアクティブ状態を更新
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 該当カテゴリのリストページを表示
+            const listPageId = categoryListPageMap[category];
+            if (listPageId) {
+                showPage(listPageId);
+            }
+        }
+
+        // ページを表示する関数
+        function showPage(pageId) {
+            const pages = document.querySelectorAll('.manual-page');
+            pages.forEach((page) => {
+                page.classList.remove('active');
+            });
+            
+            currentPage = pageId;
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+                // カテゴリを更新（リストページの場合）
+                const pageCategory = targetPage.getAttribute('data-category');
+                if (pageCategory) {
+                    currentCategory = pageCategory;
+                    // タブのアクティブ状態を更新
+                    document.querySelectorAll('.category-tab').forEach(tab => {
+                        tab.classList.remove('active');
+                        if ((pageCategory === 'all' && tab.textContent.includes('すべて')) ||
+                            (pageCategory === '厨房設備' && tab.textContent.includes('厨房設備')) ||
+                            (pageCategory === '空調設備' && tab.textContent.includes('空調設備')) ||
+                            (pageCategory === 'フロア' && tab.textContent.includes('フロア')) ||
+                            (pageCategory === 'その他' && tab.textContent.includes('その他'))) {
+                            tab.classList.add('active');
+                        }
+                    });
+                } else {
+                    // 詳細ページの場合、カテゴリを取得
+                    const pageNum = parseInt(pageId.replace('page-', ''));
+                    const pageData = manualData[pageNum - 1];
+                    if (pageData) {
+                        currentCategory = pageData.category;
+                        // タブのアクティブ状態を更新
+                        document.querySelectorAll('.category-tab').forEach(tab => {
+                            tab.classList.remove('active');
+                            if ((pageData.category === '厨房設備' && tab.textContent.includes('厨房設備')) ||
+                                (pageData.category === '空調設備' && tab.textContent.includes('空調設備')) ||
+                                (pageData.category === 'フロア' && tab.textContent.includes('フロア')) ||
+                                (pageData.category === 'その他' && tab.textContent.includes('その他'))) {
+                                tab.classList.add('active');
+                            }
+                        });
+                    }
+                }
+            }
+            
+            updateNavigation();
+            // ページタイトルを更新
+            const pageNum = parseInt(pageId.replace('page-', ''));
+            if (!pageId.startsWith('page-0-') && manualData[pageNum - 1]) {
+                document.title = `${manualData[pageNum - 1].title} - MISESAPO 清掃基準マニュアル`;
+            } else {
+                document.title = "MISESAPO 清掃基準マニュアル";
+            }
+            window.scrollTo(0, 0); // ページ切り替え時に最上部へスクロール
+        }
+
+        // 目次ページを表示する関数
+        function showIndex() {
+            const listPageId = categoryListPageMap[currentCategory];
+            if (listPageId) {
+                showPage(listPageId);
+            }
+        }
+
+        // ナビゲーションボタンの状態を更新
+        function updateNavigation() {
+            // リストページの場合は前後ボタンを無効化
+            if (currentPage.startsWith('page-0-')) {
+                prevButton.disabled = true;
+                nextButton.disabled = true;
+                return;
+            }
+            
+            // 詳細ページの場合、同じカテゴリ内のページを取得
+            const currentPageNum = parseInt(currentPage.replace('page-', ''));
+            const currentPageData = manualData[currentPageNum - 1];
+            if (!currentPageData) {
+                prevButton.disabled = true;
+                nextButton.disabled = true;
+                return;
+            }
+            
+            const category = currentPageData.category;
+            const categoryPages = manualData
+                .map((data, index) => ({ data, index: index + 1 }))
+                .filter(item => item.data.category === category);
+            
+            const currentIndex = categoryPages.findIndex(item => item.index === currentPageNum);
+            
+            prevButton.disabled = currentIndex <= 0;
+            nextButton.disabled = currentIndex >= categoryPages.length - 1;
+        }
+
+        // 前後へ移動する関数
+        function navigate(direction) {
+            // リストページの場合は何もしない
+            if (currentPage.startsWith('page-0-')) {
+                return;
+            }
+            
+            const currentPageNum = parseInt(currentPage.replace('page-', ''));
+            const currentPageData = manualData[currentPageNum - 1];
+            if (!currentPageData) {
+                return;
+            }
+            
+            const category = currentPageData.category;
+            const categoryPages = manualData
+                .map((data, index) => ({ data, index: index + 1 }))
+                .filter(item => item.data.category === category);
+            
+            const currentIndex = categoryPages.findIndex(item => item.index === currentPageNum);
+            const newIndex = currentIndex + direction;
+            
+            if (newIndex >= 0 && newIndex < categoryPages.length) {
+                showPage(`page-${categoryPages[newIndex].index}`);
+            }
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            createManualPages();
+            showIndex();
+        });
+    </script>
+</body>
+</html>
+

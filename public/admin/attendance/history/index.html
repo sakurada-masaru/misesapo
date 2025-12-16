@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title></title>
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+    <link rel="stylesheet" href="/css/admin-sidebar.css" />
+    <!-- DataUtils スクリプト（schedulesページで使用） -->
+    <script src="/js/data_utils.js"></script>
+  </head>
+  <body class="theme-pink ">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+    
+
+
+
+<main id="main" class="admin-attendance-history">
+  <!-- モバイルメニューボタン -->
+<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+  <i class="fas fa-bars"></i>
+</button>
+
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/admin/dashboard" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <!-- ロール表示 -->
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">管理者</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <!-- マイページ（目立たせる） -->
+    <a href="/staff/mypage" class="nav-item nav-item-mypage" data-page="mypage" id="sidebar-mypage-link">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <div class="nav-divider"></div>
+    <!-- 管理メニュー -->
+    <a href="/admin/dashboard" class="nav-item" data-page="dashboard">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">アクティビティ</span>
+    </a>
+    <a href="/admin/schedules/" class="nav-item" data-page="schedules">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/admin/customers/" class="nav-item" data-page="customers">
+      <i class="fas fa-store"></i>
+      <span class="nav-label">顧客管理</span>
+    </a>
+    <a href="/admin/reports/" class="nav-item" data-page="reports">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">レポート</span>
+    </a>
+    <a href="/admin/estimates/" class="nav-item" data-page="estimates">
+      <i class="fas fa-file-invoice-dollar"></i>
+      <span class="nav-label">見積もり</span>
+    </a>
+    <a href="/admin/orders" class="nav-item" data-page="orders">
+      <i class="fas fa-shopping-cart"></i>
+      <span class="nav-label">発注管理</span>
+    </a>
+    <a href="/admin/partners" class="nav-item" data-page="partners">
+      <i class="fas fa-handshake"></i>
+      <span class="nav-label">パートナー企業</span>
+    </a>
+    <a href="/admin/users/" class="nav-item" data-page="users">
+      <i class="fas fa-users"></i>
+      <span class="nav-label">ユーザー管理</span>
+    </a>
+    <a href="/admin/attendance/errors" class="nav-item" data-page="attendance-errors">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span class="nav-label">勤怠管理</span>
+    </a>
+    <a href="/admin/services/" class="nav-item" data-page="services">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">サービス管理</span>
+    </a>
+    <a href="/admin/analytics/" class="nav-item" data-page="analytics">
+      <i class="fas fa-chart-bar"></i>
+      <span class="nav-label">分析</span>
+    </a>
+    <a href="/admin/images/" class="nav-item" data-page="images">
+      <i class="fas fa-images"></i>
+      <span class="nav-label">メディア</span>
+    </a>
+    <a href="/admin/zaiko" class="nav-item" data-page="zaiko">
+      <i class="fas fa-boxes"></i>
+      <span class="nav-label">在庫管理</span>
+    </a>
+    <a href="/admin/announcements" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">業務連絡</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/wiki" class="nav-item" data-page="wiki">
+      <i class="fas fa-book-open"></i>
+      <span class="nav-label">WIKI</span>
+    </a>
+    <a href="/admin/sitemap" class="nav-item" data-page="sitemap">
+      <i class="fas fa-sitemap"></i>
+      <span class="nav-label">サイトマップ</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="staffLogout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+  </nav>
+
+  <!-- トグルボタン -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<script>
+  // 従業員用ログアウト関数（グローバル）
+  function staffLogout() {
+    // Cognitoからログアウト
+    if (window.CognitoAuth && typeof window.CognitoAuth.logout === 'function') {
+      window.CognitoAuth.logout();
+    }
+    // ローカルストレージをクリア
+    localStorage.removeItem('cognito_user');
+    localStorage.removeItem('misesapo_auth');
+    localStorage.removeItem('cognito_id_token');
+    localStorage.removeItem('cognito_access_token');
+    localStorage.removeItem('cognito_refresh_token');
+    // 従業員ログイン画面にリダイレクト
+    window.location.href = '/staff/signin.html';
+  }
+</script>
+
+
+  <!-- メインコンテンツ -->
+  <div class="main-content">
+    <!-- トップバー -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>出退勤履歴</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-outline btn-sm" id="refresh-btn">
+          <i class="fas fa-sync-alt"></i> 更新
+        </button>
+        <button class="btn btn-primary btn-sm" id="export-btn">
+          <i class="fas fa-download"></i> エクスポート
+        </button>
+      </div>
+    </header>
+
+    <!-- フィルター -->
+    <div class="filter-section">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>スタッフID</label>
+          <input type="text" id="staff-id-filter" placeholder="スタッフIDで検索..." class="filter-input">
+        </div>
+        <div class="filter-group">
+          <label>日付（開始）</label>
+          <input type="date" id="date-from-filter" class="filter-input">
+        </div>
+        <div class="filter-group">
+          <label>日付（終了）</label>
+          <input type="date" id="date-to-filter" class="filter-input">
+        </div>
+        <div class="filter-group">
+          <label>月次集計</label>
+          <input type="month" id="month-filter" class="filter-input">
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" id="apply-filters">
+          <i class="fas fa-filter"></i> フィルター適用
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" id="reset-filters">
+          <i class="fas fa-undo"></i> リセット
+        </button>
+      </div>
+    </div>
+
+    <!-- 統計カード -->
+    <div class="stats-row">
+      <div class="stat-mini">
+        <div class="stat-mini-icon blue"><i class="fas fa-calendar-check"></i></div>
+        <div class="stat-mini-body">
+          <div class="stat-mini-value" id="stat-total-days">-</div>
+          <div class="stat-mini-label">総出勤日数</div>
+        </div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon green"><i class="fas fa-clock"></i></div>
+        <div class="stat-mini-body">
+          <div class="stat-mini-value" id="stat-total-hours">-</div>
+          <div class="stat-mini-label">総労働時間</div>
+        </div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon orange"><i class="fas fa-hourglass-half"></i></div>
+        <div class="stat-mini-body">
+          <div class="stat-mini-value" id="stat-avg-hours">-</div>
+          <div class="stat-mini-label">平均労働時間</div>
+        </div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon purple"><i class="fas fa-users"></i></div>
+        <div class="stat-mini-body">
+          <div class="stat-mini-value" id="stat-staff-count">-</div>
+          <div class="stat-mini-label">対象スタッフ数</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 履歴一覧テーブル -->
+    <div class="table-container">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>スタッフID</th>
+            <th>スタッフ名</th>
+            <th>出勤時刻</th>
+            <th>退勤時刻</th>
+            <th>労働時間</th>
+            <th>休憩時間</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="history-tbody">
+          <tr>
+            <td colspan="8" class="loading-cell">
+              <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ページネーション -->
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- 詳細モーダル -->
+  <div id="detail-modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeDetailModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="detail-modal-title">出退勤詳細</h2>
+        <button class="modal-close" onclick="closeDetailModal()">×</button>
+      </div>
+      <div class="modal-body" id="detail-modal-body">
+        <!-- 詳細情報がここに表示されます -->
+      </div>
+    </div>
+  </div>
+
+  <style>
+    :root {
+      --sidebar-width: 240px;
+      --sidebar-width-collapsed: 64px;
+    }
+
+    .admin-attendance-history {
+      display: flex;
+      min-height: 100vh;
+      background: #f9fafb;
+    }
+
+          padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+    }
+    .logo-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .logo-img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      white-space: nowrap;
+      transition: opacity 0.3s ease;
+    }
+          padding: 6px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      transition: opacity 0.3s ease;
+    }
+          padding: 3px 10px;
+      background: #e0e7ff;
+      color: #3730a3;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+          gap: 1px;
+      overflow-y: auto;
+    }
+          padding: 8px 10px;
+      color: #6b7280;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+          width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .nav-label {
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+      font-size: 0.8125rem;
+    }
+
+    .sidebar.collapsed 
+    .nav-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 8px 12px;
+    }
+
+    /* メインコンテンツ */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 24px;
+      background: #f9fafb;
+    
+      transition: margin-left 0.3s ease;}
+    .sidebar.collapsed ~ .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 24px;
+      background: #f9fafb;
+    
+      transition: margin-left 0.3s ease;}
+
+    /* トップバー */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .topbar-left h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* フィルター */
+    .filter-section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .filter-row {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      min-width: 150px;
+    }
+    .filter-group label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+    }
+    .filter-input {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+    .filter-input:focus {
+      outline: none;
+      border-color: var(--primary, #3b82f6);
+    }
+
+    /* 統計カード */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-mini {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .stat-mini-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .stat-mini-icon.blue {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+    .stat-mini-icon.green {
+      background: #d1fae5;
+      color: #059669;
+    }
+    .stat-mini-icon.orange {
+      background: #fed7aa;
+      color: #ea580c;
+    }
+    .stat-mini-icon.purple {
+      background: #e9d5ff;
+      color: #7c3aed;
+    }
+    .stat-mini-body {
+      flex: 1;
+    }
+    .stat-mini-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .stat-mini-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    /* テーブル */
+    .table-container {
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .history-table thead {
+      background: #f9fafb;
+    }
+    .history-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .history-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.875rem;
+      color: #111827;
+    }
+    .history-table tbody tr:hover {
+      background: #f9fafb;
+    }
+    .loading-cell {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+
+    /* モーダル */
+    #detail-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      position: relative;
+      background: #fff;
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-body {
+      margin-bottom: 20px;
+    }
+
+    /* ページネーション */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    .pagination button {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pagination button:hover:not(:disabled) {
+      background: #f3f4f6;
+      border-color: var(--primary, #3b82f6);
+    }
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .pagination button.active {
+      background: var(--primary, #3b82f6);
+      color: #fff;
+      border-color: var(--primary, #3b82f6);
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 24px;
+      background: #f9fafb;
+    
+      transition: margin-left 0.3s ease;}
+      
+      .sidebar.collapsed {
+        transform: translateX(0);
+      }
+      .filter-row {
+        flex-direction: column;
+      }
+      .filter-group {
+        min-width: 100%;
+      }
+    }
+  </style>
+
+  <script>
+    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    let allHistory = [];
+    let filteredHistory = [];
+    let currentPage = 1;
+    const itemsPerPage = 20;
+    let staffMap = {};
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStaffList();
+      loadHistory();
+      setupFilters();
+      initSidebar();
+        
+  });
+
+    // スタッフ一覧を読み込み（名前表示用）
+    async function loadStaffList() {
+      try {
+        const response = await fetch(`${API_BASE}/workers`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.workers) {
+            data.workers.forEach(staff => {
+              staffMap[staff.id] = staff;
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading staff list:', error);
+      }
+    }
+
+    // 履歴一覧を読み込み
+    async function loadHistory() {
+      const tbody = document.getElementById('history-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" class="loading-cell"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</td></tr>';
+
+      try {
+        // クエリパラメータを構築
+        const params = new URLSearchParams();
+        const staffId = document.getElementById('staff-id-filter').value.trim();
+        const dateFrom = document.getElementById('date-from-filter').value;
+        const dateTo = document.getElementById('date-to-filter').value;
+        const month = document.getElementById('month-filter').value;
+
+        if (staffId) params.append('staff_id', staffId);
+        if (dateFrom) params.append('date_from', dateFrom);
+        if (dateTo) params.append('date_to', dateTo);
+        if (month) {
+          const [year, monthNum] = month.split('-');
+          params.append('year', year);
+          params.append('month', monthNum);
+        }
+        params.append('limit', '1000');
+
+        const response = await fetch(`${API_BASE}/attendance?${params.toString()}`);
+        if (response.ok) {
+          const data = await response.json();
+          allHistory = data.attendance || [];
+          filteredHistory = [...allHistory];
+          renderHistory();
+          updateStats();
+        } else {
+          throw new Error('履歴一覧の取得に失敗しました');
+        }
+      } catch (error) {
+        console.error('Error loading history:', error);
+        tbody.innerHTML = `<tr><td colspan="8" class="loading-cell" style="color: #dc2626;">エラー: ${error.message}</td></tr>`;
+      }
+    }
+
+    // フィルター設定
+    function setupFilters() {
+      document.getElementById('apply-filters').addEventListener('click', applyFilters);
+      document.getElementById('reset-filters').addEventListener('click', resetFilters);
+      document.getElementById('refresh-btn').addEventListener('click', loadHistory);
+      document.getElementById('export-btn').addEventListener('click', exportHistory);
+    }
+
+    // フィルター適用
+    function applyFilters() {
+      loadHistory();
+    }
+
+    // フィルターリセット
+    function resetFilters() {
+      document.getElementById('staff-id-filter').value = '';
+      document.getElementById('date-from-filter').value = '';
+      document.getElementById('date-to-filter').value = '';
+      document.getElementById('month-filter').value = '';
+      loadHistory();
+    }
+
+    // 履歴一覧をレンダリング
+    function renderHistory() {
+      const tbody = document.getElementById('history-tbody');
+      
+      if (filteredHistory.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">履歴が見つかりません</td></tr>';
+        return;
+      }
+
+      // 日付でソート（新しい順）
+      const sortedHistory = [...filteredHistory].sort((a, b) => {
+        const dateA = new Date(a.date || 0);
+        const dateB = new Date(b.date || 0);
+        return dateB - dateA;
+      });
+
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const pageHistory = sortedHistory.slice(start, end);
+
+      tbody.innerHTML = pageHistory.map(record => {
+        const staff = staffMap[record.staff_id] || {};
+        const date = record.date ? new Date(record.date).toLocaleDateString('ja-JP') : '-';
+        const clockIn = record.clock_in ? new Date(record.clock_in).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '-';
+        const clockOut = record.clock_out ? new Date(record.clock_out).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '-';
+        const workHours = record.work_hours ? formatHours(record.work_hours) : '-';
+        const breakTime = record.break_time ? formatHours(record.break_time) : '-';
+
+        return `
+          <tr>
+            <td>${date}</td>
+            <td>${escapeHtml(record.staff_id || '-')}</td>
+            <td>${escapeHtml(staff.name || '-')}</td>
+            <td>${clockIn}</td>
+            <td>${clockOut}</td>
+            <td>${workHours}</td>
+            <td>${breakTime}</td>
+            <td>
+              <button class="btn btn-sm btn-outline" onclick="viewDetail('${record.id}')">
+                <i class="fas fa-eye"></i> 詳細
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      renderPagination();
+    }
+
+    // 時間をフォーマット（時間:分）
+    function formatHours(hours) {
+      if (typeof hours === 'string') {
+        // "HH:MM"形式の場合
+        return hours;
+      }
+      if (typeof hours === 'number') {
+        // 時間数（小数）の場合
+        const h = Math.floor(hours);
+        const m = Math.round((hours - h) * 60);
+        return `${h}:${String(m).padStart(2, '0')}`;
+      }
+      return '-';
+    }
+
+    // ページネーションをレンダリング
+    function renderPagination() {
+      const pagination = document.getElementById('pagination');
+      const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
+
+      if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      if (currentPage > 1) {
+        html += `<button onclick="changePage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+      }
+
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+          html += `<button class="${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+          html += `<span>...</span>`;
+        }
+      }
+
+      if (currentPage < totalPages) {
+        html += `<button onclick="changePage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+      }
+
+      pagination.innerHTML = html;
+    }
+
+    // ページ変更
+    window.changePage = function(page) {
+      currentPage = page;
+      renderHistory();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // 詳細を表示
+    window.viewDetail = async function(recordId) {
+      const record = allHistory.find(r => r.id === recordId);
+      if (!record) {
+        // APIから詳細を取得
+        try {
+          const response = await fetch(`${API_BASE}/attendance/${recordId}`);
+          if (response.ok) {
+            const detail = await response.json();
+            showDetailModal(detail);
+          } else {
+            alert('詳細の取得に失敗しました');
+          }
+        } catch (error) {
+          console.error('Error loading detail:', error);
+          alert('詳細の取得に失敗しました');
+        }
+        return;
+      }
+
+      showDetailModal(record);
+    };
+
+    // 詳細モーダルを表示
+    function showDetailModal(record) {
+      const modal = document.getElementById('detail-modal');
+      const bodyEl = document.getElementById('detail-modal-body');
+      const staff = staffMap[record.staff_id] || {};
+
+      const formatDateTime = (dateStr) => {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      };
+
+      bodyEl.innerHTML = `
+        <div style="display: grid; gap: 16px;">
+          <div>
+            <strong>スタッフID:</strong> ${escapeHtml(record.staff_id || '-')}
+          </div>
+          <div>
+            <strong>スタッフ名:</strong> ${escapeHtml(staff.name || '-')}
+          </div>
+          <div>
+            <strong>日付:</strong> ${record.date ? new Date(record.date).toLocaleDateString('ja-JP') : '-'}
+          </div>
+          <div>
+            <strong>出勤時刻:</strong> ${formatDateTime(record.clock_in)}
+          </div>
+          <div>
+            <strong>退勤時刻:</strong> ${formatDateTime(record.clock_out)}
+          </div>
+          <div>
+            <strong>労働時間:</strong> ${record.work_hours ? formatHours(record.work_hours) : '-'}
+          </div>
+          <div>
+            <strong>休憩時間:</strong> ${record.break_time ? formatHours(record.break_time) : '-'}
+          </div>
+          ${record.notes ? `
+            <div>
+              <strong>備考:</strong><br>
+              ${escapeHtml(record.notes)}
+            </div>
+          ` : ''}
+          <div>
+            <strong>作成日時:</strong> ${formatDateTime(record.created_at)}
+          </div>
+          ${record.updated_at ? `
+            <div>
+              <strong>更新日時:</strong> ${formatDateTime(record.updated_at)}
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      modal.style.display = 'flex';
+    }
+
+    // 詳細モーダルを閉じる
+    window.closeDetailModal = function() {
+      document.getElementById('detail-modal').style.display = 'none';
+    };
+
+    // 統計を更新
+    function updateStats() {
+      if (filteredHistory.length === 0) {
+        document.getElementById('stat-total-days').textContent = '0';
+        document.getElementById('stat-total-hours').textContent = '0時間';
+        document.getElementById('stat-avg-hours').textContent = '0時間';
+        document.getElementById('stat-staff-count').textContent = '0';
+        return;
+      }
+
+      // 総出勤日数（ユニークな日付の数）
+      const uniqueDates = new Set(filteredHistory.map(r => r.date));
+      const totalDays = uniqueDates.size;
+
+      // 総労働時間
+      let totalHours = 0;
+      filteredHistory.forEach(record => {
+        if (record.work_hours) {
+          if (typeof record.work_hours === 'string') {
+            // "HH:MM"形式の場合
+            const [h, m] = record.work_hours.split(':').map(Number);
+            totalHours += h + m / 60;
+          } else if (typeof record.work_hours === 'number') {
+            totalHours += record.work_hours;
+          }
+        }
+      });
+
+      // 平均労働時間
+      const avgHours = totalDays > 0 ? totalHours / totalDays : 0;
+
+      // 対象スタッフ数
+      const uniqueStaff = new Set(filteredHistory.map(r => r.staff_id));
+      const staffCount = uniqueStaff.size;
+
+      document.getElementById('stat-total-days').textContent = totalDays;
+      document.getElementById('stat-total-hours').textContent = `${Math.round(totalHours * 10) / 10}時間`;
+      document.getElementById('stat-avg-hours').textContent = `${Math.round(avgHours * 10) / 10}時間`;
+      document.getElementById('stat-staff-count').textContent = staffCount;
+    }
+
+    // エクスポート
+    window.exportHistory = function() {
+      if (filteredHistory.length === 0) {
+        alert('エクスポートするデータがありません');
+        return;
+      }
+
+      // CSV形式でエクスポート
+      const headers = ['日付', 'スタッフID', 'スタッフ名', '出勤時刻', '退勤時刻', '労働時間', '休憩時間'];
+      const rows = filteredHistory.map(record => {
+        const staff = staffMap[record.staff_id] || {};
+        const date = record.date ? new Date(record.date).toLocaleDateString('ja-JP') : '';
+        const clockIn = record.clock_in ? new Date(record.clock_in).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+        const clockOut = record.clock_out ? new Date(record.clock_out).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+        const workHours = record.work_hours ? formatHours(record.work_hours) : '';
+        const breakTime = record.break_time ? formatHours(record.break_time) : '';
+        
+        return [
+          date,
+          record.staff_id || '',
+          staff.name || '',
+          clockIn,
+          clockOut,
+          workHours,
+          breakTime
+        ];
+      });
+
+      const csv = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `attendance_history_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    // HTMLエスケープ
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // サイドバーの初期化（共通サイドバーを使用しているため、個別の初期化は不要）
+    function initSidebar() {
+      // 共通サイドバーのJavaScriptが処理するため、ここでは何もしない
+    }
+  </script>
+</main>
+
+
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- AWS SDK and Cognito -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+    <script src="/js/cognito_config.js"></script>
+    <script src="/js/cognito_auth.js"></script>
+    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script src="/js/admin-sidebar.js"></script>
+    <!-- Page-specific scripts (injected by page content) -->
+    <script>
+      // 管理画面では共通ヘッダーを持たないため追加スクリプトは不要
+    </script>
+  </body>
+</html>
+

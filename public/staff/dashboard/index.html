@@ -1,0 +1,2938 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title>清掃員ダッシュボード | ミセサポ</title>
+    
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+    <style>
+      /* Staff signin page: hide all headers */
+      body.page-staff-signin #default-header-wrapper,
+      body.page-staff-signin #normal-header-wrapper {
+        display: none !important;
+      }
+      
+      /* Staff pages: hide global header and footer */
+      body[class*="page-staff-"] #default-header-wrapper,
+      body[class*="page-staff-"] #normal-header-wrapper,
+      body[class*="page-staff-"] footer {
+        display: none !important;
+      }
+      
+      /* Staff pages: ensure full height layout */
+      body[class*="page-staff-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="page-staff-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Admin pages: hide global header while keeping auth buttons */
+      body[class*="page-admin-"] #default-header-wrapper {
+        height: 0;
+        overflow: visible;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .site-header {
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        min-height: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .inner {
+        justify-content: flex-end;
+        padding: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-left,
+      body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
+      body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
+      body[class*="page-admin-"] #default-header-wrapper .spacer,
+      body[class*="page-admin-"] #default-header-wrapper .role-badge {
+        display: none !important;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right {
+        position: fixed;
+        top: 16px;
+        right: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 18px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.18);
+        z-index: 300;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
+        font-weight: 600;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+      }
+      
+      /* Sales pages: hide global header and footer */
+      body[class*="sales-"] #default-header-wrapper,
+      body[class*="sales-"] #normal-header-wrapper,
+      body[class*="sales-"] footer {
+        display: none !important;
+      }
+      
+      /* Sales pages: ensure full height layout */
+      body[class*="sales-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="sales-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body class="theme-pink page-staff-dashboard">
+    <div id="default-header-wrapper">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+<header id="header-guest" class="site-header" data-role="guest">
+  <div class="inner wide">
+    <div class="nav-left">
+      <a class="brand brand-logo" href="/" aria-label="ミセサポ ホーム">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+      </a>
+      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+    </div>
+    <div class="spacer"></div>
+    <nav class="nav-right hide-sm" aria-label="User">
+      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+      <a class="nav-link" href="/signin">ログイン</a>
+      <a class="nav-link primary" href="/signup">新規登録</a>
+      <button class="icon-btn" aria-label="通知">
+        <i class="fas fa-bell"></i>
+      </button>
+      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </nav>
+    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+  <!-- スマホ版ナビゲーションメニュー -->
+  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
+    <div class="mobile-nav-content">
+      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+      <nav class="mobile-nav-user" aria-label="User">
+        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+        <a class="mobile-nav-link" href="/signin">ログイン</a>
+        <a class="mobile-nav-link primary" href="/signup">新規登録</a>
+      </nav>
+    </div>
+  </nav>
+</header>
+
+    </div>
+    <!-- 通常ヘッダー（ログイン画面用） -->
+    <div id="normal-header-wrapper" style="display: none;">
+    <!-- 通常ヘッダー -->
+<header class="normal-header">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+            </a>
+                </div>
+        <nav class="normal-header-nav">
+            <a href="/">TOP</a>
+            <a href="/service">対応可能サービス</a>
+            <a href="/lp#voice">お客様の声</a>
+            <a href="/customers-support-desk">カスタマーズサポート</a>
+            <a href="/announcements">お知らせ</a>
+            <a href="/privacy-policy">規約＆ポリシー</a>
+        </nav>
+        <div class="normal-header-actions">
+            <a href="/signin" class="normal-header-login">ログイン</a>
+        </div>
+            </div>
+</header>
+
+
+    </div>
+    <main id="main">
+      
+
+
+
+<main id="main" class="container staff-dashboard">
+
+  <!-- オフラインインジケーター -->
+  <div class="offline-indicator" id="offline-indicator" style="display: none;">
+    <div class="offline-content">
+      <i class="fas fa-wifi" id="offline-icon"></i>
+      <span id="offline-text">オフライン（同期待ち: <span id="pending-count">0</span>件）</span>
+    </div>
+  </div>
+
+  <!-- 打刻履歴セクション -->
+  <section class="dashboard-section clock-in-history-section" id="clock-in-history-section" style="margin-bottom: 24px;">
+    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h2 class="section-title" style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #111827;">
+        <i class="fas fa-clock" style="color: #FF679C; margin-right: 8px;"></i>
+        打刻履歴
+      </h2>
+      <button type="button" class="btn-refresh-clock-in" id="btn-refresh-clock-in" style="background: transparent; border: none; color: #6b7280; cursor: pointer; padding: 4px 8px; font-size: 0.875rem;">
+        <i class="fas fa-sync-alt"></i> 更新
+      </button>
+    </div>
+    <div class="clock-in-history-list" id="clock-in-history-list" style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="loading-state" style="text-align: center; padding: 20px; color: #6b7280;">
+        <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+      </div>
+    </div>
+  </section>
+
+  <!-- Next Assignment Card (最優先表示) -->
+  <!-- Quick Actions (改善版) -->
+  <section class="dashboard-section">
+    <h2 class="section-title">クイックアクション</h2>
+    <div class="quick-actions-compact">
+      <a href="/staff/mypage" class="action-btn-large">
+        <i class="fas fa-user-circle"></i>
+        <span>マイページ</span>
+      </a>
+      <a href="/staff/assignments" class="action-btn-large">
+        <i class="fas fa-images"></i>
+        <span>メディア</span>
+      </a>
+      <a href="/staff/reports/new" class="action-btn-large">
+        <i class="fas fa-camera"></i>
+        <span>レポート作成</span>
+      </a>
+      <a href="/staff/schedule" class="action-btn-large">
+        <i class="fas fa-calendar"></i>
+        <span>スケジュール</span>
+      </a>
+      <a href="/cleaning-manual" class="action-btn-large">
+        <i class="fas fa-book"></i>
+        <span>マニュアル</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Today's Schedule (タイムライン表示) -->
+  <section class="dashboard-section">
+    <h2 class="section-title">
+      <i class="fas fa-calendar-day"></i>
+      本日の予定
+    </h2>
+    <div class="schedule-timeline">
+      <div class="timeline-item completed">
+        <div class="timeline-marker completed">
+          <i class="fas fa-check"></i>
+        </div>
+        <div class="timeline-content">
+          <div class="timeline-time">09:00</div>
+          <div class="timeline-details">
+            <div class="location">新宿店</div>
+            <div class="task">通常清掃</div>
+            <span class="status-check">✓ 完了</span>
+          </div>
+        </div>
+      </div>
+      <div class="timeline-item current">
+        <div class="timeline-marker current">
+          <i class="fas fa-circle"></i>
+        </div>
+        <div class="timeline-content">
+          <div class="timeline-time">10:30</div>
+          <div class="timeline-details">
+            <div class="location">神楽坂店</div>
+            <div class="task">レンジフード洗浄、グリストラップ清掃</div>
+            <span class="status-current">進行中</span>
+          </div>
+        </div>
+      </div>
+      <div class="timeline-item upcoming">
+        <div class="timeline-marker upcoming">
+          <i class="fas fa-circle"></i>
+        </div>
+        <div class="timeline-content">
+          <div class="timeline-time">14:00</div>
+          <div class="timeline-details">
+            <div class="location">日本橋茅場町店</div>
+            <div class="task">エアコン分解洗浄</div>
+            <span class="status-upcoming">予定</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- This Week's Schedule -->
+  <section class="dashboard-section">
+    <h2 class="section-title">
+      <i class="fas fa-calendar-week"></i>
+      今週の予定
+    </h2>
+    <div class="week-summary">
+      <div class="week-stat">
+        <div class="stat-value">8</div>
+        <div class="stat-label">件</div>
+      </div>
+      <div class="week-stat">
+        <div class="stat-value">6</div>
+        <div class="stat-label">店舗</div>
+      </div>
+    </div>
+    <a href="/staff/schedule" class="btn btn-outline btn-block">スケジュール一覧を見る</a>
+  </section>
+
+  <!-- SP版：左下メニューボタン -->
+  <div class="fixed-menu-button" id="fixed-menu-button">
+    <div class="fixed-menu-button__circle">
+      <div class="fixed-menu-button__text">メニュー</div>
+    </div>
+  </div>
+
+  <!-- SP版：メニューパネルオーバーレイ -->
+  <div class="sp-menu-panel-overlay" id="sp-menu-panel-overlay"></div>
+
+  <!-- SP版：メニューパネル -->
+  <div class="sp-menu-panel" id="sp-menu-panel">
+    <ul class="sp-menu-list">
+      <li class="sp-menu-item">
+        <a href="/staff/dashboard" class="sp-menu-link">ダッシュボード</a>
+      </li>
+      <li class="sp-menu-item">
+        <a href="/staff/assignments" class="sp-menu-link">メディア</a>
+      </li>
+      <li class="sp-menu-item">
+        <a href="/staff/reports" class="sp-menu-link">レポート一覧</a>
+      </li>
+      <li class="sp-menu-item">
+        <a href="/staff/schedule" class="sp-menu-link">スケジュール</a>
+      </li>
+      <li class="sp-menu-item">
+        <a href="/staff/training" class="sp-menu-link">研修動画</a>
+      </li>
+      <li class="sp-menu-item">
+        <a href="/cleaning-manual" class="sp-menu-link">清掃マニュアル</a>
+      </li>
+      <li class="sp-menu-item">
+        <a href="/announcements" class="sp-menu-link">お知らせ</a>
+      </li>
+      <li class="sp-menu-item">
+        <a href="javascript:void(0);" class="sp-menu-link" id="settings-menu-link">
+          <span>設定</span>
+          <span class="sp-menu-arrow">▶</span>
+        </a>
+      </li>
+      <li class="sp-menu-item">
+        <a href="/signin" class="sp-menu-link sp-menu-link-login">ログアウト</a>
+      </li>
+    </ul>
+    <div class="sp-menu-panel-footer">
+      <button class="sp-menu-close-btn" id="sp-menu-close-btn">閉じる</button>
+    </div>
+  </div>
+
+  <!-- SP版：設定パネルオーバーレイ -->
+  <div class="settings-panel-overlay" id="settings-panel-overlay"></div>
+
+  <!-- SP版：設定パネル -->
+  <div class="settings-panel" id="settings-panel">
+    <div class="settings-panel-header">
+      <h2 class="settings-panel-title">設定</h2>
+    </div>
+    <div class="settings-panel-content">
+      <div class="settings-section">
+        <h3 class="settings-section-title">メニューボタン配置切り替え</h3>
+        <div class="settings-option">
+          <label class="settings-radio-group">
+            <input type="radio" name="menu-button-position" value="left" id="menu-position-left" checked>
+            <span class="settings-radio-label">左下</span>
+          </label>
+          <label class="settings-radio-group">
+            <input type="radio" name="menu-button-position" value="right" id="menu-position-right">
+            <span class="settings-radio-label">右下</span>
+          </label>
+        </div>
+      </div>
+        <div class="settings-section">
+          <h3 class="settings-section-title">レイアウト変更</h3>
+          <div class="settings-option">
+            <label class="settings-radio-group">
+              <input type="radio" name="layout-mode" value="compact" id="layout-mode-compact">
+              <span class="settings-radio-label">コンパクトモード</span>
+            </label>
+            <label class="settings-radio-group">
+              <input type="radio" name="layout-mode" value="standard" id="layout-mode-standard" checked>
+              <span class="settings-radio-label">標準モード</span>
+            </label>
+            <label class="settings-radio-group">
+              <input type="radio" name="layout-mode" value="detailed" id="layout-mode-detailed">
+              <span class="settings-radio-label">詳細モード</span>
+            </label>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3 class="settings-section-title">通知の設定</h3>
+          <div class="settings-option">
+            <label class="settings-checkbox-group">
+              <input type="checkbox" id="notification-sound" checked>
+              <span class="settings-checkbox-label">音声通知</span>
+            </label>
+            <label class="settings-checkbox-group">
+              <input type="checkbox" id="notification-vibration" checked>
+              <span class="settings-checkbox-label">バイブレーション</span>
+            </label>
+            <label class="settings-checkbox-group">
+              <input type="checkbox" id="notification-reminder">
+              <span class="settings-checkbox-label">作業開始リマインダー（15分前）</span>
+            </label>
+          </div>
+        </div>
+      <div class="settings-section">
+        <h3 class="settings-section-title">モード切り替え</h3>
+        <div class="settings-option">
+          <label class="settings-radio-group">
+            <input type="radio" name="theme-mode" value="light" id="theme-mode-light" checked>
+            <span class="settings-radio-label">ライトモード</span>
+          </label>
+          <label class="settings-radio-group">
+            <input type="radio" name="theme-mode" value="dark" id="theme-mode-dark">
+            <span class="settings-radio-label">ダークモード</span>
+          </label>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3 class="settings-section-title">言語切り替え</h3>
+        <div class="settings-option">
+          <p class="settings-placeholder">準備中</p>
+        </div>
+      </div>
+      <div class="settings-panel-footer">
+        <button class="settings-panel-back" id="settings-panel-back">
+          <span>閉じる</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .staff-dashboard {
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+    }
+
+    /* レイアウトモード */
+    .staff-dashboard.layout-compact .dashboard-section {
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .staff-dashboard.layout-compact .section-title {
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+    .staff-dashboard.layout-compact .next-assignment-card {
+      padding: 16px;
+    }
+    .staff-dashboard.layout-compact .location-large {
+      font-size: 1.25rem;
+    }
+    .staff-dashboard.layout-compact .task-detail {
+      font-size: 0.875rem;
+    }
+    .staff-dashboard.layout-compact .action-btn-large {
+      padding: 16px 8px;
+      min-height: 80px;
+    }
+    .staff-dashboard.layout-compact .action-btn-large i {
+      font-size: 1.5rem;
+    }
+    .staff-dashboard.layout-compact .action-btn-large span {
+      font-size: 0.75rem;
+    }
+
+    .staff-dashboard.layout-detailed .dashboard-section {
+      padding: 24px;
+    }
+    .staff-dashboard.layout-detailed .section-title {
+      font-size: 1.25rem;
+      margin-bottom: 20px;
+    }
+    .staff-dashboard.layout-detailed .next-assignment-card {
+      padding: 24px;
+    }
+    .staff-dashboard.layout-detailed .location-large {
+      font-size: 1.75rem;
+    }
+    .staff-dashboard.layout-detailed .task-detail {
+      font-size: 1.125rem;
+    }
+    .staff-dashboard.layout-detailed .meta-item {
+      font-size: 1rem;
+    }
+
+    /* SP版：メニューボタン（左下/右下切り替え対応） */
+    .fixed-menu-button {
+      display: block;
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 80px;
+      height: 80px;
+      z-index: 999998;
+      cursor: pointer;
+      transition: transform 0.3s ease, left 0.3s ease, right 0.3s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .fixed-menu-button.position-right {
+      left: auto;
+      right: 30px;
+    }
+
+    .fixed-menu-button:hover {
+      transform: scale(1.1);
+    }
+
+    .fixed-menu-button__circle {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #FF008C;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(255, 0, 140, 0.4);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .fixed-menu-button * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .fixed-menu-button__circle::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .fixed-menu-button__text {
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* SP版：メニューパネル */
+    .sp-menu-panel {
+      display: none;
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 85vw;
+      max-width: 400px;
+      height: 100vh;
+      background: #FF6BA6;
+      box-shadow: none;
+      border-left: 4px solid rgba(255, 255, 255, 0.5);
+      z-index: 999997;
+      opacity: 0;
+      transform: translateY(-100%);
+      overflow-y: auto;
+      padding: 80px 24px 0;
+      padding-bottom: 100px; /* フッターの高さ分の余白 */
+    }
+
+    /* 左下ボタンの場合：右に展開 */
+    .sp-menu-panel.panel-right {
+      right: 0;
+      left: auto;
+      border-left: 4px solid rgba(255, 255, 255, 0.5);
+      border-right: none;
+    }
+
+    /* 右下ボタンの場合：左に展開 */
+    .sp-menu-panel.panel-left {
+      left: 0;
+      right: auto;
+      border-right: 4px solid rgba(255, 255, 255, 0.5);
+      border-left: none;
+    }
+
+    .sp-menu-panel.open {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+      animation: panelSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    
+    .sp-menu-panel.closing {
+      opacity: 0;
+      transform: translateY(-100%);
+      animation: panelSlideOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    .sp-menu-panel-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.5);
+      z-index: 999996;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .sp-menu-panel-overlay.open {
+      display: block;
+      opacity: 1;
+    }
+
+    /* 白の円形拡大アニメーション */
+    .menu-ripple-overlay {
+      position: fixed;
+      width: 100px;
+      height: 100px;
+      background: #ffffff;
+      z-index: 999995;
+      border-radius: 50%;
+      transform: scale(0);
+      pointer-events: none;
+      opacity: 0;
+      display: none;
+    }
+
+    .menu-ripple-overlay.animating {
+      opacity: 0.9;
+      display: block;
+      animation: rippleExpand 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    
+    .menu-ripple-overlay.collapsing {
+      opacity: 0.9;
+      display: block;
+      animation: rippleSlideUp 0.3s ease forwards;
+    }
+
+    @keyframes rippleExpand {
+      0% {
+        transform: scale(0);
+        opacity: 0.9;
+      }
+      100% {
+        transform: scale(25);
+        opacity: 0.9;
+      }
+    }
+    
+    @keyframes rippleSlideUp {
+      0% {
+        transform: translateY(0) scale(25);
+        opacity: 0.9;
+      }
+      100% {
+        transform: translateY(-100vh) scale(25);
+        opacity: 0;
+      }
+    }
+
+    .sp-menu-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .sp-menu-item {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    
+    .sp-menu-panel.open .sp-menu-item {
+      opacity: 0;
+      animation: menuItemFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    
+    .sp-menu-panel.closing .sp-menu-item {
+      animation: menuItemFadeOut 0.3s ease forwards;
+    }
+    
+    @keyframes panelSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes panelSlideOut {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+    }
+    
+    @keyframes menuItemFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes menuItemFadeOut {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+    }
+    
+    /* 各メニュー項目に時間差を設定（開く時：パネル展開完了後から上から順） */
+    .sp-menu-panel.open .sp-menu-item:nth-child(1) { animation-delay: 0.5s; }
+    .sp-menu-panel.open .sp-menu-item:nth-child(2) { animation-delay: 0.55s; }
+    .sp-menu-panel.open .sp-menu-item:nth-child(3) { animation-delay: 0.6s; }
+    .sp-menu-panel.open .sp-menu-item:nth-child(4) { animation-delay: 0.65s; }
+    .sp-menu-panel.open .sp-menu-item:nth-child(5) { animation-delay: 0.7s; }
+    .sp-menu-panel.open .sp-menu-item:nth-child(6) { animation-delay: 0.75s; }
+    .sp-menu-panel.open .sp-menu-item:nth-child(7) { animation-delay: 0.8s; }
+    .sp-menu-panel.open .sp-menu-item:nth-child(8) { animation-delay: 0.85s; }
+    
+    /* 各メニュー項目に時間差を設定（閉じる時：下から順、逆順） */
+    .sp-menu-panel.closing .sp-menu-item:nth-last-child(1) { animation-delay: 0.05s; }
+    .sp-menu-panel.closing .sp-menu-item:nth-last-child(2) { animation-delay: 0.1s; }
+    .sp-menu-panel.closing .sp-menu-item:nth-last-child(3) { animation-delay: 0.15s; }
+    .sp-menu-panel.closing .sp-menu-item:nth-last-child(4) { animation-delay: 0.2s; }
+    .sp-menu-panel.closing .sp-menu-item:nth-last-child(5) { animation-delay: 0.25s; }
+    .sp-menu-panel.closing .sp-menu-item:nth-last-child(6) { animation-delay: 0.3s; }
+    .sp-menu-panel.closing .sp-menu-item:nth-last-child(7) { animation-delay: 0.35s; }
+    .sp-menu-panel.closing .sp-menu-item:nth-last-child(8) { animation-delay: 0.4s; }
+
+    .sp-menu-item:last-child {
+      border-bottom: none;
+    }
+
+    .sp-menu-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .sp-menu-link:hover {
+      color: #ffffff;
+      opacity: 0.8;
+    }
+
+    .sp-menu-link-login {
+      background-color: #ffffff;
+      color: #FF679C !important;
+      padding: 14px 20px;
+      border-radius: 8px;
+      justify-content: center;
+      text-align: center;
+      margin: 8px 0;
+      border: 2px solid #FF679C;
+    }
+
+    .sp-menu-arrow {
+      font-size: 12px;
+      transition: transform 0.3s ease;
+    }
+
+    /* SP版：メニューパネルフッター */
+    .sp-menu-panel-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(51, 51, 51, 0.95);
+    }
+
+    .sp-menu-close-btn {
+      width: 100%;
+      padding: 14px 20px;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .sp-menu-close-btn:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* SP版：設定パネル */
+    .settings-panel {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+      z-index: 999999;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      overflow-y: auto;
+    }
+
+    /* 左下ボタンの場合：右に展開 */
+    .settings-panel.panel-right {
+      left: 0;
+      right: 0;
+      width: 100vw;
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+      transform: translateX(100%);
+    }
+
+    .settings-panel.panel-right.open {
+      display: block;
+      opacity: 1;
+      transform: translateX(0);
+      animation: settingsPanelSlideInRight 0.3s ease forwards;
+    }
+
+    .settings-panel.panel-right.closing {
+      opacity: 0;
+      transform: translateX(100%);
+      animation: settingsPanelSlideOutRight 0.3s ease forwards;
+    }
+
+    /* 右下ボタンの場合：左に展開 */
+    .settings-panel.panel-left {
+      left: 0;
+      right: 0;
+      width: 100vw;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+      transform: translateX(-100%);
+    }
+
+    .settings-panel.panel-left.open {
+      display: block;
+      opacity: 1;
+      transform: translateX(0);
+      animation: settingsPanelSlideInLeft 0.3s ease forwards;
+    }
+
+    .settings-panel.panel-left.closing {
+      opacity: 0;
+      transform: translateX(-100%);
+      animation: settingsPanelSlideOutLeft 0.3s ease forwards;
+    }
+
+    .settings-panel.open {
+      display: block;
+      opacity: 1;
+    }
+
+    .settings-panel.closing {
+      opacity: 0;
+    }
+
+    /* 設定パネルのアニメーション */
+    @keyframes settingsPanelSlideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes settingsPanelSlideOutRight {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+
+    @keyframes settingsPanelSlideInLeft {
+      from {
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes settingsPanelSlideOutLeft {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+    }
+
+    .settings-panel-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 999998;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .settings-panel-overlay.open {
+      display: block;
+      opacity: 1;
+    }
+
+    .settings-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 24px;
+      background: #FF6BA6;
+      color: #ffffff;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .settings-panel-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+      color: #ffffff;
+    }
+
+    .settings-panel-content {
+      padding: 24px;
+      padding-bottom: 100px;
+      min-height: calc(100vh - 60px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .settings-panel-footer {
+      margin-top: auto;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .settings-panel-back {
+      width: 100%;
+      background: #FF6BA6;
+      border: none;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 14px 20px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s, background 0.2s;
+    }
+
+    .settings-panel-back:hover {
+      opacity: 0.9;
+      background: #FF5A9A;
+    }
+
+    .settings-section {
+      margin-bottom: 32px;
+    }
+
+    .settings-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+    }
+
+    .settings-option {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .settings-radio-group {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      cursor: pointer;
+    }
+
+    .settings-radio-group:not(:last-child) {
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .settings-radio-group input[type="radio"] {
+      margin-right: 12px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .settings-radio-label {
+      font-size: 0.95rem;
+      color: #374151;
+      cursor: pointer;
+    }
+
+    .settings-checkbox-group {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      cursor: pointer;
+    }
+
+    .settings-checkbox-group:not(:last-child) {
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .settings-checkbox-group input[type="checkbox"] {
+      margin-right: 12px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .settings-checkbox-label {
+      font-size: 0.95rem;
+      color: #374151;
+      cursor: pointer;
+    }
+
+    .settings-placeholder {
+      font-size: 0.875rem;
+      color: #9ca3af;
+      margin: 0;
+      padding: 8px 0;
+    }
+
+    /* ダークモード */
+    body.dark-mode {
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    body.dark-mode .staff-dashboard {
+      background: #111827;
+    }
+
+    body.dark-mode .dashboard-section {
+      background: #1f2937;
+      color: #f9fafb;
+    }
+
+    body.dark-mode .section-title {
+      color: #f9fafb;
+    }
+
+    body.dark-mode .schedule-card {
+      background: #374151;
+    }
+
+    body.dark-mode .schedule-time {
+      color: #f9fafb;
+    }
+
+    body.dark-mode .schedule-location {
+      color: #d1d5db;
+    }
+
+    body.dark-mode .schedule-task {
+      color: #9ca3af;
+    }
+
+    body.dark-mode .week-summary {
+      background: #374151;
+    }
+
+    body.dark-mode .stat-value {
+      color: #FF6BA6;
+    }
+
+    body.dark-mode .stat-label {
+      color: #9ca3af;
+    }
+
+    body.dark-mode .pending-card {
+      background: #78350f;
+    }
+
+    body.dark-mode .pending-date {
+      color: #fef3c7;
+    }
+
+    body.dark-mode .pending-location {
+      color: #fde68a;
+    }
+
+    body.dark-mode .action-btn {
+      background: #374151;
+      border-color: #4b5563;
+      color: #f9fafb;
+    }
+
+    body.dark-mode .action-btn:hover {
+      background: #4b5563;
+      border-color: #FF6BA6;
+      color: #FF6BA6;
+    }
+
+    /* 次の作業カード - ダークモード */
+    body.dark-mode .next-assignment-card {
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    }
+
+    /* クイックアクション - ダークモード */
+    body.dark-mode .action-btn-large {
+      background: #374151;
+      border-color: #4b5563;
+      color: #f9fafb;
+    }
+
+    body.dark-mode .action-btn-large:hover {
+      background: #4b5563;
+      border-color: var(--primary);
+    }
+
+    /* 作業完了待ち - ダークモード（改善版） */
+    body.dark-mode .pending-card.urgent {
+      background: #7f1d1d;
+      border-left-color: #ef4444;
+    }
+
+    body.dark-mode .pending-card.normal {
+      background: #78350f;
+      border-left-color: #f59e0b;
+    }
+
+    body.dark-mode .pending-card.urgent .pending-location,
+    body.dark-mode .pending-card.urgent .pending-date {
+      color: #fee2e2;
+    }
+
+    body.dark-mode .pending-card.urgent .countdown {
+      color: #fee2e2;
+    }
+
+    body.dark-mode .btn-report-now {
+      background: #374151;
+      color: #f59e0b;
+      border-color: #f59e0b;
+    }
+
+    body.dark-mode .pending-card.urgent .btn-report-now {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+
+    /* タイムライン - ダークモード */
+    body.dark-mode .schedule-timeline::before {
+      background: #4b5563;
+    }
+
+    body.dark-mode .timeline-content {
+      background: #374151;
+      border-color: #4b5563;
+    }
+
+    body.dark-mode .timeline-item.current .timeline-content {
+      background: #581c87;
+      border-color: #a855f7;
+    }
+
+    body.dark-mode .timeline-item.completed .timeline-content {
+      background: #064e3b;
+      border-color: #10b981;
+    }
+
+    body.dark-mode .timeline-time {
+      color: #f9fafb;
+    }
+
+    body.dark-mode .timeline-details .location {
+      color: #f9fafb;
+    }
+
+    body.dark-mode .timeline-details .task {
+      color: #d1d5db;
+    }
+
+    body.dark-mode .timeline-marker.upcoming {
+      background: #4b5563;
+      color: #9ca3af;
+    }
+
+    body.dark-mode .settings-panel {
+      background: #1f2937;
+    }
+
+    body.dark-mode .settings-panel-header {
+      background: #FF6BA6;
+    }
+
+    body.dark-mode .settings-section-title {
+      color: #f9fafb;
+    }
+
+    body.dark-mode .settings-option {
+      background: #374151;
+    }
+
+    body.dark-mode .settings-radio-label {
+      color: #f9fafb;
+    }
+
+    body.dark-mode .settings-placeholder {
+      color: #6b7280;
+    }
+
+    body.dark-mode .settings-panel-footer {
+      border-top-color: #4b5563;
+    }
+
+    body.dark-mode .sp-menu-panel-overlay {
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    body.dark-mode .sp-menu-panel-footer {
+      background: rgba(45, 55, 72, 0.95);
+      border-top-color: rgba(255, 255, 255, 0.1);
+    }
+
+    body.dark-mode .sp-menu-close-btn {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    body.dark-mode .sp-menu-close-btn:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    @media (min-width: 769px) {
+      .fixed-menu-button {
+        bottom: 50px;
+        left: 50px;
+        width: 150px;
+        height: 150px;
+      }
+
+      .fixed-menu-button.position-right {
+        left: auto;
+        right: 50px;
+      }
+
+      .fixed-menu-button__text {
+        font-size: 14px;
+      }
+    }
+    .dashboard-section {
+      margin-bottom: 24px;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title i {
+      color: var(--primary);
+    }
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .schedule-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
+    }
+    .schedule-time {
+      min-width: 60px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #111827;
+      text-align: center;
+    }
+    .schedule-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .schedule-location {
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .schedule-location i {
+      color: var(--primary);
+      font-size: 0.875rem;
+    }
+    .schedule-task {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .schedule-status {
+      flex-shrink: 0;
+    }
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-upcoming {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .status-completed {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .week-summary {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    .week-stat {
+      flex: 1;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1.2;
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    /* 作業完了待ち（改善版） */
+    .pending-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .pending-card {
+      padding: 16px;
+      border-radius: 12px;
+      border-left: 4px solid;
+      transition: all 0.2s;
+    }
+    .pending-card.urgent {
+      background: #fee2e2;
+      border-left-color: #ef4444;
+    }
+    .pending-card.normal {
+      background: #fef3c7;
+      border-left-color: #f59e0b;
+    }
+    .pending-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .urgent-badge {
+      background: #ef4444;
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .normal-badge {
+      background: #f59e0b;
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .countdown {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #92400e;
+    }
+    .pending-card.urgent .countdown {
+      color: #991b1b;
+    }
+    .pending-content {
+      margin-bottom: 12px;
+    }
+    .pending-location {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #78350f;
+      margin-bottom: 4px;
+    }
+    .pending-card.urgent .pending-location {
+      color: #991b1b;
+    }
+    .pending-date {
+      font-size: 0.875rem;
+      color: #92400e;
+    }
+    .pending-card.urgent .pending-date {
+      color: #991b1b;
+    }
+    .btn-report-now {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px;
+      background: #ffffff;
+      color: #f59e0b;
+      border: 2px solid #f59e0b;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .pending-card.urgent .btn-report-now {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+    .btn-report-now:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    .btn-report-now i {
+      font-size: 1rem;
+    }
+
+    /* タイムライン表示 */
+    .schedule-timeline {
+      position: relative;
+      padding-left: 32px;
+    }
+    .schedule-timeline::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #e5e7eb;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 24px;
+    }
+    .timeline-item:last-child {
+      margin-bottom: 0;
+    }
+    .timeline-marker {
+      position: absolute;
+      left: -24px;
+      top: 4px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      z-index: 1;
+    }
+    .timeline-marker.completed {
+      background: #10b981;
+      color: #ffffff;
+    }
+    .timeline-marker.current {
+      background: #FF6BA6;
+      color: #ffffff;
+      animation: pulse 2s infinite;
+    }
+    .timeline-marker.upcoming {
+      background: #e5e7eb;
+      color: #6b7280;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(255, 107, 166, 0.7);
+      }
+      50% {
+        box-shadow: 0 0 0 8px rgba(255, 107, 166, 0);
+      }
+    }
+    .timeline-content {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+    }
+    .timeline-item.current .timeline-content {
+      background: #fef3f2;
+      border-color: #FF6BA6;
+    }
+    .timeline-item.completed .timeline-content {
+      background: #f0fdf4;
+      border-color: #10b981;
+    }
+    .timeline-time {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    .timeline-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .timeline-details .location {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+    }
+    .timeline-details .task {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .status-check {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      background: #10b981;
+      color: #ffffff;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-current {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      background: #FF6BA6;
+      color: #ffffff;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-upcoming {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      background: #dbeafe;
+      color: #1e40af;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    /* オフラインインジケーター */
+    .offline-indicator {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #fef3c7;
+      border-bottom: 2px solid #f59e0b;
+      padding: 12px 16px;
+      z-index: 1000000;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .offline-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #92400e;
+    }
+    .offline-indicator.online {
+      background: #d1fae5;
+      border-bottom-color: #10b981;
+    }
+    .offline-indicator.online .offline-content {
+      color: #065f46;
+    }
+    .offline-indicator i {
+      font-size: 1rem;
+    }
+
+    /* 次の作業カード */
+    .next-assignment-section {
+      margin-top: 60px; /* オフラインインジケーターのスペース */
+      margin-bottom: 24px;
+    }
+    @media (max-width: 768px) {
+      .next-assignment-section {
+        margin-top: 50px;
+      }
+    }
+    .next-assignment-card {
+      background: linear-gradient(135deg, #FF6BA6 0%, #FF8CC8 100%);
+      border-radius: 16px;
+      padding: 20px;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(255, 107, 166, 0.3);
+    }
+    .assignment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .badge-next {
+      background: rgba(255, 255, 255, 0.25);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      backdrop-filter: blur(10px);
+    }
+    .time-remaining {
+      background: rgba(255, 255, 255, 0.25);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      backdrop-filter: blur(10px);
+    }
+    .assignment-main {
+      margin-bottom: 20px;
+    }
+    .location-large {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .location-large i {
+      font-size: 1.25rem;
+    }
+    .task-detail {
+      font-size: 1rem;
+      margin-bottom: 12px;
+      opacity: 0.95;
+      line-height: 1.5;
+    }
+    .assignment-meta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.875rem;
+      opacity: 0.9;
+    }
+    .meta-item i {
+      font-size: 0.75rem;
+    }
+    .assignment-actions {
+      display: flex;
+      gap: 12px;
+      flex-direction: column;
+    }
+    .btn-start-assignment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 24px;
+      background: #ffffff;
+      color: #FF6BA6;
+      border-radius: 12px;
+      font-size: 1.125rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .btn-start-assignment:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .btn-start-assignment i {
+      font-size: 1.5rem;
+    }
+    .link-map {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      text-decoration: none;
+      transition: all 0.2s;
+      backdrop-filter: blur(10px);
+    }
+    .link-map:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* クイックアクション（改善版） */
+    .quick-actions-compact {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .action-btn-large {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 20px 12px;
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #374151;
+      transition: all 0.2s;
+      min-height: 100px;
+    }
+    .action-btn-large:hover {
+      background: #ffffff;
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .action-btn-large i {
+      font-size: 2rem;
+      color: var(--primary);
+    }
+    .action-btn-large span {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-align: center;
+    }
+    @media (max-width: 768px) {
+      .staff-dashboard {
+        padding: 12px;
+      }
+      .dashboard-section {
+        padding: 12px;
+      }
+      .quick-actions-compact {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .next-assignment-card {
+        padding: 16px;
+      }
+      .location-large {
+        font-size: 1.25rem;
+      }
+      .assignment-meta {
+        gap: 12px;
+      }
+      .meta-item {
+        font-size: 0.75rem;
+      }
+    }
+  </style>
+
+  <script>
+    // SP版：メニューボタンとメニューパネルの制御
+    (function() {
+      const menuButton = document.getElementById('fixed-menu-button');
+      const menuPanel = document.getElementById('sp-menu-panel');
+      const menuOverlay = document.getElementById('sp-menu-panel-overlay');
+      
+      if (!menuButton || !menuPanel || !menuOverlay) return;
+      
+      // リップルオーバーレイを作成
+      let rippleOverlay = document.querySelector('.menu-ripple-overlay');
+      if (!rippleOverlay) {
+        rippleOverlay = document.createElement('div');
+        rippleOverlay.className = 'menu-ripple-overlay';
+        document.body.appendChild(rippleOverlay);
+      }
+
+      // メニューパネルとリップルオーバーレイを完全にリセットする関数（グローバルスコープで使用可能にする）
+      window.resetMenuPanel = function() {
+        // メニューパネルの状態をリセット
+        if (menuPanel) {
+          menuPanel.classList.remove('open', 'closing');
+        }
+        if (menuOverlay) {
+          menuOverlay.classList.remove('open');
+        }
+        // リップルオーバーレイをリセット
+        if (rippleOverlay) {
+          rippleOverlay.classList.remove('animating', 'collapsing');
+          rippleOverlay.style.display = 'none';
+          rippleOverlay.style.opacity = '0';
+          rippleOverlay.style.transform = 'scale(0)';
+          rippleOverlay.style.top = '';
+          rippleOverlay.style.left = '';
+          rippleOverlay.style.width = '';
+          rippleOverlay.style.height = '';
+        }
+        document.body.style.overflow = '';
+      };
+
+      // 後方互換性のため、resetRippleOverlayも残す
+      window.resetRippleOverlay = window.resetMenuPanel;
+      
+      // メニューの開閉
+      function toggleMenu() {
+        const isOpen = menuPanel.classList.contains('open');
+        if (isOpen) {
+          closeMenu();
+        } else {
+          openMenu();
+        }
+      }
+      
+      function openMenu() {
+        // 既に開いている場合は何もしない
+        if (menuPanel.classList.contains('open')) {
+          return;
+        }
+        
+        // 閉じている最中の場合は、まず完全にリセット
+        if (menuPanel.classList.contains('closing')) {
+          window.resetMenuPanel();
+          // リセット後に少し待ってから開く
+          setTimeout(() => {
+            openMenu();
+          }, 50);
+          return;
+        }
+        
+        // メニューパネルとリップルオーバーレイの状態をクリア
+        menuPanel.classList.remove('closing');
+        rippleOverlay.classList.remove('animating', 'collapsing');
+        
+        // ボタンの位置を取得
+        const buttonRect = menuButton.getBoundingClientRect();
+        const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+        const buttonCenterY = buttonRect.top + buttonRect.height / 2;
+        
+        // リップルオーバーレイの初期サイズ（ボタンと同じサイズ）
+        const initialSize = 100;
+        
+        // リップルオーバーレイの位置をボタンの中心に設定
+        rippleOverlay.style.width = initialSize + 'px';
+        rippleOverlay.style.height = initialSize + 'px';
+        rippleOverlay.style.left = (buttonCenterX - initialSize / 2) + 'px';
+        rippleOverlay.style.top = (buttonCenterY - initialSize / 2) + 'px';
+        rippleOverlay.style.transform = 'scale(0)';
+        rippleOverlay.style.transformOrigin = 'center center';
+        rippleOverlay.style.display = 'block';
+        rippleOverlay.style.opacity = '0';
+        
+        // リップルアニメーション開始（次のフレームで開始）
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            rippleOverlay.classList.add('animating');
+          });
+        });
+        
+        // アニメーション完了後にパネルを表示
+        setTimeout(() => {
+          // 再度状態を確認（閉じられている場合は何もしない）
+          if (!menuPanel.classList.contains('closing')) {
+            menuPanel.classList.add('open');
+            menuOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+          }
+        }, 400); // リップルアニメーションの時間（0.4s）
+      }
+      
+      function closeMenu() {
+        // 閉じるアニメーション開始
+        menuPanel.classList.remove('open');
+        menuPanel.classList.add('closing');
+        menuOverlay.classList.remove('open');
+        
+        // リップルオーバーレイを上にスライドアウト
+        if (rippleOverlay.classList.contains('animating')) {
+          rippleOverlay.classList.remove('animating');
+          rippleOverlay.classList.add('collapsing');
+        }
+        
+        // アニメーション完了後にリセット
+        setTimeout(() => {
+          window.resetMenuPanel();
+          document.body.style.overflow = '';
+        }, 300); // アニメーション時間（0.3s）
+      }
+      
+      // メニューボタンのクリックイベント
+      menuButton.addEventListener('click', toggleMenu);
+      
+      // オーバーレイのクリックイベント
+      menuOverlay.addEventListener('click', closeMenu);
+      
+      // メニュー内のリンクをクリックしたらメニューを閉じる
+      menuPanel.querySelectorAll('a[href^="/"]').forEach(link => {
+        link.addEventListener('click', function() {
+          if (this.getAttribute('href') !== 'javascript:void(0);') {
+            closeMenu();
+          }
+        });
+      });
+
+      // メニューパネルの閉じるボタン
+      const menuCloseBtn = document.getElementById('sp-menu-close-btn');
+      if (menuCloseBtn) {
+        menuCloseBtn.addEventListener('click', closeMenu);
+      }
+    })();
+
+    // 設定パネルの制御
+    (function() {
+      const settingsPanel = document.getElementById('settings-panel');
+      const settingsOverlay = document.getElementById('settings-panel-overlay');
+      const settingsBack = document.getElementById('settings-panel-back');
+      const settingsMenuLink = document.getElementById('settings-menu-link');
+      
+      if (!settingsPanel || !settingsOverlay || !settingsBack) return;
+
+      // グローバルスコープで設定パネルを開く関数を定義
+      window.openSettingsPanel = function() {
+        // メニューパネルを完全に閉じてリセット
+        if (window.resetMenuPanel) {
+          window.resetMenuPanel();
+        }
+        
+        // 現在のメニューボタンの位置を取得して、設定パネルの展開方向を設定
+        const menuButton = document.getElementById('fixed-menu-button');
+        const currentPosition = localStorage.getItem('staff-menu-button-position') || 'left';
+        settingsPanel.classList.remove('panel-left', 'panel-right');
+        if (currentPosition === 'right') {
+          settingsPanel.classList.add('panel-right'); // 右下ボタン → 右に展開（メニューパネルと逆）
+        } else {
+          settingsPanel.classList.add('panel-left'); // 左下ボタン → 左に展開（メニューパネルと逆）
+        }
+        
+        // 設定パネルを開く（少し待ってから開く）
+        setTimeout(() => {
+          settingsPanel.classList.remove('closing');
+          settingsPanel.classList.add('open');
+          settingsOverlay.classList.add('open');
+          document.body.style.overflow = 'hidden';
+        }, 100);
+      };
+
+      function closeSettingsPanel(resetMenu = false) {
+        settingsPanel.classList.remove('open');
+        settingsPanel.classList.add('closing');
+        settingsOverlay.classList.remove('open');
+        
+        setTimeout(() => {
+          settingsPanel.classList.remove('closing');
+          // オーバーレイを完全にリセット
+          settingsOverlay.style.display = 'none';
+          settingsOverlay.style.opacity = '0';
+          
+          // 閉じるボタンが押された場合は、メニューパネルもリセット
+          if (resetMenu && window.resetMenuPanel) {
+            window.resetMenuPanel();
+            document.body.style.overflow = '';
+          }
+        }, 300);
+      }
+
+      // 設定メニューリンクのクリックイベント
+      if (settingsMenuLink) {
+        settingsMenuLink.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.openSettingsPanel();
+        });
+      }
+
+      // 閉じるボタンのクリックイベント（アニメーションをリセット）
+      settingsBack.addEventListener('click', function() {
+        closeSettingsPanel(true);
+      });
+      
+      // オーバーレイのクリックイベント（メニューパネルは残す）
+      settingsOverlay.addEventListener('click', function() {
+        closeSettingsPanel(false);
+      });
+
+      // メニューパネルと設定パネルの展開方向を更新する関数
+      function updatePanelPosition(position) {
+        const menuPanel = document.getElementById('sp-menu-panel');
+        if (menuPanel) {
+          menuPanel.classList.remove('panel-left', 'panel-right');
+          if (position === 'right') {
+            menuPanel.classList.add('panel-left'); // 右下ボタン → 左に展開
+          } else {
+            menuPanel.classList.add('panel-right'); // 左下ボタン → 右に展開
+          }
+        }
+        if (settingsPanel) {
+          settingsPanel.classList.remove('panel-left', 'panel-right');
+          if (position === 'right') {
+            settingsPanel.classList.add('panel-right'); // 右下ボタン → 右に展開（メニューパネルと逆）
+          } else {
+            settingsPanel.classList.add('panel-left'); // 左下ボタン → 左に展開（メニューパネルと逆）
+          }
+        }
+      }
+
+      // メニューボタン配置切り替え
+      const menuPositionLeft = document.getElementById('menu-position-left');
+      const menuPositionRight = document.getElementById('menu-position-right');
+      const menuButton = document.getElementById('fixed-menu-button');
+
+      // 保存された設定を読み込む
+      const savedPosition = localStorage.getItem('staff-menu-button-position') || 'left';
+      if (savedPosition === 'right') {
+        if (menuPositionRight) menuPositionRight.checked = true;
+        if (menuButton) {
+          menuButton.classList.add('position-right');
+        }
+      } else {
+        if (menuPositionLeft) menuPositionLeft.checked = true;
+        if (menuButton) {
+          menuButton.classList.remove('position-right');
+        }
+      }
+      // 初期状態でパネルの展開方向を設定
+      updatePanelPosition(savedPosition);
+
+      // ラジオボタンの変更イベント
+      if (menuPositionLeft && menuPositionRight && menuButton) {
+        menuPositionLeft.addEventListener('change', function() {
+          if (this.checked) {
+            menuButton.classList.remove('position-right');
+            localStorage.setItem('staff-menu-button-position', 'left');
+            updatePanelPosition('left');
+          }
+        });
+
+        menuPositionRight.addEventListener('change', function() {
+          if (this.checked) {
+            menuButton.classList.add('position-right');
+            localStorage.setItem('staff-menu-button-position', 'right');
+            updatePanelPosition('right');
+          }
+        });
+      }
+
+      // ダークモード切り替え
+      const themeModeLight = document.getElementById('theme-mode-light');
+      const themeModeDark = document.getElementById('theme-mode-dark');
+
+      // 保存されたテーマ設定を読み込む
+      const savedTheme = localStorage.getItem('staff-theme-mode') || 'light';
+      if (savedTheme === 'dark') {
+        if (themeModeDark) themeModeDark.checked = true;
+        document.body.classList.add('dark-mode');
+      } else {
+        if (themeModeLight) themeModeLight.checked = true;
+        document.body.classList.remove('dark-mode');
+      }
+
+      // テーマ切り替えイベント
+      if (themeModeLight && themeModeDark) {
+        themeModeLight.addEventListener('change', function() {
+          if (this.checked) {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('staff-theme-mode', 'light');
+          }
+        });
+
+        themeModeDark.addEventListener('change', function() {
+          if (this.checked) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('staff-theme-mode', 'dark');
+          }
+        });
+      }
+    })();
+
+    // カウントダウンタイマー
+    (function() {
+      function updateCountdowns() {
+        const countdowns = document.querySelectorAll('.countdown[data-deadline]');
+        const now = new Date().getTime();
+
+        countdowns.forEach(function(countdown) {
+          const deadline = new Date(countdown.getAttribute('data-deadline')).getTime();
+          const diff = deadline - now;
+
+          if (diff <= 0) {
+            countdown.textContent = '期限切れ';
+            countdown.style.color = '#ef4444';
+            return;
+          }
+
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const days = Math.floor(hours / 24);
+
+          if (days > 0) {
+            countdown.textContent = `期限まで ${days}日`;
+          } else if (hours > 0) {
+            countdown.textContent = `期限まで ${hours}時間${minutes > 0 ? minutes + '分' : ''}`;
+          } else {
+            countdown.textContent = `期限まで ${minutes}分`;
+          }
+        });
+      }
+
+      // 初回実行
+      updateCountdowns();
+      // 1分ごとに更新
+      setInterval(updateCountdowns, 60000);
+    })();
+
+
+    // オフライン対応の可視化
+    (function() {
+      const offlineIndicator = document.getElementById('offline-indicator');
+      const offlineIcon = document.getElementById('offline-icon');
+      const offlineText = document.getElementById('offline-text');
+      const pendingCountEl = document.getElementById('pending-count');
+      
+      if (!offlineIndicator) return;
+
+      function updateOnlineStatus() {
+        const isOnline = navigator.onLine;
+        const pendingCount = document.querySelectorAll('.pending-card').length;
+        
+        if (isOnline) {
+          offlineIndicator.style.display = 'none';
+        } else {
+          offlineIndicator.style.display = 'block';
+          offlineIndicator.classList.remove('online');
+          offlineIcon.className = 'fas fa-wifi-slash';
+          offlineText.textContent = `オフライン（同期待ち: ${pendingCount}件）`;
+          if (pendingCountEl) {
+            pendingCountEl.textContent = pendingCount;
+          }
+        }
+      }
+
+      // 初回チェック
+      updateOnlineStatus();
+
+      // オンライン/オフラインイベント
+      window.addEventListener('online', function() {
+        offlineIndicator.style.display = 'block';
+        offlineIndicator.classList.add('online');
+        offlineIcon.className = 'fas fa-wifi';
+        offlineText.textContent = '● オンライン';
+        setTimeout(function() {
+          offlineIndicator.style.display = 'none';
+        }, 3000);
+      });
+
+      window.addEventListener('offline', function() {
+        updateOnlineStatus();
+      });
+
+      // 定期的にチェック（ネットワーク状態が正確でない場合があるため）
+      setInterval(updateOnlineStatus, 5000);
+    })();
+
+    // 音声・バイブレーション通知
+    (function() {
+      // 通知設定の読み込み
+      const soundEnabled = localStorage.getItem('staff-notification-sound') !== 'false';
+      const vibrationEnabled = localStorage.getItem('staff-notification-vibration') !== 'false';
+      const reminderEnabled = localStorage.getItem('staff-notification-reminder') === 'true';
+
+      // 通知設定の保存
+      const notificationSound = document.getElementById('notification-sound');
+      const notificationVibration = document.getElementById('notification-vibration');
+      const notificationReminder = document.getElementById('notification-reminder');
+
+      if (notificationSound) {
+        notificationSound.checked = soundEnabled;
+        notificationSound.addEventListener('change', function() {
+          localStorage.setItem('staff-notification-sound', this.checked);
+        });
+      }
+
+      if (notificationVibration) {
+        notificationVibration.checked = vibrationEnabled;
+        notificationVibration.addEventListener('change', function() {
+          localStorage.setItem('staff-notification-vibration', this.checked);
+        });
+      }
+
+      if (notificationReminder) {
+        notificationReminder.checked = reminderEnabled;
+        notificationReminder.addEventListener('change', function() {
+          localStorage.setItem('staff-notification-reminder', this.checked);
+        });
+      }
+
+      // 通知を送信する関数
+      window.sendNotification = function(message, type) {
+        if (vibrationEnabled && 'vibrate' in navigator) {
+          navigator.vibrate(200);
+        }
+
+        if (soundEnabled) {
+          // 音声通知（Web Audio APIを使用）
+          try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+          } catch (e) {
+            console.log('音声通知エラー:', e);
+          }
+        }
+      };
+
+    })();
+
+    // 打刻履歴表示機能
+    (function() {
+      const REPORT_API = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+      // IDトークン取得
+      async function getFirebaseIdToken() {
+        try {
+          const cognitoIdToken = localStorage.getItem('cognito_id_token');
+          if (cognitoIdToken) return cognitoIdToken;
+          
+          const cognitoUser = localStorage.getItem('cognito_user');
+          if (cognitoUser) {
+            try {
+              const parsed = JSON.parse(cognitoUser);
+              if (parsed.tokens && parsed.tokens.idToken) return parsed.tokens.idToken;
+              if (parsed.idToken) return parsed.idToken;
+            } catch (e) {
+              console.warn('Error parsing cognito user:', e);
+            }
+          }
+          
+          const authData = localStorage.getItem('misesapo_auth');
+          if (authData) {
+            try {
+              const parsed = JSON.parse(authData);
+              if (parsed.token) return parsed.token;
+            } catch (e) {
+              console.warn('Error parsing auth data:', e);
+            }
+          }
+          
+          return 'dev-token';
+        } catch (error) {
+          console.error('Error getting ID token:', error);
+          return 'dev-token';
+        }
+      }
+
+      // 現在のユーザーIDを取得
+      function getCurrentUserId() {
+        try {
+          const cognitoUser = localStorage.getItem('cognito_user');
+          if (cognitoUser) {
+            const parsed = JSON.parse(cognitoUser);
+            return parsed.username || parsed.email?.split('@')[0] || 'WKR_001';
+          }
+          
+          const authData = localStorage.getItem('misesapo_auth');
+          if (authData) {
+            const parsed = JSON.parse(authData);
+            return parsed.user?.id || parsed.user?.email?.split('@')[0] || 'WKR_001';
+          }
+          
+          return 'WKR_001';
+        } catch (e) {
+          console.error('Error getting user ID:', e);
+          return 'WKR_001';
+        }
+      }
+
+      // 打刻履歴を読み込み
+      async function loadClockInHistory() {
+        const historyList = document.getElementById('clock-in-history-list');
+        if (!historyList) return;
+
+        try {
+          const user_id = getCurrentUserId();
+          const token = await getFirebaseIdToken();
+          
+          console.log('[Clock-in History] Loading for user:', user_id);
+          console.log('[Clock-in History] Token available:', token !== 'dev-token');
+          
+          const response = await fetch(`${REPORT_API}/staff/nfc/clock-in?user_id=${user_id}&limit=5`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          console.log('[Clock-in History] Response status:', response.status);
+
+          if (!response.ok) {
+            let errorData = {};
+            try {
+              const text = await response.text();
+              errorData = text ? JSON.parse(text) : {};
+            } catch (e) {
+              errorData = { error: `HTTP ${response.status}`, message: response.statusText };
+            }
+            
+            console.error('[Clock-in History] Error response:', errorData);
+            
+            // エラー情報を含むオブジェクトを作成
+            const error = new Error(errorData.message || errorData.error || `HTTP ${response.status}: 打刻履歴の取得に失敗しました`);
+            error.response = { status: response.status, statusText: response.statusText };
+            error.errorData = errorData;
+            throw error;
+          }
+
+          let result;
+          try {
+            const responseText = await response.text();
+            console.log('[Clock-in History] Response text length:', responseText.length);
+            console.log('[Clock-in History] Response text (first 500 chars):', responseText.substring(0, 500));
+            
+            if (!responseText || responseText.trim() === '') {
+              throw new Error('空のレスポンスが返されました');
+            }
+            
+            result = JSON.parse(responseText);
+            console.log('[Clock-in History] Result:', result);
+          } catch (parseError) {
+            console.error('[Clock-in History] JSON parse error:', parseError);
+            console.error('[Clock-in History] Parse error stack:', parseError.stack);
+            throw new Error(`レスポンスの解析に失敗しました: ${parseError.message}`);
+          }
+          
+          const logs = result.logs || [];
+
+          if (logs.length === 0) {
+            historyList.innerHTML = `
+              <div class="empty-state" style="text-align: center; padding: 20px; color: #6b7280; background: #f9fafb; border-radius: 8px;">
+                <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 8px; opacity: 0.5;"></i>
+                <p style="margin: 0; font-size: 0.875rem;">打刻履歴がありません</p>
+              </div>
+            `;
+            return;
+          }
+
+          historyList.innerHTML = logs.map(log => {
+            const timestamp = new Date(log.timestamp);
+            const dateStr = timestamp.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
+            const timeStr = timestamp.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            
+            return `
+              <div class="clock-in-history-item" style="padding: 12px; background: #fff; border-radius: 8px; border-left: 4px solid #FF679C; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                  <div style="flex: 1;">
+                    <div style="font-size: 0.875rem; font-weight: 600; color: #111827; margin-bottom: 4px;">
+                      ${log.facility_id || 'N/A'} - ${log.location_id || 'N/A'}
+                    </div>
+                    <div style="font-size: 0.75rem; color: #6b7280;">
+                      ${dateStr} ${timeStr}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+        } catch (error) {
+          console.error('[Clock-in History] Error:', error);
+          console.error('[Clock-in History] Error name:', error.name);
+          console.error('[Clock-in History] Error message:', error.message);
+          console.error('[Clock-in History] Error stack:', error.stack);
+          
+          // エラーの詳細を取得
+          let errorMessage = '打刻履歴の読み込みに失敗しました';
+          let errorDetail = '';
+          
+          if (error.message) {
+            errorMessage = error.message;
+          } else if (error.toString && error.toString() !== '[object Object]') {
+            errorMessage = error.toString();
+          }
+          
+          // ネットワークエラーの場合
+          if (error.name === 'TypeError' && error.message && error.message.includes('fetch')) {
+            errorDetail = 'ネットワークエラー: サーバーに接続できませんでした';
+          }
+          // HTTPエラーの場合
+          else if (error.response) {
+            errorDetail = `HTTP ${error.response.status}: ${error.response.statusText}`;
+            if (error.errorData && error.errorData.message) {
+              errorDetail += ` - ${error.errorData.message}`;
+            }
+          }
+          // その他のエラー
+          else {
+            errorDetail = error.toString();
+            if (error.stack) {
+              errorDetail += `\n${error.stack.split('\n').slice(0, 3).join('\n')}`;
+            }
+          }
+          
+          // 403エラーの場合は認証エラーとして表示
+          if (error.response && error.response.status === 403) {
+            errorMessage = '認証エラー: ログインが必要です';
+            errorDetail = 'ページを再読み込みして、再度ログインしてください';
+          }
+          
+          historyList.innerHTML = `
+            <div class="error-state" style="text-align: center; padding: 20px; color: #ef4444; background: #fef2f2; border-radius: 8px;">
+              <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 8px;"></i>
+              <p style="margin: 0; font-size: 0.875rem; margin-bottom: 8px; font-weight: 600;">打刻履歴の読み込みに失敗しました</p>
+              <p style="margin: 0; font-size: 0.75rem; color: #dc2626; margin-bottom: 4px;">${errorMessage || 'エラーが発生しました'}</p>
+              ${errorDetail ? `<p style="margin: 0; font-size: 0.7rem; color: #9ca3af; word-break: break-all; margin-bottom: 8px; white-space: pre-wrap;">${errorDetail}</p>` : ''}
+              <button type="button" onclick="location.reload()" style="margin-top: 12px; padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
+                再読み込み
+              </button>
+            </div>
+          `;
+        }
+      }
+
+      // 更新ボタンのイベントリスナー
+      const refreshBtn = document.getElementById('btn-refresh-clock-in');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+          loadClockInHistory();
+        });
+      }
+
+      // ページ読み込み時に履歴を読み込み
+      window.addEventListener('DOMContentLoaded', () => {
+        loadClockInHistory();
+      });
+
+      // NFCタグ打刻成功時に履歴を更新
+      window.addEventListener('nfc-clock-in-success', () => {
+        setTimeout(() => {
+          loadClockInHistory();
+        }, 1000);
+      });
+
+      // グローバルスコープに公開（他のIIFEからアクセス可能にする）
+      window.loadClockInHistory = loadClockInHistory;
+    })();
+
+    // NFCタグ打刻処理（バックグラウンド）
+    (function() {
+      const REPORT_API = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+      // IDトークン取得
+      async function getFirebaseIdToken() {
+        try {
+          const cognitoIdToken = localStorage.getItem('cognito_id_token');
+          if (cognitoIdToken) return cognitoIdToken;
+          
+          const cognitoUser = localStorage.getItem('cognito_user');
+          if (cognitoUser) {
+            try {
+              const parsed = JSON.parse(cognitoUser);
+              if (parsed.tokens && parsed.tokens.idToken) return parsed.tokens.idToken;
+              if (parsed.idToken) return parsed.idToken;
+            } catch (e) {
+              console.warn('Error parsing cognito user:', e);
+            }
+          }
+          
+          const authData = localStorage.getItem('misesapo_auth');
+          if (authData) {
+            try {
+              const parsed = JSON.parse(authData);
+              if (parsed.token) return parsed.token;
+            } catch (e) {
+              console.warn('Error parsing auth data:', e);
+            }
+          }
+          
+          return 'dev-token';
+        } catch (error) {
+          console.error('Error getting ID token:', error);
+          return 'dev-token';
+        }
+      }
+
+      // 現在のユーザーIDを取得
+      function getCurrentUserId() {
+        try {
+          const cognitoUser = localStorage.getItem('cognito_user');
+          if (cognitoUser) {
+            const parsed = JSON.parse(cognitoUser);
+            return parsed.username || parsed.email?.split('@')[0] || 'WKR_001';
+          }
+          
+          const authData = localStorage.getItem('misesapo_auth');
+          if (authData) {
+            const parsed = JSON.parse(authData);
+            return parsed.user?.id || parsed.user?.email?.split('@')[0] || 'WKR_001';
+          }
+          
+          return 'WKR_001';
+        } catch (e) {
+          console.error('Error getting user ID:', e);
+          return 'WKR_001';
+        }
+      }
+
+      // 打刻を実行
+      async function recordClockIn(facilityId, locationId) {
+        try {
+          const user_id = getCurrentUserId();
+          
+          const response = await fetch(`${REPORT_API}/staff/nfc/clock-in`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            },
+            body: JSON.stringify({
+              user_id: user_id,
+              facility_id: facilityId,
+              location_id: locationId
+            })
+          });
+
+          let result;
+          try {
+            const responseText = await response.text();
+            console.log('[NFC Clock-in] Clock-in response text:', responseText);
+            result = JSON.parse(responseText);
+          } catch (parseError) {
+            console.error('[NFC Clock-in] JSON parse error:', parseError);
+            throw new Error('打刻レスポンスの解析に失敗しました');
+          }
+
+          if (response.ok && result.status === 'success') {
+            return { success: true, result: result };
+          } else {
+            throw new Error(result.error || '打刻に失敗しました');
+          }
+        } catch (error) {
+          console.error('Clock-in error:', error);
+          return { success: false, error: error.message };
+        }
+      }
+
+      // トースト通知を表示
+      function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: ${type === 'success' ? '#22c55e' : '#ef4444'};
+          color: white;
+          padding: 16px 24px;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          z-index: 10000;
+          font-size: 0.875rem;
+          font-weight: 500;
+          animation: slideIn 0.3s ease-out;
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.animation = 'slideOut 0.3s ease-out';
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+
+      // スタイルを追加
+      if (!document.getElementById('nfc-toast-styles')) {
+        const style = document.createElement('style');
+        style.id = 'nfc-toast-styles';
+        style.textContent = `
+          @keyframes slideIn {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+          @keyframes slideOut {
+            from {
+              transform: translateX(0);
+              opacity: 1;
+            }
+            to {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      // 認証チェック関数
+      async function checkAuthentication() {
+        const token = await getFirebaseIdToken();
+        
+        // dev-tokenの場合は認証されていない
+        if (token === 'dev-token') {
+          return false;
+        }
+        
+        // Cognitoユーザーを確認
+        const cognitoUser = localStorage.getItem('cognito_user');
+        if (cognitoUser) {
+          try {
+            const parsed = JSON.parse(cognitoUser);
+            if (parsed.username || parsed.email) {
+              return true;
+            }
+          } catch (e) {
+            console.warn('Error parsing cognito user:', e);
+          }
+        }
+        
+        // misesapo_authを確認
+        const authData = localStorage.getItem('misesapo_auth');
+        if (authData) {
+          try {
+            const parsed = JSON.parse(authData);
+            if (parsed.user || parsed.email) {
+              return true;
+            }
+          } catch (e) {
+            console.warn('Error parsing auth data:', e);
+          }
+        }
+        
+        return false;
+      }
+
+      // ページ読み込み時にURLパラメータをチェック
+      window.addEventListener('DOMContentLoaded', async function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tagId = urlParams.get('nfc_tag_id');
+
+        if (tagId) {
+          // 認証チェック
+          const isAuthenticated = await checkAuthentication();
+          if (!isAuthenticated) {
+            // ログインページにリダイレクト（NFCタグIDを保持）
+            const loginUrl = `/staff/signin.html?redirect=${encodeURIComponent(window.location.pathname)}&nfc_tag_id=${tagId}`;
+            window.location.href = loginUrl;
+            return;
+          }
+
+          // URLパラメータを削除（履歴に残さない）
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, newUrl);
+
+          // タグ情報を取得
+          try {
+            const tagResponse = await fetch(`${REPORT_API}/staff/nfc/tag?tag_id=${tagId}`, {
+              headers: {
+                'Authorization': `Bearer ${await getFirebaseIdToken()}`
+              }
+            });
+
+            if (!tagResponse.ok) {
+              throw new Error('タグ情報の取得に失敗しました');
+            }
+
+            let tagInfo;
+            try {
+              const responseText = await tagResponse.text();
+              console.log('[NFC Clock-in] Tag response text:', responseText);
+              tagInfo = JSON.parse(responseText);
+            } catch (parseError) {
+              console.error('[NFC Clock-in] JSON parse error:', parseError);
+              throw new Error('タグ情報の解析に失敗しました');
+            }
+
+            if (!tagInfo.facility_id || !tagInfo.location_id) {
+              throw new Error('タグ情報が不完全です');
+            }
+
+            // バックグラウンドで打刻を実行
+            const clockInResult = await recordClockIn(tagInfo.facility_id, tagInfo.location_id);
+
+            if (clockInResult.success) {
+              const facilityName = tagInfo.facility_name || tagInfo.facility_id;
+              const locationName = tagInfo.location_name || tagInfo.location_id;
+              showToast(`打刻完了: ${facilityName} - ${locationName}`, 'success');
+              
+              // 打刻履歴を更新（少し待ってから実行）
+              setTimeout(() => {
+                window.dispatchEvent(new Event('nfc-clock-in-success'));
+              }, 2000);
+            } else {
+              showToast(`打刻失敗: ${clockInResult.error}`, 'error');
+            }
+          } catch (error) {
+            console.error('NFC tag processing error:', error);
+            console.error('NFC tag processing error stack:', error.stack);
+            
+            // エラーの詳細を取得
+            let errorMessage = '打刻処理中にエラーが発生しました';
+            if (error.message) {
+              errorMessage = error.message;
+            }
+            
+            // ネットワークエラーの場合
+            if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+              errorMessage = 'ネットワークエラー: サーバーに接続できませんでした。インターネット接続を確認してください。';
+            }
+            // 認証エラーの場合
+            else if (error.message && (error.message.includes('認証') || error.message.includes('Unauthorized'))) {
+              errorMessage = '認証エラー: ログインが必要です。ページを再読み込みしてください。';
+            }
+            
+            showToast(`エラー: ${errorMessage}`, 'error');
+            
+            // エラーが発生した場合でも、履歴を読み込んでみる
+            setTimeout(() => {
+              try {
+                if (window.loadClockInHistory) {
+                  window.loadClockInHistory();
+                }
+              } catch (historyError) {
+                console.error('Error loading history after NFC error:', historyError);
+              }
+            }, 1000);
+          }
+        }
+      });
+    })();
+
+    // レイアウト切り替え
+    (function() {
+      const layoutCompact = document.getElementById('layout-mode-compact');
+      const layoutStandard = document.getElementById('layout-mode-standard');
+      const layoutDetailed = document.getElementById('layout-mode-detailed');
+      const dashboard = document.querySelector('.staff-dashboard');
+
+      // 保存されたレイアウト設定を読み込む
+      const savedLayout = localStorage.getItem('staff-layout-mode') || 'standard';
+      
+      if (savedLayout === 'compact') {
+        if (layoutCompact) layoutCompact.checked = true;
+        if (dashboard) dashboard.classList.add('layout-compact');
+      } else if (savedLayout === 'detailed') {
+        if (layoutDetailed) layoutDetailed.checked = true;
+        if (dashboard) dashboard.classList.add('layout-detailed');
+      } else {
+        if (layoutStandard) layoutStandard.checked = true;
+      }
+
+      // レイアウト切り替えイベント
+      if (layoutCompact) {
+        layoutCompact.addEventListener('change', function() {
+          if (this.checked) {
+            if (dashboard) {
+              dashboard.classList.remove('layout-detailed');
+              dashboard.classList.add('layout-compact');
+            }
+            localStorage.setItem('staff-layout-mode', 'compact');
+          }
+        });
+      }
+
+      if (layoutStandard) {
+        layoutStandard.addEventListener('change', function() {
+          if (this.checked) {
+            if (dashboard) {
+              dashboard.classList.remove('layout-compact', 'layout-detailed');
+            }
+            localStorage.setItem('staff-layout-mode', 'standard');
+          }
+        });
+      }
+
+      if (layoutDetailed) {
+        layoutDetailed.addEventListener('change', function() {
+          if (this.checked) {
+            if (dashboard) {
+              dashboard.classList.remove('layout-compact');
+              dashboard.classList.add('layout-detailed');
+            }
+            localStorage.setItem('staff-layout-mode', 'detailed');
+          }
+        });
+      }
+    })();
+  </script>
+</main>
+
+
+    </main>
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script>
+      // ログイン画面では通常ヘッダーを表示
+      (function() {
+        const path = window.location.pathname || '';
+        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
+        
+        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
+        if (isSigninPage) {
+          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
+          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
+          if (defaultHeaderWrapper) {
+            defaultHeaderWrapper.style.display = 'none';
+          }
+          if (normalHeaderWrapper) {
+            normalHeaderWrapper.style.display = 'block';
+            // ログイン画面では通常ヘッダーを常に表示
+            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
+            if (normalHeader) {
+              normalHeader.classList.add('visible');
+            }
+          }
+        }
+      })();
+    </script>
+  </body>
+  </html>
+
+

@@ -1,0 +1,1570 @@
+/* カラーモード変数 */
+:root {
+  --mypage-bg-light: #f9fafb;
+  --mypage-bg-dark: #111827;
+  --mypage-bg-misesapo: #fff5f7;
+  --container-bg-light: #ffffff;
+  --container-bg-dark: #1f2937;
+  --container-bg-misesapo: #ffffff;
+  --container-section-bg-light: #f3f4f6;
+  --container-section-bg-dark: #374151;
+  --container-section-bg-misesapo: #ffc0cb;
+  --text-color-light: #111827;
+  --text-color-dark: #f9fafb;
+  --text-color-misesapo: #111827;
+}
+
+.staff-mypage {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0;
+  margin-left: var(--sidebar-width, 240px) !important;
+  padding: 16px;
+  background: var(--mypage-bg-misesapo);
+  min-height: 100vh;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease;
+}
+
+/* ライトモード */
+[data-mypage-theme="light"] .staff-mypage,
+[data-theme="light"] #mypage-content {
+  background: var(--mypage-bg-light);
+}
+
+/* ダークモード */
+[data-mypage-theme="dark"] .staff-mypage,
+[data-theme="dark"] #mypage-content {
+  background: var(--mypage-bg-dark);
+}
+
+/* ミセサポモード（ピンク） */
+[data-mypage-theme="misesapo"] .staff-mypage,
+[data-theme="misesapo"] #mypage-content {
+  background: var(--mypage-bg-misesapo);
+}
+.staff-mypage.main-content {
+  margin-left: var(--sidebar-width, 240px) !important;
+  width: calc(100% - var(--sidebar-width, 240px)) !important;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar.collapsed ~ .staff-mypage.main-content,
+.sidebar.collapsed + .staff-mypage.main-content {
+  margin-left: var(--sidebar-width-collapsed, 64px) !important;
+  width: calc(100% - var(--sidebar-width-collapsed, 64px)) !important;
+}
+#mypage-content {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+/* Bento Grid コンテナ */
+.bento-grid-container {
+  position: relative;
+  padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+}
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: minmax(200px, auto);
+  gap: 8px;
+  width: 100%;
+  padding-bottom: 24px;
+}
+
+/* Bento Card 基本スタイル */
+.bento-card {
+  background: var(--container-bg-misesapo, #ffffff);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.bento-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* カードサイズの定義 */
+.bento-card-large {
+  grid-column: span 6;
+  grid-row: span 2;
+  min-height: 400px;
+}
+
+.bento-card-medium {
+  grid-column: span 3;
+  grid-row: span 2;
+  min-height: 400px;
+}
+
+.bento-card-small {
+  grid-column: span 3;
+  grid-row: span 1;
+  min-height: 200px;
+}
+
+.bento-card-wide {
+  grid-column: span 6;
+  grid-row: span 1;
+  min-height: 200px;
+}
+
+/* 特定のカードの配置 */
+.bento-card[data-container-id="attendance"] {
+  grid-column: 1 / 7;
+  grid-row: 1 / 3;
+}
+
+.bento-card[data-container-id="calendar"] {
+  grid-column: 7 / 13;
+  grid-row: 1 / 3;
+}
+
+.bento-card[data-container-id="announcements"] {
+  grid-column: 1 / 4;
+  grid-row: 3 / 5;
+}
+
+.bento-card[data-container-id="todo"] {
+  grid-column: 4 / 7;
+  grid-row: 3 / 5;
+}
+
+.bento-card[data-container-id="weekly-schedule"] {
+  grid-column: 7 / 10;
+  grid-row: 3 / 4;
+}
+
+.bento-card[data-container-id="basic-info"] {
+  grid-column: 10 / 13;
+  grid-row: 3 / 4;
+}
+
+.bento-card[data-container-id="digital-clock"] {
+  grid-column: 7 / 10;
+  grid-row: 4 / 5;
+}
+
+.bento-card[data-container-id="daily-reports"] {
+  grid-column: 1 / 7;
+  grid-row: 5 / 6;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 1400px) {
+  .bento-grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
+  
+  .bento-card-large {
+    grid-column: span 4;
+  }
+  
+  .bento-card-medium {
+    grid-column: span 4;
+  }
+  
+  .bento-card-small {
+    grid-column: span 4;
+  }
+  
+  .bento-card-wide {
+    grid-column: span 8;
+  }
+  
+  .bento-card[data-container-id="attendance"] {
+    grid-column: 1 / 5;
+  }
+  
+  .bento-card[data-container-id="calendar"] {
+    grid-column: 5 / 9;
+  }
+  
+  .bento-card[data-container-id="announcements"] {
+    grid-column: 1 / 5;
+  }
+  
+  .bento-card[data-container-id="todo"] {
+    grid-column: 5 / 9;
+  }
+  
+  .bento-card[data-container-id="weekly-schedule"] {
+    grid-column: 1 / 5;
+  }
+  
+  .bento-card[data-container-id="basic-info"] {
+    grid-column: 5 / 9;
+  }
+  
+  .bento-card[data-container-id="digital-clock"] {
+    grid-column: 1 / 5;
+  }
+  
+  .bento-card[data-container-id="daily-reports"] {
+    grid-column: 1 / 9;
+  }
+}
+
+@media (max-width: 768px) {
+  .bento-grid-container {
+    padding: 12px;
+  }
+  
+  .bento-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .bento-card-large,
+  .bento-card-medium,
+  .bento-card-small,
+  .bento-card-wide {
+    grid-column: span 1;
+    grid-row: span 1;
+    min-height: auto;
+  }
+  
+  .bento-card[data-container-id] {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+/* Bento Card 内のコンテンツスタイル */
+.bento-card .container-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.bento-card .card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.bento-card .container-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.bento-card .container-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.bento-card .container-title i {
+  color: var(--primary, #FF679C);
+}
+
+/* 旧グリッドシステムのスタイル（後方互換性のため残す） */
+.mypage-main-grid-container {
+  position: relative;
+  padding: 0;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+.mypage-main-grid {
+  display: grid !important;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+/* 編集モード時にグリッドを可視化（ピンク色） */
+.edit-mode .mypage-main-grid-container {
+  background-color: #f9fafb;
+  position: relative;
+}
+.grid-lines-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.edit-mode .mypage-main-grid > * {
+  position: relative;
+  background: #ffffff;
+  z-index: 1;
+}
+/* セクションのコスト表示 */
+/* 80x80px固定グリッドシステム */
+/* 画面幅に合わせて自動的にグリッドを敷き詰め、余ったスペースは中央揃えで調整 */
+
+/* スマホ（〜599px）: 1列（縦積み） */
+@media (max-width: 599px) {
+  .mypage-main-grid {
+    grid-template-columns: 1fr !important;
+    grid-auto-rows: auto !important;
+    justify-content: stretch !important;
+  }
+}
+.draggable-container {
+  cursor: default;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: absolute; /* 絶対配置で自由に配置可能に */
+  background: #ffffff;
+  box-sizing: border-box;
+  /* サイズはJavaScriptで設定される（80px × マス数） */
+  min-width: 0;
+  min-height: 0;
+  flex-shrink: 0;
+  flex-grow: 0;
+  /* サイズはJavaScriptで明示的に設定されるため、CSSでは指定しない */
+  /* サイズを強制（JavaScriptで設定したサイズを維持） */
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+.edit-mode .draggable-container {
+  cursor: move;
+}
+.draggable-container.dragging {
+  opacity: 0.6;
+  transform: scale(0.98);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  z-index: 1000;
+  pointer-events: none;
+  /* サイズを維持 */
+  width: var(--dragging-width, auto);
+  height: var(--dragging-height, auto);
+}
+.draggable-container.drag-over {
+  border: 2px dashed var(--primary, #3b82f6);
+  background: #eff6ff;
+}
+.draggable-container.drag-preview {
+  /* プレビュー位置を表示（実際の位置は変更しない） */
+  position: relative;
+}
+.draggable-container.drag-preview::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px dashed var(--primary, #3b82f6);
+  background: rgba(59, 130, 246, 0.1);
+  pointer-events: none;
+  z-index: -1;
+}
+/* ドロッププレビューガイド */
+.drop-preview-guide {
+  border: 2px dashed var(--primary, #3b82f6);
+  background: rgba(59, 130, 246, 0.15);
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 999;
+  animation: previewPulse 1.5s ease-in-out infinite;
+}
+@keyframes previewPulse {
+  0%, 100% {
+    opacity: 0.6;
+    border-color: var(--primary, #3b82f6);
+  }
+  50% {
+    opacity: 1;
+    border-color: var(--primary, #3b82f6);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  }
+}
+.drag-handle {
+  cursor: default;
+  user-select: none;
+}
+.edit-mode .drag-handle {
+  cursor: move;
+}
+.edit-mode .drag-handle:hover {
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin: -4px -8px;
+}
+.edit-mode .drag-handle .fa-grip-vertical {
+  opacity: 1;
+}
+/* 編集モード中はコンテナ内の操作を無効化（ドラッグハンドル以外） */
+.edit-mode .container {
+  pointer-events: none;
+}
+.edit-mode .container .drag-handle {
+  pointer-events: auto;
+}
+.drag-handle .fa-grip-vertical {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.loading {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+  font-size: 1rem;
+}
+.error-message {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+/* ヘッダーは削除されたため、スタイルも削除 */
+
+/* サイドバー内のマイページ編集用ボタン */
+.sidebar-mypage-actions {
+  margin-top: auto;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.btn-edit-mode-sidebar,
+.btn-auto-align-sidebar {
+  width: 100%;
+  text-align: left;
+}
+
+.btn-edit-mode-sidebar.active {
+  background: var(--primary, #3b82f6);
+  color: #fff;
+}
+
+.btn-edit-mode-sidebar.active:hover {
+  background: #2563eb;
+  color: #fff;
+}
+
+.btn-auto-align-sidebar:hover {
+  background: #10b981;
+  color: #fff;
+}
+/* .mypage-grid のスタイルは上で定義済み */
+@media (max-width: 1400px) {
+  .mypage-grid {
+    grid-template-columns: 280px 1fr 320px !important;
+  }
+}
+.container {
+  background: var(--container-bg-misesapo, #ffffff);
+  border-radius: 0;
+  padding: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  font-size: clamp(0.75rem, 0.9vw, 0.95rem);
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overflow: hidden;
+  transition: background-color 0.3s ease;
+}
+
+/* ライトモード */
+[data-mypage-theme="light"] .container,
+[data-theme="light"] .container {
+  background: var(--container-bg-light, #ffffff);
+}
+
+/* ダークモード */
+[data-mypage-theme="dark"] .container,
+[data-theme="dark"] .container {
+  background: var(--container-bg-dark, #1f2937);
+}
+
+/* ミセサポモード（ピンク） */
+[data-mypage-theme="misesapo"] .container,
+[data-theme="misesapo"] .container {
+  background: var(--container-bg-misesapo, #ffffff);
+}
+
+.container-section {
+  background: var(--container-section-bg-misesapo, #ffc0cb);
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  transition: background-color 0.3s ease;
+}
+/* 時計コンテナ専用のパディング調整 */
+.digital-clock-section .container-section {
+  padding: 6px;
+}
+
+/* ライトモード */
+[data-mypage-theme="light"] .container-section,
+[data-theme="light"] .container-section {
+  background: var(--container-section-bg-light, #f3f4f6);
+}
+
+/* ダークモード */
+[data-mypage-theme="dark"] .container-section,
+[data-theme="dark"] .container-section {
+  background: var(--container-section-bg-dark, #374151);
+}
+
+/* ミセサポモード（ピンク） */
+[data-mypage-theme="misesapo"] .container-section,
+[data-theme="misesapo"] .container-section {
+  background: var(--container-section-bg-misesapo, #ffc0cb);
+}
+.container-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+  padding: 0 4px;
+}
+/* 時計コンテナのヘッダー調整 */
+.digital-clock-section .container-header {
+  margin-bottom: 4px;
+  padding: 0 2px;
+}
+.container-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+.container-size-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.edit-mode .container-size-controls {
+  display: flex !important;
+}
+.size-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+.size-btn:hover {
+  background: #f3f4f6;
+  border-color: var(--primary, #3b82f6);
+  color: var(--primary, #3b82f6);
+}
+.size-btn.active {
+  background: var(--primary, #3b82f6);
+  border-color: var(--primary, #3b82f6);
+  color: #fff;
+}
+.container-title i {
+  color: var(--primary);
+}
+.card {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 8px;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.attendance-card {
+  padding: 20px;
+}
+/* 出退勤セクション */
+.attendance-card {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 4px;
+}
+.attendance-today-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  padding: 4px 6px;
+  background: linear-gradient(135deg, #fef3f2 0%, #fff1f2 100%);
+  border-radius: 4px;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+.attendance-status-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #9ca3af;
+  flex-shrink: 0;
+}
+.status-indicator.working {
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  animation: pulse 2s infinite;
+}
+.status-indicator.break {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  flex: 1;
+}
+.status-label {
+  font-size: 0.6rem;
+  color: #6b7280;
+  font-weight: 500;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.status-time {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #111827;
+  font-family: 'SF Mono', 'Monaco', monospace;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.attendance-action-box {
+  flex-shrink: 0;
+}
+.btn-attendance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  min-width: 60px;
+}
+.btn-attendance i {
+  font-size: 0.7rem;
+}
+.btn-clock-in {
+  background: var(--primary);
+  color: #fff;
+}
+.btn-clock-in:hover {
+  background: #e11d48;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.3);
+}
+.btn-clock-out {
+  background: #6b7280;
+  color: #fff;
+}
+.btn-clock-out:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
+}
+
+/* サマリー */
+.attendance-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px 5px;
+  background: #fff;
+  justify-content: center;
+}
+.summary-label {
+  font-size: 0.55rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.summary-value {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* フッター */
+.attendance-footer {
+  padding: 4px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  border-radius: 0 0 4px 4px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.btn-text {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  font-size: 0.65rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-text:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+.btn-warning {
+  background: #f59e0b;
+  color: #fff;
+  border: none;
+}
+.btn-warning:hover {
+  background: #d97706;
+}
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+.info-item:last-child {
+  border-bottom: none;
+}
+.info-item-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+.info-item-value {
+  font-size: 0.95rem;
+  color: #111827;
+  font-weight: 500;
+}
+.empty-state {
+  text-align: center;
+  padding: 16px;
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+.calendar-section {
+  overflow: hidden;
+}
+.calendar-section .card {
+  padding: 8px;
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.calendar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+.calendar-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  text-align: center;
+  flex: 1;
+}
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #6b7280;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-size: 0.75rem;
+}
+.calendar-nav:hover {
+  background: var(--primary);
+  color: #fff;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+.calendar-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  border-radius: 2px;
+  min-width: 0;
+}
+.calendar-day-name {
+  font-weight: 600;
+  color: #6b7280;
+  background: transparent;
+}
+.calendar-date {
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.calendar-date:hover {
+  background: #f3f4f6;
+}
+.calendar-date.disabled {
+  color: #d1d5db;
+  cursor: default;
+}
+.calendar-date.has-attendance {
+  background: #d1fae5;
+  color: #065f46;
+  font-weight: 600;
+}
+.calendar-date.today {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+}
+/* TODOリスト */
+.todo-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+.todo-card {
+  padding: 8px;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.todo-input-wrapper {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+.todo-input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+.todo-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+}
+.todo-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  background: #f9fafb;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  transition: all 0.2s;
+}
+.todo-item:hover {
+  background: #f3f4f6;
+}
+.todo-item.completed {
+  opacity: 0.6;
+}
+.todo-item.completed .todo-text {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+.todo-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.todo-checkbox:hover {
+  border-color: var(--primary);
+}
+.todo-item.completed .todo-checkbox {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+.todo-text {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #374151;
+}
+.todo-text-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  color: #374151;
+  padding: 0;
+}
+.todo-text-input:focus {
+  outline: none;
+}
+.todo-delete {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  opacity: 0;
+}
+.todo-item:hover .todo-delete {
+  opacity: 1;
+}
+.todo-delete:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+.todo-filters {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+.filter-btn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.filter-btn:hover {
+  background: #f3f4f6;
+}
+.filter-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+.todo-empty {
+  text-align: center;
+  padding: 24px;
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+/* 業務連絡セクション */
+.announcements-section {
+  margin-bottom: 24px;
+}
+.basic-info-card {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 4px;
+}
+.basic-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+.basic-info-item:last-child {
+  border-bottom: none;
+}
+.basic-info-label {
+  font-size: 0.6rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+.basic-info-value {
+  font-size: 0.75rem;
+  color: #111827;
+  font-weight: 500;
+  word-break: break-word;
+}
+.announcements-card {
+  padding: 8px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+.announcement-item {
+  padding: 8px;
+  margin-bottom: 6px;
+  background: #fff;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.announcement-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.announcement-item.unread {
+  border-color: var(--primary);
+  background: #fef3f2;
+}
+.announcement-item.read {
+  opacity: 0.8;
+}
+.announcement-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.announcement-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #111827;
+}
+.new-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.announcement-meta {
+  margin-bottom: 8px;
+}
+.announcement-date {
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+.announcement-content {
+  font-size: 0.7rem;
+  color: #4b5563;
+  line-height: 1.4;
+}
+.announcement-more {
+  text-align: center;
+  margin-top: 12px;
+}
+
+/* デジタル時計セクション */
+.digital-clock-card {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border-radius: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.digital-clock-display {
+  font-size: 2.5rem !important;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  line-height: 1.1;
+  margin: 0;
+  padding: 0;
+}
+.digital-clock-date {
+  font-size: 0.5rem;
+  color: #fff;
+  text-align: center;
+  opacity: 0.9;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+}
+.digital-clock-alarm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+  padding: 2px 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  margin-top: 2px;
+}
+.alarm-status {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.55rem;
+  color: #fff;
+  flex: 1;
+  min-width: 0;
+}
+.alarm-status i {
+  font-size: 0.6rem;
+  flex-shrink: 0;
+}
+.alarm-status span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btn-alarm-toggle,
+.btn-alarm-set {
+  padding: 2px 6px;
+  font-size: 0.5rem;
+  border-radius: 3px;
+  white-space: nowrap;
+  line-height: 1.2;
+  min-height: auto;
+}
+.btn-alarm-toggle {
+  background: rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
+}
+.btn-alarm-toggle:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+.btn-alarm-set {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  width: 100%;
+  margin-top: 2px;
+}
+.btn-alarm-set:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 日報セクション */
+.daily-reports-card {
+  padding: 8px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.daily-report-form-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.daily-report-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.daily-report-date-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #111827;
+}
+.daily-report-date {
+  font-size: 0.65rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+.daily-report-textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  background: #fff;
+  color: #111827;
+}
+.daily-report-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+}
+.daily-report-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+/* モバイル対応のユーティリティクラス */
+.stack-on-sm {
+  display: block;
+}
+.hide-sm {
+  display: block;
+}
+
+@media (max-width: 767.98px) {
+  .staff-mypage.main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  .staff-mypage {
+    padding: 12px;
+    min-height: 100dvh;
+  }
+  
+  .mypage-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .container {
+    padding: 16px;
+    border-radius: 8px;
+  }
+  
+  .container-title {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+  
+  .attendance-today-grid {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+    text-align: center;
+    padding: 16px;
+  }
+  
+  .attendance-status-box {
+    justify-content: center;
+  }
+  
+  .status-time {
+    font-size: 1.1rem;
+  }
+  
+  .btn-attendance {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 24px;
+    font-size: 0.9rem;
+  }
+  
+  .attendance-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-item {
+    padding: 12px 16px;
+  }
+  
+  .summary-value {
+    font-size: 1.1rem;
+  }
+  
+  .break-section {
+    padding: 12px 16px;
+  }
+  
+  .break-actions {
+    flex-direction: column;
+  }
+  
+  .break-actions .btn {
+    width: 100%;
+  }
+  
+  .todo-card {
+    padding: 12px;
+  }
+  
+  .todo-input-wrapper {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .todo-input {
+    width: 100%;
+  }
+  
+  .todo-filters {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .filter-btn {
+    flex: 1;
+    min-width: calc(33.333% - 4px);
+    padding: 8px 12px;
+    font-size: 0.7rem;
+  }
+  
+  .announcements-card {
+    padding: 12px;
+  }
+  
+  .announcement-item {
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .announcement-title {
+    font-size: 0.95rem;
+  }
+  
+  .announcement-content {
+    font-size: 0.85rem;
+  }
+  
+  .card {
+    padding: 12px;
+  }
+  
+  .stack-on-sm {
+    display: block;
+  }
+  
+  .hide-sm {
+    display: none !important;
+  }
+  
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 10px 0;
+  }
+  
+  .info-item-label {
+    font-size: 0.8rem;
+  }
+  
+  .info-item-value {
+    font-size: 0.9rem;
+  }
+  
+  .empty-state {
+    padding: 24px 16px;
+    font-size: 0.85rem;
+  }
+}
+
+/* アコーディオン機能 */
+.accordion-toggle {
+  background-color: var(--primary, #FF679C);
+  border: none;
+  border-radius: 5px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.875rem;
+  transition: transform 0.3s ease, color 0.2s ease;
+  margin-right: 4px;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.accordion-toggle:hover {
+  background-color: var(--primary-600, #E35687);
+}
+
+.accordion-toggle i {
+  transition: transform 0.3s ease;
+}
+
+.container-section.collapsed .accordion-toggle i {
+  transform: rotate(-90deg);
+}
+
+.accordion-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+  max-height: 5000px;
+  opacity: 1;
+}
+
+.container-section.collapsed .accordion-content {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.container-section.collapsed .accordion-content .card {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.container-section.collapsed .accordion-content .calendar-head {
+  display: none;
+}
+
+/* モバイルメニューエリア */
+.mobile-menu-area {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .mobile-menu-area {
+    display: block;
+    width: 100%;
+    background-color: var(--primary, #FF679C);
+    position: fixed;
+    height: 70px;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    top: 0;
+    left: 0;
+  }
+  
+  .mobile-menu-button {
+    position: absolute;
+    top: 50%;
+    left: 16px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+  }
+  
+  .staff-mypage.main-content {
+    padding-top: 70px !important;
+  }
+  
+  .sidebar.open {
+    padding-top: 70px;
+  }
+}

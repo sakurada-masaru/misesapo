@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清掃マニュアル管理画面 - MISESAPO</title>
+    <script>
+        // baseタグは使用しない（すべてのパスを絶対URLで解決する）
+        // baseタグがあると、絶対URLも相対パスとして解釈される可能性があるため
+    </script>
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- AWS API -->
+    <script src="/js/aws-s3-upload.js"></script>
+    <script src="/js/aws-cleaning-manual-api.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Sans JP', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .page-header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .page-header h1 {
+            margin: 0;
+            color: #ff008c;
+            font-size: 24px;
+        }
+        .page-header .back-link {
+            display: inline-block;
+            margin-bottom: 10px;
+            color: #666;
+            text-decoration: none;
+        }
+        .page-header .back-link:hover {
+            color: #ff008c;
+        }
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .category-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+        .category-tabs::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .category-tabs::-webkit-scrollbar-thumb {
+            background: #ff008c;
+            border-radius: 2px;
+        }
+        .category-tab {
+            background: white;
+            border: 2px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .category-tab:hover {
+            border-color: #ff008c;
+        }
+        .category-tab.active {
+            background: #ff008c;
+            color: white;
+            border-color: #ff008c;
+        }
+        .items-list {
+            display: grid;
+            gap: 15px;
+        }
+        .item-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .item-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        .item-card h3 {
+            margin: 0 0 10px 0;
+            color: #ff008c;
+        }
+        .item-card .item-preview {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .edit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .edit-modal.active {
+            display: block;
+        }
+        .edit-modal-content {
+            background: white;
+            margin: 20px auto;
+            max-width: 800px;
+            padding: 30px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .edit-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        .edit-modal-header h2 {
+            margin: 0;
+            color: #ff008c;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        .close-btn:hover {
+            color: #ff008c;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-group .image-preview {
+            margin-top: 10px;
+            max-width: 300px;
+        }
+        .form-group .image-preview img {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .image-upload-btn {
+            background: #ff008c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .image-upload-btn:hover {
+            background: #e6007a;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #ff008c;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #e6007a;
+        }
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #555;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .message.active {
+            display: block;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .operation-guide {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .operation-guide h2 {
+            margin-top: 0;
+            color: #1976D2;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .operation-guide h2 i {
+            font-size: 20px;
+        }
+        .operation-guide ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .operation-guide li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        .operation-guide .guide-section {
+            margin-top: 15px;
+        }
+        .operation-guide .guide-section:first-child {
+            margin-top: 0;
+        }
+        .operation-guide strong {
+            color: #1976D2;
+        }
+        .operation-guide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .operation-guide-header h2 {
+            margin: 0;
+            flex: 1;
+        }
+        .operation-guide-toggle {
+            background: none;
+            border: none;
+            color: #1976D2;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+        .operation-guide-toggle:hover {
+            color: #1565C0;
+        }
+        .operation-guide.collapsed .operation-guide-toggle {
+            transform: rotate(-90deg);
+        }
+        .operation-guide-content {
+            margin-top: 15px;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            overflow: hidden;
+        }
+        .operation-guide.collapsed .operation-guide-content {
+            max-height: 0;
+            margin-top: 0;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <a href="#" id="back-to-manual-link" class="back-link">
+                <i class="fas fa-arrow-left"></i> 清掃マニュアルに戻る
+            </a>
+            <h1><i class="fas fa-edit"></i> 清掃マニュアル管理画面</h1>
+        </div>
+
+        <div class="operation-guide collapsed" id="operation-guide">
+            <div class="operation-guide-header" onclick="toggleOperationGuide()">
+                <h2><i class="fas fa-book"></i> 操作補則</h2>
+                <button class="operation-guide-toggle" type="button" aria-label="操作補則を開閉">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div class="operation-guide-content">
+            <div class="guide-section">
+                <strong>📝 項目の編集</strong>
+                <ul>
+                    <li>各項目カードをクリックすると編集モーダルが開きます</li>
+                    <li>タイトル、カテゴリ、リスク説明、良くない例、良い例、Q&Aを編集できます</li>
+                    <li>画像は複数枚アップロード可能です（スマホのライブラリから選択可）</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <strong>➕ 新規項目の追加</strong>
+                <ul>
+                    <li>各カテゴリタブの下にある「新規追加」ボタンから追加できます</li>
+                    <li>カテゴリを選択してから項目を追加してください</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <strong>💾 保存について</strong>
+                <ul>
+                    <li><strong>下書き保存:</strong> 編集内容を一時保存します。後で確認・確定できます</li>
+                    <li><strong>確定保存:</strong> 編集内容を本番環境に反映します。一般ユーザーに表示されます</li>
+                    <li>下書きがある場合は、画面上部に通知が表示されます</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <strong>🖼️ 画像のアップロード</strong>
+                <ul>
+                    <li>「画像を選択」ボタンから、スマホのライブラリまたはカメラで撮影した画像を選択できます</li>
+                    <li>複数の画像を一度に選択・アップロード可能です</li>
+                    <li>各画像には削除ボタンが表示されます</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <strong>📂 カテゴリの切り替え</strong>
+                <ul>
+                    <li>上部のカテゴリタブをクリックして、表示する項目をフィルタリングできます</li>
+                    <li>「すべて」を選択すると全カテゴリの項目が表示されます</li>
+                </ul>
+            </div>
+            </div>
+        </div>
+
+        <div id="message" class="message"></div>
+        
+        <div id="auth-required" style="display: none; background: #f8d7da; border: 1px solid #f5c6cb; padding: 20px; border-radius: 4px; margin-bottom: 20px; color: #721c24; text-align: center;">
+            <h2>ログインが必要です</h2>
+            <p>この管理画面にアクセスするには、管理者・清掃員・コンシェルジュ・開発者・マスターのいずれかの権限が必要です。</p>
+            <p id="auth-debug-info" style="margin-top: 10px; font-size: 12px; color: #856404;"></p>
+            <a href="signin.html" style="display: inline-block; margin-top: 10px; padding: 10px 20px; background: #ff008c; color: white; text-decoration: none; border-radius: 4px;">ログインページへ</a>
+        </div>
+        
+        <div id="loading-screen" style="display: flex; justify-content: center; align-items: center; min-height: 400px;">
+            <div style="text-align: center;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #ff008c;"></i>
+                <p style="margin-top: 20px;">読み込み中...</p>
+            </div>
+        </div>
+        
+        <div id="admin-content" style="display: none;">
+            <div class="category-tabs">
+                <button class="category-tab active" data-category="all">すべて</button>
+                <button class="category-tab" data-category="kitchen">厨房設備</button>
+                <button class="category-tab" data-category="aircon">空調設備</button>
+                <button class="category-tab" data-category="floor">フロア</button>
+                <button class="category-tab" data-category="other">その他</button>
+            </div>
+
+            <div id="items-list" class="items-list">
+                <div class="loading">読み込み中...</div>
+            </div>
+            
+            <div id="draft-section" style="display: none; margin-top: 30px; padding: 20px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                <h3 style="margin-top: 0; color: #856404;">
+                    <i class="fas fa-file-alt"></i> 下書きがあります
+                </h3>
+                <p style="margin-bottom: 15px;">
+                    下書き保存された内容があります。確認して確定してください。
+                </p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="loadDraft()" class="btn" style="background: #ffc107; color: #000;">
+                        <i class="fas fa-eye"></i> 下書きを確認
+                    </button>
+                    <button onclick="applyDraft()" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i> 下書きを確定
+                    </button>
+                    <button onclick="discardDraft()" class="btn btn-secondary">
+                        <i class="fas fa-trash"></i> 下書きを削除
+                    </button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 20px; background: #e7f3ff; border-left: 4px solid #2196F3; border-radius: 4px;">
+                <h3 style="margin-top: 0; color: #1976D2;">
+                    <i class="fas fa-info-circle"></i> 保存について
+                </h3>
+                <p style="margin-bottom: 10px;">
+                    <strong>下書き保存:</strong> 編集内容を一時保存します。後で確認・確定できます。
+                </p>
+                <p style="margin-bottom: 0;">
+                    <strong>確定保存:</strong> 編集内容を本番環境に反映します。一般ユーザーに表示されます。
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 編集モーダル -->
+    <div id="edit-modal" class="edit-modal">
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h2>項目を編集</h2>
+                <button class="close-btn" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="edit-form">
+                <input type="hidden" id="edit-category" />
+                <input type="hidden" id="edit-index" />
+                
+                <div class="form-group">
+                    <label>タイトル</label>
+                    <input type="text" id="edit-title" required />
+                </div>
+
+                <div class="form-group">
+                    <label>リスク</label>
+                    <input type="text" id="edit-risk" required />
+                </div>
+
+                <div class="form-group">
+                    <label>ダメな例（テキスト）</label>
+                    <textarea id="edit-bad" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>ダメな例（画像パス）</label>
+                    <input type="text" id="edit-badImage" />
+                    <button type="button" class="image-upload-btn" onclick="uploadImage('badImage')">
+                        <i class="fas fa-upload"></i> 画像をアップロード
+                    </button>
+                    <div class="image-preview" id="preview-badImage"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>模範例（テキスト）</label>
+                    <textarea id="edit-good" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>模範例（画像パス）</label>
+                    <input type="text" id="edit-goodImage" />
+                    <button type="button" class="image-upload-btn" onclick="uploadImage('goodImage')">
+                        <i class="fas fa-upload"></i> 画像をアップロード
+                    </button>
+                    <div class="image-preview" id="preview-goodImage"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Q&A 質問1</label>
+                    <input type="text" id="edit-qa1q" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Q&A 回答1</label>
+                    <textarea id="edit-qa1a" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Q&A 質問2</label>
+                    <input type="text" id="edit-qa2q" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Q&A 回答2</label>
+                    <textarea id="edit-qa2a" required></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="saveDraft()" style="background: #6c757d;">
+                        <i class="fas fa-file-alt"></i> 下書き保存
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i> 確定保存
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">
+                        キャンセル
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // パスを解決（GitHub Pages対応）
+        // baseタグを使用しないため、常に絶対URLを返す
+        function resolvePath(path) {
+            if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                return path;
+            }
+            
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' || 
+                              hostname === '127.0.0.1' ||
+                              hostname === '';
+            
+            const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+                
+                if (isLocalDev || isCustomDomain) {
+                return path.startsWith('/') ? path : '/' + path;
+            }
+            
+            // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+            let resolvedPath;
+            if (path.startsWith('/misesapo/')) {
+                // 既に/misesapo/で始まる場合はそのまま使用
+                resolvedPath = path;
+            } else if (path.startsWith('/')) {
+                // /で始まる場合は/misesapo/を追加
+                resolvedPath = '/misesapo' + path;
+            } else {
+                // 相対パスの場合は/misesapo/を追加
+                resolvedPath = '/misesapo/' + path;
+            }
+            
+            // 常に絶対URLを返す
+            return window.location.origin + resolvedPath;
+        }
+        
+        // 戻るボタンのリンクを設定
+        function setBackLink() {
+            const backLink = document.getElementById('back-to-manual-link');
+            if (backLink) {
+                backLink.href = resolvePath('/cleaning-manual.html');
+            }
+        }
+        
+        let manualData = {
+            kitchen: [],
+            aircon: [],
+            floor: [],
+            other: []
+        };
+        let currentCategory = 'all';
+
+        // 開発サーバーかどうかをチェック
+        function isDevelopmentServer() {
+            return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        }
+        
+        // AWS APIが利用可能かチェック
+        function isAWSAvailable() {
+            return window.AWSCleaningManualAPI && window.AWSCleaningManualAPI.isAvailable();
+        }
+        
+        // 認証チェックと初期化（AWS移行により認証は不要）
+        async function initAuth() {
+            // 戻るボタンのリンクを設定
+            setBackLink();
+            
+            // AWS APIが利用可能かチェック
+            if (!isAWSAvailable()) {
+                console.warn('[CleaningManualAdmin] AWS API not available');
+                // 開発サーバーの場合は表示を許可
+                if (isDevelopmentServer()) {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    document.getElementById('admin-content').style.display = 'block';
+                    return true;
+                } else {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    document.getElementById('auth-required').style.display = 'block';
+                    const debugInfo = document.getElementById('auth-debug-info');
+                    debugInfo.textContent = 'AWS APIが利用できません。';
+                    return false;
+                }
+            }
+            
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('admin-content').style.display = 'block';
+            return true;
+        }
+        
+        // 下書きチェック
+        async function checkDraft() {
+            if (!isAWSAvailable()) return;
+            
+            try {
+                const draft = await window.AWSCleaningManualAPI.loadDraft();
+                if (draft && (draft.kitchen?.length > 0 || draft.aircon?.length > 0 || draft.floor?.length > 0 || draft.other?.length > 0)) {
+                    document.getElementById('draft-section').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Draft check error:', error);
+            }
+        }
+        
+        // 下書きを読み込む
+        async function loadDraft() {
+            if (!isAWSAvailable()) {
+                showMessage('⚠️ AWS APIが利用できません。', 'error');
+                return;
+            }
+            
+            try {
+                const draft = await window.AWSCleaningManualAPI.loadDraft();
+                if (draft && (draft.kitchen?.length > 0 || draft.aircon?.length > 0 || draft.floor?.length > 0 || draft.other?.length > 0)) {
+                    manualData = draft;
+                    renderItems();
+                    showMessage('下書きを読み込みました。確認して確定してください。', 'success');
+                } else {
+                    showMessage('下書きが見つかりませんでした。', 'error');
+                }
+            } catch (error) {
+                console.error('Load draft error:', error);
+                showMessage('下書きの読み込みエラー: ' + error.message, 'error');
+            }
+        }
+        
+        // 下書きを確定
+        async function applyDraft() {
+            if (!isAWSAvailable()) {
+                showMessage('⚠️ AWS APIが利用できません。', 'error');
+                return;
+            }
+            
+            if (!confirm('下書きを確定しますか？一般ユーザーに表示されます。')) {
+                return;
+            }
+            
+            try {
+                const draft = await window.AWSCleaningManualAPI.loadDraft();
+                if (draft && (draft.kitchen?.length > 0 || draft.aircon?.length > 0 || draft.floor?.length > 0 || draft.other?.length > 0)) {
+                    // 下書きを確定版に保存
+                    await window.AWSCleaningManualAPI.publishDraft(draft);
+                    // 下書きを削除（空のデータで上書き）
+                    const emptyDraft = { kitchen: [], aircon: [], floor: [], other: [] };
+                    await window.AWSCleaningManualAPI.saveDraft(emptyDraft);
+                    
+                    manualData = draft;
+                    renderItems();
+                    document.getElementById('draft-section').style.display = 'none';
+                    showMessage('下書きを確定しました。一般ユーザーに表示されます。', 'success');
+                } else {
+                    showMessage('下書きが見つかりませんでした。', 'error');
+                }
+            } catch (error) {
+                console.error('Apply draft error:', error);
+                showMessage('下書きの確定エラー: ' + error.message, 'error');
+            }
+        }
+        
+        // 下書きを削除
+        async function discardDraft() {
+            if (!isAWSAvailable()) {
+                showMessage('⚠️ AWS APIが利用できません。', 'error');
+                return;
+            }
+            
+            if (!confirm('下書きを削除しますか？この操作は取り消せません。')) {
+                return;
+            }
+            
+            try {
+                const emptyDraft = { kitchen: [], aircon: [], floor: [], other: [] };
+                await window.AWSCleaningManualAPI.saveDraft(emptyDraft);
+                document.getElementById('draft-section').style.display = 'none';
+                showMessage('下書きを削除しました。', 'success');
+            } catch (error) {
+                console.error('Discard draft error:', error);
+                showMessage('下書きの削除エラー: ' + error.message, 'error');
+            }
+        }
+        
+        // データ読み込み
+        async function loadData() {
+            try {
+                // AWS APIが利用可能な場合はAWSから読み込む
+                if (isAWSAvailable()) {
+                    try {
+                        manualData = await window.AWSCleaningManualAPI.loadData();
+                        renderItems();
+                        // 下書きをチェック
+                        await checkDraft();
+                        return;
+                    } catch (error) {
+                        console.error('AWS API load error:', error);
+                        showMessage('AWS APIからの読み込みに失敗しました。フォールバックを試行します...', 'error');
+                    }
+                }
+                
+                // 開発サーバーの場合はAPIを試す
+                let response = null;
+                if (isDevelopmentServer()) {
+                    try {
+                        response = await fetch(resolvePath('/api/cleaning-manual'));
+                    } catch (e) {
+                        response = null;
+                    }
+                }
+                
+                // APIが利用できない場合は静的ファイルを読み込む
+                if (!response || !response.ok) {
+                    response = await fetch(resolvePath('/data/cleaning-manual.json'));
+                }
+                
+                if (response && response.ok) {
+                    manualData = await response.json();
+                    renderItems();
+                } else {
+                    showMessage('データの読み込みに失敗しました', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showMessage('データの読み込みエラー: ' + error.message, 'error');
+            }
+        }
+
+        // 項目を表示
+        function renderItems() {
+            const container = document.getElementById('items-list');
+            let items = [];
+
+            // データ構造を確認
+            console.log('[CleaningManualAdmin] manualData:', manualData);
+            console.log('[CleaningManualAdmin] currentCategory:', currentCategory);
+
+            // manualDataが正しい構造でない場合、初期化
+            if (!manualData || typeof manualData !== 'object') {
+                console.warn('[CleaningManualAdmin] manualData is invalid, initializing...');
+                manualData = {
+                    kitchen: [],
+                    aircon: [],
+                    floor: [],
+                    other: []
+                };
+            }
+
+            // 各カテゴリが配列でない場合、初期化
+            if (!Array.isArray(manualData.kitchen)) manualData.kitchen = [];
+            if (!Array.isArray(manualData.aircon)) manualData.aircon = [];
+            if (!Array.isArray(manualData.floor)) manualData.floor = [];
+            if (!Array.isArray(manualData.other)) manualData.other = [];
+
+            if (currentCategory === 'all') {
+                items = [
+                    ...manualData.kitchen.map((item, idx) => ({ ...item, category: 'kitchen', index: idx })),
+                    ...manualData.aircon.map((item, idx) => ({ ...item, category: 'aircon', index: idx })),
+                    ...manualData.floor.map((item, idx) => ({ ...item, category: 'floor', index: idx })),
+                    ...manualData.other.map((item, idx) => ({ ...item, category: 'other', index: idx }))
+                ];
+            } else {
+                items = (manualData[currentCategory] || []).map((item, idx) => ({
+                    ...item,
+                    category: currentCategory,
+                    index: idx
+                }));
+            }
+
+            console.log('[CleaningManualAdmin] Total items:', items.length);
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <p style="font-size: 18px; color: #666; margin-bottom: 20px;">項目がありません</p>
+                        <button onclick="openEditModal('${currentCategory === 'all' ? 'kitchen' : currentCategory}', -1)" class="btn btn-primary" style="padding: 12px 24px; font-size: 16px;">
+                            <i class="fas fa-plus"></i> 新規項目を追加
+                        </button>
+                        <p style="margin-top: 20px; font-size: 14px; color: #999;">
+                            または、<a href="#" onclick="importInitialData(); return false;" style="color: #ff008c; text-decoration: underline;">初期データをインポート</a>
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <button onclick="openEditModal('${currentCategory === 'all' ? 'kitchen' : currentCategory}', -1)" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> 新規項目を追加
+                    </button>
+                </div>
+                ${items.map(item => `
+                    <div class="item-card" onclick="openEditModal('${item.category}', ${item.index})">
+                        <h3>${item.title || 'タイトルなし'}</h3>
+                        <div class="item-preview">
+                            <strong>カテゴリ:</strong> ${getCategoryName(item.category)}<br>
+                            <strong>リスク:</strong> ${item.risk || '未設定'}<br>
+                            <strong>ダメな例:</strong> ${item.bad ? item.bad.substring(0, 50) + '...' : '未設定'}
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function getCategoryName(category) {
+            const names = {
+                kitchen: '厨房設備',
+                aircon: '空調設備',
+                floor: 'フロア',
+                other: 'その他'
+            };
+            return names[category] || category;
+        }
+
+        // カテゴリタブの切り替え
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentCategory = tab.dataset.category;
+                renderItems();
+            });
+        });
+
+        // 編集モーダルを開く
+        function openEditModal(category, index) {
+            console.log('[CleaningManualAdmin] openEditModal called:', { category, index });
+            
+            // カテゴリが'all'の場合は'kitchen'に変更
+            if (category === 'all') {
+                category = 'kitchen';
+            }
+
+            // 新規追加の場合（index === -1）
+            const isNew = index === -1;
+            
+            // データ構造を確認
+            console.log('[CleaningManualAdmin] manualData:', manualData);
+            console.log('[CleaningManualAdmin] manualData[category]:', manualData[category]);
+            
+            // 既存項目を取得
+            let item = null;
+            if (!isNew) {
+                if (manualData[category] && Array.isArray(manualData[category]) && manualData[category][index]) {
+                    item = manualData[category][index];
+                    console.log('[CleaningManualAdmin] Found item:', item);
+                } else {
+                    console.warn('[CleaningManualAdmin] Item not found:', { category, index, arrayLength: manualData[category]?.length });
+                    showMessage('項目が見つかりませんでした', 'error');
+                    return;
+                }
+            }
+
+            document.getElementById('edit-category').value = category;
+            document.getElementById('edit-index').value = index;
+            
+            // モーダルのタイトルを変更
+            const modalTitle = document.querySelector('#edit-modal h2');
+            if (modalTitle) {
+                modalTitle.textContent = isNew ? '新規項目を追加' : '項目を編集';
+            }
+
+            // 既存項目の場合は値を設定、新規の場合は空
+            document.getElementById('edit-title').value = item ? (item.title || '') : '';
+            document.getElementById('edit-risk').value = item ? (item.risk || '') : '';
+            document.getElementById('edit-bad').value = item ? (item.bad || '') : '';
+            
+            // 画像フィールドの値を処理（配列形式にも対応）
+            const processImageValueForInput = (imageValue) => {
+                if (!imageValue) return '';
+                // 配列の場合はJSON文字列に変換、文字列の場合はそのまま
+                if (Array.isArray(imageValue)) {
+                    return imageValue.length > 0 ? JSON.stringify(imageValue) : '';
+                }
+                return imageValue;
+            };
+            
+            const badImageValue = item ? processImageValueForInput(item.badImage) : '';
+            document.getElementById('edit-badImage').value = badImageValue;
+            document.getElementById('edit-good').value = item ? (item.good || '') : '';
+            const goodImageValue = item ? processImageValueForInput(item.goodImage) : '';
+            document.getElementById('edit-goodImage').value = goodImageValue;
+            document.getElementById('edit-qa1q').value = item ? (item.qa1q || '') : '';
+            document.getElementById('edit-qa1a').value = item ? (item.qa1a || '') : '';
+            document.getElementById('edit-qa2q').value = item ? (item.qa2q || '') : '';
+            document.getElementById('edit-qa2a').value = item ? (item.qa2a || '') : '';
+
+            // 画像プレビューを更新（配列形式にも対応）
+            updateImagePreview('badImage', item ? item.badImage : '');
+            updateImagePreview('goodImage', item ? item.goodImage : '');
+
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        // 編集モーダルを閉じる
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+
+        // 画像プレビューを更新（複数画像対応）
+        function updateImagePreview(field, path) {
+            const preview = document.getElementById(`preview-${field}`);
+            
+            // pathがundefined、null、空文字列の場合はプレビューをクリア
+            if (!path || path === 'undefined' || path === 'null' || (typeof path === 'string' && path.trim() === '')) {
+                preview.innerHTML = '';
+                return;
+            }
+            
+            // 配列の場合は複数画像を表示
+            let images = [];
+            if (Array.isArray(path)) {
+                images = path;
+            } else if (typeof path === 'string') {
+                // 文字列の場合、JSON配列かどうか確認
+                try {
+                    const parsed = JSON.parse(path);
+                    if (Array.isArray(parsed)) {
+                        images = parsed;
+            } else {
+                        images = [path];
+                    }
+                } catch (e) {
+                    // JSONパースに失敗した場合は文字列として扱う
+                    images = [path];
+                }
+            } else {
+                images = [path];
+            }
+            
+            // 空の配列の場合はプレビューをクリア
+            if (images.length === 0) {
+                preview.innerHTML = '';
+                return;
+            }
+            
+            // 画像URLを解決する関数
+            const resolveImageUrl = (imgPath) => {
+                if (!imgPath || imgPath === 'undefined' || imgPath === 'null' || imgPath.trim() === '') {
+                    return null;
+                }
+                
+                // 既にURLの場合はそのまま使用
+                if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+                    return imgPath;
+                }
+                
+                // 相対パスの場合は解決
+                const pathToResolve = imgPath.startsWith('/') ? imgPath : '/' + imgPath;
+                return resolvePath(pathToResolve);
+            };
+            
+            // 複数画像を表示
+            const imageHtml = images.map((imgPath, index) => {
+                const imageUrl = resolveImageUrl(imgPath);
+                if (!imageUrl) return '';
+                
+                return `
+                    <div style="position: relative; display: inline-block; margin: 5px; max-width: 200px;">
+                        <img src="${imageUrl}" alt="プレビュー ${index + 1}" 
+                             style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;"
+                             onerror="console.error('[ImagePreview] Failed to load image:', '${imageUrl}'); this.onerror=null; this.style.display='none';" />
+                        <button type="button" 
+                                onclick="removeImage('${field}', ${index})" 
+                                style="position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.7); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; line-height: 1;"
+                                title="この画像を削除">×</button>
+                    </div>
+                `;
+            }).filter(html => html !== '').join('');
+            
+            preview.innerHTML = imageHtml || '<span style="color:#999;font-size:12px;">画像が見つかりません</span>';
+            console.log('[ImagePreview] Updated preview for field:', field, 'Images:', images.length);
+        }
+        
+        // 画像を削除する関数（グローバルスコープに配置）
+        window.removeImage = function(field, index) {
+            const input = document.getElementById(`edit-${field}`);
+            const currentValue = input.value.trim();
+            
+            if (!currentValue) return;
+            
+            let images = [];
+            try {
+                const parsed = JSON.parse(currentValue);
+                if (Array.isArray(parsed)) {
+                    images = parsed;
+                } else {
+                    images = [currentValue];
+                }
+            } catch (e) {
+                images = [currentValue];
+            }
+            
+            // 指定されたインデックスの画像を削除
+            if (index >= 0 && index < images.length) {
+                images.splice(index, 1);
+                
+                // 画像が1枚になった場合は文字列として保存、複数枚の場合は配列として保存
+                if (images.length === 0) {
+                    input.value = '';
+                    updateImagePreview(field, '');
+                } else if (images.length === 1) {
+                    input.value = images[0];
+                    updateImagePreview(field, images[0]);
+                } else {
+                    input.value = JSON.stringify(images);
+                    updateImagePreview(field, images);
+                }
+                
+                showMessage('画像を削除しました', 'success');
+            }
+        };
+
+        // 画像をリサイズ（スマホの大きな画像を圧縮）
+        function resizeImage(file, maxWidth = 1920, maxHeight = 1920, quality = 0.8) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // リサイズが必要かチェック
+                        if (width > maxWidth || height > maxHeight) {
+                            if (width > height) {
+                                if (width > maxWidth) {
+                                    height = (height * maxWidth) / width;
+                                    width = maxWidth;
+                                }
+                            } else {
+                                if (height > maxHeight) {
+                                    width = (width * maxHeight) / height;
+                                    height = maxHeight;
+                                }
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                // 元のファイル名を保持
+                                const resizedFile = new File([blob], file.name, {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now()
+                                });
+                                resolve(resizedFile);
+                            } else {
+                                resolve(file); // リサイズ失敗時は元のファイルを返す
+                            }
+                        }, 'image/jpeg', quality);
+                    };
+                    img.onerror = () => {
+                        resolve(file); // エラー時は元のファイルを返す
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => {
+                    resolve(file); // エラー時は元のファイルを返す
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 画像アップロード（複数選択対応）
+        async function uploadImage(field) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/jpeg,image/png,image/webp,image/heic,image/heif';
+            input.multiple = true; // 複数選択を可能にする
+            // capture属性は削除（ライブラリからも選択できるようにする）
+            // カメラを使いたい場合は、ファイル選択時に「カメラ」を選択できる
+            input.onchange = async (e) => {
+                const files = Array.from(e.target.files);
+                if (!files || files.length === 0) return;
+
+                try {
+                    showMessage(`${files.length}枚の画像を処理中...`, 'success');
+                    
+                    const uploadedImages = []; // アップロード成功した画像のパスを保存
+                    const maxSize = 10 * 1024 * 1024; // 10MB
+                    
+                    // 各ファイルを順番にアップロード
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        
+                        // ファイルサイズチェック
+                    if (file.size > maxSize) {
+                            console.warn(`[ImageUpload] File ${i + 1} is too large: ${file.size} bytes`);
+                            showMessage(`⚠️ 画像${i + 1}のサイズが大きすぎます（最大10MB）。リサイズしてからアップロードします...`, 'warning');
+                    }
+
+                    // 画像をリサイズ（スマホの大きな画像を圧縮）
+                    let fileToUpload = file;
+                    if (file.type.startsWith('image/')) {
+                        try {
+                            fileToUpload = await resizeImage(file, 1920, 1920, 0.85);
+                                console.log(`[ImageUpload] File ${i + 1} resized: ${file.size} -> ${fileToUpload.size} bytes`);
+                        } catch (resizeError) {
+                                console.warn(`[ImageUpload] File ${i + 1} resize failed, using original:`, resizeError);
+                            // リサイズ失敗時は元のファイルを使用
+                        }
+                    }
+
+                    let imagePath = null;
+                    
+                        // AWS S3へのアップロードを優先
+                    if (window.AWSS3Upload && window.AWSS3Upload.isAvailable()) {
+                        try {
+                                showMessage(`画像${i + 1}/${files.length}をS3にアップロード中...`, 'success');
+                            const result = await window.AWSS3Upload.uploadImage(fileToUpload, field);
+                                console.log(`[ImageUpload] File ${i + 1} upload result:`, result);
+                            imagePath = result.path || result.url;
+                                uploadedImages.push(imagePath);
+                                console.log(`[ImageUpload] File ${i + 1} uploaded:`, imagePath);
+                        } catch (s3Error) {
+                                console.error(`[ImageUpload] File ${i + 1} S3 upload error:`, s3Error);
+                                showMessage(`画像${i + 1}のアップロードに失敗しました: ${s3Error.message}`, 'error');
+                                // エラーが発生しても次のファイルの処理を続ける
+                                continue;
+                        }
+                    } else if (isDevelopmentServer()) {
+                        // 開発サーバーが利用可能な場合は、直接APIエンドポイントにリクエスト
+                            try {
+                                showMessage(`画像${i + 1}/${files.length}をアップロード中...`, 'success');
+                        const formData = new FormData();
+                        formData.append('image', fileToUpload);
+                        
+                        const response = await fetch(resolvePath('/api/cleaning-manual/upload-image'), {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            imagePath = result.path || result.url;
+                                    uploadedImages.push(imagePath);
+                                    console.log(`[ImageUpload] File ${i + 1} uploaded:`, imagePath);
+                        } else {
+                            const errorText = await response.text();
+                                    console.error(`[ImageUpload] File ${i + 1} upload error:`, errorText);
+                                    showMessage(`画像${i + 1}のアップロードに失敗しました: ${errorText}`, 'error');
+                                    continue;
+                                }
+                            } catch (error) {
+                                console.error(`[ImageUpload] File ${i + 1} upload error:`, error);
+                                showMessage(`画像${i + 1}のアップロードエラー: ${error.message}`, 'error');
+                                continue;
+                        }
+                    } else {
+                            showMessage('⚠️ 画像のアップロードには開発サーバーまたはAWS S3が必要です。', 'error');
+                        return;
+                    }
+                    }
+                    
+                    // アップロード成功した画像を処理
+                    if (uploadedImages.length > 0) {
+                        // 既存の画像パスを取得（配列または文字列）
+                        const currentValue = document.getElementById(`edit-${field}`).value.trim();
+                        let existingImages = [];
+                        
+                        // 既存の値が配列形式（JSON）かどうか確認
+                        if (currentValue) {
+                            try {
+                                const parsed = JSON.parse(currentValue);
+                                if (Array.isArray(parsed)) {
+                                    existingImages = parsed;
+                                } else {
+                                    // 文字列の場合は配列に変換
+                                    existingImages = [currentValue];
+                                }
+                            } catch (e) {
+                                // JSONパースに失敗した場合は文字列として扱う
+                                existingImages = [currentValue];
+                            }
+                        }
+                        
+                        // 新しい画像を既存の画像に追加
+                        const allImages = [...existingImages, ...uploadedImages];
+                        
+                        // 複数枚の場合は配列として保存、1枚の場合は文字列として保存（後方互換性のため）
+                        if (allImages.length === 1) {
+                            document.getElementById(`edit-${field}`).value = allImages[0];
+                            updateImagePreview(field, allImages[0]);
+                        } else {
+                            // 複数枚の場合は配列として保存
+                            document.getElementById(`edit-${field}`).value = JSON.stringify(allImages);
+                            updateImagePreview(field, allImages); // 複数画像のプレビューを更新
+                        }
+                        
+                        showMessage(`${uploadedImages.length}枚の画像をアップロードしました`, 'success');
+                    } else {
+                        showMessage('画像のアップロードに失敗しました', 'error');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showMessage('画像のアップロードエラー: ' + (error.message || error.toString()), 'error');
+                }
+            };
+            input.click();
+        }
+        
+        // 下書き保存（Firebase削除により無効化）
+        async function saveDraft() {
+            showMessage('⚠️ 下書き保存機能は現在利用できません。', 'error');
+            return;
+            
+            const category = document.getElementById('edit-category').value;
+            const index = parseInt(document.getElementById('edit-index').value);
+            const isNew = index === -1;
+
+            // 画像フィールドの値を処理（配列形式にも対応）
+            const processImageField = (fieldId) => {
+                const value = (document.getElementById(fieldId).value || '').trim();
+                if (!value) return undefined;
+                
+                // JSON配列かどうか確認
+                try {
+                    const parsed = JSON.parse(value);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        // 配列の場合はそのまま返す（複数画像）
+                        return parsed;
+                    } else if (Array.isArray(parsed) && parsed.length === 0) {
+                        return undefined;
+                    }
+                } catch (e) {
+                    // JSONパースに失敗した場合は文字列として扱う（単一画像）
+                }
+                
+                // 文字列の場合はそのまま返す
+                return value;
+            };
+
+            const updatedItem = {
+                title: document.getElementById('edit-title').value,
+                category: getCategoryName(category),
+                risk: document.getElementById('edit-risk').value,
+                bad: document.getElementById('edit-bad').value,
+                badImage: processImageField('edit-badImage'),
+                good: document.getElementById('edit-good').value,
+                goodImage: processImageField('edit-goodImage'),
+                qa1q: document.getElementById('edit-qa1q').value,
+                qa1a: document.getElementById('edit-qa1a').value,
+                qa2q: document.getElementById('edit-qa2q').value,
+                qa2a: document.getElementById('edit-qa2a').value
+            };
+
+            // カテゴリが存在しない場合は初期化
+            if (!manualData[category]) {
+                manualData[category] = [];
+            }
+
+            // 新規追加の場合はpush、既存の場合は更新
+            if (isNew) {
+                manualData[category].push(updatedItem);
+                console.log('[CleaningManualAdmin] Added new item to category:', category);
+            } else {
+                // 既存項目の更新
+                if (manualData[category] && Array.isArray(manualData[category]) && manualData[category][index]) {
+                    manualData[category][index] = updatedItem;
+                    console.log('[CleaningManualAdmin] Updated item at index:', index, 'in category:', category);
+                } else {
+                    console.error('[CleaningManualAdmin] Cannot update item - not found:', { category, index });
+                    showMessage('項目の更新に失敗しました。項目が見つかりません。', 'error');
+                    return;
+                }
+            }
+
+            try {
+                if (isAWSAvailable()) {
+                    await window.AWSCleaningManualAPI.saveDraft(manualData);
+                showMessage('下書きを保存しました。後で確認して確定できます。', 'success');
+                } else if (isDevelopmentServer()) {
+                    // 開発サーバーの場合はAPI経由で保存
+                    const response = await fetch(resolvePath('/api/cleaning-manual/draft'), {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(manualData)
+                    });
+                    if (!response.ok) {
+                        throw new Error('保存に失敗しました');
+                    }
+                    showMessage('下書きを保存しました。後で確認して確定できます。', 'success');
+                } else {
+                    showMessage('⚠️ 下書き保存にはAWS APIまたは開発サーバーが必要です。', 'error');
+                    return;
+                }
+                closeEditModal();
+                renderItems();
+            } catch (error) {
+                console.error('Save draft error:', error);
+                showMessage('下書き保存エラー: ' + error.message, 'error');
+            }
+        }
+
+        // フォーム送信（確定保存）
+        document.getElementById('edit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const category = document.getElementById('edit-category').value;
+            const index = parseInt(document.getElementById('edit-index').value);
+            const isNew = index === -1;
+
+            // 画像フィールドの値を処理（配列形式にも対応）
+            const processImageField = (fieldId) => {
+                const value = (document.getElementById(fieldId).value || '').trim();
+                if (!value) return undefined;
+                
+                // JSON配列かどうか確認
+                try {
+                    const parsed = JSON.parse(value);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        // 配列の場合はそのまま返す（複数画像）
+                        return parsed;
+                    } else if (Array.isArray(parsed) && parsed.length === 0) {
+                        return undefined;
+                    }
+                } catch (e) {
+                    // JSONパースに失敗した場合は文字列として扱う（単一画像）
+                }
+                
+                // 文字列の場合はそのまま返す
+                return value;
+            };
+
+            const updatedItem = {
+                title: document.getElementById('edit-title').value,
+                category: getCategoryName(category),
+                risk: document.getElementById('edit-risk').value,
+                bad: document.getElementById('edit-bad').value,
+                badImage: processImageField('edit-badImage'),
+                good: document.getElementById('edit-good').value,
+                goodImage: processImageField('edit-goodImage'),
+                qa1q: document.getElementById('edit-qa1q').value,
+                qa1a: document.getElementById('edit-qa1a').value,
+                qa2q: document.getElementById('edit-qa2q').value,
+                qa2a: document.getElementById('edit-qa2a').value
+            };
+
+            // カテゴリが存在しない場合は初期化
+            if (!manualData[category]) {
+                manualData[category] = [];
+            }
+
+            // 新規追加の場合はpush、既存の場合は更新
+            if (isNew) {
+                manualData[category].push(updatedItem);
+                console.log('[CleaningManualAdmin] Added new item to category:', category);
+            } else {
+                // 既存項目の更新
+                if (manualData[category] && Array.isArray(manualData[category]) && manualData[category][index]) {
+                    manualData[category][index] = updatedItem;
+                    console.log('[CleaningManualAdmin] Updated item at index:', index, 'in category:', category);
+                } else {
+                    console.error('[CleaningManualAdmin] Cannot update item - not found:', { category, index });
+                    showMessage('項目の更新に失敗しました。項目が見つかりません。', 'error');
+                    return;
+                }
+            }
+
+            try {
+                // AWS APIが利用可能な場合はAWSに保存
+                if (isAWSAvailable()) {
+                    await window.AWSCleaningManualAPI.saveData(manualData, false);
+                    showMessage('確定保存しました。一般ユーザーに表示されます。', 'success');
+                    closeEditModal();
+                    renderItems();
+                } else if (isDevelopmentServer()) {
+                    // 開発サーバーの場合はAPI経由で保存
+                    const response = await fetch(resolvePath('/api/cleaning-manual'), {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(manualData)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        showMessage(result.message || '保存しました。変更を確認してからGitにコミット・プッシュしてください。', 'success');
+                        closeEditModal();
+                        renderItems();
+                    } else {
+                        showMessage('保存に失敗しました', 'error');
+                    }
+                } else {
+                    showMessage('⚠️ 保存にはAWS APIまたは開発サーバーが必要です。', 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showMessage('保存エラー: ' + error.message, 'error');
+            }
+        });
+
+        // メッセージ表示
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type} active`;
+            setTimeout(() => {
+                messageEl.classList.remove('active');
+            }, 3000);
+        }
+
+        // 初期データをインポート
+        async function importInitialData() {
+            if (!confirm('初期データをインポートしますか？既存のデータは上書きされます。')) {
+                return;
+            }
+
+            try {
+                // JSONファイルから初期データを読み込む
+                // ローカル開発環境では直接パスを使用、本番環境ではresolvePathを使用
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                const jsonUrl = isLocalDev ? '/data/cleaning-manual.json' : resolvePath('/data/cleaning-manual.json');
+                console.log('[CleaningManualAdmin] Importing initial data from:', jsonUrl, '(isLocalDev:', isLocalDev, ')');
+                
+                const response = await fetch(jsonUrl);
+                if (!response.ok) {
+                    throw new Error(`初期データファイルが見つかりません (Status: ${response.status}, URL: ${response.url})`);
+                }
+
+                const initialData = await response.json();
+                
+                // AWS APIが利用可能な場合はAWSに保存
+                if (isAWSAvailable()) {
+                    await window.AWSCleaningManualAPI.saveData(initialData, false);
+                    showMessage('初期データをインポートしました（確定保存）', 'success');
+                } else if (isDevelopmentServer()) {
+                    // 開発サーバーの場合はAPI経由で保存
+                    const saveResponse = await fetch(resolvePath('/api/cleaning-manual'), {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(initialData)
+                    });
+
+                    if (saveResponse.ok) {
+                        showMessage('初期データをインポートしました', 'success');
+                    } else {
+                        throw new Error('保存に失敗しました');
+                    }
+                } else {
+                    showMessage('⚠️ インポートにはAWS APIまたは開発サーバーが必要です。', 'error');
+                    return;
+                }
+
+                // データを再読み込み
+                manualData = initialData;
+                renderItems();
+            } catch (error) {
+                console.error('Import error:', error);
+                showMessage('初期データのインポートエラー: ' + error.message, 'error');
+            }
+        }
+
+        // グローバルに公開（HTMLから呼び出せるように）
+        window.loadDraft = loadDraft;
+        window.applyDraft = applyDraft;
+        window.discardDraft = discardDraft;
+        window.toggleOperationGuide = toggleOperationGuide;
+        window.importInitialData = importInitialData;
+        window.openEditModal = openEditModal;
+
+        // URLパラメータからカテゴリとインデックスを取得して編集モーダルを開く
+        function openEditModalFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const category = urlParams.get('category');
+            const index = urlParams.get('index');
+            
+            if (category && index !== null) {
+                // データ読み込み後に編集モーダルを開く
+                const checkInterval = setInterval(() => {
+                    if (manualData && manualData[category] && manualData[category][parseInt(index)]) {
+                        clearInterval(checkInterval);
+                        openEditModal(category, parseInt(index));
+                        // URLパラメータを削除
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                }, 100);
+                
+                // タイムアウト（5秒）
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                }, 5000);
+            }
+        }
+
+        // 操作補則の開閉
+        function toggleOperationGuide() {
+            const guide = document.getElementById('operation-guide');
+            if (guide) {
+                guide.classList.toggle('collapsed');
+            }
+        }
+
+        // 初期化
+        (async function() {
+            const authOk = await initAuth();
+            if (authOk) {
+                await loadData();
+                // データ読み込み後にURLパラメータをチェック
+                setTimeout(() => {
+                    openEditModalFromURL();
+                }, 500);
+            }
+        })();
+    </script>
+</body>
+</html>
+

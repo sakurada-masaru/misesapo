@@ -1,0 +1,30 @@
+[
+  {
+    "title": "グリストラップ",
+    "details": "マニフェスト発行なし / 床置き型",
+    "qty": "2",
+    "price": "¥42,000",
+    "service_item_id": 1
+  },
+  {
+    "title": "ゴミ回収",
+    "details": "不用品/粗大ゴミ",
+    "qty": "-",
+    "price": "¥8,750",
+    "service_item_id": 21
+  },
+  {
+    "title": "トイレ洗浄",
+    "details": "分解洗浄あり",
+    "qty": "2",
+    "price": "¥35,000",
+    "service_item_id": 18
+  },
+  {
+    "title": "床清掃",
+    "details": "床ポリッシャー洗浄 / キッチン",
+    "qty": "-",
+    "price": "¥35,000",
+    "service_item_id": 19
+  }
+]

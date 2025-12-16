@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title>床清掃</title>
+    
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+    <style>
+      /* Staff signin page: hide all headers */
+      body.page-staff-signin #default-header-wrapper,
+      body.page-staff-signin #normal-header-wrapper {
+        display: none !important;
+      }
+      
+      /* Staff pages: hide global header and footer */
+      body[class*="page-staff-"] #default-header-wrapper,
+      body[class*="page-staff-"] #normal-header-wrapper,
+      body[class*="page-staff-"] footer {
+        display: none !important;
+      }
+      
+      /* Staff pages: ensure full height layout */
+      body[class*="page-staff-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="page-staff-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Admin pages: hide global header while keeping auth buttons */
+      body[class*="page-admin-"] #default-header-wrapper {
+        height: 0;
+        overflow: visible;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .site-header {
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        min-height: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .inner {
+        justify-content: flex-end;
+        padding: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-left,
+      body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
+      body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
+      body[class*="page-admin-"] #default-header-wrapper .spacer,
+      body[class*="page-admin-"] #default-header-wrapper .role-badge {
+        display: none !important;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right {
+        position: fixed;
+        top: 16px;
+        right: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 18px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.18);
+        z-index: 300;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
+        font-weight: 600;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+      }
+      
+      /* Sales pages: hide global header and footer */
+      body[class*="sales-"] #default-header-wrapper,
+      body[class*="sales-"] #normal-header-wrapper,
+      body[class*="sales-"] footer {
+        display: none !important;
+      }
+      
+      /* Sales pages: ensure full height layout */
+      body[class*="sales-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="sales-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body class="theme-pink page-admin-services">
+    <div id="default-header-wrapper">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+<header id="header-guest" class="site-header" data-role="guest">
+  <div class="inner wide">
+    <div class="nav-left">
+      <a class="brand brand-logo" href="/" aria-label="ミセサポ ホーム">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+      </a>
+      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+    </div>
+    <div class="spacer"></div>
+    <nav class="nav-right hide-sm" aria-label="User">
+      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+      <a class="nav-link" href="/signin">ログイン</a>
+      <a class="nav-link primary" href="/signup">新規登録</a>
+      <button class="icon-btn" aria-label="通知">
+        <i class="fas fa-bell"></i>
+      </button>
+      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </nav>
+    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+  <!-- スマホ版ナビゲーションメニュー -->
+  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
+    <div class="mobile-nav-content">
+      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+      <nav class="mobile-nav-user" aria-label="User">
+        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+        <a class="mobile-nav-link" href="/signin">ログイン</a>
+        <a class="mobile-nav-link primary" href="/signup">新規登録</a>
+      </nav>
+    </div>
+  </nav>
+</header>
+
+    </div>
+    <!-- 通常ヘッダー（ログイン画面用） -->
+    <div id="normal-header-wrapper" style="display: none;">
+    <!-- 通常ヘッダー -->
+<header class="normal-header">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+            </a>
+                </div>
+        <nav class="normal-header-nav">
+            <a href="/">TOP</a>
+            <a href="/service">対応可能サービス</a>
+            <a href="/lp#voice">お客様の声</a>
+            <a href="/customers-support-desk">カスタマーズサポート</a>
+            <a href="/announcements">お知らせ</a>
+            <a href="/privacy-policy">規約＆ポリシー</a>
+        </nav>
+        <div class="normal-header-actions">
+            <a href="/signin" class="normal-header-login">ログイン</a>
+        </div>
+            </div>
+</header>
+
+
+    </div>
+    <main id="main">
+      
+
+
+
+<!-- AWS Services API -->
+<script src="/js/aws-services-api.js"></script>
+
+<main id="main" class="container admin-service-detail" data-service-id="19">
+  <div class="page-header">
+    <a href="/admin/services/" class="back-link">
+      <i class="fas fa-arrow-left"></i> サービス一覧に戻る
+    </a>
+    <h1 class="page-title">床清掃</h1>
+  </div>
+
+  <div class="service-detail-card">
+    <div class="service-hero-image">
+      <img id="service-hero-img" src="/images/yuka.png" alt="床清掃" />
+    </div>
+    <div class="service-detail-card-content">
+      <div class="service-detail-header">
+        <div class="service-info">
+          <h2 class="service-name">床清掃</h2>
+          <div class="service-meta">
+            <span class="service-category">フロア</span>
+            <span class="service-id">サービスID: 19</span>
+          </div>
+        </div>
+        <div class="service-price-section">
+          <div class="service-price-large">¥ 12,250</div>
+          <p class="price-note">表示価格は目安です。状況により金額が変動する可能性があります。</p>
+        </div>
+      </div>
+
+      <div class="service-detail-content">
+      <section class="detail-section">
+        <h3 class="section-title">サービス説明</h3>
+        <p class="section-content">飲食店の床は、油、食材カス、飲み物の飛び散りなどで常に汚れやすい状況です。</p>
+      </section>
+
+      <section class="detail-section">
+        <h3 class="section-title">問題点</h3>
+        <ul class="problems-list">
+          
+          <li>ベタつきや滑り、黒ずみや油膜による不衛生な印象や転倒</li>
+          
+          <li>カビや雑菌の繁殖による悪臭や食中毒リスク</li>
+          
+          <li>汚れの蓄積による床材の劣化・寿命短縮</li>
+          
+        </ul>
+      </section>
+
+      <section class="detail-section">
+        <h3 class="section-title">解決策・サービス内容</h3>
+        <p class="section-content solution-text">床材に応じて洗剤洗浄・高圧洗浄・ワックス仕上げを実施。</p>
+      </section>
+
+      <!-- モーダル表示内容 -->
+      <section class="detail-section" id="modal-sections-section" style="display: none;">
+        <h3 class="section-title">モーダル表示内容（セクション一覧）</h3>
+        <div id="modal-sections-content" class="modal-content-display"></div>
+      </section>
+    </div>
+
+      <div class="service-detail-actions">
+        <a href="/admin/services/" class="btn btn-outline">
+          <i class="fas fa-arrow-left"></i> 一覧に戻る
+        </a>
+        <button class="btn btn-primary" id="preview-modal-btn">
+          <i class="fas fa-eye"></i> モーダルをプレビュー
+        </button>
+        <a href="/admin/services/19/edit" class="btn btn-primary">
+          <i class="fas fa-edit"></i> 編集
+        </a>
+        <button class="btn btn-danger" onclick="deleteService(parseInt(document.getElementById('main').dataset.serviceId))">
+          <i class="fas fa-trash"></i> 削除
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Service Item Modal (no Tailwind dependency) -->
+<div id="service-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-dialog">
+    <!-- Header image -->
+    <div class="modal-hero">
+      <img id="modal-image" src="" alt="Service Image" class="modal-hero-img" />
+      <button id="close-modal-btn" class="modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <h2 id="modal-title" class="modal-title"></h2>
+      <hr class="divider" />
+
+      <div id="modal-form" class="stack lg"></div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button class="btn btn-primary btn-fixed btn-round">次へ</button>
+        <button id="back-modal-btn" class="btn btn-fixed btn-round">戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Details Modal -->
+<div id="details-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="details-modal-title">
+  <div class="modal-dialog">
+    <!-- Header image -->
+    <div class="modal-hero">
+      <img id="details-modal-image" src="" alt="Service Image" class="modal-hero-img" />
+      <button id="close-details-modal-btn" class="modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body modal-scroll">
+      <div class="modal-headline">
+        <h2 id="details-modal-title" class="modal-title"></h2>
+        <div class="price-line">
+          <span class="muted"><i class="fas fa-shopping-cart"></i> 清掃料金は</span>
+          <span class="price-strong">¥0</span>
+          <span class="muted">です。</span>
+        </div>
+      </div>
+      <p class="small muted">設備の詳細を選択してください。選択内容に応じて金額が自動計算されます。</p>
+      <hr class="divider" />
+
+      <div id="details-form" class="stack lg"></div>
+
+      <!-- Remarks / options -->
+        <div>
+          <h3 class="section-title">グリスフィルターをレンタルしますか？</h3>
+          <div class="stack sm">
+            <label class="choice-row"><input type="radio" name="rental" class="radio" /><span>はい</span></label>
+            <label class="choice-row"><input type="radio" name="rental" class="radio" /><span>いいえ</span></label>
+          </div>
+          <h3 class="section-title">備考欄(任意)</h3>
+          <textarea class="textarea" rows="3" placeholder="自由入力"></textarea>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button class="btn btn-primary btn-fixed btn-round">次へ</button>
+        <button id="back-to-service-modal-btn" class="btn btn-fixed btn-round">戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Modal (最終セクション) -->
+<div id="order-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
+  <div class="modal-dialog">
+    <!-- Header image -->
+    <div class="modal-hero">
+      <img id="order-modal-image" src="" alt="Service Image" class="modal-hero-img" />
+      <button id="close-order-modal-btn" class="modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <h2 id="order-modal-title" class="modal-title"></h2>
+      <hr class="divider" />
+
+      <!-- Order Section -->
+      <div class="order-section">
+        <p class="small">定期発注なら最大 ¥ 0 お得！</p>
+        <div class="actions">
+          <button id="set-regular-order-btn" class="btn btn-fixed btn-round">定期発注にする</button>
+          <button id="add-to-cart-btn" class="btn btn-primary btn-fixed btn-round">カートに入れる</button>
+          <button id="back-to-details-modal-btn" class="btn btn-fixed btn-round">戻る</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Cart Added Modal -->
+<div id="cart-added-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-dialog">
+    <button id="close-cart-added-modal-btn" class="modal-close close-pink" aria-label="閉じる">
+      <i class="fas fa-times"></i>
+    </button>
+    <!-- Full-width title -->
+    <h2 class="modal-title cart-added-title">
+      <i class="fas fa-check-circle"></i>
+      カートに追加しました
+    </h2>
+
+    <div class="grid cart-grid gap-16">
+      <!-- Left: confirmation -->
+      <div>
+        <div class="row">
+          <img id="cart-added-item-image" src="https://placehold.co/150x150/e2e8f0/666" alt="Service Image" class="avatar-round" />
+          <div>
+            <h3 id="cart-added-item-title">サービス名</h3>
+            <div id="cart-added-item-details" class="small muted"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: totals/actions -->
+      <div>
+        <h3>カート小計</h3>
+        <p>¥<span class="subtotal-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></p>
+        <div class="actions">
+          <a class="btn btn-primary btn-fixed btn-round" href="/cart">カートへ進む</a>
+          <button id="continue-shopping-btn" class="btn btn-fixed btn-round">発注を続ける</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <script>
+    // Load service data and render modal content
+    (function() {
+      async function loadServiceData() {
+        try {
+          const serviceId = parseInt(document.getElementById('main').dataset.serviceId || '0');
+          
+          if (!window.AWSServicesAPI) {
+            console.warn('[AdminServiceDetail] AWS Services API not loaded');
+            return;
+          }
+          
+          const service = await window.AWSServicesAPI.getService(serviceId);
+          
+          if (service) {
+            // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            let sections = service.sections || [];
+            if (!sections.length && (service.forms || service.details)) {
+              // formsとdetailsを統合してsectionsに変換
+              sections = [];
+              if (service.forms && service.forms.length > 0) {
+                sections = sections.concat(service.forms);
+              }
+              if (service.details && service.details.length > 0) {
+                sections = sections.concat(service.details);
+              }
+            }
+            
+            // Render sections
+            if (sections.length > 0) {
+              renderModalContent('modal-sections-content', sections);
+              document.getElementById('modal-sections-section').style.display = 'block';
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load service data:', error);
+        }
+      }
+      
+      function renderModalContent(containerId, sections) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        sections.forEach((sec, idx) => {
+          const sectionDiv = document.createElement('div');
+          sectionDiv.className = 'modal-section';
+          
+          const title = document.createElement('h4');
+          title.className = 'modal-section-title';
+          title.textContent = sec['section-title'] || `セクション ${idx + 1}`;
+          sectionDiv.appendChild(title);
+          
+          const type = (sec['section-type'] || 'radio-text').toLowerCase();
+          const items = sec['section-items'] || [];
+          
+          if (type === 'textarea') {
+            const textareaInfo = document.createElement('div');
+            textareaInfo.className = 'modal-textarea-info';
+            textareaInfo.innerHTML = `
+              <p><strong>プレースホルダー:</strong> ${sec.placeholder || 'なし'}</p>
+              <p><strong>最大文字数:</strong> ${sec.maxLength || '制限なし'}</p>
+              <p><strong>キー:</strong> ${sec.key || 'なし'}</p>
+            `;
+            sectionDiv.appendChild(textareaInfo);
+          } else if (items.length > 0) {
+            const itemsList = document.createElement('ul');
+            itemsList.className = 'modal-items-list';
+            
+            items.forEach(item => {
+              const li = document.createElement('li');
+              li.className = 'modal-item';
+              
+              if (typeof item === 'string') {
+                li.textContent = item;
+              } else {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'modal-item-content';
+                
+                if (item['img-url'] || item.img) {
+                  const img = document.createElement('img');
+                  img.src = '/' + (item['img-url'] || item.img);
+                  img.alt = item.text || '';
+                  img.className = 'modal-item-image';
+                  img.onerror = function() { this.style.display = 'none'; };
+                  itemDiv.appendChild(img);
+                }
+                
+                const text = document.createElement('span');
+                text.textContent = item.text || item;
+                itemDiv.appendChild(text);
+                
+                if (item.countable) {
+                  const countInfo = document.createElement('span');
+                  countInfo.className = 'modal-item-count';
+                  countInfo.textContent = `（数量入力: ${item.unit || ''}）`;
+                  itemDiv.appendChild(countInfo);
+                }
+                
+                li.appendChild(itemDiv);
+              }
+              
+              itemsList.appendChild(li);
+            });
+            
+            sectionDiv.appendChild(itemsList);
+          }
+          
+          if (sec.required !== undefined) {
+            const requiredBadge = document.createElement('span');
+            requiredBadge.className = 'modal-required-badge';
+            requiredBadge.textContent = sec.required ? '必須' : '任意';
+            title.appendChild(requiredBadge);
+          }
+          
+          container.appendChild(sectionDiv);
+        });
+      }
+      
+      loadServiceData();
+    })();
+    
+    // Modal preview functionality
+    (function() {
+      const previewBtn = document.getElementById('preview-modal-btn');
+      if (previewBtn) {
+        previewBtn.addEventListener('click', async function() {
+          try {
+            const serviceId = parseInt(document.getElementById('main').dataset.serviceId || '0');
+            
+            if (!window.AWSServicesAPI) {
+              throw new Error('AWS Services APIが読み込まれていません。');
+            }
+            
+            const service = await window.AWSServicesAPI.getService(serviceId);
+            
+            if (service) {
+              if (window.ModalManager) {
+                window.ModalManager.open('service-modal', service);
+              } else if (window.openModal) {
+                window.openModal(service);
+              } else {
+                alert('モーダル機能が利用できません。app.js または modal_manager.js が読み込まれているか確認してください。');
+              }
+            } else {
+              alert('サービスデータが見つかりませんでした。');
+            }
+          } catch (error) {
+            console.error('Failed to load service data:', error);
+            alert('サービスデータの読み込みに失敗しました: ' + error.message);
+          }
+        });
+      }
+    })();
+    
+    // Image fallback handling
+    (function() {
+      const heroImg = document.getElementById('service-hero-img');
+      if (heroImg) {
+        const defaultImg = '/images/service-300x200.svg';
+        
+        // Check if current image is empty or invalid
+        if (!heroImg.src || heroImg.src.endsWith('/') || heroImg.src.includes('undefined')) {
+          heroImg.src = defaultImg;
+        }
+        
+        // Handle image load error
+        heroImg.addEventListener('error', function() {
+          if (this.src !== defaultImg) {
+            this.src = defaultImg;
+          }
+        });
+      }
+      
+    })();
+    
+    // Edit and delete functions (placeholder)
+    window.editService = function(id) {
+      // TODO: Implement edit functionality
+      alert(`サービスID ${id} の編集機能は実装予定です。`);
+    };
+
+    window.deleteService = async function(id) {
+      if (!confirm(`サービスID ${id} を削除してもよろしいですか？\n\nこの操作は取り消せません。`)) {
+        return;
+      }
+      
+      try {
+        if (!window.AWSServicesAPI) {
+          throw new Error('AWS Services APIが読み込まれていません。');
+        }
+        
+        await window.AWSServicesAPI.deleteService(id);
+        alert(`サービスID ${id} を削除しました。`);
+        // 一覧ページにリダイレクト
+        window.location.href = '/admin/services/';
+      } catch (error) {
+        console.error('Delete service error:', error);
+        alert('削除エラー: ' + error.message);
+      }
+    };
+  </script>
+
+  <style>
+    .admin-service-detail {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f9fafb;
+    }
+    .page-header {
+      margin-bottom: 24px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #6b7280;
+      text-decoration: none;
+      font-size: 0.875rem;
+      margin-bottom: 12px;
+      transition: color 0.2s;
+    }
+    .back-link:hover {
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .service-detail-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    
+    .service-hero-image {
+      width: 100%;
+      height: 400px;
+      overflow: hidden;
+      background: #f9fafb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0;
+    }
+    
+    .service-hero-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .service-detail-card-content {
+      padding: 32px;
+    }
+    .service-detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .service-name {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 12px 0;
+    }
+    .service-meta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .service-category {
+      display: inline-block;
+      padding: 6px 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .service-id {
+      font-size: 0.875rem;
+      color: #9ca3af;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .service-price-section {
+      text-align: right;
+    }
+    .service-price-large {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .price-note {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin: 0;
+      line-height: 1.4;
+    }
+    .service-detail-content {
+      margin-bottom: 32px;
+    }
+    .detail-section {
+      margin-bottom: 32px;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .section-content {
+      font-size: 0.95rem;
+      color: #374151;
+      line-height: 1.8;
+      margin: 0;
+    }
+    .solution-text {
+      padding: 16px;
+      background: #d1fae5;
+      border-radius: 8px;
+      border-left: 4px solid #059669;
+      color: #065f46;
+      font-weight: 500;
+    }
+    .problems-list {
+      margin: 0;
+      padding-left: 24px;
+    }
+    .problems-list li {
+      font-size: 0.95rem;
+      color: #374151;
+      line-height: 1.8;
+      margin-bottom: 8px;
+    }
+    .service-image {
+      margin-top: 16px;
+    }
+    .service-image img {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-content-display {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 24px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-section {
+      margin-bottom: 24px;
+      padding: 20px;
+      border: 2px solid #fce7f3;
+      border-radius: 8px;
+      background: #fef7ff;
+    }
+    .modal-section:last-child {
+      margin-bottom: 0;
+    }
+    .modal-section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .modal-required-badge {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      background: #fee2e2;
+      color: #991b1b;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .modal-items-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .modal-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-item-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .modal-item-image {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-item-count {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-left: auto;
+    }
+    .modal-textarea-info {
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-textarea-info p {
+      margin: 8px 0;
+      font-size: 0.875rem;
+      color: #374151;
+    }
+    .service-detail-actions {
+      display: flex;
+      gap: 12px;
+      padding-top: 24px;
+      border-top: 2px solid #e5e7eb;
+      flex-wrap: wrap;
+    }
+    .service-detail-actions .btn {
+      flex: 1;
+      min-width: 120px;
+    }
+    .btn-danger {
+      background: #dc2626;
+      color: #ffffff;
+      border: 1px solid #dc2626;
+    }
+    .btn-danger:hover {
+      background: #b91c1c;
+      border-color: #b91c1c;
+    }
+    @media (max-width: 768px) {
+      .admin-service-detail {
+        padding: 16px;
+      }
+      .service-detail-card-content {
+        padding: 20px;
+      }
+      
+      .service-hero-image {
+        height: 250px;
+      }
+      .service-detail-header {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .service-price-section {
+        text-align: left;
+      }
+      .service-price-large {
+        font-size: 1.5rem;
+      }
+      .service-detail-actions {
+        flex-direction: column;
+      }
+      .service-detail-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</main>
+
+
+    </main>
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script>
+      // ログイン画面では通常ヘッダーを表示
+      (function() {
+        const path = window.location.pathname || '';
+        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
+        
+        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
+        if (isSigninPage) {
+          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
+          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
+          if (defaultHeaderWrapper) {
+            defaultHeaderWrapper.style.display = 'none';
+          }
+          if (normalHeaderWrapper) {
+            normalHeaderWrapper.style.display = 'block';
+            // ログイン画面では通常ヘッダーを常に表示
+            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
+            if (normalHeader) {
+              normalHeader.classList.add('visible');
+            }
+          }
+        }
+      })();
+    </script>
+  </body>
+  </html>
+
+

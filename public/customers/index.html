@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title>導入店舗一覧 | ミセサポ</title>
+    
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+    <style>
+      /* Staff signin page: hide all headers */
+      body.page-staff-signin #default-header-wrapper,
+      body.page-staff-signin #normal-header-wrapper {
+        display: none !important;
+      }
+      
+      /* Staff pages: hide global header and footer */
+      body[class*="page-staff-"] #default-header-wrapper,
+      body[class*="page-staff-"] #normal-header-wrapper,
+      body[class*="page-staff-"] footer {
+        display: none !important;
+      }
+      
+      /* Staff pages: ensure full height layout */
+      body[class*="page-staff-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="page-staff-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Admin pages: hide global header while keeping auth buttons */
+      body[class*="page-admin-"] #default-header-wrapper {
+        height: 0;
+        overflow: visible;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .site-header {
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        min-height: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .inner {
+        justify-content: flex-end;
+        padding: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-left,
+      body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
+      body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
+      body[class*="page-admin-"] #default-header-wrapper .spacer,
+      body[class*="page-admin-"] #default-header-wrapper .role-badge {
+        display: none !important;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right {
+        position: fixed;
+        top: 16px;
+        right: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 18px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.18);
+        z-index: 300;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
+        font-weight: 600;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+      }
+      
+      /* Sales pages: hide global header and footer */
+      body[class*="sales-"] #default-header-wrapper,
+      body[class*="sales-"] #normal-header-wrapper,
+      body[class*="sales-"] footer {
+        display: none !important;
+      }
+      
+      /* Sales pages: ensure full height layout */
+      body[class*="sales-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="sales-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body class="theme-pink page-customers">
+    <div id="default-header-wrapper">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+<header id="header-guest" class="site-header" data-role="guest">
+  <div class="inner wide">
+    <div class="nav-left">
+      <a class="brand brand-logo" href="/" aria-label="ミセサポ ホーム">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+      </a>
+      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+    </div>
+    <div class="spacer"></div>
+    <nav class="nav-right hide-sm" aria-label="User">
+      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+      <a class="nav-link" href="/signin">ログイン</a>
+      <a class="nav-link primary" href="/signup">新規登録</a>
+      <button class="icon-btn" aria-label="通知">
+        <i class="fas fa-bell"></i>
+      </button>
+      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </nav>
+    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+  <!-- スマホ版ナビゲーションメニュー -->
+  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
+    <div class="mobile-nav-content">
+      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+      <nav class="mobile-nav-user" aria-label="User">
+        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+        <a class="mobile-nav-link" href="/signin">ログイン</a>
+        <a class="mobile-nav-link primary" href="/signup">新規登録</a>
+      </nav>
+    </div>
+  </nav>
+</header>
+
+    </div>
+    <!-- 通常ヘッダー（ログイン画面用） -->
+    <div id="normal-header-wrapper" style="display: none;">
+    <!-- 通常ヘッダー -->
+<header class="normal-header">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+            </a>
+                </div>
+        <nav class="normal-header-nav">
+            <a href="/">TOP</a>
+            <a href="/service">対応可能サービス</a>
+            <a href="/lp#voice">お客様の声</a>
+            <a href="/customers-support-desk">カスタマーズサポート</a>
+            <a href="/announcements">お知らせ</a>
+            <a href="/privacy-policy">規約＆ポリシー</a>
+        </nav>
+        <div class="normal-header-actions">
+            <a href="/signin" class="normal-header-login">ログイン</a>
+        </div>
+            </div>
+</header>
+
+
+    </div>
+    <main id="main">
+      
+
+
+
+<main id="main" class="customers-page">
+    <!-- パンくずリスト -->
+    <nav class="breadcrumb" aria-label="パンくずリスト">
+        <div class="breadcrumb-inner">
+            <a href="/">TOP</a>
+            <span>></span>
+            <span class="current">導入店舗一覧</span>
+        </div>
+    </nav>
+
+    <!-- ヒーローセクション -->
+    <section class="customers-hero">
+        <h1>導入店舗一覧</h1>
+        <p>ミセサポをご利用いただいている店舗様をご紹介します</p>
+    </section>
+
+    <!-- メインコンテンツ -->
+    <div class="container">
+        <section class="customers-section">
+            <h2 class="section-title fade-in">導入店舗一覧</h2>
+            <p class="section-description fade-in">全国の飲食店・小売店舗様にご利用いただいています</p>
+            
+            <!-- 無限スライダー（左から右へ） -->
+            <div class="infinite-slider-wrapper fade-in">
+                <div class="swiper infinite-slider swiper-left">
+                    <ul class="swiper-wrapper customer-items">
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer01.jpg" alt="株式会社Dart Ace">
+                            <p>株式会社Dart Ace</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer02.jpg" alt="合同会社TRANSAM">
+                            <p>合同会社TRANSAM</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer03.jpg" alt="Japrise">
+                            <p>Japrise</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer04.jpg" alt="株式会社がっと">
+                            <p>株式会社がっと</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer05.jpg" alt="合同会社FOOD GROOVE JAPAN">
+                            <p>合同会社FOOD GROOVE JAPAN</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer06.jpg" alt="麺と肴　担々麺 ペン坊">
+                            <p>麺と肴　担々麺 ペン坊</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer07.jpg" alt="株式会社クラフトマスタージャパン">
+                            <p>株式会社クラフトマスタージャパン</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer08.jpg" alt="創作イタリアン肉バル　スオーノ">
+                            <p>創作イタリアン肉バル　スオーノ</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer09.jpg" alt="株式会社名店館">
+                            <p>株式会社名店館</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer10.jpg" alt="リストランティアーノ　ルベロ">
+                            <p>リストランティアーノ　ルベロ</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer11.jpg" alt="株式会社Next Culture">
+                            <p>株式会社Next Culture</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer12.jpg" alt="株式会社フードアンドパートナーズ">
+                            <p>株式会社フードアンドパートナーズ</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer13.jpg" alt="株式会社しゃぶ庵">
+                            <p>株式会社しゃぶ庵</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer14.jpg" alt="合同会社SKTC">
+                            <p>合同会社SKTC</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer15.jpg" alt="アークワークス株式会社">
+                            <p>アークワークス株式会社</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer16.jpg" alt="株式会社FELICE">
+                            <p>株式会社FELICE</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer17.jpg" alt="光フードサービス株式会社">
+                            <p>光フードサービス株式会社</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer18.jpg" alt="焼きとん　大黒">
+                            <p>焼きとん　大黒</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer19.jpg" alt="立ち吞み　魚椿">
+                            <p>立ち吞み　魚椿</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer20.jpg" alt="株式会社価値創り研究所">
+                            <p>株式会社価値創り研究所</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer21.jpg" alt="ステーキロッヂ">
+                            <p>ステーキロッヂ</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer22.jpg" alt="株式会社エイトシナジー">
+                            <p>株式会社エイトシナジー</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer23.jpg" alt="蕎麦割烹居酒屋　更科天狐〜さらしなてんこ〜">
+                            <p>蕎麦割烹居酒屋　更科天狐〜さらしなてんこ〜</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer24.jpg" alt="ダイキチシステム株式会社">
+                            <p>ダイキチシステム株式会社</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer25.jpg" alt="やきとり大吉">
+                            <p>やきとり大吉</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 無限スライダー（右から左へ） -->
+            <div class="infinite-slider-wrapper fade-in-delay">
+                <div class="swiper infinite-slider swiper-right">
+                    <ul class="swiper-wrapper customer-items">
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer26.jpg" alt="株式会社まんてん">
+                            <p>株式会社まんてん</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer26.jpg" alt="炉端居酒屋">
+                            <p>炉端居酒屋</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer27.jpg" alt="炭火焼きホルモンまんてん">
+                            <p>炭火焼きホルモンまんてん</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer28.jpg" alt="株式会社ストラク">
+                            <p>株式会社ストラク</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer29.jpg" alt="焼肉商店浦島屋　津田沼店">
+                            <p>焼肉商店浦島屋　津田沼店</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer30.jpg" alt="株式会社INGS">
+                            <p>株式会社INGS</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer31.jpg" alt="CONA　千葉駅前店">
+                            <p>CONA　千葉駅前店</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer32.jpg" alt="ラ・フェス">
+                            <p>ラ・フェス</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer33.jpg" alt="有限会社タカネット">
+                            <p>有限会社タカネット</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer34.jpg" alt="ベトナムパレス船橋">
+                            <p>ベトナムパレス船橋</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer35.jpg" alt="発酵デリカテッセン カフェテリアKouji&ko">
+                            <p>発酵デリカテッセン カフェテリアKouji&ko</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer36.jpg" alt="株式会社アクティブソース">
+                            <p>株式会社アクティブソース</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer37.jpg" alt="晩杯屋">
+                            <p>晩杯屋</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer38.jpg" alt="株式会社雷神">
+                            <p>株式会社雷神</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer39.jpg" alt="油そば雷神　市川店">
+                            <p>油そば雷神　市川店</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer40.jpg" alt="西麻布ZERO">
+                            <p>西麻布ZERO</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer41.jpg" alt="西麻布カラオケCLT">
+                            <p>西麻布カラオケCLT</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer42.jpg" alt="株式会社エデュケーション">
+                            <p>株式会社エデュケーション</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer43.jpg" alt="モンキーツリー">
+                            <p>モンキーツリー</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer44.jpg" alt="株式会社ZANGIRI">
+                            <p>株式会社ZANGIRI</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer45.jpg" alt="株式会社SSG">
+                            <p>株式会社SSG</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer46.jpg" alt="株式会社GOSSO">
+                            <p>株式会社GOSSO</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer47.jpg" alt="0秒レモンサワー仙台ホルモン焼肉酒場ときわ亭　渋谷店">
+                            <p>0秒レモンサワー仙台ホルモン焼肉酒場ときわ亭　渋谷店</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer48.jpg" alt="板前寿司ジャパン">
+                            <p>板前寿司ジャパン</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer49.jpg" alt="株式会社カワイハイ">
+                            <p>株式会社カワイハイ</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 無限スライダー（左から右へ - 3列目） -->
+            <div class="infinite-slider-wrapper fade-in-delay-2">
+                <div class="swiper infinite-slider swiper-left">
+                    <ul class="swiper-wrapper customer-items">
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer50.jpg" alt="東京五反田串揚げ酒場仲丸">
+                            <p>東京五反田串揚げ酒場仲丸</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer51.jpg" alt="人形町和食居酒屋なかまる">
+                            <p>人形町和食居酒屋なかまる</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer52.jpg" alt="株式会社でですけ">
+                            <p>株式会社でですけ</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer53.jpg" alt="でですけサイゴンキッチン">
+                            <p>でですけサイゴンキッチン</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer54.jpg" alt="株式会社小肥羊ジャパン">
+                            <p>株式会社小肥羊ジャパン</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer55.jpg" alt="株式会社パズルフードサービス">
+                            <p>株式会社パズルフードサービス</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer56.jpg" alt="株式会社ニュートン">
+                            <p>株式会社ニュートン</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer57.jpg" alt="カラオケパセラ">
+                            <p>カラオケパセラ</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer58.jpg" alt="株式会社ラムラ">
+                            <p>株式会社ラムラ</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer59.jpg" alt="すし土風炉　登戸店">
+                            <p>すし土風炉　登戸店</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer60.jpg" alt="株式会社2M8">
+                            <p>株式会社2M8</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer61.jpg" alt="株式会社デイジイ">
+                            <p>株式会社デイジイ</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer62.jpg" alt="株式会社CatchBall">
+                            <p>株式会社CatchBall</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer63.jpg" alt="御座敷天婦羅　神楽坂 天孝">
+                            <p>御座敷天婦羅　神楽坂 天孝</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer64.jpg" alt="FEEP">
+                            <p>FEEP</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer65.jpg" alt="一般社団法人日本創世推進機構">
+                            <p>一般社団法人日本創世推進機構</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer66.jpg" alt="株式会社スモールズ">
+                            <p>株式会社スモールズ</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer67.jpg" alt="オイスター&珍味 bar 不夜城">
+                            <p>オイスター&珍味 bar 不夜城</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer68.jpg" alt="ディストピアBar KARMA カルマン">
+                            <p>ディストピアBar KARMA カルマン</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer69.jpg" alt="Japanese Bar　猪鹿蝶">
+                            <p>Japanese Bar　猪鹿蝶</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer70.jpg" alt="Bar ANIME HOLIC アニメホリック goldengai">
+                            <p>Bar ANIME HOLIC アニメホリック goldengai</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer71.jpg" alt="Bar 灯鏡 tokyo　歌舞伎町レッドのれん街">
+                            <p>Bar 灯鏡 tokyo　歌舞伎町レッドのれん街</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer72.jpg" alt="株式会社千寿菊">
+                            <p>株式会社千寿菊</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer73.jpg" alt="株式会社ビック・バン">
+                            <p>株式会社ビック・バン</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer74.jpg" alt="ホルモン屋　だん">
+                            <p>ホルモン屋　だん</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer75.jpg" alt="生ラムかんな">
+                            <p>生ラムかんな</p>
+                        </li>
+                        <li class="swiper-slide customer-box">
+                            <img src="/images/customer76.jpg" alt="株式会社マッスルボディメイク">
+                            <p>株式会社マッスルボディメイク</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <style>
+        .customers-page {
+            background: #FDEDED;
+            min-height: 100vh;
+            padding-top: 100px;
+        }
+
+        .breadcrumb {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breadcrumb-inner {
+            display: inline-block;
+            padding-bottom: 8px;
+        }
+
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: #FF679C;
+        }
+
+        .breadcrumb span {
+            margin: 0 8px;
+            color: #999;
+        }
+
+        .breadcrumb .current {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .customers-hero {
+            background: linear-gradient(135deg, #FF679C 0%, #FF008C 100%);
+            color: #fff;
+            padding: 60px 24px;
+            text-align: center;
+        }
+
+        .customers-hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 0.1em;
+        }
+
+        .customers-hero p {
+            font-size: 18px;
+            opacity: 0.95;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+
+        .customers-section {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 60px 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .section-description {
+            font-size: 18px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        /* フェードインアニメーション */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .fade-in-delay {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
+        }
+
+        .fade-in-delay-2 {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.6s forwards;
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 無限スライダー */
+        .infinite-slider-wrapper {
+            margin: 40px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .infinite-slider {
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .infinite-slider .swiper-wrapper {
+            transition-timing-function: linear;
+            display: flex;
+            align-items: center;
+        }
+
+        .infinite-slider.swiper-left .swiper-wrapper {
+            animation: slideLeft 30s linear infinite;
+        }
+
+        .infinite-slider.swiper-right .swiper-wrapper {
+            animation: slideRight 30s linear infinite;
+        }
+
+        @keyframes slideLeft {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        @keyframes slideRight {
+            0% {
+                transform: translateX(-50%);
+            }
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        .customer-items {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            width: fit-content;
+        }
+
+        .customer-box {
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #dadada;
+            padding: 1.5rem 0.7rem;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-right: 2rem;
+            width: 14.4rem !important;
+            min-width: 14.4rem;
+            height: 5.5rem;
+            flex-shrink: 0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .customer-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-color: #FF679C;
+        }
+
+        .customer-box img {
+            width: 6rem;
+            height: auto;
+            margin-right: 1rem;
+            object-fit: contain;
+        }
+
+        .customer-box p {
+            font-size: 1.1rem;
+            width: calc(100% - 6rem);
+            color: #333;
+            margin: 0;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        /* スライダーの複製（無限ループ用） */
+        .infinite-slider .swiper-wrapper::after {
+            content: '';
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .customers-hero {
+                padding: 40px 16px;
+            }
+
+            .customers-hero h1 {
+                font-size: 32px;
+            }
+
+            .customers-hero p {
+                font-size: 16px;
+            }
+
+            .container {
+                padding: 40px 16px;
+            }
+
+            .customers-section {
+                padding: 40px 20px;
+            }
+
+            .section-title {
+                font-size: 28px;
+            }
+
+            .section-description {
+                font-size: 16px;
+                margin-bottom: 32px;
+            }
+
+            .customer-box {
+                width: 12rem !important;
+                min-width: 12rem;
+                height: 5rem;
+                padding: 1rem 0.5rem;
+            }
+
+            .customer-box img {
+                width: 5rem;
+            }
+
+            .customer-box p {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+
+    <script>
+        // Swiperの初期化（無限ループ用に複製）
+        document.addEventListener('DOMContentLoaded', function() {
+            const sliders = document.querySelectorAll('.infinite-slider');
+            
+            sliders.forEach(slider => {
+                const wrapper = slider.querySelector('.swiper-wrapper');
+                const items = wrapper.querySelectorAll('.swiper-slide');
+                
+                // アイテムを複製して無限ループを実現
+                items.forEach(item => {
+                    const clone = item.cloneNode(true);
+                    wrapper.appendChild(clone);
+                });
+            });
+        });
+    </script>
+</main>
+
+
+    </main>
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script>
+      // ログイン画面では通常ヘッダーを表示
+      (function() {
+        const path = window.location.pathname || '';
+        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
+        
+        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
+        if (isSigninPage) {
+          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
+          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
+          if (defaultHeaderWrapper) {
+            defaultHeaderWrapper.style.display = 'none';
+          }
+          if (normalHeaderWrapper) {
+            normalHeaderWrapper.style.display = 'block';
+            // ログイン画面では通常ヘッダーを常に表示
+            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
+            if (normalHeader) {
+              normalHeader.classList.add('visible');
+            }
+          }
+        }
+      })();
+    </script>
+  </body>
+  </html>
+
+

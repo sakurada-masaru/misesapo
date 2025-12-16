@@ -1,0 +1,501 @@
+/**
+ * メガメニュー CSS（モダン版）
+ * WordPress/Elementor用
+ */
+
+/* ============================================
+   Font Awesome アイコン読み込み
+   ============================================ */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+/* ============================================
+   基本スタイル（イシカワリフォーム風）
+   ============================================ */
+.misesapo-mega-menu {
+    position: relative;
+    width: 100%;
+    z-index: 10000;
+}
+
+.mega-menu-list {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.mega-menu-item {
+    position: relative;
+    margin: 0;
+}
+
+.mega-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    color: #333;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 400;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    position: relative;
+    border-bottom: 2px solid transparent;
+}
+
+/* イシカワリフォーム風のbullet point */
+.mega-menu-link::before {
+    content: '●';
+    color: #FF008C;
+    font-size: 8px;
+    margin-right: 0;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: scale(0);
+}
+
+.mega-menu-link:hover::before,
+.mega-menu-item.current .mega-menu-link::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.mega-menu-link:hover {
+    color: #FF008C;
+    border-bottom-color: #FF008C;
+}
+
+.mega-menu-icon {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+    transition: all 0.3s ease;
+    color: #666;
+}
+
+.mega-menu-link:hover .mega-menu-icon {
+    color: #FF008C;
+    transform: scale(1.1);
+}
+
+.mega-menu-text {
+    transition: all 0.3s ease;
+    letter-spacing: 0.05em;
+}
+
+.mega-menu-arrow {
+    font-size: 10px;
+    margin-left: 6px;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+    color: #666;
+}
+
+.mega-menu-item:hover .mega-menu-arrow {
+    transform: rotate(180deg);
+    opacity: 1;
+    color: #FF008C;
+}
+
+/* ログイン・新規登録ボタン（イシカワリフォーム風） */
+.mega-menu-login .mega-menu-link-login {
+    color: #333;
+}
+
+.mega-menu-login .mega-menu-link-login::before {
+    display: none;
+}
+
+.mega-menu-signup .mega-menu-link-signup {
+    background: #FF008C;
+    color: #fff;
+    font-weight: 500;
+    margin-left: 12px;
+    padding: 12px 24px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(255, 0, 140, 0.3);
+}
+
+.mega-menu-signup .mega-menu-link-signup::before {
+    display: none;
+}
+
+.mega-menu-signup .mega-menu-link-signup:hover {
+    background: #E6007A;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 0, 140, 0.4);
+    border-bottom-color: transparent;
+}
+
+.mega-menu-signup .mega-menu-link-signup .mega-menu-icon {
+    color: #fff;
+}
+
+/* ============================================
+   メガメニューサブメニュー（デスクトップ・イシカワリフォーム風）
+   ============================================ */
+.mega-menu-submenu {
+    position: absolute;
+    top: calc(100% + 0px);
+    left: 0;
+    width: 600px;
+    background: #fff;
+    border-radius: 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 10001;
+    padding: 24px 32px;
+    margin-top: 0;
+    border-top: 3px solid #FF008C;
+}
+
+.mega-menu-item:hover .mega-menu-submenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.mega-menu-submenu-inner {
+    display: flex;
+    gap: 48px;
+}
+
+.mega-menu-column {
+    flex: 1;
+}
+
+.mega-menu-column-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+    letter-spacing: 0.05em;
+}
+
+.mega-menu-column-title i {
+    font-size: 14px;
+    color: #FF008C;
+    transition: all 0.3s ease;
+}
+
+.mega-menu-column:hover .mega-menu-column-title {
+    color: #FF008C;
+    border-bottom-color: #FF008C;
+}
+
+.mega-menu-column-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.mega-menu-column-list li {
+    margin: 0 0 8px 0;
+    opacity: 0;
+    transform: translateX(-10px);
+    animation: slideInLeft 0.4s ease forwards;
+}
+
+.mega-menu-item:hover .mega-menu-column-list li:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.mega-menu-item:hover .mega-menu-column-list li:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.mega-menu-item:hover .mega-menu-column-list li:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.mega-menu-item:hover .mega-menu-column-list li:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+@keyframes slideInLeft {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.mega-menu-column-list a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 8px 0;
+    transition: all 0.3s ease;
+    position: relative;
+    letter-spacing: 0.02em;
+}
+
+/* イシカワリフォーム風のbullet point */
+.mega-menu-column-list a::before {
+    content: '●';
+    color: #FF008C;
+    font-size: 6px;
+    margin-right: 0;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: scale(0);
+}
+
+.mega-menu-column-list a:hover::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.mega-menu-column-list a i {
+    font-size: 12px;
+    width: 16px;
+    color: #999;
+    transition: all 0.3s ease;
+}
+
+.mega-menu-column-list a:hover {
+    color: #FF008C;
+    padding-left: 12px;
+}
+
+.mega-menu-column-list a:hover i {
+    color: #FF008C;
+    transform: scale(1.1);
+}
+
+.mega-menu-column-list a span {
+    flex: 1;
+}
+
+/* ============================================
+   ハンバーガーボタン（スマホ用）
+   ============================================ */
+.mega-menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #FF008C 0%, #FF6B9D 100%);
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 10px;
+    position: relative;
+    z-index: 10002;
+    box-shadow: 0 4px 12px rgba(255, 0, 140, 0.3);
+    transition: all 0.3s ease;
+}
+
+.mega-menu-toggle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(255, 0, 140, 0.4);
+}
+
+.mega-menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background: #fff;
+    border-radius: 2px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
+}
+
+.mega-menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px);
+}
+
+.mega-menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+.mega-menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(8px, -8px);
+}
+
+/* ============================================
+   スマホ用スタイル
+   ============================================ */
+@media screen and (max-width: 768px) {
+    .mega-menu-toggle {
+        display: flex;
+    }
+
+    .mega-menu-list {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: linear-gradient(135deg, #fff 0%, #FEF3F7 100%);
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 80px 24px 40px;
+        gap: 0;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(-100%);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto;
+        z-index: 10001;
+    }
+
+    .mega-menu-list.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(0);
+    }
+
+    .mega-menu-item {
+        width: 100%;
+        border-bottom: 1px solid rgba(255, 0, 140, 0.1);
+        animation: slideInLeft 0.4s ease forwards;
+        opacity: 0;
+    }
+
+    .mega-menu-list.active .mega-menu-item:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .mega-menu-list.active .mega-menu-item:nth-child(2) {
+        animation-delay: 0.15s;
+    }
+
+    .mega-menu-list.active .mega-menu-item:nth-child(3) {
+        animation-delay: 0.2s;
+    }
+
+    .mega-menu-list.active .mega-menu-item:nth-child(4) {
+        animation-delay: 0.25s;
+    }
+
+    .mega-menu-list.active .mega-menu-item:nth-child(5) {
+        animation-delay: 0.3s;
+    }
+
+    .mega-menu-list.active .mega-menu-item:nth-child(6) {
+        animation-delay: 0.35s;
+    }
+
+    .mega-menu-list.active .mega-menu-item:nth-child(7) {
+        animation-delay: 0.4s;
+    }
+
+    .mega-menu-link {
+        width: 100%;
+        padding: 18px 0;
+        font-size: 16px;
+        border-radius: 0;
+    }
+
+    .mega-menu-link:hover {
+        transform: translateX(8px);
+    }
+
+    .mega-menu-submenu {
+        position: static;
+        width: 100%;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+    }
+
+    .mega-menu-item.active .mega-menu-submenu {
+        max-height: 1000px;
+        padding: 16px 0;
+    }
+
+    .mega-menu-submenu-inner {
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .mega-menu-column-title {
+        font-size: 15px;
+        margin-bottom: 12px;
+    }
+
+    .mega-menu-column-list a {
+        font-size: 15px;
+        padding: 12px 0;
+    }
+
+    .mega-menu-signup .mega-menu-link-signup {
+        margin-left: 0;
+        margin-top: 20px;
+        text-align: center;
+        justify-content: center;
+    }
+
+    /* ボディスクロールロック */
+    body.mega-menu-open {
+        overflow: hidden;
+    }
+}
+
+/* ============================================
+   タブレット用スタイル
+   ============================================ */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .mega-menu-link {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .mega-menu-submenu {
+        width: 560px;
+        padding: 28px;
+    }
+
+    .mega-menu-submenu-inner {
+        gap: 36px;
+    }
+}
+
+/* ============================================
+   Elementorとの互換性
+   ============================================ */
+.elementor-widget-shortcode .misesapo-mega-menu {
+    width: 100%;
+}
+
+/* ヘッダー内での使用を想定 */
+.site-header .misesapo-mega-menu {
+    width: 100%;
+}
+
+/* 現在のページハイライト */
+.mega-menu-link.current {
+    color: #FF008C;
+    background-color: rgba(255, 0, 140, 0.1);
+}
+
+.mega-menu-link.current .mega-menu-icon {
+    color: #FF008C;
+}

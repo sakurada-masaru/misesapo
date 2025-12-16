@@ -1,0 +1,478 @@
+{
+  "images": [
+    {
+      "path": "/images-public/5s.png",
+      "name": "5s.png",
+      "size": 321300,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/adi01.jpg",
+      "name": "adi01.jpg",
+      "size": 193689,
+      "extension": ".jpg"
+    },
+    {
+      "path": "/images-public/boukashatta.png",
+      "name": "boukashatta.png",
+      "size": 336792,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/boukashatta_100.png",
+      "name": "boukashatta_100.png",
+      "size": 253744,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/boukashatta_80.png",
+      "name": "boukashatta_80.png",
+      "size": 247766,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/boukashatta_90.png",
+      "name": "boukashatta_90.png",
+      "size": 210232,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/chuuboukiki.png",
+      "name": "chuuboukiki.png",
+      "size": 271083,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/chuuboukiki_100.png",
+      "name": "chuuboukiki_100.png",
+      "size": 357020,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/chuuboukiki_80.png",
+      "name": "chuuboukiki_80.png",
+      "size": 305233,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/chuuboukiki_90.png",
+      "name": "chuuboukiki_90.png",
+      "size": 331777,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/dakuto.png",
+      "name": "dakuto.png",
+      "size": 128190,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/dakuto_100.png",
+      "name": "dakuto_100.png",
+      "size": 279420,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/dakuto_80.png",
+      "name": "dakuto_80.png",
+      "size": 354295,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/dakuto_90.png",
+      "name": "dakuto_90.png",
+      "size": 326315,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/eakonbunkai.png",
+      "name": "eakonbunkai.png",
+      "size": 229648,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/eakonfiruta.png",
+      "name": "eakonfiruta.png",
+      "size": 206208,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/eakonhouteitenken.png",
+      "name": "eakonhouteitenken.png",
+      "size": 340494,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/eiseikanri.png",
+      "name": "eiseikanri.png",
+      "size": 174549,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/gokiburichoubae.png",
+      "name": "gokiburichoubae.png",
+      "size": 291499,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/gomi_kaishu.png",
+      "name": "gomi_kaishu.png",
+      "size": 192532,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/gure-chingu.png",
+      "name": "gure-chingu.png",
+      "size": 406735,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/gure-chingu_100.png",
+      "name": "gure-chingu_100.png",
+      "size": 238286,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/gure-chingu_80.png",
+      "name": "gure-chingu_80.png",
+      "size": 396138,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/gure-chingu_90.png",
+      "name": "gure-chingu_90.png",
+      "size": 278963,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/gurisuto.png",
+      "name": "gurisuto.png",
+      "size": 353161,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/gurisuto_100.png",
+      "name": "gurisuto_100.png",
+      "size": 341427,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/gurisuto_80.png",
+      "name": "gurisuto_80.png",
+      "size": 289542,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/gurisuto_90.png",
+      "name": "gurisuto_90.png",
+      "size": 251901,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/haccp.png",
+      "name": "haccp.png",
+      "size": 335615,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/haikan.png",
+      "name": "haikan.png",
+      "size": 362963,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/haikifan.png",
+      "name": "haikifan.png",
+      "size": 167787,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/haikifan_100.png",
+      "name": "haikifan_100.png",
+      "size": 370920,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/haikifan_80.png",
+      "name": "haikifan_80.png",
+      "size": 444609,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/haikifan_90.png",
+      "name": "haikifan_90.png",
+      "size": 379566,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/haikifanberuto.png",
+      "name": "haikifanberuto.png",
+      "size": 339589,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/haisenseiri.png",
+      "name": "haisenseiri.png",
+      "size": 197936,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/heromask.png",
+      "name": "heromask.png",
+      "size": 24724,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/kabe.png",
+      "name": "kabe.png",
+      "size": 1837817,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/kabe_100.png",
+      "name": "kabe_100.png",
+      "size": 1837817,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/kabe_80.jpeg",
+      "name": "kabe_80.jpeg",
+      "size": 350080,
+      "extension": ".jpeg"
+    },
+    {
+      "path": "/images-public/kabe_90.png",
+      "name": "kabe_90.png",
+      "size": 1759119,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/kankisen.png",
+      "name": "kankisen.png",
+      "size": 253636,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/kankisen_100.png",
+      "name": "kankisen_100.png",
+      "size": 328601,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/kankisen_80.png",
+      "name": "kankisen_80.png",
+      "size": 326629,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/kankisen_90.png",
+      "name": "kankisen_90.png",
+      "size": 306316,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/kousho.png",
+      "name": "kousho.png",
+      "size": 221543,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/mado.png",
+      "name": "mado.png",
+      "size": 141004,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/nezumi.png",
+      "name": "nezumi.png",
+      "size": 287325,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/osuisou.png",
+      "name": "osuisou.png",
+      "size": 543767,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/osuisou_100.png",
+      "name": "osuisou_100.png",
+      "size": 2288232,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/osuisou_80.png",
+      "name": "osuisou_80.png",
+      "size": 2391772,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/osuisou_90.png",
+      "name": "osuisou_90.png",
+      "size": 2318541,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/renjifu-do.png",
+      "name": "renjifu-do.png",
+      "size": 342912,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/renjifu-do_100.png",
+      "name": "renjifu-do_100.png",
+      "size": 335911,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/renjifu-do_80.png",
+      "name": "renjifu-do_80.png",
+      "size": 325975,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/renjifu-do_90.png",
+      "name": "renjifu-do_90.png",
+      "size": 326570,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/seiriseiton.png",
+      "name": "seiriseiton.png",
+      "size": 125976,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/si-ruhagasi.png",
+      "name": "si-ruhagasi.png",
+      "size": 241974,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/sink_100.png",
+      "name": "sink_100.png",
+      "size": 259971,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/sink_80.png",
+      "name": "sink_80.png",
+      "size": 293711,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/sink_90.png",
+      "name": "sink_90.png",
+      "size": 241924,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/sinku.png",
+      "name": "sinku.png",
+      "size": 175780,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/sinku_100.png",
+      "name": "sinku_100.png",
+      "size": 342117,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/sinku_80.png",
+      "name": "sinku_80.png",
+      "size": 403317,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/sinku_90.png",
+      "name": "sinku_90.png",
+      "size": 334974,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/sofa.png",
+      "name": "sofa.png",
+      "size": 263851,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/staffroom.png",
+      "name": "staffroom.png",
+      "size": 260815,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/staffroom_100.jpeg",
+      "name": "staffroom_100.jpeg",
+      "size": 284120,
+      "extension": ".jpeg"
+    },
+    {
+      "path": "/images-public/staffroom_80.jpeg",
+      "name": "staffroom_80.jpeg",
+      "size": 332262,
+      "extension": ".jpeg"
+    },
+    {
+      "path": "/images-public/staffroom_90.jpeg",
+      "name": "staffroom_90.jpeg",
+      "size": 404922,
+      "extension": ".jpeg"
+    },
+    {
+      "path": "/images-public/te-burufuki.png",
+      "name": "te-burufuki.png",
+      "size": 159188,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/thumbnail-example.png",
+      "name": "thumbnail-example.png",
+      "size": 351836,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/toire.png",
+      "name": "toire.png",
+      "size": 333338,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/yuka.png",
+      "name": "yuka.png",
+      "size": 345785,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/yuka_100.png",
+      "name": "yuka_100.png",
+      "size": 372882,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/yuka_80.png",
+      "name": "yuka_80.png",
+      "size": 312971,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/yuka_90.png",
+      "name": "yuka_90.png",
+      "size": 295409,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/yuka_yukawakkusu.png",
+      "name": "yuka_yukawakkusu.png",
+      "size": 188783,
+      "extension": ".png"
+    },
+    {
+      "path": "/images-public/yukamatto_koukan.png",
+      "name": "yukamatto_koukan.png",
+      "size": 245990,
+      "extension": ".png"
+    }
+  ]
+}

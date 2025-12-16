@@ -1,0 +1,209 @@
+{
+  "reports": [
+    {
+      "id": 1,
+      "status": "NEW",
+      "cleaning_datetime": "2023年11月6日(日)8:00-11:30",
+      "cleaning_content": [
+        "シンク洗浄",
+        "トイレ清掃",
+        "グリストラップ",
+        "床清掃",
+        "窓清掃"
+      ],
+      "detail": [
+        {
+          "cleaning_item": "グリストラップ",
+          "description": "床置き型：２個 マニュフェストなし 少し流れが悪い",
+          "work_content": "グリストラップ清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/grease_trap_before_cleaning.png",
+            "/images/reports/grease_trap_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        },
+        {
+          "cleaning_item": "レンジフード洗浄",
+          "description": "グリスフィルター",
+          "work_content": "グリスフィルター清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/grease_filter_before_cleaning.png",
+            "/images/reports/grease_filter_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        },
+        {
+          "cleaning_item": "床清掃",
+          "description": "石材",
+          "work_content": "床清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/floor_before_cleaning.png",
+            "/images/reports/floor_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "cleaning_datetime": "2023年11月6日(日)8:00-11:30",
+      "cleaning_content": [
+        "シンク洗浄",
+        "トイレ清掃",
+        "グリストラップ"
+      ],
+      "detail": [
+        {
+          "cleaning_item": "グリストラップ",
+          "description": "床置き型：２個 マニュフェストなし 少し流れが悪い",
+          "work_content": "グリストラップ清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/grease_trap_before_cleaning.png",
+            "/images/reports/grease_trap_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        },
+        {
+          "cleaning_item": "レンジフード洗浄",
+          "description": "グリスフィルター",
+          "work_content": "グリスフィルター清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/grease_filter_before_cleaning.png",
+            "/images/reports/grease_filter_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        },
+        {
+          "cleaning_item": "床清掃",
+          "description": "石材",
+          "work_content": "床清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/floor_before_cleaning.png",
+            "/images/reports/floor_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "cleaning_datetime": "2023年11月6日(日)8:00-11:30",
+      "cleaning_content": [
+        "シンク洗浄"
+      ],
+      "detail": [
+        {
+          "cleaning_item": "グリストラップ",
+          "description": "床置き型：２個 マニュフェストなし 少し流れが悪い",
+          "work_content": "グリストラップ清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/grease_trap_before_cleaning.png",
+            "/images/reports/grease_trap_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        },
+        {
+          "cleaning_item": "レンジフード洗浄",
+          "description": "グリスフィルター",
+          "work_content": "グリスフィルター清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/grease_filter_before_cleaning.png",
+            "/images/reports/grease_filter_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        },
+        {
+          "cleaning_item": "床清掃",
+          "description": "石材",
+          "work_content": "床清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/floor_before_cleaning.png",
+            "/images/reports/floor_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "cleaning_datetime": "2023年11月6日(日)8:00-11:30",
+      "cleaning_content": [
+        "シンク洗浄",
+        "トイレ清掃",
+        "グリストラップ"
+      ],
+      "detail": [
+        {
+          "cleaning_item": "グリストラップ",
+          "description": "床置き型：２個 マニュフェストなし 少し流れが悪い",
+          "work_content": "グリストラップ清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/grease_trap_before_cleaning.png",
+            "/images/reports/grease_trap_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        },
+        {
+          "cleaning_item": "レンジフード洗浄",
+          "description": "グリスフィルター",
+          "work_content": "グリスフィルター清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/grease_filter_before_cleaning.png",
+            "/images/reports/grease_filter_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        },
+        {
+          "cleaning_item": "床清掃",
+          "description": "石材",
+          "work_content": "床清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/floor_before_cleaning.png",
+            "/images/reports/floor_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "cleaning_datetime": "2023年11月6日(日)8:00-11:30",
+      "cleaning_content": [
+        "シンク洗浄",
+        "トイレ清掃"
+      ],
+      "detail": [
+        {
+          "cleaning_item": "グリストラップ",
+          "description": "床置き型：２個 マニュフェストなし 少し流れが悪い",
+          "work_content": "グリストラップ清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/grease_trap_before_cleaning.png",
+            "/images/reports/grease_trap_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        },
+        {
+          "cleaning_item": "レンジフード洗浄",
+          "description": "グリスフィルター",
+          "work_content": "グリスフィルター清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/grease_filter_before_cleaning.png",
+            "/images/reports/grease_filter_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        },
+        {
+          "cleaning_item": "床清掃",
+          "description": "石材",
+          "work_content": "床清掃を行いました。作業時間に余裕がありましたので、こびりついた汚れを集中的に落としていきます。",
+          "images": [
+            "/images/reports/floor_before_cleaning.png",
+            "/images/reports/floor_after_cleaning.png"
+          ],
+          "work_memo": "特に奥の方が汚れがひどかったように見えました。次回以降、まずは右奥から集中的に落としていきたいと思います。"
+        }
+      ]
+    }
+  ]
+}

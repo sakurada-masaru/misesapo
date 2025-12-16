@@ -1,0 +1,151 @@
+.recruit-apply-page {
+  background: #ffffff;
+  min-height: 100vh;
+  padding: 40px 24px;
+}
+.recruit-apply-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.recruit-apply-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+.recruit-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+.breadcrumb-separator {
+  color: var(--primary);
+}
+.recruit-apply-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 32px;
+  text-align: center;
+}
+.recruit-apply-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+/* Job Details Table */
+.recruit-apply-details {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 24px;
+}
+.recruit-details-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.recruit-details-table th,
+.recruit-details-table td {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: top;
+}
+.recruit-details-table th {
+  background: #ffffff;
+  font-weight: 600;
+  color: #111827;
+  width: 30%;
+}
+.recruit-details-table td {
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+/* Application Form */
+.recruit-apply-form {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 32px;
+}
+.recruit-form-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 24px;
+}
+.recruit-form-group {
+  margin-bottom: 24px;
+}
+.recruit-form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+.recruit-required-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--primary);
+  color: #ffffff;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+.recruit-form-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+.recruit-form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+}
+.recruit-form-submit {
+  width: 100%;
+  padding: 16px;
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+.recruit-form-submit:hover {
+  background: #ff6b9d;
+  transform: translateY(-2px);
+}
+/* Responsive */
+@media (max-width: 768px) {
+  .recruit-apply-content {
+    grid-template-columns: 1fr;
+  }
+  .recruit-apply-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+/* コピーライトスタイル */
+body.page-recruit-apply .site-footer,
+body.page-recruit-privacy .site-footer {
+  background: #FF679C;
+  color: #ffffff;
+}
+body.page-recruit-apply .site-footer p,
+body.page-recruit-privacy .site-footer p {
+  color: #ffffff;
+}
+

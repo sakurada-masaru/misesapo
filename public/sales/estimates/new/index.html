@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title>見積もり作成 | ミセサポ</title>
+    
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+    <style>
+      /* Staff signin page: hide all headers */
+      body.page-staff-signin #default-header-wrapper,
+      body.page-staff-signin #normal-header-wrapper {
+        display: none !important;
+      }
+      
+      /* Staff pages: hide global header and footer */
+      body[class*="page-staff-"] #default-header-wrapper,
+      body[class*="page-staff-"] #normal-header-wrapper,
+      body[class*="page-staff-"] footer {
+        display: none !important;
+      }
+      
+      /* Staff pages: ensure full height layout */
+      body[class*="page-staff-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="page-staff-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Admin pages: hide global header while keeping auth buttons */
+      body[class*="page-admin-"] #default-header-wrapper {
+        height: 0;
+        overflow: visible;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .site-header {
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        min-height: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .inner {
+        justify-content: flex-end;
+        padding: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-left,
+      body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
+      body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
+      body[class*="page-admin-"] #default-header-wrapper .spacer,
+      body[class*="page-admin-"] #default-header-wrapper .role-badge {
+        display: none !important;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right {
+        position: fixed;
+        top: 16px;
+        right: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 18px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.18);
+        z-index: 300;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
+        font-weight: 600;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+      }
+      
+      /* Sales pages: hide global header and footer */
+      body[class*="sales-"] #default-header-wrapper,
+      body[class*="sales-"] #normal-header-wrapper,
+      body[class*="sales-"] footer {
+        display: none !important;
+      }
+      
+      /* Sales pages: ensure full height layout */
+      body[class*="sales-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="sales-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body class="theme-pink page-sales-estimates-new">
+    <div id="default-header-wrapper">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+<header id="header-guest" class="site-header" data-role="guest">
+  <div class="inner wide">
+    <div class="nav-left">
+      <a class="brand brand-logo" href="/" aria-label="ミセサポ ホーム">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+      </a>
+      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+    </div>
+    <div class="spacer"></div>
+    <nav class="nav-right hide-sm" aria-label="User">
+      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+      <a class="nav-link" href="/signin">ログイン</a>
+      <a class="nav-link primary" href="/signup">新規登録</a>
+      <button class="icon-btn" aria-label="通知">
+        <i class="fas fa-bell"></i>
+      </button>
+      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </nav>
+    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+  <!-- スマホ版ナビゲーションメニュー -->
+  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
+    <div class="mobile-nav-content">
+      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+      <nav class="mobile-nav-user" aria-label="User">
+        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+        <a class="mobile-nav-link" href="/signin">ログイン</a>
+        <a class="mobile-nav-link primary" href="/signup">新規登録</a>
+      </nav>
+    </div>
+  </nav>
+</header>
+
+    </div>
+    <!-- 通常ヘッダー（ログイン画面用） -->
+    <div id="normal-header-wrapper" style="display: none;">
+    <!-- 通常ヘッダー -->
+<header class="normal-header">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+            </a>
+                </div>
+        <nav class="normal-header-nav">
+            <a href="/">TOP</a>
+            <a href="/service">対応可能サービス</a>
+            <a href="/lp#voice">お客様の声</a>
+            <a href="/customers-support-desk">カスタマーズサポート</a>
+            <a href="/announcements">お知らせ</a>
+            <a href="/privacy-policy">規約＆ポリシー</a>
+        </nav>
+        <div class="normal-header-actions">
+            <a href="/signin" class="normal-header-login">ログイン</a>
+        </div>
+            </div>
+</header>
+
+
+    </div>
+    <main id="main">
+      
+
+
+
+
+
+<script src="/js/data_utils.js"></script>
+
+<main id="main" class="container sales-estimate-new">
+  <div class="page-header">
+    <a href="/sales/estimates" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">見積もり作成</h1>
+  </div>
+
+  <form id="estimate-form" class="estimate-form">
+    <!-- Client Selection -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-building"></i>
+        顧客情報
+      </h2>
+      <div class="form-group">
+        <label class="form-label required">顧客を選択</label>
+        <select class="form-select" id="client-select" name="client_id" required>
+          <option value="">選択してください</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label required">店舗を選択</label>
+        <select class="form-select" id="store-select" name="store_id" required disabled>
+          <option value="">まず顧客を選択してください</option>
+        </select>
+      </div>
+      <div class="client-info" id="client-info" style="display: none;">
+        <div class="info-item">
+          <span class="info-label">担当者:</span>
+          <span class="info-value" id="contact-person">-</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">メール:</span>
+          <span class="info-value" id="client-email">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Services -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-list"></i>
+        サービス内容
+      </h2>
+      <div class="services-list" id="services-list">
+        <!-- Services will be rendered by JavaScript -->
+      </div>
+      <div class="empty-state" id="services-empty" style="display: none;">
+        <i class="fas fa-info-circle"></i>
+        <p>サービスが選択されていません</p>
+      </div>
+    </div>
+
+    <!-- Selected Services with Quantity -->
+    <div class="form-section" id="selected-services-section" style="display: none;">
+      <h2 class="section-title">
+        <i class="fas fa-check-circle"></i>
+        選択したサービス
+      </h2>
+      <div class="selected-services-list" id="selected-services-list">
+        <!-- Selected services will be rendered by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Estimate Details -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-calendar-alt"></i>
+        見積もり詳細
+      </h2>
+      <div class="form-group">
+        <label class="form-label required">有効期限</label>
+        <input type="date" class="form-input" id="expiry-date" name="expiry_date" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">備考</label>
+        <textarea class="form-textarea" id="notes" name="notes" rows="4" placeholder="見積もりに関する備考を入力してください"></textarea>
+      </div>
+    </div>
+
+    <!-- Total -->
+    <div class="form-section total-section">
+      <div class="total-breakdown">
+        <div class="total-row">
+          <span class="total-label">小計:</span>
+          <span class="total-value" id="subtotal">¥0</span>
+        </div>
+        <div class="total-row">
+          <span class="total-label">消費税 (10%):</span>
+          <span class="total-value" id="tax">¥0</span>
+        </div>
+        <div class="total-row total-row-final">
+          <span class="total-label">合計金額:</span>
+          <span class="total-amount" id="total-amount">¥0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline btn-block" onclick="window.location.href='/sales/estimates'">キャンセル</button>
+      <button type="button" class="btn btn-outline btn-block" id="save-draft">下書き保存</button>
+      <button type="submit" class="btn btn-primary btn-block" id="submit-estimate">見積もり送付</button>
+    </div>
+  </form>
+
+  <style>
+    .sales-estimate-new {
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+      padding-bottom: 120px;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .estimate-form {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .form-section {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title i {
+      color: var(--primary);
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+    .form-label {
+      display: block;
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.875rem;
+      margin-bottom: 8px;
+    }
+    .form-label.required::after {
+      content: " *";
+      color: #ef4444;
+    }
+    .form-select,
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: #ffffff;
+      transition: all 0.2s;
+    }
+    .form-select:focus,
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .form-select:disabled {
+      background: #f9fafb;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+    .client-info {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .info-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .info-value {
+      font-size: 0.875rem;
+      color: #111827;
+    }
+    .services-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .service-item {
+      padding: 16px;
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .service-item:hover {
+      background: #ffffff;
+      border-color: var(--primary);
+    }
+    .service-item.selected {
+      background: #fff5f9;
+      border-color: var(--primary);
+    }
+    .service-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .service-info input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .service-name {
+      font-weight: 600;
+      color: #111827;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+    .service-price {
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 0.875rem;
+    }
+    .service-description {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .selected-services-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .selected-service-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+    .selected-service-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .selected-service-name {
+      font-weight: 600;
+      color: #111827;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+    .selected-service-price {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .quantity-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1rem;
+    }
+    .quantity-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .quantity-input {
+      width: 60px;
+      text-align: center;
+      padding: 6px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .service-subtotal {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 1rem;
+      min-width: 80px;
+      text-align: right;
+    }
+    .remove-service-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ef4444;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #ef4444;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .remove-service-btn:hover {
+      background: #ef4444;
+      color: #ffffff;
+    }
+    .form-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+    }
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .total-section {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .total-breakdown {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .total-row-final {
+      padding-top: 12px;
+      border-top: 2px solid rgba(255, 255, 255, 0.3);
+      margin-top: 4px;
+    }
+    .total-label {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    .total-value {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .total-amount {
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #9ca3af;
+    }
+    .empty-state i {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+    .empty-state p {
+      font-size: 0.95rem;
+      margin: 0;
+    }
+    .form-actions {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+      z-index: 100;
+    }
+    .form-actions .btn {
+      flex: 1;
+    }
+    @media (max-width: 768px) {
+      .sales-estimate-new {
+        padding: 12px;
+        padding-bottom: 120px;
+      }
+      .form-section {
+        padding: 16px;
+      }
+      .services-list {
+        grid-template-columns: 1fr;
+      }
+      .form-actions {
+        flex-direction: column;
+        padding: 12px;
+      }
+      .form-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+
+  <script type="application/json" id="clients-data">
+    {{ clients_data | tojson }}
+  </script>
+  <script type="application/json" id="service-items-data">
+    {{ service_items_data | tojson }}
+  </script>
+
+  <script>
+    (function() {
+      // Load data
+      const clientsData = JSON.parse(document.getElementById('clients-data').textContent);
+      const serviceItemsData = JSON.parse(document.getElementById('service-items-data').textContent);
+      
+      const clients = clientsData.clients || [];
+      const services = serviceItemsData || [];
+      
+      // Current sales rep (mock)
+      const currentSalesRep = '正田和輝';
+      
+      // Filter clients by sales rep
+      const myClients = clients.filter(c => c.sales_rep === currentSalesRep);
+      
+      // State
+      let selectedClient = null;
+      let selectedStores = [];
+      let selectedServices = new Map(); // service_id -> {service, quantity}
+      
+      // Initialize
+      init();
+      
+      function init() {
+        // Populate client select
+        populateClientSelect();
+        
+        // Populate services
+        populateServices();
+        
+        // Set default expiry date (30 days from now)
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 30);
+        document.getElementById('expiry-date').value = defaultDate.toISOString().split('T')[0];
+        
+        // Event listeners
+        document.getElementById('client-select').addEventListener('change', handleClientChange);
+        document.getElementById('estimate-form').addEventListener('submit', handleSubmit);
+        document.getElementById('save-draft').addEventListener('click', handleSaveDraft);
+      }
+      
+      function populateClientSelect() {
+        const select = document.getElementById('client-select');
+        select.innerHTML = '<option value="">選択してください</option>';
+        
+        // Group clients by company
+        const companyMap = new Map();
+        myClients.forEach(client => {
+          if (!companyMap.has(client.company_name)) {
+            companyMap.set(client.company_name, []);
+          }
+          companyMap.get(client.company_name).push(client);
+        });
+        
+        companyMap.forEach((stores, companyName) => {
+          const option = document.createElement('option');
+          option.value = companyName;
+          option.textContent = companyName;
+          option.dataset.stores = JSON.stringify(stores);
+          select.appendChild(option);
+        });
+      }
+      
+      function handleClientChange(e) {
+        const companyName = e.target.value;
+        const storeSelect = document.getElementById('store-select');
+        const clientInfo = document.getElementById('client-info');
+        
+        if (!companyName) {
+          storeSelect.innerHTML = '<option value="">まず顧客を選択してください</option>';
+          storeSelect.disabled = true;
+          clientInfo.style.display = 'none';
+          selectedClient = null;
+          return;
+        }
+        
+        const option = e.target.options[e.target.selectedIndex];
+        const stores = JSON.parse(option.dataset.stores);
+        selectedStores = stores;
+        
+        // Populate store select
+        storeSelect.innerHTML = '<option value="">選択してください</option>';
+        stores.forEach(store => {
+          const option = document.createElement('option');
+          option.value = store.id;
+          option.textContent = store.store_name;
+          option.dataset.client = JSON.stringify(store);
+          storeSelect.appendChild(option);
+        });
+        
+        storeSelect.disabled = false;
+        
+        // Update client info
+        if (stores.length > 0) {
+          const firstStore = stores[0];
+          document.getElementById('contact-person').textContent = firstStore.contact_person || '-';
+          document.getElementById('client-email').textContent = firstStore.email || '-';
+          clientInfo.style.display = 'block';
+        }
+        
+        // Update selected client when store is selected
+        storeSelect.addEventListener('change', function() {
+          const storeId = this.value;
+          if (storeId) {
+            const storeOption = this.options[this.selectedIndex];
+            selectedClient = JSON.parse(storeOption.dataset.client);
+            document.getElementById('contact-person').textContent = selectedClient.contact_person || '-';
+            document.getElementById('client-email').textContent = selectedClient.email || '-';
+          } else {
+            selectedClient = null;
+          }
+        });
+      }
+      
+      function populateServices() {
+        const servicesList = document.getElementById('services-list');
+        servicesList.innerHTML = '';
+        
+        if (services.length === 0) {
+          document.getElementById('services-empty').style.display = 'block';
+          return;
+        }
+        
+        services.forEach(service => {
+          const serviceItem = document.createElement('div');
+          serviceItem.className = 'service-item';
+          serviceItem.dataset.serviceId = service.id;
+          
+          // Extract price number from "¥ 21,000〜"
+          const priceMatch = service.price.match(/¥\s*([\d,]+)/);
+          const price = priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : 0;
+          
+          serviceItem.innerHTML = `
+            <div class="service-info">
+              <input type="checkbox" id="service-${service.id}" value="${service.id}" data-price="${price}" />
+              <label for="service-${service.id}" class="service-label">
+                <div class="service-name">${service.title}</div>
+                <div class="service-price">${service.price}</div>
+                ${service.category ? `<div class="service-description">${service.category}</div>` : ''}
+              </label>
+            </div>
+          `;
+          
+          const checkbox = serviceItem.querySelector('input[type="checkbox"]');
+          checkbox.addEventListener('change', function() {
+            if (this.checked) {
+              serviceItem.classList.add('selected');
+              selectedServices.set(service.id, {
+                service: service,
+                quantity: 1,
+                price: price
+              });
+            } else {
+              serviceItem.classList.remove('selected');
+              selectedServices.delete(service.id);
+            }
+            updateSelectedServices();
+            updateTotal();
+          });
+          
+          servicesList.appendChild(serviceItem);
+        });
+      }
+      
+      function updateSelectedServices() {
+        const section = document.getElementById('selected-services-section');
+        const list = document.getElementById('selected-services-list');
+        
+        if (selectedServices.size === 0) {
+          section.style.display = 'none';
+          return;
+        }
+        
+        section.style.display = 'block';
+        list.innerHTML = '';
+        
+        selectedServices.forEach((data, serviceId) => {
+          const service = data.service;
+          const quantity = data.quantity;
+          const price = data.price;
+          const subtotal = price * quantity;
+          
+          const item = document.createElement('div');
+          item.className = 'selected-service-item';
+          item.innerHTML = `
+            <div class="selected-service-info">
+              <div class="selected-service-name">${service.title}</div>
+              <div class="selected-service-price">単価: ¥${price.toLocaleString()}</div>
+            </div>
+            <div class="quantity-control">
+              <button type="button" class="quantity-btn" data-action="decrease" data-service-id="${serviceId}">-</button>
+              <input type="number" class="quantity-input" value="${quantity}" min="1" data-service-id="${serviceId}" />
+              <button type="button" class="quantity-btn" data-action="increase" data-service-id="${serviceId}">+</button>
+            </div>
+            <div class="service-subtotal">¥${subtotal.toLocaleString()}</div>
+            <button type="button" class="remove-service-btn" data-service-id="${serviceId}">
+              <i class="fas fa-times"></i>
+            </button>
+          `;
+          
+          // Quantity controls
+          const decreaseBtn = item.querySelector('[data-action="decrease"]');
+          const increaseBtn = item.querySelector('[data-action="increase"]');
+          const quantityInput = item.querySelector('.quantity-input');
+          const removeBtn = item.querySelector('.remove-service-btn');
+          
+          decreaseBtn.addEventListener('click', () => {
+            if (quantity > 1) {
+              data.quantity = quantity - 1;
+              updateSelectedServices();
+              updateTotal();
+            }
+          });
+          
+          increaseBtn.addEventListener('click', () => {
+            data.quantity = quantity + 1;
+            updateSelectedServices();
+            updateTotal();
+          });
+          
+          quantityInput.addEventListener('change', function() {
+            const newQuantity = parseInt(this.value) || 1;
+            if (newQuantity < 1) {
+              this.value = 1;
+              data.quantity = 1;
+            } else {
+              data.quantity = newQuantity;
+            }
+            updateSelectedServices();
+            updateTotal();
+          });
+          
+          removeBtn.addEventListener('click', () => {
+            selectedServices.delete(serviceId);
+            const serviceItem = document.querySelector(`[data-service-id="${serviceId}"]`);
+            if (serviceItem) {
+              serviceItem.classList.remove('selected');
+              const checkbox = serviceItem.querySelector('input[type="checkbox"]');
+              if (checkbox) checkbox.checked = false;
+            }
+            updateSelectedServices();
+            updateTotal();
+          });
+          
+          list.appendChild(item);
+        });
+      }
+      
+      function updateTotal() {
+        let subtotal = 0;
+        selectedServices.forEach(data => {
+          subtotal += data.price * data.quantity;
+        });
+        
+        const tax = Math.floor(subtotal * 0.1);
+        const total = subtotal + tax;
+        
+        document.getElementById('subtotal').textContent = `¥${subtotal.toLocaleString()}`;
+        document.getElementById('tax').textContent = `¥${tax.toLocaleString()}`;
+        document.getElementById('total-amount').textContent = `¥${total.toLocaleString()}`;
+      }
+      
+      function handleSubmit(e) {
+        e.preventDefault();
+        
+        if (!selectedClient) {
+          alert('顧客と店舗を選択してください');
+          return;
+        }
+        
+        if (selectedServices.size === 0) {
+          alert('サービスを選択してください');
+          return;
+        }
+        
+        const expiryDate = document.getElementById('expiry-date').value;
+        if (!expiryDate) {
+          alert('有効期限を入力してください');
+          return;
+        }
+        
+        // Format date
+        const expiry = new Date(expiryDate);
+        const expiryFormatted = `${expiry.getFullYear()}年${expiry.getMonth() + 1}月${expiry.getDate()}日`;
+        
+        // Calculate totals
+        let subtotal = 0;
+        const services = [];
+        selectedServices.forEach(data => {
+          const serviceSubtotal = data.price * data.quantity;
+          subtotal += serviceSubtotal;
+          services.push({
+            name: data.service.title,
+            description: data.service.category || '',
+            price: data.price,
+            quantity: data.quantity,
+            subtotal: serviceSubtotal
+          });
+        });
+        
+        const tax = Math.floor(subtotal * 0.1);
+        const total = subtotal + tax;
+        
+        // Create estimate object
+        const estimate = {
+          id: DataUtils.IdUtils.generateEstimate(),
+          client_id: selectedClient.id,
+          client_name: selectedClient.company_name,
+          store_name: selectedClient.store_name,
+          contact_person: selectedClient.contact_person,
+          email: selectedClient.email,
+          sales_rep: currentSalesRep,
+          status: 'sent',
+          status_label: '送付済み',
+          created_date: formatDate(new Date()),
+          sent_date: formatDate(new Date()),
+          expiry_date: expiryFormatted,
+          subtotal: `¥${subtotal.toLocaleString()}`,
+          tax: `¥${tax.toLocaleString()}`,
+          total: `¥${total.toLocaleString()}`,
+          services: services,
+          notes: document.getElementById('notes').value
+        };
+        
+        // In real app, save to API
+        console.log('Estimate created:', estimate);
+        
+        alert('見積もりを送付しました。');
+        window.location.href = '/sales/estimates.html';
+      }
+      
+      function handleSaveDraft() {
+        if (!selectedClient) {
+          alert('顧客と店舗を選択してください');
+          return;
+        }
+        
+        if (selectedServices.size === 0) {
+          alert('サービスを選択してください');
+          return;
+        }
+        
+        const expiryDate = document.getElementById('expiry-date').value;
+        if (!expiryDate) {
+          alert('有効期限を入力してください');
+          return;
+        }
+        
+        // Format date
+        const expiry = new Date(expiryDate);
+        const expiryFormatted = `${expiry.getFullYear()}年${expiry.getMonth() + 1}月${expiry.getDate()}日`;
+        
+        // Calculate totals
+        let subtotal = 0;
+        const services = [];
+        selectedServices.forEach(data => {
+          const serviceSubtotal = data.price * data.quantity;
+          subtotal += serviceSubtotal;
+          services.push({
+            name: data.service.title,
+            description: data.service.category || '',
+            price: data.price,
+            quantity: data.quantity,
+            subtotal: serviceSubtotal
+          });
+        });
+        
+        const tax = Math.floor(subtotal * 0.1);
+        const total = subtotal + tax;
+        
+        // Create estimate object
+        const estimate = {
+          id: DataUtils.IdUtils.generateEstimate(),
+          client_id: selectedClient.id,
+          client_name: selectedClient.company_name,
+          store_name: selectedClient.store_name,
+          contact_person: selectedClient.contact_person,
+          email: selectedClient.email,
+          sales_rep: currentSalesRep,
+          status: 'draft',
+          status_label: '下書き',
+          created_date: formatDate(new Date()),
+          sent_date: '',
+          expiry_date: expiryFormatted,
+          subtotal: `¥${subtotal.toLocaleString()}`,
+          tax: `¥${tax.toLocaleString()}`,
+          total: `¥${total.toLocaleString()}`,
+          services: services,
+          notes: document.getElementById('notes').value
+        };
+        
+        // In real app, save to API
+        console.log('Estimate draft saved:', estimate);
+        
+        alert('下書きを保存しました。');
+        window.location.href = '/sales/estimates.html';
+      }
+      
+      function formatDate(date) {
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        return `${year}年${month}月${day}日`;
+      }
+    })();
+  </script>
+</main>
+
+    </main>
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script>
+      // ログイン画面では通常ヘッダーを表示
+      (function() {
+        const path = window.location.pathname || '';
+        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
+        
+        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
+        if (isSigninPage) {
+          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
+          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
+          if (defaultHeaderWrapper) {
+            defaultHeaderWrapper.style.display = 'none';
+          }
+          if (normalHeaderWrapper) {
+            normalHeaderWrapper.style.display = 'block';
+            // ログイン画面では通常ヘッダーを常に表示
+            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
+            if (normalHeader) {
+              normalHeader.classList.add('visible');
+            }
+          }
+        }
+      })();
+    </script>
+  </body>
+  </html>
+
+

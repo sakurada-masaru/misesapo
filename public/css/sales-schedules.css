@@ -1,0 +1,1272 @@
+:root {
+  --primary: #ff679c;
+  --primary-hover: #ff8fb3;
+}
+
+/* ページヘッダー */
+.sales-schedules {
+  max-width: 100%;
+  margin: 0;
+  padding: 16px;
+  padding-bottom: 80px; /* ボトムタブのスペース */
+  background: #f9fafb;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  text-decoration: none;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.back-btn:hover {
+  background: #f9fafb;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  flex: 1;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 新規案件アラート */
+.new-project-alert {
+  background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+  border: 1px solid #ffc107;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.new-project-alert.hidden { display: none; }
+
+.new-project-alert-icon {
+  width: 40px;
+  height: 40px;
+  background: #ffc107;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.new-project-alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.new-project-alert-title {
+  font-weight: 600;
+  color: #856404;
+  margin-bottom: 4px;
+  font-size: 0.95rem;
+}
+
+.new-project-alert-text {
+  font-size: 0.85rem;
+  color: #6d5a00;
+}
+
+.new-project-alert-btn {
+  padding: 10px 16px;
+  background: #ffc107;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  font-size: 0.875rem;
+}
+
+.new-project-alert-btn:hover {
+  background: #e0a800;
+}
+
+/* フィルター */
+.filter-section {
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.filter-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: 60px;
+  text-align: right;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+#reset-filters {
+  white-space: nowrap;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+/* カードリスト（スマホ向け） */
+.schedule-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.schedule-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.schedule-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.schedule-card.draft-card {
+  background: #fffde7;
+  border-color: #ffc107;
+}
+
+.schedule-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.schedule-card-header .schedule-card-field {
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.schedule-card-header .field-label {
+  font-size: 0.75rem;
+  width: 70px;
+  text-align: right;
+}
+
+.schedule-card-header .field-value {
+  font-size: 0.75rem;
+}
+
+.schedule-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.brand-store-row {
+  gap: 12px;
+}
+
+.brand-store-value {
+  font-size: 1rem !important;
+  font-weight: 500;
+}
+
+.schedule-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 6px;
+}
+
+.schedule-card-container:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.schedule-card-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.schedule-card-field-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.schedule-card-field-row .schedule-card-field {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.field-label {
+  color: #6b7280;
+  font-weight: 500;
+  flex-shrink: 0;
+  white-space: nowrap;
+  width: 70px;
+  text-align: right;
+}
+
+.field-value {
+  color: #111827;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.schedule-card-actions {
+  display: flex;
+  flex-direction: row;
+  padding: 0;
+  gap: 8px;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+
+.schedule-card-actions .action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.schedule-card-actions .action-btn span {
+  font-size: 0.875rem;
+}
+
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* ステータスバッジ */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-draft { background: #fff3cd; color: #856404; }
+.status-scheduled { background: #dbeafe; color: #1d4ed8; }
+.status-in_progress { background: #fef3c7; color: #b45309; }
+.status-completed { background: #d1fae5; color: #047857; }
+.status-cancelled { background: #fee2e2; color: #b91c1c; }
+
+
+/* 店舗・清掃員情報 */
+.store-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.store-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.875rem;
+}
+
+.store-address {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.client-name,
+.brand-name {
+  color: #111827;
+  font-size: 0.85rem;
+}
+
+.schedule-id {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 3px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.worker-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.worker-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.unassigned {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+/* 操作ボタン */
+.action-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.action-btn.edit { background: #dbeafe; color: #1d4ed8; }
+.action-btn.edit:hover { background: #bfdbfe; }
+.action-btn.delete { background: #fee2e2; color: #b91c1c; }
+.action-btn.delete:hover { background: #fecaca; }
+.action-btn.assign { background: #ffc107; color: #333; }
+.action-btn.assign:hover { background: #e0a800; }
+
+/* ボトムタブナビゲーション */
+.bottom-tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  background: #fff;
+  display: flex;
+  border-top: 1px solid #eee;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 0.65rem;
+  cursor: pointer;
+  padding: 8px 4px;
+  transition: color 0.2s;
+  text-decoration: none;
+}
+
+.tab i {
+  font-size: 1.25rem;
+}
+
+.tab span {
+  font-weight: 500;
+}
+
+.bottom-tabs .tab.active {
+  color: var(--primary, #ff679c);
+  background: transparent !important;
+  border: none !important;
+}
+
+.bottom-tabs .tab:active {
+  opacity: 0.7;
+}
+
+.bottom-tabs .tab:hover {
+  opacity: 0.8;
+}
+
+/* カレンダー */
+.calendar-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.calendar-header h2 {
+  font-size: 1.1rem;
+  margin: 0;
+  min-width: 120px;
+  text-align: center;
+  color: #111827;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background: #f3f4f6;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #f9fafb;
+  border-radius: 12px 12px 0 0;
+  border: 1px solid #e5e7eb;
+  border-bottom: none;
+}
+
+.calendar-day-header {
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.calendar-day-header.sun { color: #ef4444; }
+.calendar-day-header.sat { color: #3b82f6; }
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #fff;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-top: none;
+}
+
+.calendar-day {
+  min-height: 80px;
+  padding: 6px;
+  border-right: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background 0.15s;
+  color: #111827;
+}
+
+.calendar-day:hover {
+  background: #f9fafb;
+}
+
+.calendar-day:nth-child(7n) {
+  border-right: none;
+}
+
+.calendar-day.empty {
+  background: #fafafa;
+  cursor: default;
+}
+
+.calendar-day.empty:hover {
+  background: #fafafa;
+}
+
+.calendar-day.today {
+  background: #fef3c7;
+}
+
+.calendar-day.today:hover {
+  background: #fde68a;
+}
+
+.calendar-day.sun .day-number { color: #ef4444; }
+.calendar-day.sat .day-number { color: #3b82f6; }
+
+.day-number {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #111827;
+}
+
+.day-events {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.day-event {
+  font-size: 0.65rem;
+  padding: 2px 4px;
+  border-radius: 3px;
+  background: var(--primary);
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.day-event:hover {
+  opacity: 0.85;
+}
+
+.day-event.status-draft { background: #f59e0b; }
+.day-event.status-scheduled { background: #3b82f6; }
+.day-event.status-in_progress { background: #8b5cf6; }
+.day-event.status-completed { background: #10b981; }
+.day-event.status-cancelled { background: #6b7280; }
+
+.day-event-more {
+  font-size: 0.6rem;
+  color: #6b7280;
+  text-align: center;
+  padding: 2px;
+}
+
+/* ダイアログ */
+.schedule-dialog,
+.delete-dialog {
+  border: none;
+  border-radius: 16px;
+  padding: 0;
+  max-width: 560px;
+  width: 90vw;
+  max-height: 90vh;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.schedule-dialog::backdrop,
+.delete-dialog::backdrop {
+  background: rgba(0,0,0,0.5);
+}
+
+.dialog-content {
+  padding: 24px;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.dialog-content.dialog-sm {
+  text-align: center;
+}
+
+.dialog-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #6b7280;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.dialog-close:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.dialog-content h3 {
+  font-size: 1.25rem;
+  margin: 0 0 20px;
+  color: #111827;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.form-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.form-field.half {
+  flex: 0 0 calc(50% - 6px);
+}
+
+.form-field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+}
+
+/* 店舗検索 */
+.store-search-wrapper {
+  position: relative;
+}
+
+.store-search-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.store-category-filter {
+  flex: 0 0 100px;
+  min-width: 100px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.store-search-controls input[type="text"] {
+  flex: 1;
+  min-width: 150px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.store-search-controls input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+}
+
+.store-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin-top: 4px;
+}
+
+.store-search-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+}
+
+.store-search-item:hover {
+  background: #f9fafb;
+}
+
+.store-search-item:last-child {
+  border-bottom: none;
+}
+
+.store-search-item.no-results {
+  color: #6b7280;
+  cursor: default;
+}
+
+.store-search-item.no-results:hover {
+  background: #fff;
+}
+
+.store-search-item-category {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-right: 8px;
+  padding: 2px 6px;
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+/* 清掃内容検索 */
+.cleaning-items-search-wrapper {
+  position: relative;
+}
+
+.cleaning-items-search-wrapper .store-search-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cleaning-items-search-wrapper input[type="text"] {
+  flex: 1;
+  min-width: 150px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.cleaning-items-search-wrapper input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+}
+
+.cleaning-items-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin-top: 4px;
+}
+
+.cleaning-item-result {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+}
+
+.cleaning-item-result:hover {
+  background: #f9fafb;
+}
+
+.cleaning-item-result:last-child {
+  border-bottom: none;
+}
+
+.cleaning-item-result.no-results {
+  color: #6b7280;
+  cursor: default;
+}
+
+.cleaning-item-result.no-results:hover {
+  background: #fff;
+}
+
+.cleaning-item-result .store-search-item-category {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-right: 8px;
+  padding: 2px 6px;
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.cleaning-items-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.cleaning-item-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  font-size: 0.875rem;
+}
+
+.cleaning-item-tag-remove {
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 0.75rem;
+  padding: 2px;
+  line-height: 1;
+}
+
+.cleaning-item-tag-remove:hover {
+  color: #ef4444;
+}
+
+.form-status {
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+
+.form-status.success { color: #047857; }
+.form-status.error { color: #b91c1c; }
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.dialog-actions .btn {
+  min-width: 100px;
+}
+
+/* ページネーション */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  padding: 8px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  min-width: 40px;
+}
+
+.pagination button.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* スマホレスポンシブ対応 */
+@media (max-width: 768px) {
+  .sales-schedules {
+    padding: 12px;
+  }
+
+  .page-header {
+    gap: 8px;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  .filter-section {
+    padding: 8px 10px;
+    margin-bottom: 12px;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .filter-group {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .filter-group label {
+    width: 70px;
+  }
+
+  #reset-filters {
+    width: 100%;
+    padding: 6px 10px;
+  }
+
+  .new-project-alert {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .new-project-alert-btn {
+    width: 100%;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
+  .form-field.half {
+    flex: 1;
+    width: 100%;
+  }
+
+  .store-search-controls {
+    flex-direction: column;
+  }
+
+  .store-category-filter {
+    flex: 1;
+    width: 100%;
+  }
+
+  .store-search-controls input[type="text"] {
+    min-width: 100%;
+  }
+
+  .cleaning-items-search-wrapper .store-search-controls {
+    flex-direction: column;
+  }
+
+  .calendar-day {
+    min-height: 60px;
+    padding: 4px;
+  }
+
+  .day-number {
+    font-size: 0.75rem;
+  }
+
+  .day-event {
+    font-size: 0.6rem;
+    padding: 2px 3px;
+  }
+
+  .dialog-actions {
+    flex-direction: column;
+  }
+
+  .dialog-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .schedule-card {
+    padding: 12px;
+  }
+
+
+  .schedule-card-field {
+    font-size: 0.8rem;
+  }
+
+  .schedule-card-actions .action-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .schedule-card-actions .action-btn span {
+    font-size: 0.8rem;
+  }
+
+  .calendar-day {
+    min-height: 50px;
+  }
+}
+
+/* 新規作成ページ用スタイル */
+.sales-schedules-new {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #f9fafb;
+  min-height: 100vh;
+}
+
+.schedule-form-new {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.schedule-form-new .form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.schedule-form-new .form-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.schedule-form-new .form-field.half {
+  flex: 0 0 calc(50% - 8px);
+}
+
+.schedule-form-new .form-field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.schedule-form-new .required {
+  color: #ef4444;
+}
+
+.schedule-form-new .form-field input,
+.schedule-form-new .form-field select,
+.schedule-form-new .form-field textarea {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.schedule-form-new .form-field input:focus,
+.schedule-form-new .form-field select:focus,
+.schedule-form-new .form-field textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+}
+
+.schedule-form-new .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.schedule-form-new .form-actions .btn {
+  min-width: 140px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.schedule-form-new .btn-primary {
+  background: var(--primary, #FF6BA6);
+  color: #ffffff;
+}
+
+.schedule-form-new .btn-primary:hover {
+  background: var(--primary-hover, #ff8fb3);
+}
+
+.schedule-form-new .btn-secondary {
+  background: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.schedule-form-new .btn-secondary:hover {
+  background: #f9fafb;
+}
+
+.schedule-form-new .form-status {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.schedule-form-new .form-status.success {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.schedule-form-new .form-status.error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+@media (max-width: 768px) {
+  .sales-schedules-new {
+    padding: 16px;
+  }
+  .schedule-form-new {
+    padding: 24px;
+  }
+  .schedule-form-new .form-row {
+    flex-direction: column;
+  }
+  .schedule-form-new .form-field.half {
+    flex: 1;
+  }
+  .schedule-form-new .form-actions {
+    flex-direction: column-reverse;
+  }
+  .schedule-form-new .form-actions .btn {
+    width: 100%;
+  }
+}
+

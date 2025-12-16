@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title>従業員マイページ | ミセサポ</title>
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="/css/admin-sidebar.css">
+<link rel="stylesheet" href="/css/staff-mypage.css">
+<link rel="stylesheet" href="/css/staff-mypage-inline.css" />
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/js/cognito_config.js"></script>
+<script src="/js/cognito_auth.js"></script>
+<script src="/js/client_auth.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+<script src="/js/staff-mypage.js"></script>
+  </head>
+  <body class="theme-pink theme-pink page-staff-mypage">
+    <div id="default-header-wrapper">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+<header id="header-guest" class="site-header" data-role="guest">
+  <div class="inner wide">
+    <div class="nav-left">
+      <a class="brand brand-logo" href="/" aria-label="ミセサポ ホーム">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+      </a>
+      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+    </div>
+    <div class="spacer"></div>
+    <nav class="nav-right hide-sm" aria-label="User">
+      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+      <a class="nav-link" href="/signin">ログイン</a>
+      <a class="nav-link primary" href="/signup">新規登録</a>
+      <button class="icon-btn" aria-label="通知">
+        <i class="fas fa-bell"></i>
+      </button>
+      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </nav>
+    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+  <!-- スマホ版ナビゲーションメニュー -->
+  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
+    <div class="mobile-nav-content">
+      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+      <nav class="mobile-nav-user" aria-label="User">
+        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+        <a class="mobile-nav-link" href="/signin">ログイン</a>
+        <a class="mobile-nav-link primary" href="/signup">新規登録</a>
+      </nav>
+    </div>
+  </nav>
+</header>
+
+    </div>
+    <!-- 通常ヘッダー（ログイン画面用） -->
+    <div id="normal-header-wrapper" style="display: none;">
+    <!-- 通常ヘッダー -->
+<header class="normal-header">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+            </a>
+                </div>
+        <nav class="normal-header-nav">
+            <a href="/">TOP</a>
+            <a href="/service">対応可能サービス</a>
+            <a href="/lp#voice">お客様の声</a>
+            <a href="/customers-support-desk">カスタマーズサポート</a>
+            <a href="/announcements">お知らせ</a>
+            <a href="/privacy-policy">規約＆ポリシー</a>
+        </nav>
+        <div class="normal-header-actions">
+            <a href="/signin" class="normal-header-login">ログイン</a>
+        </div>
+            </div>
+</header>
+
+
+    </div>
+<!-- モバイルメニューボタン -->
+<div class="mobile-menu-area">
+<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+  <i class="fas fa-bars"></i>
+</button>
+</div>
+
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/staff/mypage" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <!-- ロール表示 -->
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">清掃員</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/admin/dashboard" class="nav-item nav-item-admin" data-page="dashboard" data-role-required="admin,operation,general_affairs" style="display: none;">
+      <i class="fas fa-tachometer-alt"></i>
+      <span class="nav-label">管理ダッシュボード</span>
+    </a>
+    <div class="nav-divider" data-role-required="admin,operation,general_affairs" style="display: none;"></div>
+    <a href="/staff/mypage" class="nav-item active" data-page="mypage">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <a href="/staff/attendance-history" class="nav-item" data-page="attendance-history">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">出勤履歴</span>
+    </a>
+    <a href="/staff/daily-reports" class="nav-item" data-page="daily-reports">
+      <i class="fas fa-edit"></i>
+      <span class="nav-label">日報</span>
+    </a>
+    <a href="/staff/schedule" class="nav-item" data-page="schedule">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/staff/work-history" class="nav-item" data-page="work-history">
+      <i class="fas fa-clipboard-list"></i>
+      <span class="nav-label">作業履歴</span>
+    </a>
+    <a href="/staff/reports/new" class="nav-item" data-page="reports">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">レポート</span>
+    </a>
+    <a href="/wiki" class="nav-item" data-page="wiki">
+      <i class="fas fa-book-open"></i>
+      <span class="nav-label">WIKI</span>
+    </a>
+    <a href="/cleaning-manual" class="nav-item" data-page="cleaning-manual">
+      <i class="fas fa-book"></i>
+      <span class="nav-label">清掃マニュアル</span>
+    </a>
+    <a href="/staff/announcements" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">業務連絡</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/staff/mypage/settings" class="nav-item" data-page="settings">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">設定</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="staffLogout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+    
+    <!-- マイページ編集用ボタン -->
+    <div class="nav-divider"></div>
+    <div class="sidebar-mypage-actions">
+    </div>
+  </nav>
+
+  <!-- トグルボタン -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<main id="main" class="staff-mypage main-content" style="height:auto !important;">
+  <div class="loading" id="loading">読み込み中...</div>
+  <div id="error-message" class="error-message" style="display: none;"></div>
+  
+  <div id="mypage-content" style="display: none;">
+    <!-- メインコンテンツ -->
+    <div class="mypage-main-grid-container" style="flex: 1; overflow: hidden; min-height: 0;">
+        <div class="mypage-main-grid" id="mypage-grid">
+        <!-- 左カラム -->
+        <div class="mypage-column mypage-column-left">
+        <!-- 出退勤セクション（時計と出退勤記録を統合） -->
+        <section id="attendance">
+          <div class="container-section">
+            <div class="container-header">
+              <h2 class="container-title drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+                <i class="fas fa-clock"></i>
+                出退勤
+              </h2>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-text btn-sm" id="clock-format-toggle" title="24時間/12時間切り替え">
+                  <i class="fas fa-exchange-alt"></i>
+                </button>
+                <button class="btn btn-text btn-sm" id="request-correction-btn">
+                  <i class="fas fa-edit"></i>
+                  <span>修正依頼</span>
+                </button>
+              </div>
+            </div>
+            <div class="card accordion-content">
+              
+              <!-- 出退勤記録セクション（上部） -->
+              <div class="attendance-card" style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
+                <!-- 今日の出退勤状況 -->
+                <div class="attendance-today-grid">
+                  <div class="attendance-status-box" id="attendance-status">
+                    <div class="status-indicator" id="status-indicator"></div>
+                    <div class="status-info">
+                      <span class="status-label" id="status-label">未出勤</span>
+                      <span class="status-time" id="status-time">--:--</span>
+                    </div>
+                  </div>
+                  <div class="attendance-action-box">
+                    <button class="btn-attendance btn-clock-in" id="attendance-toggle-btn">
+                      <i class="fas fa-sign-in-alt"></i>
+                      <span id="toggle-btn-text">出勤</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- 今月のサマリー -->
+                <div class="attendance-summary">
+                  <div class="summary-item">
+                    <span class="summary-label">今月の出勤</span>
+                    <span class="summary-value" id="monthly-work-days">0日</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">今月の労働時間</span>
+                    <span class="summary-value" id="monthly-work-hours">0時間</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 時計（中央） -->
+              <div class="digital-clock-card" style="background: transparent; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 16px;">
+                <div class="digital-clock-display" id="digital-clock-display">00:00:00</div>
+                <div class="digital-clock-alarm" id="digital-clock-alarm-section" style="display: none; margin-top: 12px;">
+                  <div class="alarm-status" id="alarm-status">
+                    <i class="fas fa-bell"></i>
+                    <span id="alarm-time-display">--:--</span>
+                  </div>
+                  <button class="btn btn-sm btn-alarm-toggle" id="alarm-toggle-btn">
+                    <i class="fas fa-bell-slash"></i>
+                  </button>
+                </div>
+                <button class="btn btn-sm btn-alarm-set" id="alarm-set-btn" style="margin-top: 8px;">
+                  <i class="fas fa-plus"></i>
+                  アラーム設定
+                </button>
+              </div>
+              
+              <!-- カレンダー（下部） -->
+              <div class="attendance-calendar-section">
+                <div class="calendar-head" style="margin-bottom: 12px;">
+                  <a class="calendar-nav" href="#" id="calendar-prev" aria-label="前へ">
+                    <i class="fa-solid fa-chevron-left"></i>
+                  </a>
+                  <div class="calendar-title" id="calendar-title">2025 06</div>
+                  <a class="calendar-nav" href="#" id="calendar-next" aria-label="次へ">
+                    <i class="fa-solid fa-chevron-right"></i>
+                  </a>
+                </div>
+                <div class="calendar-grid" id="calendar-grid" style="min-height: auto;">
+                  <!-- カレンダーが動的に生成される -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 業務連絡通知セクション -->
+        <section id="announcements">
+          <div class="container-section">
+            <div class="container-header">
+              <h2 class="container-title drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+                <i class="fas fa-bullhorn"></i>
+                業務連絡
+              </h2>
+            </div>
+            <div class="card announcements-card accordion-content">
+              <div id="announcements-list">
+                <div class="empty-state">業務連絡はありません</div>
+              </div>
+            </div>
+          </div>
+        </section>
+        </div>
+        <!-- 中央カラム -->
+        <div class="mypage-column mypage-column-center">
+        <!-- 日報 -->
+        <section id="daily-reports">
+        <div class="container-section">
+          <div class="container-header">
+            <h2 class="container-title drag-handle">
+              <i class="fas fa-grip-vertical"></i>
+              <i class="fas fa-file-alt"></i>
+              日報
+            </h2>
+            <a href="/staff/daily-reports" class="btn btn-text btn-sm" title="日報詳細">
+              <i class="fas fa-external-link-alt"></i>
+              <span>詳細</span>
+            </a>
+            </div>
+          <div class="card daily-reports-card accordion-content">
+            <!-- 今日の日報入力フォーム -->
+            <div class="daily-report-form-section">
+              <div class="daily-report-form-header">
+                <span class="daily-report-date-label">本日の作業内容</span>
+                <span class="daily-report-date" id="daily-report-today-date"></span>
+              </div>
+              <textarea 
+                id="daily-report-content" 
+                class="daily-report-textarea" 
+                placeholder="今日の作業内容を入力してください..."
+                rows="6"
+              ></textarea>
+              <div class="daily-report-actions">
+                <button class="btn btn-primary btn-sm" id="daily-report-save-btn">
+                  <i class="fas fa-save"></i>
+                  <span>保存</span>
+                </button>
+                <button class="btn btn-text btn-sm" id="daily-report-clear-btn" style="display: none;">
+                  <i class="fas fa-times"></i>
+                  <span>クリア</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TODOリスト -->
+        <section id="todo">
+          <div class="container-section">
+            <div class="container-header">
+              <h2 class="container-title drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+                <i class="fas fa-tasks"></i>
+                TODOリスト
+                <span class="todo-count" id="todo-count">0</span>
+              </h2>
+            </div>
+            <div class="card todo-card accordion-content">
+              <div class="todo-input-wrapper">
+                <input type="text" id="todo-input" class="todo-input" placeholder="新しいタスクを追加..." />
+                <button class="btn btn-primary btn-sm" id="add-todo-btn">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+              <div id="todo-list" class="todo-list">
+                <!-- TODOアイテムが動的に生成される -->
+              </div>
+              <div class="todo-filters" id="todo-filters">
+                <button class="filter-btn active" data-filter="all">すべて</button>
+                <button class="filter-btn" data-filter="active">未完了</button>
+                <button class="filter-btn" data-filter="completed">完了</button>
+              </div>
+            </div>
+          </div>
+        </section>
+        </div>
+        <!-- 右カラム -->
+        <div class="mypage-column mypage-column-right">
+        <!-- 基本情報セクション -->
+        <section id="basic-info">
+          <div class="container-section">
+            <div class="container-header">
+              <h2 class="container-title drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+                <i class="fas fa-user"></i>
+                基本情報
+              </h2>
+            </div>
+            <div class="card basic-info-card accordion-content">
+              <div id="basic-info-content">
+                <div class="basic-info-row">
+                  <div class="basic-info-item">
+                    <span class="basic-info-label">名前</span>
+                    <span class="basic-info-value" id="basic-info-name">-</span>
+                  </div>
+                  <div class="basic-info-item">
+                    <span class="basic-info-label">部署</span>
+                    <span class="basic-info-value" id="basic-info-department">-</span>
+                  </div>
+                </div>
+                <div class="basic-info-item">
+                  <span class="basic-info-label">メール</span>
+                  <span class="basic-info-value" id="basic-info-email">-</span>
+                </div>
+                <div class="basic-info-item">
+                  <span class="basic-info-label">電話</span>
+                  <span class="basic-info-value" id="basic-info-phone">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        </div>
+
+
+              </div>
+              </div>
+        </div>
+      </div>
+    </main>
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- Additional scripts (if needed) -->
+    <script src="/js/staff-mypage-inline.js"></script>
+    <!-- 出勤履歴アップロード用スクリプト（開発用） -->
+    <script>
+      // 櫻田さんの出勤履歴をDBにアップロードする関数
+      window.uploadSakuraAttendanceToDB = async function() {
+        const STAFF_ID = 'W999';
+        const STAFF_NAME = '櫻田傑';
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+        
+        // ローカルストレージから出勤履歴を取得
+        function getAttendanceRecordsFromLocalStorage() {
+          try {
+            const stored = localStorage.getItem('attendanceRecords');
+            if (stored) {
+              return JSON.parse(stored);
+            }
+          } catch (error) {
+            console.error('Error reading from localStorage:', error);
+          }
+          return {};
+        }
+        
+        // Cognito IDトークンを取得
+        async function getCognitoIdToken() {
+          try {
+            if (window.CognitoAuth && window.CognitoAuth.getCurrentUser) {
+              const user = window.CognitoAuth.getCurrentUser();
+              if (user) {
+                const session = await new Promise((resolve, reject) => {
+                  user.getSession((err, session) => {
+                    if (err) reject(err);
+                    else resolve(session);
+                  });
+                });
+                if (session && session.isValid()) {
+                  return session.getIdToken().getJwtToken();
+                }
+              }
+            }
+            const idToken = localStorage.getItem('cognito_id_token');
+            if (idToken) return idToken;
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.includes('idToken')) {
+                const token = localStorage.getItem(key);
+                if (token && token.startsWith('eyJ')) {
+                  return token;
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error getting Cognito ID token:', error);
+          }
+          return null;
+        }
+        
+        // 出勤記録をAPIにアップロード
+        async function uploadAttendanceRecord(record, date) {
+          const idToken = await getCognitoIdToken();
+          const headers = {
+            'Content-Type': 'application/json'
+          };
+          if (idToken) {
+            headers['Authorization'] = `Bearer ${idToken}`;
+          }
+          
+          const data = {
+            staff_id: STAFF_ID,
+            staff_name: STAFF_NAME,
+            date: date,
+            clock_in: record.clock_in || null,
+            clock_out: record.clock_out || null
+          };
+          
+          if (record.breaks && Array.isArray(record.breaks)) {
+            data.breaks = record.breaks;
+          }
+          
+          try {
+            const response = await fetch(`${API_BASE}/attendance`, {
+              method: 'POST',
+              headers: headers,
+              body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              console.log(`✅ ${date}: アップロード成功`, result);
+              return { success: true, date, result };
+            } else {
+              const errorData = await response.json().catch(() => ({}));
+              console.error(`❌ ${date}: アップロード失敗`, response.status, errorData);
+              return { success: false, date, error: errorData };
+            }
+          } catch (error) {
+            console.error(`❌ ${date}: エラー`, error);
+            return { success: false, date, error: error.message };
+          }
+        }
+        
+        console.log('📤 出勤履歴のアップロードを開始します...');
+        console.log(`スタッフID: ${STAFF_ID}`);
+        console.log(`スタッフ名: ${STAFF_NAME}`);
+        
+        const attendanceRecords = getAttendanceRecordsFromLocalStorage();
+        console.log('📋 ローカルストレージから取得したデータ:', attendanceRecords);
+        
+        // 櫻田さんの記録を抽出
+        const sakuraRecords = {};
+        for (const date in attendanceRecords) {
+          if (attendanceRecords[date][STAFF_ID]) {
+            sakuraRecords[date] = attendanceRecords[date][STAFF_ID];
+          }
+        }
+        
+        console.log(`📊 アップロード対象: ${Object.keys(sakuraRecords).length}件`);
+        
+        if (Object.keys(sakuraRecords).length === 0) {
+          console.warn('⚠️ アップロード対象の記録が見つかりませんでした');
+          return;
+        }
+        
+        const results = [];
+        const dates = Object.keys(sakuraRecords).sort();
+        
+        // 順次アップロード
+        for (const date of dates) {
+          const record = sakuraRecords[date];
+          console.log(`\n📅 処理中: ${date}`);
+          console.log(`   出勤: ${record.clock_in || 'なし'}`);
+          console.log(`   退勤: ${record.clock_out || 'なし'}`);
+          
+          const result = await uploadAttendanceRecord(record, date);
+          results.push(result);
+          
+          // 少し待機
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        // 結果サマリー
+        console.log('\n📊 アップロード結果サマリー:');
+        const successCount = results.filter(r => r.success).length;
+        const failCount = results.filter(r => !r.success).length;
+        console.log(`✅ 成功: ${successCount}件`);
+        console.log(`❌ 失敗: ${failCount}件`);
+        
+        if (failCount > 0) {
+          console.log('\n❌ 失敗した日付:');
+          results.filter(r => !r.success).forEach(r => {
+            console.log(`   - ${r.date}: ${r.error?.error || r.error || '不明なエラー'}`);
+          });
+        }
+        
+        return results;
+      };
+      
+      console.log('💡 出勤履歴をアップロードするには、コンソールで以下を実行してください:');
+      console.log('   uploadSakuraAttendanceToDB()');
+    </script>
+  </body>
+  </html>
+

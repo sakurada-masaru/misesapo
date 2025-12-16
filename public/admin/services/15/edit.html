@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title>窓清掃</title>
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+    <link rel="stylesheet" href="/css/admin-sidebar.css" />
+    <!-- DataUtils スクリプト（schedulesページで使用） -->
+    <script src="/js/data_utils.js"></script>
+  </head>
+  <body class="theme-pink page-admin-services">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+    
+
+
+
+<!-- AWS Services API -->
+<script src="/js/aws-services-api.js"></script>
+
+<main id="main" class="admin-services-edit">
+  <!-- モバイルメニューボタン -->
+<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+  <i class="fas fa-bars"></i>
+</button>
+
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/admin/dashboard" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <!-- ロール表示 -->
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">管理者</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <!-- マイページ（目立たせる） -->
+    <a href="/staff/mypage" class="nav-item nav-item-mypage" data-page="mypage" id="sidebar-mypage-link">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <div class="nav-divider"></div>
+    <!-- 管理メニュー -->
+    <a href="/admin/dashboard" class="nav-item" data-page="dashboard">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">アクティビティ</span>
+    </a>
+    <a href="/admin/schedules/" class="nav-item" data-page="schedules">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/admin/customers/" class="nav-item" data-page="customers">
+      <i class="fas fa-store"></i>
+      <span class="nav-label">顧客管理</span>
+    </a>
+    <a href="/admin/reports/" class="nav-item" data-page="reports">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">レポート</span>
+    </a>
+    <a href="/admin/estimates/" class="nav-item" data-page="estimates">
+      <i class="fas fa-file-invoice-dollar"></i>
+      <span class="nav-label">見積もり</span>
+    </a>
+    <a href="/admin/orders" class="nav-item" data-page="orders">
+      <i class="fas fa-shopping-cart"></i>
+      <span class="nav-label">発注管理</span>
+    </a>
+    <a href="/admin/partners" class="nav-item" data-page="partners">
+      <i class="fas fa-handshake"></i>
+      <span class="nav-label">パートナー企業</span>
+    </a>
+    <a href="/admin/users/" class="nav-item" data-page="users">
+      <i class="fas fa-users"></i>
+      <span class="nav-label">ユーザー管理</span>
+    </a>
+    <a href="/admin/attendance/errors" class="nav-item" data-page="attendance-errors">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span class="nav-label">勤怠管理</span>
+    </a>
+    <a href="/admin/services/" class="nav-item" data-page="services">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">サービス管理</span>
+    </a>
+    <a href="/admin/analytics/" class="nav-item" data-page="analytics">
+      <i class="fas fa-chart-bar"></i>
+      <span class="nav-label">分析</span>
+    </a>
+    <a href="/admin/images/" class="nav-item" data-page="images">
+      <i class="fas fa-images"></i>
+      <span class="nav-label">メディア</span>
+    </a>
+    <a href="/admin/zaiko" class="nav-item" data-page="zaiko">
+      <i class="fas fa-boxes"></i>
+      <span class="nav-label">在庫管理</span>
+    </a>
+    <a href="/admin/announcements" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">業務連絡</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/wiki" class="nav-item" data-page="wiki">
+      <i class="fas fa-book-open"></i>
+      <span class="nav-label">WIKI</span>
+    </a>
+    <a href="/admin/sitemap" class="nav-item" data-page="sitemap">
+      <i class="fas fa-sitemap"></i>
+      <span class="nav-label">サイトマップ</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="staffLogout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+  </nav>
+
+  <!-- トグルボタン -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<script>
+  // 従業員用ログアウト関数（グローバル）
+  function staffLogout() {
+    // Cognitoからログアウト
+    if (window.CognitoAuth && typeof window.CognitoAuth.logout === 'function') {
+      window.CognitoAuth.logout();
+    }
+    // ローカルストレージをクリア
+    localStorage.removeItem('cognito_user');
+    localStorage.removeItem('misesapo_auth');
+    localStorage.removeItem('cognito_id_token');
+    localStorage.removeItem('cognito_access_token');
+    localStorage.removeItem('cognito_refresh_token');
+    // 従業員ログイン画面にリダイレクト
+    window.location.href = '/staff/signin.html';
+  }
+</script>
+
+
+  <!-- メインコンテンツ -->
+  <div class="main-content">
+    <div class="container">
+      <div class="page-header">
+    <h1 class="page-title">サービス編集</h1>
+  </div>
+
+  <form id="service-form" class="service-form">
+    <input type="hidden" name="id" value="15" />
+    
+    <!-- 基本情報 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-info-circle"></i>
+        基本情報
+      </h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label class="form-label">サービス名 <span class="required">必須</span></label>
+          <input type="text" class="form-input" name="title" value="窓清掃" placeholder="例: グリストラップ" required />
+          <p class="form-hint">サービス名を入力してください</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">カテゴリ <span class="required">必須</span></label>
+          <select class="form-select" name="category" id="category-select" required>
+            <option value="">選択してください</option>
+            <option value="定期清掃">定期清掃</option>
+            <option value="厨房設備">厨房設備</option>
+            <option value="空調設備">空調設備</option>
+            <option value="フロア">フロア</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">価格 <span class="required">必須</span></label>
+          <input type="text" class="form-input" name="price" value="¥ 5,250〜" placeholder="例: ¥ 21,000〜" required />
+          <p class="form-hint">価格表示形式で入力してください</p>
+        </div>
+        <div class="form-group full-width">
+          <label class="form-label">サービスメイン画像</label>
+          <div class="image-input-group">
+            <input type="text" class="form-input" name="image" id="image" value="images/mado.png" placeholder="例: images/gurisuto.png" />
+            <button type="button" class="btn btn-outline btn-select-image" data-target="image" data-preview="image_preview">
+              <i class="fas fa-images"></i> 画像を選択
+            </button>
+          </div>
+          <div class="image-preview" id="image_preview" style="display: none;">
+            <img src="" alt="プレビュー" />
+          </div>
+          <p class="form-hint">この画像はサービスカードの上部（TOPイメージ）に表示されます。画像のパスを入力するか、「画像を選択」ボタンから選択してください</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 説明情報 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-align-left"></i>
+        説明情報
+      </h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label class="form-label">サービス説明</label>
+          <textarea class="form-textarea" name="description" rows="5" placeholder="サービスの詳細説明を入力してください">窓やガラス面は油膜・指紋・ホコリ・雨ジミなどが付着しやすく、放置すると次のような問題が起こります。</textarea>
+          <p class="form-hint">この説明はサービス管理画面と詳細ページに表示されます</p>
+        </div>
+        <div class="form-group full-width">
+          <label class="form-label">問題点（1行に1つずつ入力）</label>
+          <textarea class="form-textarea" name="problems" rows="5" placeholder="例:&#10;強い悪臭の発生&#10;排水詰まりによる逆流や床の冠水&#10;ゴキブリ・チョウバエなど害虫の発生源">曇りやシミで店内が暗く見え視認性が低下し 集客力ダウン
+油膜や汚れが固着して落ちにくくなる
+店舗イメージの低下</textarea>
+          <p class="form-hint">各問題点を1行ずつ入力してください</p>
+        </div>
+        <div class="form-group full-width">
+          <label class="form-label">解決策・サービス内容</label>
+          <textarea class="form-textarea" name="solution" rows="4" placeholder="解決策やサービス内容を入力してください">専用の洗剤・道具を使用し、油膜や水アカまで徹底除去。透明感のあるガラス面を取り戻し、店舗の印象アップと衛生感の向上を実現します。</textarea>
+          <p class="form-hint">この内容は詳細ページで強調表示されます</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- モーダル表示内容 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-window-maximize"></i>
+        モーダル表示内容（セクション設定）
+      </h2>
+      
+      <div class="modal-edit-section">
+        <div class="modal-edit-header">
+          <h3 class="modal-edit-title">モーダルセクション一覧</h3>
+          <button type="button" class="btn btn-outline btn-sm" id="add-section-btn">
+            <i class="fas fa-plus"></i> セクションを追加
+          </button>
+        </div>
+        <div id="sections-container" class="modal-sections-container"></div>
+        <p class="form-hint" style="margin-top: 16px;">
+          <i class="fas fa-info-circle"></i> セクションは順番に表示されます。最後のセクションの後は自動的にエンドセクション（発注確認画面）が表示されます。
+        </p>
+      </div>
+      
+      <!-- Hidden input for JSON data -->
+      <input type="hidden" name="sections" id="sections-json-input" />
+    </div>
+
+    <!-- フォームアクション -->
+    <div class="form-actions">
+      <a href="/admin/services/15" class="btn btn-outline">
+        <i class="fas fa-times"></i>
+        キャンセル
+      </a>
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i>
+        保存する
+      </button>
+    </div>
+  </form>
+
+  <!-- Preview Modals -->
+  <!-- Service Item Modal (no Tailwind dependency) -->
+<div id="service-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-dialog">
+    <!-- Header image -->
+    <div class="modal-hero">
+      <img id="modal-image" src="" alt="Service Image" class="modal-hero-img" />
+      <button id="close-modal-btn" class="modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <h2 id="modal-title" class="modal-title"></h2>
+      <hr class="divider" />
+
+      <div id="modal-form" class="stack lg"></div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button class="btn btn-primary btn-fixed btn-round">次へ</button>
+        <button id="back-modal-btn" class="btn btn-fixed btn-round">戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Details Modal -->
+<div id="details-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="details-modal-title">
+  <div class="modal-dialog">
+    <!-- Header image -->
+    <div class="modal-hero">
+      <img id="details-modal-image" src="" alt="Service Image" class="modal-hero-img" />
+      <button id="close-details-modal-btn" class="modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body modal-scroll">
+      <div class="modal-headline">
+        <h2 id="details-modal-title" class="modal-title"></h2>
+        <div class="price-line">
+          <span class="muted"><i class="fas fa-shopping-cart"></i> 清掃料金は</span>
+          <span class="price-strong">¥0</span>
+          <span class="muted">です。</span>
+        </div>
+      </div>
+      <p class="small muted">設備の詳細を選択してください。選択内容に応じて金額が自動計算されます。</p>
+      <hr class="divider" />
+
+      <div id="details-form" class="stack lg"></div>
+
+      <!-- Remarks / options -->
+        <div>
+          <h3 class="section-title">グリスフィルターをレンタルしますか？</h3>
+          <div class="stack sm">
+            <label class="choice-row"><input type="radio" name="rental" class="radio" /><span>はい</span></label>
+            <label class="choice-row"><input type="radio" name="rental" class="radio" /><span>いいえ</span></label>
+          </div>
+          <h3 class="section-title">備考欄(任意)</h3>
+          <textarea class="textarea" rows="3" placeholder="自由入力"></textarea>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button class="btn btn-primary btn-fixed btn-round">次へ</button>
+        <button id="back-to-service-modal-btn" class="btn btn-fixed btn-round">戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <style>
+    :root {
+      --sidebar-width: 240px;
+      --sidebar-width-collapsed: 64px;
+    }
+
+    .admin-services-edit {
+      display: flex;
+      min-height: 100vh;
+      background: #f9fafb;
+      transition: margin-left 0.3s ease;
+    }
+
+    .logo-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .logo-img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      white-space: nowrap;
+      transition: opacity 0.3s ease;
+    }
+    
+    .sidebar-role .role-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #e0e7ff;
+      color: #3730a3;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .nav-label {
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+    }
+    .nav-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 8px 12px;
+    }
+    
+    .sidebar.collapsed 
+
+    /* メインコンテンツ */
+    .main-content {
+      margin-left: var(--sidebar-width) !important;
+      padding: 24px;
+      background: #f9fafb;
+      width: calc(100% - var(--sidebar-width)) !important;
+      max-width: none !important;
+      box-sizing: border-box;
+      transition: margin-left 0.3s ease, width 0.3s ease;
+    }
+    .sidebar.collapsed ~ .main-content {
+      margin-left: var(--sidebar-width-collapsed) !important;
+      padding: 24px;
+      background: #f9fafb;
+      width: calc(100% - var(--sidebar-width-collapsed)) !important;
+      max-width: none !important;
+      box-sizing: border-box;
+      transition: margin-left 0.3s ease, width 0.3s ease;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .page-header {
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .service-form {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .form-section {
+      margin-bottom: 32px;
+      padding: 24px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 2px solid #fce7f3; /* Pink border */
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .form-section:last-of-type {
+      margin-bottom: 0;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 24px 0;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+    .section-title i {
+      color: var(--primary);
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .required {
+      color: #ef4444;
+      font-size: 0.75rem;
+      margin-left: 4px;
+    }
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    .form-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    .form-hint code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .form-error {
+      color: #dc2626;
+      font-size: 0.875rem;
+      margin-top: 8px;
+      padding: 8px;
+      background: #fee2e2;
+      border-radius: 4px;
+      border: 1px solid #fecaca;
+    }
+    .modal-edit-section {
+      margin-bottom: 32px;
+      padding: 24px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-edit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+    .modal-edit-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+    .modal-sections-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .modal-section-editor {
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 2px solid var(--primary);
+    }
+    .modal-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .modal-section-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+    .modal-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .modal-item-editor {
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .modal-item-number {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #6b7280;
+    }
+    .btn-xs {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+    }
+    .image-preview-small {
+      margin-top: 8px;
+    }
+    .image-preview-small img {
+      max-width: 100px;
+      max-height: 100px;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .image-input-group {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    
+    .image-input-group .form-input {
+      flex: 1;
+    }
+    
+    .btn-select-image {
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    
+    .image-preview {
+      margin-top: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .image-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+    
+    /* 画像選択モーダル */
+    .image-select-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    
+    .image-select-modal.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .image-select-modal.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .image-select-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+    }
+    
+    .image-select-dialog {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      max-width: 90vw;
+      max-height: 90vh;
+      width: 100%;
+      max-width: 1000px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      z-index: 2001;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    
+    .image-select-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .image-select-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .image-select-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #6b7280;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    
+    .image-select-close:hover {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    
+    .image-select-search {
+      padding: 16px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    
+    .image-select-search .search-box {
+      flex: 1;
+      position: relative;
+    }
+    
+    .image-select-search .search-box i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+    }
+    
+    .image-select-search .search-input {
+      width: 100%;
+      padding: 8px 12px 8px 36px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+    
+    .image-select-search .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      background: #fff;
+    }
+    
+    .image-select-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      max-height: 60vh;
+    }
+    
+    .image-select-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+    }
+    
+    .image-select-card {
+      background: #fff;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .image-select-card:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .image-select-thumb {
+      position: relative;
+      width: 100%;
+      padding-top: 75%;
+      background: #f9fafb;
+      overflow: hidden;
+    }
+    
+    .image-select-thumb img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .image-select-info {
+      padding: 8px;
+    }
+    
+    .image-select-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .image-select-path {
+      font-size: 0.625rem;
+      color: #6b7280;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .loading-spinner {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+    
+    .loading-spinner i {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    
+    .empty-message,
+    .error-message {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid #f3f4f6;
+    }
+    .form-actions .btn {
+      min-width: 140px;
+    }
+    .btn-preview {
+      border: 2px solid var(--primary);
+      background: #ffffff;
+      color: var(--primary);
+      margin-top: 12px;
+    }
+    .btn-preview:hover {
+      background: #fff5f8;
+      color: var(--primary-600);
+    }
+    @media (max-width: 768px) {
+      .admin-services-edit {
+        padding: 16px;
+      }
+      .service-form {
+        padding: 24px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-actions {
+        flex-direction: column-reverse;
+      }
+      .form-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+
+  <script>
+    // AWS APIの読み込み確認
+    (function() {
+      if (!window.AWSServicesAPI) {
+        console.warn('[AdminServicesEdit] AWS Services API not loaded. Waiting...');
+        setTimeout(() => {
+          if (!window.AWSServicesAPI) {
+            console.error('[AdminServicesEdit] AWS Services API failed to load');
+            alert('サービス管理APIの読み込みに失敗しました。ページを再読み込みしてください。');
+          }
+        }, 1000);
+      }
+    })();
+    
+    // Set selected category
+    (function() {
+      const categorySelect = document.getElementById('category-select');
+      const currentCategory = 'フロア';
+      if (categorySelect && currentCategory) {
+        categorySelect.value = currentCategory;
+      }
+    })();
+
+    // Modal content editor (forms/details)
+    (function() {
+      let imageSelectModal = null;
+      let currentImageTarget = null;
+      
+      async function loadServiceData() {
+        try {
+          const serviceId = 15;
+          
+          if (!window.AWSServicesAPI) {
+            throw new Error('AWS Services APIが読み込まれていません。');
+          }
+          
+          const service = await window.AWSServicesAPI.getService(serviceId);
+          console.log('[AdminServicesEdit] Service loaded:', service);
+          
+          if (service) {
+            // 既存のforms/detailsをsectionsに変換（後方互換性）
+            let sections = service.sections || [];
+            if (!sections.length && (service.forms || service.details)) {
+              // formsとdetailsを統合してsectionsに変換
+              sections = [];
+              if (service.forms && service.forms.length > 0) {
+                sections = sections.concat(service.forms.map(s => ({ ...s, sectionIndex: sections.length })));
+              }
+              if (service.details && service.details.length > 0) {
+                sections = sections.concat(service.details.map(s => ({ ...s, sectionIndex: sections.length })));
+              }
+            }
+            renderSections(sections);
+          }
+        } catch (error) {
+          console.error('Failed to load service data:', error);
+          
+          // 404エラーの場合、適切なメッセージを表示して一覧ページにリダイレクト
+          if (error.status === 404 || error.message.includes('404') || error.message.includes('見つかりません')) {
+            const serviceId = 15;
+            const message = `サービスID ${serviceId} が見つかりませんでした。\n\nこのサービスは削除されたか、存在しない可能性があります。`;
+            alert(message);
+            window.location.href = '/admin/services/';
+            return;
+          }
+          
+          // その他のエラーの場合
+          const errorMessage = error.message || 'サービスの読み込みに失敗しました';
+          document.querySelector('.service-form')?.insertAdjacentHTML('afterbegin', `
+            <div class="error-banner" style="background: #fee2e2; border: 2px solid #dc2626; border-radius: 8px; padding: 16px; margin-bottom: 24px; color: #991b1b;">
+              <h3 style="margin: 0 0 8px 0; font-size: 1.125rem;">
+                <i class="fas fa-exclamation-triangle"></i> エラー
+              </h3>
+              <p style="margin: 0 0 12px 0;">${errorMessage}</p>
+              <button onclick="location.reload()" class="btn btn-primary" style="margin-right: 8px;">再読み込み</button>
+              <a href="/admin/services/" class="btn btn-outline">一覧に戻る</a>
+            </div>
+          `);
+        }
+      }
+      
+      // Render sections
+      function renderSections(sections) {
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        container.innerHTML = '';
+        
+        sections.forEach((section, idx) => {
+          container.appendChild(createSectionElement(section, idx));
+        });
+        
+        updateSectionsJSON();
+      }
+      
+      // Create section element (unified for all section types)
+      function createSectionElement(section, idx) {
+        const div = document.createElement('div');
+        div.className = 'modal-section-editor';
+        div.dataset.index = idx;
+        
+        const sectionType = section['section-type'] || 'radio-text';
+        const sectionImage = section['section-image'] || section['section-image-url'] || '';
+        const requiredChecked = section.required ? 'checked' : '';
+        
+        // タイプ別の選択肢
+        const radioTextSelected = sectionType === 'radio-text' ? 'selected' : '';
+        const radioImageSelected = sectionType === 'radio-image' ? 'selected' : '';
+        const gridItemsSelected = sectionType === 'grid-items' ? 'selected' : '';
+        const textareaSelected = sectionType === 'textarea' ? 'selected' : '';
+        
+        div.innerHTML = `
+          <div class="modal-section-header">
+            <h4 class="modal-section-label">モーダル ${idx + 1}</h4>
+            <button type="button" class="btn btn-danger btn-sm btn-remove-section" data-section-index="${idx}">
+              <i class="fas fa-trash"></i> 削除
+            </button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">セクションタイトル <span class="required">必須</span></label>
+            <input type="text" class="form-input section-title-input" value="${escapeHtml(section['section-title'] || '')}" placeholder="例: 日頃のお掃除の状況について教えてください" required />
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label">モーダルTOP画像</label>
+            <div class="image-input-group">
+              <input type="text" class="form-input section-image-input" id="section-image-${idx}" value="${escapeHtml(sectionImage)}" placeholder="例: images/gure-chingu.png" />
+              <button type="button" class="btn btn-outline btn-select-image btn-sm" data-target="section-image-${idx}">
+                <i class="fas fa-images"></i> 画像を選択
+              </button>
+            </div>
+            <p class="form-hint">この画像はモーダルの上部（TOPイメージ）に表示されます（任意）</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">セクションの目的（タイプ） <span class="required">必須</span></label>
+            <select class="form-select section-type-select" required>
+              <option value="radio-text" ${radioTextSelected}>テキスト選択</option>
+              <option value="radio-image" ${radioImageSelected}>画像選択</option>
+              <option value="grid-items" ${gridItemsSelected}>項目選択（数量入力可能）</option>
+              <option value="textarea" ${textareaSelected}>テキストエリア（自由入力）</option>
+            </select>
+            <p class="form-hint">タイプによって選択肢の形式が変わります</p>
+          </div>
+          ${sectionType === 'radio-text' || sectionType === 'radio-image' ? `
+          <div class="form-group">
+            <label class="form-label">
+              <input type="checkbox" class="section-required-checkbox" ${requiredChecked} />
+              必須項目
+            </label>
+          </div>
+          ` : ''}
+          ${sectionType === 'textarea' ? createTextareaSectionFields(section) : createItemsSectionFields(section, idx, sectionType)}
+        `;
+        
+        // Add event listeners
+        div.querySelectorAll('.section-title-input, .section-type-select, .section-required-checkbox, .section-image-input, .textarea-placeholder-input, .textarea-maxlength-input, .textarea-key-input, .item-text-input, .item-image-input, .item-countable-checkbox, .item-unit-input').forEach(el => {
+          el.addEventListener('change', updateSectionsJSON);
+          el.addEventListener('input', updateSectionsJSON);
+        });
+        
+        // タイプ変更時の再レンダリング
+        div.querySelector('.section-type-select')?.addEventListener('change', function() {
+          const idx = parseInt(div.dataset.index);
+          const container = document.getElementById('sections-container');
+          const sections = Array.from(container.children).map((el, i) => {
+            return getSectionDataFromElement(el);
+          });
+          renderSections(sections);
+        });
+        
+        // 数量入力可能チェックボックスの変更時に単位フィールドを表示/非表示
+        div.querySelectorAll('.item-countable-checkbox').forEach(checkbox => {
+          checkbox.addEventListener('change', function() {
+            const itemEl = this.closest('.modal-item-editor');
+            const unitGroup = itemEl?.querySelector('[data-countable-group]');
+            if (unitGroup) {
+              unitGroup.style.display = this.checked ? 'block' : 'none';
+            }
+            updateSectionsJSON();
+          });
+        });
+        
+        // Add event listeners for buttons
+        div.querySelector('.btn-remove-section')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          window.removeSection(sectionIdx);
+        });
+        
+        div.querySelector('.btn-add-item')?.addEventListener('click', function() {
+          const sectionIdx = parseInt(this.dataset.sectionIndex);
+          window.addItem(sectionIdx);
+        });
+        
+        // Add event listeners for remove item buttons
+        div.querySelectorAll('.btn-remove-item').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const sectionIdx = parseInt(this.dataset.sectionIndex);
+            const itemIdx = parseInt(this.dataset.itemIndex);
+            window.removeItem(sectionIdx, itemIdx);
+          });
+        });
+        
+        return div;
+      }
+      
+      // Helper function to get section data from element
+      function getSectionDataFromElement(el) {
+        const title = el.querySelector('.section-title-input')?.value || '';
+        const type = el.querySelector('.section-type-select')?.value || 'radio-text';
+        const sectionImage = el.querySelector('.section-image-input')?.value || '';
+        const required = el.querySelector('.section-required-checkbox')?.checked || false;
+        
+        if (type === 'textarea') {
+          const placeholder = el.querySelector('.textarea-placeholder-input')?.value || '';
+          const maxLength = parseInt(el.querySelector('.textarea-maxlength-input')?.value || '500', 10);
+          const key = el.querySelector('.textarea-key-input')?.value || '';
+          const sectionData = {
+            'section-title': title,
+            'section-type': 'textarea',
+            placeholder,
+            maxLength,
+            key: key || undefined
+          };
+          if (sectionImage.trim()) {
+            sectionData['section-image'] = sectionImage.trim();
+          }
+          return sectionData;
+        } else {
+          const itemsEl = el.querySelector('.modal-items-list');
+          const items = Array.from(itemsEl?.children || []).map(itemEl => {
+            const text = itemEl.querySelector('.item-text-input')?.value || '';
+            if (type === 'radio-text') {
+              return text;
+            } else if (type === 'radio-image') {
+              const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+              return { text, 'img-url': imgUrl };
+            } else if (type === 'grid-items') {
+              const imgUrl = itemEl.querySelector('.item-image-input')?.value || '';
+              const countable = itemEl.querySelector('.item-countable-checkbox')?.checked || false;
+              const unit = itemEl.querySelector('.item-unit-input')?.value || '';
+              return { text, 'img-url': imgUrl, countable, unit: countable ? unit : undefined, count: 0 };
+            }
+            return text;
+          }).filter(item => {
+            if (typeof item === 'string') {
+              return item.trim();
+            } else {
+              return item.text && item.text.trim();
+            }
+          });
+          
+          const sectionData = {
+            'section-title': title,
+            'section-type': type,
+            'section-items': items
+          };
+          if (type === 'radio-text' || type === 'radio-image') {
+            sectionData.required = required;
+          }
+          if (sectionImage.trim()) {
+            sectionData['section-image'] = sectionImage.trim();
+          }
+          return sectionData;
+        }
+      }
+      
+      // Helper function for textarea section fields
+      function createTextareaSectionFields(section) {
+        return `
+          <div class="form-group">
+            <label class="form-label">プレースホルダー</label>
+            <input type="text" class="form-input textarea-placeholder-input" value="${escapeHtml(section.placeholder || '')}" placeholder="例: 設置場所、使用時間帯、臭気の有無など" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">最大文字数</label>
+            <input type="number" class="form-input textarea-maxlength-input" value="${section.maxLength || 500}" min="1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">キー</label>
+            <input type="text" class="form-input textarea-key-input" value="${escapeHtml(section.key || '')}" placeholder="例: note" />
+          </div>
+        `;
+      }
+      
+      // Helper function for items section fields
+      function createItemsSectionFields(section, idx, sectionType) {
+        const items = section['section-items'] || [];
+        return `
+          <div class="form-group">
+            <label class="form-label">選択肢</label>
+            <div class="modal-items-list" data-section-index="${idx}">
+              ${items.map((item, itemIdx) => createItemHTML(item, idx, itemIdx, sectionType)).join('')}
+            </div>
+            <button type="button" class="btn btn-outline btn-sm btn-add-item" data-section-index="${idx}">
+              <i class="fas fa-plus"></i> 選択肢を追加
+            </button>
+          </div>
+        `;
+      }
+      
+      // Create item HTML (unified for all types)
+      function createItemHTML(item, sectionIdx, itemIdx, sectionType) {
+        if (sectionType === 'radio-text') {
+          const text = typeof item === 'string' ? item : (item.text || '');
+          return `
+            <div class="modal-item-editor" data-item-index="${itemIdx}">
+              <div class="modal-item-header">
+                <span class="modal-item-number">選択肢 ${itemIdx + 1}</span>
+                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="form-group">
+                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: 毎日清掃している" />
+              </div>
+            </div>
+          `;
+        } else if (sectionType === 'radio-image') {
+          const text = typeof item === 'string' ? item : (item.text || '');
+          const imgUrl = typeof item === 'object' ? (item['img-url'] || item.img || '') : '';
+          return `
+            <div class="modal-item-editor" data-item-index="${itemIdx}">
+              <div class="modal-item-header">
+                <span class="modal-item-number">選択肢 ${itemIdx + 1}</span>
+                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="form-group">
+                <label class="form-label">テキスト</label>
+                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: 表面がきれいになれば十分" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">画像</label>
+                <div class="image-input-group">
+                  <input type="text" class="form-input item-image-input" value="${escapeHtml(imgUrl)}" placeholder="例: images/example.png" />
+                  <button type="button" class="btn btn-outline btn-sm btn-select-image" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                    <i class="fas fa-images"></i> 画像を選択
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (sectionType === 'grid-items') {
+          const text = typeof item === 'string' ? item : (item.text || '');
+          const imgUrl = typeof item === 'object' ? (item['img-url'] || item.img || '') : '';
+          const countable = typeof item === 'object' ? (item.countable || false) : false;
+          const unit = typeof item === 'object' ? (item.unit || '') : '';
+          const countableChecked = countable ? 'checked' : '';
+          return `
+            <div class="modal-item-editor" data-item-index="${itemIdx}">
+              <div class="modal-item-header">
+                <span class="modal-item-number">項目 ${itemIdx + 1}</span>
+                <button type="button" class="btn btn-danger btn-xs btn-remove-item" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="form-group">
+                <label class="form-label">項目名</label>
+                <input type="text" class="form-input item-text-input" value="${escapeHtml(text)}" placeholder="例: U字溝" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">画像</label>
+                <div class="image-input-group">
+                  <input type="text" class="form-input item-image-input" value="${escapeHtml(imgUrl)}" placeholder="例: images/example.png" />
+                  <button type="button" class="btn btn-outline btn-sm btn-select-image" data-section-index="${sectionIdx}" data-item-index="${itemIdx}">
+                    <i class="fas fa-images"></i> 画像を選択
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <input type="checkbox" class="item-countable-checkbox" ${countableChecked} />
+                  数量入力可能
+                </label>
+              </div>
+              <div class="form-group" style="${countable ? '' : 'display: none;'}" data-countable-group>
+                <label class="form-label">単位</label>
+                <input type="text" class="form-input item-unit-input" value="${escapeHtml(unit)}" placeholder="例: m, 本, ㎡" />
+              </div>
+            </div>
+          `;
+        }
+        return '';
+      }
+      
+      // Deprecated functions removed - use createSectionElement instead
+      // Update sections JSON
+      function updateSectionsJSON() {
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        
+        const sections = Array.from(container.children).map(sectionEl => {
+          return getSectionDataFromElement(sectionEl);
+        }).filter(section => section['section-title'] && section['section-title'].trim());
+        
+        document.getElementById('sections-json-input').value = JSON.stringify(sections);
+      }
+      
+      // Add section
+      window.addSection = function() {
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        
+        const sections = Array.from(container.children).map(el => getSectionDataFromElement(el));
+        sections.push({
+          'section-title': '',
+          'section-type': 'radio-text',
+          'section-items': [],
+          required: false
+        });
+        renderSections(sections);
+      };
+      
+      // Remove section
+      window.removeSection = function(idx) {
+        if (!confirm('このセクションを削除してもよろしいですか？')) return;
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        
+        const sections = Array.from(container.children).map(el => getSectionDataFromElement(el));
+        sections.splice(idx, 1);
+        renderSections(sections);
+      };
+      
+      // Add item to section
+      window.addItem = function(sectionIdx) {
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        
+        const sectionEl = container.children[sectionIdx];
+        if (!sectionEl) return;
+        
+        const section = getSectionDataFromElement(sectionEl);
+        const sectionType = section['section-type'] || 'radio-text';
+        const items = section['section-items'] || [];
+        
+        if (sectionType === 'radio-text') {
+          items.push('');
+        } else if (sectionType === 'radio-image') {
+          items.push({ text: '', 'img-url': '' });
+        } else if (sectionType === 'grid-items') {
+          items.push({ text: '', 'img-url': '', countable: false, unit: '', count: 0 });
+        }
+        
+        section['section-items'] = items;
+        
+        const sections = Array.from(container.children).map((el, i) => {
+          if (i === sectionIdx) {
+            return section;
+          }
+          return getSectionDataFromElement(el);
+        });
+        renderSections(sections);
+      };
+      
+      // Remove item from section
+      window.removeItem = function(sectionIdx, itemIdx) {
+        const container = document.getElementById('sections-container');
+        if (!container) return;
+        
+        const sectionEl = container.children[sectionIdx];
+        if (!sectionEl) return;
+        
+        const section = getSectionDataFromElement(sectionEl);
+        const items = section['section-items'] || [];
+        items.splice(itemIdx, 1);
+        section['section-items'] = items;
+        
+        const sections = Array.from(container.children).map((el, i) => {
+          if (i === sectionIdx) {
+            return section;
+          }
+          return getSectionDataFromElement(el);
+        });
+        renderSections(sections);
+      };
+      
+      // Helper functions
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+      
+      // Deprecated global functions removed - use window.addSection, window.removeSection, window.addItem, window.removeItem instead
+      
+      // Preview section functions removed - preview buttons are no longer used
+      
+      // Event listeners
+      document.getElementById('add-section-btn')?.addEventListener('click', window.addSection);
+      
+      // Load initial data
+      loadServiceData();
+    })();
+
+    // 画像選択機能
+    (function() {
+      let imageSelectModal = null;
+      
+      // 画像プレビューを更新（グローバルスコープで使用可能にする）
+      // 最初に定義することで、後続のコードで使用可能にする
+      window.updateImagePreview = function(previewId, imagePath) {
+        const preview = document.getElementById(previewId);
+        if (!preview) return;
+        
+        if (imagePath && imagePath.trim()) {
+          const img = preview.querySelector('img');
+          if (img) {
+            // パスが / で始まっていない場合は / を追加
+            // ベースパスを考慮（GitHub Pages対応）
+            const hostname = window.location.hostname;
+            const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+            const basePath = isCustomDomain ? '' : (window.location.pathname.includes('/misesapo/') ? '/misesapo' : '');
+            let path = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+            // 既にベースパスが含まれている場合は追加しない
+            if (basePath && !path.startsWith(basePath)) {
+              path = basePath + path;
+            }
+            img.src = path;
+            img.onerror = function() {
+              // 画像読み込みエラー時は非表示にする
+              preview.style.display = 'none';
+            };
+            preview.style.display = 'block';
+          }
+        } else {
+          preview.style.display = 'none';
+        }
+      };
+      
+      // 後方互換性のため、ローカルスコープでも使用可能にする
+      const updateImagePreview = window.updateImagePreview;
+      
+      // 画像選択ボタンのイベント（イベント委譲を使用）
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-select-image')) {
+          const btn = e.target.closest('.btn-select-image');
+          const targetInputId = btn.dataset.target;
+          const previewId = btn.dataset.preview || null; // プレビューIDはオプション（編集ページでは使用しない）
+          openImageSelectModal(targetInputId, previewId);
+        }
+      });
+      
+      // 画像入力欄の変更時にプレビューを更新
+      document.getElementById('image')?.addEventListener('input', function() {
+        updateImagePreview('image_preview', this.value);
+      });
+      
+      // 初期値がある場合はプレビューを表示
+      const imageValue = document.getElementById('image')?.value;
+      if (imageValue) {
+        updateImagePreview('image_preview', imageValue);
+      }
+      
+      // 画像選択モーダルを開く
+      function openImageSelectModal(targetInputId, previewId) {
+        if (!imageSelectModal) {
+          createImageSelectModal();
+        }
+        
+        imageSelectModal.dataset.targetInput = targetInputId;
+        imageSelectModal.dataset.previewId = previewId;
+        imageSelectModal.classList.remove('hidden');
+        imageSelectModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        
+        // 画像一覧を読み込む
+        loadImagesForSelect();
+      }
+      
+      // 画像選択モーダルを作成
+      function createImageSelectModal() {
+        imageSelectModal = document.createElement('div');
+        imageSelectModal.id = 'image-select-modal';
+        imageSelectModal.className = 'image-select-modal hidden';
+        imageSelectModal.innerHTML = `
+          <div class="image-select-overlay"></div>
+          <div class="image-select-dialog">
+            <div class="image-select-header">
+              <h3 class="image-select-title">
+                <i class="fas fa-images"></i> 画像を選択
+              </h3>
+              <button class="image-select-close" aria-label="閉じる">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="image-select-search">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" class="search-input" id="image-select-search" placeholder="画像名で検索..." />
+              </div>
+              <select class="filter-select" id="image-select-filter">
+                <option value="">すべての形式</option>
+                <option value="png">PNG</option>
+                <option value="jpg">JPG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="svg">SVG</option>
+              </select>
+            </div>
+            <div class="image-select-body">
+              <div class="image-select-grid" id="image-select-grid">
+                <div class="loading-spinner">
+                  <i class="fas fa-spinner fa-spin"></i> 画像を読み込み中...
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(imageSelectModal);
+        
+        // 閉じるボタン
+        imageSelectModal.querySelector('.image-select-close')?.addEventListener('click', closeImageSelectModal);
+        imageSelectModal.querySelector('.image-select-overlay')?.addEventListener('click', closeImageSelectModal);
+        
+        // ESCキーで閉じる
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && imageSelectModal.classList.contains('open')) {
+            closeImageSelectModal();
+          }
+        });
+        
+        // 検索・フィルタ
+        imageSelectModal.querySelector('#image-select-search')?.addEventListener('input', loadImagesForSelect);
+        imageSelectModal.querySelector('#image-select-filter')?.addEventListener('change', loadImagesForSelect);
+      }
+      
+      // 画像選択モーダルを閉じる
+      function closeImageSelectModal() {
+        if (imageSelectModal) {
+          imageSelectModal.classList.add('hidden');
+          imageSelectModal.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+      }
+      
+      // 画像一覧を読み込む
+      async function loadImagesForSelect() {
+        const grid = document.getElementById('image-select-grid');
+        if (!grid) return;
+        
+        try {
+          const response = await fetch('/api/images');
+          const data = await response.ok ? await response.json() : { images: [] };
+          
+          if (data.images && data.images.length > 0) {
+            const searchQuery = (document.getElementById('image-select-search')?.value || '').toLowerCase();
+            const filterType = document.getElementById('image-select-filter')?.value || '';
+            
+            // フィルタリング
+            let filteredImages = data.images;
+            if (searchQuery) {
+              filteredImages = filteredImages.filter(img => 
+                img.name.toLowerCase().includes(searchQuery) || img.path.toLowerCase().includes(searchQuery)
+              );
+            }
+            if (filterType) {
+              filteredImages = filteredImages.filter(img => 
+                img.extension === '.' + filterType
+              );
+            }
+            
+            // グリッドを生成
+            grid.innerHTML = filteredImages.map(img => {
+              return `
+                <div class="image-select-card" data-path="${img.path}">
+                  <div class="image-select-thumb">
+                    <img src="${img.path}" alt="${img.name}" loading="lazy" onerror="this.src='/images/service-300x200.svg'" />
+                  </div>
+                  <div class="image-select-info">
+                    <div class="image-select-name" title="${img.name}">${img.name}</div>
+                    <div class="image-select-path" title="${img.path}">${img.path}</div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+            
+            // クリックイベント
+            grid.querySelectorAll('.image-select-card').forEach(card => {
+              card.addEventListener('click', function() {
+                const path = this.dataset.path;
+                const targetInputId = imageSelectModal.dataset.targetInput;
+                const previewId = imageSelectModal.dataset.previewId;
+                
+                // 入力欄にパスを設定（先頭の / を削除）
+                const input = document.getElementById(targetInputId);
+                if (input) {
+                  const imagePath = path.startsWith('/') ? path.substring(1) : path;
+                  input.value = imagePath;
+                  input.dispatchEvent(new Event('input', { bubbles: true }));
+                  input.dispatchEvent(new Event('change', { bubbles: true }));
+                  // プレビューIDが指定されている場合のみプレビューを更新（編集ページでは使用しない）
+                  if (previewId && window.updateImagePreview) {
+                    window.updateImagePreview(previewId, imagePath);
+                  }
+                } else {
+                  console.error('Input field not found:', targetInputId);
+                }
+                
+                closeImageSelectModal();
+              });
+            });
+          } else {
+            grid.innerHTML = '<div class="empty-message">画像が見つかりませんでした</div>';
+          }
+        } catch (err) {
+          console.error('画像の読み込みに失敗しました:', err);
+          grid.innerHTML = '<div class="error-message">画像の読み込みに失敗しました</div>';
+        }
+      }
+    })();
+    
+    // Form submission
+    (function() {
+      const form = document.getElementById('service-form');
+      if (form) {
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          // 送信ボタンを無効化
+          const submitBtn = form.querySelector('button[type="submit"]');
+          const originalText = submitBtn.innerHTML;
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
+          
+          try {
+            // Get form data
+            const formData = new FormData(form);
+            const problemsText = formData.get('problems') || '';
+            const problems = problemsText.split('\n').filter(p => p.trim());
+            
+            // Parse sections from hidden input
+            let sections = [];
+            try {
+              const sectionsText = document.getElementById('sections-json-input')?.value || '[]';
+              sections = JSON.parse(sectionsText);
+              if (!Array.isArray(sections)) {
+                throw new Error('sectionsは配列である必要があります');
+              }
+            } catch (e) {
+              alert(`sectionsのデータが無効です: ${e.message}`);
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalText;
+              return;
+            }
+            
+            const serviceData = {
+              id: parseInt(formData.get('id')),
+              title: formData.get('title'),
+              category: formData.get('category'),
+              price: formData.get('price'),
+              image: formData.get('image') || '',
+              description: formData.get('description') || '',
+              problems: problems.length > 0 ? problems : undefined,
+              solution: formData.get('solution') || undefined,
+              sections: sections.length > 0 ? sections : []  // sectionsは常に配列として送信
+            };
+            
+            // Remove undefined fields (but keep empty arrays for sections)
+            Object.keys(serviceData).forEach(key => {
+              if (key === 'sections') {
+                // sectionsは常に配列として保持
+                return;
+              }
+              if (serviceData[key] === undefined || serviceData[key] === '') {
+                delete serviceData[key];
+              }
+            });
+            
+            // AWS APIを使用してサービスを更新
+            if (!window.AWSServicesAPI) {
+              throw new Error('AWS Services APIが読み込まれていません。ページを再読み込みしてください。');
+            }
+            
+            const result = await window.AWSServicesAPI.updateService(serviceData.id, serviceData);
+            console.log('[AdminServicesEdit] Service updated:', result);
+            
+            // 成功メッセージ
+            alert(`サービスID ${result.id} を更新しました！\n\nサービス一覧ページに移動します。`);
+            
+            // サービス一覧ページにリダイレクト（詳細ページが存在しない場合の404を回避）
+            window.location.href = '/admin/services/';
+            
+          } catch (error) {
+            console.error('Error:', error);
+            alert('エラーが発生しました: ' + error.message + '\n\n開発サーバーが起動しているか確認してください。');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+          }
+        });
+      }
+    })();
+  </script>
+</main>
+
+
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- AWS SDK and Cognito -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+    <script src="/js/cognito_config.js"></script>
+    <script src="/js/cognito_auth.js"></script>
+    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script src="/js/admin-sidebar.js"></script>
+    <!-- Page-specific scripts (injected by page content) -->
+    <script>
+      // 管理画面では共通ヘッダーを持たないため追加スクリプトは不要
+    </script>
+  </body>
+</html>
+
