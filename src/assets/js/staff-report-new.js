@@ -7487,6 +7487,19 @@
     const endTime = previewData.endTime;
     const savedSections = previewData.sections || sections;
     
+    // デバッグ: sectionsの構造を確認
+    console.log('[Preview] savedSections:', savedSections);
+    console.log('[Preview] sections (current):', sections);
+    Object.keys(savedSections).forEach(sectionId => {
+      const section = savedSections[sectionId];
+      if (section.type === 'cleaning') {
+        console.log('[Preview] Cleaning section:', sectionId, section);
+        if (section.imageContents) {
+          console.log('[Preview] imageContents:', section.imageContents);
+        }
+      }
+    });
+    
     // レポートデータを準備（report-shared-view.jsのrenderReport関数と同じ形式）
     const workItems = Object.values(savedSections)
       .filter(s => s.type === 'cleaning' && s.item_name)
@@ -7494,39 +7507,60 @@
         // imageContentsから画像を収集
         const photos = { before: [], after: [] };
         if (s.imageContents && Array.isArray(s.imageContents)) {
+          console.log('[Preview] Processing cleaning section:', s.item_name, 'imageContents:', s.imageContents);
           s.imageContents.forEach(imageContent => {
             const imageType = imageContent.imageType || 'before_after';
+            console.log('[Preview] Processing imageContent:', imageContent, 'imageType:', imageType);
             if (imageType === 'completed') {
               // completedの場合はafterに追加
               const completedPhotos = (imageContent.photos?.completed || []).map(img => {
-                if (typeof img === 'string') return img;
+                if (typeof img === 'string') {
+                  console.log('[Preview] Completed photo (string):', img);
+                  return img;
+                }
                 if (typeof img === 'object' && img !== null) {
-                  return img.url || img.warehouseUrl || img.imageUrl || img.blobUrl || '';
+                  const url = img.url || img.warehouseUrl || img.imageUrl || img.blobUrl || '';
+                  console.log('[Preview] Completed photo (object):', img, '-> url:', url);
+                  return url;
                 }
                 return '';
               }).filter(Boolean);
+              console.log('[Preview] Completed photos:', completedPhotos);
               photos.after = photos.after.concat(completedPhotos);
             } else {
               // before_afterの場合
               const beforePhotos = (imageContent.photos?.before || []).map(img => {
-                if (typeof img === 'string') return img;
+                if (typeof img === 'string') {
+                  console.log('[Preview] Before photo (string):', img);
+                  return img;
+                }
                 if (typeof img === 'object' && img !== null) {
-                  return img.url || img.warehouseUrl || img.imageUrl || img.blobUrl || '';
+                  const url = img.url || img.warehouseUrl || img.imageUrl || img.blobUrl || '';
+                  console.log('[Preview] Before photo (object):', img, '-> url:', url);
+                  return url;
                 }
                 return '';
               }).filter(Boolean);
               const afterPhotos = (imageContent.photos?.after || []).map(img => {
-                if (typeof img === 'string') return img;
+                if (typeof img === 'string') {
+                  console.log('[Preview] After photo (string):', img);
+                  return img;
+                }
                 if (typeof img === 'object' && img !== null) {
-                  return img.url || img.warehouseUrl || img.imageUrl || img.blobUrl || '';
+                  const url = img.url || img.warehouseUrl || img.imageUrl || img.blobUrl || '';
+                  console.log('[Preview] After photo (object):', img, '-> url:', url);
+                  return url;
                 }
                 return '';
               }).filter(Boolean);
+              console.log('[Preview] Before photos:', beforePhotos, 'After photos:', afterPhotos);
               photos.before = photos.before.concat(beforePhotos);
               photos.after = photos.after.concat(afterPhotos);
             }
           });
         }
+        
+        console.log('[Preview] Final photos for', s.item_name, ':', photos);
         
         return {
           item_id: s.item_name.toLowerCase().replace(/\s+/g, '-'),
@@ -7535,6 +7569,8 @@
           photos: photos
         };
       });
+    
+    console.log('[Preview] Final workItems:', workItems);
     
     const reportSections = Object.values(savedSections)
       .filter(s => s.type !== 'cleaning')
