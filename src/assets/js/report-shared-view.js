@@ -750,8 +750,8 @@ function setupImageModal() {
     });
 }
 
-// 画像モーダルを開く
-function openImageModal(imageSrc) {
+// 画像モーダルを開く（グローバルに公開）
+window.openImageModal = function(imageSrc) {
     // モーダルが既に存在する場合は削除
     const existingModal = document.getElementById('image-modal');
     if (existingModal) {

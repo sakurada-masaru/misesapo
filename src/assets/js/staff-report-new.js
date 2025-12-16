@@ -7508,6 +7508,29 @@
           previewMainEl.innerHTML = renderedMain.innerHTML;
         }
       }
+      
+      // 画像クリックイベントを設定（report-shared-view.jsのsetupImageModalInContainerと同じロジック）
+      // プレビュー用の要素に対して設定
+      const previewImageItems = previewContent.querySelectorAll('#preview-report-main .image-item');
+      previewImageItems.forEach(item => {
+        item.style.cursor = 'pointer';
+        // 既存のイベントリスナーを削除
+        const newItem = item.cloneNode(true);
+        item.parentNode.replaceChild(newItem, item);
+        
+        newItem.addEventListener('click', function() {
+          const img = this.querySelector('img');
+          if (img && img.src) {
+            // report-shared-view.jsのopenImageModalを使用
+            if (window.openImageModal && typeof window.openImageModal === 'function') {
+              window.openImageModal(img.src);
+            } else {
+              // フォールバック: プレビュー用の画像モーダル
+              openPreviewImageModal(img.src);
+            }
+          }
+        });
+      });
     } else {
       console.warn('[openPreviewModal] renderReport function not found, using fallback');
       // フォールバック: シンプルな表示
@@ -7522,11 +7545,8 @@
       }
     }
     
-    // プレビュー用のタブ機能を設定
+    // プレビュー用のタブ機能を設定（既存のイベントリスナーを削除してから追加）
     setupPreviewTabs();
-    
-    // 画像クリックイベントを設定（report-shared-view.jsと同じ）
-    setupPreviewImageModal();
     
     // モーダルを表示
     if (previewDialog) {
@@ -7537,11 +7557,18 @@
   
   // プレビュー用のタブ機能を設定
   function setupPreviewTabs() {
-    const tabBtns = document.querySelectorAll('#preview-report-content .tab-btn');
-    const tabContents = document.querySelectorAll('#preview-report-content .tab-content');
+    const previewContent = document.getElementById('preview-report-content');
+    if (!previewContent) return;
     
+    const tabBtns = previewContent.querySelectorAll('.tab-btn');
+    const tabContents = previewContent.querySelectorAll('.tab-content');
+    
+    // 既存のイベントリスナーを削除してから追加（重複を防ぐ）
     tabBtns.forEach(btn => {
-      btn.addEventListener('click', function() {
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      
+      newBtn.addEventListener('click', function() {
         const targetTab = this.dataset.tab;
         
         // すべてのタブボタンとコンテンツからactiveクラスを削除
@@ -7553,7 +7580,7 @@
         
         // クリックされたタブをアクティブにする
         this.classList.add('active');
-        const targetContent = document.getElementById(`preview-tab-content-${targetTab}`);
+        const targetContent = previewContent.querySelector(`#preview-tab-content-${targetTab}`);
         if (targetContent) {
           targetContent.classList.add('active');
           targetContent.style.display = 'block';
