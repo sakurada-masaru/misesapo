@@ -2512,9 +2512,8 @@
         console.log('[Preview] Preview button clicked');
         showPreviewSaveDialog();
       });
-    } else {
-      console.warn('[Preview] Preview button (preview-btn) not found');
     }
+    // レポート作成画面以外では存在しないため、警告を出さない
     if (previewBtnProposal) {
       console.log('[Preview] Preview button (proposal) found, adding event listener');
       previewBtnProposal.addEventListener('click', (e) => {
@@ -2522,8 +2521,6 @@
         console.log('[Preview] Preview button (proposal) clicked');
         showPreviewSaveDialog();
       });
-    } else {
-      console.warn('[Preview] Preview button (preview-btn-proposal) not found');
     }
     
     // 保存してプレビューを表示
@@ -2548,9 +2545,8 @@
           alert('プレビューの表示に失敗しました: ' + error.message);
         }
       });
-    } else {
-      console.warn('[Preview] Preview save confirm button (preview-save-confirm-btn) not found');
     }
+    // レポート作成画面以外では存在しないため、警告を出さない
     
     // セクション追加ボタンのイベントリスナー（新規作成タブ用）
     setupSectionAddButtons('section-add-toggle-btn', 'new');
@@ -3065,7 +3061,7 @@
     const clearStockBtn = document.getElementById('clear-stock-btn');
     
     if (!stockGrid) {
-      console.warn('image-stock-grid element not found');
+      // レポート作成画面以外では存在しないため、警告を出さずに終了
       return;
     }
 
