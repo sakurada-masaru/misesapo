@@ -993,6 +993,26 @@
             }
           }
           
+          // 画像クリックイベントを設定（report-shared-view.jsのsetupImageModalInContainerと同じロジック）
+          // プレビュー用の要素に対して設定
+          const previewImageItems = previewContent.querySelectorAll('#preview-report-main-modal .image-item');
+          previewImageItems.forEach(item => {
+            item.style.cursor = 'pointer';
+            // 既存のイベントリスナーを削除
+            const newItem = item.cloneNode(true);
+            item.parentNode.replaceChild(newItem, item);
+            
+            newItem.addEventListener('click', function() {
+              const img = this.querySelector('img');
+              if (img && img.src) {
+                // report-shared-view.jsのopenImageModalを使用
+                if (window.openImageModal && typeof window.openImageModal === 'function') {
+                  window.openImageModal(img.src);
+                }
+              }
+            });
+          });
+          
           // プレビュー用のタブ機能を設定
           setupPreviewTabsAdmin();
         } else {
