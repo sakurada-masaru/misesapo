@@ -7460,32 +7460,17 @@
       return;
     }
     
-    // 保存されたプレビューデータを取得
-    const savedPreviewData = localStorage.getItem('preview_report_data');
-    let previewData;
+    // 現在のフォームデータを使用（常に最新のsectionsを使用）
+    const brandName = document.getElementById('report-brand-search')?.value || 
+                     document.getElementById('report-brand-name')?.value || '';
+    const storeName = document.getElementById('report-store-search')?.value || 
+                     document.getElementById('report-store-name')?.value || '';
+    const date = document.getElementById('report-date')?.value || '';
+    const startTime = document.getElementById('report-start')?.value || '';
+    const endTime = document.getElementById('report-end')?.value || '';
     
-    if (savedPreviewData) {
-      previewData = JSON.parse(savedPreviewData);
-    } else {
-      // 保存データがない場合は現在のフォームデータを使用
-      previewData = {
-        brandName: document.getElementById('report-brand-search')?.value || 
-                   document.getElementById('report-brand-name')?.value || '',
-        storeName: document.getElementById('report-store-search')?.value || 
-                   document.getElementById('report-store-name')?.value || '',
-        date: document.getElementById('report-date')?.value || '',
-        startTime: document.getElementById('report-start')?.value || '',
-        endTime: document.getElementById('report-end')?.value || '',
-        sections: sections
-      };
-    }
-    
-    const brandName = previewData.brandName;
-    const storeName = previewData.storeName;
-    const date = previewData.date;
-    const startTime = previewData.startTime;
-    const endTime = previewData.endTime;
-    const savedSections = previewData.sections || sections;
+    // 常に現在のsectionsを使用（localStorageではなく、メモリ上の最新データを使用）
+    const savedSections = sections;
     
     // デバッグ: sectionsの構造を確認
     console.log('[Preview] savedSections:', savedSections);
