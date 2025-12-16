@@ -1444,15 +1444,34 @@
 
     // イベントリスナー
     function setupEventListeners() {
-      document.getElementById('search-input').addEventListener('input', debounce(filterAndRender, 300));
-      document.getElementById('filter-status').addEventListener('change', filterAndRender);
-      document.getElementById('filter-store').addEventListener('change', filterAndRender);
-      document.getElementById('filter-date-from').addEventListener('change', filterAndRender);
-      document.getElementById('filter-date-to').addEventListener('change', filterAndRender);
-      document.getElementById('btn-reset-filters').addEventListener('click', () => {
-        document.getElementById('search-input').value = '';
-        document.getElementById('filter-status').value = '';
-        document.getElementById('filter-store').value = '';
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', debounce(filterAndRender, 300));
+      }
+      
+      const filterStatus = document.getElementById('filter-status');
+      if (filterStatus) {
+        filterStatus.addEventListener('change', filterAndRender);
+      }
+      
+      const filterStore = document.getElementById('filter-store');
+      if (filterStore) {
+        filterStore.addEventListener('change', filterAndRender);
+      }
+      
+      const filterDateFrom = document.getElementById('filter-date-from');
+      if (filterDateFrom) {
+        filterDateFrom.addEventListener('change', filterAndRender);
+      }
+      
+      const filterDateTo = document.getElementById('filter-date-to');
+      if (filterDateTo) {
+        filterDateTo.addEventListener('change', filterAndRender);
+      }
+      
+      const btnResetFilters = document.getElementById('btn-reset-filters');
+      if (btnResetFilters) {
+        btnResetFilters.addEventListener('click', () => {
           if (searchInput) searchInput.value = '';
           if (filterStatus) filterStatus.value = '';
           if (filterStore) filterStore.value = '';
