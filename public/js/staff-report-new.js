@@ -7818,8 +7818,16 @@
       if (renderedMain) {
         const previewMainEl = document.getElementById('preview-report-main');
         if (previewMainEl) {
+          console.log('[Preview] Copying renderedMain to previewMainEl');
+          console.log('[Preview] renderedMain.innerHTML length:', renderedMain.innerHTML.length);
           previewMainEl.innerHTML = renderedMain.innerHTML;
+          console.log('[Preview] previewMainEl.innerHTML length after copy:', previewMainEl.innerHTML.length);
+          console.log('[Preview] previewMainEl images count:', previewMainEl.querySelectorAll('img').length);
+        } else {
+          console.warn('[Preview] preview-report-main element not found');
         }
+      } else {
+        console.warn('[Preview] renderedMain not found in tempContainer');
       }
       
       // 画像クリックイベントを設定（report-shared-view.jsのsetupImageModalInContainerと同じロジック）
