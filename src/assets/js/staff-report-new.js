@@ -7715,11 +7715,13 @@
           });
         }
         
-        console.log('[Preview] Final photos for', s.item_name, ':', photos);
+        // item_nameが空の場合はデフォルト名を使用
+        const itemName = s.item_name && s.item_name.trim() !== '' ? s.item_name : '清掃項目';
+        console.log('[Preview] Final photos for', itemName, ':', photos);
         
         return {
-          item_id: s.item_name.toLowerCase().replace(/\s+/g, '-'),
-          item_name: s.item_name,
+          item_id: itemName.toLowerCase().replace(/\s+/g, '-'),
+          item_name: itemName,
           details: {},
           photos: photos
         };
