@@ -449,23 +449,57 @@ window.renderReport = function(report, container) {
     
     // セクション（画像、コメント、作業内容）を表示
     const sections = report.sections || [];
+    
+    // デバッグログ: セクションの構造を確認
+    console.log('[renderReport] Sections:', sections);
+    
     const sectionsHtml = sections.map(section => {
         if (section.section_type === 'image') {
             // 画像セクション
-            const beforePhotos = section.photos?.before || [];
-            const afterPhotos = section.photos?.after || [];
+            // 画像URLを正規化（配列でない場合や、オブジェクトの場合に対応）
+            const normalizePhotoUrls = (photos) => {
+                if (!photos) return [];
+                if (Array.isArray(photos)) {
+                    return photos.map(photo => {
+                        if (typeof photo === 'string') {
+                            // 文字列の場合はそのまま返す（相対パスの場合はresolvePathで解決）
+                            return photo.startsWith('http://') || photo.startsWith('https://') || photo.startsWith('//')
+                                ? photo
+                                : resolvePath(photo);
+                        } else if (typeof photo === 'object' && photo !== null) {
+                            // オブジェクトの場合はurlプロパティを取得
+                            return photo.url || photo.warehouseUrl || photo.imageUrl || '';
+                        }
+                        return '';
+                    }).filter(Boolean);
+                }
+                return [];
+            };
+            
+            const beforePhotos = normalizePhotoUrls(section.photos?.before);
+            const afterPhotos = normalizePhotoUrls(section.photos?.after);
             const imageType = section.image_type || 'work';
             const beforeLabel = imageType === 'work' ? '作業前（Before）' : '設置前（Before）';
             const afterLabel = imageType === 'work' ? '作業後（After）' : '設置後（After）';
             
+            // デバッグログ: 画像URLを確認
+            console.log('[renderReport] Image section:', section);
+            console.log('[renderReport] Before photos:', beforePhotos);
+            console.log('[renderReport] After photos:', afterPhotos);
+            
             const beforePhotosHtml = beforePhotos.length > 0
                 ? `<div class="image-list">
-                     ${beforePhotos.map((url, index) => `
-                       <div class="image-item" data-image-url="${url}">
-                         <img src="${url}" alt="${beforeLabel}" loading="lazy" 
-                              onerror="this.onerror=null; this.src='${DEFAULT_NO_PHOTO_IMAGE}';" />
+                     ${beforePhotos.map((url, index) => {
+                         const resolvedUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
+                             ? url
+                             : resolvePath(url);
+                         return `
+                       <div class="image-item" data-image-url="${resolvedUrl}">
+                         <img src="${resolvedUrl}" alt="${beforeLabel}" loading="lazy" 
+                              onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
                        </div>
-                     `).join('')}
+                     `;
+                     }).join('')}
                    </div>`
                 : `<div class="image-list">
                      <div class="image-item">
@@ -475,12 +509,17 @@ window.renderReport = function(report, container) {
             
             const afterPhotosHtml = afterPhotos.length > 0
                 ? `<div class="image-list">
-                     ${afterPhotos.map((url, index) => `
-                       <div class="image-item" data-image-url="${url}">
-                         <img src="${url}" alt="${afterLabel}" loading="lazy" 
+                     ${afterPhotos.map((url, index) => {
+                         const resolvedUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
+                             ? url
+                             : resolvePath(url);
+                         return `
+                       <div class="image-item" data-image-url="${resolvedUrl}">
+                         <img src="${resolvedUrl}" alt="${afterLabel}" loading="lazy" 
                               onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
                        </div>
-                     `).join('')}
+                     `;
+                     }).join('')}
                    </div>`
                 : `<div class="image-list">
                      <div class="image-item">
