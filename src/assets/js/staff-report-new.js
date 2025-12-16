@@ -6734,12 +6734,21 @@
     };
 
     // 清掃項目を収集（画像もアップロード）
+    // item_nameが空でも、画像がある場合はworkItemsに含める
     const workItems = await Promise.all(
       Object.values(sections)
-      .filter(s => s.type === 'cleaning' && s.item_name)
+      .filter(s => {
+        if (s.type !== 'cleaning') return false;
+        // item_nameがある場合、または画像がある場合は含める
+        const hasItemName = s.item_name && s.item_name.trim() !== '';
+        const hasImages = s.imageContents && Array.isArray(s.imageContents) && s.imageContents.length > 0;
+        return hasItemName || hasImages;
+      })
         .map(async (s) => {
+        // item_nameが空の場合はデフォルト名を使用
+        const itemName = s.item_name && s.item_name.trim() !== '' ? s.item_name : '清掃項目';
         // item_nameからitem_idを生成（スラッグ化）
-        const itemId = s.item_name.toLowerCase()
+        const itemId = itemName.toLowerCase()
           .replace(/\s+/g, '-')
           .replace(/[^\w\-]+/g, '')
           .replace(/\-\-+/g, '-')
@@ -6763,11 +6772,23 @@
             }
           }
           
+          // コメントとサブタイトルを取得
+          const comments = (s.comments || []).map(c => {
+            const value = (typeof c === 'string') ? c : (c.value || '');
+            return value;
+          }).filter(Boolean);
+          const subtitles = (s.subtitles || []).map(st => {
+            const value = (typeof st === 'string') ? st : (st.value || '');
+            return value;
+          }).filter(Boolean);
+          
         return {
           item_id: itemId,
-          item_name: s.item_name,
+          item_name: itemName,
           details: {},
-            photos: photos
+            photos: photos,
+            comments: comments,
+            subtitles: subtitles
         };
         })
     );
