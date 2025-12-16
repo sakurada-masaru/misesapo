@@ -478,28 +478,29 @@
       sectionCards.forEach(card => card.remove());
       
       // セクション追加アイコンエリアが削除された場合は再追加
+      // ただし、既に存在する場合は何もしない（重複を防ぐ）
       if (!sectionAddIconsArea && reportContent) {
-        const toggleBtnId = tabType === 'proposal' ? 'section-add-toggle-btn-proposal' : 'section-add-toggle-btn';
-        const iconsId = tabType === 'proposal' ? 'section-add-icons-proposal' : 'section-add-icons';
-        const cleaningBtnId = tabType === 'proposal' ? 'section-add-cleaning-proposal' : 'section-add-cleaning';
-        const commentBtnId = tabType === 'proposal' ? 'section-add-comment-proposal' : 'section-add-comment';
-        const imageBtnId = tabType === 'proposal' ? 'section-add-image-proposal' : 'section-add-image';
-        const hintId = tabType === 'proposal' ? 'section-add-hint-proposal' : 'section-add-hint';
-        
-        // HTMLを再作成
-        const sectionAddIconsAreaHTML = `
-          <div class="section-add-icons-area" id="${sectionAddIconsAreaId}">
-            <div class="section-add-hint" id="${hintId}">
-              <span>↓New section↓</span>
+        // 念のため、再度存在確認（他の処理で追加された可能性がある）
+        const existingArea = document.getElementById(sectionAddIconsAreaId);
+        if (!existingArea) {
+          const toggleBtnId = tabType === 'proposal' ? 'section-add-toggle-btn-proposal' : 'section-add-toggle-btn';
+          const hintId = tabType === 'proposal' ? 'section-add-hint-proposal' : 'section-add-hint';
+          
+          // HTMLを再作成
+          const sectionAddIconsAreaHTML = `
+            <div class="section-add-icons-area" id="${sectionAddIconsAreaId}">
+              <div class="section-add-hint" id="${hintId}">
+                <span>↓New section↓</span>
+              </div>
+              <button type="button" class="section-add-toggle-btn" id="${toggleBtnId}">
+                <i class="fas fa-plus"></i>
+              </button>
             </div>
-            <button type="button" class="section-add-toggle-btn" id="${toggleBtnId}">
-              <i class="fas fa-plus"></i>
-            </button>
-          </div>
-        `;
-        reportContent.insertAdjacentHTML('beforeend', sectionAddIconsAreaHTML);
-        // イベントリスナーを再設定
-        setupSectionAddButtons(toggleBtnId, tabType);
+          `;
+          reportContent.insertAdjacentHTML('beforeend', sectionAddIconsAreaHTML);
+          // イベントリスナーを再設定
+          setupSectionAddButtons(toggleBtnId, tabType);
+        }
       }
     }
     
