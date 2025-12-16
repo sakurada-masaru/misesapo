@@ -5370,6 +5370,11 @@
       });
     }
     
+    // sectionsByTabも更新
+    if (sectionsByTab[currentActiveTab]) {
+      sectionsByTab[currentActiveTab] = { ...sections };
+    }
+    
     autoSave();
   }
   
@@ -7589,7 +7594,10 @@
     const endTime = document.getElementById('report-end')?.value || '';
     
     // 常に現在のsectionsを使用（localStorageではなく、メモリ上の最新データを使用）
-    const savedSections = sections;
+    // 現在アクティブなタブのsectionsを使用
+    const savedSections = sectionsByTab[currentActiveTab] || sections;
+    console.log('[Preview] Using sections from tab:', currentActiveTab);
+    console.log('[Preview] sectionsByTab:', sectionsByTab);
     
     // デバッグ: sectionsの構造を確認
     console.log('[Preview] savedSections:', savedSections);
