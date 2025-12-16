@@ -55,6 +55,220 @@ function formatDate(dateString) {
     });
 }
 
+// 次回ご提案レポートを取得
+async function loadProposalReport(reportId) {
+    const proposalLoadingEl = document.getElementById('proposal-loading');
+    const proposalEmptyEl = document.getElementById('proposal-empty');
+    const proposalItemsBarEl = document.getElementById('proposal-items-bar');
+    const proposalMainEl = document.getElementById('proposal-report-main');
+    
+    try {
+        // ローディング表示
+        if (proposalLoadingEl) proposalLoadingEl.style.display = 'block';
+        if (proposalEmptyEl) proposalEmptyEl.style.display = 'none';
+        if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'none';
+        if (proposalMainEl) proposalMainEl.style.display = 'none';
+        
+        // APIから次回ご提案レポートを取得
+        try {
+            // まず、元のレポートを取得して、関連する次回ご提案を探す
+            const response = await fetch(`${API_BASE_URL}/public/reports/${reportId}`);
+            if (!response.ok) {
+                throw new Error('レポートが見つかりませんでした');
+            }
+            const data = await response.json();
+            const report = data.report || data;
+            
+            // 次回ご提案レポートを探す（parent_report_idまたはstore_id + cleaning_dateで検索）
+            let proposalReport = null;
+            
+            // 方法1: parent_report_idで検索
+            if (report.report_id || report.id) {
+                const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?parent_report_id=${report.report_id || report.id}&proposal_type=proposal`);
+                if (proposalResponse.ok) {
+                    const proposalData = await proposalResponse.json();
+                    if (proposalData.reports && proposalData.reports.length > 0) {
+                        proposalReport = proposalData.reports[0];
+                    } else if (proposalData.items && proposalData.items.length > 0) {
+                        proposalReport = proposalData.items[0];
+                    } else if (proposalData.report) {
+                        proposalReport = proposalData.report;
+                    }
+                }
+            }
+            
+            // 方法2: store_id + cleaning_dateで検索（parent_report_idがない場合）
+            if (!proposalReport && report.store_id && report.cleaning_date) {
+                const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?store_id=${report.store_id}&cleaning_date=${report.cleaning_date}&proposal_type=proposal`);
+                if (proposalResponse.ok) {
+                    const proposalData = await proposalResponse.json();
+                    if (proposalData.reports && proposalData.reports.length > 0) {
+                        proposalReport = proposalData.reports[0];
+                    } else if (proposalData.items && proposalData.items.length > 0) {
+                        proposalReport = proposalData.items[0];
+                    } else if (proposalData.report) {
+                        proposalReport = proposalData.report;
+                    }
+                }
+            }
+            
+            if (proposalReport) {
+                // 次回ご提案を表示
+                renderProposalReport(proposalReport);
+                if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
+                if (proposalEmptyEl) proposalEmptyEl.style.display = 'none';
+                if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'flex';
+                if (proposalMainEl) proposalMainEl.style.display = 'block';
+            } else {
+                // 次回ご提案がない場合
+                if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
+                if (proposalEmptyEl) proposalEmptyEl.style.display = 'block';
+                if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'none';
+                if (proposalMainEl) proposalMainEl.style.display = 'none';
+            }
+        } catch (apiError) {
+            console.warn('Proposal API fetch failed:', apiError);
+            // 次回ご提案がない場合として扱う
+            if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
+            if (proposalEmptyEl) proposalEmptyEl.style.display = 'block';
+            if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'none';
+            if (proposalMainEl) proposalMainEl.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading proposal report:', error);
+        if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
+        if (proposalEmptyEl) proposalEmptyEl.style.display = 'block';
+        if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'none';
+        if (proposalMainEl) proposalMainEl.style.display = 'none';
+    }
+}
+
+// 次回ご提案レポートを表示
+function renderProposalReport(report) {
+    // 清掃項目リスト
+    const items = report.work_items || [];
+    const proposalItemsEl = document.getElementById('proposal-cleaning-items');
+    if (proposalItemsEl) {
+        const itemNames = items.map(item => item.item_name || item.item_id).filter(Boolean);
+        proposalItemsEl.innerHTML = itemNames.map(name => 
+            `<span class="items-list-item">${escapeHtml(name)}</span>`
+        ).join('');
+    }
+    
+    // レポート本体を表示
+    const proposalMainEl = document.getElementById('proposal-report-main');
+    if (proposalMainEl) {
+        // 清掃項目の詳細
+        const workItemsHtml = items.map(item => {
+            const details = item.details || {};
+            const tags = [];
+            if (details.type) tags.push(details.type);
+            if (details.count) tags.push(`${details.count}個`);
+            const tagsHtml = tags.map(tag => `<span class="detail-tag">${escapeHtml(tag)}</span>`).join('');
+            
+            return `
+              <section class="cleaning-section">
+                <div class="item-header">
+                  <h3 class="item-title">〜 ${escapeHtml(item.item_name || item.item_id)} 〜</h3>
+                  <div class="item-details">${tagsHtml}</div>
+                </div>
+              </section>
+            `;
+        }).join('');
+        
+        // セクション（画像、コメント、作業内容）を表示
+        const sections = report.sections || [];
+        const sectionsHtml = sections.map(section => {
+            if (section.section_type === 'image') {
+                // 画像セクション
+                const beforePhotos = section.photos?.before || [];
+                const afterPhotos = section.photos?.after || [];
+                const imageType = section.image_type || 'work';
+                const beforeLabel = imageType === 'work' ? '作業前（Before）' : '設置前（Before）';
+                const afterLabel = imageType === 'work' ? '作業後（After）' : '設置後（After）';
+                
+                const beforePhotosHtml = beforePhotos.length > 0
+                    ? `<div class="image-list">
+                         ${beforePhotos.map((url, index) => `
+                           <div class="image-item" data-image-url="${url}">
+                             <img src="${url}" alt="${beforeLabel}" loading="lazy" 
+                                  onerror="this.onerror=null; this.src='${DEFAULT_NO_PHOTO_IMAGE}';" />
+                           </div>
+                         `).join('')}
+                       </div>`
+                    : `<div class="image-list">
+                         <div class="image-item">
+                           <img src="${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}" alt="写真なし" class="default-no-photo-image" />
+                         </div>
+                       </div>`;
+                
+                const afterPhotosHtml = afterPhotos.length > 0
+                    ? `<div class="image-list">
+                         ${afterPhotos.map((url, index) => `
+                           <div class="image-item" data-image-url="${url}">
+                             <img src="${url}" alt="${afterLabel}" loading="lazy" 
+                                  onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
+                           </div>
+                         `).join('')}
+                       </div>`
+                    : `<div class="image-list">
+                         <div class="image-item">
+                           <img src="${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}" alt="写真なし" class="default-no-photo-image" />
+                         </div>
+                       </div>`;
+                
+                return `
+                  <section class="image-section">
+                    <div class="section-header">
+                      <h4 class="section-title">画像</h4>
+                    </div>
+                    <div class="image-grid">
+                      <div class="image-category before-category">
+                        <h4 class="image-category-title">${beforeLabel}</h4>
+                        ${beforePhotosHtml}
+                      </div>
+                      <div class="image-category after-category">
+                        <h4 class="image-category-title">${afterLabel}</h4>
+                        ${afterPhotosHtml}
+                      </div>
+                    </div>
+                  </section>
+                `;
+            } else if (section.section_type === 'comment') {
+                // コメントセクション
+                return `
+                  <section class="comment-section">
+                    <div class="section-header">
+                      <h4 class="section-title">コメント</h4>
+                    </div>
+                    <div class="subsection">
+                      <p style="white-space: pre-wrap;">${escapeHtml(section.content || '')}</p>
+                    </div>
+                  </section>
+                `;
+            } else if (section.section_type === 'work_content') {
+                // 作業内容セクション
+                return `
+                  <section class="work-content-section">
+                    <div class="section-header">
+                      <h4 class="section-title">作業内容</h4>
+                    </div>
+                    <div class="subsection">
+                      <p style="white-space: pre-wrap;">${escapeHtml(section.content || '')}</p>
+                    </div>
+                  </section>
+                `;
+            }
+            return '';
+        }).filter(Boolean).join('');
+        
+        proposalMainEl.innerHTML = workItemsHtml + sectionsHtml;
+        
+        // 画像クリックイベントを設定
+        setupImageModal();
+    }
+}
+
 // レポート詳細を取得
 async function loadReportDetail() {
     const loadingEl = document.getElementById('loading');
@@ -87,6 +301,9 @@ async function loadReportDetail() {
             
             // レポート情報を表示
             renderReport(report);
+            
+            // 次回ご提案も読み込む
+            await loadProposalReport(reportId);
         } catch (apiError) {
             console.warn('API fetch failed, trying local JSON:', apiError);
             
@@ -127,6 +344,10 @@ async function loadReportDetail() {
                     };
                     
                     renderReport(formattedReport);
+                    
+                    // 次回ご提案はローカルJSONにはないため、空表示
+                    const proposalEmptyEl = document.getElementById('proposal-empty');
+                    if (proposalEmptyEl) proposalEmptyEl.style.display = 'block';
                 } else {
                     throw new Error('レポートが見つかりませんでした');
                 }
@@ -577,8 +798,38 @@ function openImageModal(imageSrc) {
     }, 10);
 }
 
+// タブ切り替え処理
+function setupTabs() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetTab = this.dataset.tab;
+            
+            // すべてのタブボタンとコンテンツからactiveクラスを削除
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => {
+                c.classList.remove('active');
+                c.style.display = 'none';
+            });
+            
+            // クリックされたタブをアクティブにする
+            this.classList.add('active');
+            const targetContent = document.getElementById(`tab-content-${targetTab}`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+                targetContent.style.display = 'block';
+            }
+        });
+    });
+}
+
 // レポート承認の処理
 document.addEventListener('DOMContentLoaded', function() {
+    // タブ機能を設定
+    setupTabs();
+    
     // 必要な要素が存在する場合のみloadReportDetailを実行
     const loadingEl = document.getElementById('loading');
     const contentEl = document.getElementById('report-content');

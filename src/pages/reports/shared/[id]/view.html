@@ -28,15 +28,51 @@
                 </div>
             </div>
             
-            <div class="items-list-bar">
-                <div class="items-list">
-                    <span class="items-list-label">実施清掃項目</span>
-                    <div class="items-list-items" id="cleaning-items"></div>
+            <!-- タブナビゲーション -->
+            <div class="report-tabs">
+                <button class="tab-btn active" data-tab="report" id="tab-report">
+                    <i class="fas fa-file-alt"></i>
+                    <span>レポート</span>
+                </button>
+                <button class="tab-btn" data-tab="proposal" id="tab-proposal">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>次回ご提案</span>
+                </button>
+            </div>
+            
+            <!-- レポートタブ -->
+            <div class="tab-content active" id="tab-content-report">
+                <div class="items-list-bar">
+                    <div class="items-list">
+                        <span class="items-list-label">実施清掃項目</span>
+                        <div class="items-list-items" id="cleaning-items"></div>
+                    </div>
+                </div>
+                
+                <div class="report-main" id="report-main">
+                    <!-- 清掃項目が動的に追加される -->
                 </div>
             </div>
             
-            <div class="report-main" id="report-main">
-                <!-- 清掃項目が動的に追加される -->
+            <!-- 次回ご提案タブ -->
+            <div class="tab-content" id="tab-content-proposal" style="display: none;">
+                <div class="proposal-loading" id="proposal-loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>読み込み中...</p>
+                </div>
+                <div class="proposal-empty" id="proposal-empty" style="display: none;">
+                    <i class="fas fa-lightbulb"></i>
+                    <p>次回ご提案はありません</p>
+                </div>
+                <div class="items-list-bar" id="proposal-items-bar" style="display: none;">
+                    <div class="items-list">
+                        <span class="items-list-label">ご提案項目</span>
+                        <div class="items-list-items" id="proposal-cleaning-items"></div>
+                    </div>
+                </div>
+                <div class="report-main" id="proposal-report-main" style="display: none;">
+                    <!-- 次回ご提案の内容が動的に追加される -->
+                </div>
             </div>
 
             <!-- レポート承認セクション -->

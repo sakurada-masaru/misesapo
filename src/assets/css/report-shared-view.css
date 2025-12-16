@@ -69,6 +69,67 @@ body {
     font-size: 0.9rem;
     opacity: 0.85;
 }
+/* タブナビゲーション */
+.report-tabs {
+    display: flex;
+    background: #f9f9f9;
+    border-bottom: 2px solid #eee;
+    padding: 0 32px;
+    gap: 0;
+}
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #666;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+.tab-btn:hover {
+    background: #f0f0f0;
+    color: #FF679C;
+}
+.tab-btn.active {
+    color: #FF679C;
+    border-bottom-color: #FF679C;
+    background: #fff;
+}
+.tab-btn i {
+    font-size: 1.1rem;
+}
+.tab-content {
+    display: block;
+}
+.tab-content.active {
+    display: block;
+}
+.proposal-loading,
+.proposal-empty {
+    text-align: center;
+    padding: 60px 32px;
+    color: #6b7280;
+}
+.proposal-loading i,
+.proposal-empty i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    color: #FFB3D1;
+}
+.proposal-empty i {
+    color: #d1d5db;
+}
+.proposal-loading p,
+.proposal-empty p {
+    font-size: 1.1rem;
+    margin: 0;
+}
 .items-list-bar {
     background: #f9f9f9;
     padding: 16px 32px;
@@ -542,5 +603,19 @@ body {
         font-size: 35px;
         width: 35px;
         height: 35px;
+    }
+    .report-tabs {
+        padding: 0 16px;
+    }
+    .tab-btn {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+    }
+    .tab-btn i {
+        font-size: 1rem;
+    }
+    .proposal-loading,
+    .proposal-empty {
+        padding: 40px 16px;
     }
 }
