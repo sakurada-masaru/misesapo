@@ -18,7 +18,8 @@
   let clients = window.clients;
   let serviceItems = window.serviceItems;
   let sectionCounter = 0;
-  let sections = {}; // セクションデータを保持
+  let sections = {}; // セクションデータを保持（タブごとに分ける）
+  let sectionsByTab = { new: {}, proposal: {}, edit: {} }; // タブごとのセクションデータ
 
   // 画像倉庫用
   let warehouseImages = [];
@@ -437,21 +438,73 @@
           }
         }
         
-        // 新規作成タブに切り替えた場合はフォームと画像ストックをリセット
-        if (targetTab === 'new') {
-          await resetFormForNewReport('new');
-          // リセット後、セクションが空の場合はデフォルトで清掃項目セクションを追加
-          if (Object.keys(sections).length === 0 && window.addCleaningItemSection) {
-            window.addCleaningItemSection();
+        // タブ切り替え時に、そのタブのセクションデータを保存・復元
+        if (targetTab === 'new' || targetTab === 'proposal' || targetTab === 'edit') {
+          // 現在のタブのセクションデータを保存（sectionsオブジェクトをそのまま保存）
+          const previousActiveTab = Array.from(tabButtons).find(btn => btn.classList.contains('active'))?.dataset.tab;
+          if (previousActiveTab && (previousActiveTab === 'new' || previousActiveTab === 'proposal' || previousActiveTab === 'edit')) {
+            sectionsByTab[previousActiveTab] = { ...sections };
           }
-        }
-        
-        // 次回ご提案タブに切り替えた場合はフォームと画像ストックをリセット（新規作成と同じ処理）
-        if (targetTab === 'proposal') {
-          await resetFormForNewReport('proposal');
-          // リセット後、セクションが空の場合はデフォルトで清掃項目セクションを追加
-          if (Object.keys(sections).length === 0 && window.addCleaningItemSection) {
-            window.addCleaningItemSection();
+          
+          // 切り替え先のタブのセクションデータを復元
+          sections = { ...sectionsByTab[targetTab] };
+          
+          // セクションカウンターを調整（既存のセクションIDから最大値を取得）
+          const existingSectionIds = Object.keys(sections).map(id => {
+            const match = id.match(/section-(\d+)/);
+            return match ? parseInt(match[1]) : 0;
+          });
+          if (existingSectionIds.length > 0) {
+            sectionCounter = Math.max(...existingSectionIds);
+          } else {
+            sectionCounter = 0;
+          }
+          
+          // 切り替え先のタブのDOMからセクションデータを再構築（DOMが既に存在する場合）
+          const reportContentId = targetTab === 'proposal' ? 'report-content-proposal' : 
+                                  targetTab === 'edit' ? 'report-content-edit' : 'report-content';
+          const reportContent = document.getElementById(reportContentId);
+          if (reportContent) {
+            const existingSectionCards = reportContent.querySelectorAll('.section-card');
+            
+            // DOMにセクションが存在するが、sectionsオブジェクトが空の場合は、DOMから再構築
+            if (existingSectionCards.length > 0 && Object.keys(sections).length === 0) {
+              // DOMからセクションデータを再構築（簡易版：セクションIDだけを保持）
+              existingSectionCards.forEach(card => {
+                const sectionId = card.dataset.sectionId;
+                if (sectionId && !sections[sectionId]) {
+                  // セクションタイプを判定
+                  const sectionTitle = card.querySelector('.section-title')?.textContent || '';
+                  let sectionType = 'cleaning';
+                  if (sectionTitle.includes('画像')) {
+                    sectionType = 'image';
+                  } else if (sectionTitle.includes('コメント')) {
+                    sectionType = 'comment';
+                  } else if (sectionTitle.includes('作業内容')) {
+                    sectionType = 'work_content';
+                  }
+                  
+                  // 基本的なセクションデータを作成（詳細はDOMから読み取る必要があるが、簡易版として空データを作成）
+                  sections[sectionId] = { type: sectionType };
+                }
+              });
+              
+              // セクションカウンターを更新
+              const sectionIds = Object.keys(sections).map(id => {
+                const match = id.match(/section-(\d+)/);
+                return match ? parseInt(match[1]) : 0;
+              });
+              if (sectionIds.length > 0) {
+                sectionCounter = Math.max(...sectionIds);
+              }
+            }
+            
+            // セクションが空の場合はデフォルトで清掃項目セクションを追加
+            if (Object.keys(sections).length === 0 && existingSectionCards.length === 0) {
+              if (window.addCleaningItemSection) {
+                window.addCleaningItemSection();
+              }
+            }
           }
         }
         
