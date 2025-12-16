@@ -2583,7 +2583,9 @@
       });
 
       // フォーム送信（モーダル用）
-      document.getElementById('report-form-modal').addEventListener('submit', async (e) => {
+      const reportFormModal = document.getElementById('report-form-modal');
+      if (reportFormModal) {
+        reportFormModal.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         try {
@@ -2820,6 +2822,7 @@
           alert(`エラー: ${error.message}`);
         }
       });
+      }
     }
 
     function formatDate(dateStr) {
