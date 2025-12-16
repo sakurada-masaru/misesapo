@@ -71,25 +71,28 @@ async function loadProposalReport(reportId, reportData = null) {
         
         // APIから次回ご提案レポートを取得
         try {
-            // まず、元のレポートを取得して、関連する次回ご提案を探す
-            let report = null;
-            try {
-                const response = await fetch(`${API_BASE_URL}/public/reports/${reportId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
+            // まず、元のレポートを取得（既に取得済みの場合はそれを使用）
+            let report = reportData;
+            if (!report) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/public/reports/${reportId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        report = data.report || data;
+                    } else {
+                        // レポートが取得できない場合は次回ご提案も取得できない
+                        throw new Error('レポートが見つかりませんでした');
                     }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    report = data.report || data;
-                } else {
-                    // レポートが取得できない場合は次回ご提案も取得できない
-                    throw new Error('レポートが見つかりませんでした');
+                } catch (fetchError) {
+                    // CORSエラーやネットワークエラーの場合は次回ご提案を取得できない
+                    // エラーを再スローせず、次回ご提案がない場合として扱う
+                    throw fetchError;
                 }
-            } catch (fetchError) {
-                // CORSエラーやネットワークエラーの場合は次回ご提案を取得できない
-                throw fetchError;
             }
             
             if (!report) {
@@ -104,15 +107,26 @@ async function loadProposalReport(reportId, reportData = null) {
                 try {
                     // mode: 'no-cors'は使えない（レスポンスが読めない）ので、通常のfetchを使用
                     // CORSエラーが発生する可能性があるが、catchで処理する
-                    const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?parent_report_id=${report.report_id || report.id}&proposal_type=proposal`);
-                    if (proposalResponse.ok) {
-                        const proposalData = await proposalResponse.json();
-                        if (proposalData.reports && proposalData.reports.length > 0) {
-                            proposalReport = proposalData.reports[0];
-                        } else if (proposalData.items && proposalData.items.length > 0) {
-                            proposalReport = proposalData.items[0];
-                        } else if (proposalData.report) {
-                            proposalReport = proposalData.report;
+                    const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?parent_report_id=${report.report_id || report.id}&proposal_type=proposal`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        // CORSエラーを抑制するため、modeを指定しない（デフォルトのcorsを使用）
+                    }).catch(() => null); // fetch自体が失敗した場合はnullを返す
+                    
+                    if (proposalResponse && proposalResponse.ok) {
+                        try {
+                            const proposalData = await proposalResponse.json();
+                            if (proposalData.reports && proposalData.reports.length > 0) {
+                                proposalReport = proposalData.reports[0];
+                            } else if (proposalData.items && proposalData.items.length > 0) {
+                                proposalReport = proposalData.items[0];
+                            } else if (proposalData.report) {
+                                proposalReport = proposalData.report;
+                            }
+                        } catch (jsonError) {
+                            // JSON解析エラーは無視
                         }
                     }
                 } catch (fetchError) {
@@ -124,15 +138,25 @@ async function loadProposalReport(reportId, reportData = null) {
             // 方法2: store_id + cleaning_dateで検索（parent_report_idがない場合）
             if (!proposalReport && report.store_id && report.cleaning_date) {
                 try {
-                    const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?store_id=${report.store_id}&cleaning_date=${report.cleaning_date}&proposal_type=proposal`);
-                    if (proposalResponse.ok) {
-                        const proposalData = await proposalResponse.json();
-                        if (proposalData.reports && proposalData.reports.length > 0) {
-                            proposalReport = proposalData.reports[0];
-                        } else if (proposalData.items && proposalData.items.length > 0) {
-                            proposalReport = proposalData.items[0];
-                        } else if (proposalData.report) {
-                            proposalReport = proposalData.report;
+                    const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?store_id=${report.store_id}&cleaning_date=${report.cleaning_date}&proposal_type=proposal`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }).catch(() => null); // fetch自体が失敗した場合はnullを返す
+                    
+                    if (proposalResponse && proposalResponse.ok) {
+                        try {
+                            const proposalData = await proposalResponse.json();
+                            if (proposalData.reports && proposalData.reports.length > 0) {
+                                proposalReport = proposalData.reports[0];
+                            } else if (proposalData.items && proposalData.items.length > 0) {
+                                proposalReport = proposalData.items[0];
+                            } else if (proposalData.report) {
+                                proposalReport = proposalData.report;
+                            }
+                        } catch (jsonError) {
+                            // JSON解析エラーは無視
                         }
                     }
                 } catch (fetchError) {
