@@ -5051,17 +5051,38 @@
       imageList.appendChild(imageThumb);
     }
     
-    // セクションデータを更新
-    if (sections[sectionId]) {
-      const section = sections[sectionId];
-      if (!section.images) section.images = {};
-      if (!section.images[category]) section.images[category] = [];
-      
-      section.images[category].push({
-        id: imageId,
-        url: imageUrl,
-        source: 'media',
-        media_info: imageData
+    // セクションデータを更新（imageContentsに保存）
+    if (sections[sectionId] && sections[sectionId].imageContents) {
+      const imageContent = sections[sectionId].imageContents.find(ic => ic.id === imageContentId);
+      if (imageContent) {
+        if (!imageContent.photos[category]) {
+          imageContent.photos[category] = [];
+        }
+        const imageDataObj = {
+          imageId: imageId,
+          url: imageUrl,
+          warehouseUrl: imageUrl,
+          imageUrl: imageUrl,
+          source: 'media',
+          media_info: imageData,
+          uploaded: true
+        };
+        imageContent.photos[category].push(imageDataObj);
+        console.log('[ImageUpload] Image added to section (media):', {
+          sectionId,
+          imageContentId,
+          category,
+          imageData: imageDataObj,
+          allPhotos: imageContent.photos
+        });
+      } else {
+        console.warn('[ImageUpload] ImageContent not found (media):', imageContentId, 'in section:', sectionId);
+      }
+    } else {
+      console.warn('[ImageUpload] Section or imageContents not found (media):', {
+        sectionId,
+        hasSection: !!sections[sectionId],
+        hasImageContents: !!(sections[sectionId] && sections[sectionId].imageContents)
       });
     }
   }
