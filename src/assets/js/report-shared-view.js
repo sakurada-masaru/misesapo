@@ -784,13 +784,98 @@ function renderReportToContainer(report, container) {
     const items = report.work_items || [];
     const itemNames = items.map(item => item.item_name || item.item_id).filter(Boolean);
     
-    // 清掃項目の詳細（項目名と詳細のみ、写真は別のsectionsで表示）
+    // 清掃項目の詳細（項目名、詳細、写真を含む）
     const workItemsHtml = items.map(item => {
+        console.log('[renderReportToContainer] Processing work item:', item);
         const details = item.details || {};
         const tags = [];
         if (details.type) tags.push(details.type);
         if (details.count) tags.push(`${details.count}個`);
         const tagsHtml = tags.map(tag => `<span class="detail-tag">${escapeHtml(tag)}</span>`).join('');
+        
+        // 画像を正規化
+        const normalizePhotoUrls = (photos) => {
+            if (!photos) return [];
+            if (Array.isArray(photos)) {
+                return photos.map(photo => {
+                    if (typeof photo === 'string') {
+                        return photo.startsWith('http://') || photo.startsWith('https://') || photo.startsWith('//')
+                            ? photo
+                            : resolvePath(photo);
+                    } else if (typeof photo === 'object' && photo !== null) {
+                        const url = photo.url || photo.warehouseUrl || photo.imageUrl || photo.blobUrl || '';
+                        return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
+                            ? url
+                            : resolvePath(url);
+                    }
+                    return '';
+                }).filter(Boolean);
+            }
+            return [];
+        };
+        
+        const beforePhotos = normalizePhotoUrls(item.photos?.before);
+        const afterPhotos = normalizePhotoUrls(item.photos?.after);
+        console.log('[renderReportToContainer] Item photos:', {
+            itemName: item.item_name,
+            before: beforePhotos,
+            after: afterPhotos,
+            rawPhotos: item.photos
+        });
+        
+        let photosHtml = '';
+        if (beforePhotos.length > 0 || afterPhotos.length > 0) {
+            const beforePhotosHtml = beforePhotos.length > 0
+                ? `<div class="image-list">
+                     ${beforePhotos.map((url, index) => {
+                         const resolvedUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
+                             ? url
+                             : resolvePath(url);
+                         return `
+                       <div class="image-item" data-image-url="${resolvedUrl}">
+                         <img src="${resolvedUrl}" alt="作業前" loading="lazy" 
+                              onclick="if(window.openImageModal) window.openImageModal('${resolvedUrl}')"
+                              onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
+                       </div>
+                     `;
+                     }).join('')}
+                   </div>`
+                : '';
+            
+            const afterPhotosHtml = afterPhotos.length > 0
+                ? `<div class="image-list">
+                     ${afterPhotos.map((url, index) => {
+                         const resolvedUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
+                             ? url
+                             : resolvePath(url);
+                         return `
+                       <div class="image-item" data-image-url="${resolvedUrl}">
+                         <img src="${resolvedUrl}" alt="作業後" loading="lazy" 
+                              onclick="if(window.openImageModal) window.openImageModal('${resolvedUrl}')"
+                              onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
+                       </div>
+                     `;
+                     }).join('')}
+                   </div>`
+                : '';
+            
+            photosHtml = `
+              <div class="image-grid">
+                ${beforePhotos.length > 0 ? `
+                  <div class="image-category before-category">
+                    <h4 class="image-category-title">作業前（Before）</h4>
+                    ${beforePhotosHtml}
+                  </div>
+                ` : ''}
+                ${afterPhotos.length > 0 ? `
+                  <div class="image-category after-category">
+                    <h4 class="image-category-title">作業後（After）</h4>
+                    ${afterPhotosHtml}
+                  </div>
+                ` : ''}
+              </div>
+            `;
+        }
         
         return `
           <section class="cleaning-section">
@@ -798,6 +883,7 @@ function renderReportToContainer(report, container) {
               <h3 class="item-title">〜 ${escapeHtml(item.item_name || item.item_id)} 〜</h3>
               <div class="item-details">${tagsHtml}</div>
             </div>
+            ${photosHtml}
           </section>
         `;
     }).join('');
