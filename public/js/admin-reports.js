@@ -270,13 +270,27 @@
         
         // ブランド名を取得
         const brandId = store.brand_id || r.brand_id;
-        console.log('[renderTable] Report:', r.id || r.report_id, 'store:', store, 'brandId:', brandId, 'allBrands length:', allBrands.length);
+        if (!brandId) {
+          console.warn('[renderTable] No brandId found for report:', r.id || r.report_id, 'store:', store);
+        }
         const brand = (window.DataUtils && window.DataUtils.findBrand && brandId)
           ? window.DataUtils.findBrand(allBrands, brandId) || {}
-          : (brandId ? allBrands.find(b => b.id === brandId) || {} : {});
-        console.log('[renderTable] Found brand:', brand, 'brand.name:', brand.name);
-        const displayBrandName = brand.name || r.brand_name || '-';
-        console.log('[renderTable] displayBrandName:', displayBrandName);
+          : (brandId ? allBrands.find(b => {
+              const match = String(b.id) === String(brandId);
+              if (!match && brandId) {
+                // デバッグ: 最初の数件のブランドIDを確認
+                if (allBrands.length > 0 && allBrands.indexOf(b) < 3) {
+                  console.log('[renderTable] Comparing brandId:', brandId, 'with brand.id:', b.id, 'match:', match);
+                }
+              }
+              return match;
+            }) || {} : {});
+        if (!brand.name && brandId) {
+          console.warn('[renderTable] Brand not found for brandId:', brandId, 'store:', store, 'report:', r.id || r.report_id);
+        }
+        const displayBrandName = (window.DataUtils && window.DataUtils.escapeHtml) 
+          ? window.DataUtils.escapeHtml(brand.name || r.brand_name || '-') 
+          : escapeHtml(brand.name || r.brand_name || '-');
         
         // 法人名を取得（ブランド経由または店舗経由）
         let clientId = null;
