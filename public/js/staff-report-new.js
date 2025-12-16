@@ -7767,9 +7767,12 @@
     // report-shared-view.jsのrenderReportToContainer関数を使用して表示
     // 一時的なコンテナを作成してレンダリング
     const tempContainer = document.createElement('div');
+    console.log('[Preview] Calling renderReport with report:', report);
+    console.log('[Preview] workItems:', report.work_items);
     if (window.renderReport && typeof window.renderReport === 'function') {
       // renderReportToContainerを使う（第2引数にコンテナを指定）
       window.renderReport(report, tempContainer);
+      console.log('[Preview] renderReport completed, tempContainer HTML:', tempContainer.innerHTML.substring(0, 500));
       
       // レンダリングされたHTMLから必要な部分を取得
       const renderedHeader = tempContainer.querySelector('.report-header');
