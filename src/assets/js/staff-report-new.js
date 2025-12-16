@@ -7719,11 +7719,19 @@
         const itemName = s.item_name && s.item_name.trim() !== '' ? s.item_name : '清掃項目';
         console.log('[Preview] Final photos for', itemName, ':', photos);
         
+        // コメントとサブタイトルを取得
+        const comments = (s.comments || []).map(c => c.value || '').filter(Boolean);
+        const subtitles = (s.subtitles || []).map(st => st.value || '').filter(Boolean);
+        console.log('[Preview] Comments for', itemName, ':', comments);
+        console.log('[Preview] Subtitles for', itemName, ':', subtitles);
+        
         return {
           item_id: itemName.toLowerCase().replace(/\s+/g, '-'),
           item_name: itemName,
           details: {},
-          photos: photos
+          photos: photos,
+          comments: comments,
+          subtitles: subtitles
         };
       });
     

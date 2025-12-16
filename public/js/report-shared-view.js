@@ -644,13 +644,34 @@ window.renderReport = function(report, container) {
             `;
         }
         
+        // コメントとサブタイトルを取得（renderReport関数用）
+        const comments = item.comments || [];
+        const subtitles = item.subtitles || [];
+        
+        // サブタイトルとコメントのHTMLを生成
+        let subtitlesHtml = '';
+        if (subtitles && subtitles.length > 0) {
+            subtitlesHtml = subtitles.map(subtitle => 
+                `<div class="cleaning-item-subtitle-display" style="margin-top: 12px; margin-bottom: 8px; font-weight: 600; font-size: 1rem; color: #333;">${escapeHtml(subtitle)}</div>`
+            ).join('');
+        }
+        
+        let commentsHtml = '';
+        if (comments && comments.length > 0) {
+            commentsHtml = comments.map(comment => 
+                `<div class="cleaning-item-comment-display" style="margin-top: 8px; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px; white-space: pre-wrap; color: #333;">${escapeHtml(comment)}</div>`
+            ).join('');
+        }
+        
         return `
           <section class="cleaning-section">
             <div class="item-header">
               <h3 class="item-title">〜 ${escapeHtml(item.item_name || item.item_id)} 〜</h3>
               <div class="item-details">${tagsHtml}</div>
             </div>
+            ${subtitlesHtml}
             ${photosHtml}
+            ${commentsHtml}
           </section>
         `;
     }).join('');
@@ -844,6 +865,27 @@ function renderReportToContainer(report, container) {
             after: afterPhotos,
             rawPhotos: item.photos
         });
+        
+        // コメントとサブタイトルを取得
+        const comments = item.comments || [];
+        const subtitles = item.subtitles || [];
+        console.log('[renderReportToContainer] Item comments:', comments);
+        console.log('[renderReportToContainer] Item subtitles:', subtitles);
+        
+        // サブタイトルとコメントのHTMLを生成
+        let subtitlesHtml = '';
+        if (subtitles && subtitles.length > 0) {
+            subtitlesHtml = subtitles.map(subtitle => 
+                `<div class="cleaning-item-subtitle-display" style="margin-top: 12px; margin-bottom: 8px; font-weight: 600; font-size: 1rem; color: #333;">${escapeHtml(subtitle)}</div>`
+            ).join('');
+        }
+        
+        let commentsHtml = '';
+        if (comments && comments.length > 0) {
+            commentsHtml = comments.map(comment => 
+                `<div class="cleaning-item-comment-display" style="margin-top: 8px; margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px; white-space: pre-wrap; color: #333;">${escapeHtml(comment)}</div>`
+            ).join('');
+        }
         
         let photosHtml = '';
         if (beforePhotos.length > 0 || afterPhotos.length > 0) {
