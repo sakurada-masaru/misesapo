@@ -343,11 +343,7 @@
 }
 
 /* カードビュー非表示 */
-.users-grid.card-view-hidden {
-  display: none;
-}
-
-.organization-layout.list-view .departments-container {
+.organization-layout.list-view .department-group {
   display: none;
 }
 
