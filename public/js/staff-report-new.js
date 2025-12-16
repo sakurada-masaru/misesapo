@@ -7636,6 +7636,8 @@
       console.log('[Preview] Section:', sectionId, 'type:', section.type, 'full data:', section);
       if (section.type === 'cleaning') {
         console.log('[Preview] Cleaning section:', sectionId, section);
+        console.log('[Preview] Cleaning section comments:', section.comments);
+        console.log('[Preview] Cleaning section subtitles:', section.subtitles);
         if (section.imageContents) {
           console.log('[Preview] imageContents:', section.imageContents);
           section.imageContents.forEach((ic, idx) => {
@@ -7720,8 +7722,19 @@
         console.log('[Preview] Final photos for', itemName, ':', photos);
         
         // コメントとサブタイトルを取得
-        const comments = (s.comments || []).map(c => c.value || '').filter(Boolean);
-        const subtitles = (s.subtitles || []).map(st => st.value || '').filter(Boolean);
+        console.log('[Preview] Section data for', itemName, ':', s);
+        console.log('[Preview] Section comments (raw):', s.comments);
+        console.log('[Preview] Section subtitles (raw):', s.subtitles);
+        const comments = (s.comments || []).map(c => {
+          const value = (typeof c === 'string') ? c : (c.value || '');
+          console.log('[Preview] Processing comment:', c, '-> value:', value);
+          return value;
+        }).filter(Boolean);
+        const subtitles = (s.subtitles || []).map(st => {
+          const value = (typeof st === 'string') ? st : (st.value || '');
+          console.log('[Preview] Processing subtitle:', st, '-> value:', value);
+          return value;
+        }).filter(Boolean);
         console.log('[Preview] Comments for', itemName, ':', comments);
         console.log('[Preview] Subtitles for', itemName, ':', subtitles);
         

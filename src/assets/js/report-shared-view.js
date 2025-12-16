@@ -869,8 +869,11 @@ function renderReportToContainer(report, container) {
         // コメントとサブタイトルを取得
         const comments = item.comments || [];
         const subtitles = item.subtitles || [];
-        console.log('[renderReportToContainer] Item comments:', comments);
-        console.log('[renderReportToContainer] Item subtitles:', subtitles);
+        console.log('[renderReportToContainer] Processing item:', item.item_name);
+        console.log('[renderReportToContainer] Item comments (raw):', item.comments);
+        console.log('[renderReportToContainer] Item comments (processed):', comments);
+        console.log('[renderReportToContainer] Item subtitles (raw):', item.subtitles);
+        console.log('[renderReportToContainer] Item subtitles (processed):', subtitles);
         
         // サブタイトルとコメントのHTMLを生成
         let subtitlesHtml = '';
