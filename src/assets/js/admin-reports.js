@@ -924,6 +924,14 @@
         return;
       }
 
+      // 直接Viewページに遷移
+      const reportId = report.report_id || report.id;
+      const baseUrl = window.location.origin;
+      const viewUrl = `${baseUrl}/reports/shared/${reportId}/view`;
+      window.open(viewUrl, '_blank');
+      
+      // 以下はモーダル表示用のコード（使用しないが、念のため残しておく）
+      /*
       const previewDialog = document.getElementById('preview-dialog-modal');
       const previewContent = document.getElementById('preview-report-content-modal');
       
@@ -1081,6 +1089,7 @@
         console.error('Error loading report preview:', error);
         alert('プレビューの読み込みに失敗しました: ' + error.message);
       }
+      */
     };
 
     // プレビュー用のタブ機能を設定（管理画面）
