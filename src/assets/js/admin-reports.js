@@ -107,6 +107,7 @@
         const res = await fetch(`${API_BASE}/brands`);
         const brandsData = await res.json();
         allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
+        console.log('[loadBrands] Loaded brands:', allBrands.length, allBrands);
       } catch (e) {
         console.error('Failed to load brands:', e);
         allBrands = [];
@@ -269,10 +270,13 @@
         
         // ブランド名を取得
         const brandId = store.brand_id || r.brand_id;
+        console.log('[renderTable] Report:', r.id || r.report_id, 'store:', store, 'brandId:', brandId, 'allBrands length:', allBrands.length);
         const brand = (window.DataUtils && window.DataUtils.findBrand && brandId)
           ? window.DataUtils.findBrand(allBrands, brandId) || {}
           : (brandId ? allBrands.find(b => b.id === brandId) || {} : {});
+        console.log('[renderTable] Found brand:', brand, 'brand.name:', brand.name);
         const displayBrandName = brand.name || r.brand_name || '-';
+        console.log('[renderTable] displayBrandName:', displayBrandName);
         
         // 法人名を取得（ブランド経由または店舗経由）
         let clientId = null;
