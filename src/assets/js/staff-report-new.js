@@ -2560,7 +2560,11 @@
     const sectionAddToggleBtn = document.getElementById(toggleBtnId);
     
     if (sectionAddToggleBtn) {
-      sectionAddToggleBtn.addEventListener('click', function(e) {
+      // 既存のイベントリスナーを削除するために、ノードをクローンして置き換え
+      const newBtn = sectionAddToggleBtn.cloneNode(true);
+      sectionAddToggleBtn.parentNode.replaceChild(newBtn, sectionAddToggleBtn);
+      
+      newBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
