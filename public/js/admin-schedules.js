@@ -210,8 +210,32 @@ function setupStoreSearch() {
   const resultsDiv = document.getElementById('schedule-store-results');
   const hiddenInput = document.getElementById('schedule-store');
   const categoryFilter = document.getElementById('store-category-filter');
+  const summaryStoreEl = document.getElementById('schedule-store-summary-store');
+  const summaryClientEl = document.getElementById('schedule-store-summary-client');
+  const summaryBrandEl = document.getElementById('schedule-store-summary-brand');
+  const summaryAddressEl = document.getElementById('schedule-store-summary-address');
   
   if (!searchInput || !resultsDiv || !hiddenInput) return;
+
+  function setSummary({ storeName = '-', clientName = '-', brandName = '-', address = '-' } = {}) {
+    if (summaryStoreEl) summaryStoreEl.textContent = storeName || '-';
+    if (summaryClientEl) summaryClientEl.textContent = clientName || '-';
+    if (summaryBrandEl) summaryBrandEl.textContent = brandName || '-';
+    if (summaryAddressEl) summaryAddressEl.textContent = address || '-';
+  }
+
+  function getSelectedStoreSummary(storeId) {
+    const store = DataUtils.findStore(allStores, storeId) || allStores.find(s => s.id === storeId) || {};
+    const storeName = store.name || '';
+    const brandId = store.brand_id;
+    const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId)) || null;
+    const brandName = brand ? (brand.name || '') : '';
+    const clientId = store.client_id || (brand ? brand.client_id : null);
+    const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId)) || null;
+    const clientName = client ? (client.name || client.company_name || '') : '';
+    const address = (store.address || `${store.pref || ''}${store.city || ''}${store.street || ''}` || '').trim();
+    return { store, storeName, brandName, clientName, address };
+  }
   
   function getClientName(clientId) {
     if (!clientId) return '';
@@ -295,6 +319,13 @@ function setupStoreSearch() {
         hiddenInput.value = id;
         searchInput.value = name;
         resultsDiv.style.display = 'none';
+        const summary = getSelectedStoreSummary(id);
+        setSummary({
+          storeName: summary.storeName || name || '-',
+          clientName: summary.clientName || '-',
+          brandName: summary.brandName || '-',
+          address: summary.address || '-'
+        });
       });
     });
   }
@@ -311,6 +342,9 @@ function setupStoreSearch() {
       resultsDiv.style.display = 'none';
     }
   });
+
+  // 初期状態
+  setSummary();
 }
 
 // 清掃内容検索機能のセットアップ（店舗検索と同様のUI）
@@ -705,6 +739,16 @@ function setupEventListeners() {
         alert('店舗を選択してください');
         return;
       }
+
+      // 店舗/法人/ブランド/住所を補完（保存データを安定させる）
+      const store = DataUtils.findStore(allStores, storeId) || allStores.find(s => s.id === storeId) || {};
+      const brandId = store.brand_id;
+      const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId)) || null;
+      const clientId = store.client_id || (brand ? brand.client_id : null);
+      const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId)) || null;
+      const derivedStoreName = store.name || '';
+      const derivedClientName = client ? (client.name || client.company_name || '') : '';
+      const derivedAddress = (store.address || `${store.pref || ''}${store.city || ''}${store.street || ''}` || '').trim();
       
       // 清掃内容を取得
       const cleaningItems = selectedCleaningItems.map(item => ({
@@ -719,6 +763,9 @@ function setupEventListeners() {
         duration_minutes: parseInt(document.getElementById('schedule-duration').value) || 60,
         sales_id: document.getElementById('schedule-sales').value || null,
         worker_id: document.getElementById('schedule-worker').value || null,
+        store_name: derivedStoreName,
+        client_name: derivedClientName,
+        address: derivedAddress,
         cleaning_items: cleaningItems,
         work_content: cleaningItems.length > 0 ? cleaningItems.map(item => item.name).join(', ') : '',
         status: document.getElementById('schedule-status').value,
@@ -840,6 +887,15 @@ function openAddDialog(dateStr) {
   if (scheduleId) scheduleId.value = '';
   if (scheduleStore) scheduleStore.value = '';
   if (scheduleStoreSearch) scheduleStoreSearch.value = '';
+  // 店舗サマリーをリセット
+  const summaryStoreEl = document.getElementById('schedule-store-summary-store');
+  const summaryClientEl = document.getElementById('schedule-store-summary-client');
+  const summaryBrandEl = document.getElementById('schedule-store-summary-brand');
+  const summaryAddressEl = document.getElementById('schedule-store-summary-address');
+  if (summaryStoreEl) summaryStoreEl.textContent = '-';
+  if (summaryClientEl) summaryClientEl.textContent = '-';
+  if (summaryBrandEl) summaryBrandEl.textContent = '-';
+  if (summaryAddressEl) summaryAddressEl.textContent = '-';
   if (scheduleDate) scheduleDate.value = dateStr || new Date().toISOString().split('T')[0];
   
   // 清掃内容をリセット
@@ -902,6 +958,30 @@ window.editSchedule = function(id) {
       scheduleStoreEl.value = storeId || '';
       scheduleStoreSearchEl.value = store.name || '';
     }
+  }
+  
+  // 店舗サマリーを更新
+  try {
+    const summaryStoreEl = document.getElementById('schedule-store-summary-store');
+    const summaryClientEl = document.getElementById('schedule-store-summary-client');
+    const summaryBrandEl = document.getElementById('schedule-store-summary-brand');
+    const summaryAddressEl = document.getElementById('schedule-store-summary-address');
+    const store = DataUtils.findStore(allStores, storeId) || allStores.find(s => s.id === storeId) || {};
+    const brandId = store.brand_id;
+    const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId)) || null;
+    const clientId = store.client_id || (brand ? brand.client_id : null);
+    const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId)) || null;
+    const storeName = store.name || '-';
+    const brandName = brand ? (brand.name || '-') : '-';
+    const clientName = client ? (client.name || client.company_name || '-') : '-';
+    const address = (store.address || `${store.pref || ''}${store.city || ''}${store.street || ''}` || '').trim() || '-';
+    if (summaryStoreEl) summaryStoreEl.textContent = storeName;
+    if (summaryClientEl) summaryClientEl.textContent = clientName;
+    if (summaryBrandEl) summaryBrandEl.textContent = brandName;
+    if (summaryAddressEl) summaryAddressEl.textContent = address;
+  } catch (e) {
+    // サマリー表示は補助なので失敗しても続行
+    console.warn('Failed to update store summary:', e);
   }
   
   if (scheduleDateEl) scheduleDateEl.value = date;
