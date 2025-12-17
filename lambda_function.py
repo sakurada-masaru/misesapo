@@ -1109,6 +1109,16 @@ def lambda_handler(event, context):
                 return update_estimate(estimate_id, event, headers)
             elif method == 'DELETE':
                 return delete_estimate(estimate_id, headers)
+        elif normalized_path == '/admin/schedules/clear':
+            # 危険操作: スケジュールを全件削除（誤操作防止のため確認文字列必須）
+            # Googleカレンダーには一切触れない（システム側のみクリア）
+            if method in ['POST', 'DELETE']:
+                return clear_all_schedules(event, headers)
+            return {
+                'statusCode': 405,
+                'headers': headers,
+                'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+            }
         elif normalized_path == '/schedules':
             # スケジュールデータの読み書き
             if method == 'GET':
@@ -4299,6 +4309,75 @@ def delete_schedule(schedule_id, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': 'スケジュールの削除に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def clear_all_schedules(event, headers):
+    """
+    危険操作: schedules テーブルを全件削除（システム側のみ）
+    - 誤操作防止: confirm=DELETE_ALL_SCHEDULES が必須
+    - Googleカレンダーは一切操作しない
+    """
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        body = event.get('body')
+        body_json = {}
+        if body:
+            try:
+                if isinstance(body, str):
+                    body_json = json.loads(body)
+                else:
+                    body_json = json.loads(body.decode('utf-8'))
+            except Exception:
+                body_json = {}
+
+        confirm = (query_params.get('confirm') or body_json.get('confirm') or '').strip()
+        if confirm != 'DELETE_ALL_SCHEDULES':
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': False,
+                    'error': 'confirmation_required',
+                    'message': 'This operation is destructive. Provide confirm=DELETE_ALL_SCHEDULES to proceed.'
+                }, ensure_ascii=False)
+            }
+
+        deleted = 0
+        scan_kwargs = {'ProjectionExpression': 'id'}
+        response = SCHEDULES_TABLE.scan(**scan_kwargs)
+        with SCHEDULES_TABLE.batch_writer() as batch:
+            for item in response.get('Items', []):
+                if item.get('id'):
+                    batch.delete_item(Key={'id': item['id']})
+                    deleted += 1
+            while 'LastEvaluatedKey' in response:
+                response = SCHEDULES_TABLE.scan(ExclusiveStartKey=response['LastEvaluatedKey'], **scan_kwargs)
+                for item in response.get('Items', []):
+                    if item.get('id'):
+                        batch.delete_item(Key={'id': item['id']})
+                        deleted += 1
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'success': True,
+                'message': 'All schedules have been deleted (system side only).',
+                'deleted_count': deleted
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error clearing schedules: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'success': False,
+                'error': 'スケジュールの全削除に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }
