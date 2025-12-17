@@ -168,8 +168,15 @@ function populateStoreSelects() {
 }
 
 function populateSalesSelects() {
-  // 営業担当者（role が sales のユーザー）を抽出
-  let sales = allWorkers.filter(w => (w.role || '').toLowerCase() === 'sales');
+  // 管理画面と同じ基準で「営業」を抽出（role / roles / department など）
+  const isSalesPerson = (w) => {
+    if (!w) return false;
+    const role = String(w.role || '').toLowerCase();
+    const roles = Array.isArray(w.roles) ? w.roles.map(r => String(r).toLowerCase()) : [];
+    const dept = String(w.department || w.dept || w.division || w.team || '').toLowerCase();
+    return role === 'sales' || roles.includes('sales') || dept.includes('営業') || dept.includes('sales');
+  };
+  let sales = allWorkers.filter(isSalesPerson);
   
   // 万が一 role 情報が無い / sales が一人もいない場合は、全件を使う
   if (sales.length === 0) {
@@ -199,8 +206,7 @@ function populateWorkerSelects() {
     workerFilterEl.innerHTML = '<option value="">全員</option>' + options;
   }
   if (scheduleWorkerEl) {
-    // 担当清掃員: 「全員（オープン）」を選ぶと特定の清掃員に割り当てずオープンな状態にできる
-    scheduleWorkerEl.innerHTML = '<option value="">全員（オープン）</option>' + options;
+    scheduleWorkerEl.innerHTML = '<option value="">未割当</option>' + options;
   }
 }
 
@@ -210,9 +216,32 @@ function setupStoreSearch() {
   const resultsDiv = document.getElementById('schedule-store-results');
   const hiddenInput = document.getElementById('schedule-store');
   const categoryFilter = document.getElementById('store-category-filter');
+  // 選択サマリー
+  const summaryStoreEl = document.getElementById('schedule-store-summary-store');
+  const summaryClientEl = document.getElementById('schedule-store-summary-client');
+  const summaryBrandEl = document.getElementById('schedule-store-summary-brand');
+  const summaryAddressEl = document.getElementById('schedule-store-summary-address');
   
   if (!searchInput || !resultsDiv || !hiddenInput) return;
   
+  function setSummary({ storeName = '-', clientName = '-', brandName = '-', address = '-' } = {}) {
+    if (summaryStoreEl) summaryStoreEl.textContent = storeName || '-';
+    if (summaryClientEl) summaryClientEl.textContent = clientName || '-';
+    if (summaryBrandEl) summaryBrandEl.textContent = brandName || '-';
+    if (summaryAddressEl) summaryAddressEl.textContent = address || '-';
+  }
+
+  function setContactFields({ address = '', phone = '', email = '', contactPerson = '' } = {}) {
+    const addressEl = document.getElementById('schedule-address');
+    const phoneEl = document.getElementById('schedule-phone');
+    const emailEl = document.getElementById('schedule-email');
+    const contactEl = document.getElementById('schedule-contact-person');
+    if (addressEl) addressEl.value = address || '';
+    if (phoneEl) phoneEl.value = phone || '';
+    if (emailEl) emailEl.value = email || '';
+    if (contactEl) contactEl.value = contactPerson || '';
+  }
+
   function getClientName(clientId) {
     if (!clientId) return '';
     const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId));
@@ -295,6 +324,22 @@ function setupStoreSearch() {
         hiddenInput.value = id;
         searchInput.value = name;
         resultsDiv.style.display = 'none';
+
+        // サマリーと連絡先の自動入力
+        const store = allStores.find(s => s.id === id || String(s.id) === String(id)) || {};
+        const storeName = store.name || name || '';
+        const brandId = store.brand_id;
+        const brandName = getBrandName(brandId) || '';
+        const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId || String(b.id) === String(brandId))?.client_id : null);
+        const clientName = getClientName(clientId) || '';
+        const address = (store.address || `${store.postcode ? '〒' + store.postcode + ' ' : ''}${store.pref || ''}${store.city || ''}${store.address1 || ''}${store.address2 || ''}`).trim();
+        setSummary({ storeName, clientName, brandName, address });
+        setContactFields({
+          address,
+          phone: store.phone || store.tel || '',
+          email: store.email || '',
+          contactPerson: store.contact_person || store.contactPerson || ''
+        });
       });
     });
   }
@@ -311,6 +356,9 @@ function setupStoreSearch() {
       resultsDiv.style.display = 'none';
     }
   });
+
+  // 初期表示（未選択）
+  setSummary();
 }
 
 // 清掃内容検索機能のセットアップ（店舗検索と同様のUI）
@@ -709,6 +757,26 @@ function setupEventListeners() {
     });
   }
 
+  // 顧客データ再読み込み（モーダル内）
+  const reloadCustomersBtn = document.getElementById('reload-customers-data-btn');
+  if (reloadCustomersBtn) {
+    reloadCustomersBtn.addEventListener('click', async () => {
+      try {
+        reloadCustomersBtn.disabled = true;
+        reloadCustomersBtn.textContent = '再読み込み中...';
+        await Promise.all([loadClients(), loadBrands(), loadStores()]);
+        populateStoreSelects();
+        filterAndRender();
+      } catch (e) {
+        console.error('Failed to reload customer data:', e);
+        alert('顧客データの再読み込みに失敗しました');
+      } finally {
+        reloadCustomersBtn.disabled = false;
+        reloadCustomersBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 顧客データ再読み込み';
+      }
+    });
+  }
+
   // フォーム送信
   if (scheduleForm) {
     scheduleForm.addEventListener('submit', async (e) => {
@@ -729,6 +797,16 @@ function setupEventListeners() {
         name: item.name,
         id: item.id
       }));
+
+      // 選択店舗から法人/ブランド/店舗名を拾い、管理画面と同じく参照用に保存（表示・検索のフォールバック）
+      const selectedStore = allStores.find(s => s.id === storeId || String(s.id) === String(storeId)) || null;
+      const storeFound = !!selectedStore?.id;
+      const brandId = storeFound ? selectedStore.brand_id : null;
+      const brandName = storeFound ? (allBrands.find(b => b.id === brandId || String(b.id) === String(brandId))?.name || '') : '';
+      const clientId = storeFound
+        ? (selectedStore.client_id || (brandId ? allBrands.find(b => b.id === brandId || String(b.id) === String(brandId))?.client_id : null))
+        : null;
+      const clientName = storeFound ? (allClients.find(c => c.id === clientId || String(c.id) === String(clientId))?.name || '') : '';
       
       const data = {
         store_id: storeId,
@@ -740,7 +818,14 @@ function setupEventListeners() {
         cleaning_items: cleaningItems,
         work_content: cleaningItems.length > 0 ? cleaningItems.map(item => item.name).join(', ') : '',
         status: document.getElementById('schedule-status').value,
-        notes: document.getElementById('schedule-notes').value
+        notes: document.getElementById('schedule-notes').value,
+        client_name: clientName || '',
+        brand_name: brandName || '',
+        store_name: storeFound ? (selectedStore.name || '') : '',
+        address: (document.getElementById('schedule-address')?.value || '').trim(),
+        phone: (document.getElementById('schedule-phone')?.value || '').trim(),
+        email: (document.getElementById('schedule-email')?.value || '').trim(),
+        contact_person: (document.getElementById('schedule-contact-person')?.value || '').trim()
       };
 
       // 清掃員を割り当てた場合、未確定（draft）から確定（scheduled）に自動更新

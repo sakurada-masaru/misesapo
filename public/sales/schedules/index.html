@@ -340,6 +340,44 @@
             <input type="hidden" id="schedule-store" name="store_id">
             <div class="store-search-results" id="schedule-store-results" style="display: none;"></div>
           </div>
+          <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+            <a class="btn btn-secondary btn-sm" href="/sales/clients/new.html" target="_blank" rel="noopener noreferrer" id="open-customers-page-btn">
+              <i class="fas fa-external-link-alt"></i> 新規顧客（店舗）登録
+            </a>
+            <button type="button" class="btn btn-secondary btn-sm" id="reload-customers-data-btn">
+              <i class="fas fa-sync-alt"></i> 顧客データ再読み込み
+            </button>
+          </div>
+          <div id="schedule-store-summary" style="margin-top:8px;color:#6b7280;font-size:0.875rem;">
+            <div><strong style="color:#111827;">選択中:</strong> <span id="schedule-store-summary-store">-</span></div>
+            <div>法人: <span id="schedule-store-summary-client">-</span> / ブランド: <span id="schedule-store-summary-brand">-</span></div>
+            <div>住所: <span id="schedule-store-summary-address">-</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="schedule-address">住所（必要に応じて編集）</label>
+          <textarea id="schedule-address" name="address" rows="2" placeholder="住所を入力（店舗選択で自動入力されます）"></textarea>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field half">
+          <label for="schedule-phone">電話番号</label>
+          <input type="tel" id="schedule-phone" name="phone" placeholder="店舗の電話番号（店舗選択で自動入力）">
+        </div>
+        <div class="form-field half">
+          <label for="schedule-email">メール</label>
+          <input type="email" id="schedule-email" name="email" placeholder="連絡先メール（店舗選択で自動入力）">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="schedule-contact-person">相手先担当者名</label>
+          <input type="text" id="schedule-contact-person" name="contact_person" placeholder="当日の相手先担当者（店舗選択で自動入力）">
         </div>
       </div>
       
@@ -371,7 +409,7 @@
         <div class="form-field half">
           <label for="schedule-worker">担当清掃員</label>
           <select id="schedule-worker" name="worker_id">
-            <option value="">全員（オープン）</option>
+            <option value="">未割当</option>
           </select>
         </div>
       </div>
