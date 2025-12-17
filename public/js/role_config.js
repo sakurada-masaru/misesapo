@@ -294,7 +294,7 @@ const ROLE_CONFIG = {
       { href: '/sales/clients/new.html', label: '新規顧客登録', icon: 'fa-user-plus' },
       { href: '/sales/estimates.html', label: '見積もり一覧', icon: 'fa-file-invoice' },
       { href: '/sales/estimates/new.html', label: '見積もり作成', icon: 'fa-file-invoice-dollar' },
-      { href: '/sales/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
+      { href: '/sales/schedules', label: 'スケジュール', icon: 'fa-calendar' },
       { href: '/sales/orders.html', label: '発注管理', icon: 'fa-shopping-cart' }
     ],
     '管理者': [
