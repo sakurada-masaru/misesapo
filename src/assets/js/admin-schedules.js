@@ -528,8 +528,8 @@ function renderTable() {
         </td>
         <td>
           <div class="store-info">
-            <span class="store-name">${escapeHtml(displayStoreName)}</span>
             <span class="store-address">${escapeHtml(store.pref || '')}${escapeHtml(store.city || '')}</span>
+            <span class="store-name">${escapeHtml(displayStoreName)}</span>
           </div>
         </td>
         <td>
