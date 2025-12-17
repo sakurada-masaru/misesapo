@@ -146,18 +146,13 @@
   word-break: keep-all;
 }
 
-/* 小さめPC: フィルターは折り返さず横スクロールで1行維持（ラベル縦割れ防止） */
-@media (max-width: 1200px) {
-  .filter-row {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-  }
-  .filter-group {
-    flex: 0 0 auto;
-  }
+/* 小さめPC: 横スクロールにせず「グループ単位で折り返す」ことで崩れを防ぐ */
+.filter-group {
+  min-width: 160px;
+}
+#reset-filters {
+  margin-left: auto;
+  white-space: nowrap;
 }
 .filter-group {
   display: flex;
