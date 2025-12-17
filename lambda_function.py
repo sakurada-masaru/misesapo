@@ -793,12 +793,15 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-imag
 S3_REGION = os.environ.get('S3_REGION', 'ap-northeast-1')
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*').split(',')
 
-# Google Calendar API設定（環境変数から取得）
-GOOGLE_CALENDAR_ENABLED = os.environ.get('GOOGLE_CALENDAR_ENABLED', 'false').lower() == 'true'
-GOOGLE_CALENDAR_ID = os.environ.get('GOOGLE_CALENDAR_ID', 'primary')  # カレンダーID（サービスアカウントのメールアドレスまたは'primary'）
-# サービスアカウントのJSONキーは環境変数またはSecrets Managerから取得
-GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON', None)
-GOOGLE_SERVICE_ACCOUNT_SECRET_NAME = os.environ.get('GOOGLE_SERVICE_ACCOUNT_SECRET_NAME', None)  # Secrets Managerのシークレット名
+# Google Calendar API設定（※このプロジェクトでは今後Googleカレンダーを使用しない方針）
+# - Google側の共有を外しても、システムが誤って同期処理を試みると権限エラーが発生し得るため、
+#   「環境変数が残っていても」Google APIを呼ばないようにコード側で恒久的に無効化する。
+# - 既存データ（google_calendar_event_id 等）がDBに残っていても問題ないが、今後は利用しない。
+GOOGLE_CALENDAR_ENABLED = False
+GOOGLE_CALENDAR_ID = None
+GOOGLE_SERVICE_ACCOUNT_JSON = None
+GOOGLE_SERVICE_ACCOUNT_SECRET_NAME = None
+print("INFO: Google Calendar integration is permanently disabled by code (project policy).")
 
 # データファイルのS3キー
 DATA_KEY = 'cleaning-manual/data.json'
@@ -1113,15 +1116,16 @@ def lambda_handler(event, context):
             elif method == 'POST':
                 return create_schedule(event, headers)
         elif normalized_path == '/google-calendar/events':
-            # Google Calendarイベント一覧の取得
-            if method == 'GET':
-                return get_google_calendar_events(event, headers)
-            else:
-                return {
-                    'statusCode': 405,
-                    'headers': headers,
-                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
-                }
+            # Google Calendar連携は廃止（今後はシステム内スケジュールのみ）
+            return {
+                'statusCode': 410,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': False,
+                    'error': 'gone',
+                    'message': 'Google Calendar integration is disabled (project policy).'
+                }, ensure_ascii=False)
+            }
         elif normalized_path == '/daily-reports':
             # 日報の取得・作成
             if method == 'GET':
@@ -1153,26 +1157,27 @@ def lambda_handler(event, context):
             elif method == 'DELETE':
                 return delete_todo(todo_id, headers)
         elif normalized_path.startswith('/google-calendar/events/'):
-            # Google Calendarイベント詳細の取得
-            event_id = normalized_path.split('/')[-1]
-            if method == 'GET':
-                return get_google_calendar_event_detail(event_id, event, headers)
-            else:
-                return {
-                    'statusCode': 405,
-                    'headers': headers,
-                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
-                }
+            # Google Calendar連携は廃止（今後はシステム内スケジュールのみ）
+            return {
+                'statusCode': 410,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': False,
+                    'error': 'gone',
+                    'message': 'Google Calendar integration is disabled (project policy).'
+                }, ensure_ascii=False)
+            }
         elif normalized_path == '/google-calendar/sync':
-            # Google CalendarイベントをDynamoDBに同期
-            if method == 'POST':
-                return sync_google_calendar_to_schedules(event, headers)
-            else:
-                return {
-                    'statusCode': 405,
-                    'headers': headers,
-                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
-                }
+            # Google Calendar連携は廃止（今後はシステム内スケジュールのみ）
+            return {
+                'statusCode': 410,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': False,
+                    'error': 'gone',
+                    'message': 'Google Calendar integration is disabled (project policy).'
+                }, ensure_ascii=False)
+            }
         elif normalized_path.startswith('/schedules/'):
             # スケジュール詳細の取得・更新・削除
             schedule_id = normalized_path.split('/')[-1]
@@ -3880,9 +3885,7 @@ def create_schedule(event, headers):
             response_body['estimate_id'] = estimate_id
             response_body['message'] = 'スケジュールと見積もりを作成しました'
         
-        # Google Calendarイベント作成結果を追加
-        if calendar_event_result:
-            response_body['google_calendar'] = calendar_event_result
+        # Google Calendar連携は廃止（今後は返さない）
         
         return {
             'statusCode': 200,
