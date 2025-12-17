@@ -43,14 +43,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
   
+  // 参照データ（stores/clients/brands/services/workers）を先に揃えてからスケジュールを描画する
+  // （先にスケジュールだけ描画されて brand/client が '-' になるのを防ぐ）
   await Promise.all([
-    loadStores(), 
-    loadWorkers(), 
-    loadClients(), 
-    loadBrands(), 
-    loadServices(), 
-    loadSchedules()
+    loadStores(),
+    loadWorkers(),
+    loadClients(),
+    loadBrands(),
+    loadServices(),
   ]);
+  await loadSchedules();
   setupEventListeners();
   setupStoreSearch();
   setupCleaningItemsSearch();
