@@ -561,6 +561,21 @@ function renderTable() {
     return brand ? brand.name : '';
   }
 
+  function inferBrandFromText(text) {
+    const t = (text || '').trim();
+    if (!t) return null;
+    // 店舗名テキストに含まれるブランド名を最長一致で推定（旧データのフォールバック）
+    let best = null;
+    for (const b of allBrands) {
+      const name = (b?.name || '').trim();
+      if (!name) continue;
+      if (t.includes(name)) {
+        if (!best || name.length > (best.name || '').length) best = b;
+      }
+    }
+    return best;
+  }
+
   tbody.innerHTML = pageSchedules.map(schedule => {
     // 正規化されたスケジュールデータを使用
     const normalized = DataUtils.normalizeSchedule(schedule);
@@ -582,9 +597,21 @@ function renderTable() {
     // - 引けない場合（旧データ等）: schedule側に保存されている名称でフォールバック
     const storeFound = !!store?.id;
     const brandId = storeFound ? store.brand_id : null;
-    const brandName = storeFound ? getBrandName(brandId) : (schedule.brand_name || normalized.brand_name || '');
-    const clientId = storeFound ? (store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null)) : null;
-    const clientName = storeFound ? getClientName(clientId) : (schedule.client_name || normalized.client_name || '');
+    let brandName = storeFound ? getBrandName(brandId) : (schedule.brand_name || '');
+    let clientId = storeFound ? (store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null)) : null;
+    let clientName = storeFound ? getClientName(clientId) : (schedule.client_name || '');
+
+    // 旧データ救済: 店舗が引けず brand_name も無い場合、店舗名テキストからブランド推定
+    if (!storeFound && !brandName) {
+      const inferredBrand = inferBrandFromText(displayStoreName || schedule.store_name || '');
+      if (inferredBrand) {
+        brandName = inferredBrand.name || '';
+        clientId = inferredBrand.client_id || clientId;
+        if (!clientName && clientId) {
+          clientName = getClientName(clientId) || clientName;
+        }
+      }
+    }
     
     return `
       <tr data-id="${schedule.id}" class="${isDraft ? 'draft-row' : ''}">
