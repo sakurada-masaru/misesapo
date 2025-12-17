@@ -291,6 +291,13 @@
   color: #6b7280;
   text-transform: uppercase;
 }
+.schedule-table th .th-client {
+  color: #111827;
+}
+.schedule-table th .th-brand {
+  color: #ec4899; /* pink */
+  font-weight: 700;
+}
 .schedule-table tbody tr:hover {
   background: #fafafa;
 }
