@@ -71,6 +71,15 @@
     transition: margin-left 0.3s ease, width 0.3s ease;
   }
 
+/* 画面幅が狭い場合: サイドバー分のmargin-leftを解除して左余白崩れを防ぐ */
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 16px;
+  }
+}
+
 .sidebar.collapsed ~ .main-content,
 .sidebar.collapsed + .main-content {
     margin-left: var(--sidebar-width-collapsed) !important;
@@ -184,6 +193,64 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* カード表示（狭い画面用） */
+.schedule-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.schedule-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.schedule-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.schedule-card-id {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+.schedule-card-title {
+  font-weight: 700;
+  color: #111827;
+}
+.schedule-card-sub {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+.schedule-card-meta {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 6px 10px;
+  font-size: 0.85rem;
+  margin-top: 10px;
+}
+.schedule-card-meta .k {
+  color: #6b7280;
+}
+.schedule-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+  .schedule-table-wrapper {
+    display: none;
+  }
+  #schedule-cards {
+    display: grid !important;
+  }
 }
 .schedule-table {
   width: 100%;

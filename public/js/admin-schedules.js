@@ -566,11 +566,15 @@ function filterAndRender() {
 function renderTable() {
   if (!tbody) return;
   
+  const cardsEl = document.getElementById('schedule-cards');
   const start = (currentPage - 1) * perPage;
   const pageSchedules = filteredSchedules.slice(start, start + perPage);
 
   if (pageSchedules.length === 0) {
     tbody.innerHTML = '<tr><td colspan="10" class="loading-cell">該当するスケジュールがありません</td></tr>';
+    if (cardsEl) {
+      cardsEl.innerHTML = '<div class="schedule-card"><div class="schedule-card-title">該当するスケジュールがありません</div></div>';
+    }
     return;
   }
 
@@ -600,6 +604,78 @@ function renderTable() {
       }
     }
     return best;
+  }
+
+  // カード描画（狭い画面用）
+  if (cardsEl) {
+    cardsEl.innerHTML = pageSchedules.map(schedule => {
+      const normalized = DataUtils.normalizeSchedule(schedule);
+      const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
+      const store = DataUtils.findStore(allStores, storeId) || {};
+      const workerId = normalized.worker_id || schedule.worker_id || schedule.assigned_to;
+      const worker = allWorkers.find(w => w.id === workerId);
+      const salesId = schedule.sales_id || normalized.sales_id;
+      const sales = salesId ? allWorkers.find(w => w.id === salesId) : null;
+      const isDraft = schedule.status === 'draft';
+      const displayStoreName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
+
+      const storeFound = !!store?.id;
+      const brandId = storeFound ? store.brand_id : null;
+      let brandName = storeFound ? getBrandName(brandId) : (schedule.brand_name || '');
+      let clientId = storeFound ? (store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null)) : null;
+      let clientName = storeFound ? getClientName(clientId) : (schedule.client_name || '');
+      if (!storeFound && !brandName) {
+        const inferredBrand = inferBrandFromText(displayStoreName || schedule.store_name || '');
+        if (inferredBrand) {
+          brandName = inferredBrand.name || '';
+          clientId = inferredBrand.client_id || clientId;
+          if (!clientName && clientId) clientName = getClientName(clientId) || clientName;
+        }
+      }
+
+      const cleaningItems = schedule.cleaning_items || normalized.cleaning_items || [];
+      const itemNames = Array.isArray(cleaningItems)
+        ? cleaningItems.map(item => escapeHtml(item.name || item.title || '')).filter(Boolean)
+        : [];
+      const cleaningHtml = itemNames.length
+        ? `<div class="cleaning-tags">${itemNames.map(n => `<span class="cleaning-tag">${n}</span>`).join('')}</div>`
+        : '<span style="color:#9ca3af;">-</span>';
+
+      return `
+        <div class="schedule-card ${isDraft ? 'draft-row' : ''}" data-id="${escapeHtml(schedule.id || '')}">
+          <div class="schedule-card-head">
+            <div>
+              <div class="schedule-card-title">${escapeHtml(displayStoreName || '-')}</div>
+              <div class="schedule-card-sub">${escapeHtml(clientName || '-')}${brandName ? ` / ${escapeHtml(brandName)}` : ''}</div>
+              <div class="schedule-card-id">${escapeHtml(schedule.id || '-')}</div>
+            </div>
+            <div>
+              <span class="status-badge status-${normalized.status}">${getStatusLabel(normalized.status)}</span>
+            </div>
+          </div>
+          <div class="schedule-card-meta">
+            <div class="k">日時</div><div>${escapeHtml(formatDate(normalized.date || schedule.date || schedule.scheduled_date) || '-')}${normalized.time ? ` ${escapeHtml(normalized.time)}` : ''}</div>
+            <div class="k">営業</div><div>${sales ? `<span class="worker-avatar" title="${escapeHtml(sales.id || '')}${sales.name ? ' / ' + escapeHtml(sales.name) : ''}">${(sales.name || sales.id || '?')[0]}</span>` : '<span class="unassigned">未設定</span>'}</div>
+            <div class="k">清掃員</div><div>${worker ? escapeHtml(worker.name || '') : '<span class="unassigned">未割当</span>'}</div>
+            <div class="k">清掃内容</div><div>${cleaningHtml}</div>
+          </div>
+          <div class="schedule-card-actions">
+            ${isDraft ? `
+              <button class="action-btn assign" title="アサイン・確定（新規案件）" onclick="editSchedule('${schedule.id}')" style="background:#ffc107;color:#333">
+                <i class="fas fa-user-check"></i>
+              </button>
+            ` : `
+              <button class="action-btn edit" title="編集" onclick="editSchedule('${schedule.id}')">
+                <i class="fas fa-edit"></i>
+              </button>
+            `}
+            <button class="action-btn delete" title="削除" onclick="confirmDelete('${schedule.id}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   tbody.innerHTML = pageSchedules.map(schedule => {
