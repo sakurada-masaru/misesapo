@@ -1,5 +1,24 @@
 const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
+// キャッシュ対策:
+// 一部環境でHTML/JSが古いキャッシュのまま配信されることがあるため、
+// 初回ロード時だけ「no-store」で最新のJS本文を取得して実行する。
+// （二重ロード防止のためグローバルフラグでガード）
+if (!window.__salesSchedulesLatestLoaded) {
+  window.__salesSchedulesLatestLoaded = true;
+  fetch(`/js/sales-schedules.js?ts=${Date.now()}`, { cache: 'no-store' })
+    .then(r => r.ok ? r.text() : null)
+    .then(code => {
+      if (!code) return;
+      // 取得した最新版を実行（グローバルスコープでeval）
+      // eslint-disable-next-line no-eval
+      (0, eval)(code);
+    })
+    .catch(() => {});
+  // このファイル（キャッシュ版）の実行は止める
+  throw new Error('Reloading latest sales-schedules.js');
+}
+
 let allSchedules = [];
 let allStores = [];
 let allWorkers = [];
