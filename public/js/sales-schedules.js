@@ -107,6 +107,10 @@ async function loadStores() {
     const storesData = await response.json();
     allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
     populateStoreSelects();
+    // 参照データが揃ったら再描画（先にスケジュールだけ描画されて brand/client が '-' になるのを防ぐ）
+    if (Array.isArray(allSchedules) && allSchedules.length > 0) {
+      filterAndRender();
+    }
   } catch (error) {
     console.error('Failed to load stores:', error);
     allStores = [];
@@ -131,6 +135,9 @@ async function loadClients() {
     const response = await fetch(`${API_BASE}/clients`);
     const clientsData = await response.json();
     allClients = Array.isArray(clientsData) ? clientsData : (clientsData.items || clientsData.clients || []);
+    if (Array.isArray(allSchedules) && allSchedules.length > 0) {
+      filterAndRender();
+    }
   } catch (error) {
     console.error('Failed to load clients:', error);
     allClients = [];
@@ -142,6 +149,9 @@ async function loadBrands() {
     const response = await fetch(`${API_BASE}/brands`);
     const brandsData = await response.json();
     allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
+    if (Array.isArray(allSchedules) && allSchedules.length > 0) {
+      filterAndRender();
+    }
   } catch (error) {
     console.error('Failed to load brands:', error);
     allBrands = [];
