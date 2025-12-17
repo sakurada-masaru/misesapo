@@ -191,6 +191,18 @@ function populateSalesSelects() {
   if (salesSelectEl) {
     salesSelectEl.innerHTML = '<option value="">未設定</option>' + options;
   }
+
+  // 一覧フィルター: 営業で絞り込み（value はIDのまま、表示は名前）
+  const salesFilterEl = document.getElementById('sales-filter');
+  if (salesFilterEl) {
+    const nameOptions = sales
+      .map(w => {
+        const label = w.name ? `${w.name}${w.id ? ` (${w.id})` : ''}` : (w.id || '');
+        return `<option value="${w.id}">${escapeHtml(label)}</option>`;
+      })
+      .join('');
+    salesFilterEl.innerHTML = '<option value="">全営業</option>' + nameOptions;
+  }
 }
 
 function populateWorkerSelects() {

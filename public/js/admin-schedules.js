@@ -196,7 +196,10 @@ function populateSalesSelects() {
   const salesFilterEl = document.getElementById('sales-filter');
   if (salesFilterEl) {
     const idOptions = sales
-      .map(w => `<option value="${w.id}">${escapeHtml(w.id || '')}</option>`)
+      .map(w => {
+        const label = w.name ? `${w.name}${w.id ? ` (${w.id})` : ''}` : (w.id || '');
+        return `<option value="${w.id}">${escapeHtml(label)}</option>`;
+      })
       .join('');
     salesFilterEl.innerHTML = '<option value="">全営業</option>' + idOptions;
   }
