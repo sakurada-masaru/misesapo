@@ -1227,6 +1227,60 @@ def lambda_handler(event, context):
                 return update_client(client_id, event, headers)
             elif method == 'DELETE':
                 return delete_client(client_id, headers)
+        elif normalized_path == '/brands':
+            # ブランド一覧の取得・作成
+            if method == 'GET':
+                return get_brands(event, headers)
+            elif method == 'POST':
+                return create_brand(event, headers)
+            else:
+                return {
+                    'statusCode': 405,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                }
+        elif normalized_path.startswith('/brands/'):
+            # ブランド詳細の取得・更新・削除
+            brand_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_brand_detail(brand_id, headers)
+            elif method == 'PUT':
+                return update_brand(brand_id, event, headers)
+            elif method == 'DELETE':
+                return delete_brand(brand_id, headers)
+            else:
+                return {
+                    'statusCode': 405,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                }
+        elif normalized_path == '/stores':
+            # 店舗一覧の取得・作成
+            if method == 'GET':
+                return get_stores(event, headers)
+            elif method == 'POST':
+                return create_store(event, headers)
+            else:
+                return {
+                    'statusCode': 405,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                }
+        elif normalized_path.startswith('/stores/'):
+            # 店舗詳細の取得・更新・削除
+            store_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_store_detail(store_id, headers)
+            elif method == 'PUT':
+                return update_store(store_id, event, headers)
+            elif method == 'DELETE':
+                return delete_store(store_id, headers)
+            else:
+                return {
+                    'statusCode': 405,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                }
         elif normalized_path.startswith('/admin/cognito/users'):
             # Cognitoユーザー作成（管理者のみ）
             if method == 'POST':
