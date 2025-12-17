@@ -536,6 +536,21 @@ function renderTable() {
     return brand ? brand.name : '';
   }
 
+  function inferBrandFromText(text) {
+    const t = (text || '').trim();
+    if (!t) return null;
+    // 店舗名テキストに含まれるブランド名を最長一致で推定（旧データのフォールバック）
+    let best = null;
+    for (const b of allBrands) {
+      const name = (b?.name || '').trim();
+      if (!name) continue;
+      if (t.includes(name)) {
+        if (!best || name.length > (best.name || '').length) best = b;
+      }
+    }
+    return best;
+  }
+
   scheduleCardList.innerHTML = pageSchedules.map(schedule => {
     // 正規化されたスケジュールデータを使用
     const normalized = DataUtils.normalizeSchedule(schedule);
@@ -553,10 +568,24 @@ function renderTable() {
     const displayStoreName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
     
     // 法人名・ブランド名を取得
-    const brandId = store.brand_id;
-    const brandName = getBrandName(brandId);
-    const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null);
-    const clientName = getClientName(clientId);
+    // - schedule側に保存されている名称をまず優先（APIが返す/旧データ救済）
+    // - store_id から店舗が引ける場合は stores/brands/clients から導出
+    // - 引けない場合は店舗名テキストからブランド推定
+    const storeFound = !!store?.id;
+    const brandId = storeFound ? store.brand_id : null;
+    let brandName = escapeHtml(normalized.brand_name || schedule.brand_name || '') || (storeFound ? getBrandName(brandId) : '');
+    let clientName = escapeHtml(normalized.client_name || schedule.client_name || '') || '';
+    let clientId = storeFound ? (store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null)) : null;
+    if (!clientName && clientId) clientName = escapeHtml(getClientName(clientId) || '');
+
+    if (!storeFound && !brandName) {
+      const inferredBrand = inferBrandFromText(displayStoreName || schedule.store_name || '');
+      if (inferredBrand) {
+        brandName = escapeHtml(inferredBrand.name || '');
+        clientId = inferredBrand.client_id || clientId;
+        if (!clientName && clientId) clientName = escapeHtml(getClientName(clientId) || '');
+      }
+    }
     
     // 清掃内容を取得
     const cleaningItems = schedule.cleaning_items || normalized.cleaning_items || [];
