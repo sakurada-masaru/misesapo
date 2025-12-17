@@ -1336,14 +1336,42 @@
   const modalTitle = document.getElementById('modal-title');
   const formStatus = document.getElementById('form-status');
 
+  // IDトークン取得（Cognito/localStorageから取得）
+  async function getFirebaseIdToken() {
+    try {
+      const cognitoIdToken = localStorage.getItem('cognito_id_token');
+      if (cognitoIdToken) return cognitoIdToken;
+
+      const authData = localStorage.getItem('misesapo_auth');
+      if (authData) {
+        const parsed = JSON.parse(authData);
+        if (parsed.token) return parsed.token;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting ID token:', error);
+      return null;
+    }
+  }
+
+  async function getAuthHeaders() {
+    const idToken = await getFirebaseIdToken();
+    if (!idToken) return null;
+    return {
+      'Authorization': `Bearer ${idToken}`,
+      'Content-Type': 'application/json'
+    };
+  }
+
   // データを取得
   async function loadStores() {
     try {
+      const headers = (await getAuthHeaders()) || { 'Content-Type': 'application/json' };
       // 並列で取得
       const [storesRes, clientsRes, brandsRes] = await Promise.all([
-        fetch(`${API_BASE}/stores`).catch(() => ({ ok: false })),
-        fetch(`${API_BASE}/clients`).catch(() => ({ ok: false })),
-        fetch(`${API_BASE}/brands`).catch(() => ({ ok: false }))
+        fetch(`${API_BASE}/stores`, { headers }).catch(() => ({ ok: false })),
+        fetch(`${API_BASE}/clients`, { headers }).catch(() => ({ ok: false })),
+        fetch(`${API_BASE}/brands`, { headers }).catch(() => ({ ok: false }))
       ]);
       
       if (storesRes.ok) {
@@ -2212,6 +2240,14 @@
     try {
       formStatus.textContent = '保存中...';
       formStatus.className = 'form-status';
+
+      const authHeaders = await getAuthHeaders();
+      if (!authHeaders) {
+        formStatus.textContent = '保存に失敗しました（ログイン情報が見つかりません）';
+        formStatus.className = 'form-status error';
+        alert('認証情報が見つかりません。再ログインしてから保存してください。');
+        return;
+      }
       
       // 新規法人の作成（IDはバックエンドで生成）
       if (!clientId && newClientName) {
@@ -2223,16 +2259,17 @@
         };
         const clientRes = await fetch(`${API_BASE}/clients`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders,
           body: JSON.stringify(newClient)
         });
         if (!clientRes.ok) {
           const errorData = await clientRes.json().catch(() => ({}));
           throw new Error(errorData.error || '法人の作成に失敗しました');
         }
-        const createdClient = await clientRes.json();
+        const createdClientRes = await clientRes.json();
+        const createdClient = createdClientRes.client || createdClientRes;
         allClients.push(createdClient);
-        clientId = createdClient.id || newClient.id;
+        clientId = createdClientRes.id || createdClient.id;
       }
       
       // 新規ブランドの作成（IDはバックエンドで生成）
@@ -2248,16 +2285,17 @@
         };
         const brandRes = await fetch(`${API_BASE}/brands`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders,
           body: JSON.stringify(newBrand)
         });
         if (!brandRes.ok) {
           const errorData = await brandRes.json().catch(() => ({}));
           throw new Error(errorData.error || 'ブランドの作成に失敗しました');
         }
-        const createdBrand = await brandRes.json();
+        const createdBrandRes = await brandRes.json();
+        const createdBrand = createdBrandRes.brand || createdBrandRes;
         allBrands.push(createdBrand);
-        brandId = createdBrand.id || newBrand.id;
+        brandId = createdBrandRes.id || createdBrand.id;
       }
       
       // 店舗データ
@@ -2289,18 +2327,21 @@
       
       const response = await fetch(`${API_BASE}/stores${isNew ? '' : '/' + id}`, {
         method: isNew ? 'POST' : 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify(data)
       });
       
       if (response.ok) {
+        const storeRes = await response.json().catch(() => ({}));
+        const savedStore = storeRes.store || storeRes;
         // リスト更新
         if (isNew) {
-          allStores.unshift(data);
+          allStores.unshift(savedStore);
           
           // 招待リンク送信
           if (sendInvite) {
-            const inviteLink = `${window.location.origin}/registration/customer-complete.html?token=${data.id}`;
+            const storeIdForInvite = savedStore.id || data.id;
+            const inviteLink = `${window.location.origin}/registration/customer-complete.html?token=${storeIdForInvite}`;
             formStatus.innerHTML = `
               <div class="invite-success">
                 <div class="invite-success-header">
@@ -2330,7 +2371,7 @@
           } else {
             idx = allStores.findIndex(s => s.id === id || String(s.id) === String(id));
           }
-          if (idx >= 0) allStores[idx] = { ...allStores[idx], ...data };
+          if (idx >= 0) allStores[idx] = { ...allStores[idx], ...savedStore };
           formStatus.textContent = '保存しました';
           formStatus.className = 'form-status success';
           setTimeout(() => closeStoreDialog(), 800);
