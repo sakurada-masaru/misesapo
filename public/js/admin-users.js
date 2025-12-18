@@ -385,8 +385,8 @@
       departmentFilter.appendChild(allOption);
     }
     
-    // ユニークな部署を取得（「現場」を「OS課」に変換）
-    const departments = [...new Set(allUsers.map(u => normalizeDepartmentName(u.department)).filter(d => d && d !== '-'))].sort();
+    // ユニークな部署を取得（「現場」を「OS課」に変換し、「現場」は除外）
+    const departments = [...new Set(allUsers.map(u => normalizeDepartmentName(u.department)).filter(d => d && d !== '-' && d !== '現場'))].sort();
     
     // 部署オプションを追加
     departments.forEach(dept => {
@@ -412,8 +412,8 @@
     const usersByDepartment = {};
     for (const user of filteredUsers) {
       const dept = normalizeDepartmentName(user.department) || '未分類';
-      // 削除対象の部署はスキップ
-      if (dept === 'OS課' || dept === '経営本部') {
+      // 「現場」部署は除外（既に「OS課」に変換済み）
+      if (dept === '現場') {
         continue;
       }
       if (!usersByDepartment[dept]) {
