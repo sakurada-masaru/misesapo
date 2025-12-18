@@ -879,17 +879,23 @@
           console.error('Delete error:', error);
           errorCount++;
           
-          // CORSエラーの検出
-          const isCorsError = error.message.includes('CORS') || 
-                             error.message.includes('Failed to fetch') ||
-                             error.name === 'TypeError';
+          // CORSエラーの検出（より確実に検出）
+          const errorMessage = error.message || '';
+          const errorName = error.name || '';
+          const isCorsError = 
+            errorMessage.includes('CORS') || 
+            errorMessage.includes('Failed to fetch') ||
+            errorMessage.includes('network') ||
+            errorMessage.includes('NetworkError') ||
+            (errorName === 'TypeError' && errorMessage.includes('fetch')) ||
+            (errorName === 'TypeError' && !errorMessage); // TypeErrorでメッセージがない場合もCORSの可能性が高い
           
           if (isCorsError) {
             corsErrorCount++;
             errors.push(`${imageId} (CORSエラー)`);
             console.warn(`CORS error detected for ${imageId}. This is a backend configuration issue.`);
           } else {
-            errors.push(`${imageId} (${error.message})`);
+            errors.push(`${imageId} (${errorMessage || errorName || 'Unknown error'})`);
           }
         }
       }
