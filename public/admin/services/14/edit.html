@@ -29,6 +29,87 @@
     <link rel="stylesheet" href="/css/admin-sidebar.css" />
     <!-- DataUtils スクリプト（schedulesページで使用） -->
     <script src="/js/data_utils.js"></script>
+    <style>
+      /* 顧客ページでヘッダーを非表示 */
+      body[class*="admin-stores"] #default-header-wrapper,
+      body[class*="admin-stores"] #normal-header-wrapper,
+      body[class*="admin-stores"] header.site-header,
+      body[class*="admin-stores"] .nav-right,
+      body[class*="admin-stores"] nav[aria-label="User"],
+      body[class*="admin-stores"] nav.nav-right {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
+      }
+    </style>
+    <script>
+      // 顧客ページでnav-right要素を完全に削除
+      (function() {
+        function removeNavRight() {
+          // 顧客ページかどうかを確認
+          const isCustomersPage = document.body.classList.contains('admin-stores-v2') ||
+                                  document.querySelector('main.admin-stores-v2') ||
+                                  window.location.pathname.includes('/admin/customers');
+          
+          if (!isCustomersPage) return;
+          
+          // nav-right要素をすべて削除
+          const navRightElements = document.querySelectorAll('nav.nav-right, nav[aria-label="User"]');
+          navRightElements.forEach(el => {
+            el.remove();
+          });
+          
+          // 親要素ごと削除する場合も考慮
+          const headerElements = document.querySelectorAll('header.site-header, #default-header-wrapper');
+          headerElements.forEach(header => {
+            const navRight = header.querySelector('nav.nav-right, nav[aria-label="User"]');
+            if (navRight) {
+              navRight.remove();
+            }
+          });
+        }
+        
+        // 即座に実行
+        removeNavRight();
+        
+        // DOMContentLoaded時に実行
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', removeNavRight);
+        } else {
+          removeNavRight();
+        }
+        
+        // 動的に追加される可能性があるため、複数回実行
+        setTimeout(removeNavRight, 50);
+        setTimeout(removeNavRight, 100);
+        setTimeout(removeNavRight, 200);
+        setTimeout(removeNavRight, 500);
+        setTimeout(removeNavRight, 1000);
+        
+        // MutationObserverで動的に追加される要素も監視
+        const observer = new MutationObserver(function(mutations) {
+          removeNavRight();
+        });
+        
+        // body要素の変更を監視
+        if (document.body) {
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true
+          });
+        } else {
+          document.addEventListener('DOMContentLoaded', function() {
+            observer.observe(document.body, {
+              childList: true,
+              subtree: true
+            });
+          });
+        }
+      })();
+    </script>
   </head>
   <body class="theme-pink page-admin-services">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>

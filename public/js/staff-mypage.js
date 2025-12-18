@@ -1219,7 +1219,7 @@ function setupAttendanceToggleButton() {
       console.log('[Attendance] ローカルストレージに保存しました');
       
       // 画面をリフレッシュしてボタン状態を更新
-      setTimeout(() => {
+        setTimeout(() => {
         location.reload();
       }, 500);
     } else {

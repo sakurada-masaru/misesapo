@@ -205,7 +205,7 @@ function setupStoreSearch() {
     if (emailEl) emailEl.value = email || '';
     if (contactEl) contactEl.value = contactPerson || '';
   }
-
+  
   function getClientName(clientId) {
     if (!clientId) return '';
     const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId));

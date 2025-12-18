@@ -46,11 +46,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 参照データ（stores/clients/brands/services/workers）を先に揃えてからスケジュールを描画する
   // （先にスケジュールだけ描画されて brand/client が '-' になるのを防ぐ）
   await Promise.all([
-    loadStores(),
-    loadWorkers(),
-    loadClients(),
-    loadBrands(),
-    loadServices(),
+    loadStores(), 
+    loadWorkers(), 
+    loadClients(), 
+    loadBrands(), 
+    loadServices(), 
   ]);
   await loadSchedules();
   setupEventListeners();
@@ -253,7 +253,7 @@ function setupStoreSearch() {
     if (emailEl) emailEl.value = email || '';
     if (contactEl) contactEl.value = contactPerson || '';
   }
-
+  
   function getClientName(clientId) {
     if (!clientId) return '';
     const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId));

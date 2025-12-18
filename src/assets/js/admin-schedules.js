@@ -336,7 +336,7 @@ function setupStoreSearch() {
       const brandName = getBrandName(brandId);
       const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null);
       const clientName = getClientName(clientId);
-
+      
       // 表示は常に「店舗名」を主にして、補足で法人/ブランドを出す（混同防止）
       const categoryLabel = category === 'client'
         ? '<span class="store-search-item-category">法人</span>'
@@ -353,7 +353,7 @@ function setupStoreSearch() {
         if (clientName) parts.push(clientName);
         sub = ` <small style="color:#6b7280;">(${escapeHtml(parts.join(' / '))})</small>`;
       }
-
+      
       return `<div class="store-search-item" data-id="${store.id}" data-name="${escapeHtml(storeName)}">${categoryLabel}${escapeHtml(storeName)}${sub}</div>`;
     }).join('');
     

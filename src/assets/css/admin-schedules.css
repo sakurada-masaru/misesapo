@@ -78,7 +78,7 @@
     width: 100% !important;
     padding: 16px;
   }
-}
+  }
 
 .sidebar.collapsed ~ .main-content,
 .sidebar.collapsed + .main-content {
