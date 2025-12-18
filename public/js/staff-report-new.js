@@ -6772,7 +6772,7 @@
     const reportId = form.dataset.reportId; // 編集モードかどうか
     const isEditMode = !!reportId;
 
-    const storeId = document.getElementById('report-store').value;
+    const storeId = document.getElementById('report-store')?.value || '';
     // 店舗名は、直接入力された場合は入力欄から、選択された場合はhiddenフィールドから取得
     const storeNameInput = document.getElementById('report-store-search')?.value.trim() || '';
     const storeNameHidden = document.getElementById('report-store-name')?.value || '';
@@ -6782,18 +6782,21 @@
     const brandNameInput = document.getElementById('report-brand-search')?.value.trim() || '';
     const brandNameHidden = document.getElementById('report-brand-name')?.value || '';
     const brandName = brandNameInput || brandNameHidden;
-    const cleaningDate = document.getElementById('report-date').value;
+    const cleaningDate = document.getElementById('report-date')?.value || '';
 
-    if (!storeId) {
-      showError('店舗を選択してください');
+    // バリデーション: 店舗名または店舗IDが必要
+    if (!storeName && !storeId) {
+      showError('店舗を選択または入力してください');
       return;
     }
 
+    // バリデーション: ブランド名が必要
     if (!brandName) {
       showError('ブランド名を入力してください');
       return;
     }
 
+    // バリデーション: 清掃日が必要
     if (!cleaningDate) {
       showError('清掃日を入力してください');
       return;
@@ -7020,6 +7023,13 @@
 
       const result = await response.json();
       console.log('[Submit] Success:', result);
+      console.log('[Submit] Report ID:', result.report_id || result.id);
+      
+      // レポートIDが返ってきているか確認
+      if (!result.report_id && !result.id) {
+        console.warn('[Submit] Warning: No report_id in response:', result);
+      }
+      
       showSuccess(isEditMode ? 'レポートを修正しました！' : 'レポートを提出しました！');
       
       // 管理画面側のレポート作成画面かどうかを判定
@@ -7052,8 +7062,11 @@
             window.close();
           }, 1500);
         } else {
-          // 清掃員側の場合はダッシュボードにリダイレクト
-        window.location.href = '/staff/dashboard';
+          // 清掃員側の場合は成功メッセージを表示してからリダイレクト
+          // 成功メッセージが表示される時間を確保（3秒）
+          setTimeout(() => {
+            window.location.href = '/staff/dashboard';
+          }, 3000);
         }
       }
 
