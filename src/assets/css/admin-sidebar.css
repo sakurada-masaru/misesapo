@@ -279,6 +279,54 @@
   background: #f3f4f6;
 }
 
+/* リップルアニメーション（清掃員ページのメニューボタンと同じ効果） */
+.menu-ripple-overlay {
+  position: fixed;
+  width: 100px;
+  height: 100px;
+  background: #ffffff;
+  z-index: 99;
+  border-radius: 50%;
+  transform: scale(0);
+  pointer-events: none;
+  opacity: 0;
+  display: none;
+}
+
+.menu-ripple-overlay.animating {
+  opacity: 0.9;
+  display: block;
+  animation: rippleExpand 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.menu-ripple-overlay.collapsing {
+  opacity: 0.9;
+  display: block;
+  animation: rippleSlideUp 0.3s ease forwards;
+}
+
+@keyframes rippleExpand {
+  0% {
+    transform: scale(0);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(25);
+    opacity: 0.9;
+  }
+}
+
+@keyframes rippleSlideUp {
+  0% {
+    transform: translateY(0) scale(25);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-100vh) scale(25);
+    opacity: 0;
+  }
+}
+
 /* レスポンシブ */
 @media (max-width: 768px) {
   .mobile-menu-button {

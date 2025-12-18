@@ -113,21 +113,97 @@
       });
     }
 
+    // リップルオーバーレイを作成（清掃員ページのメニューボタンと同じ効果）
+    let rippleOverlay = document.querySelector('.menu-ripple-overlay');
+    if (!rippleOverlay) {
+      rippleOverlay = document.createElement('div');
+      rippleOverlay.className = 'menu-ripple-overlay';
+      document.body.appendChild(rippleOverlay);
+    }
+
+    // リップルオーバーレイをリセットする関数
+    function resetRippleOverlay() {
+      if (rippleOverlay) {
+        rippleOverlay.classList.remove('animating', 'collapsing');
+        rippleOverlay.style.display = 'none';
+        rippleOverlay.style.opacity = '0';
+        rippleOverlay.style.transform = 'scale(0)';
+        rippleOverlay.style.top = '';
+        rippleOverlay.style.left = '';
+        rippleOverlay.style.width = '';
+        rippleOverlay.style.height = '';
+      }
+    }
+
     // モバイルメニューボタンのイベント
     if (mobileMenuButton) {
       mobileMenuButton.addEventListener('click', function() {
-        sidebar.classList.toggle('open');
-        if (sidebarOverlay) {
-          sidebarOverlay.classList.toggle('active');
-        }
-        // ボタンのアイコンを変更
-        const icon = mobileMenuButton.querySelector('i');
-        if (icon) {
-          if (sidebar.classList.contains('open')) {
-            icon.className = 'fas fa-times';
-          } else {
+        const isOpening = !sidebar.classList.contains('open');
+        
+        if (isOpening) {
+          // メニューを開く：リップルアニメーション開始
+          rippleOverlay.classList.remove('collapsing');
+          
+          // ボタンの位置を取得
+          const buttonRect = mobileMenuButton.getBoundingClientRect();
+          const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+          const buttonCenterY = buttonRect.top + buttonRect.height / 2;
+          
+          // リップルオーバーレイの初期サイズ
+          const initialSize = 100;
+          
+          // リップルオーバーレイの位置をボタンの中心に設定
+          rippleOverlay.style.width = initialSize + 'px';
+          rippleOverlay.style.height = initialSize + 'px';
+          rippleOverlay.style.left = (buttonCenterX - initialSize / 2) + 'px';
+          rippleOverlay.style.top = (buttonCenterY - initialSize / 2) + 'px';
+          rippleOverlay.style.transform = 'scale(0)';
+          rippleOverlay.style.transformOrigin = 'center center';
+          rippleOverlay.style.display = 'block';
+          rippleOverlay.style.opacity = '0';
+          
+          // リップルアニメーション開始
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              rippleOverlay.classList.add('animating');
+            });
+          });
+          
+          // アニメーション完了後にサイドバーを表示
+          setTimeout(() => {
+            sidebar.classList.add('open');
+            if (sidebarOverlay) {
+              sidebarOverlay.classList.add('active');
+            }
+            // ボタンのアイコンを変更
+            const icon = mobileMenuButton.querySelector('i');
+            if (icon) {
+              icon.className = 'fas fa-times';
+            }
+          }, 400); // リップルアニメーションの時間（0.4s）
+        } else {
+          // メニューを閉じる：リップルアニメーションで閉じる
+          sidebar.classList.remove('open');
+          if (sidebarOverlay) {
+            sidebarOverlay.classList.remove('active');
+          }
+          
+          // リップルオーバーレイを上にスライドアウト
+          if (rippleOverlay.classList.contains('animating')) {
+            rippleOverlay.classList.remove('animating');
+            rippleOverlay.classList.add('collapsing');
+          }
+          
+          // ボタンのアイコンを変更
+          const icon = mobileMenuButton.querySelector('i');
+          if (icon) {
             icon.className = 'fas fa-bars';
           }
+          
+          // アニメーション完了後にリセット
+          setTimeout(() => {
+            resetRippleOverlay();
+          }, 300); // アニメーション時間（0.3s）
         }
       });
     }
