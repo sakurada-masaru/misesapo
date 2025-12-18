@@ -852,24 +852,37 @@
       
       let successCount = 0;
       let errorCount = 0;
+      const errors = [];
       
       for (const imageId of selected) {
         try {
+          const token = await getFirebaseIdToken();
           const response = await fetch(`${REPORT_API}/staff/report-images/${imageId}`, {
             method: 'DELETE',
             headers: {
-              'Authorization': `Bearer ${await getFirebaseIdToken()}`
-            }
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            mode: 'cors'
           });
           
           if (response.ok) {
             successCount++;
           } else {
+            const errorText = await response.text().catch(() => '');
+            console.error(`Delete failed for ${imageId}:`, response.status, errorText);
             errorCount++;
+            errors.push(`${imageId} (${response.status})`);
           }
         } catch (error) {
           console.error('Delete error:', error);
           errorCount++;
+          errors.push(`${imageId} (${error.message})`);
+          
+          // CORSエラーの場合は特別なメッセージを表示
+          if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+            console.warn('CORS error detected. This may be a backend configuration issue.');
+          }
         }
       }
       
@@ -877,9 +890,13 @@
       loadReportImages();
       
       if (successCount > 0) {
-        alert(`${successCount}件の画像を削除しました${errorCount > 0 ? `（${errorCount}件失敗）` : ''}`);
+        if (errorCount > 0) {
+          alert(`${successCount}件の画像を削除しました。${errorCount}件の削除に失敗しました。\n\n失敗した画像ID:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n...他${errors.length - 5}件` : ''}\n\nCORSエラーの場合は、バックエンドのAPI Gateway設定を確認してください。`);
+        } else {
+          alert(`${successCount}件の画像を削除しました`);
+        }
       } else {
-        alert('削除に失敗しました');
+        alert(`削除に失敗しました。\n\nエラー詳細:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n...他${errors.length - 5}件` : ''}\n\nCORSエラーの場合は、バックエンドのAPI Gateway設定を確認してください。`);
       }
     }
     

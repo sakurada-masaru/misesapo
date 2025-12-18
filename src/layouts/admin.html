@@ -29,8 +29,11 @@
       // 顧客ページでnav-right要素を完全に削除
       (function() {
         function removeNavRight() {
+          // document.bodyが存在しない場合はスキップ
+          if (!document.body) return;
+          
           // 顧客ページかどうかを確認
-          const isCustomersPage = document.body.classList.contains('admin-stores-v2') ||
+          const isCustomersPage = document.body.classList && document.body.classList.contains('admin-stores-v2') ||
                                   document.querySelector('main.admin-stores-v2') ||
                                   window.location.pathname.includes('/admin/customers');
           
