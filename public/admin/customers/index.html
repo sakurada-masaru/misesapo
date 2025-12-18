@@ -29,6 +29,15 @@
     <link rel="stylesheet" href="/css/admin-sidebar.css" />
     <!-- DataUtils スクリプト（schedulesページで使用） -->
     <script src="/js/data_utils.js"></script>
+    <style>
+      /* 顧客ページでヘッダーを非表示 */
+      body[class*="admin-stores"] #default-header-wrapper,
+      body[class*="admin-stores"] #normal-header-wrapper,
+      body[class*="admin-stores"] header.site-header,
+      body[class*="admin-stores"] .nav-right {
+        display: none !important;
+      }
+    </style>
   </head>
   <body class="theme-pink ">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
