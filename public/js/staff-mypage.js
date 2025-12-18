@@ -1218,30 +1218,10 @@ function setupAttendanceToggleButton() {
       localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
       console.log('[Attendance] ローカルストレージに保存しました');
       
-      // APIから最新のデータを再取得して反映
-      await loadAttendanceRecords();
-      console.log('[Attendance] APIから最新データを再取得しました');
-      
-      // DOM要素が存在することを確認してから表示を更新
-      const statusIndicator = document.getElementById('status-indicator');
-      if (statusIndicator) {
-        renderAttendanceStatus();
-        calculateMonthlyStats();
-        renderCalendar();
-      } else {
-        // DOM要素がまだ存在しない場合は、少し遅延してから再試行
-        setTimeout(() => {
-          renderAttendanceStatus();
-          calculateMonthlyStats();
-          renderCalendar();
-        }, 100);
-      }
-      
-      console.log('[Attendance] マイページの表示を更新しました。出勤履歴ページでも反映されているか確認してください。');
-      
-      // 成功時もボタンを再有効化
-      newToggleBtn.disabled = false;
-      newToggleBtn.innerHTML = originalText;
+      // 画面をリフレッシュしてボタン状態を更新
+      setTimeout(() => {
+        location.reload();
+      }, 500);
     } else {
       // ボタンを再有効化
       newToggleBtn.disabled = false;
