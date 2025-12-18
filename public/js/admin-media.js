@@ -94,6 +94,9 @@
       }
     }
     
+    // 選択状態を管理
+    let selectedServiceImages = new Set();
+    
     function renderServiceImages(imagePaths) {
       const grid = document.getElementById('images-grid');
       if (!grid) return;
@@ -122,8 +125,12 @@
         const fileName = path.split('/').pop();
         const fileExt = fileName.split('.').pop().toLowerCase();
         const resolvedPath = resolvePath(path);
+        const isSelected = selectedServiceImages.has(path);
         return `
-          <div class="image-card" data-path="${path}">
+          <div class="image-card ${isSelected ? 'selected' : ''}" data-path="${path}">
+            <div class="image-card-checkbox ${isSelected ? 'checked' : ''}" data-path="${path}">
+              ${isSelected ? '<i class="fas fa-check"></i>' : ''}
+            </div>
             <div class="image-card-thumb">
               <img src="${resolvedPath}" alt="${fileName}" loading="lazy" onerror="this.src='${resolvePath('/images/service-300x200.svg')}'" />
               <div class="image-card-overlay">
@@ -139,8 +146,20 @@
         `;
       }).join('');
       
+      // チェックボックスのイベントリスナー
+      document.querySelectorAll('.image-card-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const path = this.dataset.path;
+          toggleServiceImageSelection(path);
+        });
+      });
+      
       document.querySelectorAll('.image-card').forEach(card => {
-        card.addEventListener('click', function() {
+        card.addEventListener('click', function(e) {
+          // チェックボックスがクリックされた場合は無視
+          if (e.target.closest('.image-card-checkbox')) return;
+          
           const path = this.dataset.path;
           const fileName = path.split('/').pop();
           
@@ -158,7 +177,60 @@
           openServiceImageModal(path, fileName);
         });
       });
+      
+      updateServiceSelectionToolbar();
     }
+    
+    function toggleServiceImageSelection(path) {
+      if (selectedServiceImages.has(path)) {
+        selectedServiceImages.delete(path);
+      } else {
+        selectedServiceImages.add(path);
+      }
+      renderServiceImages(Array.from(document.querySelectorAll('.image-card')).map(card => card.dataset.path));
+    }
+    
+    function selectAllServiceImages() {
+      const allPaths = Array.from(document.querySelectorAll('.image-card')).map(card => card.dataset.path);
+      allPaths.forEach(path => selectedServiceImages.add(path));
+      renderServiceImages(allPaths);
+    }
+    
+    function deselectAllServiceImages() {
+      selectedServiceImages.clear();
+      const allPaths = Array.from(document.querySelectorAll('.image-card')).map(card => card.dataset.path);
+      renderServiceImages(allPaths);
+    }
+    
+    function updateServiceSelectionToolbar() {
+      const toolbar = document.getElementById('service-selection-toolbar');
+      const countEl = document.getElementById('service-selected-count');
+      
+      if (toolbar && countEl) {
+        const count = selectedServiceImages.size;
+        countEl.textContent = count;
+        toolbar.style.display = count > 0 ? 'flex' : 'none';
+      }
+    }
+    
+    async function deleteSelectedServiceImages() {
+      const selected = Array.from(selectedServiceImages);
+      if (selected.length === 0) return;
+      
+      if (!confirm(`${selected.length}件の画像を削除しますか？この操作は取り消せません。`)) {
+        return;
+      }
+      
+      // TODO: API呼び出しで削除を実装
+      // 現在は選択をクリアするだけ
+      selectedServiceImages.clear();
+      loadServiceImages();
+      alert(`${selected.length}件の画像を削除しました`);
+    }
+    
+    document.getElementById('btn-select-all-service')?.addEventListener('click', selectAllServiceImages);
+    document.getElementById('btn-deselect-all-service')?.addEventListener('click', deselectAllServiceImages);
+    document.getElementById('btn-delete-selected-service')?.addEventListener('click', deleteSelectedServiceImages);
     
     function openServiceImageModal(path, fileName) {
       const modal = document.getElementById('image-modal');
@@ -654,19 +726,27 @@
       }
     }
 
+    // 選択状態を管理
+    let selectedReportImages = new Set();
+    
     function renderReportImages() {
       const grid = document.getElementById('report-media-grid');
       if (!grid) return;
 
       if (currentReportImages.length === 0) {
         grid.innerHTML = '<div class="empty-state"><i class="fas fa-images"></i><p>画像がありません</p></div>';
+        updateReportSelectionToolbar();
         return;
       }
 
       grid.innerHTML = currentReportImages.map(img => {
         const categoryLabel = img.category === 'before' ? '作業前' : '作業後';
+        const isSelected = selectedReportImages.has(img.image_id);
         return `
-          <div class="report-media-item" onclick="openReportImagePreview('${img.image_id}', '${img.url}')">
+          <div class="report-media-item ${isSelected ? 'selected' : ''}" data-image-id="${img.image_id}">
+            <div class="report-media-item-checkbox ${isSelected ? 'checked' : ''}" data-image-id="${img.image_id}">
+              ${isSelected ? '<i class="fas fa-check"></i>' : ''}
+            </div>
             <img src="${img.url}" alt="Image" loading="lazy">
             <div class="report-media-item-category">${categoryLabel}</div>
             <div class="report-media-item-overlay">
@@ -675,7 +755,107 @@
           </div>
         `;
       }).join('');
+      
+      // チェックボックスのイベントリスナー
+      document.querySelectorAll('.report-media-item-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const imageId = this.dataset.imageId;
+          toggleReportImageSelection(imageId);
+        });
+      });
+      
+      // 画像アイテムのクリックイベント
+      document.querySelectorAll('.report-media-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+          // チェックボックスがクリックされた場合は無視
+          if (e.target.closest('.report-media-item-checkbox')) return;
+          
+          const imageId = this.dataset.imageId;
+          const image = currentReportImages.find(img => img.image_id === imageId);
+          if (image) {
+            openReportImagePreview(imageId, image.url);
+          }
+        });
+      });
+      
+      updateReportSelectionToolbar();
     }
+    
+    function toggleReportImageSelection(imageId) {
+      if (selectedReportImages.has(imageId)) {
+        selectedReportImages.delete(imageId);
+      } else {
+        selectedReportImages.add(imageId);
+      }
+      renderReportImages();
+    }
+    
+    function selectAllReportImages() {
+      currentReportImages.forEach(img => selectedReportImages.add(img.image_id));
+      renderReportImages();
+    }
+    
+    function deselectAllReportImages() {
+      selectedReportImages.clear();
+      renderReportImages();
+    }
+    
+    function updateReportSelectionToolbar() {
+      const toolbar = document.getElementById('report-selection-toolbar');
+      const countEl = document.getElementById('report-selected-count');
+      
+      if (toolbar && countEl) {
+        const count = selectedReportImages.size;
+        countEl.textContent = count;
+        toolbar.style.display = count > 0 ? 'flex' : 'none';
+      }
+    }
+    
+    async function deleteSelectedReportImages() {
+      const selected = Array.from(selectedReportImages);
+      if (selected.length === 0) return;
+      
+      if (!confirm(`${selected.length}件の画像を削除しますか？この操作は取り消せません。`)) {
+        return;
+      }
+      
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (const imageId of selected) {
+        try {
+          const response = await fetch(`${REPORT_API}/staff/report-images/${imageId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            }
+          });
+          
+          if (response.ok) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          console.error('Delete error:', error);
+          errorCount++;
+        }
+      }
+      
+      selectedReportImages.clear();
+      loadReportImages();
+      
+      if (successCount > 0) {
+        alert(`${successCount}件の画像を削除しました${errorCount > 0 ? `（${errorCount}件失敗）` : ''}`);
+      } else {
+        alert('削除に失敗しました');
+      }
+    }
+    
+    document.getElementById('btn-select-all-report')?.addEventListener('click', selectAllReportImages);
+    document.getElementById('btn-deselect-all-report')?.addEventListener('click', deselectAllReportImages);
+    document.getElementById('btn-delete-selected-report')?.addEventListener('click', deleteSelectedReportImages);
 
     window.openReportImagePreview = function(imageId, imageUrl) {
       selectedReportImageId = imageId;
@@ -696,6 +876,14 @@
           <div><strong>アップロード日時:</strong> ${new Date(image.uploaded_at).toLocaleString('ja-JP')}</div>
         `;
         modal.style.display = 'flex';
+        
+        // 削除ボタンのイベントリスナーを更新
+        const deleteBtn = document.getElementById('delete-report-image-btn');
+        if (deleteBtn) {
+          deleteBtn.onclick = () => {
+            deleteReportImage(imageId);
+          };
+        }
       }
     };
 

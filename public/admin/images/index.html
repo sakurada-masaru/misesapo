@@ -65,6 +65,7 @@
           // 親要素ごと削除する場合も考慮
           const headerElements = document.querySelectorAll('header.site-header, #default-header-wrapper');
           headerElements.forEach(header => {
+            if (!header) return; // nullチェック
             const navRight = header.querySelector('nav.nav-right, nav[aria-label="User"]');
             if (navRight) {
               navRight.remove();
@@ -284,6 +285,24 @@
             <i class="fas fa-upload"></i> 画像をアップロード
           </button>
         </div>
+        
+        <!-- 選択・削除ツールバー -->
+        <div class="selection-toolbar" id="service-selection-toolbar" style="display: none;">
+          <div class="selection-info">
+            <span id="service-selected-count">0</span>件選択中
+          </div>
+          <div class="selection-actions">
+            <button type="button" class="btn btn-outline" id="btn-select-all-service">
+              <i class="fas fa-check-square"></i> すべて選択
+            </button>
+            <button type="button" class="btn btn-outline" id="btn-deselect-all-service">
+              <i class="fas fa-square"></i> 選択解除
+            </button>
+            <button type="button" class="btn btn-danger" id="btn-delete-selected-service">
+              <i class="fas fa-trash"></i> 選択した画像を削除
+            </button>
+          </div>
+        </div>
 
         <div class="images-stats" id="images-stats">
           <div class="stat-card">
@@ -331,6 +350,24 @@
           <button class="filter-tab-btn" data-filter="before">作業前</button>
           <button class="filter-tab-btn" data-filter="after">作業後</button>
           <input type="date" id="report-media-date-filter" class="date-filter-input">
+        </div>
+        
+        <!-- 選択・削除ツールバー -->
+        <div class="selection-toolbar" id="report-selection-toolbar" style="display: none;">
+          <div class="selection-info">
+            <span id="report-selected-count">0</span>件選択中
+          </div>
+          <div class="selection-actions">
+            <button type="button" class="btn btn-outline" id="btn-select-all-report">
+              <i class="fas fa-check-square"></i> すべて選択
+            </button>
+            <button type="button" class="btn btn-outline" id="btn-deselect-all-report">
+              <i class="fas fa-square"></i> 選択解除
+            </button>
+            <button type="button" class="btn btn-danger" id="btn-delete-selected-report">
+              <i class="fas fa-trash"></i> 選択した画像を削除
+            </button>
+          </div>
         </div>
 
         <!-- 画像グリッド -->
@@ -626,12 +663,75 @@
     overflow: hidden;
     cursor: pointer;
     transition: all 0.2s;
+    position: relative;
   }
 
   .image-card:hover {
     border-color: #3b82f6;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
     transform: translateY(-2px);
+  }
+
+  .image-card.selected {
+    border-color: #3b82f6;
+    border-width: 2px;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+
+  .image-card-checkbox {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 24px;
+    height: 24px;
+    z-index: 10;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #3b82f6;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .image-card-checkbox.checked {
+    background: #3b82f6;
+    color: #fff;
+  }
+
+  .image-card-checkbox:hover {
+    background: rgba(59, 130, 246, 0.1);
+  }
+
+  .image-card-checkbox.checked:hover {
+    background: #2563eb;
+  }
+
+  .selection-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+
+  .selection-info {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .selection-info span {
+    color: #3b82f6;
+  }
+
+  .selection-actions {
+    display: flex;
+    gap: 8px;
   }
 
   .image-card-thumb {
@@ -857,6 +957,43 @@
   .report-media-item:hover {
     border-color: #FF679C;
     transform: scale(1.05);
+  }
+
+  .report-media-item.selected {
+    border-color: #FF679C;
+    border-width: 3px;
+    box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.2);
+  }
+
+  .report-media-item-checkbox {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 20px;
+    height: 20px;
+    z-index: 10;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #FF679C;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 0.75rem;
+  }
+
+  .report-media-item-checkbox.checked {
+    background: #FF679C;
+    color: #fff;
+  }
+
+  .report-media-item-checkbox:hover {
+    background: rgba(255, 103, 156, 0.1);
+  }
+
+  .report-media-item-checkbox.checked:hover {
+    background: #FF5A9A;
   }
 
   .report-media-item img {
