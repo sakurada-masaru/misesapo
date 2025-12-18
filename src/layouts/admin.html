@@ -45,6 +45,7 @@
           // 親要素ごと削除する場合も考慮
           const headerElements = document.querySelectorAll('header.site-header, #default-header-wrapper');
           headerElements.forEach(header => {
+            if (!header) return; // nullチェック
             const navRight = header.querySelector('nav.nav-right, nav[aria-label="User"]');
             if (navRight) {
               navRight.remove();

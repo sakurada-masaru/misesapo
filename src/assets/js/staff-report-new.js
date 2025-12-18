@@ -3061,12 +3061,25 @@
       `;
     }
     
-    // 重複チェック関数
+    // 処理中のファイルを追跡するセット（ファイル名+サイズの組み合わせ）
+    const processingFiles = new Set();
+    
+    // 重複チェック関数（既存のimageStockと処理中のファイルの両方をチェック）
     function isDuplicate(file) {
-      return imageStock.some(existing => 
+      const fileKey = `${file.name}_${file.size}`;
+      if (processingFiles.has(fileKey)) {
+        return true; // 既に処理中
+      }
+      const existsInStock = imageStock.some(existing => 
         existing.fileName === file.name && 
         existing.originalFileSize === file.size
       );
+      if (existsInStock) {
+        return true; // 既にストックに存在
+      }
+      // 処理中としてマーク
+      processingFiles.add(fileKey);
+      return false;
     }
     
     // バッチ処理（5枚ずつ処理）
@@ -3084,6 +3097,8 @@
             processedCount++;
             return null; // 重複している場合はスキップ
           }
+          
+          const fileKey = `${file.name}_${file.size}`;
           
           // 画像を最適化・圧縮
           const optimizedBlob = await optimizeImage(file);
@@ -3157,8 +3172,25 @@
         // IndexedDBに保存（AWSアップロード済みの場合はblobDataなしで保存）
         await saveImageToDB(imageData);
         
-        // メモリにも追加
-        imageStock.push(imageData);
+        // メモリにも追加（追加前に再度重複チェック）
+        const fileKey = `${file.name}_${file.size}`;
+        const alreadyExists = imageStock.some(existing => 
+          existing.fileName === file.name && 
+          existing.originalFileSize === file.size
+        );
+        if (!alreadyExists) {
+          imageStock.push(imageData);
+        } else {
+          // 重複していた場合は処理中のマークを削除してスキップ
+          processingFiles.delete(fileKey);
+          skippedCount++;
+          skippedFiles.push(file.name);
+          processedCount++;
+          return null;
+        }
+        
+        // 処理完了後、処理中のマークを削除
+        processingFiles.delete(fileKey);
           
           processedCount++;
           
@@ -3173,6 +3205,9 @@
           return imageData;
       } catch (error) {
         console.error('Error adding image to stock:', error);
+        // エラーが発生した場合も処理中のマークを削除
+        const fileKey = `${file.name}_${file.size}`;
+        processingFiles.delete(fileKey);
           processedCount++;
           return null;
         }
