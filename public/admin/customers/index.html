@@ -34,10 +34,43 @@
       body[class*="admin-stores"] #default-header-wrapper,
       body[class*="admin-stores"] #normal-header-wrapper,
       body[class*="admin-stores"] header.site-header,
-      body[class*="admin-stores"] .nav-right {
+      body[class*="admin-stores"] .nav-right,
+      body[class*="admin-stores"] nav[aria-label="User"],
+      body[class*="admin-stores"] nav.nav-right {
         display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
       }
     </style>
+    <script>
+      // 顧客ページでnav-right要素を完全に削除
+      (function() {
+        function removeNavRight() {
+          const navRightElements = document.querySelectorAll('nav.nav-right, nav[aria-label="User"]');
+          navRightElements.forEach(el => {
+            if (el.closest('body[class*="admin-stores"]') || 
+                document.body.classList.contains('admin-stores-v2') ||
+                document.querySelector('main.admin-stores-v2')) {
+              el.remove();
+            }
+          });
+        }
+        
+        // DOMContentLoaded時に実行
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', removeNavRight);
+        } else {
+          removeNavRight();
+        }
+        
+        // 動的に追加される可能性があるため、少し遅延して再実行
+        setTimeout(removeNavRight, 100);
+        setTimeout(removeNavRight, 500);
+      })();
+    </script>
   </head>
   <body class="theme-pink ">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
