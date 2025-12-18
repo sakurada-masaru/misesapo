@@ -2451,6 +2451,28 @@
       return `${year}-${month}-${day}`;
     }
 
+    // タブクリック処理（グローバルスコープで定義）
+    window.handleTabClick = function(tabName, url) {
+      // すべてのタブからactiveクラスを削除
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // クリックされたタブにactiveクラスを追加
+      const clickedTab = document.querySelector(`.tab[data-tab="${tabName}"]`);
+      if (clickedTab) {
+        clickedTab.classList.add('active');
+      }
+      
+      // URLが指定されている場合はページ遷移
+      if (url) {
+        window.location.href = url;
+      } else if (tabName === 'case') {
+        // 案件管理の場合は画面切り替え
+        switchScreen('case');
+      }
+    };
+
     document.addEventListener('DOMContentLoaded', async () => {
       setupTabs();
       setupSwipe();
@@ -2465,7 +2487,7 @@
     });
 
     function setupTabs() {
-      document.querySelectorAll('.tab').forEach(tab => {
+      document.querySelectorAll('.tab[data-screen]').forEach(tab => {
         tab.addEventListener('click', () => {
           const screen = tab.dataset.screen;
           switchScreen(screen);
