@@ -47,10 +47,10 @@
     <!-- 検索・フィルター -->
     <div class="search-section">
       <div class="search-row">
-        <div class="search-box">
-          <i class="fas fa-search"></i>
+      <div class="search-box">
+        <i class="fas fa-search"></i>
           <input type="text" id="search-input" placeholder="店舗名 / 住所 / 電話で検索...">
-        </div>
+      </div>
       </div>
       <div class="filter-row">
         <select id="client-filter" class="filter-select">
@@ -81,9 +81,9 @@
           <option value="id-asc">ID 昇順</option>
           <option value="id-desc">ID 降順</option>
         </select>
-        <button type="button" class="btn btn-secondary btn-sm" id="reset-filters">
-          <i class="fas fa-undo"></i> リセット
-        </button>
+      <button type="button" class="btn btn-secondary btn-sm" id="reset-filters">
+        <i class="fas fa-undo"></i> リセット
+      </button>
       </div>
     </div>
     
@@ -2047,20 +2047,47 @@
     if (!store) return;
     
     modalTitle.textContent = '顧客情報編集';
-    document.getElementById('store-id').value = store.id;
-    document.getElementById('store-company').value = store.company_name || '';
-    document.getElementById('store-contact').value = store.contact_person || '';
-    document.getElementById('store-name').value = store.name || '';
-    document.getElementById('store-postcode').value = store.postcode || '';
-    document.getElementById('store-pref').value = store.pref || '';
-    document.getElementById('store-city').value = store.city || '';
-    document.getElementById('store-address1').value = store.address1 || '';
-    document.getElementById('store-address2').value = store.address2 || '';
-    document.getElementById('store-phone').value = store.phone || '';
-    document.getElementById('store-email').value = store.email || store.report_email || '';
-    document.getElementById('store-description').value = store.description || '';
-    document.getElementById('invite-option').style.display = 'none'; // 編集時は非表示
-    document.getElementById('send-invite').checked = false;
+    const storeIdEl = document.getElementById('store-id');
+    if (storeIdEl) storeIdEl.value = store.id;
+    
+    const storeCompanyEl = document.getElementById('store-company');
+    if (storeCompanyEl) storeCompanyEl.value = store.company_name || '';
+    
+    const storeContactEl = document.getElementById('store-contact');
+    if (storeContactEl) storeContactEl.value = store.contact_person || '';
+    
+    const storeNameEl = document.getElementById('store-name');
+    if (storeNameEl) storeNameEl.value = store.name || '';
+    
+    const storePostcodeEl = document.getElementById('store-postcode');
+    if (storePostcodeEl) storePostcodeEl.value = store.postcode || '';
+    
+    const storePrefEl = document.getElementById('store-pref');
+    if (storePrefEl) storePrefEl.value = store.pref || '';
+    
+    const storeCityEl = document.getElementById('store-city');
+    if (storeCityEl) storeCityEl.value = store.city || '';
+    
+    const storeAddress1El = document.getElementById('store-address1');
+    if (storeAddress1El) storeAddress1El.value = store.address1 || '';
+    
+    const storeAddress2El = document.getElementById('store-address2');
+    if (storeAddress2El) storeAddress2El.value = store.address2 || '';
+    
+    const storePhoneEl = document.getElementById('store-phone');
+    if (storePhoneEl) storePhoneEl.value = store.phone || '';
+    
+    const storeEmailEl = document.getElementById('store-email');
+    if (storeEmailEl) storeEmailEl.value = store.email || store.report_email || '';
+    
+    const storeDescriptionEl = document.getElementById('store-description');
+    if (storeDescriptionEl) storeDescriptionEl.value = store.description || '';
+    
+    const inviteOptionEl = document.getElementById('invite-option');
+    if (inviteOptionEl) inviteOptionEl.style.display = 'none'; // 編集時は非表示
+    
+    const sendInviteEl = document.getElementById('send-invite');
+    if (sendInviteEl) sendInviteEl.checked = false;
     
     // 営業情報表示（営業からの登録の場合）
     const salesSection = document.getElementById('sales-notes-section');
