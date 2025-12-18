@@ -1521,8 +1521,8 @@
           if (filterStore) filterStore.value = '';
           if (filterDateFrom) filterDateFrom.value = '';
           if (filterDateTo) filterDateTo.value = '';
-          filterAndRender();
-        });
+        filterAndRender();
+      });
       }
 
       // モーダル内のセクション追加ボタンのイベントリスナーを設定
@@ -1554,9 +1554,9 @@
       const btnNewReport = document.getElementById('btn-new-report');
       if (btnNewReport) {
         btnNewReport.addEventListener('click', () => {
-          // PC版レポート作成画面を新規ウィンドウで開く
-          window.open('/admin/reports/new-pc.html', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
-        });
+        // PC版レポート作成画面を新規ウィンドウで開く
+        window.open('/admin/reports/new-pc.html', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+      });
       } else {
         console.warn('[AdminReports] btn-new-report button not found');
       }
@@ -3047,10 +3047,14 @@
             
             if (this.classList.contains('free-input-option')) {
               brandSearchInput.removeAttribute('readonly');
-              brandSearchInput.focus();
               document.getElementById('report-brand-modal').value = '';
               document.getElementById('report-brand-name-modal').value = '';
               brandSearchInput.value = '';
+              closeBrandModalAdmin();
+              // モーダルを閉じた後にフォーカスを設定（少し遅延させる）
+              setTimeout(() => {
+                brandSearchInput.focus();
+              }, 100);
             } else {
               document.getElementById('report-brand-modal').value = id;
               document.getElementById('report-brand-name-modal').value = name;
@@ -3095,9 +3099,15 @@
       
       brandSearchInput.addEventListener('input', function() {
         if (!this.hasAttribute('readonly')) {
-          const inputValue = this.value.trim();
-          document.getElementById('report-brand-name-modal').value = inputValue;
-          document.getElementById('report-brand-modal').value = '';
+          const inputValue = this.value;
+          const brandNameEl = document.getElementById('report-brand-name-modal');
+          const brandIdEl = document.getElementById('report-brand-modal');
+          if (brandNameEl) {
+            brandNameEl.value = inputValue;
+          }
+          if (brandIdEl) {
+            brandIdEl.value = '';
+          }
         }
       });
       
@@ -3188,10 +3198,14 @@
             
             if (this.classList.contains('free-input-option')) {
               storeSearchInput.removeAttribute('readonly');
-              storeSearchInput.focus();
               document.getElementById('report-store-modal').value = '';
               document.getElementById('report-store-name-modal').value = '';
               storeSearchInput.value = '';
+              closeStoreModalAdmin();
+              // モーダルを閉じた後にフォーカスを設定（少し遅延させる）
+              setTimeout(() => {
+                storeSearchInput.focus();
+              }, 100);
             } else {
               document.getElementById('report-store-modal').value = id || '';
               document.getElementById('report-store-name-modal').value = name || '';
@@ -3236,9 +3250,15 @@
       
       storeSearchInput.addEventListener('input', function() {
         if (!this.hasAttribute('readonly')) {
-          const inputValue = this.value.trim();
-          document.getElementById('report-store-name-modal').value = inputValue;
-          document.getElementById('report-store-modal').value = '';
+          const inputValue = this.value;
+          const storeNameEl = document.getElementById('report-store-name-modal');
+          const storeIdEl = document.getElementById('report-store-modal');
+          if (storeNameEl) {
+            storeNameEl.value = inputValue;
+          }
+          if (storeIdEl) {
+            storeIdEl.value = '';
+          }
         }
       });
       

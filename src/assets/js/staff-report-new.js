@@ -87,9 +87,19 @@
     brandSearchInput.addEventListener('input', function() {
       if (!this.hasAttribute('readonly')) {
         // 自由入力モード：ブランド名を更新
-        const inputValue = this.value.trim();
-        document.getElementById('report-brand-name').value = inputValue;
-        document.getElementById('report-brand').value = '';
+        const inputValue = this.value;
+        const brandNameEl = document.getElementById('report-brand-name');
+        const brandIdEl = document.getElementById('report-brand');
+        if (brandNameEl) {
+          brandNameEl.value = inputValue;
+        }
+        if (brandIdEl) {
+          brandIdEl.value = '';
+        }
+        // 入力状態を更新
+        if (typeof checkDetailsInputStatus === 'function') {
+          checkDetailsInputStatus();
+        }
       }
     });
     
@@ -146,9 +156,19 @@
     storeSearchInput.addEventListener('input', function() {
       if (!this.hasAttribute('readonly')) {
         // 自由入力モード：店舗名を更新
-        const inputValue = this.value.trim();
-        document.getElementById('report-store-name').value = inputValue;
-        document.getElementById('report-store').value = '';
+        const inputValue = this.value;
+        const storeNameEl = document.getElementById('report-store-name');
+        const storeIdEl = document.getElementById('report-store');
+        if (storeNameEl) {
+          storeNameEl.value = inputValue;
+        }
+        if (storeIdEl) {
+          storeIdEl.value = '';
+        }
+        // 入力状態を更新
+        if (typeof checkDetailsInputStatus === 'function') {
+          checkDetailsInputStatus();
+        }
       }
     });
     
@@ -2184,12 +2204,20 @@
         freeInputOption.addEventListener('click', function() {
           // 入力欄を編集可能にする
           brandSearchInput.removeAttribute('readonly');
-          brandSearchInput.focus();
           // ブランドIDをクリア（自由入力のため）
           document.getElementById('report-brand').value = '';
           document.getElementById('report-brand-name').value = '';
           brandSearchInput.value = '';
           closeBrandModal();
+          
+          // モーダルを閉じた後にフォーカスを設定（少し遅延させる）
+          setTimeout(() => {
+            brandSearchInput.focus();
+            // 入力状態を更新
+            if (typeof checkDetailsInputStatus === 'function') {
+              checkDetailsInputStatus();
+            }
+          }, 100);
           
           // 店舗選択を有効化
           const storeSelect = document.getElementById('report-store-select');
@@ -2250,17 +2278,32 @@
       // 初期状態はreadonly
       brandSearchInput.setAttribute('readonly', 'readonly');
       
-      // 自由入力モード時の入力処理
-      brandSearchInput.addEventListener('input', function() {
-        // readonlyが解除されている場合のみ処理（自由入力モード）
-        if (!this.hasAttribute('readonly')) {
-          const inputValue = this.value.trim();
-          // 直接入力された場合は、ブランド名のみを設定（ブランドIDは空）
-          document.getElementById('report-brand-name').value = inputValue;
-          // ブランドIDをクリア
-          document.getElementById('report-brand').value = '';
-        }
-      });
+      // 自由入力モード時の入力処理（重複登録を防ぐため、既存のリスナーを削除してから追加）
+      // initBrandSelectで既に登録されている可能性があるため、ここでは追加しない
+      // ただし、setupEventListenersが複数回呼ばれる可能性があるため、一度だけ登録する
+      if (!brandSearchInput.hasAttribute('data-free-input-listener')) {
+        brandSearchInput.setAttribute('data-free-input-listener', 'true');
+        brandSearchInput.addEventListener('input', function() {
+          // readonlyが解除されている場合のみ処理（自由入力モード）
+          if (!this.hasAttribute('readonly')) {
+            const inputValue = this.value;
+            // 直接入力された場合は、ブランド名のみを設定（ブランドIDは空）
+            const brandNameEl = document.getElementById('report-brand-name');
+            const brandIdEl = document.getElementById('report-brand');
+            if (brandNameEl) {
+              brandNameEl.value = inputValue;
+            }
+            // ブランドIDをクリア
+            if (brandIdEl) {
+              brandIdEl.value = '';
+            }
+            // 入力状態を更新
+            if (typeof checkDetailsInputStatus === 'function') {
+              checkDetailsInputStatus();
+            }
+          }
+        });
+      }
     }
 
     // 店舗セレクトボックス（モーダル方式では使用しないが、互換性のため残す）
@@ -2347,7 +2390,6 @@
           // 入力欄を編集可能にする
           if (storeSearchInput) {
             storeSearchInput.removeAttribute('readonly');
-            storeSearchInput.focus();
           }
           // 店舗IDをクリア（自由入力のため）
           document.getElementById('report-store').value = '';
@@ -2356,6 +2398,17 @@
             storeSearchInput.value = '';
           }
           closeStoreModal();
+          
+          // モーダルを閉じた後にフォーカスを設定（少し遅延させる）
+          setTimeout(() => {
+            if (storeSearchInput) {
+              storeSearchInput.focus();
+            }
+            // 入力状態を更新
+            if (typeof checkDetailsInputStatus === 'function') {
+              checkDetailsInputStatus();
+            }
+          }, 100);
         });
       }
       
