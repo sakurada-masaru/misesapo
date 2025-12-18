@@ -5151,19 +5151,20 @@ def create_cognito_user(event, headers):
         # Cognitoにユーザーを作成
         try:
             # UserAttributesを構築（空の値は除外）
+            # 注意: custom:name属性はCognito User Poolに定義されていないため、設定しない
             user_attributes = [
                 {'Name': 'email', 'Value': email},
                 {'Name': 'email_verified', 'Value': 'true'}
             ]
             
-            if name:
-                user_attributes.append({'Name': 'custom:name', 'Value': str(name)})
-            if role:
-                user_attributes.append({'Name': 'custom:role', 'Value': str(role)})
-            if department:
-                user_attributes.append({'Name': 'custom:department', 'Value': str(department)})
+            # custom:roleとcustom:departmentのみ設定（custom:nameは設定しない）
+            if role and str(role).strip():
+                user_attributes.append({'Name': 'custom:role', 'Value': str(role).strip()})
+            if department and str(department).strip():
+                user_attributes.append({'Name': 'custom:department', 'Value': str(department).strip()})
             
             print(f"Creating Cognito user: email={email}, name={name}, role={role}, department={department}")
+            print(f"UserAttributes: {user_attributes}")
             
             response = cognito_client.admin_create_user(
                 UserPoolId=COGNITO_USER_POOL_ID,
