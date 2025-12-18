@@ -235,19 +235,19 @@
 
   <!-- 下部タブバー -->
   <nav class="bottom-tabs">
-    <button class="tab" onclick="window.location.href='/staff/mypage'">
+    <button class="tab active" data-tab="mypage" onclick="handleTabClick('mypage', '/staff/mypage')">
       <i class="fas fa-user-circle"></i>
       <span>マイページ</span>
     </button>
-    <button class="tab" onclick="window.location.href='/sales/clients'">
+    <button class="tab" data-tab="clients" onclick="handleTabClick('clients', '/sales/clients')">
         <i class="fas fa-user-plus"></i>
       <span>顧客登録</span>
     </button>
-    <button class="tab" onclick="window.location.href='/sales/schedules'">
+    <button class="tab" data-tab="schedules" onclick="handleTabClick('schedules', '/sales/schedules')">
         <i class="fas fa-calendar"></i>
       <span>スケジュール</span>
     </button>
-    <button class="tab" data-screen="case">
+    <button class="tab" data-tab="case" data-screen="case" onclick="handleTabClick('case')">
         <i class="fas fa-briefcase"></i>
       <span>案件管理</span>
     </button>
@@ -2292,8 +2292,18 @@
         }
       });
       
+      // タブのアクティブ状態を更新
       tabs.forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.screen === screenName);
+        if (screenName === 'case') {
+          // 案件管理の場合はdata-screenで判定
+          tab.classList.toggle('active', tab.dataset.screen === screenName);
+        } else {
+          // その他の場合はdata-tabで判定
+          const tabName = tab.dataset.tab;
+          if (tabName) {
+            tab.classList.toggle('active', tabName === screenName);
+          }
+        }
       });
       
       // 案件管理画面に切り替えた時にタブ機能を初期化
