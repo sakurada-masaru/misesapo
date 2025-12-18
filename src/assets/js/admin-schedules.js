@@ -1053,6 +1053,17 @@ function setupEventListeners() {
           if (scheduleDialog) {
             setTimeout(() => scheduleDialog.close(), 500);
           }
+          
+          // 新規作成の場合は、適切な時間後に画面をリフレッシュ
+          if (isNew) {
+            setTimeout(() => {
+              location.reload();
+            }, 1000); // 1秒後にリフレッシュ（保存成功メッセージを表示してから）
+          } else {
+            // 編集の場合は、フィルターとレンダリングを更新
+            filterAndRender();
+            renderCalendar();
+          }
         } else {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.error || errorData.message || '保存に失敗しました');
