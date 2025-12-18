@@ -256,45 +256,9 @@
       <i class="fas fa-calendar-day"></i>
       本日の予定
     </h2>
-    <div class="schedule-timeline">
-      <div class="timeline-item completed">
-        <div class="timeline-marker completed">
-          <i class="fas fa-check"></i>
-        </div>
-        <div class="timeline-content">
-          <div class="timeline-time">09:00</div>
-          <div class="timeline-details">
-            <div class="location">新宿店</div>
-            <div class="task">通常清掃</div>
-            <span class="status-check">✓ 完了</span>
-          </div>
-        </div>
-      </div>
-      <div class="timeline-item current">
-        <div class="timeline-marker current">
-          <i class="fas fa-circle"></i>
-        </div>
-        <div class="timeline-content">
-          <div class="timeline-time">10:30</div>
-          <div class="timeline-details">
-            <div class="location">神楽坂店</div>
-            <div class="task">レンジフード洗浄、グリストラップ清掃</div>
-            <span class="status-current">進行中</span>
-          </div>
-        </div>
-      </div>
-      <div class="timeline-item upcoming">
-        <div class="timeline-marker upcoming">
-          <i class="fas fa-circle"></i>
-        </div>
-        <div class="timeline-content">
-          <div class="timeline-time">14:00</div>
-          <div class="timeline-details">
-            <div class="location">日本橋茅場町店</div>
-            <div class="task">エアコン分解洗浄</div>
-            <span class="status-upcoming">予定</span>
-          </div>
-        </div>
+    <div class="schedule-timeline" id="schedule-timeline">
+      <div class="loading-state" style="text-align: center; padding: 20px; color: #6b7280;">
+        <i class="fas fa-spinner fa-spin"></i> 読み込み中...
       </div>
     </div>
   </section>
