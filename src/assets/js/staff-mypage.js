@@ -170,7 +170,7 @@ async function loadCurrentUser() {
     }
     
     if (!userId && !userEmail) {
-      throw new Error('ログインしてください。');
+      throw new Error('ミセサポへようこそ。従業員アカウントでログインしてください。');
     }
     
     // ユーザー情報を取得（AWS APIを優先、ローカルJSONはフォールバック）
@@ -335,7 +335,7 @@ async function loadCurrentUser() {
     }
 
     if (!currentUser || !currentUser.id) {
-      throw new Error('ユーザー情報を取得できませんでした。ログインしてください。');
+      throw new Error('ユーザー情報を取得できませんでした。ミセサポの従業員ログインをお願いします。');
     }
 
     console.log('User loaded:', currentUser);
