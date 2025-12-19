@@ -205,74 +205,7 @@
   <div class="swipe-container" id="swipe-container">
     <div class="swipe-wrapper" id="swipe-wrapper">
       
-      <!-- 画面1: アクティビティ -->
-      <section class="swipe-screen" data-screen="activity">
-        <header class="screen-header gradient-header">
-    <div class="header-content">
-            <div class="greeting">こんにちは</div>
-            <div class="user-name" id="user-name">営業担当</div>
-          </div>
-          <a href="/" class="header-action">
-            <i class="fas fa-sign-out-alt"></i>
-      </a>
-        </header>
-        
-        <!-- 業務連絡通知セクション -->
-        <div class="section announcements-section" id="announcements-section" style="display: none;">
-          <div class="section-header">
-            <h2><i class="fas fa-bullhorn"></i> 業務連絡</h2>
-          </div>
-          <div class="announcements-list" id="announcements-list">
-            <div class="loading">読み込み中...</div>
-          </div>
-        </div>
-        
-        <!-- 今日のサマリー -->
-        <div class="summary-row">
-          <div class="summary-card" onclick="window.location.href='/sales/schedules'">
-            <div class="summary-icon"><i class="fas fa-calendar-check"></i></div>
-            <div class="summary-num" id="today-count">0</div>
-            <div class="summary-label">本日の予定</div>
-    </div>
-          <div class="summary-card" onclick="switchScreen('reserve')">
-            <div class="summary-icon"><i class="fas fa-clock"></i></div>
-            <div class="summary-num" id="draft-count">0</div>
-            <div class="summary-label">仮押さえ申請中</div>
-    </div>
-  </div>
-
-        <!-- 仮押さえ状況 -->
-        <div class="section" id="draft-status-section">
-          <div class="section-header">
-            <h2><i class="fas fa-clock"></i> 仮押さえ状況</h2>
-      </div>
-          <div class="draft-status-list" id="draft-status-list">
-            <div class="loading">読み込み中...</div>
-      </div>
-    </div>
-
-        <!-- 緊急対応 -->
-        <div class="section urgent-section" id="urgent-section" style="display: none;">
-          <div class="section-header">
-            <h2><i class="fas fa-exclamation-triangle"></i> 緊急対応</h2>
-            <span class="badge urgent" id="urgent-count">0</span>
-      </div>
-          <div class="urgent-list" id="urgent-list"></div>
-      </div>
-
-        <!-- 今週のスケジュール -->
-        <div class="section">
-          <div class="section-header">
-            <h2><i class="fas fa-calendar"></i> 今週の予定</h2>
-            <button type="button" class="see-all" onclick="window.location.href='/sales/schedules'">すべて見る</button>
-    </div>
-          <div class="schedule-list" id="schedule-list">
-            <div class="loading">読み込み中...</div>
-      </div>
-      </div>
-      </section>
-
-      <!-- 画面2: 顧客登録 -->
+      <!-- 画面1: 顧客登録 -->
       <section class="swipe-screen" data-screen="client">
         <header class="screen-header">
           <h1>顧客管理</h1>
@@ -494,19 +427,19 @@
 
   <!-- 下部タブバー -->
   <nav class="bottom-tabs">
-    <button class="tab active" data-screen="activity">
-      <i class="fas fa-bolt"></i>
-      <span>アクティビティ</span>
+    <button class="tab active" data-tab="mypage" onclick="handleTabClick('mypage', '/staff/mypage')">
+      <i class="fas fa-user-circle"></i>
+      <span>マイページ</span>
     </button>
-    <button class="tab" onclick="window.location.href='/sales/clients'">
+    <button class="tab" data-tab="clients" onclick="handleTabClick('clients', '/sales/clients')">
         <i class="fas fa-user-plus"></i>
       <span>顧客登録</span>
     </button>
-    <button class="tab" onclick="window.location.href='/sales/schedules'">
+    <button class="tab" data-tab="schedules" onclick="handleTabClick('schedules', '/sales/schedules')">
         <i class="fas fa-calendar"></i>
       <span>スケジュール</span>
     </button>
-    <button class="tab" data-screen="case">
+    <button class="tab" data-tab="case" data-screen="case" onclick="handleTabClick('case')">
         <i class="fas fa-briefcase"></i>
       <span>案件管理</span>
     </button>
@@ -2518,6 +2451,28 @@
       return `${year}-${month}-${day}`;
     }
 
+    // タブクリック処理（グローバルスコープで定義）
+    window.handleTabClick = function(tabName, url) {
+      // すべてのタブからactiveクラスを削除
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // クリックされたタブにactiveクラスを追加
+      const clickedTab = document.querySelector(`.tab[data-tab="${tabName}"]`);
+      if (clickedTab) {
+        clickedTab.classList.add('active');
+      }
+      
+      // URLが指定されている場合はページ遷移
+      if (url) {
+        window.location.href = url;
+      } else if (tabName === 'case') {
+        // 案件管理の場合は画面切り替え
+        switchScreen('case');
+      }
+    };
+
     document.addEventListener('DOMContentLoaded', async () => {
       setupTabs();
       setupSwipe();
@@ -2528,11 +2483,11 @@
       await loadData();
       loadServiceItems();
       renderClientList(); // 顧客一覧の初期表示
-      loadAnnouncements(); // 業務連絡を読み込み
+      // loadAnnouncements(); // アクティビティ画面は削除されたため、業務連絡の読み込みは不要
     });
 
     function setupTabs() {
-      document.querySelectorAll('.tab').forEach(tab => {
+      document.querySelectorAll('.tab[data-screen]').forEach(tab => {
         tab.addEventListener('click', () => {
           const screen = tab.dataset.screen;
           switchScreen(screen);
@@ -2551,8 +2506,18 @@
         }
       });
       
+      // タブのアクティブ状態を更新
       tabs.forEach(tab => {
+        if (screenName === 'case') {
+          // 案件管理の場合はdata-screenで判定
         tab.classList.toggle('active', tab.dataset.screen === screenName);
+        } else {
+          // その他の場合はdata-tabで判定
+          const tabName = tab.dataset.tab;
+          if (tabName) {
+            tab.classList.toggle('active', tabName === screenName);
+          }
+        }
       });
       
       // 案件管理画面に切り替えた時にタブ機能を初期化
@@ -2570,6 +2535,11 @@
       // スケジュール画面は独立したページ(/sales/schedules/)にリダイレクト
       if (screenName === 'schedule-list') {
         window.location.href = '/sales/schedules';
+        return;
+      }
+      
+      // アクティビティ画面は削除されたため、activityへの切り替えは無効
+      if (screenName === 'activity') {
         return;
       }
     }
@@ -3080,27 +3050,7 @@
           allBrands = [];
         }
         
-        // 統計更新
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayStr = formatDateToYYYYMMDD(today);
-        const todayCount = allSchedules.filter(s => {
-          const sDate = s.scheduled_date || s.date;
-          if (!sDate) return false;
-          const sDateStr = formatDateToYYYYMMDD(new Date(sDate));
-          return sDateStr === todayStr;
-        }).length;
-        document.getElementById('today-count').textContent = todayCount;
-        
-        // 仮押さえ件数（自分が申請したもの）
-        const draftSchedules = allSchedules.filter(s => s.status === 'draft');
-        document.getElementById('draft-count').textContent = draftSchedules.length;
-        
-        // スケジュール表示
-        renderSchedules();
-        
-        // 仮押さえ状況表示
-        renderDraftStatus();
+        // アクティビティ画面は削除されたため、統計更新とスケジュール表示は不要
         
         // 店舗セレクト更新
         populateStoreSelects();

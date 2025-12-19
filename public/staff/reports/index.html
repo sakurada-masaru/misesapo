@@ -194,6 +194,107 @@
 
 
 
+<link rel="stylesheet" href="/css/admin-sidebar.css">
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/js/cognito_config.js"></script>
+<script src="/js/cognito_auth.js"></script>
+<script src="/js/client_auth.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+
+<!-- モバイルメニューボタン -->
+<div class="mobile-menu-area">
+<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+  <i class="fas fa-bars"></i>
+</button>
+</div>
+
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/staff/mypage" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <!-- ロール表示 -->
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">清掃員</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/admin/dashboard" class="nav-item nav-item-admin" data-page="dashboard" data-role-required="admin,operation,general_affairs" style="display: none;">
+      <i class="fas fa-tachometer-alt"></i>
+      <span class="nav-label">管理ダッシュボード</span>
+    </a>
+    <div class="nav-divider" data-role-required="admin,operation,general_affairs" style="display: none;"></div>
+    <a href="/staff/mypage" class="nav-item" data-page="mypage">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <a href="/staff/attendance-history" class="nav-item" data-page="attendance-history">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">出勤履歴</span>
+    </a>
+    <a href="/staff/daily-reports" class="nav-item" data-page="daily-reports">
+      <i class="fas fa-edit"></i>
+      <span class="nav-label">日報</span>
+    </a>
+    <a href="/staff/schedule" class="nav-item" data-page="schedule">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/staff/work-history" class="nav-item" data-page="work-history">
+      <i class="fas fa-clipboard-list"></i>
+      <span class="nav-label">作業履歴</span>
+    </a>
+    <a href="/staff/reports/new" class="nav-item active" data-page="reports">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">レポート</span>
+    </a>
+    <a href="/wiki" class="nav-item" data-page="wiki">
+      <i class="fas fa-book-open"></i>
+      <span class="nav-label">WIKI</span>
+    </a>
+    <a href="/cleaning-manual" class="nav-item" data-page="cleaning-manual">
+      <i class="fas fa-book"></i>
+      <span class="nav-label">清掃マニュアル</span>
+    </a>
+    <a href="/staff/announcements" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">業務連絡</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/staff/mypage/settings" class="nav-item" data-page="settings">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">設定</span>
+    </a>
+    <a href="/signin" class="nav-item" data-page="signin">
+      <i class="fas fa-sign-in-alt"></i>
+      <span class="nav-label">ログイン</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="staffLogout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+    
+    <!-- マイページ編集用ボタン -->
+    <div class="nav-divider"></div>
+    <div class="sidebar-mypage-actions">
+    </div>
+  </nav>
+
+  <!-- トグルボタン -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
 <main id="main" class="container staff-reports">
   <!-- パンくずリスト -->
   <nav class="breadcrumb" aria-label="パンくずリスト">

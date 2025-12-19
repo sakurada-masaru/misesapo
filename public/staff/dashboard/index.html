@@ -256,45 +256,9 @@
       <i class="fas fa-calendar-day"></i>
       本日の予定
     </h2>
-    <div class="schedule-timeline">
-      <div class="timeline-item completed">
-        <div class="timeline-marker completed">
-          <i class="fas fa-check"></i>
-        </div>
-        <div class="timeline-content">
-          <div class="timeline-time">09:00</div>
-          <div class="timeline-details">
-            <div class="location">新宿店</div>
-            <div class="task">通常清掃</div>
-            <span class="status-check">✓ 完了</span>
-          </div>
-        </div>
-      </div>
-      <div class="timeline-item current">
-        <div class="timeline-marker current">
-          <i class="fas fa-circle"></i>
-        </div>
-        <div class="timeline-content">
-          <div class="timeline-time">10:30</div>
-          <div class="timeline-details">
-            <div class="location">神楽坂店</div>
-            <div class="task">レンジフード洗浄、グリストラップ清掃</div>
-            <span class="status-current">進行中</span>
-          </div>
-        </div>
-      </div>
-      <div class="timeline-item upcoming">
-        <div class="timeline-marker upcoming">
-          <i class="fas fa-circle"></i>
-        </div>
-        <div class="timeline-content">
-          <div class="timeline-time">14:00</div>
-          <div class="timeline-details">
-            <div class="location">日本橋茅場町店</div>
-            <div class="task">エアコン分解洗浄</div>
-            <span class="status-upcoming">予定</span>
-          </div>
-        </div>
+    <div class="schedule-timeline" id="schedule-timeline">
+      <div class="loading-state" style="text-align: center; padding: 20px; color: #6b7280;">
+        <i class="fas fa-spinner fa-spin"></i> 読み込み中...
       </div>
     </div>
   </section>
@@ -305,67 +269,18 @@
       <i class="fas fa-calendar-week"></i>
       今週の予定
     </h2>
-    <div class="week-summary">
+    <div class="week-summary" id="week-summary">
       <div class="week-stat">
-        <div class="stat-value">8</div>
+        <div class="stat-value" id="week-schedule-count">-</div>
         <div class="stat-label">件</div>
       </div>
       <div class="week-stat">
-        <div class="stat-value">6</div>
+        <div class="stat-value" id="week-store-count">-</div>
         <div class="stat-label">店舗</div>
       </div>
     </div>
     <a href="/staff/schedule" class="btn btn-outline btn-block">スケジュール一覧を見る</a>
   </section>
-
-  <!-- SP版：左下メニューボタン -->
-  <div class="fixed-menu-button" id="fixed-menu-button">
-    <div class="fixed-menu-button__circle">
-      <div class="fixed-menu-button__text">メニュー</div>
-    </div>
-  </div>
-
-  <!-- SP版：メニューパネルオーバーレイ -->
-  <div class="sp-menu-panel-overlay" id="sp-menu-panel-overlay"></div>
-
-  <!-- SP版：メニューパネル -->
-  <div class="sp-menu-panel" id="sp-menu-panel">
-    <ul class="sp-menu-list">
-      <li class="sp-menu-item">
-        <a href="/staff/dashboard" class="sp-menu-link">ダッシュボード</a>
-      </li>
-      <li class="sp-menu-item">
-        <a href="/staff/assignments" class="sp-menu-link">メディア</a>
-      </li>
-      <li class="sp-menu-item">
-        <a href="/staff/reports" class="sp-menu-link">レポート一覧</a>
-      </li>
-      <li class="sp-menu-item">
-        <a href="/staff/schedule" class="sp-menu-link">スケジュール</a>
-      </li>
-      <li class="sp-menu-item">
-        <a href="/staff/training" class="sp-menu-link">研修動画</a>
-      </li>
-      <li class="sp-menu-item">
-        <a href="/cleaning-manual" class="sp-menu-link">清掃マニュアル</a>
-      </li>
-      <li class="sp-menu-item">
-        <a href="/announcements" class="sp-menu-link">お知らせ</a>
-      </li>
-      <li class="sp-menu-item">
-        <a href="javascript:void(0);" class="sp-menu-link" id="settings-menu-link">
-          <span>設定</span>
-          <span class="sp-menu-arrow">▶</span>
-        </a>
-      </li>
-      <li class="sp-menu-item">
-        <a href="/signin" class="sp-menu-link sp-menu-link-login">ログアウト</a>
-      </li>
-    </ul>
-    <div class="sp-menu-panel-footer">
-      <button class="sp-menu-close-btn" id="sp-menu-close-btn">閉じる</button>
-    </div>
-  </div>
 
   <!-- SP版：設定パネルオーバーレイ -->
   <div class="settings-panel-overlay" id="settings-panel-overlay"></div>
@@ -376,19 +291,6 @@
       <h2 class="settings-panel-title">設定</h2>
     </div>
     <div class="settings-panel-content">
-      <div class="settings-section">
-        <h3 class="settings-section-title">メニューボタン配置切り替え</h3>
-        <div class="settings-option">
-          <label class="settings-radio-group">
-            <input type="radio" name="menu-button-position" value="left" id="menu-position-left" checked>
-            <span class="settings-radio-label">左下</span>
-          </label>
-          <label class="settings-radio-group">
-            <input type="radio" name="menu-button-position" value="right" id="menu-position-right">
-            <span class="settings-radio-label">右下</span>
-          </label>
-        </div>
-      </div>
         <div class="settings-section">
           <h3 class="settings-section-title">レイアウト変更</h3>
           <div class="settings-option">
@@ -507,337 +409,6 @@
       font-size: 1rem;
     }
 
-    /* SP版：メニューボタン（左下/右下切り替え対応） */
-    .fixed-menu-button {
-      display: block;
-      position: fixed;
-      bottom: 30px;
-      left: 30px;
-      width: 80px;
-      height: 80px;
-      z-index: 999998;
-      cursor: pointer;
-      transition: transform 0.3s ease, left 0.3s ease, right 0.3s ease;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-
-    .fixed-menu-button.position-right {
-      left: auto;
-      right: 30px;
-    }
-
-    .fixed-menu-button:hover {
-      transform: scale(1.1);
-    }
-
-    .fixed-menu-button__circle {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: #FF008C;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      box-shadow: 0 4px 12px rgba(255, 0, 140, 0.4);
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .fixed-menu-button * {
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .fixed-menu-button__circle::before {
-      content: '';
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      right: 8px;
-      bottom: 8px;
-      border: 3px solid #fff;
-      border-radius: 50%;
-      pointer-events: none;
-    }
-
-    .fixed-menu-button__text {
-      color: #fff;
-      font-size: 10px;
-      font-weight: 600;
-      text-align: center;
-      line-height: 1.3;
-    }
-
-    /* SP版：メニューパネル */
-    .sp-menu-panel {
-      display: none;
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 85vw;
-      max-width: 400px;
-      height: 100vh;
-      background: #FF6BA6;
-      box-shadow: none;
-      border-left: 4px solid rgba(255, 255, 255, 0.5);
-      z-index: 999997;
-      opacity: 0;
-      transform: translateY(-100%);
-      overflow-y: auto;
-      padding: 80px 24px 0;
-      padding-bottom: 100px; /* フッターの高さ分の余白 */
-    }
-
-    /* 左下ボタンの場合：右に展開 */
-    .sp-menu-panel.panel-right {
-      right: 0;
-      left: auto;
-      border-left: 4px solid rgba(255, 255, 255, 0.5);
-      border-right: none;
-    }
-
-    /* 右下ボタンの場合：左に展開 */
-    .sp-menu-panel.panel-left {
-      left: 0;
-      right: auto;
-      border-right: 4px solid rgba(255, 255, 255, 0.5);
-      border-left: none;
-    }
-
-    .sp-menu-panel.open {
-      display: block;
-      opacity: 1;
-      transform: translateY(0);
-      animation: panelSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    }
-    
-    .sp-menu-panel.closing {
-      opacity: 0;
-      transform: translateY(-100%);
-      animation: panelSlideOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    }
-
-    .sp-menu-panel-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(255, 255, 255, 0.5);
-      z-index: 999996;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .sp-menu-panel-overlay.open {
-      display: block;
-      opacity: 1;
-    }
-
-    /* 白の円形拡大アニメーション */
-    .menu-ripple-overlay {
-      position: fixed;
-      width: 100px;
-      height: 100px;
-      background: #ffffff;
-      z-index: 999995;
-      border-radius: 50%;
-      transform: scale(0);
-      pointer-events: none;
-      opacity: 0;
-      display: none;
-    }
-
-    .menu-ripple-overlay.animating {
-      opacity: 0.9;
-      display: block;
-      animation: rippleExpand 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    }
-    
-    .menu-ripple-overlay.collapsing {
-      opacity: 0.9;
-      display: block;
-      animation: rippleSlideUp 0.3s ease forwards;
-    }
-
-    @keyframes rippleExpand {
-      0% {
-        transform: scale(0);
-        opacity: 0.9;
-      }
-      100% {
-        transform: scale(25);
-        opacity: 0.9;
-      }
-    }
-    
-    @keyframes rippleSlideUp {
-      0% {
-        transform: translateY(0) scale(25);
-        opacity: 0.9;
-      }
-      100% {
-        transform: translateY(-100vh) scale(25);
-        opacity: 0;
-      }
-    }
-
-    .sp-menu-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .sp-menu-item {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      opacity: 0;
-      transform: translateY(-10px);
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-    
-    .sp-menu-panel.open .sp-menu-item {
-      opacity: 0;
-      animation: menuItemFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    }
-    
-    .sp-menu-panel.closing .sp-menu-item {
-      animation: menuItemFadeOut 0.3s ease forwards;
-    }
-    
-    @keyframes panelSlideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-100%);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    @keyframes panelSlideOut {
-      from {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      to {
-        opacity: 0;
-        transform: translateY(-100%);
-      }
-    }
-    
-    @keyframes menuItemFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    @keyframes menuItemFadeOut {
-      from {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      to {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-    }
-    
-    /* 各メニュー項目に時間差を設定（開く時：パネル展開完了後から上から順） */
-    .sp-menu-panel.open .sp-menu-item:nth-child(1) { animation-delay: 0.5s; }
-    .sp-menu-panel.open .sp-menu-item:nth-child(2) { animation-delay: 0.55s; }
-    .sp-menu-panel.open .sp-menu-item:nth-child(3) { animation-delay: 0.6s; }
-    .sp-menu-panel.open .sp-menu-item:nth-child(4) { animation-delay: 0.65s; }
-    .sp-menu-panel.open .sp-menu-item:nth-child(5) { animation-delay: 0.7s; }
-    .sp-menu-panel.open .sp-menu-item:nth-child(6) { animation-delay: 0.75s; }
-    .sp-menu-panel.open .sp-menu-item:nth-child(7) { animation-delay: 0.8s; }
-    .sp-menu-panel.open .sp-menu-item:nth-child(8) { animation-delay: 0.85s; }
-    
-    /* 各メニュー項目に時間差を設定（閉じる時：下から順、逆順） */
-    .sp-menu-panel.closing .sp-menu-item:nth-last-child(1) { animation-delay: 0.05s; }
-    .sp-menu-panel.closing .sp-menu-item:nth-last-child(2) { animation-delay: 0.1s; }
-    .sp-menu-panel.closing .sp-menu-item:nth-last-child(3) { animation-delay: 0.15s; }
-    .sp-menu-panel.closing .sp-menu-item:nth-last-child(4) { animation-delay: 0.2s; }
-    .sp-menu-panel.closing .sp-menu-item:nth-last-child(5) { animation-delay: 0.25s; }
-    .sp-menu-panel.closing .sp-menu-item:nth-last-child(6) { animation-delay: 0.3s; }
-    .sp-menu-panel.closing .sp-menu-item:nth-last-child(7) { animation-delay: 0.35s; }
-    .sp-menu-panel.closing .sp-menu-item:nth-last-child(8) { animation-delay: 0.4s; }
-
-    .sp-menu-item:last-child {
-      border-bottom: none;
-    }
-
-    .sp-menu-link {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 0;
-      color: #ffffff;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .sp-menu-link:hover {
-      color: #ffffff;
-      opacity: 0.8;
-    }
-
-    .sp-menu-link-login {
-      background-color: #ffffff;
-      color: #FF679C !important;
-      padding: 14px 20px;
-      border-radius: 8px;
-      justify-content: center;
-      text-align: center;
-      margin: 8px 0;
-      border: 2px solid #FF679C;
-    }
-
-    .sp-menu-arrow {
-      font-size: 12px;
-      transition: transform 0.3s ease;
-    }
-
-    /* SP版：メニューパネルフッター */
-    .sp-menu-panel-footer {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 16px 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(51, 51, 51, 0.95);
-    }
-
-    .sp-menu-close-btn {
-      width: 100%;
-      padding: 14px 20px;
-      background-color: rgba(255, 255, 255, 0.1);
-      color: #ffffff;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-align: center;
-    }
-
-    .sp-menu-close-btn:hover {
-      background-color: rgba(255, 255, 255, 0.2);
-      border-color: rgba(255, 255, 255, 0.5);
-    }
 
     /* SP版：設定パネル */
     .settings-panel {
@@ -1282,43 +853,6 @@
       border-top-color: #4b5563;
     }
 
-    body.dark-mode .sp-menu-panel-overlay {
-      background: rgba(0, 0, 0, 0.5);
-    }
-
-    body.dark-mode .sp-menu-panel-footer {
-      background: rgba(45, 55, 72, 0.95);
-      border-top-color: rgba(255, 255, 255, 0.1);
-    }
-
-    body.dark-mode .sp-menu-close-btn {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: #e2e8f0;
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    body.dark-mode .sp-menu-close-btn:hover {
-      background-color: rgba(255, 255, 255, 0.2);
-      border-color: rgba(255, 255, 255, 0.4);
-    }
-
-    @media (min-width: 769px) {
-      .fixed-menu-button {
-        bottom: 50px;
-        left: 50px;
-        width: 150px;
-        height: 150px;
-      }
-
-      .fixed-menu-button.position-right {
-        left: auto;
-        right: 50px;
-      }
-
-      .fixed-menu-button__text {
-        font-size: 14px;
-      }
-    }
     .dashboard-section {
       margin-bottom: 24px;
       background: #ffffff;
@@ -1851,154 +1385,11 @@
   </style>
 
   <script>
-    // SP版：メニューボタンとメニューパネルの制御
-    (function() {
-      const menuButton = document.getElementById('fixed-menu-button');
-      const menuPanel = document.getElementById('sp-menu-panel');
-      const menuOverlay = document.getElementById('sp-menu-panel-overlay');
-      
-      if (!menuButton || !menuPanel || !menuOverlay) return;
-      
-      // リップルオーバーレイを作成
-      let rippleOverlay = document.querySelector('.menu-ripple-overlay');
-      if (!rippleOverlay) {
-        rippleOverlay = document.createElement('div');
-        rippleOverlay.className = 'menu-ripple-overlay';
-        document.body.appendChild(rippleOverlay);
-      }
-
-      // メニューパネルとリップルオーバーレイを完全にリセットする関数（グローバルスコープで使用可能にする）
-      window.resetMenuPanel = function() {
-        // メニューパネルの状態をリセット
-        if (menuPanel) {
-          menuPanel.classList.remove('open', 'closing');
-        }
-        if (menuOverlay) {
-          menuOverlay.classList.remove('open');
-        }
-        // リップルオーバーレイをリセット
-        if (rippleOverlay) {
-          rippleOverlay.classList.remove('animating', 'collapsing');
-          rippleOverlay.style.display = 'none';
-          rippleOverlay.style.opacity = '0';
-          rippleOverlay.style.transform = 'scale(0)';
-          rippleOverlay.style.top = '';
-          rippleOverlay.style.left = '';
-          rippleOverlay.style.width = '';
-          rippleOverlay.style.height = '';
-        }
-        document.body.style.overflow = '';
-      };
-
-      // 後方互換性のため、resetRippleOverlayも残す
-      window.resetRippleOverlay = window.resetMenuPanel;
-      
-      // メニューの開閉
-      function toggleMenu() {
-        const isOpen = menuPanel.classList.contains('open');
-        if (isOpen) {
-          closeMenu();
-        } else {
-          openMenu();
-        }
-      }
-      
-      function openMenu() {
-        // 既に開いている場合は何もしない
-        if (menuPanel.classList.contains('open')) {
-          return;
-        }
-        
-        // 閉じている最中の場合は、まず完全にリセット
-        if (menuPanel.classList.contains('closing')) {
-          window.resetMenuPanel();
-          // リセット後に少し待ってから開く
-          setTimeout(() => {
-            openMenu();
-          }, 50);
-          return;
-        }
-        
-        // メニューパネルとリップルオーバーレイの状態をクリア
-        menuPanel.classList.remove('closing');
-        rippleOverlay.classList.remove('animating', 'collapsing');
-        
-        // ボタンの位置を取得
-        const buttonRect = menuButton.getBoundingClientRect();
-        const buttonCenterX = buttonRect.left + buttonRect.width / 2;
-        const buttonCenterY = buttonRect.top + buttonRect.height / 2;
-        
-        // リップルオーバーレイの初期サイズ（ボタンと同じサイズ）
-        const initialSize = 100;
-        
-        // リップルオーバーレイの位置をボタンの中心に設定
-        rippleOverlay.style.width = initialSize + 'px';
-        rippleOverlay.style.height = initialSize + 'px';
-        rippleOverlay.style.left = (buttonCenterX - initialSize / 2) + 'px';
-        rippleOverlay.style.top = (buttonCenterY - initialSize / 2) + 'px';
-        rippleOverlay.style.transform = 'scale(0)';
-        rippleOverlay.style.transformOrigin = 'center center';
-        rippleOverlay.style.display = 'block';
-        rippleOverlay.style.opacity = '0';
-        
-        // リップルアニメーション開始（次のフレームで開始）
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            rippleOverlay.classList.add('animating');
-          });
-        });
-        
-        // アニメーション完了後にパネルを表示
-        setTimeout(() => {
-          // 再度状態を確認（閉じられている場合は何もしない）
-          if (!menuPanel.classList.contains('closing')) {
-            menuPanel.classList.add('open');
-            menuOverlay.classList.add('open');
-            document.body.style.overflow = 'hidden';
-          }
-        }, 400); // リップルアニメーションの時間（0.4s）
-      }
-      
-      function closeMenu() {
-        // 閉じるアニメーション開始
-        menuPanel.classList.remove('open');
-        menuPanel.classList.add('closing');
-        menuOverlay.classList.remove('open');
-        
-        // リップルオーバーレイを上にスライドアウト
-        if (rippleOverlay.classList.contains('animating')) {
-          rippleOverlay.classList.remove('animating');
-          rippleOverlay.classList.add('collapsing');
-        }
-        
-        // アニメーション完了後にリセット
-        setTimeout(() => {
-          window.resetMenuPanel();
-          document.body.style.overflow = '';
-        }, 300); // アニメーション時間（0.3s）
-      }
-      
-      // メニューボタンのクリックイベント
-      menuButton.addEventListener('click', toggleMenu);
-      
-      // オーバーレイのクリックイベント
-      menuOverlay.addEventListener('click', closeMenu);
-      
-      // メニュー内のリンクをクリックしたらメニューを閉じる
-      menuPanel.querySelectorAll('a[href^="/"]').forEach(link => {
-        link.addEventListener('click', function() {
-          if (this.getAttribute('href') !== 'javascript:void(0);') {
-            closeMenu();
-          }
-        });
-      });
-
-      // メニューパネルの閉じるボタン
-      const menuCloseBtn = document.getElementById('sp-menu-close-btn');
-      if (menuCloseBtn) {
-        menuCloseBtn.addEventListener('click', closeMenu);
-      }
-    })();
+    // メニューパネルリセット関数（設定パネル用に残す）
+    window.resetMenuPanel = function() {
+      // 何もしない（メニューパネルは削除済み）
+    };
+    window.resetRippleOverlay = window.resetMenuPanel;
 
     // 設定パネルの制御
     (function() {
@@ -2011,24 +1402,10 @@
 
       // グローバルスコープで設定パネルを開く関数を定義
       window.openSettingsPanel = function() {
-        // メニューパネルを完全に閉じてリセット
-        if (window.resetMenuPanel) {
-          window.resetMenuPanel();
-        }
-        
-        // 現在のメニューボタンの位置を取得して、設定パネルの展開方向を設定
-        const menuButton = document.getElementById('fixed-menu-button');
-        const currentPosition = localStorage.getItem('staff-menu-button-position') || 'left';
-        settingsPanel.classList.remove('panel-left', 'panel-right');
-        if (currentPosition === 'right') {
-          settingsPanel.classList.add('panel-right'); // 右下ボタン → 右に展開（メニューパネルと逆）
-        } else {
-          settingsPanel.classList.add('panel-left'); // 左下ボタン → 左に展開（メニューパネルと逆）
-        }
-        
-        // 設定パネルを開く（少し待ってから開く）
+        // 設定パネルを開く
+        settingsPanel.classList.remove('closing', 'panel-left', 'panel-right');
+        settingsPanel.classList.add('panel-right'); // デフォルトで右から展開
         setTimeout(() => {
-          settingsPanel.classList.remove('closing');
           settingsPanel.classList.add('open');
           settingsOverlay.classList.add('open');
           document.body.style.overflow = 'hidden';
@@ -2054,14 +1431,6 @@
         }, 300);
       }
 
-      // 設定メニューリンクのクリックイベント
-      if (settingsMenuLink) {
-        settingsMenuLink.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          window.openSettingsPanel();
-        });
-      }
 
       // 閉じるボタンのクリックイベント（アニメーションをリセット）
       settingsBack.addEventListener('click', function() {
@@ -2073,66 +1442,6 @@
         closeSettingsPanel(false);
       });
 
-      // メニューパネルと設定パネルの展開方向を更新する関数
-      function updatePanelPosition(position) {
-        const menuPanel = document.getElementById('sp-menu-panel');
-        if (menuPanel) {
-          menuPanel.classList.remove('panel-left', 'panel-right');
-          if (position === 'right') {
-            menuPanel.classList.add('panel-left'); // 右下ボタン → 左に展開
-          } else {
-            menuPanel.classList.add('panel-right'); // 左下ボタン → 右に展開
-          }
-        }
-        if (settingsPanel) {
-          settingsPanel.classList.remove('panel-left', 'panel-right');
-          if (position === 'right') {
-            settingsPanel.classList.add('panel-right'); // 右下ボタン → 右に展開（メニューパネルと逆）
-          } else {
-            settingsPanel.classList.add('panel-left'); // 左下ボタン → 左に展開（メニューパネルと逆）
-          }
-        }
-      }
-
-      // メニューボタン配置切り替え
-      const menuPositionLeft = document.getElementById('menu-position-left');
-      const menuPositionRight = document.getElementById('menu-position-right');
-      const menuButton = document.getElementById('fixed-menu-button');
-
-      // 保存された設定を読み込む
-      const savedPosition = localStorage.getItem('staff-menu-button-position') || 'left';
-      if (savedPosition === 'right') {
-        if (menuPositionRight) menuPositionRight.checked = true;
-        if (menuButton) {
-          menuButton.classList.add('position-right');
-        }
-      } else {
-        if (menuPositionLeft) menuPositionLeft.checked = true;
-        if (menuButton) {
-          menuButton.classList.remove('position-right');
-        }
-      }
-      // 初期状態でパネルの展開方向を設定
-      updatePanelPosition(savedPosition);
-
-      // ラジオボタンの変更イベント
-      if (menuPositionLeft && menuPositionRight && menuButton) {
-        menuPositionLeft.addEventListener('change', function() {
-          if (this.checked) {
-            menuButton.classList.remove('position-right');
-            localStorage.setItem('staff-menu-button-position', 'left');
-            updatePanelPosition('left');
-          }
-        });
-
-        menuPositionRight.addEventListener('change', function() {
-          if (this.checked) {
-            menuButton.classList.add('position-right');
-            localStorage.setItem('staff-menu-button-position', 'right');
-            updatePanelPosition('right');
-          }
-        });
-      }
 
       // ダークモード切り替え
       const themeModeLight = document.getElementById('theme-mode-light');
@@ -2888,6 +2197,336 @@
           }
         });
       }
+    })();
+
+    // 本日の予定を読み込む
+    (function() {
+      const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+      let allStores = [];
+
+      // 現在のユーザーIDを取得
+      function getCurrentUserId() {
+        try {
+          const cognitoUser = localStorage.getItem('cognito_user');
+          if (cognitoUser) {
+            const parsed = JSON.parse(cognitoUser);
+            return parsed.username || parsed.email?.split('@')[0] || null;
+          }
+          
+          const authData = localStorage.getItem('misesapo_auth');
+          if (authData) {
+            const parsed = JSON.parse(authData);
+            return parsed.user?.id || parsed.user?.email?.split('@')[0] || null;
+          }
+          
+          return null;
+        } catch (e) {
+          console.error('Error getting user ID:', e);
+          return null;
+        }
+      }
+
+      // 店舗名を取得
+      function getStoreName(storeId) {
+        if (!storeId) return '未設定';
+        if (typeof DataUtils !== 'undefined' && DataUtils.getStoreName) {
+          return DataUtils.getStoreName(allStores, storeId);
+        }
+        const store = allStores.find(s => s.id === storeId || s.store_id === storeId);
+        return store ? store.name : storeId;
+      }
+
+      // 時間をHH:MM形式に変換
+      function formatTime(timeStr) {
+        if (!timeStr) return '';
+        if (typeof timeStr === 'string' && timeStr.includes(':')) {
+          const parts = timeStr.split(':');
+          return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+        }
+        return timeStr;
+      }
+
+      // スケジュールの状態を判定（完了/進行中/予定）
+      function getScheduleStatus(schedule) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        if (!schedule.date) return 'upcoming';
+        
+        const scheduleDate = new Date(schedule.date);
+        const scheduleDateOnly = new Date(scheduleDate.getFullYear(), scheduleDate.getMonth(), scheduleDate.getDate());
+        
+        // 日付が今日でない場合は予定
+        if (scheduleDateOnly.getTime() !== today.getTime()) {
+          return 'upcoming';
+        }
+        
+        // ステータスが完了の場合は完了
+        if (schedule.status === 'completed' || schedule.status === 'done') {
+          return 'completed';
+        }
+        
+        // 開始時刻と終了時刻を取得
+        const startTime = schedule.start_time || schedule.time || '';
+        const endTime = schedule.end_time || '';
+        
+        if (!startTime) return 'upcoming';
+        
+        // 時刻を解析
+        const [startHour, startMinute] = startTime.split(':').map(Number);
+        const startDateTime = new Date(today);
+        startDateTime.setHours(startHour || 0, startMinute || 0, 0, 0);
+        
+        if (endTime) {
+          const [endHour, endMinute] = endTime.split(':').map(Number);
+          const endDateTime = new Date(today);
+          endDateTime.setHours(endHour || 0, endMinute || 0, 0, 0);
+          
+          // 現在時刻が終了時刻を過ぎている場合は完了
+          if (now >= endDateTime) {
+            return 'completed';
+          }
+        }
+        
+        // 現在時刻が開始時刻を過ぎている場合は進行中
+        if (now >= startDateTime) {
+          return 'current';
+        }
+        
+        // それ以外は予定
+        return 'upcoming';
+      }
+
+      // 清掃内容を取得
+      function getCleaningItems(schedule) {
+        if (schedule.cleaning_items && Array.isArray(schedule.cleaning_items)) {
+          return schedule.cleaning_items.join('、');
+        }
+        if (schedule.cleaning_items && typeof schedule.cleaning_items === 'string') {
+          return schedule.cleaning_items;
+        }
+        if (schedule.items && Array.isArray(schedule.items)) {
+          return schedule.items.map(item => item.name || item).join('、');
+        }
+        return '通常清掃';
+      }
+
+      // 本日の予定を読み込み
+      async function loadTodaySchedules() {
+        const timelineContainer = document.getElementById('schedule-timeline');
+        if (!timelineContainer) return;
+
+        try {
+          const currentUserId = getCurrentUserId();
+          
+          // 店舗データを読み込み
+          try {
+            const storesResponse = await fetch(`${API_BASE}/stores`);
+            const storesData = await storesResponse.json();
+            allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+          } catch (error) {
+            console.warn('Failed to load stores:', error);
+            allStores = [];
+          }
+
+          // スケジュールを読み込み
+          const schedulesResponse = await fetch(`${API_BASE}/schedules`);
+          const schedulesData = await schedulesResponse.json();
+          const allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+
+          // 本日の日付を取得
+          const today = new Date();
+          const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD形式
+
+          // 本日のスケジュールをフィルタリング
+          const todaySchedules = allSchedules.filter(schedule => {
+            // ステータスが draft のものは除外
+            if (schedule.status === 'draft') return false;
+            
+            // 日付が今日のもの
+            const scheduleDate = schedule.date || schedule.scheduled_date || schedule.start_date;
+            if (!scheduleDate) return false;
+            
+            const scheduleDateStr = scheduleDate.split('T')[0]; // YYYY-MM-DD形式に変換
+            if (scheduleDateStr !== todayStr) return false;
+            
+            // ログインユーザーがいる場合、自分の担当分のみ
+            if (currentUserId) {
+              const workerId = schedule.worker_id || schedule.worker;
+              if (workerId && workerId !== currentUserId) return false;
+            }
+            
+            return true;
+          });
+
+          // 開始時刻でソート
+          todaySchedules.sort((a, b) => {
+            const timeA = a.start_time || a.time || '';
+            const timeB = b.start_time || b.time || '';
+            if (!timeA && !timeB) return 0;
+            if (!timeA) return 1;
+            if (!timeB) return -1;
+            return timeA.localeCompare(timeB);
+          });
+
+          // タイムラインを描画
+          if (todaySchedules.length === 0) {
+            timelineContainer.innerHTML = `
+              <div class="empty-state" style="text-align: center; padding: 20px; color: #6b7280; background: #f9fafb; border-radius: 8px;">
+                <p style="margin: 0; font-size: 0.875rem;">なし</p>
+              </div>
+            `;
+            return;
+          }
+
+          timelineContainer.innerHTML = todaySchedules.map(schedule => {
+            const status = getScheduleStatus(schedule);
+            const storeName = getStoreName(schedule.store_id || schedule.store);
+            const cleaningItems = getCleaningItems(schedule);
+            const timeStr = formatTime(schedule.start_time || schedule.time || '');
+            
+            let statusBadge = '';
+            let markerClass = '';
+            let markerIcon = '';
+            
+            if (status === 'completed') {
+              markerClass = 'completed';
+              markerIcon = '<i class="fas fa-check"></i>';
+              statusBadge = '<span class="status-check">✓ 完了</span>';
+            } else if (status === 'current') {
+              markerClass = 'current';
+              markerIcon = '<i class="fas fa-circle"></i>';
+              statusBadge = '<span class="status-current">進行中</span>';
+            } else {
+              markerClass = 'upcoming';
+              markerIcon = '<i class="fas fa-circle"></i>';
+              statusBadge = '<span class="status-upcoming">予定</span>';
+            }
+            
+            return `
+              <div class="timeline-item ${status}">
+                <div class="timeline-marker ${markerClass}">
+                  ${markerIcon}
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-time">${timeStr || '時間未設定'}</div>
+                  <div class="timeline-details">
+                    <div class="location">${storeName}</div>
+                    <div class="task">${cleaningItems}</div>
+                    ${statusBadge}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+        } catch (error) {
+          console.error('Failed to load today schedules:', error);
+          timelineContainer.innerHTML = `
+            <div class="error-state" style="text-align: center; padding: 20px; color: #ef4444; background: #fef2f2; border-radius: 8px;">
+              <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 8px;"></i>
+              <p style="margin: 0; font-size: 0.875rem;">予定の読み込みに失敗しました</p>
+            </div>
+          `;
+        }
+      }
+
+      // 今週の予定を読み込み
+      async function loadWeekSchedules() {
+        const scheduleCountEl = document.getElementById('week-schedule-count');
+        const storeCountEl = document.getElementById('week-store-count');
+        
+        if (!scheduleCountEl || !storeCountEl) return;
+
+        try {
+          const currentUserId = getCurrentUserId();
+          
+          // 店舗データを読み込み（まだ読み込まれていない場合）
+          if (allStores.length === 0) {
+            try {
+              const storesResponse = await fetch(`${API_BASE}/stores`);
+              const storesData = await storesResponse.json();
+              allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+            } catch (error) {
+              console.warn('Failed to load stores:', error);
+              allStores = [];
+            }
+          }
+
+          // スケジュールを読み込み
+          const schedulesResponse = await fetch(`${API_BASE}/schedules`);
+          const schedulesData = await schedulesResponse.json();
+          const allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+
+          // 今週の開始日（月曜日）と終了日（日曜日）を計算
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const dayOfWeek = today.getDay(); // 0=日曜日, 1=月曜日, ..., 6=土曜日
+          const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 月曜日までのオフセット
+          const weekStart = new Date(today);
+          weekStart.setDate(today.getDate() + mondayOffset);
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6); // 日曜日
+
+          const weekStartStr = weekStart.toISOString().split('T')[0]; // YYYY-MM-DD形式
+          const weekEndStr = weekEnd.toISOString().split('T')[0]; // YYYY-MM-DD形式
+
+          // 今週のスケジュールをフィルタリング
+          const weekSchedules = allSchedules.filter(schedule => {
+            // ステータスが draft のものは除外
+            if (schedule.status === 'draft') return false;
+            
+            // 日付が今週の範囲内のもの
+            const scheduleDate = schedule.date || schedule.scheduled_date || schedule.start_date;
+            if (!scheduleDate) return false;
+            
+            const scheduleDateStr = scheduleDate.split('T')[0]; // YYYY-MM-DD形式に変換
+            if (scheduleDateStr < weekStartStr || scheduleDateStr > weekEndStr) return false;
+            
+            // ログインユーザーがいる場合、自分の担当分のみ
+            if (currentUserId) {
+              const workerId = schedule.worker_id || schedule.worker;
+              if (workerId && workerId !== currentUserId) return false;
+            }
+            
+            return true;
+          });
+
+          // 件数をカウント
+          const scheduleCount = weekSchedules.length;
+
+          // 店舗数をカウント（重複を除外）
+          const uniqueStoreIds = new Set();
+          weekSchedules.forEach(schedule => {
+            const storeId = schedule.store_id || schedule.store;
+            if (storeId) {
+              uniqueStoreIds.add(storeId);
+            }
+          });
+          const storeCount = uniqueStoreIds.size;
+
+          // 表示を更新
+          scheduleCountEl.textContent = scheduleCount;
+          storeCountEl.textContent = storeCount;
+
+        } catch (error) {
+          console.error('Failed to load week schedules:', error);
+          scheduleCountEl.textContent = '-';
+          storeCountEl.textContent = '-';
+        }
+      }
+
+      // ページ読み込み時に予定を読み込み
+      window.addEventListener('DOMContentLoaded', () => {
+        loadTodaySchedules();
+        loadWeekSchedules();
+      });
+
+      // 定期的に更新（5分ごと）
+      setInterval(() => {
+        loadTodaySchedules();
+        loadWeekSchedules();
+      }, 5 * 60 * 1000);
     })();
   </script>
 </main>

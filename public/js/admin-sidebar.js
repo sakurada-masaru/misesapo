@@ -172,16 +172,16 @@
           // アニメーション完了後にサイドバーを表示
           setTimeout(() => {
             sidebar.classList.add('open');
-            if (sidebarOverlay) {
+        if (sidebarOverlay) {
               sidebarOverlay.classList.add('active');
-            }
-            // ボタンのアイコンを変更
-            const icon = mobileMenuButton.querySelector('i');
-            if (icon) {
-              icon.className = 'fas fa-times';
+        }
+        // ボタンのアイコンを変更
+        const icon = mobileMenuButton.querySelector('i');
+        if (icon) {
+            icon.className = 'fas fa-times';
             }
           }, 400); // リップルアニメーションの時間（0.4s）
-        } else {
+          } else {
           // メニューを閉じる：リップルアニメーションで閉じる
           sidebar.classList.remove('open');
           if (sidebarOverlay) {

@@ -4,6 +4,38 @@ let currentUser = null;
 let attendanceRecords = {};
 let currentCalendarDate = new Date();
 
+async function buildAuthHeaders(includeContentType = false) {
+  const headers = {};
+  if (includeContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
+  const idToken = await getCognitoIdToken();
+  if (idToken) {
+    headers['Authorization'] = `Bearer ${idToken}`;
+  }
+  return headers;
+}
+
+async function requireAuthOrRedirect(contextLabel) {
+  const idToken = await getCognitoIdToken();
+  if (idToken) return idToken;
+
+  showErrorMessage(`${contextLabel}のため再ログインが必要です。ログイン画面へ移動します。`);
+  const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+  setTimeout(() => {
+    window.location.href = `/staff/signin.html?redirect=${redirect}`;
+  }, 800);
+  return null;
+}
+
+function handleAuthError(contextLabel) {
+  showErrorMessage(`${contextLabel}のため再ログインが必要です。ログイン画面へ移動します。`);
+  const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+  setTimeout(() => {
+    window.location.href = `/staff/signin.html?redirect=${redirect}`;
+  }, 800);
+}
+
 // 従業員用ログアウト関数
 function staffLogout() {
   // Cognitoからログアウト
@@ -149,11 +181,13 @@ async function loadCurrentUser() {
       // まずAWS APIから最新データを取得
       let response = null;
       let urlParamId = userId; // URLパラメータのIDを保存
+      const authHeaders = await buildAuthHeaders();
       
       if (userId) {
         // IDで取得を試みる（キャッシュ無効化）
         response = await fetch(`${API_BASE}/workers/${userId}?t=${timestamp}&_=${Date.now()}`, {
-          cache: 'no-store'
+          cache: 'no-store',
+          headers: authHeaders
         });
         if (response.ok) {
           currentUser = await response.json();
@@ -191,7 +225,8 @@ async function loadCurrentUser() {
               // Cognito認証から取得したIDがURLパラメータのIDと異なる場合、そのIDで検索
               console.log('[Mypage] Trying Cognito auth ID:', cognitoUser.id);
               response = await fetch(`${API_BASE}/workers/${cognitoUser.id}?t=${timestamp}&_=${Date.now()}`, {
-                cache: 'no-store'
+                cache: 'no-store',
+                headers: authHeaders
               });
               if (response && response.ok) {
                 currentUser = await response.json();
@@ -212,7 +247,8 @@ async function loadCurrentUser() {
       if (!currentUser || !currentUser.id) {
         if (userEmail) {
           response = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(userEmail)}&t=${timestamp}&_=${Date.now()}`, {
-            cache: 'no-store'
+            cache: 'no-store',
+            headers: authHeaders
           });
           if (response && response.ok) {
             const users = await response.json();
@@ -241,7 +277,8 @@ async function loadCurrentUser() {
           const cognitoUser = await window.CognitoAuth.getCurrentUser();
           if (cognitoUser && cognitoUser.cognito_sub) {
             fallbackResponse = await fetch(`${API_BASE}/workers?cognito_sub=${encodeURIComponent(cognitoUser.cognito_sub)}&t=${timestamp}&_=${Date.now()}`, {
-              cache: 'no-store'
+              cache: 'no-store',
+              headers: authHeaders
             });
           }
         }
@@ -1561,6 +1598,7 @@ async function loadDailyReports() {
   const todayDateEl = document.getElementById('daily-report-today-date');
   if (todayDateEl) {
     todayDateEl.textContent = todayStr;
+    todayDateEl.dataset.date = today.toISOString().split('T')[0];
   }
   
   // 今日の日報を読み込む
@@ -1580,7 +1618,8 @@ async function loadTodayDailyReport() {
   try {
     // まずAPIから読み込む
     try {
-      const idToken = await getCognitoIdToken();
+      const idToken = await requireAuthOrRedirect('日報の読み込み');
+      if (!idToken) return;
       const headers = {};
       if (idToken) {
         headers['Authorization'] = `Bearer ${idToken}`;
@@ -1608,6 +1647,9 @@ async function loadTodayDailyReport() {
           localStorage.setItem(storageKey, JSON.stringify(data));
           return;
         }
+      } else if (response.status === 401) {
+        handleAuthError('日報の読み込み');
+        return;
       }
     } catch (apiError) {
       console.warn('日報のAPI読み込みに失敗、ローカルストレージから読み込みます:', apiError);
@@ -1828,7 +1870,8 @@ async function saveDailyReport() {
     
     // APIに保存
     try {
-      const idToken = await getCognitoIdToken();
+      const idToken = await requireAuthOrRedirect('日報の保存');
+      if (!idToken) return;
       const headers = {
         'Content-Type': 'application/json'
       };
@@ -1847,6 +1890,10 @@ async function saveDailyReport() {
         console.log('日報をAPIに保存しました:', result);
         showSuccessMessage('日報を保存しました');
       } else {
+        if (response.status === 401) {
+          handleAuthError('日報の保存');
+          return;
+        }
         const errorData = await response.json().catch(() => ({}));
         console.error('日報のAPI保存に失敗:', errorData);
         // API保存に失敗してもローカル保存は成功しているので、警告のみ

@@ -144,6 +144,28 @@
       </div>
     </div>
 
+    <!-- 日報セクション -->
+    <div class="attendance-section">
+      <div class="section-header">
+        <h3 class="section-title">
+          <i class="fas fa-file-alt"></i>
+          日報
+        </h3>
+        <div class="month-selector">
+          <button class="btn-icon" id="daily-report-refresh-btn" title="更新">
+            <i class="fas fa-sync"></i>
+          </button>
+        </div>
+      </div>
+      <div class="info-card" style="margin-top: 12px;">
+        <div class="info-item" style="flex-direction: column; align-items: stretch;">
+          <div id="daily-reports-loading" class="muted small">読み込み中...</div>
+          <div id="daily-reports-empty" class="muted small" style="display: none;">日報はありません</div>
+          <div id="daily-reports-list"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- スケジュール情報セクション -->
     <div class="schedule-section">
       <h3 class="section-title">
@@ -911,6 +933,46 @@
     let monthlyAttendance = [];
     let attendanceRequests = []; // 編集申請の一覧
 
+    function getAuthToken() {
+      if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
+        const token = window.CognitoAuth.getIdToken && window.CognitoAuth.getIdToken();
+        if (token) return token;
+      }
+      return localStorage.getItem('cognito_id_token');
+    }
+
+    function buildAuthHeaders(includeContentType = false) {
+      const headers = {};
+      if (includeContentType) {
+        headers['Content-Type'] = 'application/json';
+      }
+      const token = getAuthToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      return headers;
+    }
+
+    function getAuthToken() {
+      if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
+        const token = window.CognitoAuth.getIdToken && window.CognitoAuth.getIdToken();
+        if (token) return token;
+      }
+      return localStorage.getItem('cognito_id_token');
+    }
+
+    function buildAuthHeaders(includeContentType = false) {
+      const headers = {};
+      if (includeContentType) {
+        headers['Content-Type'] = 'application/json';
+      }
+      const token = getAuthToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      return headers;
+    }
+
     // URLからユーザーIDを取得
     function getUserIdFromUrl() {
       // まずクエリパラメータから取得を試みる
@@ -1061,13 +1123,15 @@
           // キャッシュを無効化するためにタイムスタンプを追加
           const timestamp = new Date().getTime();
           response = await fetch(`${API_BASE}/workers/${userId}?t=${timestamp}&_=${Date.now()}`, {
-            cache: 'no-store'
+            cache: 'no-store',
+            headers: buildAuthHeaders()
           });
           if (!response.ok) {
             if (response.status === 404) {
               // APIでも見つからない場合、メールアドレスや名前で検索を試みる
               const allWorkersResponse = await fetch(`${API_BASE}/workers?t=${timestamp}&_=${Date.now()}`, {
-                cache: 'no-store'
+                cache: 'no-store',
+                headers: buildAuthHeaders()
               });
               if (allWorkersResponse.ok) {
                 const allWorkers = await allWorkersResponse.json();
@@ -1132,6 +1196,7 @@
         
         // タイムカードを読み込み（出退勤記録も含む）
         loadTimecard();
+        loadDailyReportsForUser();
 
         loadingEl.style.display = 'none';
         contentEl.style.display = 'block';
@@ -1246,6 +1311,70 @@
       return colors[role] || '#64748b';
     }
 
+    function renderDailyReports(reports) {
+      const listEl = document.getElementById('daily-reports-list');
+      const loadingEl = document.getElementById('daily-reports-loading');
+      const emptyEl = document.getElementById('daily-reports-empty');
+      if (!listEl || !loadingEl || !emptyEl) return;
+
+      loadingEl.style.display = 'none';
+
+      if (!reports || reports.length === 0) {
+        emptyEl.style.display = 'block';
+        listEl.innerHTML = '';
+        return;
+      }
+
+      emptyEl.style.display = 'none';
+
+      const rows = reports.map(report => {
+        const date = report.date || report.created_at || '';
+        const dateLabel = date ? formatDate(date) : '-';
+        const content = report.content || report.text || '';
+        const safeContent = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `
+          <div class="daily-report-item" style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+            <div class="muted small" style="margin-bottom: 6px;">${dateLabel}</div>
+            <div style="white-space: pre-wrap; line-height: 1.6;">${safeContent || '-'}</div>
+          </div>
+        `;
+      }).join('');
+
+      listEl.innerHTML = rows;
+    }
+
+    async function loadDailyReportsForUser() {
+      const loadingEl = document.getElementById('daily-reports-loading');
+      const emptyEl = document.getElementById('daily-reports-empty');
+      if (loadingEl) loadingEl.style.display = 'block';
+      if (emptyEl) emptyEl.style.display = 'none';
+
+      if (!currentUser || !currentUser.id) {
+        renderDailyReports([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/daily-reports?staff_id=${encodeURIComponent(currentUser.id)}`, {
+          method: 'GET',
+          headers: buildAuthHeaders(),
+          cache: 'no-store'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const reports = data.items || data.reports || (Array.isArray(data) ? data : []);
+          renderDailyReports(reports);
+          return;
+        }
+
+        renderDailyReports([]);
+      } catch (error) {
+        console.error('Error loading daily reports:', error);
+        renderDailyReports([]);
+      }
+    }
+
     // 出退勤記録を読み込み（タイムカード機能に統合されたため、この関数は空に）
     function loadAttendanceRecords() {
       // タイムカード機能で出退勤記録を管理するため、この関数は不要
@@ -1346,7 +1475,7 @@
       try {
         const response = await fetch(`${API_BASE}/workers/${currentUser.id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: buildAuthHeaders(true),
           body: JSON.stringify(data)
         });
 
@@ -1777,6 +1906,13 @@
       setupAttendanceButton();
       setupMonthNavigation();
       initSidebar();
+
+      const refreshBtn = document.getElementById('daily-report-refresh-btn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+          loadDailyReportsForUser();
+        });
+      }
         
   });
 
@@ -1786,4 +1922,3 @@
     }
   </script>
 </main>
-

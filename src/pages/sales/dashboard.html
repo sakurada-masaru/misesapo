@@ -2318,7 +2318,7 @@
       tabs.forEach(tab => {
         if (screenName === 'case') {
           // 案件管理の場合はdata-screenで判定
-          tab.classList.toggle('active', tab.dataset.screen === screenName);
+        tab.classList.toggle('active', tab.dataset.screen === screenName);
         } else {
           // その他の場合はdata-tabで判定
           const tabName = tab.dataset.tab;
