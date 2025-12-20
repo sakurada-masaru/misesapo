@@ -1000,12 +1000,27 @@
   
   <script>
     const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
     
     let currentUser = null;
     let allSchedules = [];
     let allStores = [];
     let currentDate = new Date();
     const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+    let reportByScheduleId = {};
+
+    function getScheduleId(schedule) {
+      return schedule.id || schedule.schedule_id || schedule.scheduleId;
+    }
+
+    function getAuthHeaders() {
+      const headers = {};
+      const idToken = localStorage.getItem('cognito_id_token');
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+      return headers;
+    }
 
     // 現在のユーザー情報を取得
     async function loadCurrentUser() {
@@ -1046,21 +1061,39 @@
     // データ読み込み
     async function loadSchedules() {
       try {
-        const response = await fetch(`${API_BASE}/schedules`);
-        const data = await response.json();
-        
-        // 自分の担当分のみフィルター
-        allSchedules = data.filter(s => {
-          // ステータスが draft のものは除外
-          if (s.status === 'draft') return false;
-          
-          // ログインユーザーがいる場合、自分の担当分のみ
-          if (currentUser && currentUser.id) {
-            return s.worker_id === currentUser.id || !s.worker_id;
+        const headers = getAuthHeaders();
+        const [schedulesRes, reportsRes] = await Promise.all([
+          fetch(`${API_BASE}/schedules`, { headers }).catch(() => null),
+          fetch(`${REPORT_API}/staff/reports?limit=1000`, { headers }).catch(() => null)
+        ]);
+
+        const schedulesData = schedulesRes && schedulesRes.ok ? await schedulesRes.json() : [];
+        const reportsData = reportsRes && reportsRes.ok ? await reportsRes.json() : [];
+        const scheduleArray = Array.isArray(schedulesData)
+          ? schedulesData
+          : (schedulesData.items || schedulesData.schedules || []);
+        const reportsArray = Array.isArray(reportsData)
+          ? reportsData
+          : (reportsData.items || reportsData.reports || []);
+
+        reportByScheduleId = {};
+        reportsArray.forEach(report => {
+          const scheduleId = report.schedule_id || report.scheduleId || report.schedule;
+          const reportId = report.report_id || report.id;
+          if (scheduleId && reportId) {
+            reportByScheduleId[String(scheduleId)] = reportId;
           }
-          
-          // ユーザー情報がない場合は全て表示
-          return true;
+        });
+
+        allSchedules = scheduleArray.filter(s => s.status !== 'draft');
+        allSchedules = allSchedules.map(s => {
+          const scheduleId = getScheduleId(s);
+          const reportId = scheduleId ? reportByScheduleId[String(scheduleId)] : '';
+          return {
+            ...s,
+            report_created: Boolean(reportId),
+            report_id: reportId || ''
+          };
         });
         
         console.log('[Schedule] Loaded', allSchedules.length, 'schedules');
@@ -1218,6 +1251,14 @@
         const isScheduled = schedule.status === 'scheduled';
         const isInProgress = schedule.status === 'in_progress';
         const isCompleted = schedule.status === 'completed';
+        const hasReport = Boolean(schedule.report_created);
+        const reportBadge = hasReport
+          ? '<span class="status-badge status-completed" style="margin-top: 6px;">レポート作成済み</span>'
+          : '<span class="status-badge status-scheduled" style="margin-top: 6px;">レポート未作成</span>';
+        const scheduleId = getScheduleId(schedule);
+        const reportLink = schedule.report_id
+          ? `/staff/reports/new?edit=${schedule.report_id}`
+          : `/staff/reports/new?schedule=${scheduleId}`;
         
         return `
           <div class="schedule-item status-${statusClass}">
@@ -1236,6 +1277,7 @@
               </div>
               <div class="item-status">
                 <span class="status-badge status-${statusClass}">${statusLabel}</span>
+                ${reportBadge}
               </div>
             </div>
             <div class="item-actions">
@@ -1248,13 +1290,13 @@
                 <button class="action-btn btn-start" onclick="startWork('${schedule.id}')">
                   <i class="fas fa-play-circle"></i> 作業開始
                 </button>
-                <a href="/staff/reports/new?schedule=${schedule.id}" class="action-btn btn-report">
-                  <i class="fas fa-file-alt"></i> レポート作成
+                <a href="${reportLink}" class="action-btn btn-report">
+                  <i class="fas fa-file-alt"></i> ${hasReport ? 'レポート確認' : 'レポート作成'}
                 </a>
               ` : ''}
               ${isCompleted ? `
-                <a href="/staff/reports/new?schedule=${schedule.id}" class="action-btn btn-report">
-                  <i class="fas fa-file-alt"></i> レポート確認
+                <a href="${reportLink}" class="action-btn btn-report">
+                  <i class="fas fa-file-alt"></i> ${hasReport ? 'レポート確認' : 'レポート作成'}
                 </a>
               ` : ''}
             </div>
