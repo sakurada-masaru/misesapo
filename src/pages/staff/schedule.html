@@ -795,16 +795,25 @@
       background: var(--primary);
       color: #fff;
     }
-    .calendar-day .event-dot {
+    .calendar-day .event-count {
       position: absolute;
-      bottom: 6px;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--primary);
+      top: 6px;
+      right: 6px;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: #f97316;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 20px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(249, 115, 22, 0.35);
     }
-    .calendar-day.today .event-dot {
+    .calendar-day.today .event-count {
       background: #fff;
+      color: var(--primary);
     }
     .schedule-list {
       background: #ffffff;
@@ -1151,13 +1160,13 @@
       const calendarDays = document.getElementById('calendar-days');
       calendarDays.innerHTML = '';
       
-      // スケジュールがある日を取得
-      const eventDays = new Set();
+      // スケジュール件数を日別に集計
+      const eventCounts = new Map();
       allSchedules.forEach(s => {
         if (s.scheduled_date) {
           const [y, m, d] = s.scheduled_date.split('-').map(Number);
           if (y === year && m === month + 1) {
-            eventDays.add(d);
+            eventCounts.set(d, (eventCounts.get(d) || 0) + 1);
           }
         }
       });
@@ -1181,11 +1190,13 @@
           day.classList.add('today');
         }
         
-        if (eventDays.has(i)) {
+        const dayCount = eventCounts.get(i);
+        if (dayCount) {
           day.classList.add('has-event');
-          const dot = document.createElement('span');
-          dot.className = 'event-dot';
-          day.appendChild(dot);
+          const count = document.createElement('span');
+          count.className = 'event-count';
+          count.textContent = String(dayCount);
+          day.appendChild(count);
         }
         
         const dayNum = document.createElement('span');
