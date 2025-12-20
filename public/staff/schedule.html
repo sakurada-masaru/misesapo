@@ -1405,7 +1405,9 @@
       await Promise.all([loadStores(), loadSchedules()]);
       renderCalendar();
       renderScheduleList();
-      setupViewToggle();
+      if (typeof setupViewToggle === 'function') {
+        setupViewToggle();
+      }
     });
 
     // データ読み込み
