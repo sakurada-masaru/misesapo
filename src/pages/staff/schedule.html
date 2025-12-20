@@ -1106,7 +1106,8 @@
     async function loadStores() {
       try {
         const response = await fetch(`${API_BASE}/stores`);
-        allStores = await response.json();
+        const data = await response.json();
+        allStores = Array.isArray(data) ? data : (data.items || data.stores || []);
       } catch (error) {
         console.error('Failed to load stores:', error);
         allStores = [];
@@ -1114,6 +1115,9 @@
     }
 
     function getStoreName(storeId) {
+      if (!Array.isArray(allStores)) {
+        allStores = [];
+      }
       if (typeof DataUtils !== 'undefined') {
         return DataUtils.getStoreName(allStores, storeId);
       }
