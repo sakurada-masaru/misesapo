@@ -195,12 +195,10 @@
 
 
 <main id="main" class="container staff-media">
-  <div class="quick-menu-area">
-    <button class="quick-menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
+  <div class="page-header">
+    <button class="menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
       <i class="fas fa-bars"></i>
     </button>
-  </div>
-  <div class="page-header">
     <a href="/staff/dashboard" class="back-btn">
       <i class="fas fa-chevron-left"></i>
     </a>
@@ -316,13 +314,7 @@
       background: #f9fafb;
       padding-bottom: 160px;
     }
-    .quick-menu-area {
-      position: fixed;
-      top: 16px;
-      left: 16px;
-      z-index: 1300;
-    }
-    .quick-menu-btn {
+    .menu-btn {
       width: 44px;
       height: 44px;
       border-radius: 50%;
@@ -333,7 +325,7 @@
       cursor: pointer;
       box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
     }
-    .quick-menu-btn:hover {
+    .menu-btn:hover {
       background: #fff1f6;
       border-color: #fecddf;
     }

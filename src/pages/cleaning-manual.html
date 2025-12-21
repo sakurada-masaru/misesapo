@@ -53,6 +53,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
     <!--GoogleFonts(Noto Sans JP) end-->
     <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="/css/swiper-bundle.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <script src="/js/swiper-bundle.min.js"></script>
@@ -97,29 +98,48 @@
         /* ページタイトル */
         .manual-title {
             position: fixed;
-            top: 6.4rem; /* ヘッダーの高さ分 */
+            top: 0;
             left: 0;
             width: 100%;
-            background-color: #ff008c;
-            color: white;
-            text-align: center;
-            padding: 12px 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            height: var(--manual-title-height);
+            background-color: #ffffff;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 16px;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
             z-index: 998;
             box-sizing: border-box;
         }
         .manual-title h1 {
             margin: 0;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: white;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #111827;
             line-height: 1.2;
             padding: 0;
         }
+        .manual-title .menu-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            color: #111827;
+            font-size: 1.25rem;
+            cursor: pointer;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+        }
+        .manual-title .menu-btn:hover {
+            background: #fff1f6;
+            border-color: #fecddf;
+        }
         /* 言語切り替えタブと編集ボタンのコンテナ */
         :root {
-            --manual-header-height: 6.4rem;
-            --manual-title-height: calc(1.8rem + 24px);
+            --manual-header-height: 0px;
+            --manual-title-height: 64px;
             --manual-lang-tabs-height: 48px;
             --manual-category-tabs-height: 50px;
         }
@@ -460,27 +480,6 @@
         #content {
             padding-bottom: 180px;
         }
-        .quick-menu-area {
-            position: fixed;
-            top: 16px;
-            left: 16px;
-            z-index: 1300;
-        }
-        .quick-menu-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: 1px solid #e5e7eb;
-            background: #ffffff;
-            color: #111827;
-            font-size: 1.25rem;
-            cursor: pointer;
-            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
-        }
-        .quick-menu-btn:hover {
-            background: #fff1f6;
-            border-color: #fecddf;
-        }
         .quick-actions-dock {
             position: fixed;
             left: 0;
@@ -494,6 +493,10 @@
             border-top: 1px solid #e5e7eb;
             box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.08);
             z-index: 1200;
+            box-sizing: border-box;
+        }
+        .quick-actions-dock * {
+            box-sizing: border-box;
         }
         .dock-item {
             display: flex;
@@ -522,34 +525,11 @@
     </style>
 </head>
 <body>
-    <div class="quick-menu-area">
-        <button class="quick-menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-    <header>
-        <div class="header-flex wrapper">
-            <h1 class="header-logo">
-                <a href="/staff/dashboard"><img id="header-logo-img" src="/images/header-logo.jpg" alt="ミセサポ"></a>
-            </h1>
-            <button class="btn"><span></span><span></span><span></span></button>
-            <nav id="g-nav">
-                <div id="g-nav-list">
-                    <ul>
-                        <li><a href="/staff/dashboard">ダッシュボード</a></li>
-                        <li><a href="staff/assignments.html">作業一覧</a></li>
-                        <li><a href="staff/reports/new.html">レポート作成</a></li>
-                        <li><a href="staff/schedule.html">スケジュール</a></li>
-                        <li><a href="staff/training.html">研修動画</a></li>
-                        <li><a href="cleaning-manual.html">清掃基準マニュアル</a></li>
-                    </ul>
-                </div>
-            </nav>
-        </div>
-    </header>
-    
     <!-- ページタイトル -->
     <div class="manual-title">
+        <button class="menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
+            <i class="fas fa-bars"></i>
+        </button>
         <h1>ミセサポ研修マニュアル</h1>
     </div>
     

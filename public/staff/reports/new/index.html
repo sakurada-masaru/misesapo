@@ -199,13 +199,11 @@
 <link rel="stylesheet" href="/css/report-shared-view.css">
 
 <main id="main" class="staff-report-page">
-  <div class="quick-menu-area">
-    <button class="quick-menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
-      <i class="fas fa-bars"></i>
-    </button>
-  </div>
   <!-- 固定ヘッダー -->
   <header class="page-header-fixed">
+    <button class="menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
+      <i class="fas fa-bars"></i>
+    </button>
     <a href="/staff/dashboard" class="back-btn">
       <i class="fas fa-chevron-left"></i>
     </a>
@@ -880,13 +878,7 @@
   .staff-report-page {
     padding-bottom: 160px;
   }
-  .quick-menu-area {
-    position: fixed;
-    top: 16px;
-    left: 16px;
-    z-index: 1300;
-  }
-  .quick-menu-btn {
+  .menu-btn {
     width: 44px;
     height: 44px;
     border-radius: 50%;
@@ -897,7 +889,7 @@
     cursor: pointer;
     box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
   }
-  .quick-menu-btn:hover {
+  .menu-btn:hover {
     background: #fff1f6;
     border-color: #fecddf;
   }
