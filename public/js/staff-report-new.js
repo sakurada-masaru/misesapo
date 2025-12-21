@@ -205,7 +205,12 @@
         }
         if (reportedScheduleIds.has(String(scheduleId))) return false;
         if (currentUser && currentUser.id) {
-          return schedule.worker_id === currentUser.id || schedule.assigned_to === currentUser.id;
+          const normalized = (window.DataUtils && DataUtils.normalizeSchedule)
+            ? DataUtils.normalizeSchedule(schedule)
+            : schedule;
+          const workerId = normalized.worker_id || schedule.worker_id || schedule.assigned_to || schedule.staff_id || schedule.staffId || '';
+          if (!workerId) return true;
+          return String(workerId) === String(currentUser.id);
         }
         return true;
       });
