@@ -229,10 +229,18 @@
 <main id="main" class="staff-report-page">
   <!-- 固定ヘッダー -->
   <div class="report-top-actions">
-    <button type="button" class="details-btn is-prominent" id="details-btn" aria-label="詳細パネルを開く">
-      <i class="fas fa-info-circle"></i>
-      <span class="details-btn-text">詳細パネル</span>
+    <button type="button" class="details-btn is-prominent details-btn-callout" id="details-btn" aria-label="詳細パネルを開く">
+      <span class="details-btn-badge">重要</span>
+      <span class="details-btn-main">
+        <i class="fas fa-info-circle"></i>
+        <span class="details-btn-text">詳細パネルを開く</span>
+      </span>
+      <span class="details-btn-sub">写真・現場情報はここから入力</span>
     </button>
+    <div class="details-hint">
+      <span class="details-hint-dot"></span>
+      <span>レポートの必須情報は詳細パネルから設定</span>
+    </div>
   </div>
 
   <!-- タブナビゲーション -->
