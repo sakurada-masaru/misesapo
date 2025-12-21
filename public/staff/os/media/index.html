@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title>メディア | ミセサポ</title>
+    
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+    <style>
+      /* Staff signin page: hide all headers */
+      body.page-staff-signin #default-header-wrapper,
+      body.page-staff-signin #normal-header-wrapper {
+        display: none !important;
+      }
+      
+      /* Staff pages: hide global header and footer */
+      body[class*="page-staff-"] #default-header-wrapper,
+      body[class*="page-staff-"] #normal-header-wrapper,
+      body[class*="page-staff-"] footer {
+        display: none !important;
+      }
+      
+      /* Staff pages: ensure full height layout */
+      body[class*="page-staff-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="page-staff-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Admin pages: hide global header while keeping auth buttons */
+      body[class*="page-admin-"] #default-header-wrapper {
+        height: 0;
+        overflow: visible;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .site-header {
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        min-height: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .inner {
+        justify-content: flex-end;
+        padding: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-left,
+      body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
+      body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
+      body[class*="page-admin-"] #default-header-wrapper .spacer,
+      body[class*="page-admin-"] #default-header-wrapper .role-badge {
+        display: none !important;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right {
+        position: fixed;
+        top: 16px;
+        right: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 18px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.18);
+        z-index: 300;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
+        font-weight: 600;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+      }
+      
+      /* Sales pages: hide global header and footer */
+      body[class*="sales-"] #default-header-wrapper,
+      body[class*="sales-"] #normal-header-wrapper,
+      body[class*="sales-"] footer {
+        display: none !important;
+      }
+      
+      /* Sales pages: ensure full height layout */
+      body[class*="sales-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="sales-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body class="theme-pink page-staff-media">
+    <div id="default-header-wrapper">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+<header id="header-guest" class="site-header" data-role="guest">
+  <div class="inner wide">
+    <div class="nav-left">
+      <a class="brand brand-logo" href="/" aria-label="ミセサポ ホーム">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+      </a>
+      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+    </div>
+    <div class="spacer"></div>
+    <nav class="nav-right hide-sm" aria-label="User">
+      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+      <a class="nav-link" href="/signin">ログイン</a>
+      <a class="nav-link primary" href="/signup">新規登録</a>
+      <button class="icon-btn" aria-label="通知">
+        <i class="fas fa-bell"></i>
+      </button>
+      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </nav>
+    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+  <!-- スマホ版ナビゲーションメニュー -->
+  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
+    <div class="mobile-nav-content">
+      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+      <nav class="mobile-nav-user" aria-label="User">
+        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+        <a class="mobile-nav-link" href="/signin">ログイン</a>
+        <a class="mobile-nav-link primary" href="/signup">新規登録</a>
+      </nav>
+    </div>
+  </nav>
+</header>
+
+    </div>
+    <!-- 通常ヘッダー（ログイン画面用） -->
+    <div id="normal-header-wrapper" style="display: none;">
+    <!-- 通常ヘッダー -->
+<header class="normal-header">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+            </a>
+                </div>
+        <nav class="normal-header-nav">
+            <a href="/">TOP</a>
+            <a href="/service">対応可能サービス</a>
+            <a href="/lp#voice">お客様の声</a>
+            <a href="/customers-support-desk">カスタマーズサポート</a>
+            <a href="/announcements">お知らせ</a>
+            <a href="/privacy-policy">規約＆ポリシー</a>
+        </nav>
+        <div class="normal-header-actions">
+            <a href="/signin" class="normal-header-login">ログイン</a>
+        </div>
+            </div>
+</header>
+
+
+    </div>
+    <script>
+  (function() {
+    const isOsUser = () => {
+      const candidates = ['cognito_user', 'misesapo_auth'];
+      for (const key of candidates) {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+          const parsed = JSON.parse(raw);
+          const user = parsed.user || parsed;
+          const department = String(user.department || '').toLowerCase();
+          if (department.includes('os')) {
+            return true;
+          }
+        } catch (error) {
+          console.warn('[OS Page] Failed to parse user:', error);
+        }
+      }
+      return false;
+    };
+
+    if (!isOsUser()) {
+      window.location.replace('/staff/mypage');
+    }
+  })();
+</script>
+
+<main id="main">
+      
+
+
+
+<main id="main" class="container staff-media">
+  <div class="page-header">
+    <div class="header-spacer" aria-hidden="true"></div>
+    <div class="header-spacer" aria-hidden="true"></div>
+    <button class="menu-btn" type="button" onclick="window.location.href='/staff/os/mypage'" aria-label="マイページを開く">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+  <h1 class="page-title">メディア</h1>
+
+  <!-- アップロードボタン -->
+  <div class="media-upload-section">
+    <label class="btn-upload-media">
+      <input type="file" accept="image/*" multiple id="media-file-input" style="display:none;">
+      <i class="fas fa-plus"></i>
+      <span>画像を追加</span>
+    </label>
+  </div>
+
+  <!-- フォルダ選択 -->
+  <div class="folder-section">
+    <div class="folder-select-wrapper">
+      <label for="media-date-filter" class="folder-label">日付:</label>
+      <input type="date" id="media-date-filter" class="date-filter-input">
+    </div>
+    <div class="folder-select-wrapper">
+      <label for="media-schedule-select" class="folder-label">スケジュールID:</label>
+      <select id="media-schedule-select" class="folder-select">
+        <option value="">選択してください</option>
+      </select>
+    </div>
+    <div class="folder-select-wrapper">
+      <label for="media-service-input" class="folder-label">サービスID:</label>
+      <input type="text" id="media-service-input" class="folder-input" placeholder="例: service-001" list="service-id-options">
+      <datalist id="service-id-options"></datalist>
+    </div>
+    <div class="folder-select-wrapper">
+      <label for="folder-select" class="folder-label">フォルダ:</label>
+      <select id="folder-select" class="folder-select">
+        <option value="">全てのフォルダ</option>
+      </select>
+    </div>
+    <div class="folder-preview" id="folder-preview">フォルダ未設定</div>
+  </div>
+
+  <!-- フィルター -->
+  <div class="filter-tabs">
+    <button class="tab-btn active" data-filter="all">全て</button>
+    <button class="tab-btn" data-filter="before">作業前</button>
+    <button class="tab-btn" data-filter="after">作業後</button>
+    
+  </div>
+
+  <!-- 画像グリッド -->
+  <div class="media-grid" id="media-grid">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>読み込み中...</p>
+      </div>
+    </div>
+
+  <!-- 画像プレビューモーダル -->
+  <div id="image-preview-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content image-preview-content">
+      <div class="modal-header">
+        <h3>画像プレビュー</h3>
+        <button type="button" class="modal-close" onclick="closeImagePreview()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <img id="preview-image" src="" alt="Preview" style="max-width:100%; height:auto;">
+        <div class="image-info" id="image-info"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeImagePreview()">閉じる</button>
+        <button type="button" class="btn btn-danger" id="delete-image-btn">削除</button>
+      </div>
+    </div>
+  </div>
+
+<nav class="quick-actions-dock" aria-label="クイックアクション">
+  <a href="/staff/os/mypage" class="dock-item">
+    <i class="fas fa-user"></i>
+    <span>マイページ</span>
+  </a>
+  <a href="/staff/os/schedule" class="dock-item">
+    <i class="fas fa-calendar"></i>
+    <span>スケジュール</span>
+  </a>
+  <a href="/staff/os/reports/new" class="dock-item">
+    <i class="fas fa-file-alt"></i>
+    <span>レポート</span>
+  </a>
+  <a href="/staff/os/media" class="dock-item is-active">
+    <i class="fas fa-photo-film"></i>
+    <span>メディア</span>
+  </a>
+</nav>
+
+  <style>
+    .staff-media {
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+      padding-bottom: 160px;
+    }
+    .menu-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      color: #111827;
+      font-size: 1.25rem;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+    }
+    .menu-btn:hover {
+      background: #fff1f6;
+      border-color: #fecddf;
+    }
+    .quick-actions-dock {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 12px 16px;
+      background: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.08);
+      z-index: 1200;
+    }
+    .dock-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 6px;
+      border-radius: 12px;
+      color: #374151;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.75rem;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+    }
+    .dock-item i {
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+    .dock-item:active,
+    .dock-item:hover {
+      background: #fff1f6;
+      border-color: #fecddf;
+    }
+
+  .page-header {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .header-spacer {
+    width: 44px;
+    height: 44px;
+  }
+
+    .page-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 20px;
+    }
+
+    .media-upload-section {
+      margin-bottom: 20px;
+    }
+
+    .btn-upload-media {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 16px;
+      background: #FF679C;
+      color: #fff;
+      border-radius: 12px;
+      cursor: pointer;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-upload-media:hover {
+      background: #FF5A9A;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 103, 156, 0.3);
+    }
+
+    .btn-upload-media i {
+      font-size: 1.25rem;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 8px;
+      align-items: center;
+    }
+
+    .tab-btn {
+      padding: 8px 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #6b7280;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .date-filter-input {
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      font-size: 0.875rem;
+      margin-left: 0;
+    }
+
+    .folder-section {
+      margin-bottom: 20px;
+      padding: 12px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .folder-select-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .folder-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      white-space: nowrap;
+    }
+
+    .folder-select,
+    .folder-input {
+      flex: 1;
+      min-width: 150px;
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      font-size: 0.875rem;
+      color: #374151;
+      cursor: pointer;
+    }
+
+    .folder-select:focus,
+    .folder-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+
+    .folder-preview {
+      font-size: 0.85rem;
+      color: #6b7280;
+      background: #f3f4f6;
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      color: #374151;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+
+    .form-hint {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #FF5A9A;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .media-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid #e5e7eb;
+      transition: all 0.2s;
+    }
+
+    .media-item:hover {
+      border-color: #FF679C;
+      transform: scale(1.05);
+    }
+
+    .media-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .media-item-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .media-item:hover .media-item-overlay {
+      opacity: 1;
+    }
+
+    .media-item-category {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      padding: 4px 8px;
+      background: rgba(255, 103, 156, 0.9);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .loading-spinner {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+
+    .loading-spinner i {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px;
+      color: #9ca3af;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+      cursor: pointer;
+    }
+
+    .modal-content {
+      max-width: 500px;
+      width: 100%;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: default;
+    }
+
+    .image-preview-content {
+      max-width: 90vw;
+      max-height: 90vh;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: default;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .image-info {
+      margin-top: 16px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      padding: 16px 20px;
+      border-top: 1px solid #e5e7eb;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+    }
+
+    .btn-outline:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    @media (max-width: 768px) {
+      .staff-media {
+        padding: 12px;
+      }
+
+      .media-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 8px;
+      }
+    }
+  </style>
+
+  <script>
+    (function() {
+      const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+      const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+      let currentImages = [];
+      let currentFilter = 'all';
+      let currentDate = '';
+      let currentFolder = '';
+      let currentScheduleId = '';
+      let currentServiceId = '';
+      let availableFolders = [];
+      let availableSchedules = [];
+      let availableServices = [];
+      let selectedImageId = null;
+
+      // IDトークン取得（Cognito/localStorageから取得）
+      async function getFirebaseIdToken() {
+        try {
+          // 1. Cognito ID Token（最優先）
+          const cognitoIdToken = localStorage.getItem('cognito_id_token');
+          if (cognitoIdToken) {
+            return cognitoIdToken;
+          }
+          
+          // 2. Cognito認証のユーザーオブジェクトからトークンを取得
+          const cognitoUser = localStorage.getItem('cognito_user');
+          if (cognitoUser) {
+            try {
+              const parsed = JSON.parse(cognitoUser);
+              if (parsed.tokens && parsed.tokens.idToken) {
+                return parsed.tokens.idToken;
+              }
+              if (parsed.idToken) {
+                return parsed.idToken;
+              }
+            } catch (e) {
+              console.warn('Error parsing cognito user:', e);
+            }
+          }
+          
+          // 3. CognitoAuthから取得
+          if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
+            try {
+              const cognitoUser = await window.CognitoAuth.getCurrentUser();
+              if (cognitoUser && cognitoUser.tokens && cognitoUser.tokens.idToken) {
+                return cognitoUser.tokens.idToken;
+              }
+            } catch (e) {
+              console.warn('Error getting token from CognitoAuth:', e);
+            }
+          }
+          
+          // 4. misesapo_auth から取得（フォールバック）
+          const authData = localStorage.getItem('misesapo_auth');
+          if (authData) {
+            try {
+              const parsed = JSON.parse(authData);
+              if (parsed.token) {
+                return parsed.token;
+              }
+            } catch (e) {
+              console.warn('Error parsing auth data:', e);
+            }
+          }
+          
+          return 'dev-token';
+        } catch (error) {
+          console.error('Error getting ID token:', error);
+          return 'dev-token';
+        }
+      }
+
+      async function getAuthHeaders() {
+        const token = await getFirebaseIdToken();
+        if (!token) return {};
+        return { 'Authorization': `Bearer ${token}` };
+      }
+
+      // 画像のハッシュ値を計算（SHA-256）
+      async function calculateImageHash(blob) {
+        const arrayBuffer = await blob.arrayBuffer();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+
+      // 画像をBase64に変換
+      function blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result;
+            const base64 = dataUrl.split(',')[1];
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      // 画像を最適化
+      async function optimizeImage(file, maxWidth = 1920, quality = 0.85) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+
+              if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+
+              canvas.toBlob((blob) => {
+                if (blob) {
+                  resolve(blob);
+                } else {
+                  reject(new Error('画像の最適化に失敗しました'));
+                }
+              }, 'image/jpeg', quality);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // 画像の重複チェック（簡易版：既存の画像一覧と比較）
+      async function checkDuplicateImage(imageHash) {
+        // 現在の日付の画像一覧を取得してハッシュ値を比較
+        const cleaningDate = currentDate || new Date().toISOString().split('T')[0];
+        let url = `${REPORT_API}/staff/report-images?date=${cleaningDate}`;
+        
+        try {
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const images = data.images || [];
+            // 既存の画像のハッシュ値と比較
+            return images.some(img => img.image_hash === imageHash);
+          }
+        } catch (error) {
+          console.warn('Duplicate check error:', error);
+          // エラーが発生してもアップロードは続行
+        }
+        return false;
+      }
+
+      // 画像をアップロード
+      async function uploadImage(file) {
+        try {
+          const optimizedBlob = await optimizeImage(file);
+          
+          // 画像のハッシュ値を計算
+          const imageHash = await calculateImageHash(optimizedBlob);
+          
+          // 重複チェック
+          const isDuplicate = await checkDuplicateImage(imageHash);
+          if (isDuplicate) {
+            throw new Error('この画像は既にアップロードされています');
+          }
+          
+          const base64 = await blobToBase64(optimizedBlob);
+          const cleaningDate = currentDate || new Date().toISOString().split('T')[0];
+          const folderName = buildFolderName();
+          if (!folderName) {
+            throw new Error('日付・スケジュールID・サービスIDを指定してください');
+          }
+          
+          // 選択中のカテゴリを取得（'all'の場合は'after'をデフォルトに）
+          let category = currentFilter;
+          if (category === 'all') {
+            category = 'after'; // デフォルトは作業後
+          }
+
+          const requestBody = {
+            image: base64,
+            category: category,
+            cleaning_date: cleaningDate,
+            folder_name: folderName,
+            image_hash: imageHash  // ハッシュ値を送信
+          };
+
+          const response = await fetch(`${REPORT_API}/staff/report-images`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            },
+            body: JSON.stringify(requestBody)
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            if (errorData.error && errorData.error.includes('重複')) {
+              throw new Error('この画像は既にアップロードされています');
+            }
+            throw new Error(errorData.error || 'アップロードに失敗しました');
+          }
+
+          const result = await response.json();
+          return result.image || result;
+        } catch (error) {
+          console.error('Upload error:', error);
+          throw error;
+        }
+      }
+
+      function parseFolderName(folderName) {
+        const parts = (folderName || '').split('/');
+        return {
+          date: parts[0] || '',
+          scheduleId: parts[1] || '',
+          serviceId: parts[2] || ''
+        };
+      }
+
+      function buildFolderName() {
+        if (!currentDate || !currentScheduleId || !currentServiceId) {
+          return '';
+        }
+        return `${currentDate}/${currentScheduleId}/${currentServiceId}`;
+      }
+
+      function updateFolderPreview() {
+        const preview = document.getElementById('folder-preview');
+        if (!preview) return;
+        const folderName = buildFolderName();
+        preview.textContent = folderName || 'フォルダ未設定';
+      }
+
+      function applyFolderSelection(folderName) {
+        const meta = parseFolderName(folderName);
+        if (meta.date) {
+          currentDate = meta.date;
+          const dateInput = document.getElementById('media-date-filter');
+          if (dateInput) dateInput.value = meta.date;
+        }
+        currentScheduleId = meta.scheduleId || '';
+        currentServiceId = meta.serviceId || '';
+        const scheduleSelect = document.getElementById('media-schedule-select');
+        const serviceInput = document.getElementById('media-service-input');
+        if (scheduleSelect) scheduleSelect.value = currentScheduleId;
+        if (serviceInput) serviceInput.value = currentServiceId;
+        updateServiceOptions();
+        currentFolder = folderName || '';
+        updateFolderPreview();
+      }
+
+      async function loadSchedules() {
+        const scheduleSelect = document.getElementById('media-schedule-select');
+        if (!scheduleSelect) return;
+        try {
+          const response = await fetch(`${API_BASE}/schedules`, {
+            headers: await getAuthHeaders()
+          });
+          if (!response.ok) throw new Error('スケジュールの取得に失敗しました');
+          const data = await response.json();
+          const schedules = data.schedules || data.items || data || [];
+          availableSchedules = schedules.filter(schedule => {
+            if (!currentDate || !schedule.scheduled_date) return false;
+            return schedule.scheduled_date === currentDate;
+          });
+          updateScheduleOptions();
+        } catch (error) {
+          console.error('Load schedules error:', error);
+        }
+      }
+
+      function updateScheduleOptions() {
+        const scheduleSelect = document.getElementById('media-schedule-select');
+        if (!scheduleSelect) return;
+        const currentValue = scheduleSelect.value;
+        scheduleSelect.innerHTML = '<option value="">選択してください</option>';
+        const scheduleIds = new Set();
+        availableSchedules.forEach(schedule => {
+          const id = schedule.schedule_id || schedule.scheduleId || schedule.id || '';
+          if (!id || scheduleIds.has(id)) return;
+          scheduleIds.add(id);
+          const option = document.createElement('option');
+          option.value = id;
+          option.textContent = `案件ID: ${id}`;
+          scheduleSelect.appendChild(option);
+        });
+        availableFolders.forEach(folder => {
+          const meta = parseFolderName(folder);
+          if (!meta.scheduleId || scheduleIds.has(meta.scheduleId)) return;
+          if (currentDate && meta.date !== currentDate) return;
+          scheduleIds.add(meta.scheduleId);
+          const option = document.createElement('option');
+          option.value = meta.scheduleId;
+          option.textContent = `案件ID: ${meta.scheduleId}`;
+          scheduleSelect.appendChild(option);
+        });
+        if (currentValue && scheduleIds.has(currentValue)) {
+          scheduleSelect.value = currentValue;
+        }
+      }
+
+      function updateServiceOptions() {
+        const datalist = document.getElementById('service-id-options');
+        if (!datalist) return;
+        datalist.innerHTML = '';
+        const services = new Set();
+        availableFolders.forEach(folder => {
+          const meta = parseFolderName(folder);
+          if (currentDate && meta.date !== currentDate) return;
+          if (currentScheduleId && meta.scheduleId !== currentScheduleId) return;
+          if (meta.serviceId) services.add(meta.serviceId);
+        });
+        availableServices = Array.from(services).sort();
+        availableServices.forEach(serviceId => {
+          const option = document.createElement('option');
+          option.value = serviceId;
+          datalist.appendChild(option);
+        });
+      }
+
+      // フォルダ一覧を取得
+      async function loadFolders() {
+        try {
+          const cleaningDate = currentDate || new Date().toISOString().split('T')[0];
+          let url = `${REPORT_API}/staff/report-images?date=${cleaningDate}`;
+          
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error('フォルダの取得に失敗しました');
+          }
+
+          const data = await response.json();
+          const images = data.images || [];
+          
+          // フォルダ名の一意リストを取得
+          const folderSet = new Set();
+          images.forEach(img => {
+            if (img.folder_name) {
+              folderSet.add(img.folder_name);
+            }
+          });
+          
+          availableFolders = Array.from(folderSet).sort();
+          updateFolderSelect();
+          updateScheduleOptions();
+          updateServiceOptions();
+        } catch (error) {
+          console.error('Load folders error:', error);
+        }
+      }
+
+      // フォルダ選択を更新
+      function updateFolderSelect() {
+        const select = document.getElementById('folder-select');
+        const currentValue = select.value;
+        
+        // 「全てのフォルダ」オプションを保持
+        select.innerHTML = '<option value="">全てのフォルダ</option>';
+        
+        // フォルダオプションを追加
+        const filteredFolders = availableFolders.filter(folder => {
+          const meta = parseFolderName(folder);
+          return !currentDate || meta.date === currentDate;
+        });
+        filteredFolders.forEach(folder => {
+          const meta = parseFolderName(folder);
+          const option = document.createElement('option');
+          option.value = folder;
+          option.textContent = meta.scheduleId && meta.serviceId
+            ? `${meta.scheduleId} / ${meta.serviceId}`
+            : folder;
+          select.appendChild(option);
+        });
+        
+        // 以前の選択を復元
+        if (currentValue && availableFolders.includes(currentValue)) {
+          select.value = currentValue;
+        }
+      }
+
+      // 画像一覧を取得
+      async function loadImages() {
+        const grid = document.getElementById('media-grid');
+        grid.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>読み込み中...</p></div>';
+
+        try {
+          const cleaningDate = currentDate || new Date().toISOString().split('T')[0];
+          let url = `${REPORT_API}/staff/report-images?date=${cleaningDate}`;
+          if (currentFilter !== 'all') {
+            url += `&category=${currentFilter}`;
+          }
+          if (currentFolder) {
+            url += `&folder_name=${encodeURIComponent(currentFolder)}`;
+          }
+
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error('画像の取得に失敗しました');
+          }
+
+          const data = await response.json();
+          currentImages = data.images || [];
+
+          renderImages();
+        } catch (error) {
+          console.error('Load error:', error);
+          grid.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>画像の読み込みに失敗しました</p></div>';
+        }
+      }
+
+      function getFilteredImages() {
+        if (!currentScheduleId && !currentServiceId) {
+          return currentImages;
+        }
+        const prefixParts = [currentDate, currentScheduleId, currentServiceId].filter(Boolean);
+        const prefix = prefixParts.join('/');
+        return currentImages.filter(img => {
+          if (!img.folder_name) return false;
+          return img.folder_name.startsWith(prefix);
+        });
+      }
+
+      // 画像を表示
+      function renderImages() {
+        const grid = document.getElementById('media-grid');
+        const visibleImages = getFilteredImages();
+
+        if (visibleImages.length === 0) {
+          grid.innerHTML = '<div class="empty-state"><i class="fas fa-images"></i><p>画像がありません</p></div>';
+          return;
+        }
+
+        grid.innerHTML = visibleImages.map(img => {
+          const categoryLabel = img.category === 'before' ? '作業前' : '作業後';
+          const date = new Date(img.cleaning_date).toLocaleDateString('ja-JP');
+          return `
+            <div class="media-item" onclick="openImagePreview('${img.image_id}', '${img.url}')">
+              <img src="${img.url}" alt="Image" loading="lazy">
+              <div class="media-item-category">${categoryLabel}</div>
+              <div class="media-item-overlay">
+                <i class="fas fa-search-plus" style="color:#fff; font-size:2rem;"></i>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 画像プレビューを開く
+      window.openImagePreview = function(imageId, imageUrl) {
+        selectedImageId = imageId;
+        const modal = document.getElementById('image-preview-modal');
+        const previewImg = document.getElementById('preview-image');
+        const imageInfo = document.getElementById('image-info');
+        const image = currentImages.find(img => img.image_id === imageId);
+
+        if (image) {
+          previewImg.src = imageUrl;
+          const date = new Date(image.cleaning_date).toLocaleDateString('ja-JP');
+          const categoryLabel = image.category === 'before' ? '作業前' : '作業後';
+          const folderName = image.folder_name || 'フォルダなし';
+          imageInfo.innerHTML = `
+            <div><strong>カテゴリ:</strong> ${categoryLabel}</div>
+            <div><strong>フォルダ:</strong> ${folderName}</div>
+            <div><strong>日付:</strong> ${date}</div>
+            <div><strong>アップロード日時:</strong> ${new Date(image.uploaded_at).toLocaleString('ja-JP')}</div>
+          `;
+        }
+
+        modal.style.display = 'flex';
+      };
+
+      // 画像プレビューを閉じる
+      window.closeImagePreview = function() {
+        const modal = document.getElementById('image-preview-modal');
+        modal.style.display = 'none';
+        selectedImageId = null;
+      };
+
+      // 画像を削除（バックエンドAPIが実装されたら有効化）
+      async function deleteImage(imageId) {
+        if (!confirm('この画像を削除しますか？')) {
+          return;
+        }
+
+        try {
+          // TODO: バックエンドに削除APIが実装されたら有効化
+          const response = await fetch(`${REPORT_API}/staff/report-images/${imageId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            }
+          });
+
+          if (!response.ok) {
+            if (response.status === 404 || response.status === 405) {
+              alert('画像削除機能は現在利用できません。バックエンドの実装をお待ちください。');
+              return;
+            }
+            throw new Error('削除に失敗しました');
+          }
+
+          closeImagePreview();
+          loadImages();
+          alert('画像を削除しました');
+        } catch (error) {
+          console.error('Delete error:', error);
+          alert('画像の削除に失敗しました。バックエンドの実装をお待ちください。');
+        }
+      }
+
+      // イベントリスナー
+      document.getElementById('media-file-input').addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        const grid = document.getElementById('media-grid');
+        const originalContent = grid.innerHTML;
+        grid.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>アップロード中...</p></div>';
+
+        let successCount = 0;
+        let errorCount = 0;
+        let duplicateCount = 0;
+        const errorMessages = [];
+
+        for (const file of files) {
+          try {
+            await uploadImage(file);
+            successCount++;
+          } catch (error) {
+            console.error('Upload error:', error);
+            errorCount++;
+            const errorMessage = error.message || 'アップロードに失敗しました';
+            
+            if (errorMessage.includes('既にアップロードされています') || errorMessage.includes('重複')) {
+              duplicateCount++;
+            } else {
+              errorMessages.push(`${file.name}: ${errorMessage}`);
+            }
+          }
+        }
+
+        e.target.value = '';
+        loadFolders();
+        loadImages();
+
+        // 結果を表示
+        if (errorCount > 0 || duplicateCount > 0) {
+          let message = `${successCount}件の画像をアップロードしました`;
+          if (duplicateCount > 0) {
+            message += `\n${duplicateCount}件の画像は既にアップロード済みのためスキップしました`;
+          }
+          if (errorMessages.length > 0) {
+            message += `\n\nエラー:\n${errorMessages.slice(0, 3).join('\n')}`;
+            if (errorMessages.length > 3) {
+              message += `\n...他${errorMessages.length - 3}件`;
+            }
+          }
+          alert(message);
+        } else if (successCount > 0) {
+          alert(`${successCount}件の画像をアップロードしました`);
+        }
+      });
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentFilter = btn.dataset.filter;
+          loadImages();
+        });
+      });
+
+      document.getElementById('media-date-filter').addEventListener('change', (e) => {
+        currentDate = e.target.value;
+        currentScheduleId = '';
+        currentServiceId = '';
+        currentFolder = '';
+        document.getElementById('folder-select').value = '';
+        document.getElementById('media-schedule-select').value = '';
+        document.getElementById('media-service-input').value = '';
+        updateFolderPreview();
+        loadSchedules();
+        loadFolders();
+        loadImages();
+      });
+
+      document.getElementById('media-schedule-select').addEventListener('change', (e) => {
+        currentScheduleId = e.target.value;
+        updateServiceOptions();
+        currentFolder = buildFolderName();
+        updateFolderPreview();
+        loadImages();
+      });
+
+      document.getElementById('media-service-input').addEventListener('input', (e) => {
+        currentServiceId = e.target.value.trim();
+        currentFolder = buildFolderName();
+        updateFolderPreview();
+        loadImages();
+      });
+
+      document.getElementById('folder-select').addEventListener('change', (e) => {
+        const selected = e.target.value;
+        if (selected) {
+          applyFolderSelection(selected);
+        } else {
+          currentFolder = buildFolderName();
+          updateFolderPreview();
+        }
+        loadImages();
+      });
+
+      document.getElementById('delete-image-btn').addEventListener('click', () => {
+        if (selectedImageId) {
+          deleteImage(selectedImageId);
+        }
+      });
+
+      // 初期化
+      document.getElementById('media-date-filter').value = new Date().toISOString().split('T')[0];
+      currentDate = new Date().toISOString().split('T')[0];
+      updateFolderPreview();
+      loadSchedules();
+      loadFolders();
+      loadImages();
+    })();
+  </script>
+</main>
+
+    </main>
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script>
+      // ログイン画面では通常ヘッダーを表示
+      (function() {
+        const path = window.location.pathname || '';
+        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
+        
+        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
+        if (isSigninPage) {
+          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
+          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
+          if (defaultHeaderWrapper) {
+            defaultHeaderWrapper.style.display = 'none';
+          }
+          if (normalHeaderWrapper) {
+            normalHeaderWrapper.style.display = 'block';
+            // ログイン画面では通常ヘッダーを常に表示
+            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
+            if (normalHeader) {
+              normalHeader.classList.add('visible');
+            }
+          }
+        }
+      })();
+    </script>
+  </body>
+  </html>
