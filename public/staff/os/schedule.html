@@ -115,8 +115,48 @@
         padding: 0;
       }
     </style>
-  </head>
+  <style>
+  .os-fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 16px;
+    background: #fff;
+    z-index: 1200;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  }
+  .os-header-menu {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .os-header-menu:active {
+    transform: scale(0.98);
+  }
+  #main {
+    padding-top: 80px;
+  }
+</style>
+</head>
   <body class="theme-pink page-staff-schedule">
+<header class="os-fixed-header">
+  <button class="os-header-menu" type="button" aria-label="メニューを開く" onclick="const target = document.getElementById('sidebar-toggle') || document.getElementById('mobile-menu-button'); if (target) { target.click(); }">
+    <i class="fas fa-bars"></i>
+  </button>
+</header>
+
     <div id="default-header-wrapper">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
 <header id="header-guest" class="site-header" data-role="guest">
@@ -326,9 +366,6 @@
         </label>
         <span class="view-label">カレンダー</span>
       </div>
-      <button class="menu-btn" type="button" onclick="window.location.href='/staff/os/mypage'" aria-label="マイページを開く">
-        <i class="fas fa-bars"></i>
-      </button>
     </div>
     <div class="role-badge-display" id="role-badge-display"></div>
 

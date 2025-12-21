@@ -115,8 +115,9 @@
         padding: 0;
       }
     </style>
-  </head>
+</head>
   <body class="theme-pink page-staff-reports-new">
+
     <div id="default-header-wrapper">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
 <header id="header-guest" class="site-header" data-role="guest">
@@ -235,7 +236,7 @@
         <span class="details-btn-text">詳細</span>
       </button>
     </div>
-    <button class="menu-btn" type="button" onclick="window.location.href='/staff/os/mypage'" aria-label="マイページを開く">
+    <button class="menu-btn" type="button" onclick="const target = document.getElementById('sidebar-toggle') || document.getElementById('mobile-menu-button'); if (target) { target.click(); }" aria-label="メニューを開く">
       <i class="fas fa-bars"></i>
     </button>
   </header>
@@ -908,17 +909,21 @@
 
 <style>
 .staff-report-page {
+  padding-top: 80px;
   padding-bottom: 220px;
 }
 .page-header-fixed {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
   z-index: 1100;
   display: grid;
   grid-template-columns: 44px 1fr 44px;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 0 16px;
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
