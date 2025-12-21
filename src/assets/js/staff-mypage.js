@@ -437,6 +437,8 @@ function renderUser(user) {
       roleBadge.textContent = user.department;
     }
   }
+
+  toggleOsQuickDock(user);
 }
 
 // OS課専用サイドバーを設定
@@ -493,6 +495,15 @@ function loadOSSectionSidebar() {
   }
   
   console.log('OS section sidebar configured');
+}
+
+function toggleOsQuickDock(user) {
+  const dock = document.getElementById('os-quick-dock');
+  const main = document.querySelector('.staff-mypage');
+  if (!dock || !main) return;
+  const isOs = user && user.department === 'OS課';
+  dock.classList.toggle('is-hidden', !isOs);
+  main.classList.toggle('has-quick-dock', isOs);
 }
 
 function formatDate(dateString) {
