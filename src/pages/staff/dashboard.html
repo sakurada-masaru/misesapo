@@ -31,32 +31,25 @@
   </section>
 
   <!-- Next Assignment Card (最優先表示) -->
-  <!-- Quick Actions (改善版) -->
-  <section class="dashboard-section">
-    <h2 class="section-title">クイックアクション</h2>
-    <div class="quick-actions-compact">
-      <a href="/staff/mypage" class="action-btn-large">
-        <i class="fas fa-user-circle"></i>
-        <span>マイページ</span>
-      </a>
-      <a href="/staff/assignments" class="action-btn-large">
-        <i class="fas fa-images"></i>
-        <span>メディア</span>
-      </a>
-      <a href="/staff/reports/new" class="action-btn-large">
-        <i class="fas fa-camera"></i>
-        <span>レポート作成</span>
-      </a>
-      <a href="/staff/schedule" class="action-btn-large">
-        <i class="fas fa-calendar"></i>
-        <span>スケジュール</span>
-      </a>
-      <a href="/cleaning-manual" class="action-btn-large">
-        <i class="fas fa-book"></i>
-        <span>マニュアル</span>
-      </a>
-    </div>
-  </section>
+  <!-- Quick Actions (固定バー) -->
+  <nav class="quick-actions-dock" aria-label="クイックアクション">
+    <a href="/staff/schedule" class="dock-item">
+      <i class="fas fa-calendar"></i>
+      <span>スケジュール</span>
+    </a>
+    <a href="/staff/reports/new" class="dock-item">
+      <i class="fas fa-camera"></i>
+      <span>レポート作成</span>
+    </a>
+    <a href="/staff/assignments" class="dock-item">
+      <i class="fas fa-images"></i>
+      <span>メディア</span>
+    </a>
+    <a href="/cleaning-manual" class="dock-item">
+      <i class="fas fa-book"></i>
+      <span>マニュアル</span>
+    </a>
+  </nav>
 
   <!-- Today's Schedule (タイムライン表示) -->
   <section class="dashboard-section">
@@ -166,6 +159,7 @@
       margin: 0;
       padding: 16px;
       background: #f9fafb;
+      padding-bottom: 120px;
     }
 
     /* レイアウトモード */
@@ -195,6 +189,44 @@
     }
     .staff-dashboard.layout-compact .action-btn-large span {
       font-size: 0.75rem;
+    }
+    .quick-actions-dock {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 12px 16px;
+      background: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.08);
+      z-index: 1200;
+    }
+    .dock-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 6px;
+      border-radius: 12px;
+      color: #374151;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.75rem;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+    }
+    .dock-item i {
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+    .dock-item:active,
+    .dock-item:hover {
+      background: #fff1f6;
+      border-color: #fecddf;
     }
 
     .staff-dashboard.layout-detailed .dashboard-section {
@@ -2338,4 +2370,3 @@
     })();
   </script>
 </main>
-

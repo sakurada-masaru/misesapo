@@ -1537,40 +1537,26 @@
 
 /* モバイルメニューエリア */
 .mobile-menu-area {
-  display: none;
+  display: block;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1200;
 }
 
-@media (max-width: 767.98px) {
-  .mobile-menu-area {
-    display: block;
-    width: 100%;
-    background-color: var(--primary, #FF679C);
-    position: fixed;
-    height: 70px;
-    z-index: 1000;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    top: 0;
-    left: 0;
-  }
-  
-  .mobile-menu-button {
-    position: absolute;
-    top: 50%;
-    left: 16px;
-    transform: translateY(-50%);
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 8px;
-  }
-  
-  .staff-mypage.main-content {
-    padding-top: 70px !important;
-  }
-  
-  .sidebar.open {
-    padding-top: 70px;
-  }
+.mobile-menu-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #111827;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+}
+
+.mobile-menu-button:hover {
+  background: #fff1f6;
+  border-color: #fecddf;
 }
