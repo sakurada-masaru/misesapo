@@ -411,7 +411,7 @@ font-size: 1rem !important;
   right: 0;
   bottom: 0;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   padding: 12px 16px;
   background: #ffffff;
