@@ -342,6 +342,15 @@
       </div>
     </div>
 
+    <div class="schedule-list calendar-schedule-section" id="calendar-schedule-section">
+      <h3 class="list-title" id="calendar-list-title">本日の予定</h3>
+      <div class="schedule-items" id="calendar-schedule-items">
+        <div class="loading-message">
+          <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+        </div>
+      </div>
+    </div>
+
     <div class="list-tabs" id="list-tabs">
       <button class="list-tab active" data-filter="today">本日の予定</button>
       <button class="list-tab" data-filter="week">今週の予定</button>
@@ -374,6 +383,15 @@
     <div class="schedule-list" id="cleaning-schedule-section">
       <h3 class="list-title" id="list-title">今後の予定</h3>
       <div class="schedule-items" id="schedule-items">
+        <div class="loading-message">
+          <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+        </div>
+      </div>
+    </div>
+
+    <div class="schedule-list past-schedule-section" id="past-schedule-section">
+      <h3 class="list-title"><i class="fas fa-rotate-left"></i> 過去の予定（レポート未作成）</h3>
+      <div class="schedule-items" id="past-schedule-items">
         <div class="loading-message">
           <i class="fas fa-spinner fa-spin"></i> 読み込み中...
         </div>
@@ -478,7 +496,39 @@
     </div>
   </div>
 
-  <nav class="quick-actions-dock" aria-label="クイックアクション">
+  <div class="modal-overlay" id="report-create-modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-file-alt"></i> レポート作成</h3>
+        <button class="modal-close" id="report-create-close">&times;</button>
+      </div>
+      <div class="report-modal-body">
+        <div class="report-step is-active" data-step="confirm">
+          <p class="report-step-text">レポートが未作成です。レポートを作成しますか？</p>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="report-create-cancel">いいえ</button>
+            <button type="button" class="btn-submit" id="report-create-next">はい</button>
+          </div>
+        </div>
+        <div class="report-step" data-step="details">
+          <p class="report-step-text">こちらのスケジュールでレポートを作成しますか？</p>
+          <div class="report-detail-card" id="report-create-details"></div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="report-create-back">戻る</button>
+            <button type="button" class="btn-submit" id="report-create-confirm">作成する</button>
+          </div>
+        </div>
+        <div class="report-step" data-step="loading">
+          <div class="report-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>基本情報を書き込んでいます。しばらくお待ちください。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<nav class="quick-actions-dock" aria-label="クイックアクション">
     <a href="/staff/schedule" class="dock-item is-active">
       <i class="fas fa-calendar"></i>
       <span>スケジュール</span>
@@ -1038,6 +1088,62 @@
       background: #e5e7eb;
       color: #111827;
     }
+    .report-modal-body {
+      padding: 20px;
+    }
+    .report-step {
+      display: none;
+    }
+    .report-step.is-active {
+      display: block;
+    }
+    .report-step-text {
+      margin: 0 0 16px 0;
+      color: #111827;
+      font-weight: 600;
+    }
+    .report-detail-card {
+      background: #f9fafb;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      color: #374151;
+      font-size: 0.9rem;
+    }
+    .report-detail-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .report-detail-row span {
+      display: inline-flex;
+    }
+    .report-detail-label {
+      font-weight: 600;
+      color: #6b7280;
+      min-width: 90px;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .report-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 24px 0;
+      color: #6b7280;
+    }
+    .report-loading i {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
     #task-form, #memo-form {
       padding: 20px;
     }
@@ -1264,6 +1370,12 @@
       padding: 20px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
+    .calendar-schedule-section {
+      margin-top: 20px;
+    }
+    .past-schedule-section {
+      margin-top: 24px;
+    }
     .list-title {
       font-size: 1.125rem;
       font-weight: 600;
@@ -1482,6 +1594,7 @@
     let reportByScheduleId = {};
     let listFilterMode = 'today';
     let listFilterDate = null;
+    let pendingReportSchedule = null;
 
     function getScheduleId(schedule) {
       return schedule.id || schedule.schedule_id || schedule.scheduleId;
@@ -1529,10 +1642,13 @@
       await loadCurrentUser();
       await Promise.all([loadStores(), loadBrands(), loadClients(), loadSchedules()]);
       renderCalendar();
+      renderCalendarSchedules(new Date().toISOString().split('T')[0]);
       renderScheduleList();
+      renderPastSchedules();
       const toggle = document.getElementById('view-toggle');
       applyScheduleView(toggle ? toggle.checked : false);
       setupListTabs();
+      setupReportCreateModal();
     });
 
     // データ読み込み
@@ -1860,9 +1976,180 @@
       }).join('');
     }
 
+    function renderCalendarSchedules(filterDate) {
+      const container = document.getElementById('calendar-schedule-items');
+      const title = document.getElementById('calendar-list-title');
+      if (!container || !title) return;
+
+      const dateLabel = filterDate || new Date().toISOString().split('T')[0];
+      title.textContent = `${dateLabel} の予定`;
+
+      let schedules = [...allSchedules];
+      schedules = schedules.filter(s => s.scheduled_date === dateLabel);
+
+      schedules.sort((a, b) => {
+        const dateA = `${a.scheduled_date} ${a.scheduled_time || '00:00'}`;
+        const dateB = `${b.scheduled_date} ${b.scheduled_time || '00:00'}`;
+        return dateA.localeCompare(dateB);
+      });
+
+      if (schedules.length === 0) {
+        container.innerHTML = `
+          <div class="empty-message">
+            <i class="fas fa-calendar-check" style="font-size: 2rem; margin-bottom: 12px; color: #d1d5db;"></i>
+            <p>予定はありません</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = schedules.map(schedule => {
+        const date = new Date(schedule.scheduled_date);
+        const day = date.getDate();
+        const dow = weekdays[date.getDay()];
+        const statusClass = schedule.status || 'scheduled';
+        const statusLabel = getStatusLabel(schedule.status);
+        const isScheduled = schedule.status === 'scheduled';
+        const isInProgress = schedule.status === 'in_progress';
+        const isCompleted = schedule.status === 'completed';
+        const hasReport = Boolean(schedule.report_created);
+        const reportBadge = hasReport
+          ? '<span class="status-badge status-completed" style="margin-top: 6px;">レポート作成済み</span>'
+          : '<span class="status-badge status-scheduled" style="margin-top: 6px;">レポート未作成</span>';
+        const scheduleId = getScheduleId(schedule);
+        const reportLink = schedule.report_id
+          ? `/staff/reports/new?edit=${schedule.report_id}`
+          : `/staff/reports/new?schedule=${scheduleId}`;
+        const { brandName, clientName } = getBrandAndClient(schedule);
+        const brandLine = (clientName || brandName)
+          ? `<div class="item-brand">${escapeHtml(clientName || '-')} ${brandName ? `/ ${escapeHtml(brandName)}` : ''}</div>`
+          : '';
+
+        return `
+          <div class="schedule-item status-${statusClass}">
+            <div class="schedule-item-header">
+              <div class="item-date">
+                <span class="date-day">${day}</span>
+                <span class="date-dow">${dow}</span>
+              </div>
+              <div class="item-content">
+                <div class="item-time">
+                  <i class="fas fa-clock"></i> ${schedule.scheduled_time || '-'} (${schedule.duration_minutes || 60}分)
+                </div>
+                <div class="item-id">案件ID: ${escapeHtml(String(scheduleId || '未設定'))}</div>
+                ${brandLine}
+                <div class="item-location">${escapeHtml(getStoreName(schedule.store_id))}</div>
+                <div class="item-address">${escapeHtml(getStoreAddress(schedule.store_id))}</div>
+                ${schedule.notes ? `<div class="item-task"><i class="fas fa-sticky-note"></i> ${escapeHtml(schedule.notes)}</div>` : ''}
+              </div>
+              <div class="item-status">
+                <span class="status-badge status-${statusClass}">${statusLabel}</span>
+                ${reportBadge}
+              </div>
+            </div>
+            <div class="item-actions">
+              ${isScheduled ? `
+                <button class="action-btn btn-accept" onclick="acceptSchedule('${schedule.id}')">
+                  <i class="fas fa-check-circle"></i> 受託
+                </button>
+              ` : ''}
+              ${isInProgress ? `
+                <button class="action-btn btn-start" onclick="startWork('${schedule.id}')">
+                  <i class="fas fa-play-circle"></i> 作業開始
+                </button>
+                <a href="${reportLink}" class="action-btn btn-report">
+                  <i class="fas fa-file-alt"></i> ${hasReport ? 'レポート確認' : 'レポート作成'}
+                </a>
+              ` : ''}
+              ${isCompleted ? `
+                <a href="${reportLink}" class="action-btn btn-report">
+                  <i class="fas fa-file-alt"></i> ${hasReport ? 'レポート確認' : 'レポート作成'}
+                </a>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderPastSchedules() {
+      const container = document.getElementById('past-schedule-items');
+      if (!container) return;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const pastSchedules = allSchedules.filter(schedule => {
+        if (!schedule.scheduled_date || schedule.report_created) return false;
+        const date = new Date(`${schedule.scheduled_date}T00:00:00`);
+        return date < today;
+      });
+
+      pastSchedules.sort((a, b) => {
+        const dateA = `${a.scheduled_date} ${a.scheduled_time || '00:00'}`;
+        const dateB = `${b.scheduled_date} ${b.scheduled_time || '00:00'}`;
+        return dateB.localeCompare(dateA);
+      });
+
+      if (pastSchedules.length === 0) {
+        container.innerHTML = `
+          <div class="empty-message">
+            <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 12px; color: #d1d5db;"></i>
+            <p>レポート未作成の過去予定はありません</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = pastSchedules.map(schedule => {
+        const date = new Date(schedule.scheduled_date);
+        const day = date.getDate();
+        const dow = weekdays[date.getDay()];
+        const statusClass = schedule.status || 'scheduled';
+        const statusLabel = getStatusLabel(schedule.status);
+        const scheduleId = getScheduleId(schedule);
+        const canCreateReport = Boolean(scheduleId);
+        const reportLabel = canCreateReport ? 'レポート作成' : '案件ID未設定';
+        const reportDisabled = canCreateReport ? '' : 'disabled';
+        const { brandName, clientName } = getBrandAndClient(schedule);
+        const brandLine = (clientName || brandName)
+          ? `<div class="item-brand">${escapeHtml(clientName || '-')} ${brandName ? `/ ${escapeHtml(brandName)}` : ''}</div>`
+          : '';
+
+        return `
+          <div class="schedule-item status-${statusClass}">
+            <div class="schedule-item-header">
+              <div class="item-date">
+                <span class="date-day">${day}</span>
+                <span class="date-dow">${dow}</span>
+              </div>
+              <div class="item-content">
+                <div class="item-time">
+                  <i class="fas fa-clock"></i> ${schedule.scheduled_time || '-'} (${schedule.duration_minutes || 60}分)
+                </div>
+                <div class="item-id">案件ID: ${escapeHtml(String(scheduleId || '未設定'))}</div>
+                ${brandLine}
+                <div class="item-location">${escapeHtml(getStoreName(schedule.store_id))}</div>
+                <div class="item-address">${escapeHtml(getStoreAddress(schedule.store_id))}</div>
+                ${schedule.notes ? `<div class="item-task"><i class="fas fa-sticky-note"></i> ${escapeHtml(schedule.notes)}</div>` : ''}
+              </div>
+              <div class="item-status">
+                <span class="status-badge status-${statusClass}">${statusLabel}</span>
+                <span class="status-badge status-scheduled" style="margin-top: 6px;">レポート未作成</span>
+              </div>
+            </div>
+            <div class="item-actions">
+              <button class="action-btn btn-report" type="button" onclick="openReportCreateModal('${scheduleId || ''}')" ${reportDisabled}>
+                <i class="fas fa-file-alt"></i> ${reportLabel}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
     function showDaySchedules(date) {
       listFilterDate = date;
       renderScheduleList(date);
+      renderCalendarSchedules(date);
       setActiveListTab(null);
     }
 
@@ -1895,6 +2182,104 @@
         'completed': '完了'
       };
       return labels[status] || '予定';
+    }
+
+    function setupReportCreateModal() {
+      const modal = document.getElementById('report-create-modal');
+      if (!modal) return;
+      const closeBtn = document.getElementById('report-create-close');
+      const cancelBtn = document.getElementById('report-create-cancel');
+      const nextBtn = document.getElementById('report-create-next');
+      const backBtn = document.getElementById('report-create-back');
+      const confirmBtn = document.getElementById('report-create-confirm');
+
+      const closeModal = () => {
+        modal.style.display = 'none';
+        pendingReportSchedule = null;
+      };
+
+      closeBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+          closeModal();
+        }
+      });
+
+      nextBtn.addEventListener('click', () => {
+        if (!pendingReportSchedule) return;
+        setReportModalStep('details');
+      });
+
+      backBtn.addEventListener('click', () => {
+        setReportModalStep('confirm');
+      });
+
+      confirmBtn.addEventListener('click', () => {
+        if (!pendingReportSchedule) return;
+        setReportModalStep('loading');
+        const scheduleId = getScheduleId(pendingReportSchedule);
+        window.setTimeout(() => {
+          window.location.href = `/staff/reports/new?schedule=${encodeURIComponent(scheduleId || '')}`;
+        }, 900);
+      });
+    }
+
+    function setReportModalStep(step) {
+      const steps = document.querySelectorAll('#report-create-modal .report-step');
+      steps.forEach(section => {
+        section.classList.toggle('is-active', section.dataset.step === step);
+      });
+    }
+
+    function openReportCreateModal(scheduleId) {
+      const modal = document.getElementById('report-create-modal');
+      if (!modal) return;
+      const target = allSchedules.find(s => String(getScheduleId(s)) === String(scheduleId));
+      if (!target) return;
+      pendingReportSchedule = target;
+      updateReportCreateDetails(target);
+      setReportModalStep('confirm');
+      modal.style.display = 'flex';
+    }
+
+    function updateReportCreateDetails(schedule) {
+      const detail = document.getElementById('report-create-details');
+      if (!detail) return;
+      const scheduleId = getScheduleId(schedule);
+      const dateLabel = schedule.scheduled_date
+        ? `${schedule.scheduled_date} ${schedule.scheduled_time || ''}`.trim()
+        : '-';
+      const { brandName, clientName } = getBrandAndClient(schedule);
+      const storeName = getStoreName(schedule.store_id);
+      const storeAddress = getStoreAddress(schedule.store_id);
+
+      detail.innerHTML = `
+        <div class="report-detail-row">
+          <span class="report-detail-label">案件ID</span>
+          <span>${escapeHtml(String(scheduleId || '未設定'))}</span>
+        </div>
+        <div class="report-detail-row">
+          <span class="report-detail-label">日付</span>
+          <span>${escapeHtml(dateLabel)}</span>
+        </div>
+        <div class="report-detail-row">
+          <span class="report-detail-label">ブランド</span>
+          <span>${escapeHtml(brandName || '-')}</span>
+        </div>
+        <div class="report-detail-row">
+          <span class="report-detail-label">法人名</span>
+          <span>${escapeHtml(clientName || '-')}</span>
+        </div>
+        <div class="report-detail-row">
+          <span class="report-detail-label">店舗</span>
+          <span>${escapeHtml(storeName || '-')}</span>
+        </div>
+        <div class="report-detail-row">
+          <span class="report-detail-label">住所</span>
+          <span>${escapeHtml(storeAddress || '-')}</span>
+        </div>
+      `;
     }
 
     function escapeHtml(str) {
@@ -2019,6 +2404,8 @@
       const toggle = document.getElementById('view-toggle');
       const calendarView = document.getElementById('calendar-view');
       const listView = document.getElementById('cleaning-schedule-section');
+      const pastSection = document.getElementById('past-schedule-section');
+      const calendarSection = document.getElementById('calendar-schedule-section');
 
       if (!calendarView || !listView) return;
 
@@ -2029,6 +2416,12 @@
 
       calendarView.classList.toggle('is-hidden', !isCalendar);
       listView.classList.toggle('is-hidden', isCalendar);
+      if (pastSection) {
+        pastSection.classList.toggle('is-hidden', isCalendar);
+      }
+      if (calendarSection) {
+        calendarSection.classList.toggle('is-hidden', !isCalendar);
+      }
     }
   </script>
 </main>
