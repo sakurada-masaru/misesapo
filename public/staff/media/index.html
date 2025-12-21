@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <base href="/" />
-    <title>作業割り当て一覧 | ミセサポ</title>
+    <title>メディア | ミセサポ</title>
     
     <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
 <link rel="shortcut icon" href="/images/logo_144x144.png" />
@@ -116,7 +116,7 @@
       }
     </style>
   </head>
-  <body class="theme-pink page-staff-assignments">
+  <body class="theme-pink page-staff-media">
     <div id="default-header-wrapper">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
 <header id="header-guest" class="site-header" data-role="guest">
@@ -196,14 +196,15 @@
 
 <main id="main" class="container staff-media">
   <div class="page-header">
+    <button class="menu-btn" type="button" onclick="window.location.href='/staff/dashboard'" aria-label="ホームへ戻る">
+      <i class="fas fa-home"></i>
+    </button>
+    <div class="header-spacer"></div>
     <button class="menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
       <i class="fas fa-bars"></i>
     </button>
-    <a href="/staff/dashboard" class="back-btn">
-      <i class="fas fa-chevron-left"></i>
-    </a>
-    <h1 class="page-title">メディア</h1>
   </div>
+  <h1 class="page-title">メディア</h1>
 
   <!-- アップロードボタン -->
   <div class="media-upload-section">
@@ -288,10 +289,6 @@
   </div>
 
   <nav class="quick-actions-dock" aria-label="クイックアクション">
-    <a href="/staff/dashboard" class="dock-item">
-      <i class="fas fa-home"></i>
-      <span>ホーム</span>
-    </a>
     <a href="/staff/schedule" class="dock-item">
       <i class="fas fa-calendar"></i>
       <span>スケジュール</span>
@@ -299,6 +296,10 @@
     <a href="/staff/reports/new" class="dock-item">
       <i class="fas fa-file-alt"></i>
       <span>レポート</span>
+    </a>
+    <a href="/staff/media" class="dock-item is-active">
+      <i class="fas fa-photo-film"></i>
+      <span>メディア</span>
     </a>
     <a href="/cleaning-manual" class="dock-item">
       <i class="fas fa-book"></i>
@@ -369,39 +370,18 @@
     }
 
     .page-header {
-      display: flex;
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
       align-items: center;
       gap: 12px;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #e5e7eb;
-    }
-
-    .back-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      color: #374151;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-
-    .back-btn:hover {
-      background: #f9fafb;
-      border-color: var(--primary);
-      color: var(--primary);
+      margin-bottom: 16px;
     }
 
     .page-title {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: #111827;
-      margin: 0;
+      margin: 0 0 20px;
     }
 
     .media-upload-section {

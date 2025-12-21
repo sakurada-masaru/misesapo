@@ -107,7 +107,8 @@
             height: var(--manual-title-height);
             background-color: #ffffff;
             color: #111827;
-            display: flex;
+            display: grid;
+            grid-template-columns: 44px 1fr 44px;
             align-items: center;
             gap: 12px;
             padding: 0 16px;
@@ -116,13 +117,11 @@
             z-index: 998;
             box-sizing: border-box;
         }
-        .manual-title h1 {
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #111827;
-            line-height: 1.2;
-            padding: 0;
+        .manual-header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
         .manual-title .menu-btn {
             width: 44px;
@@ -143,23 +142,8 @@
         :root {
             --manual-header-height: 0px;
             --manual-title-height: 64px;
-            --manual-lang-tabs-height: 48px;
+            --manual-lang-tabs-height: 0px;
             --manual-category-tabs-height: 50px;
-        }
-        .language-tabs-container {
-            position: fixed;
-            top: calc(var(--manual-header-height) + var(--manual-title-height)); /* 標準ヘッダーの高さ + タイトルの高さ */
-            left: 0;
-            width: 100%;
-            background-color: #f8f8f8;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-            z-index: 999;
-            padding: 6px 20px;
-            box-sizing: border-box;
-            min-height: var(--manual-lang-tabs-height);
         }
         /* 言語切り替えタブ */
         .language-tabs {
@@ -540,20 +524,20 @@
 <body>
     <!-- ページタイトル -->
     <div class="manual-title">
+        <button class="menu-btn" type="button" onclick="window.location.href='/staff/dashboard'" aria-label="ホームへ戻る">
+            <i class="fas fa-home"></i>
+        </button>
+        <div class="manual-header-actions">
+            <div class="language-tabs">
+                <button class="language-tab active" data-lang="jp" onclick="switchLanguage('jp')">JP</button>
+                <button class="language-tab" data-lang="en" onclick="switchLanguage('en')">EN</button>
+            </div>
+            <button id="edit-manual-btn" class="edit-manual-btn" onclick="handleEditButtonClick()">
+                <i class="fas fa-edit"></i> 編集
+            </button>
+        </div>
         <button class="menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
             <i class="fas fa-bars"></i>
-        </button>
-        <h1>ミセサポ研修マニュアル</h1>
-    </div>
-    
-    <!-- 言語切り替えタブと編集ボタン -->
-    <div class="language-tabs-container">
-        <div class="language-tabs">
-            <button class="language-tab active" data-lang="jp" onclick="switchLanguage('jp')">JP</button>
-            <button class="language-tab" data-lang="en" onclick="switchLanguage('en')">EN</button>
-        </div>
-        <button id="edit-manual-btn" class="edit-manual-btn" onclick="handleEditButtonClick()">
-            <i class="fas fa-edit"></i> 編集
         </button>
     </div>
     
@@ -1694,10 +1678,6 @@
     </div>
 
     <nav class="quick-actions-dock" aria-label="クイックアクション">
-        <a href="/staff/dashboard" class="dock-item">
-            <i class="fas fa-home"></i>
-            <span>ホーム</span>
-        </a>
         <a href="/staff/schedule" class="dock-item">
             <i class="fas fa-calendar"></i>
             <span>スケジュール</span>
@@ -1705,6 +1685,10 @@
         <a href="/staff/reports/new" class="dock-item">
             <i class="fas fa-file-alt"></i>
             <span>レポート</span>
+        </a>
+        <a href="/staff/media" class="dock-item">
+            <i class="fas fa-photo-film"></i>
+            <span>メディア</span>
         </a>
         <a href="/cleaning-manual" class="dock-item is-active">
             <i class="fas fa-book"></i>

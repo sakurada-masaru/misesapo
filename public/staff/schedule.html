@@ -290,8 +290,8 @@
 <main id="main" class="staff-page main-content">
   <div class="page-container">
     <div class="page-header">
-      <button class="menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
-        <i class="fas fa-bars"></i>
+      <button class="menu-btn" type="button" onclick="window.location.href='/staff/dashboard'" aria-label="ホームへ戻る">
+        <i class="fas fa-home"></i>
       </button>
       <div class="view-toggle">
         <span class="view-label">リスト</span>
@@ -301,8 +301,11 @@
         </label>
         <span class="view-label">カレンダー</span>
       </div>
-      <div class="role-badge-display" id="role-badge-display"></div>
+      <button class="menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
+        <i class="fas fa-bars"></i>
+      </button>
     </div>
+    <div class="role-badge-display" id="role-badge-display"></div>
 
     <!-- ロール別タブ（開発者の場合のみ表示） -->
     <div class="schedule-tabs" id="schedule-tabs" style="display: none;">
@@ -476,10 +479,6 @@
   </div>
 
   <nav class="quick-actions-dock" aria-label="クイックアクション">
-    <a href="/staff/dashboard" class="dock-item">
-      <i class="fas fa-home"></i>
-      <span>ホーム</span>
-    </a>
     <a href="/staff/schedule" class="dock-item is-active">
       <i class="fas fa-calendar"></i>
       <span>スケジュール</span>
@@ -487,6 +486,10 @@
     <a href="/staff/reports/new" class="dock-item">
       <i class="fas fa-file-alt"></i>
       <span>レポート</span>
+    </a>
+    <a href="/staff/media" class="dock-item">
+      <i class="fas fa-photo-film"></i>
+      <span>メディア</span>
     </a>
     <a href="/cleaning-manual" class="dock-item">
       <i class="fas fa-book"></i>
@@ -507,20 +510,20 @@
     }
     .page-header {
       margin-bottom: 24px;
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
       align-items: center;
-      flex-wrap: wrap;
       gap: 12px;
     }
-    .page-header {
-      gap: 16px;
+    .page-header .view-toggle {
+      margin: 0 auto;
     }
     .role-badge-display {
       padding: 6px 16px;
       border-radius: 20px;
       font-size: 0.875rem;
       font-weight: 600;
+      margin-bottom: 12px;
     }
     .view-toggle {
       display: inline-flex;
