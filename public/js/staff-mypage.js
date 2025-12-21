@@ -308,8 +308,14 @@ async function loadCurrentUser() {
       currentUser.role = getRoleFromCode(currentUser.role_code);
     }
 
+    const hasAttendanceUI = Boolean(document.getElementById('attendance-toggle-btn'));
+    const hasDailyReportUI = Boolean(document.getElementById('daily-report-content'));
+    const hasCalendarUI = Boolean(document.getElementById('calendar-title')) && Boolean(document.getElementById('calendar-grid'));
+
     // 出退勤記録を読み込み（非同期）
-    await loadAttendanceRecords();
+    if (hasAttendanceUI || hasCalendarUI) {
+      await loadAttendanceRecords();
+    }
 
     // ユーザー情報を表示
     renderUser(currentUser);
@@ -317,10 +323,14 @@ async function loadCurrentUser() {
     // スケジュールと業務連絡を読み込み
     // loadWeeklySchedule(); // weekly-scheduleセクションが存在しないためコメントアウト
     loadAnnouncements();
-    loadDailyReports();
+    if (hasDailyReportUI) {
+      loadDailyReports();
+    }
 
     // カレンダーを表示
-    renderCalendar();
+    if (hasCalendarUI) {
+      renderCalendar();
+    }
     
     loadingEl.style.display = 'none';
     contentEl.style.display = 'flex';
@@ -336,23 +346,25 @@ async function loadCurrentUser() {
     
     // 出退勤ボタンのイベントリスナーを再設定（コンテンツ表示後）
     // 少し遅延を入れてDOMが完全にレンダリングされるのを待つ
-    setTimeout(() => {
-      console.log('Setting up button after delay...');
-      setupAttendanceToggleButton();
-      
-      // ボタンが存在するか再確認
-      const btn = document.getElementById('attendance-toggle-btn');
-      if (btn) {
-        console.log('Button found after setup:', btn);
-        console.log('Button display style:', window.getComputedStyle(btn).display);
-        console.log('Button visibility:', window.getComputedStyle(btn).visibility);
-        console.log('Button parent display:', window.getComputedStyle(btn.parentElement).display);
-      } else {
-        console.error('Button still not found after setup!');
-      }
-      
-      // アコーディオン機能は削除されました
-    }, 100);
+    if (hasAttendanceUI) {
+      setTimeout(() => {
+        console.log('Setting up button after delay...');
+        setupAttendanceToggleButton();
+        
+        // ボタンが存在するか再確認
+        const btn = document.getElementById('attendance-toggle-btn');
+        if (btn) {
+          console.log('Button found after setup:', btn);
+          console.log('Button display style:', window.getComputedStyle(btn).display);
+          console.log('Button visibility:', window.getComputedStyle(btn).visibility);
+          console.log('Button parent display:', window.getComputedStyle(btn.parentElement).display);
+        } else {
+          console.error('Button still not found after setup!');
+        }
+        
+        // アコーディオン機能は削除されました
+      }, 100);
+    }
   } catch (error) {
     console.error('Error loading user:', error);
     loadingEl.style.display = 'none';
@@ -693,6 +705,9 @@ function calculateTotalBreakTime(breaks) {
 // 月間統計を計算
 function calculateMonthlyStats() {
   if (!currentUser) return;
+  const workDaysEl = document.getElementById('monthly-work-days');
+  const workHoursEl = document.getElementById('monthly-work-hours');
+  if (!workDaysEl || !workHoursEl) return;
   
   const now = new Date();
   const year = now.getFullYear();
@@ -715,8 +730,8 @@ function calculateMonthlyStats() {
     }
   }
   
-  document.getElementById('monthly-work-days').textContent = `${workDays}日`;
-  document.getElementById('monthly-work-hours').textContent = formatWorkHours(totalHours);
+  workDaysEl.textContent = `${workDays}日`;
+  workHoursEl.textContent = formatWorkHours(totalHours);
 }
 
 // 確認ダイアログを表示する関数
@@ -980,12 +995,6 @@ function validateAttendanceTimes(clockIn, clockOut) {
 function setupAttendanceToggleButton() {
   const toggleBtn = document.getElementById('attendance-toggle-btn');
   if (!toggleBtn) {
-    console.error('Attendance toggle button not found!');
-    console.error('Available elements:', {
-      mypageContent: document.getElementById('mypage-content'),
-      attendanceCard: document.querySelector('.attendance-card'),
-      attendanceToday: document.querySelector('.attendance-today')
-    });
     return;
   }
   
@@ -1551,6 +1560,7 @@ function renderAnnouncements(announcements) {
 // 日報を読み込む
 async function loadDailyReports() {
   if (!currentUser) return;
+  if (!document.getElementById('daily-report-content')) return;
   
   // 今日の日付を表示
   const today = new Date();
@@ -1575,6 +1585,7 @@ async function loadDailyReports() {
 // 今日の日報を読み込む
 async function loadTodayDailyReport() {
   if (!currentUser) return;
+  if (!document.getElementById('daily-report-content')) return;
   
   const today = new Date().toISOString().split('T')[0];
   const storageKey = `daily_report_${currentUser.id}_${today}`;
@@ -1780,6 +1791,8 @@ function setupDailyReportListeners() {
   const saveBtn = document.getElementById('daily-report-save-btn');
   const clearBtn = document.getElementById('daily-report-clear-btn');
   const textarea = document.getElementById('daily-report-content');
+
+  if (!saveBtn && !clearBtn && !textarea) return;
   
   if (saveBtn) {
     saveBtn.addEventListener('click', saveDailyReport);
@@ -2136,14 +2149,16 @@ function renderCalendar() {
   const year = currentCalendarDate.getFullYear();
   const month = currentCalendarDate.getMonth();
   
-  document.getElementById('calendar-title').textContent = `${year} ${month + 1}`;
+  const titleEl = document.getElementById('calendar-title');
+  const grid = document.getElementById('calendar-grid');
+  if (!titleEl || !grid) return;
+  titleEl.textContent = `${year} ${month + 1}`;
   
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const startDate = new Date(firstDay);
   startDate.setDate(startDate.getDate() - startDate.getDay());
   
-  const grid = document.getElementById('calendar-grid');
   grid.innerHTML = '';
   
   // 曜日ヘッダー
@@ -3940,9 +3955,14 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeAttendanceForToday();
   
   loadCurrentUser();
-  setupAttendanceToggleButton();
+  if (document.getElementById('attendance-toggle-btn')) {
+    setupAttendanceToggleButton();
+  }
   setupCorrectionRequestButton();
-  setupTodoListeners();
+  const hasTodoUI = Boolean(document.getElementById('todo-input')) || Boolean(document.getElementById('todo-list'));
+  if (hasTodoUI) {
+    setupTodoListeners();
+  }
   setupDigitalClock();
   applyMypageTheme();
   
@@ -4009,20 +4029,22 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // ユーザー読み込み後にTODOを読み込む
   const originalLoadCurrentUser = loadCurrentUser;
-  const checkAndLoadTodos = setInterval(() => {
-    if (currentUser) {
-      loadTodos();
+  if (hasTodoUI) {
+    const checkAndLoadTodos = setInterval(() => {
+      if (currentUser) {
+        loadTodos();
+        clearInterval(checkAndLoadTodos);
+      }
+    }, 500);
+    
+    // 5秒後にタイムアウト
+    setTimeout(() => {
       clearInterval(checkAndLoadTodos);
-    }
-  }, 500);
-  
-  // 5秒後にタイムアウト
-  setTimeout(() => {
-    clearInterval(checkAndLoadTodos);
-    if (!currentUser) {
-      loadTodos(); // ユーザーがなくてもデフォルトで読み込む
-    }
-  }, 5000);
+      if (!currentUser) {
+        loadTodos(); // ユーザーがなくてもデフォルトで読み込む
+      }
+    }, 5000);
+  }
   
   // アコーディオン機能のセットアップはloadCurrentUser()の完了後に実行される
 });
