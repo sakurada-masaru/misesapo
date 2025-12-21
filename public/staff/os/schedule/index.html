@@ -337,9 +337,6 @@
       <button class="tab-btn active" data-tab="dev-tasks">
         <i class="fas fa-code"></i> 開発タスク
       </button>
-      <button class="tab-btn" data-tab="personal-memo">
-        <i class="fas fa-sticky-note"></i> メモ
-      </button>
     </div>
 
     <div class="calendar-nav">
@@ -415,20 +412,6 @@
       </div>
     </div>
 
-    <!-- メモセクション（全ロール共通） -->
-    <div class="memo-section" id="memo-section">
-      <div class="section-header">
-        <h3 class="list-title">
-          <i class="fas fa-sticky-note"></i> 個人メモ
-        </h3>
-        <button class="btn-add-memo" id="btn-add-memo">
-          <i class="fas fa-plus"></i> メモ追加
-        </button>
-      </div>
-      <div class="memo-list" id="memo-list">
-        <!-- メモがここに表示される -->
-      </div>
-    </div>
   </div>
 
   <!-- 新規タスク追加モーダル -->
@@ -487,31 +470,6 @@
     </div>
   </div>
 
-  <!-- メモ追加モーダル -->
-  <div class="modal-overlay" id="memo-modal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fas fa-sticky-note"></i> メモ追加</h3>
-        <button class="modal-close" id="memo-modal-close">&times;</button>
-      </div>
-      <form id="memo-form">
-        <div class="form-group">
-          <label>日付</label>
-          <input type="date" id="memo-date">
-        </div>
-        <div class="form-group">
-          <label>メモ内容 <span class="required">*</span></label>
-          <textarea id="memo-content" rows="4" required placeholder="メモを入力"></textarea>
-        </div>
-        <div class="form-actions">
-          <button type="button" class="btn-cancel" id="btn-cancel-memo">キャンセル</button>
-          <button type="submit" class="btn-submit">
-            <i class="fas fa-save"></i> 保存
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <div class="modal-overlay" id="report-create-modal" style="display: none;">
     <div class="modal-content">
@@ -774,7 +732,7 @@
       align-items: center;
       margin-bottom: 16px;
     }
-    .btn-add-task, .btn-add-memo {
+    .btn-add-task {
       padding: 10px 16px;
       border: none;
       border-radius: 8px;
@@ -788,7 +746,7 @@
       align-items: center;
       gap: 6px;
     }
-    .btn-add-task:hover, .btn-add-memo:hover {
+    .btn-add-task:hover {
       background: var(--primary-600);
       transform: translateY(-1px);
     }
@@ -991,70 +949,6 @@
       background: #e5e7eb;
     }
     
-    /* メモセクション */
-    .memo-section {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 20px;
-      margin-top: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .memo-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .memo-card {
-      display: flex;
-      gap: 16px;
-      padding: 16px;
-      background: #fffbeb;
-      border-radius: 12px;
-      border-left: 4px solid #f59e0b;
-    }
-    .memo-date {
-      min-width: 60px;
-      text-align: center;
-    }
-    .memo-date-day {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #111827;
-      line-height: 1;
-    }
-    .memo-date-month {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-    .memo-content {
-      flex: 1;
-      font-size: 0.95rem;
-      color: #374151;
-      line-height: 1.6;
-    }
-    .memo-actions {
-      display: flex;
-      gap: 8px;
-    }
-    .memo-action-btn {
-      padding: 6px 10px;
-      border: none;
-      border-radius: 6px;
-      background: rgba(0,0,0,0.05);
-      color: #6b7280;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .memo-action-btn:hover {
-      background: rgba(0,0,0,0.1);
-      color: #374151;
-    }
-    .memo-empty {
-      text-align: center;
-      padding: 40px;
-      color: #9ca3af;
-    }
     
     /* モーダル */
     .modal-overlay {
@@ -1166,7 +1060,7 @@
       font-size: 1.5rem;
       color: var(--primary);
     }
-    #task-form, #memo-form {
+    #task-form {
       padding: 20px;
     }
     .form-group {
