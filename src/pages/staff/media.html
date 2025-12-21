@@ -4,10 +4,8 @@
 
 <main id="main" class="container staff-media">
   <div class="page-header">
-    <button class="menu-btn" type="button" onclick="window.location.href='/staff/dashboard'" aria-label="ホームへ戻る">
-      <i class="fas fa-home"></i>
-    </button>
-    <div class="header-spacer"></div>
+    <div class="header-spacer" aria-hidden="true"></div>
+    <div class="header-spacer" aria-hidden="true"></div>
     <button class="menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
       <i class="fas fa-bars"></i>
     </button>
@@ -171,6 +169,10 @@
     align-items: center;
     gap: 12px;
     margin-bottom: 16px;
+  }
+  .header-spacer {
+    width: 44px;
+    height: 44px;
   }
 
   .page-title {

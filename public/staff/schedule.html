@@ -290,9 +290,7 @@
 <main id="main" class="staff-page main-content">
   <div class="page-container">
     <div class="page-header">
-      <button class="menu-btn" type="button" onclick="window.location.href='/staff/dashboard'" aria-label="ホームへ戻る">
-        <i class="fas fa-home"></i>
-      </button>
+      <div class="header-spacer" aria-hidden="true"></div>
       <div class="view-toggle">
         <span class="view-label">リスト</span>
         <label class="switch" aria-label="表示切り替え">
@@ -655,6 +653,10 @@
     .menu-btn:hover {
       background: #fff1f6;
       border-color: #fecddf;
+    }
+    .header-spacer {
+      width: 44px;
+      height: 44px;
     }
     .quick-actions-dock {
       position: fixed;

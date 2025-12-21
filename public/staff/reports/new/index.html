@@ -201,9 +201,7 @@
 <main id="main" class="staff-report-page">
   <!-- 固定ヘッダー -->
   <header class="page-header-fixed">
-    <button class="menu-btn" type="button" onclick="window.location.href='/staff/dashboard'" aria-label="ホームへ戻る">
-      <i class="fas fa-home"></i>
-    </button>
+    <div class="header-spacer" aria-hidden="true"></div>
     <div class="header-actions">
       <button type="button" class="details-btn" id="details-btn" aria-label="詳細を開く">
         <i class="fas fa-info-circle"></i>
@@ -885,23 +883,27 @@
 .staff-report-page {
   padding-bottom: 220px;
 }
-  .page-header-fixed {
-    position: sticky;
-    top: 0;
-    z-index: 1100;
-    display: grid;
-    grid-template-columns: 44px 1fr 44px;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-  }
-  .page-header-fixed .header-actions {
-    display: flex;
-    justify-content: center;
-  }
+.page-header-fixed {
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+.header-spacer {
+  width: 44px;
+  height: 44px;
+}
+.page-header-fixed .header-actions {
+  display: flex;
+  justify-content: center;
+}
   .menu-btn {
     width: 44px;
     height: 44px;

@@ -8,7 +8,7 @@
 <main class="staff-inventory-scan">
   <div class="scan-container">
     <header class="scan-header">
-      <a href="/staff/dashboard" class="back-btn">
+      <a href="/staff/mypage" class="back-btn">
         <i class="fas fa-chevron-left"></i>
       </a>
       <h1>NFCタグ打刻</h1>
@@ -240,7 +240,7 @@
           // 3秒後にダッシュボードに戻る（オプション）
           setTimeout(() => {
             if (confirm('ダッシュボードに戻りますか？')) {
-              window.location.href = '/staff/dashboard';
+              window.location.href = '/staff/mypage';
             }
           }, 3000);
         }
@@ -411,4 +411,3 @@
     })();
   </script>
 </main>
-
