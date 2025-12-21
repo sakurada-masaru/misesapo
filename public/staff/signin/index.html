@@ -633,8 +633,20 @@
             const base = document.querySelector('base');
             const basePath = base ? (base.getAttribute('href') || '/') : '/';
             
-            // 従業員ログインからログインした場合は、全員等しくマイページにリダイレクト
-            let defaultPath = '/staff/mypage.html';
+            const getDefaultPath = (user) => {
+              const role = (user?.role || '').toLowerCase();
+              const department = (user?.department || '').toLowerCase();
+              if (role === 'sales' || department.includes('営業') || department.includes('sales')) {
+                return '/sales/dashboard.html';
+              }
+              if (department.includes('os') || department.includes('ｏｓ') || department.includes('os課') || department.includes('ｏｓ課')) {
+                return '/staff/dashboard.html';
+              }
+              return '/staff/mypage.html';
+            };
+
+            // 部署に応じたデフォルトリダイレクト
+            let defaultPath = getDefaultPath(result.user);
             
             // ユーザーIDをパラメータに追加
             if (result.user.id) {
@@ -771,5 +783,4 @@
     </script>
   </body>
   </html>
-
 
