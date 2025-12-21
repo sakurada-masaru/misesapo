@@ -90,7 +90,7 @@
 </head>
   <body class="theme-pink theme-pink page-staff-mypage">
 <header class="os-fixed-header">
-  <button class="os-header-menu" type="button" aria-label="メニューを開く" onclick="const target = document.getElementById('sidebar-toggle') || document.getElementById('mobile-menu-button'); if (target) { target.click(); }">
+  <button class="os-header-menu" type="button" aria-label="メニューを開く" onclick="const target = document.getElementById('sidebar-toggle'); if (target) { target.click(); }">
     <i class="fas fa-bars"></i>
   </button>
 </header>
@@ -167,13 +167,6 @@
 
 
     </div>
-<!-- モバイルメニューボタン -->
-<div class="mobile-menu-area">
-<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
-  <i class="fas fa-bars"></i>
-</button>
-</div>
-
 <!-- サイドバーオーバーレイ -->
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
