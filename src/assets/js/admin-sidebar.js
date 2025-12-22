@@ -645,6 +645,25 @@
     }
   }
 
+  /**
+   * 従業員用ログアウト関数
+   * すべてのマイページから使用される
+   */
+  function staffLogout() {
+    // Cognitoからログアウト
+    if (window.CognitoAuth && typeof window.CognitoAuth.logout === 'function') {
+      window.CognitoAuth.logout();
+    }
+    // ローカルストレージをクリア
+    localStorage.removeItem('cognito_user');
+    localStorage.removeItem('misesapo_auth');
+    localStorage.removeItem('cognito_id_token');
+    localStorage.removeItem('cognito_access_token');
+    localStorage.removeItem('cognito_refresh_token');
+    // 従業員ログイン画面にリダイレクト
+    window.location.href = '/staff/signin.html';
+  }
+
   // グローバルに公開
   window.AdminSidebar = {
     init: init,
@@ -655,6 +674,9 @@
     hasAdminAccess: hasAdminAccess,
     setupMypageLink: setupMypageLink
   };
+
+  // staffLogoutをグローバルに公開（すべてのマイページで使用可能にする）
+  window.staffLogout = staffLogout;
 
   // 自動初期化
   init();
