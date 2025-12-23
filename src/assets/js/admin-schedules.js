@@ -1447,6 +1447,7 @@ window.quickAssignWorker = async function(scheduleId) {
       // モーダルを閉じる
       document.body.removeChild(modal);
 
+      // 成功メッセージを表示
       if (selectedValue === 'ALL' || selectedValue === '') {
         alert('全員（オープン）に設定しました');
       } else {
