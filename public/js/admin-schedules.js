@@ -1469,15 +1469,21 @@ window.quickAssignWorker = async function(scheduleId) {
         ? (wasDraft ? 'scheduled' : (schedule.status || 'scheduled')) // 清掃員を割り当てた場合は自動的にscheduledに
         : schedule.status; // 清掃員を解除した場合は元のstatusを維持
       
+      // 通常のスケジュール更新フォームと同じ形式で送信
       const updateData = {
-        worker_id: selectedWorkerId,
-        assigned_to: selectedWorkerId, // 念のため両方更新
+        worker_id: selectedWorkerId || null, // nullの場合は明示的にnullを送信
         status: newStatus
       };
+      
+      // nullの場合はフィールドを削除（APIがnullを処理できない場合に備える）
+      if (updateData.worker_id === null) {
+        delete updateData.worker_id;
+      }
       
       console.log('[Quick Assign] Updating schedule:', {
         scheduleId,
         selectedWorkerId,
+        updateData,
         wasDraft,
         hadWorker,
         oldStatus: schedule.status,
@@ -1491,7 +1497,16 @@ window.quickAssignWorker = async function(scheduleId) {
       });
 
       if (!response.ok) {
-        throw new Error('更新に失敗しました');
+        // エラーレスポンスの詳細を取得
+        let errorMessage = '更新に失敗しました';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          console.error('[Quick Assign] API Error:', errorData);
+        } catch (e) {
+          console.error('[Quick Assign] Failed to parse error response:', e);
+        }
+        throw new Error(errorMessage);
       }
 
       // レスポンスから更新されたスケジュールデータを取得
