@@ -1462,30 +1462,37 @@ window.quickAssignWorker = async function(scheduleId) {
 
     try {
       // スケジュールを更新
-      // 清掃員を割り当てた場合、draft状態からscheduledに自動更新
-      const wasDraft = schedule.status === 'draft';
-      const hadWorker = schedule.worker_id || schedule.assigned_to;
-      const newStatus = selectedWorkerId 
-        ? (wasDraft ? 'scheduled' : (schedule.status || 'scheduled')) // 清掃員を割り当てた場合は自動的にscheduledに
-        : schedule.status; // 清掃員を解除した場合は元のstatusを維持
+      // 「全員（オープン）」の場合と個人を選択した場合で処理を分ける
+      let updateData = {};
       
-      // 通常のスケジュール更新フォームと同じ形式で送信
-      const updateData = {
-        worker_id: selectedWorkerId || null, // nullの場合は明示的にnullを送信
-        status: newStatus
-      };
-      
-      // nullの場合はフィールドを削除（APIがnullを処理できない場合に備える）
-      if (updateData.worker_id === null) {
-        delete updateData.worker_id;
+      if (selectedValue === 'ALL' || selectedValue === '') {
+        // 「全員（オープン）」の場合：worker_idを空文字列に設定（APIが空文字列で未割当を処理する場合）
+        // またはフィールドを削除（APIがnullを処理できない場合）
+        updateData = {
+          worker_id: '' // 空文字列を送信
+        };
+        // ステータスは変更しない（全員オープンの場合はstatusを維持）
+        if (schedule.status) {
+          updateData.status = schedule.status;
+        }
+      } else {
+        // 個人を選択した場合
+        const wasDraft = schedule.status === 'draft';
+        const newStatus = wasDraft 
+          ? 'scheduled' // draft状態からscheduledに自動更新
+          : (schedule.status || 'scheduled'); // 既に確定済みの場合は維持
+        
+        updateData = {
+          worker_id: selectedWorkerId,
+          status: newStatus
+        };
       }
       
       console.log('[Quick Assign] Updating schedule:', {
         scheduleId,
+        selectedValue,
         selectedWorkerId,
         updateData,
-        wasDraft,
-        hadWorker,
         oldStatus: schedule.status,
         newStatus: updateData.status
       });
@@ -1518,8 +1525,9 @@ window.quickAssignWorker = async function(scheduleId) {
       let finalWorkerId = null;
       if (selectedValue === 'ALL' || selectedValue === '') {
         // 「全員（オープン）」の場合
+        // APIが空文字列を返すか、nullを返すか、フィールドを削除するかはAPI次第
         finalWorkerId = updatedSchedule.worker_id !== undefined 
-          ? (updatedSchedule.worker_id || null) 
+          ? (updatedSchedule.worker_id === '' ? null : (updatedSchedule.worker_id || null)) 
           : null;
       } else {
         // 個人を選択した場合
@@ -1527,6 +1535,13 @@ window.quickAssignWorker = async function(scheduleId) {
           ? (updatedSchedule.worker_id || selectedWorkerId) 
           : selectedWorkerId;
       }
+      
+      console.log('[Quick Assign] Final worker ID:', {
+        selectedValue,
+        selectedWorkerId,
+        responseWorkerId: updatedSchedule.worker_id,
+        finalWorkerId
+      });
 
       // ローカルデータを更新（即座に反映）
       const idx = allSchedules.findIndex(s => {
