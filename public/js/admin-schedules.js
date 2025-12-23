@@ -1462,10 +1462,27 @@ window.quickAssignWorker = async function(scheduleId) {
 
     try {
       // スケジュールを更新
+      // 清掃員を割り当てた場合、draft状態からscheduledに自動更新
+      const wasDraft = schedule.status === 'draft';
+      const hadWorker = schedule.worker_id || schedule.assigned_to;
+      const newStatus = selectedWorkerId 
+        ? (wasDraft ? 'scheduled' : (schedule.status || 'scheduled')) // 清掃員を割り当てた場合は自動的にscheduledに
+        : schedule.status; // 清掃員を解除した場合は元のstatusを維持
+      
       const updateData = {
         worker_id: selectedWorkerId,
-        status: selectedWorkerId ? 'scheduled' : schedule.status // 清掃員を割り当てた場合は自動的にscheduledに
+        assigned_to: selectedWorkerId, // 念のため両方更新
+        status: newStatus
       };
+      
+      console.log('[Quick Assign] Updating schedule:', {
+        scheduleId,
+        selectedWorkerId,
+        wasDraft,
+        hadWorker,
+        oldStatus: schedule.status,
+        newStatus: updateData.status
+      });
 
       const response = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
         method: 'PUT',
