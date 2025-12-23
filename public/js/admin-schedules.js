@@ -892,6 +892,7 @@ function setupEventListeners() {
   const salesFilter = document.getElementById('sales-filter');
   const workerFilter = document.getElementById('worker-filter');
   const statusFilter = document.getElementById('status-filter');
+  const dateRangeFilter = document.getElementById('date-range-filter');
   const resetFilters = document.getElementById('reset-filters');
   
   if (storeFilter) {
@@ -905,6 +906,9 @@ function setupEventListeners() {
   }
   if (statusFilter) {
     statusFilter.addEventListener('change', filterAndRender);
+  }
+  if (dateRangeFilter) {
+    dateRangeFilter.addEventListener('change', filterAndRender);
   }
   if (resetFilters) {
     resetFilters.addEventListener('click', () => {
