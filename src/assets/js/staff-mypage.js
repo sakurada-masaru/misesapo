@@ -4367,21 +4367,35 @@ async function loadScheduleList(user) {
       // 店舗名を取得
       const storeName = schedule.store_name || schedule.client_name || '-';
       
-      // ステータスラベル
+      // 現在のユーザーに既に受託されているか確認
+      const scheduleWorkerId = schedule.worker_id || schedule.assigned_to || schedule.staff_id || '';
+      let isAssigned = false;
+      if (scheduleWorkerId) {
+        if (window.DataUtils && window.DataUtils.IdUtils && window.DataUtils.IdUtils.isSame) {
+          isAssigned = window.DataUtils.IdUtils.isSame(scheduleWorkerId, user.id);
+        } else {
+          isAssigned = String(scheduleWorkerId) === String(user.id);
+        }
+      }
+      
+      // 既に受託済みの場合は「確定」バッジ、未受託の場合は「受託」ボタンを表示
       const statusLabel = schedule.status === 'in_progress' ? '作業中' : '確定';
       const statusClass = schedule.status === 'in_progress' ? 'status-in-progress' : 'status-scheduled';
       
       return `
-        <div class="schedule-list-item" style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer;" onclick="window.location.href='/staff/schedule'">
+        <div class="schedule-list-item" style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer;" onclick="window.location.href='/staff/schedule'">
               <i class="fas fa-calendar-check" style="color: #ff679c; font-size: 0.875rem;"></i>
               <span style="font-weight: 600; color: #111827;">${escapeHtml(dateStr)}</span>
               <span style="color: #6b7280; font-size: 0.875rem;">${timeStr}</span>
             </div>
-            <span class="status-badge ${statusClass}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500;">${statusLabel}</span>
+            ${isAssigned 
+              ? `<span class="status-badge ${statusClass}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500;">${statusLabel}</span>`
+              : `<button class="btn-accept-schedule" onclick="event.stopPropagation(); acceptSchedule('${escapeHtml(schedule.id)}', this);" style="padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; background: #ff679c; color: white; border: none; cursor: pointer; transition: all 0.2s;">受託</button>`
+            }
           </div>
-          <div style="color: #6b7280; font-size: 0.875rem;">
+          <div style="color: #6b7280; font-size: 0.875rem; cursor: pointer;" onclick="window.location.href='/staff/schedule'">
             <i class="fas fa-store" style="margin-right: 4px;"></i>
             ${escapeHtml(storeName)}
           </div>
