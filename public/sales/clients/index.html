@@ -195,6 +195,7 @@
 
 
 <link rel="stylesheet" href="/css/sales-clients.css" />
+<link rel="stylesheet" href="/css/staff-mypage-inline.css" />
 <script src="/js/data_utils.js"></script>
 
 <main id="main" class="container sales-clients">
@@ -333,24 +334,24 @@
     </div>
   </div>
 
-  <!-- ボトムタブナビゲーション -->
-  <nav class="bottom-tabs">
-    <button class="tab" onclick="window.location.href='/sales/dashboard'" data-screen="activity">
-      <i class="fas fa-bolt"></i>
-      <span>アクティビティ</span>
-    </button>
-    <button class="tab active" data-screen="client">
+  <!-- クイックアクションドック -->
+  <nav class="quick-actions-dock" aria-label="クイックアクション">
+    <a href="/sales/mypage" class="dock-item">
+      <i class="fas fa-user-circle"></i>
+      <span>マイページ</span>
+    </a>
+    <a href="/sales/clients" class="dock-item is-active">
       <i class="fas fa-user-plus"></i>
-      <span>顧客登録</span>
-    </button>
-    <button class="tab" onclick="window.location.href='/sales/schedules'" data-screen="schedule">
+      <span>顧客</span>
+    </a>
+    <a href="/sales/schedules" class="dock-item">
       <i class="fas fa-calendar"></i>
       <span>スケジュール</span>
-    </button>
-    <button class="tab" onclick="window.location.href='/sales/estimates'" data-screen="case">
+    </a>
+    <a href="/sales/dashboard" class="dock-item" onclick="event.preventDefault(); window.location.href='/sales/dashboard'; setTimeout(() => { if (window.handleTabClick) { window.handleTabClick('case'); } else { const caseTab = document.querySelector('.tab[data-tab=\"case\"]'); if (caseTab) caseTab.click(); } }, 300); return false;">
       <i class="fas fa-briefcase"></i>
-      <span>案件管理</span>
-    </button>
+      <span>案件</span>
+    </a>
   </nav>
 </main>
 

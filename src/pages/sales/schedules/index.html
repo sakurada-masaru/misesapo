@@ -3,6 +3,7 @@
 @json('data/meta/sales_schedules_body_class.json', $body_class)
 
 <link rel="stylesheet" href="/css/sales-schedules.css?v=20251217-1" />
+<link rel="stylesheet" href="/css/staff-mypage-inline.css" />
 <script src="/js/data_utils.js"></script>
 <script src="/js/aws-services-api.js"></script>
 
@@ -102,24 +103,24 @@
   </div>
 </main>
 
-<!-- ボトムタブナビゲーション -->
-<nav class="bottom-tabs">
-  <button class="tab" onclick="window.location.href='/sales/dashboard'">
-    <i class="fas fa-bolt"></i>
-    <span>アクティビティ</span>
-  </button>
-  <button class="tab" onclick="window.location.href='/sales/dashboard#client'">
+<!-- クイックアクションドック -->
+<nav class="quick-actions-dock" aria-label="クイックアクション">
+  <a href="/sales/mypage" class="dock-item">
+    <i class="fas fa-user-circle"></i>
+    <span>マイページ</span>
+  </a>
+  <a href="/sales/clients" class="dock-item">
     <i class="fas fa-user-plus"></i>
-    <span>顧客登録</span>
-  </button>
-  <button class="tab active" onclick="window.location.href='/sales/schedules'">
+    <span>顧客</span>
+  </a>
+  <a href="/sales/schedules" class="dock-item is-active">
     <i class="fas fa-calendar"></i>
     <span>スケジュール</span>
-  </button>
-  <button class="tab" onclick="window.location.href='/sales/dashboard#case'">
-    <i class="fas fa-folder-open"></i>
-    <span>案件管理</span>
-  </button>
+  </a>
+  <a href="/sales/dashboard" class="dock-item" onclick="event.preventDefault(); window.location.href='/sales/dashboard'; setTimeout(() => { if (window.handleTabClick) { window.handleTabClick('case'); } else { const caseTab = document.querySelector('.tab[data-tab=\"case\"]'); if (caseTab) caseTab.click(); } }, 300); return false;">
+    <i class="fas fa-briefcase"></i>
+    <span>案件</span>
+  </a>
 </nav>
 
 <!-- 新規作成/編集ダイアログ -->

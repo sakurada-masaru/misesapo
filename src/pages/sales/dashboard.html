@@ -2,6 +2,7 @@
 @json('data/meta/sales_dashboard_title.json', $title)
 @json('data/meta/sales_dashboard_body_class.json', $body_class)
 
+<link rel="stylesheet" href="/css/staff-mypage-inline.css" />
 <script src="/js/data_utils.js"></script>
 <script src="/js/aws-services-api.js"></script>
 <!-- PDF生成ライブラリ -->
@@ -233,24 +234,24 @@
     </div>
     </div>
 
-  <!-- 下部タブバー -->
-  <nav class="bottom-tabs">
-    <button class="tab active" data-tab="mypage" onclick="handleTabClick('mypage', '/sales/mypage')">
+  <!-- クイックアクションドック -->
+  <nav class="quick-actions-dock" aria-label="クイックアクション" id="quick-actions-dock">
+    <a href="/sales/mypage" class="dock-item" data-tab="mypage" onclick="event.preventDefault(); handleTabClick('mypage', '/sales/mypage'); return false;">
       <i class="fas fa-user-circle"></i>
       <span>マイページ</span>
-    </button>
-    <button class="tab" data-tab="clients" onclick="handleTabClick('clients', '/sales/clients')">
-        <i class="fas fa-user-plus"></i>
+    </a>
+    <a href="/sales/clients" class="dock-item" data-tab="clients" onclick="event.preventDefault(); handleTabClick('clients', '/sales/clients'); return false;">
+      <i class="fas fa-user-plus"></i>
       <span>顧客</span>
-    </button>
-    <button class="tab" data-tab="schedules" onclick="handleTabClick('schedules', '/sales/schedules')">
-        <i class="fas fa-calendar"></i>
+    </a>
+    <a href="/sales/schedules" class="dock-item" data-tab="schedules" onclick="event.preventDefault(); handleTabClick('schedules', '/sales/schedules'); return false;">
+      <i class="fas fa-calendar"></i>
       <span>スケジュール</span>
-    </button>
-    <button class="tab" data-tab="case" data-screen="case" onclick="handleTabClick('case')">
-        <i class="fas fa-briefcase"></i>
+    </a>
+    <a href="/sales/dashboard" class="dock-item" data-tab="case" data-screen="case" onclick="event.preventDefault(); handleTabClick('case'); return false;">
+      <i class="fas fa-briefcase"></i>
       <span>案件</span>
-    </button>
+    </a>
   </nav>
 
   <style>
@@ -2279,7 +2280,19 @@
         tab.classList.remove('active');
       });
       
-      // クリックされたタブにactiveクラスを追加
+      // クイックメニューのアクティブ状態を更新
+      const quickDock = document.getElementById('quick-actions-dock');
+      if (quickDock) {
+        quickDock.querySelectorAll('.dock-item').forEach(item => {
+          item.classList.remove('is-active');
+        });
+        const activeDockItem = quickDock.querySelector(`.dock-item[data-tab="${tabName}"]`);
+        if (activeDockItem) {
+          activeDockItem.classList.add('is-active');
+        }
+      }
+      
+      // クリックされたタブにactiveクラスを追加（後方互換性のため）
       const clickedTab = document.querySelector(`.tab[data-tab="${tabName}"]`);
       if (clickedTab) {
         clickedTab.classList.add('active');
@@ -2305,6 +2318,15 @@
       loadServiceItems();
       renderClientList(); // 顧客一覧の初期表示
       // loadAnnouncements(); // アクティビティ画面は削除されたため、業務連絡の読み込みは不要
+      
+      // クイックメニューの初期アクティブ状態を設定（マイページがデフォルト）
+      const quickDock = document.getElementById('quick-actions-dock');
+      if (quickDock) {
+        const mypageDockItem = quickDock.querySelector('.dock-item[data-tab="mypage"]');
+        if (mypageDockItem) {
+          mypageDockItem.classList.add('is-active');
+        }
+      }
     });
 
     function setupTabs() {
@@ -2340,6 +2362,27 @@
           }
         }
       });
+      
+      // クイックメニューのアクティブ状態を更新
+      const quickDock = document.getElementById('quick-actions-dock');
+      if (quickDock) {
+        quickDock.querySelectorAll('.dock-item').forEach(item => {
+          item.classList.remove('is-active');
+        });
+        // 案件管理の場合は 'case' タブをアクティブに
+        if (screenName === 'case') {
+          const caseDockItem = quickDock.querySelector('.dock-item[data-tab="case"]');
+          if (caseDockItem) {
+            caseDockItem.classList.add('is-active');
+          }
+        } else {
+          // その他の場合はdata-tabで判定
+          const activeDockItem = quickDock.querySelector(`.dock-item[data-tab="${screenName}"]`);
+          if (activeDockItem) {
+            activeDockItem.classList.add('is-active');
+          }
+        }
+      }
       
       // 案件管理画面に切り替えた時にタブ機能を初期化
       if (screenName === 'case') {
