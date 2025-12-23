@@ -1431,18 +1431,30 @@ window.quickAssignWorker = async function(scheduleId) {
         throw new Error('更新に失敗しました');
       }
 
+      // レスポンスから更新されたスケジュールデータを取得
+      const responseData = await response.json();
+      const updatedSchedule = responseData.schedule || responseData || { ...schedule, ...updateData };
+
       // ローカルデータを更新
       const idx = allSchedules.findIndex(s => s.id === scheduleId);
       if (idx >= 0) {
-        allSchedules[idx] = { ...allSchedules[idx], ...updateData };
+        allSchedules[idx] = { ...allSchedules[idx], ...updatedSchedule };
+      } else {
+        // 見つからない場合は追加（念のため）
+        allSchedules.push(updatedSchedule);
       }
 
-      // データを再読み込み
+      // データを再読み込み（最新の状態を取得）
       await loadSchedules();
       
       // 画面を更新
       filterAndRender();
       updateDraftAlert();
+      
+      // カレンダー表示の場合は再描画
+      if (currentView === 'calendar') {
+        renderCalendar();
+      }
 
       // モーダルを閉じる
       document.body.removeChild(modal);
