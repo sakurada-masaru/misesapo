@@ -1512,6 +1512,21 @@ window.quickAssignWorker = async function(scheduleId) {
       // レスポンスから更新されたスケジュールデータを取得
       const responseData = await response.json();
       const updatedSchedule = responseData.schedule || responseData || { ...schedule, ...updateData };
+      
+      // レスポンスから取得したworker_idを優先（APIが返した値を使用）
+      // 「全員（オープン）」の場合は空文字列またはnullになる
+      let finalWorkerId = null;
+      if (selectedValue === 'ALL' || selectedValue === '') {
+        // 「全員（オープン）」の場合
+        finalWorkerId = updatedSchedule.worker_id !== undefined 
+          ? (updatedSchedule.worker_id || null) 
+          : null;
+      } else {
+        // 個人を選択した場合
+        finalWorkerId = updatedSchedule.worker_id !== undefined 
+          ? (updatedSchedule.worker_id || selectedWorkerId) 
+          : selectedWorkerId;
+      }
 
       // ローカルデータを更新（即座に反映）
       const idx = allSchedules.findIndex(s => {
@@ -1523,17 +1538,24 @@ window.quickAssignWorker = async function(scheduleId) {
       });
       
       if (idx >= 0) {
-        // 既存のスケジュールを更新（worker_idとstatusを確実に更新）
+        // 既存のスケジュールを更新（レスポンスから取得したデータを優先）
         allSchedules[idx] = {
           ...allSchedules[idx],
-          worker_id: selectedWorkerId,
-          assigned_to: selectedWorkerId, // 念のため両方更新
-          status: updateData.status
+          ...updatedSchedule,
+          worker_id: finalWorkerId,
+          assigned_to: finalWorkerId, // 念のため両方更新
+          status: updatedSchedule.status || updateData.status
         };
         console.log('[Quick Assign] Updated schedule in local data:', allSchedules[idx]);
       } else {
         // 見つからない場合は追加（念のため）
-        allSchedules.push({ ...schedule, ...updateData, ...updatedSchedule });
+        allSchedules.push({ 
+          ...schedule, 
+          ...updatedSchedule,
+          worker_id: finalWorkerId,
+          assigned_to: finalWorkerId,
+          status: updatedSchedule.status || updateData.status
+        });
       }
 
       // データを再読み込み（最新の状態を取得）
