@@ -496,130 +496,282 @@ function editClientDetail() {
 }
 
 // 顧客登録
-async function submitClient() {
-  const companyName = document.getElementById('client-company').value.trim();
-  const brandName = document.getElementById('client-brand').value.trim();
-  const storeName = document.getElementById('client-store').value.trim();
+// 法人・ブランドの選択肢を更新
+function populateHierarchySelects() {
+  if (!Array.isArray(allClients)) {
+    console.warn('allClients is not an array in populateHierarchySelects:', allClients);
+    allClients = [];
+  }
+  if (!Array.isArray(allBrands)) {
+    console.warn('allBrands is not an array in populateHierarchySelects:', allBrands);
+    allBrands = [];
+  }
   
-  if (!companyName || !storeName) {
-    alert('企業名と店舗名は必須です');
+  const clientSelect = document.getElementById('store-client');
+  const brandSelect = document.getElementById('store-brand');
+  
+  if (!clientSelect || !brandSelect) return;
+  
+  // 法人選択肢
+  clientSelect.innerHTML = '<option value="">-- 新規法人または選択 --</option>' + 
+    allClients.map(c => `<option value="${c.id}">${c.name || c.company_name || ''}</option>`).join('');
+  
+  // ブランド選択肢（全て）
+  updateBrandSelectForForm();
+}
+
+// フォーム用ブランド選択肢を更新
+function updateBrandSelectForForm() {
+  if (!Array.isArray(allBrands)) {
+    console.warn('allBrands is not an array in updateBrandSelectForForm:', allBrands);
+    allBrands = [];
+  }
+  if (!Array.isArray(allClients)) {
+    console.warn('allClients is not an array in updateBrandSelectForForm:', allClients);
+    allClients = [];
+  }
+  
+  const clientSelect = document.getElementById('store-client');
+  const brandSelect = document.getElementById('store-brand');
+  
+  if (!clientSelect || !brandSelect) return;
+  
+  const clientId = clientSelect.value;
+  
+  let brands;
+  if (clientId) {
+    if (window.DataUtils?.IdUtils?.isSame) {
+      brands = allBrands.filter(b => window.DataUtils.IdUtils.isSame(b.client_id, clientId));
+    } else {
+      brands = allBrands.filter(b => b.client_id === clientId || String(b.client_id) === String(clientId));
+    }
+  } else {
+    brands = allBrands;
+  }
+  
+  brandSelect.innerHTML = '<option value="">-- 新規ブランドまたは選択 --</option>' + 
+    brands.map(b => {
+      let client = null;
+      if (window.DataUtils?.EntityFinder?.findClient) {
+        client = window.DataUtils.EntityFinder.findClient(allClients, b.client_id);
+      } else {
+        client = allClients.find(c => c.id === b.client_id || String(c.id) === String(b.client_id));
+      }
+      const clientName = client ? ` (${client.name || client.company_name || ''})` : '';
+      return `<option value="${b.id}">${b.name}${clientName}</option>`;
+    }).join('');
+}
+
+// IDトークン取得（Cognito/localStorageから取得）
+async function getAuthHeaders() {
+  try {
+    const cognitoIdToken = localStorage.getItem('cognito_id_token');
+    if (cognitoIdToken) {
+      return {
+        'Authorization': `Bearer ${cognitoIdToken}`,
+        'Content-Type': 'application/json'
+      };
+    }
+    
+    const authData = localStorage.getItem('misesapo_auth');
+    if (authData) {
+      const parsed = JSON.parse(authData);
+      if (parsed.token) {
+        return {
+          'Authorization': `Bearer ${parsed.token}`,
+          'Content-Type': 'application/json'
+        };
+      }
+    }
+    
+    return { 'Content-Type': 'application/json' };
+  } catch (error) {
+    console.error('Error getting auth headers:', error);
+    return { 'Content-Type': 'application/json' };
+  }
+}
+
+// フォーム送信処理（管理ページと同じロジック）
+async function handleStoreFormSubmit(e) {
+  e.preventDefault();
+  
+  const id = document.getElementById('store-id').value;
+  const isNew = !id;
+  
+  const sendInvite = document.getElementById('send-invite').checked;
+  const email = document.getElementById('store-email').value;
+  
+  // 招待送信時はメール必須
+  if (isNew && sendInvite && !email) {
+    alert('招待リンクを送信するにはメールアドレスが必要です');
+    document.getElementById('store-email').focus();
     return;
   }
   
+  // 3層構造の取得
+  let clientId = document.getElementById('store-client').value;
+  let brandId = document.getElementById('store-brand').value;
+  const newClientName = document.getElementById('store-client-new').value.trim();
+  const newBrandName = document.getElementById('store-brand-new').value.trim();
+  
+  const formStatus = document.getElementById('form-status');
+  
   try {
-    // 1. 法人を検索または作成
-    let clientId = null;
-    const clientsRes = await fetch(`${API_BASE}/clients`);
-    if (!clientsRes.ok) {
-      throw new Error('法人一覧の取得に失敗しました');
+    if (formStatus) {
+      formStatus.textContent = '保存中...';
+      formStatus.className = 'form-status';
     }
-    const clientsData = await clientsRes.json();
-    const clients = Array.isArray(clientsData) ? clientsData : (clientsData.items || clientsData.clients || []);
-    const existingClient = clients.find(c => c.name === companyName);
+
+    const authHeaders = await getAuthHeaders();
     
-    if (existingClient) {
-      clientId = existingClient.id;
-    } else {
-      // 新規法人作成
+    // 新規法人の作成
+    if (!clientId && newClientName) {
+      const newClient = {
+        name: newClientName,
+        type: 'corporate',
+        created_at: new Date().toISOString()
+      };
       const clientRes = await fetch(`${API_BASE}/clients`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: companyName,
-          type: 'company',
-          status: 'active',
-          created_at: new Date().toISOString()
-        })
+        headers: authHeaders,
+        body: JSON.stringify(newClient)
       });
       if (!clientRes.ok) {
         const errorData = await clientRes.json().catch(() => ({}));
-        throw new Error(`法人の作成に失敗しました: ${errorData.error || clientRes.statusText}`);
+        throw new Error(errorData.error || '法人の作成に失敗しました');
       }
-      const clientData = await clientRes.json();
-      clientId = clientData.id;
+      const createdClientRes = await clientRes.json();
+      const createdClient = createdClientRes.client || createdClientRes;
+      allClients.push(createdClient);
+      clientId = createdClientRes.id || createdClient.id;
     }
     
-    if (!clientId) {
-      throw new Error('法人IDの取得に失敗しました');
+    // 新規ブランドの作成
+    if (!brandId && newBrandName) {
+      if (!clientId) {
+        throw new Error('ブランドを作成するには法人を選択または作成してください');
+      }
+      const newBrand = {
+        name: newBrandName,
+        client_id: clientId,
+        created_at: new Date().toISOString()
+      };
+      const brandRes = await fetch(`${API_BASE}/brands`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify(newBrand)
+      });
+      if (!brandRes.ok) {
+        const errorData = await brandRes.json().catch(() => ({}));
+        throw new Error(errorData.error || 'ブランドの作成に失敗しました');
+      }
+      const createdBrandRes = await brandRes.json();
+      const createdBrand = createdBrandRes.brand || createdBrandRes;
+      allBrands.push(createdBrand);
+      brandId = createdBrandRes.id || createdBrand.id;
     }
     
-    // 2. ブランドを検索または作成
-    let brandId = null;
-    if (brandName) {
-      const brandsRes = await fetch(`${API_BASE}/brands`);
-      if (!brandsRes.ok) {
-        throw new Error('ブランド一覧の取得に失敗しました');
-      }
-      const brandsData = await brandsRes.json();
-      const brands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
-      let existingBrand = null;
-      if (window.DataUtils?.IdUtils?.isSame) {
-        existingBrand = brands.find(b => b.name === brandName && window.DataUtils.IdUtils.isSame(b.client_id, clientId));
-      } else {
-        existingBrand = brands.find(b => b.name === brandName && (b.client_id === clientId || String(b.client_id) === String(clientId)));
-      }
-      
-      if (existingBrand) {
-        brandId = existingBrand.id;
-      } else {
-        // 新規ブランド作成
-        const brandRes = await fetch(`${API_BASE}/brands`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: brandName,
-            client_id: clientId,
-            status: 'active',
-            created_at: new Date().toISOString()
-          })
-        });
-        if (!brandRes.ok) {
-          const errorData = await brandRes.json().catch(() => ({}));
-          throw new Error(`ブランドの作成に失敗しました: ${errorData.error || brandRes.statusText}`);
-        }
-        const brandData = await brandRes.json();
-        brandId = brandData.id;
-      }
-    }
-    
-    // 3. 店舗を作成
-    const storeData = {
-      name: storeName,
-      client_id: clientId,
-      brand_id: brandId,
-      pref: document.getElementById('client-pref').value,
-      city: '',
-      address1: document.getElementById('client-address').value,
-      postcode: document.getElementById('client-postcode').value,
-      phone: document.getElementById('client-phone').value,
-      email: document.getElementById('client-email').value,
-      contact_person: document.getElementById('client-contact').value,
-      notes: document.getElementById('client-notes').value,
-      status: 'active',
-      registration_type: 'sales',
-      created_at: new Date().toISOString()
+    // 店舗データ
+    const data = {
+      contact_person: document.getElementById('store-contact').value,
+      name: document.getElementById('store-name').value,
+      postcode: document.getElementById('store-postcode').value,
+      pref: document.getElementById('store-pref').value,
+      city: document.getElementById('store-city').value,
+      address1: document.getElementById('store-address1').value,
+      address2: document.getElementById('store-address2').value,
+      phone: document.getElementById('store-phone').value,
+      email: email,
+      description: document.getElementById('store-description').value,
+      status: document.getElementById('store-status').value,
+      client_id: clientId || null,
+      brand_id: brandId || null
     };
     
-    const storeRes = await fetch(`${API_BASE}/stores`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(storeData)
+    if (isNew) {
+      data.created_at = new Date().toISOString();
+      if (sendInvite) data.status = 'pending_customer_info';
+    } else {
+      data.id = id;
+    }
+    data.updated_at = new Date().toISOString();
+    
+    const response = await fetch(`${API_BASE}/stores${isNew ? '' : '/' + id}`, {
+      method: isNew ? 'POST' : 'PUT',
+      headers: authHeaders,
+      body: JSON.stringify(data)
     });
     
-    if (!storeRes.ok) {
-      const errorData = await storeRes.json().catch(() => ({}));
-      throw new Error(`店舗の作成に失敗しました: ${errorData.error || storeRes.statusText}`);
+    if (response.ok) {
+      const storeRes = await response.json().catch(() => ({}));
+      const savedStore = storeRes.store || storeRes;
+      // リスト更新
+      if (isNew) {
+        allStores.unshift(savedStore);
+        
+        // 招待リンク送信
+        if (sendInvite) {
+          const storeIdForInvite = savedStore.id || data.id;
+          const inviteLink = `${window.location.origin}/registration/customer-complete.html?token=${storeIdForInvite}`;
+          if (formStatus) {
+            formStatus.innerHTML = `
+              <div class="invite-success">
+                <div class="invite-success-header">
+                  <i class="fas fa-check-circle"></i> 保存しました
+                </div>
+                <div class="invite-success-body">
+                  <p>招待リンク:</p>
+                  <input type="text" value="${inviteLink}" readonly class="invite-link-input" onclick="this.select()">
+                  <small>このリンクをお客様にお送りください</small>
+                </div>
+              </div>
+            `;
+            formStatus.className = 'form-status success';
+          }
+        } else {
+          if (formStatus) {
+            formStatus.textContent = '保存しました';
+            formStatus.className = 'form-status success';
+          }
+          // フォームリセット
+          const storeForm = document.getElementById('store-form');
+          if (storeForm) storeForm.reset();
+          document.getElementById('store-id').value = '';
+          populateHierarchySelects();
+        }
+      } else {
+        let idx = -1;
+        if (window.DataUtils?.IdUtils?.isSame) {
+          idx = allStores.findIndex(s => window.DataUtils.IdUtils.isSame(s.id, id));
+        } else {
+          idx = allStores.findIndex(s => s.id === id || String(s.id) === String(id));
+        }
+        if (idx >= 0) allStores[idx] = { ...allStores[idx], ...savedStore };
+        if (formStatus) {
+          formStatus.textContent = '保存しました';
+          formStatus.className = 'form-status success';
+        }
+      }
+      await loadData();
+      renderClientList();
+    } else {
+      throw new Error('Save failed');
     }
-    
-    alert('顧客を登録しました');
-    // フォームクリア
-    document.querySelectorAll('#client-company, #client-brand, #client-store, #client-postcode, #client-address, #client-phone, #client-contact, #client-email, #client-notes').forEach(el => el.value = '');
-    document.getElementById('client-pref').value = '';
-    await loadData();
-    renderClientList();
-  } catch (e) {
-    console.error('Customer registration error:', e);
-    alert(`登録に失敗しました: ${e.message || '不明なエラーが発生しました'}`);
+  } catch (error) {
+    console.error('Save failed:', error);
+    if (formStatus) {
+      formStatus.textContent = '保存に失敗しました: ' + (error.message || '不明なエラー');
+      formStatus.className = 'form-status error';
+    }
+  }
+}
+
+// 後方互換のため、submitClient関数も残す
+async function submitClient() {
+  const form = document.getElementById('store-form');
+  if (form) {
+    const event = new Event('submit', { bubbles: true, cancelable: true });
+    form.dispatchEvent(event);
   }
 }
 
@@ -641,6 +793,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   setupClientTabs();
   await loadData();
+  
+  // フォーム送信イベントリスナー
+  const storeForm = document.getElementById('store-form');
+  if (storeForm) {
+    storeForm.addEventListener('submit', handleStoreFormSubmit);
+  }
+  
+  // 法人選択時にブランド選択肢を更新
+  const clientSelect = document.getElementById('store-client');
+  if (clientSelect) {
+    clientSelect.addEventListener('change', updateBrandSelectForForm);
+  }
+  
+  // 初期表示時に選択肢を更新
+  populateHierarchySelects();
+  
   // 初期表示時に顧客一覧を表示（顧客一覧タブがアクティブな場合）
   const activeTab = document.querySelector('.client-tab.active');
   if (activeTab && activeTab.dataset.clientTab === 'list') {

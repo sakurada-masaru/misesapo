@@ -688,6 +688,221 @@
   opacity: 0.7;
 }
 
+/* 法人・ブランド・店舗セクション（管理ページと同じスタイル） */
+.hierarchy-section,
+.store-section {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.hierarchy-header {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.hierarchy-header i {
+  font-size: 1rem;
+}
+
+.hierarchy-section select,
+.store-section select,
+.hierarchy-section input,
+.store-section input,
+.hierarchy-section textarea,
+.store-section textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.hierarchy-section select:focus,
+.store-section select:focus,
+.hierarchy-section input:focus,
+.store-section input:focus,
+.hierarchy-section textarea:focus,
+.store-section textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+}
+
+.hierarchy-section .form-row,
+.store-section .form-row {
+  margin-bottom: 12px;
+}
+
+.hierarchy-section .form-row:last-child,
+.store-section .form-row:last-child {
+  margin-bottom: 0;
+}
+
+.hierarchy-section label,
+.store-section label {
+  display: block;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.client-register-form {
+  padding: 16px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-field {
+  flex: 1;
+}
+
+.form-field.half {
+  flex: 0 0 calc(50% - 8px);
+}
+
+.form-field label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.form-field .required {
+  color: #dc2626;
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.2);
+}
+
+.invite-option {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.invite-option .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #166534;
+  cursor: pointer;
+}
+
+.invite-option .checkbox-label input {
+  width: 18px;
+  height: 18px;
+}
+
+.invite-hint {
+  font-size: 0.8rem;
+  color: #15803d;
+  margin: 8px 0 0 26px;
+}
+
+.form-status {
+  min-height: 24px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.form-status.success {
+  color: #059669;
+}
+
+.form-status.error {
+  color: #dc2626;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* 招待リンク成功表示 */
+.invite-success {
+  text-align: left;
+  padding: 16px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 12px;
+}
+
+.invite-success-header {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #16a34a;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.invite-success-header i {
+  font-size: 1.25rem;
+}
+
+.invite-success-body {
+  margin-bottom: 8px;
+}
+
+.invite-success-body p {
+  font-size: 0.85rem;
+  color: #374151;
+  margin: 0 0 6px;
+}
+
+.invite-link-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 6px;
+}
+
+.invite-success-body small {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
 /* レスポンシブ */
 @media (max-width: 768px) {
   .sales-clients {
@@ -708,8 +923,17 @@
     margin-bottom: 12px;
   }
 
-  .form-container {
+  .client-register-form {
     padding: 12px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .form-field.half {
+    flex: 1;
   }
 
   .client-list-view {

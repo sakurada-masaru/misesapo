@@ -32,59 +32,143 @@
 
   <!-- 顧客登録タブ -->
   <div class="client-tab-content active" data-client-content="register">
-    <div class="form-container">
-      <div class="form-group">
-        <label>企業名 / 個人名 <span class="req">*</span></label>
-        <input type="text" id="client-company" placeholder="例: 株式会社ABC" />
-      </div>
-      <div class="form-group">
-        <label>ブランド名 / 屋号</label>
-        <input type="text" id="client-brand" placeholder="例: カフェXYZ" />
-      </div>
-      <div class="form-group">
-        <label>店舗名 <span class="req">*</span></label>
-        <input type="text" id="client-store" placeholder="例: 渋谷店" />
-      </div>
-      <div class="form-row">
-        <div class="form-group half">
-          <label>郵便番号</label>
-          <input type="text" id="client-postcode" placeholder="123-4567" />
+    <form id="store-form" class="client-register-form">
+      <input type="hidden" id="store-id" name="id">
+      
+      <!-- 法人情報セクション -->
+      <div class="hierarchy-section">
+        <div class="hierarchy-header">
+          <i class="fas fa-building"></i> 法人名
         </div>
-        <div class="form-group half">
-          <label>都道府県</label>
-          <select id="client-pref">
-            <option value="">選択</option>
-            <option value="東京都">東京都</option>
-            <option value="神奈川県">神奈川県</option>
-            <option value="埼玉県">埼玉県</option>
-            <option value="千葉県">千葉県</option>
-          </select>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="store-client">既存法人から選択</label>
+            <select id="store-client" name="client_id">
+              <option value="">-- 新規法人または選択 --</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="store-client-new">新規法人登録</label>
+            <input type="text" id="store-client-new" name="client_name_new" placeholder="株式会社○○">
+          </div>
         </div>
       </div>
-      <div class="form-group">
-        <label>住所</label>
-        <input type="text" id="client-address" placeholder="市区町村・番地" />
+      
+      <!-- ブランド情報セクション -->
+      <div class="hierarchy-section">
+        <div class="hierarchy-header">
+          <i class="fas fa-tag"></i> ブランド名
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="store-brand">既存ブランドから選択</label>
+            <select id="store-brand" name="brand_id">
+              <option value="">-- 新規ブランドまたは選択 --</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="store-brand-new">新規ブランド登録</label>
+            <input type="text" id="store-brand-new" name="brand_name_new" placeholder="晩杯屋">
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>電話番号</label>
-        <input type="tel" id="client-phone" placeholder="03-1234-5678" />
+      
+      <!-- 店舗情報セクション -->
+      <div class="store-section">
+        <div class="hierarchy-header">
+          <i class="fas fa-store"></i> 新規店舗登録
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="store-name">店舗名 <span class="required">*</span></label>
+            <input type="text" id="store-name" name="name" required placeholder="門前仲町店">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field half">
+            <label for="store-contact">担当者名</label>
+            <input type="text" id="store-contact" name="contact_person" placeholder="山田太郎">
+          </div>
+          <div class="form-field half">
+            <label for="store-phone">電話番号</label>
+            <input type="tel" id="store-phone" name="phone" placeholder="03-1234-5678">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="store-email">メールアドレス <span class="required" id="email-required" style="display:none">*</span></label>
+            <input type="email" id="store-email" name="email" placeholder="info@example.com">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field half">
+            <label for="store-postcode">郵便番号</label>
+            <input type="text" id="store-postcode" name="postcode" placeholder="1234567">
+          </div>
+          <div class="form-field half">
+            <label for="store-pref">都道府県</label>
+            <input type="text" id="store-pref" name="pref" placeholder="東京都">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field half">
+            <label for="store-city">市区町村</label>
+            <input type="text" id="store-city" name="city" placeholder="新宿区">
+          </div>
+          <div class="form-field half">
+            <label for="store-address1">住所</label>
+            <input type="text" id="store-address1" name="address1" placeholder="1-2-3">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="store-address2">建物名等</label>
+            <input type="text" id="store-address2" name="address2" placeholder="○○ビル3F">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="store-status">ステータス</label>
+            <select id="store-status" name="status">
+              <option value="active">稼働中</option>
+              <option value="contract_pending">契約作業中</option>
+              <option value="considering">検討中</option>
+              <option value="prospect">アプローチ前</option>
+              <option value="negotiated">商談済</option>
+              <option value="lost">失注</option>
+              <option value="suspended">休止中</option>
+              <option value="terminated">契約終了</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="store-description">備考</label>
+            <textarea id="store-description" name="description" rows="2"></textarea>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>担当者名</label>
-        <input type="text" id="client-contact" placeholder="山田太郎" />
+      
+      <!-- 招待リンク送信オプション（新規追加時のみ表示） -->
+      <div class="invite-option" id="invite-option">
+        <label class="checkbox-label">
+          <input type="checkbox" id="send-invite" name="send_invite">
+          <span>お客様に詳細情報入力の招待リンクを送信する</span>
+        </label>
+        <p class="invite-hint">チェックすると、登録後にお客様のメールアドレスへ招待リンクが送信されます。</p>
       </div>
-      <div class="form-group">
-        <label>メールアドレス</label>
-        <input type="email" id="client-email" placeholder="info@example.com" />
+      
+      <div class="form-status" id="form-status"></div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="submit-btn">
+          <i class="fas fa-save"></i> 登録する
+        </button>
       </div>
-      <div class="form-group">
-        <label>備考</label>
-        <textarea id="client-notes" rows="3" placeholder="特記事項があれば入力"></textarea>
-      </div>
-      <button class="btn-primary" onclick="submitClient()">
-        <i class="fas fa-save"></i> 登録する
-      </button>
-    </div>
+    </form>
   </div>
 
   <!-- 顧客一覧タブ -->
