@@ -1409,7 +1409,10 @@ window.quickAssignWorker = async function(scheduleId) {
   // 保存ボタン
   modal.querySelector('#quick-assign-save').addEventListener('click', async () => {
     const selectEl = modal.querySelector('#quick-assign-worker-select');
-    const selectedWorkerId = selectEl.value || null;
+    const selectedValue = selectEl.value;
+    
+    // 「全員（オープン）」が選択された場合はworker_idをnullに
+    const selectedWorkerId = (selectedValue === 'ALL' || selectedValue === '') ? null : selectedValue;
 
     try {
       // スケジュールを更新
