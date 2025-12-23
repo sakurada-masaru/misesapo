@@ -1234,7 +1234,16 @@ function renderCalendar() {
       daySchedules.slice(0, 3).forEach(schedule => {
         const event = document.createElement('div');
         const normalized = DataUtils.normalizeSchedule(schedule);
-        event.className = `day-event status-${normalized.status}`;
+        
+        // 過去のスケジュールかどうかを判定
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const scheduleDateObj = new Date(dateStr);
+        scheduleDateObj.setHours(0, 0, 0, 0);
+        const isPast = scheduleDateObj < now;
+        
+        // 過去の場合は`past`クラスを追加
+        event.className = `day-event status-${normalized.status}${isPast ? ' past' : ''}`;
         const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
         const store = DataUtils.findStore(allStores, storeId) || {};
         

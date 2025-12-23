@@ -672,6 +672,13 @@
 .day-event.status-completed { background: #10b981; }
 .day-event.status-cancelled { background: #6b7280; }
 
+/* 過去のスケジュールは黒く表示 */
+.day-event.past {
+  background: #1f2937 !important;
+  color: #fff;
+  opacity: 0.7;
+}
+
 .day-event-more {
   font-size: 0.6rem;
   color: #6b7280;
