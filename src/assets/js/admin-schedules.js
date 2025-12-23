@@ -626,7 +626,15 @@ function renderTable() {
       const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
       const store = DataUtils.findStore(allStores, storeId) || {};
       const workerId = normalized.worker_id || schedule.worker_id || schedule.assigned_to;
-      const worker = allWorkers.find(w => w.id === workerId);
+      // IDの正規化処理を使用してworkerを検索
+      let worker = null;
+      if (workerId) {
+        if (DataUtils && DataUtils.IdUtils && DataUtils.IdUtils.isSame) {
+          worker = allWorkers.find(w => DataUtils.IdUtils.isSame(w.id, workerId));
+        } else {
+          worker = allWorkers.find(w => String(w.id) === String(workerId));
+        }
+      }
       const salesId = schedule.sales_id || normalized.sales_id;
       const sales = salesId ? allWorkers.find(w => w.id === salesId) : null;
       const isDraft = schedule.status === 'draft';
@@ -702,7 +710,15 @@ function renderTable() {
     const store = DataUtils.findStore(allStores, storeId) || {};
     // worker_id または assigned_to に対応
     const workerId = normalized.worker_id || schedule.worker_id || schedule.assigned_to;
-    const worker = allWorkers.find(w => w.id === workerId);
+    // IDの正規化処理を使用してworkerを検索
+    let worker = null;
+    if (workerId) {
+      if (DataUtils && DataUtils.IdUtils && DataUtils.IdUtils.isSame) {
+        worker = allWorkers.find(w => DataUtils.IdUtils.isSame(w.id, workerId));
+      } else {
+        worker = allWorkers.find(w => String(w.id) === String(workerId));
+      }
+    }
     // 営業担当者を取得
     const salesId = schedule.sales_id || normalized.sales_id;
     const sales = salesId ? allWorkers.find(w => w.id === salesId) : null;
