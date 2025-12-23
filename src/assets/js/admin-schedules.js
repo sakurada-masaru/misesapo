@@ -995,14 +995,28 @@ function setupEventListeners() {
       // 清掃員を割り当てた場合、未確定（draft）から確定（scheduled）に自動更新
       if (!isNew && originalSchedule) {
         const wasDraft = originalSchedule.status === 'draft';
-        const hadWorker = originalSchedule.worker_id && originalSchedule.worker_id !== '';
+        const originalWorkerId = originalSchedule.worker_id || originalSchedule.assigned_to || '';
+        const hadWorker = originalWorkerId && originalWorkerId !== '';
         const hasWorker = data.worker_id && data.worker_id !== '';
-        const workerAssigned = !hadWorker && hasWorker; // 新しく清掃員が割り当てられた
+        
+        // IDの正規化処理を使用して比較
+        let workerAssigned = false;
+        if (DataUtils && DataUtils.IdUtils && DataUtils.IdUtils.isSame) {
+          // IdUtils.isSameを使用してID比較
+          workerAssigned = !hadWorker && hasWorker; // 新しく清掃員が割り当てられた
+        } else {
+          // フォールバック: 文字列比較
+          workerAssigned = !hadWorker && hasWorker;
+        }
         
         // 未確定状態で清掃員を新しく割り当てた場合、自動的に確定に変更
         if (wasDraft && workerAssigned) {
           data.status = 'scheduled';
-          document.getElementById('schedule-status').value = 'scheduled';
+          const statusEl = document.getElementById('schedule-status');
+          if (statusEl) {
+            statusEl.value = 'scheduled';
+          }
+          console.log('[Admin Schedules] Auto-updating status to scheduled after worker assignment');
         }
       }
 
@@ -1219,7 +1233,51 @@ window.editSchedule = function(id) {
   if (scheduleTimeEl) scheduleTimeEl.value = time;
   if (scheduleDurationEl) scheduleDurationEl.value = schedule.duration_minutes || normalized.duration || 60;
   if (scheduleSalesEl) scheduleSalesEl.value = schedule.sales_id || schedule.created_by || '';
-  if (scheduleWorkerEl) scheduleWorkerEl.value = workerId;
+  
+  // 清掃員選択の更新（IDの正規化処理を追加）
+  if (scheduleWorkerEl) {
+    // 清掃員ドロップダウンが既に更新されていることを確認
+    // もし更新されていない場合は、populateWorkerSelects()を呼び出す
+    if (scheduleWorkerEl.options.length <= 1) {
+      populateWorkerSelects();
+    }
+    
+    // workerIdが空の場合は空文字列を設定
+    if (!workerId) {
+      scheduleWorkerEl.value = '';
+    } else {
+      // IDの正規化処理を使用して一致する清掃員を探す
+      let matchedWorkerId = '';
+      if (DataUtils && DataUtils.IdUtils && DataUtils.IdUtils.isSame) {
+        // IdUtils.isSameを使用してID比較
+        for (let i = 0; i < scheduleWorkerEl.options.length; i++) {
+          const option = scheduleWorkerEl.options[i];
+          if (option.value && DataUtils.IdUtils.isSame(option.value, workerId)) {
+            matchedWorkerId = option.value;
+            break;
+          }
+        }
+      } else {
+        // フォールバック: 文字列比較
+        for (let i = 0; i < scheduleWorkerEl.options.length; i++) {
+          const option = scheduleWorkerEl.options[i];
+          if (String(option.value) === String(workerId)) {
+            matchedWorkerId = option.value;
+            break;
+          }
+        }
+      }
+      
+      if (matchedWorkerId) {
+        scheduleWorkerEl.value = matchedWorkerId;
+      } else {
+        // 一致する清掃員が見つからない場合は空文字列を設定
+        console.warn('[Admin Schedules] Worker ID not found in dropdown:', workerId);
+        scheduleWorkerEl.value = '';
+      }
+    }
+  }
+  
   if (scheduleStatusEl) scheduleStatusEl.value = schedule.status || 'scheduled';
   if (scheduleNotesEl) scheduleNotesEl.value = schedule.notes || normalized.notes || '';
   
