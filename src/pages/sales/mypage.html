@@ -227,6 +227,96 @@
         <div class="mypage-main-grid" id="mypage-grid">
         <!-- 左カラム -->
         <div class="mypage-column mypage-column-left">
+        <!-- 出退勤セクション（時計と出退勤記録を統合） -->
+        <section id="attendance">
+          <div class="container-section">
+            <div class="container-header">
+              <h2 class="container-title drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+                <i class="fas fa-clock"></i>
+                出退勤
+              </h2>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-text btn-sm" id="clock-format-toggle" title="24時間/12時間切り替え">
+                  <i class="fas fa-exchange-alt"></i>
+                </button>
+                <button class="btn btn-text btn-sm" id="request-correction-btn">
+                  <i class="fas fa-edit"></i>
+                  <span>修正依頼</span>
+                </button>
+              </div>
+            </div>
+            <div class="card accordion-content">
+              
+              <!-- 出退勤記録セクション（上部） -->
+              <div class="attendance-card" style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
+                <!-- 今日の出退勤状況 -->
+                <div class="attendance-today-grid">
+                  <div class="attendance-status-box" id="attendance-status">
+                    <div class="status-indicator" id="status-indicator"></div>
+                    <div class="status-info">
+                      <span class="status-label" id="status-label">未出勤</span>
+                      <span class="status-time" id="status-time">--:--</span>
+                    </div>
+                  </div>
+                  <div class="attendance-action-box">
+                    <button class="btn-attendance btn-clock-in" id="attendance-toggle-btn">
+                      <i class="fas fa-sign-in-alt"></i>
+                      <span id="toggle-btn-text">出勤</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- 今月のサマリー -->
+                <div class="attendance-summary">
+                  <div class="summary-item">
+                    <span class="summary-label">今月の出勤</span>
+                    <span class="summary-value" id="monthly-work-days">0日</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">今月の労働時間</span>
+                    <span class="summary-value" id="monthly-work-hours">0時間</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 時計（中央） -->
+              <div class="digital-clock-card" style="background: transparent; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 16px;">
+                <div class="digital-clock-display" id="digital-clock-display">00:00:00</div>
+                <div class="digital-clock-alarm" id="digital-clock-alarm-section" style="display: none; margin-top: 12px;">
+                  <div class="alarm-status" id="alarm-status">
+                    <i class="fas fa-bell"></i>
+                    <span id="alarm-time-display">--:--</span>
+                  </div>
+                  <button class="btn btn-sm btn-alarm-toggle" id="alarm-toggle-btn">
+                    <i class="fas fa-bell-slash"></i>
+                  </button>
+                </div>
+                <button class="btn btn-sm btn-alarm-set" id="alarm-set-btn" style="margin-top: 8px;">
+                  <i class="fas fa-plus"></i>
+                  アラーム設定
+                </button>
+              </div>
+              
+              <!-- カレンダー（下部） -->
+              <div class="attendance-calendar-section">
+                <div class="calendar-head" style="margin-bottom: 12px;">
+                  <a class="calendar-nav" href="#" id="calendar-prev" aria-label="前へ">
+                    <i class="fa-solid fa-chevron-left"></i>
+                  </a>
+                  <div class="calendar-title" id="calendar-title">2025 06</div>
+                  <a class="calendar-nav" href="#" id="calendar-next" aria-label="次へ">
+                    <i class="fa-solid fa-chevron-right"></i>
+                  </a>
+                </div>
+                <div class="calendar-grid" id="calendar-grid" style="min-height: auto;">
+                  <!-- カレンダーが動的に生成される -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- 基本情報セクション -->
         <section id="basic-info">
           <div class="container-section">
