@@ -65,6 +65,8 @@
 @include('partials.cart_added_modal')
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -99,6 +101,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = {{ id }};
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -113,12 +116,18 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             @foreach $problems
+            // @ts-ignore - Template variable
             problemsList.push('{{ value }}');
+            // @ts-ignore - Template syntax
             @endforeach
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = @jsonvar $sections;
+            // @ts-ignore - Template variable
             const forms = @jsonvar $forms;
+            // @ts-ignore - Template variable
             const details = @jsonvar $details;
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -130,15 +139,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: {{ id }},
+              // @ts-ignore - Template variable
               title: '{{ title }}',
+              // @ts-ignore - Template variable
               image: '{{ image }}',
+              // @ts-ignore - Template variable
               'detail-image': '{{ detail_image }}',
+              // @ts-ignore - Template variable
               price: '{{ price }}',
+              // @ts-ignore - Template variable
               category: '{{ category }}',
+              // @ts-ignore - Template variable
               description: '{{ description }}',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '{{ solution }}',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,
