@@ -1481,13 +1481,27 @@ window.quickAssignWorker = async function(scheduleId) {
       const responseData = await response.json();
       const updatedSchedule = responseData.schedule || responseData || { ...schedule, ...updateData };
 
-      // ローカルデータを更新
-      const idx = allSchedules.findIndex(s => s.id === scheduleId);
+      // ローカルデータを更新（即座に反映）
+      const idx = allSchedules.findIndex(s => {
+        if (DataUtils && DataUtils.IdUtils && DataUtils.IdUtils.isSame) {
+          return DataUtils.IdUtils.isSame(s.id, scheduleId);
+        } else {
+          return String(s.id) === String(scheduleId);
+        }
+      });
+      
       if (idx >= 0) {
-        allSchedules[idx] = { ...allSchedules[idx], ...updatedSchedule };
+        // 既存のスケジュールを更新（worker_idとstatusを確実に更新）
+        allSchedules[idx] = {
+          ...allSchedules[idx],
+          worker_id: selectedWorkerId,
+          assigned_to: selectedWorkerId, // 念のため両方更新
+          status: updateData.status
+        };
+        console.log('[Quick Assign] Updated schedule in local data:', allSchedules[idx]);
       } else {
         // 見つからない場合は追加（念のため）
-        allSchedules.push(updatedSchedule);
+        allSchedules.push({ ...schedule, ...updateData, ...updatedSchedule });
       }
 
       // データを再読み込み（最新の状態を取得）
