@@ -481,12 +481,18 @@ function filterAndRender() {
   const storeFilter = document.getElementById('store-filter');
   const workerFilter = document.getElementById('worker-filter');
   const statusFilter = document.getElementById('status-filter');
+  const dateRangeFilter = document.getElementById('date-range-filter');
   
   if (!storeFilter || !workerFilter || !statusFilter) return;
   
   const storeId = storeFilter.value;
   const workerId = workerFilter.value;
   const status = statusFilter.value;
+  const dateRange = dateRangeFilter ? dateRangeFilter.value : 'future'; // デフォルトは「今後のみ」
+
+  // 現在の日時を取得（時刻は00:00:00に設定して日付のみで比較）
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
 
   filteredSchedules = allSchedules.filter(s => {
     // store_id または client_id に対応
@@ -496,7 +502,30 @@ function filterAndRender() {
     const scheduleWorkerId = s.worker_id || s.assigned_to;
     const matchWorker = !workerId || scheduleWorkerId === workerId;
     const matchStatus = !status || s.status === status;
-    return matchStore && matchWorker && matchStatus;
+    
+    // 日付範囲フィルター
+    let matchDateRange = true;
+    if (dateRange === 'future' || dateRange === 'past') {
+      const normalized = DataUtils.normalizeSchedule(s);
+      const scheduleDate = normalized.date || s.date || s.scheduled_date;
+      if (scheduleDate) {
+        const scheduleDateObj = new Date(scheduleDate);
+        scheduleDateObj.setHours(0, 0, 0, 0);
+        
+        if (dateRange === 'future') {
+          // 今後のみ：今日以降のスケジュール
+          matchDateRange = scheduleDateObj >= now;
+        } else if (dateRange === 'past') {
+          // 過去のみ：今日より前のスケジュール
+          matchDateRange = scheduleDateObj < now;
+        }
+      } else {
+        // 日付がない場合は、過去として扱う（アーカイブ表示時のみ表示）
+        matchDateRange = dateRange === 'past';
+      }
+    }
+    
+    return matchStore && matchWorker && matchStatus && matchDateRange;
   });
 
   // 予定日順（時系列順）にソート
@@ -734,6 +763,7 @@ function setupEventListeners() {
   const storeFilter = document.getElementById('store-filter');
   const workerFilter = document.getElementById('worker-filter');
   const statusFilter = document.getElementById('status-filter');
+  const dateRangeFilter = document.getElementById('date-range-filter');
   const resetFilters = document.getElementById('reset-filters');
   
   if (storeFilter) {
@@ -745,11 +775,15 @@ function setupEventListeners() {
   if (statusFilter) {
     statusFilter.addEventListener('change', filterAndRender);
   }
+  if (dateRangeFilter) {
+    dateRangeFilter.addEventListener('change', filterAndRender);
+  }
   if (resetFilters) {
     resetFilters.addEventListener('click', () => {
       if (storeFilter) storeFilter.value = '';
       if (workerFilter) workerFilter.value = '';
       if (statusFilter) statusFilter.value = '';
+      if (dateRangeFilter) dateRangeFilter.value = 'future'; // デフォルトは「今後のみ」
       filterAndRender();
     });
   }

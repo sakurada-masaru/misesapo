@@ -63,6 +63,14 @@
           <option value="cancelled">キャンセル</option>
         </select>
       </div>
+      <div class="filter-group">
+        <label>表示範囲</label>
+        <select id="date-range-filter">
+          <option value="future" selected>今後のみ</option>
+          <option value="all">全て</option>
+          <option value="past">過去のみ（アーカイブ）</option>
+        </select>
+      </div>
       <button type="button" class="btn btn-secondary btn-sm" id="reset-filters">
         <i class="fas fa-undo"></i> リセット
       </button>
