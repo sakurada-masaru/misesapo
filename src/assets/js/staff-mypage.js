@@ -4528,8 +4528,11 @@ async function loadOSNextSchedule(user) {
         timeLeftText = '開始時刻を過ぎています';
       }
       
-      // 店舗名を取得（必要に応じて）
+      // ブランド名と店舗名を取得
+      const brandName = nextSchedule.brand_name || '';
       const storeName = nextSchedule.store_name || nextSchedule.store?.name || '-';
+      // ブランド名と店名を組み合わせて表示（ブランド名がある場合のみ表示）
+      const displayName = brandName ? `${escapeHtml(brandName)} / ${escapeHtml(storeName)}` : escapeHtml(storeName);
       
       scheduleInfoContent.innerHTML = `
         <div class="schedule-detail" style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb;">
@@ -4552,7 +4555,7 @@ async function loadOSNextSchedule(user) {
             <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 4px;">店舗</div>
             <div style="font-size: 1rem; font-weight: 600; color: #111827;">
               <i class="fas fa-store" style="margin-right: 8px; color: #6b7280;"></i>
-              ${escapeHtml(storeName)}
+              ${displayName}
             </div>
           </div>
         </div>
