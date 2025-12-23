@@ -446,6 +446,15 @@ function renderUser(user) {
     loadMonthlySchedulesCount();
   }
   
+  // OS課マイページの場合、直近のスケジュール情報を読み込む
+  if (window.location.pathname.includes('/staff/os/mypage')) {
+    loadOSNextSchedule(user);
+    // リアルタイム更新（30秒ごと）
+    setInterval(() => {
+      loadOSNextSchedule(user);
+    }, 30000);
+  }
+  
   // TODOリストコンテナの時計を初期化
   initializeTodoClock();
   
