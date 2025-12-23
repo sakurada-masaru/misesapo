@@ -517,6 +517,7 @@ function filterAndRender() {
   const salesFilter = document.getElementById('sales-filter');
   const workerFilter = document.getElementById('worker-filter');
   const statusFilter = document.getElementById('status-filter');
+  const dateRangeFilter = document.getElementById('date-range-filter');
   
   if (!storeFilter || !workerFilter || !statusFilter) return;
   
@@ -524,6 +525,11 @@ function filterAndRender() {
   const salesId = salesFilter ? salesFilter.value : '';
   const workerId = workerFilter.value;
   const status = statusFilter.value;
+  const dateRange = dateRangeFilter ? dateRangeFilter.value : 'future'; // デフォルトは「今後のみ」
+
+  // 現在の日時を取得（時刻は00:00:00に設定して日付のみで比較）
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
 
   filteredSchedules = allSchedules.filter(s => {
     // store_id または client_id に対応
@@ -548,7 +554,30 @@ function filterAndRender() {
         : (String(scheduleWorkerId) === String(workerId))
     );
     const matchStatus = !status || s.status === status;
-    return matchStore && matchSales && matchWorker && matchStatus;
+    
+    // 日付範囲フィルター
+    let matchDateRange = true;
+    if (dateRange === 'future' || dateRange === 'past') {
+      const normalized = DataUtils.normalizeSchedule(s);
+      const scheduleDate = normalized.date || s.date || s.scheduled_date;
+      if (scheduleDate) {
+        const scheduleDateObj = new Date(scheduleDate);
+        scheduleDateObj.setHours(0, 0, 0, 0);
+        
+        if (dateRange === 'future') {
+          // 今後のみ：今日以降のスケジュール
+          matchDateRange = scheduleDateObj >= now;
+        } else if (dateRange === 'past') {
+          // 過去のみ：今日より前のスケジュール
+          matchDateRange = scheduleDateObj < now;
+        }
+      } else {
+        // 日付がない場合は、過去として扱う（アーカイブ表示時のみ表示）
+        matchDateRange = dateRange === 'past';
+      }
+    }
+    
+    return matchStore && matchSales && matchWorker && matchStatus && matchDateRange;
   });
 
   // 予定日順（時系列順）にソート
@@ -883,6 +912,7 @@ function setupEventListeners() {
       if (salesFilter) salesFilter.value = '';
       if (workerFilter) workerFilter.value = '';
       if (statusFilter) statusFilter.value = '';
+      if (dateRangeFilter) dateRangeFilter.value = 'future'; // デフォルトは「今後のみ」
       filterAndRender();
     });
   }
