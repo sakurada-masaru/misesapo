@@ -826,6 +826,7 @@
       font-size: 0.75rem;
       font-weight: 500;
       white-space: nowrap;
+      text-decoration: none;
     }
     .action-btn i {
       font-size: 0.7rem;
@@ -836,6 +837,14 @@
     }
     .action-btn.view:hover {
       background: #374151;
+      color: #fff;
+    }
+    .action-btn.chart {
+      background: #f0fdf4;
+      color: #16a34a;
+    }
+    .action-btn.chart:hover {
+      background: #16a34a;
       color: #fff;
     }
     .action-btn.edit {
@@ -1903,6 +1912,9 @@
         <td>${store.phone || '-'}</td>
         <td>
           <div class="action-btns">
+            <a href="/admin/customers/stores/${store.id}/chart" class="action-btn chart" title="清掃カルテ">
+              <i class="fas fa-clipboard-list"></i>
+            </a>
             <button type="button" class="action-btn edit" title="編集" onclick="editStore('${store.id}')">
               <i class="fas fa-edit"></i>
             </button>
