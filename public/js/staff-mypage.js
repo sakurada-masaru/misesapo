@@ -439,24 +439,7 @@ function renderUser(user) {
   // 基本情報を表示
   renderBasicInfo(user);
   
-  // 出退勤セクションのヘッダーにユーザー名を表示
-  const attendanceSection = document.getElementById('attendance');
-  if (attendanceSection && user.name) {
-    const containerTitle = attendanceSection.querySelector('.container-title');
-    if (containerTitle) {
-      // 既存のユーザー名表示を削除（重複防止）
-      const existingUserName = containerTitle.querySelector('.attendance-user-name');
-      if (existingUserName) {
-        existingUserName.remove();
-      }
-      // ユーザー名を小さく表示
-      const userNameSpan = document.createElement('span');
-      userNameSpan.className = 'attendance-user-name';
-      userNameSpan.style.cssText = 'font-size: 0.75rem; font-weight: normal; color: #6b7280; margin-left: 8px;';
-      userNameSpan.textContent = user.name;
-      containerTitle.appendChild(userNameSpan);
-    }
-  }
+  // 出退勤セクションのヘッダーにユーザー名を表示する処理は削除（基本情報に統合されたため）
   
   // 営業マイページの場合、今月の総案件数を読み込む
   if (window.location.pathname.includes('/sales/mypage')) {

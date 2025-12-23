@@ -241,6 +241,23 @@
               </div>
             </div>
             <div class="card accordion-content">
+              <!-- 基本情報（名前・部署） -->
+              <div class="attendance-basic-info" style="padding: 16px; border-bottom: 1px solid #e5e7eb; margin-bottom: 16px;">
+                <div class="basic-info-row" style="display: flex; gap: 24px; flex-wrap: wrap;">
+                  <div class="basic-info-item">
+                    <span class="basic-info-label">名前</span>
+                    <span class="basic-info-value" id="basic-info-name">-</span>
+                  </div>
+                  <div class="basic-info-item">
+                    <span class="basic-info-label">部署</span>
+                    <span class="basic-info-value" id="basic-info-department">-</span>
+                  </div>
+                </div>
+                <div class="basic-info-item" style="margin-top: 12px;">
+                  <span class="basic-info-label">ログインID</span>
+                  <span class="basic-info-value" id="basic-info-email">-</span>
+                </div>
+              </div>
               
               <!-- 出退勤記録セクション（上部） -->
               <div class="attendance-card" style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
@@ -355,41 +372,6 @@
                   <i class="fas fa-times"></i>
                   <span>クリア</span>
                 </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 基本情報セクション -->
-        <section id="basic-info">
-          <div class="container-section">
-            <div class="container-header">
-              <h2 class="container-title drag-handle">
-                <i class="fas fa-grip-vertical"></i>
-                <i class="fas fa-user"></i>
-                基本情報
-              </h2>
-            </div>
-            <div class="card basic-info-card accordion-content">
-              <div id="basic-info-content">
-                <div class="basic-info-row">
-                  <div class="basic-info-item">
-                    <span class="basic-info-label">名前</span>
-                    <span class="basic-info-value" id="basic-info-name">-</span>
-                  </div>
-                  <div class="basic-info-item">
-                    <span class="basic-info-label">部署</span>
-                    <span class="basic-info-value" id="basic-info-department">-</span>
-                  </div>
-                </div>
-                <div class="basic-info-item">
-                  <span class="basic-info-label">メール</span>
-                  <span class="basic-info-value" id="basic-info-email">-</span>
-                </div>
-                <div class="basic-info-item">
-                  <span class="basic-info-label">電話</span>
-                  <span class="basic-info-value" id="basic-info-phone">-</span>
-                </div>
               </div>
             </div>
           </div>
