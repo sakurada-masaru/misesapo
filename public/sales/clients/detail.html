@@ -21,12 +21,10 @@
       <div class="info-card">
         <div class="card-header">
           <div class="client-main-info">
-            <h2 class="client-company" id="client-company">-</h2>
-            <div class="client-store" id="client-store">-</div>
-            <div class="client-brand" id="client-brand" style="display: none;">-</div>
-          </div>
-          <span class="status-badge" id="client-status">-</span>
-        </div>
+        <h2 class="client-store-title" id="client-store">-</h2>
+      </div>
+      <span class="status-badge" id="client-status">-</span>
+    </div>
 
         <div class="info-grid">
           <div class="info-section">
@@ -36,7 +34,7 @@
             </h3>
             <div class="info-grid-cards">
               <div class="info-card-item">
-                <span class="info-card-label">会社名</span>
+                <span class="info-card-label">法人名</span>
                 <span class="info-card-value" id="client-company-value">-</span>
               </div>
               <div class="info-card-item">
@@ -44,16 +42,8 @@
                 <span class="info-card-value" id="client-brand-value">-</span>
               </div>
               <div class="info-card-item">
-                <span class="info-card-label">店舗名</span>
-                <span class="info-card-value" id="client-store-value">-</span>
-              </div>
-              <div class="info-card-item">
                 <span class="info-card-label">店舗数</span>
                 <span class="info-card-value" id="client-store-count">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">ステータス</span>
-                <span class="info-card-value" id="client-status-value">-</span>
               </div>
             </div>
           </div>
@@ -299,20 +289,11 @@
     .client-main-info {
       flex: 1;
     }
-    .client-company {
+    .client-store-title {
       font-size: 1.35rem;
       font-weight: 700;
       color: #111827;
       margin: 0 0 4px 0;
-    }
-    .client-store {
-      font-size: 1rem;
-      color: #6b7280;
-      margin-bottom: 2px;
-    }
-    .client-brand {
-      font-size: 0.875rem;
-      color: #9ca3af;
     }
     .status-badge {
       padding: 6px 14px;
