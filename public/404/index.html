@@ -115,6 +115,7 @@
                 // [id]はURLエンコードせず、そのまま使用
                 const templateUrl = basePath.replace(/\/$/, '') + '/admin/customers/stores/[id]/chart.html';
                 
+                // 即座に実行（非同期処理を待たない）
                 fetch(templateUrl)
                     .then(response => {
                         if (!response.ok) {
@@ -131,8 +132,10 @@
                     })
                     .catch(error => {
                         console.error('Error loading template:', error);
+                        // エラー時も404メッセージを表示
                         document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1>404 - ページが見つかりません</h1><p>カルテが見つかりませんでした。</p><p style="color:#999;font-size:0.9rem;">エラー: ' + error.message + '</p><a href="/admin/customers/" style="color:#FF679C;text-decoration:none;">顧客管理に戻る</a></div>';
                     });
+                // 即座にreturnして、他の処理を実行しない
                 return;
             }
             
