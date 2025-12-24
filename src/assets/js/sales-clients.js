@@ -342,7 +342,7 @@ function getBrandName(brandId) {
 // 顧客詳細表示
 async function viewClientDetail(id) {
   if (id) {
-    window.location.href = `/sales/clients/${id}.html`;
+    window.location.href = `/sales/clients/detail.html?id=${encodeURIComponent(id)}`;
     return;
   }
   selectedClientId = id;
