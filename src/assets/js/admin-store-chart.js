@@ -37,13 +37,17 @@ function getStoreIdFromUrl() {
   const path = window.location.pathname;
   const fullUrl = window.location.href;
   
+  // デバッグ用コンソールログ
+  console.log('[DEBUG] getStoreIdFromUrl called', { path, fullUrl });
+  
   // #region agent log
   fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:37',message:'getStoreIdFromUrl called',data:{path:path,url:fullUrl,hash:window.location.hash,search:window.location.search},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
   // #endregion
   
-  // 方法1: /admin/customers/stores/{id}/chart.html の形式から取得（末尾の/を考慮）
-  const chartMatch = path.match(/\/admin\/customers\/stores\/([^\/]+)\/chart\.html\/?$/);
+  // 方法1: /admin/customers/stores/{id}/chart.html の形式から取得（末尾の/を考慮、大文字小文字を区別しない）
+  const chartMatch = path.match(/\/admin\/customers\/stores\/([^\/\?]+)\/chart\.html\/?$/i);
   if (chartMatch && chartMatch[1] && chartMatch[1] !== '[id]') {
+    console.log('[DEBUG] Store ID found via method1:', chartMatch[1]);
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:42',message:'Store ID found via method1',data:{storeId:chartMatch[1]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
     // #endregion
@@ -86,14 +90,16 @@ function getStoreIdFromUrl() {
   }
   
   // 方法4: URL全体から直接抽出を試みる（最後の手段）
-  const urlMatch = fullUrl.match(/\/stores\/([^\/\?]+)/);
-  if (urlMatch && urlMatch[1] && urlMatch[1] !== '[id]' && urlMatch[1] !== 'chart.html') {
+  const urlMatch = fullUrl.match(/\/stores\/([^\/\?]+)/i);
+  if (urlMatch && urlMatch[1] && urlMatch[1] !== '[id]' && urlMatch[1] !== 'chart.html' && !urlMatch[1].includes('?')) {
+    console.log('[DEBUG] Store ID found via method4 (full URL):', urlMatch[1]);
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:67',message:'Store ID found via method4 (full URL)',data:{storeId:urlMatch[1]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
     // #endregion
     return urlMatch[1];
   }
   
+  console.error('[DEBUG] Store ID not found', { path, fullUrl, chartMatch: chartMatch ? chartMatch[1] : null, pathParts, storeIdIndex });
   // #region agent log
   fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:72',message:'Store ID not found',data:{path:path,fullUrl:fullUrl,chartMatch:chartMatch?chartMatch[1]:null,pathParts:pathParts,storeIdIndex:storeIdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
   // #endregion
