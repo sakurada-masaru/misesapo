@@ -34,6 +34,11 @@ let chartData = {
 
 // URLから店舗IDを取得する関数
 function getStoreIdFromUrl() {
+  // 方法0: グローバル変数から取得（テンプレートファイルのインラインスクリプトで設定された場合）
+  if (window.__chartStoreId) {
+    return window.__chartStoreId;
+  }
+  
   const path = window.location.pathname;
   const fullUrl = window.location.href;
   
@@ -131,7 +136,7 @@ function execute404Routing() {
       
       if (!currentStoreId || currentStoreId === '[id]') {
         console.error('Store ID not found in URL after routing attempt');
-        document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1>エラー</h1><p>店舗IDが見つかりませんでした。</p><p style="color:#999;font-size:0.9rem;">URLを確認してください: ' + window.location.pathname + '</p><a href="/admin/customers/" style="color:#FF679C;text-decoration:none;">顧客管理に戻る</a></div>';
+        // エラー表示はしない（ページが既に表示されている可能性があるため）
         return;
       }
       
