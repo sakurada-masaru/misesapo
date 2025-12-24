@@ -35,18 +35,33 @@ let chartData = {
 // URLから店舗IDを取得する関数
 function getStoreIdFromUrl() {
   const path = window.location.pathname;
+  const fullUrl = window.location.href;
   
-  // 方法1: /admin/customers/stores/{id}/chart.html の形式から取得
-  const chartMatch = path.match(/\/admin\/customers\/stores\/([^\/]+)\/chart\.html/);
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:37',message:'getStoreIdFromUrl called',data:{path:path,url:fullUrl,hash:window.location.hash,search:window.location.search},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
+  
+  // 方法1: /admin/customers/stores/{id}/chart.html の形式から取得（末尾の/を考慮）
+  const chartMatch = path.match(/\/admin\/customers\/stores\/([^\/]+)\/chart\.html\/?$/);
   if (chartMatch && chartMatch[1] && chartMatch[1] !== '[id]') {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:42',message:'Store ID found via method1',data:{storeId:chartMatch[1]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
     return chartMatch[1];
   }
   
-  // 方法2: パスパーツから取得
-  const pathParts = path.split('/');
+  // 方法2: パスパーツから取得（storesの次の要素を取得）
+  const pathParts = path.split('/').filter(p => p); // 空文字列を除外
   const storeIdIndex = pathParts.indexOf('stores');
-  if (storeIdIndex >= 0 && pathParts[storeIdIndex + 1] && pathParts[storeIdIndex + 1] !== '[id]') {
-    return pathParts[storeIdIndex + 1];
+  if (storeIdIndex >= 0 && storeIdIndex + 1 < pathParts.length) {
+    const potentialStoreId = pathParts[storeIdIndex + 1];
+    // chart.htmlの前の要素が店舗ID
+    if (potentialStoreId && potentialStoreId !== '[id]' && potentialStoreId !== 'chart.html') {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:49',message:'Store ID found via method2',data:{storeId:potentialStoreId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      return potentialStoreId;
+    }
   }
   
   // 方法3: ハッシュやクエリパラメータから取得（フォールバック）
@@ -54,6 +69,9 @@ function getStoreIdFromUrl() {
   if (hash) {
     const hashMatch = hash.match(/store[_-]?id[=:]([^&\/]+)/i);
     if (hashMatch && hashMatch[1] && hashMatch[1] !== '[id]') {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:57',message:'Store ID found via method3',data:{storeId:hashMatch[1]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       return hashMatch[1];
     }
   }
@@ -61,21 +79,49 @@ function getStoreIdFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const storeIdParam = params.get('store_id') || params.get('storeId') || params.get('id');
   if (storeIdParam && storeIdParam !== '[id]') {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:64',message:'Store ID found via query param',data:{storeId:storeIdParam},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
     return storeIdParam;
   }
+  
+  // 方法4: URL全体から直接抽出を試みる（最後の手段）
+  const urlMatch = fullUrl.match(/\/stores\/([^\/\?]+)/);
+  if (urlMatch && urlMatch[1] && urlMatch[1] !== '[id]' && urlMatch[1] !== 'chart.html') {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:67',message:'Store ID found via method4 (full URL)',data:{storeId:urlMatch[1]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+    return urlMatch[1];
+  }
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:72',message:'Store ID not found',data:{path:path,fullUrl:fullUrl,chartMatch:chartMatch?chartMatch[1]:null,pathParts:pathParts,storeIdIndex:storeIdIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
   
   return null;
 }
 
 // 初期化
 document.addEventListener('DOMContentLoaded', async () => {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:71',message:'DOMContentLoaded event fired',data:{path:window.location.pathname,readyState:document.readyState},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
+  
   // URLから店舗IDを取得
   currentStoreId = getStoreIdFromUrl();
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:75',message:'Initial store ID check',data:{currentStoreId:currentStoreId,isIdPlaceholder:currentStoreId==='[id]',isNull:!currentStoreId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
   
   // [id]が含まれている場合、または店舗IDが取得できない場合は、少し待ってから再試行
   if (currentStoreId === '[id]' || !currentStoreId) {
     console.warn('Store ID is still [id], 404.html routing may not have executed');
     console.log('Waiting for 404.html routing...');
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:80',message:'Starting retry loop for store ID',data:{currentStoreId:currentStoreId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
     
     // 404.htmlのルーティングが実行されるまで待つ（最大2秒）
     let retryCount = 0;
@@ -83,12 +129,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const checkInterval = setInterval(() => {
       currentStoreId = getStoreIdFromUrl();
       
+      // #region agent log
+      if (retryCount % 5 === 0) { // 5回ごとにログ
+        fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:85',message:'Retry check',data:{retryCount:retryCount,currentStoreId:currentStoreId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      }
+      // #endregion
+      
       if (currentStoreId && currentStoreId !== '[id]') {
         clearInterval(checkInterval);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:88',message:'Store ID found after retry',data:{currentStoreId:currentStoreId,retryCount:retryCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
         console.log('Store ID found:', currentStoreId);
         initializeChart();
       } else if (retryCount >= maxRetries) {
         clearInterval(checkInterval);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:94',message:'Store ID not found after max retries',data:{retryCount:retryCount,currentStoreId:currentStoreId,path:window.location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
         console.error('404.html routing failed, cannot determine store ID');
         console.error('Store ID not found in URL after retries');
         document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1>エラー</h1><p>店舗IDが見つかりませんでした。</p><p style="color:#999;font-size:0.9rem;">URLを確認してください: ' + window.location.pathname + '</p><a href="/admin/customers/" style="color:#FF679C;text-decoration:none;">顧客管理に戻る</a></div>';
@@ -98,6 +156,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-store-chart.js:101',message:'Store ID found immediately, initializing',data:{currentStoreId:currentStoreId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
+  
   console.log('Store ID found:', currentStoreId);
   initializeChart();
 });
