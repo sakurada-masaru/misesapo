@@ -42,16 +42,8 @@
 
     <script>
         (function() {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'404.html:44',message:'404.html script started',data:{path:window.location.pathname,url:window.location.href},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
-            
             const path = window.location.pathname;
             const basePath = document.querySelector('base')?.getAttribute('href') || '/';
-            
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'404.html:48',message:'Path and basePath extracted',data:{path:path,basePath:basePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
             
             // URLエンコードされた[id]をデコード
             function decodeTemplatePath(url) {
@@ -116,72 +108,32 @@
             // /admin/customers/stores/{id}/chart.html の場合
             const chartMatch = path.match(/^\/admin\/customers\/stores\/([^\/]+)\/chart\.html\/?$/);
             
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'404.html:109',message:'Chart path matching attempt',data:{path:path,chartMatch:chartMatch?chartMatch[1]:null,matched:!!chartMatch},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-            // #endregion
-            
             if (chartMatch) {
                 const storeId = chartMatch[1];
                 // テンプレートファイルを読み込んで、IDを置き換えて表示
                 // [id]はURLエンコードせず、そのまま使用
                 const templateUrl = basePath.replace(/\/$/, '') + '/admin/customers/stores/[id]/chart.html';
                 
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'404.html:115',message:'Before template fetch',data:{storeId:storeId,templateUrl:templateUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                // #endregion
-                
                 fetch(templateUrl)
                     .then(response => {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'404.html:117',message:'Template fetch response',data:{ok:response.ok,status:response.status,statusText:response.statusText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                        // #endregion
-                        
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
                         }
                         return response.text();
                     })
                     .then(html => {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'404.html:123',message:'Before ID replacement',data:{htmlLength:html.length,hasIdPlaceholder:html.includes('[id]'),storeId:storeId,currentUrl:window.location.href},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                        // #endregion
-                        
                         // [id]を実際のIDに置き換え
                         const processedHtml = html.replace(/\[id\]/g, storeId);
-                        
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'404.html:125',message:'After ID replacement',data:{processedHtmlLength:processedHtml.length,hasIdPlaceholder:processedHtml.includes('[id]'),replacementCount:(html.match(/\[id\]/g)||[]).length,storeId:storeId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                        // #endregion
-                        
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'404.html:127',message:'Before document.write',data:{storeId:storeId,currentUrl:window.location.href},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        // #endregion
-                        
                         document.open();
                         document.write(processedHtml);
                         document.close();
-                        
-                        // #region agent log
-                        // document.write後、少し待ってからURLを確認
-                        setTimeout(() => {
-                            fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'404.html:132',message:'After document.write',data:{storeId:storeId,currentUrl:window.location.href,pathname:window.location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        }, 100);
-                        // #endregion
                     })
                     .catch(error => {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'404.html:129',message:'Template fetch error',data:{error:error.message,stack:error.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                        // #endregion
-                        
                         console.error('Error loading template:', error);
                         document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1>404 - ページが見つかりません</h1><p>カルテが見つかりませんでした。</p><p style="color:#999;font-size:0.9rem;">エラー: ' + error.message + '</p><a href="/admin/customers/" style="color:#FF679C;text-decoration:none;">顧客管理に戻る</a></div>';
                     });
                 return;
             }
-            
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'404.html:136',message:'No chart match, showing default 404',data:{path:path},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-            // #endregion
             
             // その他の404エラー
             document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1>404 - ページが見つかりません</h1><p>お探しのページは存在しません。</p><a href="/" style="color:#FF679C;text-decoration:none;">トップページに戻る</a></div>';
