@@ -8,9 +8,6 @@
 <script src="/js/aws-services-api.js"></script>
 
 <main id="main" class="container sales-schedules">
-  <div class="page-title-block">
-    <h1 class="page-title">スケジュール管理</h1>
-  </div>
   <div class="page-header">
     <div class="header-actions">
       <button type="button" class="btn-icon" id="view-toggle" title="カレンダー表示">
@@ -33,6 +30,13 @@
     </div>
     <button class="new-project-alert-btn" onclick="filterNewProjects()">
       <i class="fas fa-list"></i> 確認する
+    </button>
+  </div>
+
+  <div class="page-title-block">
+    <button class="client-tab active" type="button" aria-label="スケジュール管理">
+      <i class="fas fa-calendar"></i>
+      <span>スケジュール管理</span>
     </button>
   </div>
 
