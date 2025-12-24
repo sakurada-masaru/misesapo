@@ -78,35 +78,63 @@ function getStoreIdFromUrl() {
   return null;
 }
 
+// 404.htmlのルーティングを手動で実行する関数
+function execute404Routing() {
+  const path = window.location.pathname;
+  const basePath = document.querySelector('base')?.getAttribute('href') || '/';
+  const chartMatch = path.match(/^\/admin\/customers\/stores\/([^\/]+)\/chart\.html\/?$/);
+  
+  if (chartMatch) {
+    const storeId = chartMatch[1];
+    const templateUrl = basePath.replace(/\/$/, '') + '/admin/customers/stores/[id]/chart.html';
+    
+    return fetch(templateUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.text();
+      })
+      .then(html => {
+        const processedHtml = html.replace(/\[id\]/g, storeId);
+        document.open();
+        document.write(processedHtml);
+        document.close();
+        return true;
+      })
+      .catch(error => {
+        console.error('Error loading template:', error);
+        return false;
+      });
+  }
+  return Promise.resolve(false);
+}
+
 // 初期化
 document.addEventListener('DOMContentLoaded', async () => {
   // URLから店舗IDを取得
   currentStoreId = getStoreIdFromUrl();
   
-  // [id]が含まれている場合、または店舗IDが取得できない場合は、少し待ってから再試行
+  // [id]が含まれている場合、または店舗IDが取得できない場合は、404.htmlのルーティングを手動で実行
   if (currentStoreId === '[id]' || !currentStoreId) {
-    console.warn('Store ID is still [id], 404.html routing may not have executed');
-    console.log('Waiting for 404.html routing...');
+    console.warn('Store ID not found, attempting 404.html routing manually...');
     
-    // 404.htmlのルーティングが実行されるまで待つ（最大2秒）
-    let retryCount = 0;
-    const maxRetries = 20; // 2秒間待機
-    const checkInterval = setInterval(() => {
-      currentStoreId = getStoreIdFromUrl();
-      
-      if (currentStoreId && currentStoreId !== '[id]') {
-        clearInterval(checkInterval);
-        console.log('Store ID found:', currentStoreId);
-        initializeChart();
-      } else if (retryCount >= maxRetries) {
-        clearInterval(checkInterval);
-        console.error('404.html routing failed, cannot determine store ID');
-        console.error('Store ID not found in URL after retries');
-        document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1>エラー</h1><p>店舗IDが見つかりませんでした。</p><p style="color:#999;font-size:0.9rem;">URLを確認してください: ' + window.location.pathname + '</p><a href="/admin/customers/" style="color:#FF679C;text-decoration:none;">顧客管理に戻る</a></div>';
-      }
-      retryCount++;
-    }, 100);
-    return;
+    // 404.htmlのルーティングを手動で実行
+    const routingSuccess = await execute404Routing();
+    
+    if (routingSuccess) {
+      // ルーティングが成功した場合、ページが再読み込みされるのでここで終了
+      return;
+    }
+    
+    // ルーティングが失敗した場合、URLから直接取得を再試行
+    currentStoreId = getStoreIdFromUrl();
+    
+    if (!currentStoreId || currentStoreId === '[id]') {
+      console.error('Store ID not found in URL after routing attempt');
+      document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1>エラー</h1><p>店舗IDが見つかりませんでした。</p><p style="color:#999;font-size:0.9rem;">URLを確認してください: ' + window.location.pathname + '</p><a href="/admin/customers/" style="color:#FF679C;text-decoration:none;">顧客管理に戻る</a></div>';
+      return;
+    }
   }
 
   console.log('Store ID found:', currentStoreId);

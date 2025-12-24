@@ -41,6 +41,7 @@
     </div>
 
     <script>
+        // 即時実行（DOMContentLoadedを待たない）
         (function() {
             const path = window.location.pathname;
             const basePath = document.querySelector('base')?.getAttribute('href') || '/';
@@ -107,11 +108,13 @@
             
             // /admin/customers/stores/{id}/chart.html の場合
             const chartMatch = path.match(/^\/admin\/customers\/stores\/([^\/]+)\/chart\.html\/?$/);
+            
             if (chartMatch) {
                 const storeId = chartMatch[1];
                 // テンプレートファイルを読み込んで、IDを置き換えて表示
                 // [id]はURLエンコードせず、そのまま使用
                 const templateUrl = basePath.replace(/\/$/, '') + '/admin/customers/stores/[id]/chart.html';
+                
                 fetch(templateUrl)
                     .then(response => {
                         if (!response.ok) {
