@@ -127,12 +127,12 @@
   gap: 12px;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #111827;
+  color: #ff679c;
   margin: 0;
 }
 
 .section-title i {
-  color: #6b7280;
+  color: #ff679c;
 }
 
 .section-toggle {
@@ -755,4 +755,3 @@ textarea:focus {
     flex-direction: column;
   }
 }
-
