@@ -110,6 +110,10 @@
         </div>
       </div>
 
+      <div class="kartere-hint" aria-live="polite">
+        <span>↓下部に入力した内容はカルテに自動反映されます。↓</span>
+      </div>
+
       <!-- Onsite Survey Report (Interview Sheet) -->
       <div class="info-card report-card">
         <div class="card-header">
@@ -118,7 +122,6 @@
               <i class="fas fa-clipboard-list"></i>
               現地調査レポート（問診票）
             </h2>
-            <p class="card-subtitle">営業が入力した内容がカルテに自動反映されます。</p>
           </div>
           <span class="status-chip status-draft">未作成</span>
         </div>
@@ -261,7 +264,7 @@
     .page-title {
       font-size: 1.5rem;
       font-weight: 700;
-      color: #111827;
+      color: #ff4f9a;
       margin: 0;
       flex: 1;
     }
@@ -331,7 +334,7 @@
     .section-title {
       font-size: 0.95rem;
       font-weight: 700;
-      color: #111827;
+      color: #ff4f9a;
       margin: 0 0 6px 0;
       display: flex;
       align-items: center;
@@ -442,12 +445,34 @@
       font-size: 1.05rem;
       font-weight: 700;
       margin: 0;
-      color: #111827;
+      color: #ff4f9a;
     }
-    .card-subtitle {
-      font-size: 0.8rem;
-      color: #6b7280;
-      margin: 0;
+    .kartere-hint {
+      display: flex;
+      justify-content: center;
+      margin: 6px 0 12px;
+    }
+    .kartere-hint span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 79, 154, 0.12);
+      color: #ff4f9a;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      animation: hintFloat 2.8s ease-in-out infinite;
+      text-align: center;
+    }
+    @keyframes hintFloat {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-6px);
+      }
     }
     .status-chip {
       padding: 6px 12px;
