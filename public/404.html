@@ -110,7 +110,8 @@
             if (chartMatch) {
                 const storeId = chartMatch[1];
                 // テンプレートファイルを読み込んで、IDを置き換えて表示
-                const templateUrl = basePath.replace(/\/$/, '') + '/admin/customers/stores/%5Bid%5D/chart.html';
+                // [id]はURLエンコードせず、そのまま使用
+                const templateUrl = basePath.replace(/\/$/, '') + '/admin/customers/stores/[id]/chart.html';
                 fetch(templateUrl)
                     .then(response => {
                         if (!response.ok) {
