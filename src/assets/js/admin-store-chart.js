@@ -34,13 +34,49 @@ let chartData = {
 
 // 初期化
 document.addEventListener('DOMContentLoaded', async () => {
-  // URLから店舗IDを取得
-  const pathParts = window.location.pathname.split('/');
-  const storeIdIndex = pathParts.indexOf('stores');
-  if (storeIdIndex >= 0 && pathParts[storeIdIndex + 1]) {
-    currentStoreId = pathParts[storeIdIndex + 1];
+  // URLから店舗IDを取得（複数の方法で試行）
+  const path = window.location.pathname;
+  
+  // 方法1: /admin/customers/stores/{id}/chart.html の形式から取得
+  const chartMatch = path.match(/\/admin\/customers\/stores\/([^\/]+)\/chart\.html/);
+  if (chartMatch) {
+    currentStoreId = chartMatch[1];
+  } else {
+    // 方法2: パスパーツから取得（従来の方法）
+    const pathParts = path.split('/');
+    const storeIdIndex = pathParts.indexOf('stores');
+    if (storeIdIndex >= 0 && pathParts[storeIdIndex + 1]) {
+      currentStoreId = pathParts[storeIdIndex + 1];
+    }
   }
 
+  // [id]が含まれている場合は、404.htmlのルーティングを待つ
+  if (currentStoreId === '[id]' || !currentStoreId) {
+    // 404.htmlのルーティングが実行されるまで待つ
+    let retryCount = 0;
+    const maxRetries = 10;
+    const checkInterval = setInterval(() => {
+      const pathParts = window.location.pathname.split('/');
+      const storeIdIndex = pathParts.indexOf('stores');
+      if (storeIdIndex >= 0 && pathParts[storeIdIndex + 1] && pathParts[storeIdIndex + 1] !== '[id]') {
+        currentStoreId = pathParts[storeIdIndex + 1];
+        clearInterval(checkInterval);
+        initializeChart();
+      } else if (retryCount >= maxRetries) {
+        clearInterval(checkInterval);
+        console.error('Store ID not found in URL after retries');
+        document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1>エラー</h1><p>店舗IDが見つかりませんでした。</p><a href="/admin/customers/" style="color:#FF679C;text-decoration:none;">顧客管理に戻る</a></div>';
+      }
+      retryCount++;
+    }, 100);
+    return;
+  }
+
+  initializeChart();
+});
+
+// カルテの初期化処理
+async function initializeChart() {
   if (!currentStoreId) {
     console.error('Store ID not found in URL');
     return;
@@ -65,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // バージョン表示を更新
   updateVersionDisplay();
-});
+}
 
 // バージョン表示を更新
 function updateVersionDisplay() {

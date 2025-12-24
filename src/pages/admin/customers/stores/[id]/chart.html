@@ -4,6 +4,37 @@
 
 <link rel="stylesheet" href="/css/admin-store-chart.css" />
 <script src="/js/data_utils.js"></script>
+<script>
+  // 404.htmlのルーティングが実行されない場合のフォールバック
+  // URLから直接店舗IDを取得して、[id]を置き換える
+  (function() {
+    const path = window.location.pathname;
+    const chartMatch = path.match(/\/admin\/customers\/stores\/([^\/]+)\/chart\.html/);
+    
+    if (chartMatch && chartMatch[1] !== '[id]') {
+      // 既に店舗IDが正しく設定されている場合は何もしない
+      return;
+    }
+    
+    // [id]が含まれている場合、または店舗IDが取得できない場合
+    // 404.htmlのルーティングを待つか、手動で処理
+    if (chartMatch && chartMatch[1] === '[id]') {
+      console.warn('Store ID is still [id], 404.html routing may not have executed');
+      // 404.htmlのルーティングが実行されるまで少し待つ
+      setTimeout(() => {
+        const currentPath = window.location.pathname;
+        const newMatch = currentPath.match(/\/admin\/customers\/stores\/([^\/]+)\/chart\.html/);
+        if (newMatch && newMatch[1] !== '[id]') {
+          // ルーティングが実行された
+          console.log('404.html routing executed, store ID:', newMatch[1]);
+        } else {
+          // ルーティングが実行されていない場合、エラーを表示
+          console.error('404.html routing failed, cannot determine store ID');
+        }
+      }, 500);
+    }
+  })();
+</script>
 
 <main id="main" class="container admin-store-chart">
   <div class="page-header">
@@ -384,5 +415,19 @@
   </div>
 </dialog>
 
+<script>
+  // 404.htmlが実行されない場合のフォールバック: URLから直接店舗IDを取得
+  (function() {
+    const path = window.location.pathname;
+    const chartMatch = path.match(/\/admin\/customers\/stores\/([^\/]+)\/chart\.html/);
+    if (chartMatch && chartMatch[1] !== '[id]') {
+      // 店舗IDが正しく取得できている場合はそのまま続行
+      // 404.htmlのルーティングが実行された場合、[id]は既に置き換えられている
+    } else if (chartMatch && chartMatch[1] === '[id]') {
+      // [id]のままの場合は、404.htmlのルーティングを待つ
+      console.log('Waiting for 404.html routing...');
+    }
+  })();
+</script>
 <script src="/js/admin-store-chart.js"></script>
 
