@@ -105,6 +105,33 @@
                 return;
             }
             
+            // /admin/customers/stores/{id}/chart.html の場合
+            const chartMatch = path.match(/^\/admin\/customers\/stores\/([^\/]+)\/chart\.html\/?$/);
+            if (chartMatch) {
+                const storeId = chartMatch[1];
+                // テンプレートファイルを読み込んで、IDを置き換えて表示
+                const templateUrl = basePath.replace(/\/$/, '') + '/admin/customers/stores/%5Bid%5D/chart.html';
+                fetch(templateUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        // [id]を実際のIDに置き換え
+                        const processedHtml = html.replace(/\[id\]/g, storeId);
+                        document.open();
+                        document.write(processedHtml);
+                        document.close();
+                    })
+                    .catch(error => {
+                        console.error('Error loading template:', error);
+                        document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1>404 - ページが見つかりません</h1><p>カルテが見つかりませんでした。</p><p style="color:#999;font-size:0.9rem;">エラー: ' + error.message + '</p><a href="/admin/customers/" style="color:#FF679C;text-decoration:none;">顧客管理に戻る</a></div>';
+                    });
+                return;
+            }
+            
             // その他の404エラー
             document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1>404 - ページが見つかりません</h1><p>お探しのページは存在しません。</p><a href="/" style="color:#FF679C;text-decoration:none;">トップページに戻る</a></div>';
         })();

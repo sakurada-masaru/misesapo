@@ -2,6 +2,10 @@
 @json('data/meta/admin_stores_title.json', $title)
 @json('data/meta/admin_stores_body_class.json', $body_class)
 
+<link rel="stylesheet" href="/css/admin-customers-v3.css" />
+<script src="/js/admin-customers-v3.js"></script>
+<script src="/js/data_utils.js"></script>
+
 <main id="main" class="admin-stores-v2">
   @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->
@@ -14,36 +18,149 @@
           <span class="store-count" id="store-count">読み込み中...</span>
         </div>
         <div class="topbar-right">
-          <button type="button" class="btn btn-primary" id="add-store-btn" onclick="document.getElementById('store-dialog').showModal()">
+          <div class="export-actions">
+            <button type="button" class="export-btn" id="export-csv-btn" title="CSVエクスポート (Ctrl/Cmd + E)">
+              <i class="fas fa-file-csv"></i> CSV
+            </button>
+            <button type="button" class="export-btn" id="export-excel-btn" title="Excelエクスポート">
+              <i class="fas fa-file-excel"></i> Excel
+            </button>
+          </div>
+          <button type="button" class="btn btn-primary" id="add-store-btn" onclick="document.getElementById('store-dialog').showModal()" aria-label="新規顧客を追加">
             <i class="fas fa-plus"></i>
             新規追加
           </button>
         </div>
       </header>
 
+    <!-- 最近閲覧した顧客（クイックアクセス） -->
+    <div class="recent-views-section" id="recent-views-section" style="display: none;">
+      <h2 class="section-title-small">最近閲覧した顧客</h2>
+      <div class="recent-views-list" id="recent-views-list">
+        <!-- 動的に生成 -->
+      </div>
+    </div>
+
     <!-- 統計 -->
     <section class="stats-grid" aria-label="顧客統計">
-      <div class="stat-card">
+      <div class="stat-card" role="region" aria-label="店舗統計">
         <div class="stat-label">店舗</div>
-        <div class="stat-value" id="stat-stores-total">-</div>
+        <div class="stat-value" id="stat-stores-total" aria-live="polite">-</div>
         <div class="stat-sub" id="stat-stores-active">稼働中: -</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" role="region" aria-label="法人統計">
         <div class="stat-label">法人</div>
-        <div class="stat-value" id="stat-clients-total">-</div>
+        <div class="stat-value" id="stat-clients-total" aria-live="polite">-</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" role="region" aria-label="ブランド統計">
         <div class="stat-label">ブランド</div>
-        <div class="stat-value" id="stat-brands-total">-</div>
+        <div class="stat-value" id="stat-brands-total" aria-live="polite">-</div>
         <div class="stat-sub" id="stat-stores-no-brand">未ブランド紐付け: -</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" role="region" aria-label="連絡先未登録統計">
         <div class="stat-label">連絡先未登録</div>
-        <div class="stat-value" id="stat-missing-contact">-</div>
+        <div class="stat-value" id="stat-missing-contact" aria-live="polite">-</div>
         <div class="stat-sub">電話 or メールが空</div>
       </div>
     </section>
 
+    <!-- ビューモード切り替え -->
+    <div class="view-mode-switcher" role="tablist" aria-label="ビューモード切り替え">
+      <button class="view-mode-btn" data-view="hierarchy" title="階層ビュー" role="tab" aria-selected="false" aria-controls="hierarchy-view">
+        <i class="fas fa-sitemap"></i> 階層
+      </button>
+      <button class="view-mode-btn" data-view="flat" title="一覧ビュー" role="tab" aria-selected="false" aria-controls="flat-view">
+        <i class="fas fa-list"></i> 一覧
+      </button>
+      <button class="view-mode-btn" data-view="cards" title="カードビュー" role="tab" aria-selected="false" aria-controls="cards-view">
+        <i class="fas fa-th"></i> カード
+      </button>
+    </div>
+
+    <!-- 一括操作バー -->
+    <div class="batch-operations-bar" id="batch-operations-bar" role="region" aria-label="一括操作">
+      <span class="batch-selected-count" id="batch-selected-count" aria-live="polite">0件選択</span>
+      <div class="batch-actions">
+        <button class="batch-btn" onclick="batchChangeStatus()" aria-label="選択した項目のステータスを変更">
+          <i class="fas fa-edit"></i> ステータス変更
+        </button>
+        <button class="batch-btn" onclick="batchExport()" aria-label="選択した項目をエクスポート">
+          <i class="fas fa-download"></i> エクスポート
+        </button>
+        <button class="batch-btn" onclick="clearSelection()" aria-label="選択を解除">
+          <i class="fas fa-times"></i> 選択解除
+        </button>
+      </div>
+    </div>
+
+    <!-- 統合検索セクション -->
+    <div class="unified-search-section">
+      <div class="search-header">
+        <h2 class="search-title">統合検索</h2>
+      </div>
+      <div class="search-main">
+      <div class="search-input-wrapper">
+        <i class="fas fa-search search-icon" aria-hidden="true"></i>
+        <input type="text" id="unified-search-input" class="search-input" 
+               placeholder="法人名・ブランド名・店舗名・住所・電話で検索..." 
+               aria-label="統合検索（Ctrl/Cmd + Kでフォーカス）"
+               autocomplete="off"
+               list="search-suggestions">
+        <datalist id="search-suggestions">
+          <!-- 検索履歴が動的に追加されます -->
+        </datalist>
+        <span class="sr-only">Ctrl/Cmd + K で検索にフォーカス</span>
+      </div>
+      </div>
+      <div class="search-filters">
+        <div class="filter-group">
+          <label class="filter-label">法人</label>
+          <select id="unified-client-filter" class="filter-select">
+            <option value="">全法人</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">ブランド</label>
+          <select id="unified-brand-filter" class="filter-select">
+            <option value="">全ブランド</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">ステータス</label>
+          <select id="unified-status-filter" class="filter-select">
+            <option value="">全ステータス</option>
+            <option value="active">稼働中</option>
+            <option value="contract_pending">契約作業中</option>
+            <option value="considering">検討中</option>
+            <option value="prospect">アプローチ前</option>
+            <option value="negotiated">商談済</option>
+            <option value="lost">失注</option>
+            <option value="suspended">休止中</option>
+            <option value="terminated">契約終了</option>
+          </select>
+        </div>
+      </div>
+      <div class="search-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="unified-reset-filters" aria-label="検索条件をリセット">
+          <i class="fas fa-undo"></i> リセット
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" id="clear-search-history" aria-label="検索履歴をクリア" style="display: none;">
+          <i class="fas fa-history"></i> 履歴クリア
+        </button>
+      </div>
+    </div>
+
+    <!-- 階層ビュー -->
+    <div id="hierarchy-view" style="display: none;" role="tabpanel" aria-labelledby="hierarchy-tab">
+      <div class="hierarchy-tree" id="hierarchy-tree-container" role="tree" aria-label="顧客階層ツリー">
+        <div class="loading-cell">
+          <i class="fas fa-spinner fa-spin" aria-hidden="true"></i> 読み込み中...
+        </div>
+      </div>
+    </div>
+
+    <!-- フラットビュー（既存のテーブル） -->
+    <div id="flat-view" role="tabpanel" aria-labelledby="flat-tab">
     <!-- 検索・フィルター -->
     <div class="search-section">
       <div class="search-row">
@@ -94,16 +211,17 @@
     <div class="stores-table-wrapper">
       <table class="stores-table">
         <thead>
-          <tr>
-            <th>ID</th>
-            <th>ブランド名</th>
-            <th>店舗名</th>
-            <th>法人名</th>
-            <th>ステータス</th>
-            <th>住所</th>
-            <th>電話番号</th>
-            <th>操作</th>
-          </tr>
+      <tr>
+        <th style="width: 40px;"><input type="checkbox" id="select-all-stores" onchange="toggleSelectAll(this)" aria-label="すべて選択"></th>
+        <th>ID</th>
+        <th>ブランド名</th>
+        <th>店舗名</th>
+        <th>法人名</th>
+        <th>ステータス</th>
+        <th>住所</th>
+        <th>電話番号</th>
+        <th>操作</th>
+      </tr>
         </thead>
         <tbody id="stores-tbody">
           <tr>
@@ -117,6 +235,16 @@
 
     <!-- ページネーション -->
     <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- カードビュー -->
+    <div id="cards-view" style="display: none;" role="tabpanel" aria-labelledby="cards-tab">
+      <div class="customer-cards-grid" id="cards-view-container" role="grid" aria-label="顧客カード一覧">
+        <div class="loading-cell">
+          <i class="fas fa-spinner fa-spin" aria-hidden="true"></i> 読み込み中...
+        </div>
+      </div>
+    </div>
     </div>
   </div>
 </main>
@@ -1505,7 +1633,7 @@
       filterAndRender();
     } catch (error) {
       console.error('Failed to load data:', error);
-      tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">読み込みに失敗しました</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="loading-cell"><i class="fas fa-exclamation-triangle"></i><br>読み込みに失敗しました<br><small>ネットワーク接続を確認してください</small></td></tr>';
     }
   }
 
@@ -1803,7 +1931,7 @@
     const pageStores = filteredStores.slice(start, start + perPage);
     
     if (pageStores.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">該当する店舗がありません</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="loading-cell"><i class="fas fa-inbox"></i><br>該当する店舗がありません</td></tr>';
       return;
     }
     
@@ -1896,8 +2024,10 @@
         console.warn('Client has no name:', client);
       }
       
+      const isSelected = window.selectedItems && window.selectedItems.has(store.id);
       return `
-      <tr data-id="${store.id}">
+      <tr data-id="${store.id}" ${isSelected ? 'class="row-selected"' : ''}>
+        <td><input type="checkbox" class="store-checkbox" data-id="${store.id}" onchange="toggleStoreSelection('${store.id}')" aria-label="店舗 ${escapeHtml(store.name || store.id)} を選択" ${isSelected ? 'checked' : ''}></td>
         <td>${store.id}</td>
         <td>${brandCell}</td>
         <td>
@@ -1912,6 +2042,7 @@
         <td>${store.phone || '-'}</td>
         <td>
           <div class="action-btns">
+            <input type="checkbox" class="store-checkbox" data-id="${store.id}" onchange="toggleStoreSelection('${store.id}')" style="margin-right: 8px;">
             <a href="/admin/customers/stores/${store.id}/chart.html" class="action-btn chart" title="清掃カルテ">
               <i class="fas fa-clipboard-list"></i>
             </a>
@@ -2708,10 +2839,351 @@
     }
   }
 
+  // グローバル変数をv3と共有
+  window.allStoresGlobal = allStores;
+  window.allClientsGlobal = allClients;
+  window.allBrandsGlobal = allBrands;
+  window.filteredStoresGlobal = filteredStores;
+
+  // データ更新時にv3も更新
+  const originalFilterAndRender = filterAndRender;
+  filterAndRender = function() {
+    originalFilterAndRender();
+    window.allStoresGlobal = allStores;
+    window.allClientsGlobal = allClients;
+    window.allBrandsGlobal = allBrands;
+    window.filteredStoresGlobal = filteredStores;
+    if (window.CustomerManagementV3) {
+      window.CustomerManagementV3.allStores = allStores;
+      window.CustomerManagementV3.allClients = allClients;
+      window.CustomerManagementV3.allBrands = allBrands;
+      window.CustomerManagementV3.filteredData = filteredStores;
+      window.CustomerManagementV3.renderCurrentView();
+    }
+  };
+
+  // 一括操作用のグローバル変数
+  window.selectedItems = new Set();
+
   // 初期化
   loadStores().then(() => {
     checkEditMode();
+    // v3機能の初期化（データ読み込み後）
+    setTimeout(() => {
+      window.allStoresGlobal = allStores;
+      window.allClientsGlobal = allClients;
+      window.allBrandsGlobal = allBrands;
+      window.filteredStoresGlobal = filteredStores;
+      if (window.CustomerManagementV3) {
+        window.CustomerManagementV3.allStores = allStores;
+        window.CustomerManagementV3.allClients = allClients;
+        window.CustomerManagementV3.allBrands = allBrands;
+        window.CustomerManagementV3.loadData();
+        window.CustomerManagementV3.updateUnifiedFilters();
+      }
+    }, 500);
   });
+
+  // エクスポート機能
+  document.getElementById('export-csv-btn')?.addEventListener('click', () => {
+    exportToCSV();
+  });
+
+  document.getElementById('export-excel-btn')?.addEventListener('click', () => {
+    exportToCSV(); // ExcelはCSVとして出力
+  });
+
+  function exportToCSV() {
+    const headers = ['ID', '法人名', 'ブランド名', '店舗名', 'ステータス', '住所', '電話番号', 'メールアドレス'];
+    const rows = filteredStores.map(store => {
+      let brand = null;
+      let client = null;
+      
+      if (window.DataUtils?.EntityFinder?.findBrand) {
+        brand = window.DataUtils.EntityFinder.findBrand(allBrands, store.brand_id);
+      } else {
+        brand = allBrands.find(b => b.id === store.brand_id || String(b.id) === String(store.brand_id));
+      }
+      
+      if (brand && window.DataUtils?.EntityFinder?.findClient) {
+        client = window.DataUtils.EntityFinder.findClient(allClients, brand.client_id);
+      } else if (brand) {
+        client = allClients.find(c => c.id === brand.client_id || String(c.id) === String(brand.client_id));
+      }
+
+      return [
+        store.id || '',
+        client ? (client.name || client.company_name || '') : '',
+        brand ? (brand.name || '') : '',
+        store.name || '',
+        store.status || '',
+        `${store.pref || ''}${store.city || ''}${store.address1 || ''}`,
+        store.phone || '',
+        store.email || ''
+      ];
+    });
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `customers_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  }
+
+  // 一括操作
+  window.batchChangeStatus = function() {
+    if (window.selectedItems.size === 0) {
+      alert('選択された項目がありません');
+      return;
+    }
+    const newStatus = prompt('新しいステータスを選択してください:\n1. active (稼働中)\n2. suspended (休止中)\n3. terminated (契約終了)');
+    if (newStatus && ['active', 'suspended', 'terminated'].includes(newStatus)) {
+      alert(`${window.selectedItems.size}件のステータスを${newStatus}に変更します（実装予定）`);
+    }
+  };
+
+  window.batchExport = function() {
+    if (window.selectedItems.size === 0) {
+      alert('選択された項目がありません');
+      return;
+    }
+    const selectedStores = filteredStores.filter(s => window.selectedItems.has(s.id));
+    const originalFiltered = filteredStores;
+    filteredStores = selectedStores;
+    exportToCSV();
+    filteredStores = originalFiltered;
+  };
+
+  window.clearSelection = function() {
+    window.selectedItems.clear();
+    
+    // すべてのチェックボックスを解除
+    document.querySelectorAll('.store-checkbox').forEach(cb => {
+      cb.checked = false;
+      const storeId = cb.dataset.id;
+      
+      // テーブル行のハイライト解除
+      const row = document.querySelector(`tr[data-id="${storeId}"]`);
+      if (row) {
+        row.classList.remove('row-selected');
+      }
+      
+      // カードのハイライト解除
+      const card = document.querySelector(`.customer-card[data-id="${storeId}"]`);
+      if (card) {
+        card.classList.remove('selected');
+      }
+    });
+    
+    updateBatchOperationsBar();
+    updateSelectAllCheckbox();
+    renderTable();
+    if (window.CustomerManagementV3) {
+      window.CustomerManagementV3.renderCurrentView();
+    }
+  };
+
+  function updateBatchOperationsBar() {
+    const bar = document.getElementById('batch-operations-bar');
+    const count = document.getElementById('batch-selected-count');
+    if (bar && count) {
+      if (window.selectedItems.size > 0) {
+        bar.classList.add('active');
+        count.textContent = `${window.selectedItems.size}件選択`;
+      } else {
+        bar.classList.remove('active');
+      }
+    }
+  }
+
+  window.toggleStoreSelection = function(storeId) {
+    const checkbox = document.querySelector(`.store-checkbox[data-id="${storeId}"]`);
+    if (checkbox) {
+      if (checkbox.checked) {
+        window.selectedItems.add(storeId);
+      } else {
+        window.selectedItems.delete(storeId);
+      }
+      updateBatchOperationsBar();
+      updateSelectAllCheckbox();
+      
+      // 行のハイライト（テーブルビュー）
+      const row = document.querySelector(`tr[data-id="${storeId}"]`);
+      if (row) {
+        if (checkbox.checked) {
+          row.classList.add('row-selected');
+        } else {
+          row.classList.remove('row-selected');
+        }
+      }
+      
+      // カードのハイライト（カードビュー）
+      const card = document.querySelector(`.customer-card[data-id="${storeId}"]`);
+      if (card) {
+        if (checkbox.checked) {
+          card.classList.add('selected');
+        } else {
+          card.classList.remove('selected');
+        }
+      }
+    }
+  };
+
+  window.toggleSelectAll = function(checkbox) {
+    const storeCheckboxes = document.querySelectorAll('.store-checkbox:not(#select-all-stores)');
+    storeCheckboxes.forEach(cb => {
+      cb.checked = checkbox.checked;
+      const storeId = cb.dataset.id;
+      if (checkbox.checked) {
+        window.selectedItems.add(storeId);
+      } else {
+        window.selectedItems.delete(storeId);
+      }
+      
+      // 行のハイライト（テーブルビュー）
+      const row = document.querySelector(`tr[data-id="${storeId}"]`);
+      if (row) {
+        if (checkbox.checked) {
+          row.classList.add('row-selected');
+        } else {
+          row.classList.remove('row-selected');
+        }
+      }
+      
+      // カードのハイライト（カードビュー）
+      const card = document.querySelector(`.customer-card[data-id="${storeId}"]`);
+      if (card) {
+        if (checkbox.checked) {
+          card.classList.add('selected');
+        } else {
+          card.classList.remove('selected');
+        }
+      }
+    });
+    updateBatchOperationsBar();
+  };
+
+  function updateSelectAllCheckbox() {
+    const selectAll = document.getElementById('select-all-stores');
+    if (selectAll) {
+      const allCheckboxes = document.querySelectorAll('.store-checkbox:not(#select-all-stores)');
+      const checkedCount = Array.from(allCheckboxes).filter(cb => cb.checked).length;
+      selectAll.checked = checkedCount === allCheckboxes.length && allCheckboxes.length > 0;
+      selectAll.indeterminate = checkedCount > 0 && checkedCount < allCheckboxes.length;
+    }
+  }
+
+  // ページ読み込み時に選択状態を復元
+  function restoreSelectionState() {
+    if (window.selectedItems && window.selectedItems.size > 0) {
+      window.selectedItems.forEach(storeId => {
+        const checkbox = document.querySelector(`.store-checkbox[data-id="${storeId}"]`);
+        if (checkbox) {
+          checkbox.checked = true;
+          toggleStoreSelection(storeId);
+        }
+      });
+      updateBatchOperationsBar();
+      updateSelectAllCheckbox();
+    }
+  }
+
+  // データ読み込み後に選択状態を復元
+  const originalLoadStores = loadStores;
+  loadStores = async function() {
+    await originalLoadStores();
+    setTimeout(restoreSelectionState, 100);
+  };
+
+  // エクスポート機能
+  document.getElementById('export-csv-btn')?.addEventListener('click', () => {
+    exportToCSV();
+  });
+
+  document.getElementById('export-excel-btn')?.addEventListener('click', () => {
+    exportToExcel();
+  });
+
+  function exportToCSV() {
+    const headers = ['ID', '法人名', 'ブランド名', '店舗名', 'ステータス', '住所', '電話番号', 'メールアドレス'];
+    const rows = filteredStores.map(store => {
+      let brand = null;
+      let client = null;
+      
+      if (window.DataUtils?.EntityFinder?.findBrand) {
+        brand = window.DataUtils.EntityFinder.findBrand(allBrands, store.brand_id);
+      } else {
+        brand = allBrands.find(b => b.id === store.brand_id || String(b.id) === String(store.brand_id));
+      }
+      
+      if (brand && window.DataUtils?.EntityFinder?.findClient) {
+        client = window.DataUtils.EntityFinder.findClient(allClients, brand.client_id);
+      } else if (brand) {
+        client = allClients.find(c => c.id === brand.client_id || String(c.id) === String(brand.client_id));
+      }
+
+      return [
+        store.id || '',
+        client ? (client.name || client.company_name || '') : '',
+        brand ? (brand.name || '') : '',
+        store.name || '',
+        store.status || '',
+        `${store.pref || ''}${store.city || ''}${store.address1 || ''}`,
+        store.phone || '',
+        store.email || ''
+      ];
+    });
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `customers_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  }
+
+  function exportToExcel() {
+    // Excel形式はCSVとして出力（実際のExcelライブラリが必要な場合は後で追加）
+    exportToCSV();
+  }
+
+  // 一括操作
+  window.batchChangeStatus = function() {
+    if (selectedItems.size === 0) {
+      alert('選択された項目がありません');
+      return;
+    }
+    // ステータス変更モーダルを表示（簡易実装）
+    const newStatus = prompt('新しいステータスを選択してください:\n1. active (稼働中)\n2. suspended (休止中)\n3. terminated (契約終了)');
+    if (newStatus && ['active', 'suspended', 'terminated'].includes(newStatus)) {
+      // 実際のAPI呼び出しは後で実装
+      alert(`${selectedItems.size}件のステータスを${newStatus}に変更します（実装予定）`);
+    }
+  };
+
+  window.batchExport = function() {
+    if (selectedItems.size === 0) {
+      alert('選択された項目がありません');
+      return;
+    }
+    // 選択された項目のみをエクスポート
+    const selectedStores = filteredStores.filter(s => selectedItems.has(s.id));
+    const originalFiltered = filteredStores;
+    filteredStores = selectedStores;
+    exportToCSV();
+    filteredStores = originalFiltered;
+  };
+
+
   
 })();
     </script>

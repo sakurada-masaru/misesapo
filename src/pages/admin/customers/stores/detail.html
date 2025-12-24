@@ -11,12 +11,24 @@
           <i class="fas fa-arrow-left"></i>
         </a>
         <div class="header-title">
-          <div class="breadcrumb" id="breadcrumb">
-            <a href="#" class="client-name breadcrumb-link" id="client-link">-</a>
-            <i class="fas fa-chevron-right"></i>
-            <a href="#" class="brand-name breadcrumb-link" id="brand-link">-</a>
-            <i class="fas fa-chevron-right"></i>
-            <span class="store-name">-</span>
+          <div class="enhanced-breadcrumb" id="breadcrumb">
+            <div class="breadcrumb-item">
+              <a href="/admin/customers/" class="breadcrumb-link">
+                <i class="fas fa-home"></i> 顧客管理
+              </a>
+            </div>
+            <i class="fas fa-chevron-right breadcrumb-separator"></i>
+            <div class="breadcrumb-item">
+              <a href="#" class="client-name breadcrumb-link" id="client-link">-</a>
+            </div>
+            <i class="fas fa-chevron-right breadcrumb-separator"></i>
+            <div class="breadcrumb-item">
+              <a href="#" class="brand-name breadcrumb-link" id="brand-link">-</a>
+            </div>
+            <i class="fas fa-chevron-right breadcrumb-separator"></i>
+            <div class="breadcrumb-item">
+              <span class="store-name breadcrumb-current">-</span>
+            </div>
           </div>
           <h1 id="store-name">読み込み中...</h1>
         </div>
@@ -1360,6 +1372,15 @@
     document.getElementById('schedule-panel').style.display = tabName === 'info' ? 'block' : 'none';
     document.getElementById('estimates-panel').style.display = tabName === 'estimates' ? 'block' : 'none';
     document.getElementById('history-panel').style.display = tabName === 'history' ? 'block' : 'none';
+
+    // カルテタブの処理
+    if (tabName === 'chart') {
+      // カルテページへリダイレクト
+      const storeId = new URLSearchParams(window.location.search).get('id');
+      if (storeId) {
+        window.location.href = `/admin/customers/stores/${storeId}/chart.html`;
+      }
+    }
 
     if (tabName === 'estimates') loadEstimates();
     if (tabName === 'history') loadReports();
