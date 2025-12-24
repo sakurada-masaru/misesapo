@@ -662,7 +662,13 @@
     }
 
     // 検索結果数を更新
-    updateSearchResultCount();
+    if (filteredData.length < allStores.length) {
+      const info = document.createElement('div');
+      info.className = 'data-integrity-warning';
+      info.style.cssText = 'margin-top: 12px; padding: 8px 12px;';
+      info.innerHTML = `<i class="fas fa-filter"></i> フィルター適用中: ${filteredData.length} / ${allStores.length}件を表示`;
+      container.appendChild(info);
+    }
   }
 
   /**
