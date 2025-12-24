@@ -924,7 +924,7 @@
 /* レスポンシブ */
 @media (max-width: 768px) {
   .sales-clients {
-    padding: 10px;
+    padding: 0;
     padding-bottom: 70px;
   }
 
@@ -942,7 +942,7 @@
   }
 
   .client-register-form {
-    padding: 10px;
+    padding: 0;
   }
 
   .form-row {
