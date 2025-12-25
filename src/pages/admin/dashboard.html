@@ -2,6 +2,13 @@
 @json('data/meta/admin_dashboard_title.json', $title)
 @json('data/meta/admin_dashboard_body_class.json', $body_class)
 
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
 <main id="main" class="admin-dashboard">
   @include('partials.admin-sidebar')
 

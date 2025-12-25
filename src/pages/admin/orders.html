@@ -2,6 +2,13 @@
 @json('data/meta/admin_orders_title.json', $title)
 @json('data/meta/admin_orders_body_class.json', $body_class)
 
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
 <main id="main" class="admin-orders-v2">
   @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->

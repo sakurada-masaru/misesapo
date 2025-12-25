@@ -2,6 +2,13 @@
 @json('data/meta/admin_attendance_errors_title.json', $title)
 @json('data/meta/admin_attendance_errors_body_class.json', $body_class)
 
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
 <main id="main" class="admin-attendance-errors">
   @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->

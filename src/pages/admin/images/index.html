@@ -2,6 +2,13 @@
 @json('data/meta/admin_services_title.json', $page_title)
 @json('data/meta/admin_services_body_class.json', $body_class)
 
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
 <main id="main" class="admin-images-v2">
   @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->

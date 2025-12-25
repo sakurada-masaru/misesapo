@@ -2,6 +2,13 @@
 @json('data/meta/admin_store_chart_title.json', $title)
 @json('data/meta/admin_store_chart_body_class.json', $body_class)
 
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
 <link rel="stylesheet" href="/css/admin-store-chart.css" />
 <script src="/js/aws-s3-upload.js"></script>
 <script src="/js/data_utils.js"></script>

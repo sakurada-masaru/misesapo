@@ -1,205 +1,14 @@
-<!DOCTYPE html>
-<html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <base href="/" />
-    <title>コンシェルジュ一覧（ユーザーID管理） | ミセサポ</title>
-    
-    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
-<link rel="shortcut icon" href="/images/logo_144x144.png" />
-<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
-<link rel="stylesheet" href="/styles.css" />
-<link rel="stylesheet" href="/css/header.css" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<!-- 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
--->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+@layout('layouts.base')
+@json('data/meta/admin_users_sales_title.json', $title)
+@json('data/meta/admin_users_sales_body_class.json', $body_class)
+@json('data/clients.json', clients_data)
+
 <style>
-  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
-  /* Brand theme variables (default + variants) */
-  body { --primary: #FF679C; --primary-600: #E35687; }
-  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
-  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
-  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
-  /* Note: :root also defines the same brand color; inline vars ensure early paint */
-  </style>
-
-    <style>
-      /* Staff signin page: hide all headers */
-      body.page-staff-signin #default-header-wrapper,
-      body.page-staff-signin #normal-header-wrapper {
-        display: none !important;
-      }
-      
-      /* Staff pages: hide global header and footer */
-      body[class*="page-staff-"] #default-header-wrapper,
-      body[class*="page-staff-"] #normal-header-wrapper,
-      body[class*="page-staff-"] footer {
-        display: none !important;
-      }
-      
-      /* Staff pages: ensure full height layout */
-      body[class*="page-staff-"] {
-        margin: 0;
-        padding: 0;
-      }
-      
-      body[class*="page-staff-"] #main {
-        margin: 0;
-        padding: 0;
-      }
-      
-      /* Admin pages: hide global header while keeping auth buttons */
-      body[class*="page-admin-"] #default-header-wrapper {
-        height: 0;
-        overflow: visible;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .site-header {
-        background: transparent;
-        box-shadow: none;
-        padding: 0;
-        min-height: 0;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .inner {
-        justify-content: flex-end;
-        padding: 0;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-left,
-      body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
-      body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
-      body[class*="page-admin-"] #default-header-wrapper .spacer,
-      body[class*="page-admin-"] #default-header-wrapper .role-badge {
-        display: none !important;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-right {
-        position: fixed;
-        top: 16px;
-        right: 24px;
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        background: #fff;
-        border-radius: 999px;
-        padding: 6px 18px;
-        box-shadow: 0 12px 30px rgba(15,23,42,0.18);
-        z-index: 300;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
-        font-weight: 600;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 999px;
-        border: 1px solid #e5e7eb;
-      }
-      
-      /* Admin store chart page: completely hide header */
-      body[class*="admin-store-chart"] #default-header-wrapper,
-      body[class*="admin-store-chart"] #normal-header-wrapper {
-        display: none !important;
-      }
-      
-      /* Sales pages: hide global header and footer */
-      body[class*="sales-"] #default-header-wrapper,
-      body[class*="sales-"] #normal-header-wrapper,
-      body[class*="sales-"] footer {
-        display: none !important;
-      }
-      
-      /* Sales pages: ensure full height layout */
-      body[class*="sales-"] {
-        margin: 0;
-        padding: 0;
-      }
-      
-      body[class*="sales-"] #main {
-        margin: 0;
-        padding: 0;
-      }
-    </style>
-  </head>
-  <body class="theme-pink page-admin-users-sales">
-    <div id="default-header-wrapper">
-    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
-<header id="header-guest" class="site-header" data-role="guest">
-  <div class="inner wide">
-    <div class="nav-left">
-      <a class="brand brand-logo" href="/" aria-label="ミセサポ ホーム">
-        <img src="/images/logo_144x144.png" alt="ミセサポ" />
-      </a>
-      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
-        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
-      </nav>
-    </div>
-    <div class="spacer"></div>
-    <nav class="nav-right hide-sm" aria-label="User">
-      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
-      <a class="nav-link" href="/signin">ログイン</a>
-      <a class="nav-link primary" href="/signup">新規登録</a>
-      <button class="icon-btn" aria-label="通知">
-        <i class="fas fa-bell"></i>
-      </button>
-      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
-        <i class="fas fa-sign-out-alt"></i>
-      </button>
-    </nav>
-    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-  </div>
-  <!-- スマホ版ナビゲーションメニュー -->
-  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
-    <div class="mobile-nav-content">
-      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
-        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
-      </nav>
-      <nav class="mobile-nav-user" aria-label="User">
-        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
-        <a class="mobile-nav-link" href="/signin">ログイン</a>
-        <a class="mobile-nav-link primary" href="/signup">新規登録</a>
-      </nav>
-    </div>
-  </nav>
-</header>
-
-    </div>
-    <!-- 通常ヘッダー（ログイン画面用） -->
-    <div id="normal-header-wrapper" style="display: none;">
-    <!-- 通常ヘッダー -->
-<header class="normal-header">
-    <div class="normal-header-inner">
-        <div class="normal-header-logo">
-            <a href="/">
-                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
-            </a>
-                </div>
-        <nav class="normal-header-nav">
-            <a href="/">TOP</a>
-            <a href="/service">対応可能サービス</a>
-            <a href="/lp#voice">お客様の声</a>
-            <a href="/customers-support-desk">カスタマーズサポート</a>
-            <a href="/announcements">お知らせ</a>
-            <a href="/privacy-policy">規約＆ポリシー</a>
-        </nav>
-        <div class="normal-header-actions">
-            <a href="/signin" class="normal-header-login">ログイン</a>
-        </div>
-            </div>
-</header>
-
-
-    </div>
-    <main id="main">
-      
-
-
-
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
 
 <main id="main" class="container admin-users-sales">
   <div class="page-header">
@@ -279,7 +88,7 @@
   </div>
 
   <script type="application/json" id="clients-data">
-    {"clients": [{"company_name": "株式会社 Dart Ace", "company_name_kana": "", "brand_name": "A’s ダーツバー(Darts Bar A's )", "store_name": "日本橋茅場町店", "contact_person": "永井研行", "email": "info@dart-ace.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "2025年3月19日 13:00", "url": "https://x.gd/AkFdE", "cleaning_frequency": "毎月清掃", "id": "2167ccb6"}, {"company_name": "株式会社 Dart Ace", "company_name_kana": "", "brand_name": "A’s ダーツバー(Darts Bar A's )", "store_name": "大塚店", "contact_person": "永井研行", "email": "info@dart-ace.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "2025年3月20日 13:00", "url": "https://x.gd/AkFdE", "cleaning_frequency": "毎月清掃", "id": "bf9f6bcc"}, {"company_name": "株式会社 Dart Ace", "company_name_kana": "", "brand_name": "A’s ダーツバー(Darts Bar A's", "store_name": "高円寺店", "contact_person": "永井研行", "email": "info@dart-ace.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "2025年3月21日 13:00", "url": "https://x.gd/AkFdE", "cleaning_frequency": "毎月清掃", "id": "703bafc0"}, {"company_name": "株式会社 Dart Ace", "company_name_kana": "", "brand_name": "A’s ダーツバー(Darts Bar A's", "store_name": "水道橋店", "contact_person": "永井研行", "email": "info@dart-ace.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "2025年3月11日 7:00", "url": "https://x.gd/AkFdE", "cleaning_frequency": "毎月清掃", "id": "d5da5132"}, {"company_name": "株式会社 Dart Ace", "company_name_kana": "", "brand_name": "A’s ダーツバー(Darts Bar A's", "store_name": "神楽坂店", "contact_person": "永井研行", "email": "info@dart-ace.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "2025年3月11日 13:00", "url": "https://x.gd/AkFdE", "cleaning_frequency": "毎月清掃", "id": "86cce202"}, {"company_name": "株式会社 GRAST", "company_name_kana": "", "brand_name": "手作りの味噌らーめん", "store_name": "味噌樽", "contact_person": "和田 賢次@渡邉社長紹介", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "アプローチ前", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "b94abbdc"}, {"company_name": "株式会社 GRAST", "company_name_kana": "", "brand_name": "北海道らーめん みそ熊", "store_name": "北千住店", "contact_person": "和田 賢次@渡邉社長紹介", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "アプローチ前", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "afeceb88"}, {"company_name": "株式会社 GRAST", "company_name_kana": "", "brand_name": "北海道らーめん みそ熊", "store_name": "王子店", "contact_person": "和田 賢次@渡邉社長紹介", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "アプローチ前", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "a0d05c48"}, {"company_name": "株式会社 SSG", "company_name_kana": "", "brand_name": "上海料理佳樹園", "store_name": "", "contact_person": "砂子田社長", "email": "", "sales_rep": "正田和輝", "store_count": "1店舗", "status": "稼働中", "notes": "4月から月2　グリストラップ清掃＋α", "next_date": "", "url": "", "cleaning_frequency": "２週間に１回", "id": "83816a1c"}, {"company_name": "株式会社 ゴーゴーカレーグループ", "company_name_kana": "", "brand_name": "ゴーゴーカレー", "store_name": "新宿東口駅前スタジアム", "contact_person": "松永", "email": "ksms.matsunaga@gmail.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "33d1da77"}, {"company_name": "株式会社2M8", "company_name_kana": "", "brand_name": "MASSIMOTTVIO", "store_name": "", "contact_person": "角谷店長", "email": "saigonkitchien@dedesuke.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "スポット清掃", "id": "65f8ddef"}, {"company_name": "株式会社Bright", "company_name_kana": "", "brand_name": "貸切居酒屋ラフェス", "store_name": "神田小川町店", "contact_person": "大江　ひとみ", "email": "", "sales_rep": "佐藤大志", "store_count": "", "status": "稼働中", "notes": "3月11日水道蛇口交換工事の依頼。外注合わせて60,000円のニーズがありました。その他に害虫害虫が気になるとのことで今後依頼する可能性あり。売り上げ的には至っていないが、今イベント活動しているため、今後フリーストラップ、床清掃などの提案し依頼される可能性あり", "next_date": "", "url": "", "cleaning_frequency": "", "id": "b5c24939"}, {"company_name": "株式会社CatchBall", "company_name_kana": "", "brand_name": "ラム肉専門店-隣のロッヂ", "store_name": "", "contact_person": "松倉", "email": "t.matsukura@hitsujinolodge.com", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "7/7 　清掃", "next_date": "", "url": "", "cleaning_frequency": "", "id": "1d895c6c"}, {"company_name": "株式会社CatchBall", "company_name_kana": "", "brand_name": "ようさい", "store_name": "", "contact_person": "松倉", "email": "t.matsukura@hitsujinolodge.com", "sales_rep": "", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "1d895c6c"}, {"company_name": "株式会社FELICE", "company_name_kana": "", "brand_name": "宮崎辛麺　辛麺屋一輪", "store_name": "", "contact_person": "幸谷 仁志", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "スポット依頼", "next_date": "", "url": "", "cleaning_frequency": "", "id": "a91ee1dc"}, {"company_name": "株式会社GOSSO", "company_name_kana": "", "brand_name": "0秒レモンサワー 仙台ホルモン焼肉酒場 ときわ亭", "store_name": "渋谷店", "contact_person": "國吉さん", "email": "kuniyoshi@gosso.co.jp", "sales_rep": "正田和輝", "store_count": "60店舗", "status": "稼働中", "notes": "定期清掃　月75,000円", "next_date": "", "url": "", "cleaning_frequency": "毎月清掃", "id": "1336062b"}, {"company_name": "株式会社GOSSO", "company_name_kana": "", "brand_name": "CRAFTCHEESEMARKET", "store_name": "渋谷店", "contact_person": "高橋", "email": "takahashi_t@gosso.co.jp", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "38a66680"}, {"company_name": "株式会社GRAST", "company_name_kana": "", "brand_name": "北海道らーめん みそ熊", "store_name": "王子店", "contact_person": "桑原政之", "email": "masayuki_kuwabara@mulbelea.co.jp", "sales_rep": "", "store_count": "", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "f006e997"}, {"company_name": "株式会社HIRA", "company_name_kana": "", "brand_name": "SUNRIZE", "store_name": "大崎店", "contact_person": "ラミチャネ スリヤ", "email": "suryalami123 @gmail.com", "sales_rep": "正田和輝", "store_count": "", "status": "商談済", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "f61011d7"}, {"company_name": "株式会社INGS", "company_name_kana": "", "brand_name": "CONA 千葉駅前店", "store_name": "", "contact_person": "FC菅又さん", "email": "", "sales_rep": "佐藤大志", "store_count": "", "status": "契約作業中", "notes": "ビーエヌアイ村友さんからのご紹介。千葉の駅前にあるイタリアンのお店クリス。トラップ、ダクト清掃など含めて複数依頼あり。店舗差はこれから実施する。", "next_date": "", "url": "", "cleaning_frequency": "", "id": "059c922e"}, {"company_name": "株式会社Next Culture", "company_name_kana": "", "brand_name": "BAR　FD", "store_name": "", "contact_person": "かおん", "email": "", "sales_rep": "林大貴（浅倉麗央）", "store_count": "", "status": "稼働中", "notes": "ゴミ回収", "next_date": "", "url": "", "cleaning_frequency": "", "id": "9a8c9062"}, {"company_name": "株式会社PET’S MOST", "company_name_kana": "", "brand_name": "inu to hito", "store_name": "", "contact_person": "遠藤", "email": "inutohito0712@gmail.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "d196d7bc"}, {"company_name": "株式会社Plan・Do・See", "company_name_kana": "", "brand_name": "THE MARK GRAND HOTEL", "store_name": "", "contact_person": "関根", "email": "eriko.sekine@themarkgrand.com", "sales_rep": "", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "8481c94b"}, {"company_name": "株式会社wege", "company_name_kana": "", "brand_name": "KUSABIオフィス", "store_name": "", "contact_person": "りょう（永井研行）", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "検討中", "notes": "1年契約が終了するタイミング。", "next_date": "", "url": "", "cleaning_frequency": "", "id": "1df0457b"}, {"company_name": "株式会社ZANGIRI", "company_name_kana": "", "brand_name": "ZANGIRI Next", "store_name": "", "contact_person": "大平社長", "email": "", "sales_rep": "正田和輝", "store_count": "2店舗", "status": "稼働中", "notes": "4月エアコン分解清掃", "next_date": "", "url": "", "cleaning_frequency": "年１清掃", "id": "55d57c2d"}, {"company_name": "株式会社アシュリップ", "company_name_kana": "", "brand_name": "カイロライン", "store_name": "国分寺整体院", "contact_person": "木村さん", "email": "t.kimura@aburagaku.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "f9a6fd67"}, {"company_name": "株式会社いのこ", "company_name_kana": "", "brand_name": "麺処いのこ", "store_name": "赤塚店", "contact_person": "阿部店長", "email": "ossan.t2@ezweb.ne.jp", "sales_rep": "", "store_count": "", "status": "", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "8e67aaa6"}, {"company_name": "株式会社いのこ", "company_name_kana": "", "brand_name": "麺処いのこ", "store_name": "平和台店", "contact_person": "見留太基店長", "email": "gullwing8864@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "75fedfcd"}, {"company_name": "株式会社エゴイプセ", "company_name_kana": "", "brand_name": "大勝軒", "store_name": "大勝軒まるいち 新宿東南口店", "contact_person": "松永誠一", "email": "ksms.matsunaga@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "31aaa93e"}, {"company_name": "株式会社エデュケーション", "company_name_kana": "", "brand_name": "モンキーツリー", "store_name": "", "contact_person": "鈴木社長", "email": "rsa44186@gmail.com", "sales_rep": "正田和輝", "store_count": "1店舗", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "毎月清掃", "id": "dc0c7082"}, {"company_name": "株式会社オン・ザ・プラネット", "company_name_kana": "", "brand_name": "魚焼男", "store_name": "弐", "contact_person": "玉置竜也", "email": "tamanegi.t@gmail.com  hanakuro13570@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "3ec1b358"}, {"company_name": "株式会社オン・ザ・プラネット", "company_name_kana": "", "brand_name": "魚豪商", "store_name": "コダマ新橋店", "contact_person": "玉置竜也", "email": "tamanegi.t@gmail.com  hanakuro13570@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "54b66e34"}, {"company_name": "株式会社オン・ザ・プラネット", "company_name_kana": "", "brand_name": "魚焼男", "store_name": "新橋本店", "contact_person": "玉置竜也", "email": "tamanegi.t@gmail.com  hanakuro13570@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "1e832dc3"}, {"company_name": "株式会社オン・ザ・プラネット", "company_name_kana": "", "brand_name": "焼肉男", "store_name": "マンモス", "contact_person": "玉置竜也", "email": "tamanegi.t@gmail.com  hanakuro13570@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "ccaeb2ed"}, {"company_name": "株式会社オン・ザ・プラネット", "company_name_kana": "", "brand_name": "魚無双", "store_name": "トオダ", "contact_person": "玉置竜也", "email": "tamanegi.t@gmail.com  hanakuro13570@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "b1701651"}, {"company_name": "株式会社オン・ザ・プラネット", "company_name_kana": "", "brand_name": "魚豪商コダマ", "store_name": "錦糸町店", "contact_person": "玉置竜也", "email": "tamanegi.t@gmail.com  hanakuro13570@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "77cd1d5a"}, {"company_name": "株式会社オン・ザ・プラネット", "company_name_kana": "", "brand_name": "魚豪商コダマ", "store_name": "大井町店", "contact_person": "玉置竜也", "email": "tamanegi.t@gmail.com  hanakuro13570@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "0f8748eb"}, {"company_name": "株式会社オン・ザ・プラネット", "company_name_kana": "", "brand_name": "燻男（いぶしお）", "store_name": "", "contact_person": "玉置竜也", "email": "tamanegi.t@gmail.com  hanakuro13570@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "78c7baf0"}, {"company_name": "株式会社オン・ザ・プラネット", "company_name_kana": "", "brand_name": "ホルモンのマンモス", "store_name": "", "contact_person": "玉置竜也", "email": "tamanegi.t@gmail.com  hanakuro13570@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "78c7baf0"}, {"company_name": "株式会社オン・ザ・プラネット", "company_name_kana": "", "brand_name": "新魚焼男", "store_name": "ニューサカナヤキオ", "contact_person": "玉置竜也", "email": "tamanegi.t@gmail.com  hanakuro13570@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "アプローチ前", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "d3b726d3"}, {"company_name": "株式会社オン・ザ・プラネット", "company_name_kana": "", "brand_name": "新燻男", "store_name": "ニューイブシオ", "contact_person": "玉置竜也", "email": "tamanegi.t@gmail.com  hanakuro13570@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "アプローチ前", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "543c4515"}, {"company_name": "株式会社がっと", "company_name_kana": "", "brand_name": "ワイン食堂がっと", "store_name": "渋谷円山町店", "contact_person": "佐藤 大介", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "2月レンジフードダクト清掃（3万）、5月エアコン分解洗浄、室外機もやりたい", "next_date": "2025年3月19日 7:00", "url": "https://x.gd/IKIiK", "cleaning_frequency": "年１清掃", "id": "0f4557a9"}, {"company_name": "株式会社カワイハイ", "company_name_kana": "", "brand_name": "ニクアザブ", "store_name": "西麻布店", "contact_person": "夕島店長", "email": "", "sales_rep": "正田和輝", "store_count": "7店舗", "status": "稼働中", "notes": "防火扉がしまっていて、左側のキーボックス 0877", "next_date": "", "url": "", "cleaning_frequency": "", "id": "98a40e3b"}, {"company_name": "株式会社ギガデイン", "company_name_kana": "", "brand_name": "武蔵野油学会", "store_name": "早稲田総本店", "contact_person": "木村さん", "email": "t.kimura@aburagaku.com", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "a298df02"}, {"company_name": "株式会社ギガデイン", "company_name_kana": "", "brand_name": "武蔵野油学会", "store_name": "早稲田別館", "contact_person": "木村さん", "email": "t.kimura@aburagaku.com", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "eb276c6d"}, {"company_name": "株式会社ギガデイン", "company_name_kana": "", "brand_name": "武蔵野油学会", "store_name": "明大前", "contact_person": "木村さん", "email": "t.kimura@aburagaku.com", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "60c1653e"}, {"company_name": "株式会社ギガデイン", "company_name_kana": "", "brand_name": "武蔵野油学会", "store_name": "代々木店", "contact_person": "木村さん", "email": "t.kimura@aburagaku.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "81641448"}, {"company_name": "株式会社ギガデイン", "company_name_kana": "", "brand_name": "武蔵野油学会", "store_name": "吉祥寺店", "contact_person": "木村さん", "email": "t.kimura@aburagaku.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "6737de36"}, {"company_name": "株式会社ギガデイン", "company_name_kana": "", "brand_name": "武蔵野油学会", "store_name": "神田店", "contact_person": "木村さん", "email": "t.kimura@aburagaku.com", "sales_rep": "正田和輝", "store_count": "", "status": "検討中", "notes": "フランチャイズでグリストラップとエアコン洗浄を依頼したい", "next_date": "", "url": "", "cleaning_frequency": "", "id": "9f84ba3a"}, {"company_name": "株式会社クラフトマスタージャパン", "company_name_kana": "", "brand_name": "鮨 輝らく", "store_name": "", "contact_person": "堀題地", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "見積書送付", "next_date": "", "url": "", "cleaning_frequency": "", "id": "9c10049e"}, {"company_name": "株式会社しゃぶ庵", "company_name_kana": "", "brand_name": "一見さんお断り 完全会員制 お座敷遊び 料亭 「独楽」", "store_name": "", "contact_person": "福田誠治", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "西麻布のBAR、金龍、独楽をやっている。", "next_date": "", "url": "https://x.gd/zwmhm", "cleaning_frequency": "", "id": "c25dbcb3"}, {"company_name": "株式会社ストラク", "company_name_kana": "", "brand_name": "焼肉商店 浦島屋 津田沼店", "store_name": "", "contact_person": "FC菅又さん", "email": "m-sugamata@springs-web.com", "sales_rep": "佐藤大志", "store_count": "", "status": "契約作業中", "notes": "ビーエヌI村友さんからのご紹介。津田沼駅にある焼肉店のご依頼ホール内に複数の天井から通されている。ダクトあり。その他油まみれな部分があるため清掃依頼あり", "next_date": "", "url": "", "cleaning_frequency": "", "id": "7831fc54"}, {"company_name": "株式会社スモールズ", "company_name_kana": "", "brand_name": "オイスター&珍味 bar 不夜城", "store_name": "", "contact_person": "長田　光司", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "bc5c5b70"}, {"company_name": "株式会社スモールズ", "company_name_kana": "", "brand_name": "ディストピアBar KARMA　カルマ", "store_name": "", "contact_person": "長田　光司", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "bc5c5b70"}, {"company_name": "株式会社スモールズ", "company_name_kana": "", "brand_name": "Japanese Bar　猪鹿蝶", "store_name": "", "contact_person": "長田　光司", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "bc5c5b70"}, {"company_name": "株式会社スモールズ", "company_name_kana": "", "brand_name": "Bar ANIME HOLIC アニメホリック goldengai", "store_name": "", "contact_person": "長田　光司", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "bc5c5b70"}, {"company_name": "株式会社スモールズ", "company_name_kana": "", "brand_name": "Bar 灯鏡 tokyo 歌舞伎町レッドのれん街", "store_name": "", "contact_person": "長田　光司", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "bc5c5b70"}, {"company_name": "株式会社ダイニングエッジ", "company_name_kana": "", "brand_name": "楽が気", "store_name": "新橋本店", "contact_person": "黒沢 幸樹", "email": "koki-kurosawa@diningedge.co.jp", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "26bf2a5d"}, {"company_name": "株式会社ダイニング富士屋本店", "company_name_kana": "", "brand_name": "富士屋本店", "store_name": "日本橋浜町", "contact_person": "加藤雄三", "email": "", "sales_rep": "", "store_count": "", "status": "", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "94f76013"}, {"company_name": "株式会社ダイニング富士屋本店", "company_name_kana": "", "brand_name": "立呑 富士屋本店", "store_name": "立呑 富士屋本店", "contact_person": "酒主", "email": "", "sales_rep": "", "store_count": "", "status": "", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "c7fe22ba"}, {"company_name": "株式会社ダイニング富士屋本店", "company_name_kana": "", "brand_name": "富士屋本店", "store_name": "日本橋浜町", "contact_person": "", "email": "", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "24305c2b"}, {"company_name": "株式会社テイクユー", "company_name_kana": "", "brand_name": "貝出汁 中華そば 竹祥", "store_name": "", "contact_person": "中村", "email": "yuichi@muse-sava.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "707918f1"}, {"company_name": "株式会社デイジイ", "company_name_kana": "", "brand_name": "株式会社デイジイ", "store_name": "西新宿店", "contact_person": "倉田尚子常務取締役", "email": "", "sales_rep": "", "store_count": "", "status": "", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "266fe182"}, {"company_name": "株式会社デイジイ", "company_name_kana": "", "brand_name": "株式会社デイジイ", "store_name": "麹町店", "contact_person": "倉田尚子常務取締役", "email": "", "sales_rep": "", "store_count": "", "status": "", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "50509a58"}, {"company_name": "株式会社でですけ", "company_name_kana": "", "brand_name": "でですけサイゴンキッチン", "store_name": "", "contact_person": "小原店長", "email": "", "sales_rep": "正田和輝", "store_count": "8店舗", "status": "稼働中", "notes": "エアコン清掃依頼　遠藤さんが獲得、営業案件", "next_date": "", "url": "", "cleaning_frequency": "スポット清掃", "id": "cc9d3593"}, {"company_name": "株式会社ニュートン", "company_name_kana": "", "brand_name": "カラオケパセラ", "store_name": "上野駅前店", "contact_person": "根本 諭", "email": "hiraoka@newton-co.jp", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "6ff89ce9"}, {"company_name": "株式会社ニュートン", "company_name_kana": "", "brand_name": "カラオケパセラ", "store_name": "上野御徒町店", "contact_person": "根本 諭", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "アプローチ前", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "5029e8c1"}, {"company_name": "株式会社パズルフードサービス", "company_name_kana": "", "brand_name": "東京餃子楼", "store_name": "三軒茶屋本店", "contact_person": "齋藤部長　奥村啓社長", "email": "food@puzzle-ring.co.jp", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "スポット清掃", "id": "7d9b5321"}, {"company_name": "株式会社パズルフードサービス", "company_name_kana": "", "brand_name": "東京餃子楼", "store_name": "工場", "contact_person": "齋藤部長　奥村啓社長", "email": "food@puzzle-ring.co.jp", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "隔月清掃", "id": "4ed53c81"}, {"company_name": "株式会社ビック・バン", "company_name_kana": "", "brand_name": "ホルモン屋 だん", "store_name": "新橋総本店", "contact_person": "三浦さん（渡辺社長）", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "ネズミ駆除の定期清掃", "next_date": "", "url": "", "cleaning_frequency": "", "id": "b88fd428"}, {"company_name": "株式会社ビック・バン", "company_name_kana": "", "brand_name": "ホルモン屋 だん", "store_name": "新橋2号店", "contact_person": "渡辺社長", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "ネズミ駆除の定期清掃", "next_date": "", "url": "", "cleaning_frequency": "", "id": "2e3fe061"}, {"company_name": "株式会社ビック・バン", "company_name_kana": "", "brand_name": "ホルモン屋 だん", "store_name": "はなれ新橋3号店", "contact_person": "渡辺社長", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "ネズミ駆除の定期清掃", "next_date": "", "url": "", "cleaning_frequency": "", "id": "33e6a3c3"}, {"company_name": "株式会社ビック・バン", "company_name_kana": "", "brand_name": "生ラムかんな", "store_name": "新橋店", "contact_person": "渡辺社長", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "ネズミ駆除の定期清掃", "next_date": "", "url": "", "cleaning_frequency": "", "id": "325a8b56"}, {"company_name": "株式会社ビック・バン", "company_name_kana": "", "brand_name": "ラムと泡", "store_name": "本店", "contact_person": "渡辺社長", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "ネズミ駆除の定期清掃", "next_date": "", "url": "", "cleaning_frequency": "", "id": "15bc6988"}, {"company_name": "株式会社ビック・バン", "company_name_kana": "", "brand_name": "肉汁屋", "store_name": "新橋店", "contact_person": "渡辺社長", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "ネズミ駆除の定期清掃", "next_date": "", "url": "", "cleaning_frequency": "", "id": "325a8b56"}, {"company_name": "株式会社フードアンドパートナーズ", "company_name_kana": "", "brand_name": "発酵デリカテッセンカフェテリアKouji&ko", "store_name": "", "contact_person": "高野伴美（高橋真樹）", "email": "takahashi-maki@foodandpartners.co.jp", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "渋谷と新宿のテナントに入居中", "next_date": "", "url": "https://x.gd/c4Ern", "cleaning_frequency": "3ヶ月に1回清掃", "id": "0ad5d6bf"}, {"company_name": "株式会社フードアンドパートナーズ", "company_name_kana": "", "brand_name": "発酵デリカテッセン カフェテリアKouji&ko", "store_name": "", "contact_person": "高橋部長", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "３ヶ月に1回清掃", "next_date": "", "url": "", "cleaning_frequency": "", "id": "78449035"}, {"company_name": "株式会社マッスルボディメイク", "company_name_kana": "", "brand_name": "マッスルボディメイク", "store_name": "", "contact_person": "吉成題寿", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "パーソナルジム", "next_date": "", "url": "https://x.gd/4O2gk", "cleaning_frequency": "スポット清掃", "id": "ddbce584"}, {"company_name": "株式会社まんてん", "company_name_kana": "", "brand_name": "炉端居酒屋", "store_name": "中野製作所 まんてん別館", "contact_person": "真船店長（阿部社長）", "email": "", "sales_rep": "正田和輝", "store_count": "7店舗", "status": "稼働中", "notes": "ゴキブリ駆除依頼", "next_date": "2025年3月21日 13:00", "url": "", "cleaning_frequency": "スポット清掃", "id": "4328c02c"}, {"company_name": "株式会社まんてん", "company_name_kana": "", "brand_name": "炭火焼きホルモンまんてん", "store_name": "中野店", "contact_person": "村上店長（阿部社長）", "email": "", "sales_rep": "正田和輝", "store_count": "7店舗", "status": "稼働中", "notes": "・ゴキブリ", "next_date": "", "url": "", "cleaning_frequency": "", "id": "9afccec8"}, {"company_name": "株式会社まんてん", "company_name_kana": "", "brand_name": "炭火焼きホルモンまんてん", "store_name": "中目黒本店", "contact_person": "はづき", "email": "", "sales_rep": "正田和輝", "store_count": "7店舗", "status": "稼働中", "notes": "古い店なのでそこそこ汚れはあるんですが、子バエがいるのが気になりますね", "next_date": "2025年3月28日 10:30", "url": "", "cleaning_frequency": "毎月清掃", "id": "254bf36f"}, {"company_name": "株式会社まんてん", "company_name_kana": "", "brand_name": "炭火焼きホルモンまんてん", "store_name": "代々木店", "contact_person": "神棒智", "email": "", "sales_rep": "正田和輝", "store_count": "7店舗", "status": "稼働中", "notes": "ダクト清掃", "next_date": "2025年3月28日 10:30", "url": "", "cleaning_frequency": "毎月清掃", "id": "27cff7c3"}, {"company_name": "株式会社ラムラ", "company_name_kana": "", "brand_name": "すし土風炉", "store_name": "登戸店", "contact_person": "", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "0a3b06ee"}, {"company_name": "株式会社価値作り研究所", "company_name_kana": "", "brand_name": "ステーキロッジ", "store_name": "道元坂店", "contact_person": "福田幸洋", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "", "next_date": "", "url": "https://x.gd/Ntu4u", "cleaning_frequency": "", "id": "703690b5"}, {"company_name": "株式会社価値作り研究所", "company_name_kana": "", "brand_name": "ステーキロッヂ ヨドバシ", "store_name": "Akiba店", "contact_person": "福田幸洋", "email": "", "sales_rep": "正田和輝", "store_count": "数店舗", "status": "契約作業中", "notes": "", "next_date": "", "url": "https://x.gd/7g4sW", "cleaning_frequency": "", "id": "c22b7491"}, {"company_name": "株式会社元気Dining", "company_name_kana": "", "brand_name": "大衆寿司酒場こがね", "store_name": "", "contact_person": "永井部長", "email": "", "sales_rep": "", "store_count": "", "status": "", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "f540557f"}, {"company_name": "株式会社元気Dining", "company_name_kana": "", "brand_name": "大衆焼肉酒場こがね", "store_name": "", "contact_person": "永井部長", "email": "nagai.r.genki@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "f540557f"}, {"company_name": "株式会社小肥羊ジャパン", "company_name_kana": "", "brand_name": "火鍋 小肥羊", "store_name": "銀座店", "contact_person": "梶原部長", "email": "", "sales_rep": "正田和輝", "store_count": "20店舗", "status": "稼働中", "notes": "ネズミ駆除、6月〜7月、撲滅してから考える。", "next_date": "", "url": "", "cleaning_frequency": "毎月清掃", "id": "868b43b1"}, {"company_name": "株式会社千寿菊", "company_name_kana": "", "brand_name": "新橋バーラウンジ御殿", "store_name": "", "contact_person": "鈴木真理子", "email": "", "sales_rep": "林大貴（浅倉麗央）", "store_count": "", "status": "稼働中", "notes": "グリストラップ エアコンフィルター 厨房フィルター 害虫駆除 厨房機器掻き出し シンクの臭い除去 シンク清掃 初回50,000円", "next_date": "", "url": "", "cleaning_frequency": "", "id": "d5d6c028"}, {"company_name": "株式会社馬力", "company_name_kana": "", "brand_name": "馬力", "store_name": "神田南口店", "contact_person": "渡邉", "email": "bariki.group@ezweb.ne.jp", "sales_rep": "沖 智弘", "store_count": "", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "0cd8fba7"}, {"company_name": "株式会社名店館", "company_name_kana": "", "brand_name": "ビストロ エヴォルテ", "store_name": "", "contact_person": "木ノ内 謙", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "https://x.gd/nUWrX", "cleaning_frequency": "3ヶ月に1回清掃", "id": "7f2539db"}, {"company_name": "株式会社友電設", "company_name_kana": "", "brand_name": "Mahaloh Import Shop", "store_name": "", "contact_person": "ウィリアン", "email": "Willianmahalohjp@hotmail.com", "sales_rep": "梅岡Alexandra", "store_count": "1", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "373e4c83"}, {"company_name": "株式会社雷神", "company_name_kana": "", "brand_name": "油そば 雷神", "store_name": "市川店", "contact_person": "加藤陸王　（加藤 裕之）", "email": "goku.kato@raijin-gyouza.jp", "sales_rep": "正田和輝", "store_count": "1店舗", "status": "契約作業中", "notes": "柏　6月1日から開始", "next_date": "", "url": "", "cleaning_frequency": "", "id": "1afaa333"}, {"company_name": "居酒屋ビッグ 新河岸駅前店", "company_name_kana": "", "brand_name": "居酒屋ビッグ", "store_name": "新河岸駅前店", "contact_person": "神宮　将", "email": "js.bar.54fg@gmail.com", "sales_rep": "", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "668ca5b2"}, {"company_name": "御座敷天婦羅天孝", "company_name_kana": "", "brand_name": "御座敷天婦羅", "store_name": "神楽坂 天孝", "contact_person": "", "email": "新井均", "sales_rep": "", "store_count": "遠藤虹輝", "status": "", "notes": "稼働中", "next_date": "", "url": "", "cleaning_frequency": "", "id": "3ae6d6ce"}, {"company_name": "合同会社FOOD GROOVE JAPAN", "company_name_kana": "", "brand_name": "米と魚さかなさま", "store_name": "", "contact_person": "酒井（鈴木基次）", "email": "info.foodgroovejapan@gmail.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "末日ゴミ回収＋見積もりの内容", "next_date": "2025年3月28日 0:00", "url": "https://x.gd/UneyL", "cleaning_frequency": "", "id": "ff399963"}, {"company_name": "合同会社FOOD GROOVE JAPAN", "company_name_kana": "", "brand_name": "麺と肴担々麺 ペン坊", "store_name": "", "contact_person": "青柳昇店長(さかなさまスタッフ)", "email": "noboru.ao@gmail.com", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "レンジフードのグリスフィルターがない。", "next_date": "", "url": "", "cleaning_frequency": "", "id": "d4cf599b"}, {"company_name": "合同会社SKTC", "company_name_kana": "", "brand_name": "Aphroditeアフロディーテ（ニューハーフバー）", "store_name": "", "contact_person": "岩下 弥樹", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "3月清掃", "next_date": "", "url": "https://x.gd/LdNvl", "cleaning_frequency": "スポット清掃", "id": "e2508de7"}, {"company_name": "合同会社TRANSAM", "company_name_kana": "", "brand_name": "dining Bar TRANSAM赤坂", "store_name": "", "contact_person": "宮西宏嘉", "email": "", "sales_rep": "佐藤大志", "store_count": "1", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "930ccaef"}, {"company_name": "合同会社港エージェンシー", "company_name_kana": "", "brand_name": "西麻布ZERO", "store_name": "", "contact_person": "福田誠治", "email": "", "sales_rep": "正田和輝", "store_count": "2,3,4階", "status": "契約作業中", "notes": "定期清掃 10万（床/ソファ/カーペット/エアコンフィルター）", "next_date": "", "url": "", "cleaning_frequency": "", "id": "82e64aee"}, {"company_name": "合同会社港エージェンシー", "company_name_kana": "", "brand_name": "西麻布カラオケCLT", "store_name": "", "contact_person": "福田誠治", "email": "", "sales_rep": "正田和輝", "store_count": "6階１店舗", "status": "契約作業中", "notes": "6階 5万", "next_date": "", "url": "", "cleaning_frequency": "", "id": "82e64aee"}, {"company_name": "焼肉 松の屋", "company_name_kana": "", "brand_name": "焼肉 松の屋", "store_name": "焼肉 松の屋", "contact_person": "岩渕", "email": "t.iwabuchi-74@sp-nur.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "7fdb0819"}, {"company_name": "板前寿司ジャパン", "company_name_kana": "", "brand_name": "板前寿司", "store_name": "赤坂店", "contact_person": "月木専務", "email": "tsukigi@itamae.co.jp", "sales_rep": "正田和輝", "store_count": "8店舗", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "f26f4f31"}, {"company_name": "板前寿司ジャパン", "company_name_kana": "", "brand_name": "板前寿司", "store_name": "愛宕店", "contact_person": "月木専務", "email": "tsukigi@itamae.co.jp", "sales_rep": "正田和輝", "store_count": "8店舗", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "4868fa83"}, {"company_name": "有限会社タカネット", "company_name_kana": "", "brand_name": "ロケ弁エージェント", "store_name": "", "contact_person": "高杉光徳", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "ロケ弁の店舗三ノ輪で４店舗ある。", "next_date": "", "url": "", "cleaning_frequency": "", "id": "990a563e"}, {"company_name": "", "company_name_kana": "", "brand_name": "たまき新宿2代目店", "store_name": "たまき新宿2代目店", "contact_person": "グルン", "email": "gbu4991@gmail.com", "sales_rep": "沖 智弘", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "ada1ef3f"}, {"company_name": "", "company_name_kana": "", "brand_name": "韓国料理COCOYA", "store_name": "池袋2号店", "contact_person": "", "email": "", "sales_rep": "", "store_count": "", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "58ca79e3"}, {"company_name": "", "company_name_kana": "", "brand_name": "創作イタリアン肉バル スオーノ", "store_name": "", "contact_person": "能勢 純司", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "グリースサットルで床も荒れ放題", "next_date": "", "url": "", "cleaning_frequency": "", "id": "bc2ac60e"}, {"company_name": "", "company_name_kana": "", "brand_name": "リストランティアーノルベロ", "store_name": "", "contact_person": "長澤流（竹中社長）", "email": "", "sales_rep": "正田和輝", "store_count": "1", "status": "契約作業中", "notes": "", "next_date": "", "url": "https://x.gd/nCFom", "cleaning_frequency": "", "id": "6c3b4e4b"}, {"company_name": "", "company_name_kana": "", "brand_name": "CRAFT CHEESE MARKET", "store_name": "渋谷駅前店", "contact_person": "", "email": "", "sales_rep": "", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "3314df61"}, {"company_name": "", "company_name_kana": "", "brand_name": "デニーロ", "store_name": "デニーロ神田店", "contact_person": "今村店長", "email": "shinpei9600@gmail.com", "sales_rep": "正田和輝", "store_count": "2店舗", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "毎月清掃", "id": "a71e8c2c"}, {"company_name": "", "company_name_kana": "", "brand_name": "FAST OYSTERS", "store_name": "神楽坂店", "contact_person": "渡邉社長", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "稼働中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "950883e3"}, {"company_name": "", "company_name_kana": "", "brand_name": "WAGYU SUKIYAKI 極〜GOKU〜", "store_name": "東銀座築地", "contact_person": "浦 昴大", "email": "", "sales_rep": "正田和輝", "store_count": "", "status": "契約作業中", "notes": "", "next_date": "", "url": "", "cleaning_frequency": "", "id": "b5c0e18c"}, {"company_name": "", "company_name_kana": "", "brand_name": "家庭料理居酒屋", "store_name": "焼肉Yakitaro", "contact_person": "水道橋店", "email": "秋元賢", "sales_rep": "", "store_count": "正田和輝", "status": "", "notes": "稼働中", "next_date": "", "url": "", "cleaning_frequency": "", "id": "68e03010"}], "total": 114}
+    @jsonvar $clients_data
   </script>
 
   <script type="application/json" id="sales-data">
@@ -742,48 +551,4 @@
     })();
   </script>
 </main>
-
-
-    </main>
-    <footer class="site-footer">
-  <div class="container text-center muted small" style="padding: 16px 0;">
-    <p>&copy; 2025 ミセサポ</p>
-  </div>
-</footer>
-
-
-    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
-    <script src="/js/role_config.js"></script>
-    <script src="/js/users.js"></script>
-    <script src="/js/auth.js"></script>
-    <script src="/js/navigation.js"></script>
-    <script src="/modal_manager.js"></script>
-    <script src="/app.js"></script>
-    <script>
-      // ログイン画面では通常ヘッダーを表示
-      (function() {
-        const path = window.location.pathname || '';
-        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
-        
-        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
-        if (isSigninPage) {
-          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
-          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
-          if (defaultHeaderWrapper) {
-            defaultHeaderWrapper.style.display = 'none';
-          }
-          if (normalHeaderWrapper) {
-            normalHeaderWrapper.style.display = 'block';
-            // ログイン画面では通常ヘッダーを常に表示
-            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
-            if (normalHeader) {
-              normalHeader.classList.add('visible');
-            }
-          }
-        }
-      })();
-    </script>
-  </body>
-  </html>
-
 

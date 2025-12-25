@@ -2,6 +2,13 @@
 @json('data/meta/admin_analytics_title.json', $title)
 @json('data/meta/admin_analytics_body_class.json', $body_class)
 
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
 <main id="main" class="admin-analytics-v2">
   @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->

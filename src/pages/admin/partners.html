@@ -3,6 +3,13 @@
 @json('data/meta/admin_partners_body_class.json', $body_class)
 @json('data/partners.json', partners_data)
 
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
 <main id="main" class="admin-partners-v2">
   @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->
