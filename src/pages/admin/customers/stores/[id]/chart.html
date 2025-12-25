@@ -3,6 +3,7 @@
 @json('data/meta/admin_store_chart_body_class.json', $body_class)
 
 <link rel="stylesheet" href="/css/admin-store-chart.css" />
+<script src="/js/aws-s3-upload.js"></script>
 <script src="/js/data_utils.js"></script>
 <script>
   // 404.htmlのルーティングが実行されない場合のフォールバック
@@ -371,12 +372,22 @@
 
       <div class="survey-photo-row">
         <div class="form-group">
-          <label for="intake-breaker-photo-url">ブレーカー位置の写真</label>
+          <label>ブレーカー位置の写真</label>
+          <label class="btn-upload-stock btn-upload-intake">
+            <input type="file" id="intake-breaker-photo" accept="image/*" style="display:none;">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>画像を追加</span>
+          </label>
           <input id="intake-breaker-photo-url" type="text" placeholder="URL">
           <div class="survey-photo-preview" id="intake-breaker-photo-preview"></div>
         </div>
         <div class="form-group">
-          <label for="intake-key-photo-url">鍵の置き場の写真</label>
+          <label>鍵の置き場の写真</label>
+          <label class="btn-upload-stock btn-upload-intake">
+            <input type="file" id="intake-key-photo" accept="image/*" style="display:none;">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>画像を追加</span>
+          </label>
           <input id="intake-key-photo-url" type="text" placeholder="URL">
           <div class="survey-photo-preview" id="intake-key-photo-preview"></div>
         </div>

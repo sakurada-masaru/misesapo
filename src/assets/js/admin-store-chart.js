@@ -88,6 +88,41 @@ function getAuthToken() {
   return null;
 }
 
+function getSafeFileName(file, fallbackPrefix) {
+  const rawName = file?.name || `${fallbackPrefix}-photo.jpg`;
+  return rawName.replace(/[^\w.\-]+/g, '_');
+}
+
+function buildUploadPrefix(storeId, type) {
+  if (!storeId) return '';
+  return `stores/${storeId}/assets/${type}`;
+}
+
+async function uploadIntakePhoto({ fileInputId, urlInputId, previewId, type }) {
+  const fileInput = document.getElementById(fileInputId);
+  const urlInput = document.getElementById(urlInputId);
+  if (!fileInput) return '';
+
+  if (fileInput.files && fileInput.files.length > 0) {
+    if (!window.AWSS3Upload || !window.AWSS3Upload.isAvailable()) {
+      throw new Error('S3アップロードが利用できません');
+    }
+    const file = fileInput.files[0];
+    const timestamp = new Date().toISOString().replace(/[^\d]/g, '');
+    const safeName = getSafeFileName(file, type);
+    const keyPrefix = buildUploadPrefix(currentStoreId, type);
+    const result = await window.AWSS3Upload.uploadImage(file, type, {
+      keyPrefix,
+      fileName: `${timestamp}-${safeName}`
+    });
+    const url = result?.url || result?.path || '';
+    if (urlInput) urlInput.value = url;
+    setPreviewImage(previewId, url);
+    return url;
+  }
+  return urlInput?.value || '';
+}
+
 // URLから店舗IDを取得する関数
 function getStoreIdFromUrl() {
   // 方法0: グローバル変数から取得（テンプレートファイルのインラインスクリプトで設定された場合）
@@ -249,6 +284,25 @@ async function initializeChart() {
   
   // バージョン表示を更新
   updateVersionDisplay();
+
+  const breakerInput = document.getElementById('intake-breaker-photo');
+  if (breakerInput) {
+    breakerInput.addEventListener('change', (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (file) {
+        setPreviewImage('intake-breaker-photo-preview', URL.createObjectURL(file));
+      }
+    });
+  }
+  const keyInput = document.getElementById('intake-key-photo');
+  if (keyInput) {
+    keyInput.addEventListener('change', (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (file) {
+        setPreviewImage('intake-key-photo-preview', URL.createObjectURL(file));
+      }
+    });
+  }
 }
 
 async function loadKarteData() {
@@ -311,6 +365,24 @@ async function loadKarteData() {
 
 async function saveKarteData() {
   try {
+    let breakerPhotoUrl = document.getElementById('intake-breaker-photo-url')?.value || '';
+    let keyPhotoUrl = document.getElementById('intake-key-photo-url')?.value || '';
+    try {
+      breakerPhotoUrl = await uploadIntakePhoto({
+        fileInputId: 'intake-breaker-photo',
+        urlInputId: 'intake-breaker-photo-url',
+        previewId: 'intake-breaker-photo-preview',
+        type: 'breaker'
+      });
+      keyPhotoUrl = await uploadIntakePhoto({
+        fileInputId: 'intake-key-photo',
+        urlInputId: 'intake-key-photo-url',
+        previewId: 'intake-key-photo-preview',
+        type: 'key'
+      });
+    } catch (uploadError) {
+      console.warn('[Karte] Intake photo upload failed:', uploadError);
+    }
     const equipment = Array.from(document.querySelectorAll('#intake-equipment input[type="checkbox"]:checked'))
       .map((input) => input.value);
     const payload = {
@@ -347,8 +419,8 @@ async function saveKarteData() {
       lastClean: document.getElementById('intake-last-clean')?.value || '',
       plan: document.getElementById('intake-plan')?.value || '',
       selfRating: document.getElementById('intake-self-rating')?.value || '',
-      breakerPhotoUrl: document.getElementById('intake-breaker-photo-url')?.value || '',
-      keyPhotoUrl: document.getElementById('intake-key-photo-url')?.value || ''
+      breakerPhotoUrl,
+      keyPhotoUrl
     };
 
     const token = getAuthToken();
