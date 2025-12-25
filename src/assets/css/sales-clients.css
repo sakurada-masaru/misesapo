@@ -863,9 +863,6 @@
   color: #6b7280;
   font-weight: 600;
 }
-.input-with-unit.unit-compact input {
-  width: 120px;
-}
 @keyframes hint-float {
   0% {
     transform: translateY(0);
