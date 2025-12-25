@@ -860,9 +860,15 @@
   grid-template-columns: minmax(120px, 0.9fr) minmax(0, 2fr);
 }
 .registration-intake .info-label {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #6b7280;
-  font-weight: 600;
+  font-weight: 500;
+}
+.registration-intake .intake-category {
+  margin-top: 0;
+}
+.registration-intake .intake-category + .intake-category {
+  margin-top: 12px;
 }
 .registration-intake .form-row {
   display: grid;
@@ -914,6 +920,26 @@
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
   margin-top: 12px;
+}
+.registration-intake .compact-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.registration-intake .compact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+  flex: 1 1 140px;
+}
+.registration-intake .compact-field span {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+}
+.registration-intake .survey-upload-preview img {
+  max-width: 140px;
 }
 .input-with-unit {
   position: relative;
