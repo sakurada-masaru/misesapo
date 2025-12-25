@@ -848,7 +848,7 @@
   gap: 8px;
   margin-bottom: 12px;
 }
-.client-tab-content .info-item {
+.registration-intake .info-item {
   display: grid;
   grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.2fr);
   align-items: start;
@@ -856,20 +856,20 @@
   padding: 6px 0;
   border-bottom: 1px dashed rgba(203, 213, 225, 0.8);
 }
-.client-tab-content .info-item.form-item {
+.registration-intake .info-item.form-item {
   grid-template-columns: minmax(120px, 0.9fr) minmax(0, 2fr);
 }
-.client-tab-content .info-label {
+.registration-intake .info-label {
   font-size: 0.85rem;
   color: #6b7280;
   font-weight: 600;
 }
-.client-tab-content .form-row {
+.registration-intake .form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
-.client-tab-content .form-field {
+.registration-intake .form-field {
   width: 100%;
   border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: 10px;
@@ -880,17 +880,17 @@
   box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
   resize: vertical;
 }
-.client-tab-content .form-field:focus {
+.registration-intake .form-field:focus {
   outline: none;
   border-color: #ff4f9a;
   box-shadow: 0 0 0 3px rgba(255, 79, 154, 0.15);
 }
-.client-tab-content .checkbox-group {
+.registration-intake .checkbox-group {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
-.client-tab-content .checkbox-chip {
+.registration-intake .checkbox-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -904,12 +904,12 @@
   cursor: pointer;
   white-space: nowrap;
 }
-.client-tab-content .checkbox-chip input {
+.registration-intake .checkbox-chip input {
   width: 14px;
   height: 14px;
   accent-color: #ff4f9a;
 }
-.client-tab-content .survey-upload-row {
+.registration-intake .survey-upload-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
