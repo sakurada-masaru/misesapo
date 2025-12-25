@@ -792,12 +792,15 @@ async function uploadSurveyPhoto({ storeId, fileInputId, hiddenInputId, previewI
 }
 
 function buildSurveyPayload() {
+  const equipment = Array.from(document.querySelectorAll('#survey-equipment input[type=\"checkbox\"]:checked'))
+    .map((input) => input.value);
   const payload = {
     issue: getSurveyValue('survey-issue'),
     environment: getSurveyValue('survey-environment'),
     staffNormal: getSurveyValue('survey-staff-normal'),
     staffPeak: getSurveyValue('survey-staff-peak'),
     hours: getSurveyValue('survey-hours'),
+    cleaningFrequency: getSurveyValue('survey-cleaning-frequency'),
     aircon: getSurveyValue('survey-aircon'),
     kitchen: getSurveyValue('survey-kitchen'),
     hotspots: getSurveyValue('survey-hotspots'),
@@ -805,21 +808,29 @@ function buildSurveyPayload() {
     wallMaterial: getSurveyValue('survey-wall-material'),
     toiletCount: getSurveyValue('survey-toilet-count'),
     areaSqm: getSurveyValue('survey-area-sqm'),
+    areaTatami: getSurveyValue('survey-area-tatami'),
     ceilingHeight: getSurveyValue('survey-ceiling-height'),
+    entrances: getSurveyValue('survey-entrances'),
     breakerLocation: getSurveyValue('survey-breaker-location'),
     keyLocation: getSurveyValue('survey-key-location'),
+    staffRoom: getSurveyValue('survey-staff-room'),
+    electricalAmps: getSurveyValue('survey-electrical-amps'),
+    airconCount: getSurveyValue('survey-aircon-count'),
+    equipment,
     seatCounter: !!getSurveyValue('survey-seat-counter'),
     seatBox: !!getSurveyValue('survey-seat-box'),
     seatZashiki: !!getSurveyValue('survey-seat-zashiki'),
     notes: getSurveyValue('survey-notes'),
     lastClean: getSurveyValue('survey-last-clean'),
     plan: getSurveyValue('survey-plan'),
+    selfRating: getSurveyValue('survey-self-rating'),
     breakerPhotoUrl: getSurveyValue('survey-breaker-photo-url'),
     keyPhotoUrl: getSurveyValue('survey-key-photo-url')
   };
 
   const hasValue = Object.values(payload).some((value) => {
     if (typeof value === 'boolean') return value;
+    if (Array.isArray(value)) return value.length > 0;
     return value !== '';
   });
   if (!hasValue) return null;
