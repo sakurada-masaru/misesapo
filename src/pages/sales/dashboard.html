@@ -158,148 +158,168 @@
   <!-- 問診票 -->
   <div class="client-tab-content active" data-client-content="survey">
     <div class="hierarchy-section">
-      <div class="hierarchy-header">
+    <div class="hierarchy-header">
         <i class="fas fa-clipboard-list"></i> 問診票（初回ヒアリング）
       </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label for="survey-issue">清掃の悩み</label>
-          <textarea id="survey-issue" rows="2" placeholder="例：厨房の油汚れが落ちない、臭気が気になる"></textarea>
+      <div class="intake-category">
+        <div class="intake-category-title">
+          <i class="fas fa-clipboard-check"></i> 基本ヒアリング
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label for="survey-environment">店内環境</label>
-          <textarea id="survey-environment" rows="2" placeholder="例：油煙が強い、湿気が多い、換気が弱い"></textarea>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="survey-issue">清掃の悩み</label>
+            <textarea id="survey-issue" rows="2" placeholder="例：厨房の油汚れが落ちない、臭気が気になる"></textarea>
+          </div>
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field half">
-          <label for="survey-staff-normal">稼働人数（通常）</label>
-          <input type="text" id="survey-staff-normal" placeholder="例：6名">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="survey-environment">店内環境</label>
+            <textarea id="survey-environment" rows="2" placeholder="例：油煙が強い、湿気が多い、換気が弱い"></textarea>
+          </div>
         </div>
-        <div class="form-field half">
-          <label for="survey-staff-peak">稼働人数（ピーク）</label>
-          <input type="text" id="survey-staff-peak" placeholder="例：12名">
+        <div class="form-row">
+          <div class="form-field half">
+            <label for="survey-staff-normal">稼働人数（通常）</label>
+            <input type="text" id="survey-staff-normal" placeholder="例：6名">
+          </div>
+          <div class="form-field half">
+            <label for="survey-staff-peak">稼働人数（ピーク）</label>
+            <input type="text" id="survey-staff-peak" placeholder="例：12名">
+          </div>
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label for="survey-hours">稼働時間</label>
-          <input type="text" id="survey-hours" placeholder="例：11:00〜23:30（定休：月）">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label for="survey-aircon">空調設備の状態</label>
-          <textarea id="survey-aircon" rows="2" placeholder="例：台数3、1台異音、フィルター目詰まり"></textarea>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label for="survey-kitchen">厨房設備の状態</label>
-          <textarea id="survey-kitchen" rows="2" placeholder="例：レンジフード油固着、ダクト詰まり傾向"></textarea>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label for="survey-hotspots">特に気になる場所</label>
-          <textarea id="survey-hotspots" rows="2" placeholder="例：ダクト、床排水溝、グリスト"></textarea>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field half">
-          <label for="survey-floor-material">床の材質</label>
-          <input type="text" id="survey-floor-material" placeholder="例：塩ビ">
-        </div>
-        <div class="form-field half">
-          <label for="survey-wall-material">壁の材質</label>
-          <input type="text" id="survey-wall-material" placeholder="例：タイル">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field half">
-          <label for="survey-toilet-count">トイレの数</label>
-          <input type="text" id="survey-toilet-count" placeholder="例：2">
-        </div>
-        <div class="form-field half">
-          <label for="survey-area-sqm">平米数</label>
-          <input type="text" id="survey-area-sqm" placeholder="例：120">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field half">
-          <label for="survey-ceiling-height">天井高さ</label>
-          <input type="text" id="survey-ceiling-height" placeholder="例：2.6m">
-        </div>
-        <div class="form-field half">
-          <label for="survey-breaker-location">ブレーカーの位置</label>
-          <input type="text" id="survey-breaker-location" placeholder="例：厨房奥">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label for="survey-key-location">鍵の置き場所</label>
-          <input type="text" id="survey-key-location" placeholder="例：受付右棚">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field half">
-          <label>ブレーカー位置の写真</label>
-          <label class="btn-upload-stock">
-            <input type="file" id="survey-breaker-photo" accept="image/*" style="display:none;">
-            <i class="fas fa-cloud-upload-alt"></i>
-            <span>画像を追加</span>
-          </label>
-          <input type="hidden" id="survey-breaker-photo-url">
-          <div class="survey-upload-preview" id="survey-breaker-photo-preview"></div>
-        </div>
-        <div class="form-field half">
-          <label>鍵の置き場の写真</label>
-          <label class="btn-upload-stock">
-            <input type="file" id="survey-key-photo" accept="image/*" style="display:none;">
-            <i class="fas fa-cloud-upload-alt"></i>
-            <span>画像を追加</span>
-          </label>
-          <input type="hidden" id="survey-key-photo-url">
-          <div class="survey-upload-preview" id="survey-key-photo-preview"></div>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label>客席（設備補足）</label>
-          <div class="checkbox-row">
-            <label class="checkbox-inline">
-              <input type="checkbox" id="survey-seat-counter"> カウンター席の有無
-            </label>
-            <label class="checkbox-inline">
-              <input type="checkbox" id="survey-seat-box"> ボックス席の有無
-            </label>
-            <label class="checkbox-inline">
-              <input type="checkbox" id="survey-seat-zashiki"> 座敷の有無
-            </label>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="survey-hours">稼働時間</label>
+            <input type="text" id="survey-hours" placeholder="例：11:00〜23:30（定休：月）">
           </div>
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label for="survey-notes">注意事項</label>
-          <textarea id="survey-notes" rows="2" placeholder="例：薬剤の臭いNG、閉店後のみ作業可"></textarea>
+      <div class="intake-category">
+        <div class="intake-category-title">
+          <i class="fas fa-cogs"></i> 設備・客席
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="survey-aircon">空調設備の状態</label>
+            <textarea id="survey-aircon" rows="2" placeholder="例：台数3、1台異音、フィルター目詰まり"></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="survey-kitchen">厨房設備の状態</label>
+            <textarea id="survey-kitchen" rows="2" placeholder="例：レンジフード油固着、ダクト詰まり傾向"></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>客席（設備補足）</label>
+            <div class="checkbox-row">
+              <label class="checkbox-inline">
+                <input type="checkbox" id="survey-seat-counter"> カウンター席の有無
+              </label>
+              <label class="checkbox-inline">
+                <input type="checkbox" id="survey-seat-box"> ボックス席の有無
+              </label>
+              <label class="checkbox-inline">
+                <input type="checkbox" id="survey-seat-zashiki"> 座敷の有無
+              </label>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-field half">
-          <label for="survey-last-clean">最終清掃日</label>
-          <input type="date" id="survey-last-clean">
+      <div class="intake-category">
+        <div class="intake-category-title">
+          <i class="fas fa-store"></i> 店舗仕様
         </div>
-        <div class="form-field half">
-          <label for="survey-plan">依頼プラン</label>
-          <select id="survey-plan">
-            <option value="">選択してください</option>
-            <option value="regular">定期</option>
-            <option value="spot">スポット</option>
-            <option value="undecided">未定</option>
-          </select>
+        <div class="form-row">
+          <div class="form-field half">
+            <label for="survey-floor-material">床の材質</label>
+            <input type="text" id="survey-floor-material" placeholder="例：塩ビ">
+          </div>
+          <div class="form-field half">
+            <label for="survey-wall-material">壁の材質</label>
+            <input type="text" id="survey-wall-material" placeholder="例：タイル">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field half">
+            <label for="survey-toilet-count">トイレの数</label>
+            <input type="text" id="survey-toilet-count" placeholder="例：2">
+          </div>
+          <div class="form-field half">
+            <label for="survey-area-sqm">平米数</label>
+            <input type="text" id="survey-area-sqm" placeholder="例：120">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field half">
+            <label for="survey-ceiling-height">天井高さ</label>
+            <input type="text" id="survey-ceiling-height" placeholder="例：2.6m">
+          </div>
+          <div class="form-field half">
+            <label for="survey-breaker-location">ブレーカーの位置</label>
+            <input type="text" id="survey-breaker-location" placeholder="例：厨房奥">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="survey-key-location">鍵の置き場所</label>
+            <input type="text" id="survey-key-location" placeholder="例：受付右棚">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field half">
+            <label>ブレーカー位置の写真</label>
+            <label class="btn-upload-stock">
+              <input type="file" id="survey-breaker-photo" accept="image/*" style="display:none;">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <span>画像を追加</span>
+            </label>
+            <input type="hidden" id="survey-breaker-photo-url">
+            <div class="survey-upload-preview" id="survey-breaker-photo-preview"></div>
+          </div>
+          <div class="form-field half">
+            <label>鍵の置き場の写真</label>
+            <label class="btn-upload-stock">
+              <input type="file" id="survey-key-photo" accept="image/*" style="display:none;">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <span>画像を追加</span>
+            </label>
+            <input type="hidden" id="survey-key-photo-url">
+            <div class="survey-upload-preview" id="survey-key-photo-preview"></div>
+          </div>
+        </div>
+      </div>
+      <div class="intake-category">
+        <div class="intake-category-title">
+          <i class="fas fa-exclamation-circle"></i> 注意事項・計画
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="survey-hotspots">特に気になる場所</label>
+            <textarea id="survey-hotspots" rows="2" placeholder="例：ダクト、床排水溝、グリスト"></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="survey-notes">注意事項</label>
+            <textarea id="survey-notes" rows="2" placeholder="例：薬剤の臭いNG、閉店後のみ作業可"></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field half">
+            <label for="survey-last-clean">最終清掃日</label>
+            <input type="date" id="survey-last-clean">
+          </div>
+          <div class="form-field half">
+            <label for="survey-plan">依頼プラン</label>
+            <select id="survey-plan">
+              <option value="">選択してください</option>
+              <option value="regular">定期</option>
+              <option value="spot">スポット</option>
+              <option value="undecided">未定</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>

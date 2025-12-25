@@ -832,6 +832,22 @@
   font-size: 0.95rem;
   animation: hint-float 2.4s ease-in-out infinite;
 }
+.intake-category {
+  border: 1px dashed rgba(255, 79, 154, 0.35);
+  border-radius: 14px;
+  padding: 14px;
+  background: #ffffff;
+  margin-top: 16px;
+}
+.intake-category-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ff4f9a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
 @keyframes hint-float {
   0% {
     transform: translateY(0);

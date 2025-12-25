@@ -129,206 +129,231 @@
               <i class="fas fa-notes-medical"></i>
               問診（営業入力）
             </h3>
-            <div class="info-item form-item">
-              <span class="info-label">清掃の悩み</span>
-              <textarea class="form-field" id="survey-issue" rows="2" placeholder="例：厨房の油汚れが落ちない、臭気が気になる"></textarea>
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">店内環境</span>
-              <textarea class="form-field" id="survey-environment" rows="2" placeholder="例：油煙が強い、湿気が多い、換気が弱い"></textarea>
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">稼働人数</span>
-              <div class="form-row">
-                <input class="form-field" id="survey-staff-normal" type="text" placeholder="通常時（例：6名）">
-                <input class="form-field" id="survey-staff-peak" type="text" placeholder="ピーク時（例：12名）">
+            <div class="intake-category">
+              <div class="intake-category-title">
+                <i class="fas fa-clipboard-check"></i> 基本ヒアリング
               </div>
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">稼働時間</span>
-              <input class="form-field" id="survey-hours" type="text" placeholder="例：11:00〜23:30（定休：月）">
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">通常清掃の頻度</span>
-              <input class="form-field" id="survey-cleaning-frequency" type="text" placeholder="例：毎日（閉店後に30分）">
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">店舗仕様（現地確認）</span>
-              <div class="compact-fields">
-                <label class="compact-field">
-                  <span>店舗数</span>
-                  <input class="form-field" id="survey-store-count" type="text" placeholder="例：3店舗">
-                </label>
-                <label class="compact-field">
-                  <span>平米数</span>
-                  <input class="form-field" id="survey-area-sqm" type="text" placeholder="例：120">
-                </label>
-                <label class="compact-field">
-                  <span>畳数</span>
-                  <input class="form-field" id="survey-area-tatami" type="text" placeholder="例：72">
-                </label>
-                <label class="compact-field">
-                  <span>トイレ数</span>
-                  <input class="form-field" id="survey-toilet-count" type="text" placeholder="例：2">
-                </label>
-                <label class="compact-field">
-                  <span>出入口</span>
-                  <input class="form-field" id="survey-entrances" type="text" placeholder="例：正面1/裏口1">
-                </label>
-                <label class="compact-field">
-                  <span>ブレーカー</span>
-                  <input class="form-field" id="survey-breaker-location" type="text" placeholder="例：厨房奥">
-                </label>
-                <label class="compact-field">
-                  <span>鍵の位置</span>
-                  <input class="form-field" id="survey-key-location" type="text" placeholder="例：受付右棚">
-                </label>
-                <label class="compact-field">
-                  <span>スタッフルーム</span>
-                  <input class="form-field" id="survey-staff-room" type="text" placeholder="例：有/無">
-                </label>
-                <label class="compact-field">
-                  <span>壁の材質</span>
-                  <input class="form-field" id="survey-wall-material" type="text" placeholder="例：タイル">
-                </label>
-                <label class="compact-field">
-                  <span>床の材質</span>
-                  <input class="form-field" id="survey-floor-material" type="text" placeholder="例：塩ビ">
-                </label>
-                <label class="compact-field">
-                  <span>アンペア数</span>
-                  <input class="form-field" id="survey-electrical-amps" type="text" placeholder="例：60A">
-                </label>
-                <label class="compact-field">
-                  <span>空調の数</span>
-                  <input class="form-field" id="survey-aircon-count" type="text" placeholder="例：3台">
-                </label>
-                <label class="compact-field">
-                  <span>天井高さ</span>
-                  <input class="form-field" id="survey-ceiling-height" type="text" placeholder="例：2.6m">
-                </label>
+              <div class="info-item form-item">
+                <span class="info-label">清掃の悩み</span>
+                <textarea class="form-field" id="survey-issue" rows="2" placeholder="例：厨房の油汚れが落ちない、臭気が気になる"></textarea>
               </div>
-              <div class="survey-upload-row">
-                <div class="survey-upload">
-                  <span class="survey-upload-label">ブレーカー位置の写真</span>
-                  <label class="btn-upload-stock">
-                    <input type="file" id="survey-breaker-photo" accept="image/*" style="display:none;">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <span>画像を追加</span>
-                  </label>
-                  <input type="hidden" id="survey-breaker-photo-url">
-                  <div class="survey-upload-preview" id="survey-breaker-photo-preview"></div>
+              <div class="info-item form-item">
+                <span class="info-label">店内環境</span>
+                <textarea class="form-field" id="survey-environment" rows="2" placeholder="例：油煙が強い、湿気が多い、換気が弱い"></textarea>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">稼働人数</span>
+                <div class="form-row">
+                  <input class="form-field" id="survey-staff-normal" type="text" placeholder="通常時（例：6名）">
+                  <input class="form-field" id="survey-staff-peak" type="text" placeholder="ピーク時（例：12名）">
                 </div>
-                <div class="survey-upload">
-                  <span class="survey-upload-label">鍵の置き場の写真</span>
-                  <label class="btn-upload-stock">
-                    <input type="file" id="survey-key-photo" accept="image/*" style="display:none;">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <span>画像を追加</span>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">稼働時間</span>
+                <input class="form-field" id="survey-hours" type="text" placeholder="例：11:00〜23:30（定休：月）">
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">通常清掃の頻度</span>
+                <input class="form-field" id="survey-cleaning-frequency" type="text" placeholder="例：毎日（閉店後に30分）">
+              </div>
+            </div>
+            <div class="intake-category">
+              <div class="intake-category-title">
+                <i class="fas fa-store"></i> 店舗仕様
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">店舗仕様（現地確認）</span>
+                <div class="compact-fields">
+                  <label class="compact-field">
+                    <span>店舗数</span>
+                    <input class="form-field" id="survey-store-count" type="text" placeholder="例：3店舗">
                   </label>
-                  <input type="hidden" id="survey-key-photo-url">
-                  <div class="survey-upload-preview" id="survey-key-photo-preview"></div>
+                  <label class="compact-field">
+                    <span>平米数</span>
+                    <input class="form-field" id="survey-area-sqm" type="text" placeholder="例：120">
+                  </label>
+                  <label class="compact-field">
+                    <span>畳数</span>
+                    <input class="form-field" id="survey-area-tatami" type="text" placeholder="例：72">
+                  </label>
+                  <label class="compact-field">
+                    <span>トイレ数</span>
+                    <input class="form-field" id="survey-toilet-count" type="text" placeholder="例：2">
+                  </label>
+                  <label class="compact-field">
+                    <span>出入口</span>
+                    <input class="form-field" id="survey-entrances" type="text" placeholder="例：正面1/裏口1">
+                  </label>
+                  <label class="compact-field">
+                    <span>天井高さ</span>
+                    <input class="form-field" id="survey-ceiling-height" type="text" placeholder="例：2.6m">
+                  </label>
+                  <label class="compact-field">
+                    <span>ブレーカー</span>
+                    <input class="form-field" id="survey-breaker-location" type="text" placeholder="例：厨房奥">
+                  </label>
+                  <label class="compact-field">
+                    <span>鍵の位置</span>
+                    <input class="form-field" id="survey-key-location" type="text" placeholder="例：受付右棚">
+                  </label>
+                </div>
+                <div class="survey-upload-row">
+                  <div class="survey-upload">
+                    <span class="survey-upload-label">ブレーカー位置の写真</span>
+                    <label class="btn-upload-stock">
+                      <input type="file" id="survey-breaker-photo" accept="image/*" style="display:none;">
+                      <i class="fas fa-cloud-upload-alt"></i>
+                      <span>画像を追加</span>
+                    </label>
+                    <input type="hidden" id="survey-breaker-photo-url">
+                    <div class="survey-upload-preview" id="survey-breaker-photo-preview"></div>
+                  </div>
+                  <div class="survey-upload">
+                    <span class="survey-upload-label">鍵の置き場の写真</span>
+                    <label class="btn-upload-stock">
+                      <input type="file" id="survey-key-photo" accept="image/*" style="display:none;">
+                      <i class="fas fa-cloud-upload-alt"></i>
+                      <span>画像を追加</span>
+                    </label>
+                    <input type="hidden" id="survey-key-photo-url">
+                    <div class="survey-upload-preview" id="survey-key-photo-preview"></div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="info-item form-item">
-              <span class="info-label">空調設備の状態</span>
-              <textarea class="form-field" id="survey-aircon" rows="2" placeholder="例：台数3、1台異音、フィルター目詰まり"></textarea>
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">厨房設備の状態</span>
-              <textarea class="form-field" id="survey-kitchen" rows="2" placeholder="例：レンジフード油固着、ダクト詰まり傾向"></textarea>
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">客席（設備補足）</span>
-              <div class="checkbox-group">
-                <label class="checkbox-chip">
-                  <input type="checkbox" id="survey-seat-counter" value="counter">
-                  <span>カウンター席</span>
-                </label>
-                <label class="checkbox-chip">
-                  <input type="checkbox" id="survey-seat-box" value="box">
-                  <span>ボックス席</span>
-                </label>
-                <label class="checkbox-chip">
-                  <input type="checkbox" id="survey-seat-zashiki" value="zashiki">
-                  <span>座敷</span>
-                </label>
+            <div class="intake-category">
+              <div class="intake-category-title">
+                <i class="fas fa-cogs"></i> 設備・内装
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">設備・内装</span>
+                <div class="compact-fields">
+                  <label class="compact-field">
+                    <span>スタッフルーム</span>
+                    <input class="form-field" id="survey-staff-room" type="text" placeholder="例：有/無">
+                  </label>
+                  <label class="compact-field">
+                    <span>壁の材質</span>
+                    <input class="form-field" id="survey-wall-material" type="text" placeholder="例：タイル">
+                  </label>
+                  <label class="compact-field">
+                    <span>床の材質</span>
+                    <input class="form-field" id="survey-floor-material" type="text" placeholder="例：塩ビ">
+                  </label>
+                  <label class="compact-field">
+                    <span>アンペア数</span>
+                    <input class="form-field" id="survey-electrical-amps" type="text" placeholder="例：60A">
+                  </label>
+                  <label class="compact-field">
+                    <span>空調の数</span>
+                    <input class="form-field" id="survey-aircon-count" type="text" placeholder="例：3台">
+                  </label>
+                </div>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">客席（設備補足）</span>
+                <div class="checkbox-group">
+                  <label class="checkbox-chip">
+                    <input type="checkbox" id="survey-seat-counter" value="counter">
+                    <span>カウンター席</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" id="survey-seat-box" value="box">
+                    <span>ボックス席</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" id="survey-seat-zashiki" value="zashiki">
+                    <span>座敷</span>
+                  </label>
+                </div>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">設備情報（必須）</span>
+                <div class="checkbox-group" id="survey-equipment">
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="aircon">
+                    <span>空調</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="duct">
+                    <span>ダクト</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="hood">
+                    <span>レンジフード</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="grease_trap">
+                    <span>グリストラップ</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="floor">
+                    <span>床</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="drain">
+                    <span>排水溝</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="toilet">
+                    <span>トイレ</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="window">
+                    <span>窓・ガラス</span>
+                  </label>
+                </div>
               </div>
             </div>
-            <div class="info-item form-item">
-              <span class="info-label">設備情報（必須）</span>
-              <div class="checkbox-group" id="survey-equipment">
-                <label class="checkbox-chip">
-                  <input type="checkbox" value="aircon">
-                  <span>空調</span>
-                </label>
-                <label class="checkbox-chip">
-                  <input type="checkbox" value="duct">
-                  <span>ダクト</span>
-                </label>
-                <label class="checkbox-chip">
-                  <input type="checkbox" value="hood">
-                  <span>レンジフード</span>
-                </label>
-                <label class="checkbox-chip">
-                  <input type="checkbox" value="grease_trap">
-                  <span>グリストラップ</span>
-                </label>
-                <label class="checkbox-chip">
-                  <input type="checkbox" value="floor">
-                  <span>床</span>
-                </label>
-                <label class="checkbox-chip">
-                  <input type="checkbox" value="drain">
-                  <span>排水溝</span>
-                </label>
-                <label class="checkbox-chip">
-                  <input type="checkbox" value="toilet">
-                  <span>トイレ</span>
-                </label>
-                <label class="checkbox-chip">
-                  <input type="checkbox" value="window">
-                  <span>窓・ガラス</span>
-                </label>
+            <div class="intake-category">
+              <div class="intake-category-title">
+                <i class="fas fa-exclamation-circle"></i> 注意事項・計画
               </div>
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">特に気になる場所</span>
-              <textarea class="form-field" id="survey-hotspots" rows="2" placeholder="例：ダクト、床排水溝、グリスト"></textarea>
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">注意事項</span>
-              <textarea class="form-field" id="survey-notes" rows="2" placeholder="例：薬剤の臭いNG、閉店後のみ作業可"></textarea>
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">最終清掃日</span>
-              <input class="form-field" id="survey-last-clean" type="date">
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">依頼プラン</span>
-              <select class="form-field" id="survey-plan">
-                <option value="">選択してください</option>
-                <option value="regular">定期</option>
-                <option value="spot">スポット</option>
-                <option value="undecided">未定</option>
-              </select>
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">衛生状態自己評価</span>
-              <select class="form-field" id="survey-self-rating">
-                <option value="">選択してください</option>
-                <option value="1">1（不衛生）</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5（普通）</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10（非常に衛生的）</option>
-              </select>
+              <div class="info-item form-item">
+                <span class="info-label">空調設備の状態</span>
+                <textarea class="form-field" id="survey-aircon" rows="2" placeholder="例：台数3、1台異音、フィルター目詰まり"></textarea>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">厨房設備の状態</span>
+                <textarea class="form-field" id="survey-kitchen" rows="2" placeholder="例：レンジフード油固着、ダクト詰まり傾向"></textarea>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">特に気になる場所</span>
+                <textarea class="form-field" id="survey-hotspots" rows="2" placeholder="例：ダクト、床排水溝、グリスト"></textarea>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">注意事項</span>
+                <textarea class="form-field" id="survey-notes" rows="2" placeholder="例：薬剤の臭いNG、閉店後のみ作業可"></textarea>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">最終清掃日</span>
+                <input class="form-field" id="survey-last-clean" type="date">
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">依頼プラン</span>
+                <select class="form-field" id="survey-plan">
+                  <option value="">選択してください</option>
+                  <option value="regular">定期</option>
+                  <option value="spot">スポット</option>
+                  <option value="undecided">未定</option>
+                </select>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">衛生状態自己評価</span>
+                <select class="form-field" id="survey-self-rating">
+                  <option value="">選択してください</option>
+                  <option value="1">1（不衛生）</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5（普通）</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10（非常に衛生的）</option>
+                </select>
+              </div>
             </div>
           </div>
           <div class="info-section">
@@ -508,6 +533,24 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+    .intake-category {
+      border: 1px dashed rgba(255, 79, 154, 0.35);
+      border-radius: 14px;
+      padding: 14px;
+      background: #ffffff;
+    }
+    .intake-category + .intake-category {
+      margin-top: 12px;
+    }
+    .intake-category-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ff4f9a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
     }
     .info-section.full-width {
       grid-column: 1 / -1;
