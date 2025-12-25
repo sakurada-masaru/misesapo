@@ -311,7 +311,7 @@
           if (window.DataUtils?.IdUtils?.normalize) {
             allClients = allClients.map(client => ({
               ...client,
-              id: window.DataUtils.IdUtils.normalize(client.id)
+              id: window.DataUtils.IdUtils.normalize(client.id || client.client_id || client.clientId)
             }));
           }
         } catch (e) {
@@ -893,8 +893,35 @@
     const unifiedBrandFilter = document.getElementById('unified-brand-filter');
 
     if (unifiedClientFilter) {
-      unifiedClientFilter.innerHTML = '<option value="">全法人</option>' + 
-        allClients.map(c => `<option value="${c.id}">${escapeHtml(c.name || c.company_name || '')}</option>`).join('');
+      const normalizedClients = allClients
+        .map((client) => ({
+          id: client.id || client.client_id || client.clientId || '',
+          name: client.name || client.company_name || client.companyName || client.client_name || ''
+        }))
+        .filter((client) => client.id || client.name);
+
+      const uniqueById = new Map();
+      normalizedClients.forEach((client) => {
+        const key = client.id || client.name;
+        if (!uniqueById.has(key)) {
+          uniqueById.set(key, client);
+        }
+      });
+
+      const dedupedClients = Array.from(uniqueById.values());
+      const nameCounts = dedupedClients.reduce((acc, client) => {
+        const nameKey = client.name || '';
+        acc[nameKey] = (acc[nameKey] || 0) + 1;
+        return acc;
+      }, {});
+
+      unifiedClientFilter.innerHTML = '<option value="">全法人</option>' +
+        dedupedClients.map((client) => {
+          const safeName = client.name || '名称未設定';
+          const needsId = nameCounts[safeName] > 1 && client.id;
+          const label = needsId ? `${safeName} (${client.id})` : safeName;
+          return `<option value="${client.id}">${escapeHtml(label)}</option>`;
+        }).join('');
     }
 
     updateUnifiedBrandFilter();
@@ -1391,4 +1418,3 @@
   };
 
 })();
-
