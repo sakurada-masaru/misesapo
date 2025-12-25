@@ -964,6 +964,20 @@
 .registration-intake .intake-category:nth-of-type(2) .compact-field:nth-child(n + 4) {
   grid-column: span 3;
 }
+.registration-intake .intake-category:nth-of-type(3) .info-item {
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.registration-intake .intake-category:nth-of-type(3) .compact-fields {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+.registration-intake .intake-category:nth-of-type(3) .compact-field {
+  min-width: 0;
+  flex: 0 0 auto;
+  grid-column: span 2;
+}
 .registration-intake .compact-row {
   display: grid;
   gap: 8px;
