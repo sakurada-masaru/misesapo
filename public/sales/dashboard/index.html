@@ -245,14 +245,22 @@
       </div>
       <div class="form-row">
         <div class="form-field half">
-          <label for="survey-breaker-photo">ブレーカー位置の写真</label>
-          <input type="file" id="survey-breaker-photo" accept="image/*">
+          <label>ブレーカー位置の写真</label>
+          <label class="btn-upload-stock">
+            <input type="file" id="survey-breaker-photo" accept="image/*" style="display:none;">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>画像を追加</span>
+          </label>
           <input type="hidden" id="survey-breaker-photo-url">
           <div class="survey-upload-preview" id="survey-breaker-photo-preview"></div>
         </div>
         <div class="form-field half">
-          <label for="survey-key-photo">鍵の置き場の写真</label>
-          <input type="file" id="survey-key-photo" accept="image/*">
+          <label>鍵の置き場の写真</label>
+          <label class="btn-upload-stock">
+            <input type="file" id="survey-key-photo" accept="image/*" style="display:none;">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>画像を追加</span>
+          </label>
           <input type="hidden" id="survey-key-photo-url">
           <div class="survey-upload-preview" id="survey-key-photo-preview"></div>
         </div>

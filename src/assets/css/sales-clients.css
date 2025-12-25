@@ -859,6 +859,26 @@
   border: 1px solid rgba(148, 163, 184, 0.4);
   object-fit: cover;
 }
+.btn-upload-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #ff679c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-upload-stock:hover {
+  background: #e55a8a;
+}
+.btn-upload-stock:active {
+  background: #cc4d7a;
+}
 .checkbox-row {
   display: flex;
   flex-wrap: wrap;

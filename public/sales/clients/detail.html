@@ -210,14 +210,22 @@
               </div>
               <div class="survey-upload-row">
                 <div class="survey-upload">
-                  <label class="survey-upload-label" for="survey-breaker-photo">ブレーカー位置の写真</label>
-                  <input class="survey-upload-input" id="survey-breaker-photo" type="file" accept="image/*">
+                  <span class="survey-upload-label">ブレーカー位置の写真</span>
+                  <label class="btn-upload-stock">
+                    <input type="file" id="survey-breaker-photo" accept="image/*" style="display:none;">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>画像を追加</span>
+                  </label>
                   <input type="hidden" id="survey-breaker-photo-url">
                   <div class="survey-upload-preview" id="survey-breaker-photo-preview"></div>
                 </div>
                 <div class="survey-upload">
-                  <label class="survey-upload-label" for="survey-key-photo">鍵の置き場の写真</label>
-                  <input class="survey-upload-input" id="survey-key-photo" type="file" accept="image/*">
+                  <span class="survey-upload-label">鍵の置き場の写真</span>
+                  <label class="btn-upload-stock">
+                    <input type="file" id="survey-key-photo" accept="image/*" style="display:none;">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>画像を追加</span>
+                  </label>
                   <input type="hidden" id="survey-key-photo-url">
                   <div class="survey-upload-preview" id="survey-key-photo-preview"></div>
                 </div>
