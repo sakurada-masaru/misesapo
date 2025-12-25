@@ -187,209 +187,230 @@
       </button>
     </div>
     <div class="section-content">
-      <div class="survey-grid">
-        <div class="form-group">
-          <label for="intake-issue">清掃の悩み</label>
-          <textarea id="intake-issue" rows="2" placeholder="例：厨房の油汚れが落ちない"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="intake-environment">店内環境</label>
-          <textarea id="intake-environment" rows="2" placeholder="例：油煙が強い、湿気が多い"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="intake-staff-normal">稼働人数（通常）</label>
-          <input id="intake-staff-normal" type="text" placeholder="例：6名">
-        </div>
-        <div class="form-group">
-          <label for="intake-staff-peak">稼働人数（ピーク）</label>
-          <input id="intake-staff-peak" type="text" placeholder="例：12名">
-        </div>
-        <div class="form-group">
-          <label for="intake-hours">稼働時間</label>
-          <input id="intake-hours" type="text" placeholder="例：11:00〜23:30">
-        </div>
-        <div class="form-group">
-          <label for="intake-cleaning-frequency">通常清掃の頻度</label>
-          <input id="intake-cleaning-frequency" type="text" placeholder="例：毎日（閉店後30分）">
-        </div>
-        <div class="form-group">
-          <label for="intake-store-count">店舗数</label>
-          <input id="intake-store-count" type="text" placeholder="例：3店舗">
-        </div>
-        <div class="form-group">
-          <label for="intake-area-sqm">平米数</label>
-          <input id="intake-area-sqm" type="text" placeholder="例：120">
-        </div>
-        <div class="form-group">
-          <label for="intake-area-tatami">畳数</label>
-          <input id="intake-area-tatami" type="text" placeholder="例：72">
-        </div>
-        <div class="form-group">
-          <label for="intake-toilet-count">トイレ数</label>
-          <input id="intake-toilet-count" type="text" placeholder="例：2">
-        </div>
-        <div class="form-group">
-          <label for="intake-entrances">出入口</label>
-          <input id="intake-entrances" type="text" placeholder="例：正面1/裏口1">
-        </div>
-        <div class="form-group">
-          <label for="intake-breaker-location">ブレーカーの位置</label>
-          <input id="intake-breaker-location" type="text" placeholder="例：厨房奥">
-        </div>
-        <div class="form-group">
-          <label for="intake-key-location">鍵の位置</label>
-          <input id="intake-key-location" type="text" placeholder="例：受付右棚">
-        </div>
-        <div class="form-group">
-          <label for="intake-staff-room">スタッフルーム</label>
-          <input id="intake-staff-room" type="text" placeholder="例：有/無">
-        </div>
-        <div class="form-group">
-          <label for="intake-wall-material">壁の材質</label>
-          <input id="intake-wall-material" type="text" placeholder="例：タイル">
-        </div>
-        <div class="form-group">
-          <label for="intake-floor-material">床の材質</label>
-          <input id="intake-floor-material" type="text" placeholder="例：塩ビ">
-        </div>
-        <div class="form-group">
-          <label for="intake-electrical-amps">アンペア数</label>
-          <input id="intake-electrical-amps" type="text" placeholder="例：60A">
-        </div>
-        <div class="form-group">
-          <label for="intake-aircon-count">空調の数</label>
-          <input id="intake-aircon-count" type="text" placeholder="例：3台">
-        </div>
-        <div class="form-group">
-          <label for="intake-ceiling-height">天井高さ</label>
-          <input id="intake-ceiling-height" type="text" placeholder="例：2.6m">
-        </div>
-        <div class="form-group">
-          <label for="intake-aircon">空調設備の状態</label>
-          <textarea id="intake-aircon" rows="2" placeholder="例：台数3、1台異音"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="intake-kitchen">厨房設備の状態</label>
-          <textarea id="intake-kitchen" rows="2" placeholder="例：レンジフード油固着"></textarea>
+      <div class="intake-category">
+        <div class="intake-category-title">基本ヒアリング</div>
+        <div class="survey-grid">
+          <div class="form-group">
+            <label for="intake-issue">清掃の悩み</label>
+            <textarea id="intake-issue" rows="2" placeholder="例：厨房の油汚れが落ちない"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="intake-environment">店内環境</label>
+            <textarea id="intake-environment" rows="2" placeholder="例：油煙が強い、湿気が多い"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="intake-staff-normal">稼働人数（通常）</label>
+            <input id="intake-staff-normal" type="text" placeholder="例：6名">
+          </div>
+          <div class="form-group">
+            <label for="intake-staff-peak">稼働人数（ピーク）</label>
+            <input id="intake-staff-peak" type="text" placeholder="例：12名">
+          </div>
+          <div class="form-group">
+            <label for="intake-hours">稼働時間</label>
+            <input id="intake-hours" type="text" placeholder="例：11:00〜23:30">
+          </div>
+          <div class="form-group">
+            <label for="intake-cleaning-frequency">通常清掃の頻度</label>
+            <input id="intake-cleaning-frequency" type="text" placeholder="例：毎日（閉店後30分）">
+          </div>
         </div>
       </div>
 
-      <div class="survey-subsection">
-        <h3 class="survey-subtitle">客席（設備補足）</h3>
-        <div class="checkbox-group">
-          <label class="checkbox-item">
-            <input type="checkbox" id="intake-seat-counter">
-            <span class="checkbox-label">カウンター席</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" id="intake-seat-box">
-            <span class="checkbox-label">ボックス席</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" id="intake-seat-zashiki">
-            <span class="checkbox-label">座敷</span>
-          </label>
+      <div class="intake-category">
+        <div class="intake-category-title">店舗仕様</div>
+        <div class="survey-grid">
+          <div class="form-group">
+            <label for="intake-store-count">店舗数</label>
+            <input id="intake-store-count" type="text" placeholder="例：3店舗">
+          </div>
+          <div class="form-group">
+            <label for="intake-area-sqm">平米数</label>
+            <input id="intake-area-sqm" type="text" placeholder="例：120">
+          </div>
+          <div class="form-group">
+            <label for="intake-area-tatami">畳数</label>
+            <input id="intake-area-tatami" type="text" placeholder="例：72">
+          </div>
+          <div class="form-group">
+            <label for="intake-toilet-count">トイレ数</label>
+            <input id="intake-toilet-count" type="text" placeholder="例：2">
+          </div>
+          <div class="form-group">
+            <label for="intake-entrances">出入口</label>
+            <input id="intake-entrances" type="text" placeholder="例：正面1/裏口1">
+          </div>
+          <div class="form-group">
+            <label for="intake-ceiling-height">天井高さ</label>
+            <input id="intake-ceiling-height" type="text" placeholder="例：2.6m">
+          </div>
+          <div class="form-group">
+            <label for="intake-breaker-location">ブレーカーの位置</label>
+            <input id="intake-breaker-location" type="text" placeholder="例：厨房奥">
+          </div>
+          <div class="form-group">
+            <label for="intake-key-location">鍵の位置</label>
+            <input id="intake-key-location" type="text" placeholder="例：受付右棚">
+          </div>
         </div>
       </div>
 
-      <div class="survey-subsection">
-        <h3 class="survey-subtitle">設備情報（問診票）</h3>
-        <div class="checkbox-group" id="intake-equipment">
-          <label class="checkbox-item">
-            <input type="checkbox" value="aircon">
-            <span class="checkbox-label">空調</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" value="duct">
-            <span class="checkbox-label">ダクト</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" value="hood">
-            <span class="checkbox-label">レンジフード</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" value="grease_trap">
-            <span class="checkbox-label">グリストラップ</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" value="floor">
-            <span class="checkbox-label">床</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" value="drain">
-            <span class="checkbox-label">排水溝</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" value="toilet">
-            <span class="checkbox-label">トイレ</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" value="window">
-            <span class="checkbox-label">窓・ガラス</span>
-          </label>
+      <div class="intake-category">
+        <div class="intake-category-title">設備・客席</div>
+        <div class="survey-grid">
+          <div class="form-group">
+            <label for="intake-staff-room">スタッフルーム</label>
+            <input id="intake-staff-room" type="text" placeholder="例：有/無">
+          </div>
+          <div class="form-group">
+            <label for="intake-wall-material">壁の材質</label>
+            <input id="intake-wall-material" type="text" placeholder="例：タイル">
+          </div>
+          <div class="form-group">
+            <label for="intake-floor-material">床の材質</label>
+            <input id="intake-floor-material" type="text" placeholder="例：塩ビ">
+          </div>
+          <div class="form-group">
+            <label for="intake-electrical-amps">アンペア数</label>
+            <input id="intake-electrical-amps" type="text" placeholder="例：60A">
+          </div>
+          <div class="form-group">
+            <label for="intake-aircon-count">空調の数</label>
+            <input id="intake-aircon-count" type="text" placeholder="例：3台">
+          </div>
+        </div>
+
+        <div class="survey-subsection">
+          <h3 class="survey-subtitle">客席（設備補足）</h3>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" id="intake-seat-counter">
+              <span class="checkbox-label">カウンター席</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="intake-seat-box">
+              <span class="checkbox-label">ボックス席</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="intake-seat-zashiki">
+              <span class="checkbox-label">座敷</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="survey-subsection">
+          <h3 class="survey-subtitle">設備情報（問診票）</h3>
+          <div class="checkbox-group" id="intake-equipment">
+            <label class="checkbox-item">
+              <input type="checkbox" value="aircon">
+              <span class="checkbox-label">空調</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" value="duct">
+              <span class="checkbox-label">ダクト</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" value="hood">
+              <span class="checkbox-label">レンジフード</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" value="grease_trap">
+              <span class="checkbox-label">グリストラップ</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" value="floor">
+              <span class="checkbox-label">床</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" value="drain">
+              <span class="checkbox-label">排水溝</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" value="toilet">
+              <span class="checkbox-label">トイレ</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" value="window">
+              <span class="checkbox-label">窓・ガラス</span>
+            </label>
+          </div>
         </div>
       </div>
 
-      <div class="survey-grid">
-        <div class="form-group">
-          <label for="intake-hotspots">特に気になる場所</label>
-          <textarea id="intake-hotspots" rows="2" placeholder="例：ダクト、床排水溝"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="intake-notes">注意事項</label>
-          <textarea id="intake-notes" rows="2" placeholder="例：薬剤の臭いNG"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="intake-last-clean">最終清掃日</label>
-          <input id="intake-last-clean" type="date">
-        </div>
-        <div class="form-group">
-          <label for="intake-plan">依頼プラン</label>
-          <select id="intake-plan">
-            <option value="">選択してください</option>
-            <option value="regular">定期</option>
-            <option value="spot">スポット</option>
-            <option value="undecided">未定</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="intake-self-rating">衛生状態自己評価</label>
-          <select id="intake-self-rating">
-            <option value="">選択してください</option>
-            <option value="1">1（不衛生）</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5（普通）</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10（非常に良い）</option>
-          </select>
+      <div class="intake-category">
+        <div class="intake-category-title">注意事項・計画</div>
+        <div class="survey-grid">
+          <div class="form-group">
+            <label for="intake-aircon">空調設備の状態</label>
+            <textarea id="intake-aircon" rows="2" placeholder="例：台数3、1台異音"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="intake-kitchen">厨房設備の状態</label>
+            <textarea id="intake-kitchen" rows="2" placeholder="例：レンジフード油固着"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="intake-hotspots">特に気になる場所</label>
+            <textarea id="intake-hotspots" rows="2" placeholder="例：ダクト、床排水溝"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="intake-notes">注意事項</label>
+            <textarea id="intake-notes" rows="2" placeholder="例：薬剤の臭いNG"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="intake-last-clean">最終清掃日</label>
+            <input id="intake-last-clean" type="date">
+          </div>
+          <div class="form-group">
+            <label for="intake-plan">依頼プラン</label>
+            <select id="intake-plan">
+              <option value="">選択してください</option>
+              <option value="regular">定期</option>
+              <option value="spot">スポット</option>
+              <option value="undecided">未定</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="intake-self-rating">衛生状態自己評価</label>
+            <select id="intake-self-rating">
+              <option value="">選択してください</option>
+              <option value="1">1（不衛生）</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5（普通）</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10（非常に良い）</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <div class="survey-photo-row">
-        <div class="form-group">
-          <label>ブレーカー位置の写真</label>
-          <label class="btn-upload-stock btn-upload-intake">
-            <input type="file" id="intake-breaker-photo" accept="image/*" style="display:none;">
-            <i class="fas fa-cloud-upload-alt"></i>
-            <span>画像を追加</span>
-          </label>
-          <input id="intake-breaker-photo-url" type="text" placeholder="URL">
-          <div class="survey-photo-preview" id="intake-breaker-photo-preview"></div>
-        </div>
-        <div class="form-group">
-          <label>鍵の置き場の写真</label>
-          <label class="btn-upload-stock btn-upload-intake">
-            <input type="file" id="intake-key-photo" accept="image/*" style="display:none;">
-            <i class="fas fa-cloud-upload-alt"></i>
-            <span>画像を追加</span>
-          </label>
-          <input id="intake-key-photo-url" type="text" placeholder="URL">
-          <div class="survey-photo-preview" id="intake-key-photo-preview"></div>
+      <div class="intake-category">
+        <div class="intake-category-title">写真</div>
+        <div class="survey-photo-row">
+          <div class="form-group">
+            <label>ブレーカー位置の写真</label>
+            <label class="btn-upload-stock btn-upload-intake">
+              <input type="file" id="intake-breaker-photo" accept="image/*" style="display:none;">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <span>画像を追加</span>
+            </label>
+            <input id="intake-breaker-photo-url" type="text" placeholder="URL">
+            <div class="survey-photo-preview" id="intake-breaker-photo-preview"></div>
+          </div>
+          <div class="form-group">
+            <label>鍵の置き場の写真</label>
+            <label class="btn-upload-stock btn-upload-intake">
+              <input type="file" id="intake-key-photo" accept="image/*" style="display:none;">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <span>画像を追加</span>
+            </label>
+            <input id="intake-key-photo-url" type="text" placeholder="URL">
+            <div class="survey-photo-preview" id="intake-key-photo-preview"></div>
+          </div>
         </div>
       </div>
     </div>

@@ -650,6 +650,19 @@ textarea:focus {
   gap: 16px;
   margin-bottom: 16px;
 }
+.intake-category {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 18px;
+  background: #ffffff;
+}
+.intake-category-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+}
 .survey-subsection {
   margin-bottom: 16px;
 }
