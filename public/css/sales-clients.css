@@ -884,6 +884,7 @@
 }
 .registration-intake .form-field {
   width: 100%;
+  flex: 0 0 auto;
   border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: 10px;
   padding: 8px 10px;
@@ -946,6 +947,23 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+.registration-intake .intake-category:nth-of-type(2) .info-item {
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.registration-intake .intake-category:nth-of-type(2) .compact-fields {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+.registration-intake .intake-category:nth-of-type(2) .compact-field {
+  min-width: 0;
+  flex: 0 0 auto;
+  grid-column: span 2;
+}
+.registration-intake .intake-category:nth-of-type(2) .compact-field:nth-child(n + 4) {
+  grid-column: span 3;
+}
 .registration-intake .compact-row {
   display: grid;
   gap: 8px;
@@ -971,6 +989,17 @@
 }
 .registration-intake .survey-upload-preview img {
   max-width: 140px;
+}
+@media (max-width: 768px) {
+  .registration-intake .compact-row.three,
+  .registration-intake .compact-row.two {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 420px) {
+  .registration-intake .intake-category:nth-of-type(2) .compact-field {
+    grid-column: 1 / -1;
+  }
 }
 @media (max-width: 768px) {
   .registration-intake .compact-row.three,
