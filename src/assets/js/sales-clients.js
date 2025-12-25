@@ -776,7 +776,8 @@ async function handleStoreFormSubmit(e) {
   const id = document.getElementById('store-id').value;
   const isNew = !id;
   
-  const sendInvite = document.getElementById('send-invite').checked;
+  const sendInviteEl = document.getElementById('send-invite');
+  const sendInvite = !!sendInviteEl && sendInviteEl.checked;
   const email = document.getElementById('store-email').value;
   
   // 招待送信時はメール必須
