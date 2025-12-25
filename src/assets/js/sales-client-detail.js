@@ -59,6 +59,8 @@ function redirectToSignin() {
   window.location.href = `/staff/signin.html?redirect=${redirect}`;
 }
 
+let karteHistory = [];
+
 function ensureAuthOrRedirect() {
   const token = getStoredToken();
   if (!token) {
@@ -115,6 +117,16 @@ function normalizeEquipmentList(value) {
   return [];
 }
 
+function getKarteKey(karte) {
+  return karte?.id || karte?.karte_id || karte?.chart_id || karte?.created_at || '';
+}
+
+function formatKarteLabel(karte, index) {
+  const dateLabel = formatDateToJa(karte?.created_at || karte?.updated_at || '');
+  const orderLabel = index === 0 ? '最新' : `履歴${index}`;
+  return `${orderLabel}：${dateLabel}`;
+}
+
 function setHtml(id, value) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -150,6 +162,23 @@ function setKarteStatus(hasKarte) {
     statusChip.classList.add('status-draft');
     statusChip.classList.remove('status-complete');
   }
+}
+
+function renderKarteHistory(items) {
+  const historyWrap = document.getElementById('karte-history');
+  const select = document.getElementById('karte-history-select');
+  if (!historyWrap || !select) return;
+  if (!items || items.length <= 1) {
+    historyWrap.style.display = 'none';
+    return;
+  }
+  historyWrap.style.display = 'flex';
+  select.innerHTML = items.map((item, index) => {
+    const value = getKarteKey(item);
+    const label = formatKarteLabel(item, index);
+    return `<option value="${escapeHtml(String(value))}">${escapeHtml(label)}</option>`;
+  }).join('');
+  select.value = getKarteKey(items[0]);
 }
 
 function setHref(id, href, text) {
@@ -373,7 +402,9 @@ async function loadClientDetail() {
     if (karteRes.ok) {
       const karteData = await karteRes.json().catch(() => ({}));
       const karteItems = Array.isArray(karteData) ? karteData : (karteData.items || []);
-      const latestKarte = karteItems[0];
+      karteHistory = karteItems.slice(0, 20);
+      renderKarteHistory(karteHistory);
+      const latestKarte = karteHistory[0];
       const hasKarte = Boolean(latestKarte);
       setKarteStatus(hasKarte);
       if (latestKarte) {
@@ -471,6 +502,59 @@ document.addEventListener('DOMContentLoaded', () => {
       if (file) {
         setPreviewImage('survey-key-photo-preview', URL.createObjectURL(file));
       }
+    });
+  }
+
+  const historySelect = document.getElementById('karte-history-select');
+  if (historySelect) {
+    historySelect.addEventListener('change', (event) => {
+      const selectedKey = event.target.value;
+      const selected = karteHistory.find((item) => String(getKarteKey(item)) === String(selectedKey));
+      if (!selected) return;
+      setInputValue('survey-issue', selected.issue || '');
+      setInputValue('survey-environment', selected.environment || '');
+      setInputValue('survey-staff-normal', selected.staffNormal || '');
+      setInputValue('survey-staff-peak', selected.staffPeak || '');
+      setInputValue('survey-hours', selected.hours || '');
+      setInputValue('survey-cleaning-frequency', selected.cleaningFrequency || '');
+      setInputValue('survey-area-sqm', selected.areaSqm || '');
+      setInputValue('survey-area-tatami', selected.areaTatami || '');
+      setInputValue('survey-toilet-count', selected.toiletCount || '');
+      setInputValue('survey-entrances', selected.entrances || '');
+      setInputValue('survey-breaker-location', selected.breakerLocation || '');
+      setInputValue('survey-key-location', selected.keyLocation || '');
+      setInputValue('survey-staff-room', selected.staffRoom || '');
+      setInputValue('survey-wall-material', selected.wallMaterial || '');
+      setInputValue('survey-floor-material', selected.floorMaterial || '');
+      setInputValue('survey-electrical-amps', selected.electricalAmps || '');
+      setInputValue('survey-aircon-count', selected.airconCount || '');
+      setInputValue('survey-ceiling-height', selected.ceilingHeight || '');
+      setInputValue('survey-aircon', selected.aircon || '');
+      setInputValue('survey-kitchen', selected.kitchen || '');
+      setInputValue('survey-hotspots', selected.hotspots || '');
+      setInputValue('survey-notes', selected.notes || '');
+      setInputValue('survey-last-clean', selected.lastClean || '');
+      setInputValue('survey-plan', selected.plan || '');
+      setInputValue('survey-self-rating', selected.selfRating || '');
+
+      const equipmentValues = normalizeEquipmentList(selected.equipment);
+      document.querySelectorAll('#survey-equipment input[type="checkbox"]').forEach((checkbox) => {
+        checkbox.checked = equipmentValues.includes(checkbox.value);
+      });
+      setCheckboxValue('survey-seat-counter', selected.seatCounter);
+      setCheckboxValue('survey-seat-box', selected.seatBox);
+      setCheckboxValue('survey-seat-zashiki', selected.seatZashiki);
+
+      setInputValue('survey-breaker-photo-url', selected.breakerPhotoUrl || '');
+      setInputValue('survey-key-photo-url', selected.keyPhotoUrl || '');
+      setPreviewImage('survey-breaker-photo-preview', selected.breakerPhotoUrl || '');
+      setPreviewImage('survey-key-photo-preview', selected.keyPhotoUrl || '');
+
+      setSurveyEditable(false);
+      const saveButton = document.getElementById('onsite-survey-save');
+      const editButton = document.getElementById('onsite-survey-edit');
+      if (saveButton) saveButton.style.display = 'none';
+      if (editButton) editButton.style.display = 'inline-flex';
     });
   }
 

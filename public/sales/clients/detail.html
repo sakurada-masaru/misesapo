@@ -123,6 +123,10 @@
           </div>
           <span class="status-chip status-draft" id="karte-status">カルテ未作成</span>
         </div>
+        <div class="report-history" id="karte-history" style="display: none;">
+          <label for="karte-history-select">履歴</label>
+          <select id="karte-history-select"></select>
+        </div>
         <div class="info-grid">
           <div class="info-section">
             <h3 class="section-title">
@@ -811,6 +815,26 @@
       padding-top: 12px;
       border-top: 1px dashed rgba(203, 213, 225, 0.8);
       flex-wrap: wrap;
+    }
+    .report-history {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 6px 0 10px;
+    }
+    .report-history label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 600;
+    }
+    .report-history select {
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      color: #0f172a;
+      background: #ffffff;
     }
     .report-hint {
       font-size: 0.8rem;
