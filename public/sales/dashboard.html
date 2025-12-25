@@ -144,9 +144,12 @@
       </div>
       
       <div class="form-status" id="form-status"></div>
-      <div class="form-actions">
+      <div class="form-actions stacked">
         <button type="submit" class="btn btn-primary" id="submit-btn">
           <i class="fas fa-save"></i> 登録する
+        </button>
+        <button type="button" class="btn btn-sky" id="go-to-survey">
+          <i class="fas fa-clipboard-list"></i> カルテ作成に進む
         </button>
       </div>
       <div class="register-hint">
@@ -156,7 +159,7 @@
   </div>
 
   <!-- 問診票 -->
-  <div class="client-tab-content active" data-client-content="survey">
+  <div class="client-tab-content" data-client-content="survey">
     <div class="hierarchy-section">
     <div class="hierarchy-header">
         <i class="fas fa-clipboard-list"></i> 問診票（初回ヒアリング）

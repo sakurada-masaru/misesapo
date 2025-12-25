@@ -1115,6 +1115,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+
+  const surveyContent = document.querySelector('.client-tab-content[data-client-content="survey"]');
+  const goToSurveyButton = document.getElementById('go-to-survey');
+  if (surveyContent && goToSurveyButton) {
+    surveyContent.classList.remove('active');
+    goToSurveyButton.addEventListener('click', () => {
+      surveyContent.classList.add('active');
+      surveyContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
   
   // 法人選択時にブランド選択肢を更新
   const clientSelect = document.getElementById('store-client');

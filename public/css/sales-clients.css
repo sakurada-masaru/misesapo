@@ -80,6 +80,13 @@
 .btn-primary:hover {
   background: var(--primary-hover);
 }
+.btn-sky {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+.btn-sky:hover {
+  background: #bae6fd;
+}
 
 .btn-sm {
   padding: 6px 12px;
@@ -1152,6 +1159,13 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: 24px;
+}
+.form-actions.stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+.form-actions.stacked .btn {
+  justify-content: center;
 }
 
 /* 招待リンク成功表示 */

@@ -121,7 +121,7 @@
               現地調査レポート（問診票）
             </h2>
           </div>
-          <span class="status-chip status-draft">未作成</span>
+          <span class="status-chip status-draft" id="karte-status">カルテ未作成</span>
         </div>
         <div class="info-grid">
           <div class="info-section">
@@ -384,6 +384,9 @@
           </div>
         </div>
         <div class="report-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="onsite-survey-edit" style="display:none;">
+            <i class="fas fa-edit"></i> 編集する
+          </button>
           <button type="button" class="btn btn-primary btn-sm" id="onsite-survey-save">
             <i class="fas fa-pen"></i> 問診票を入力
           </button>
@@ -795,6 +798,10 @@
     .status-draft {
       background: #e0f2fe;
       color: #0369a1;
+    }
+    .status-complete {
+      background: #dcfce7;
+      color: #166534;
     }
     .report-actions {
       display: flex;

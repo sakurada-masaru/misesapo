@@ -121,6 +121,37 @@ function setHtml(id, value) {
   el.innerHTML = value || '-';
 }
 
+function setSurveyEditable(isEditable) {
+  const reportCard = document.querySelector('.report-card');
+  if (!reportCard) return;
+  const fields = reportCard.querySelectorAll('.form-field');
+  fields.forEach((field) => {
+    field.disabled = !isEditable;
+  });
+  const checkboxes = reportCard.querySelectorAll('input[type="checkbox"]');
+  checkboxes.forEach((checkbox) => {
+    checkbox.disabled = !isEditable;
+  });
+  const fileInputs = reportCard.querySelectorAll('input[type="file"]');
+  fileInputs.forEach((input) => {
+    input.disabled = !isEditable;
+  });
+}
+
+function setKarteStatus(hasKarte) {
+  const statusChip = document.getElementById('karte-status');
+  if (!statusChip) return;
+  if (hasKarte) {
+    statusChip.textContent = 'カルテ作成済み';
+    statusChip.classList.remove('status-draft');
+    statusChip.classList.add('status-complete');
+  } else {
+    statusChip.textContent = 'カルテ未作成';
+    statusChip.classList.add('status-draft');
+    statusChip.classList.remove('status-complete');
+  }
+}
+
 function setHref(id, href, text) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -343,6 +374,8 @@ async function loadClientDetail() {
       const karteData = await karteRes.json().catch(() => ({}));
       const karteItems = Array.isArray(karteData) ? karteData : (karteData.items || []);
       const latestKarte = karteItems[0];
+      const hasKarte = Boolean(latestKarte);
+      setKarteStatus(hasKarte);
       if (latestKarte) {
         setInputValue('survey-issue', latestKarte.issue || '');
         setInputValue('survey-environment', latestKarte.environment || '');
@@ -389,6 +422,27 @@ async function loadClientDetail() {
           setPreviewImage('survey-key-photo-preview', latestKarte.keyPhotoUrl);
         }
       }
+
+      const saveButton = document.getElementById('onsite-survey-save');
+      const editButton = document.getElementById('onsite-survey-edit');
+      if (hasKarte) {
+        setSurveyEditable(false);
+        if (saveButton) {
+          saveButton.style.display = 'none';
+        }
+        if (editButton) {
+          editButton.style.display = 'inline-flex';
+        }
+      } else {
+        setSurveyEditable(true);
+        if (saveButton) {
+          saveButton.style.display = 'inline-flex';
+          saveButton.innerHTML = '<i class="fas fa-pen"></i> 問診票を入力';
+        }
+        if (editButton) {
+          editButton.style.display = 'none';
+        }
+      }
     } else if (karteRes.status === 401 || karteRes.status === 403) {
       redirectToSignin();
       return;
@@ -421,6 +475,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const saveButton = document.getElementById('onsite-survey-save');
+  const editButton = document.getElementById('onsite-survey-edit');
+  if (editButton) {
+    editButton.addEventListener('click', () => {
+      setSurveyEditable(true);
+      editButton.style.display = 'none';
+      if (saveButton) {
+        saveButton.style.display = 'inline-flex';
+        saveButton.innerHTML = '<i class="fas fa-save"></i> 保存する';
+      }
+    });
+  }
   if (!saveButton) return;
   saveButton.addEventListener('click', async () => {
     saveButton.disabled = true;
@@ -507,6 +572,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const errorText = await response.text();
         throw new Error(errorText || '保存に失敗しました');
       }
+      setKarteStatus(true);
+      setSurveyEditable(false);
+      if (editButton) {
+        editButton.style.display = 'inline-flex';
+      }
+      saveButton.style.display = 'none';
       alert('問診票を保存しました');
     } catch (error) {
       console.error('[Onsite Survey] Save failed:', error);
