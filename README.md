@@ -152,6 +152,8 @@ gcloud run services describe "${SERVICE}" \
 - `public/` は自動生成物です。直接編集せず、`src/pages/`（必要なら `src/partials/`, `src/layouts/`）を編集してください。
 - アセットは `src/assets/` に配置してください（例: `src/assets/styles.css`）。ビルド時に `public/` 配下へコピーされます。
 - 生成: `python3 scripts/build.py`（`src/pages/**/*.html` を生成し、`src/assets/**` を `public/` にコピー）。
+- 差分ビルド: `python3 scripts/build_one.py src/pages/...`（指定したページのみ生成し、`src/assets/**` を `public/` にコピー）。
+- 最小ビルド: `python3 scripts/build_min.py --page src/pages/... --asset src/assets/...`（指定ページと指定アセットだけ生成）。
 - Git: `public/` は `.gitignore` で除外しています。
 
 ### レスポンシブ設計ルール（SP対応方針）
