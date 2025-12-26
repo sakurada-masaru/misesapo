@@ -152,6 +152,7 @@ gcloud run services describe "${SERVICE}" \
 - `public/` は自動生成物です。直接編集せず、`src/pages/`（必要なら `src/partials/`, `src/layouts/`）を編集してください。
 - アセットは `src/assets/` に配置してください（例: `src/assets/styles.css`）。ビルド時に `public/` 配下へコピーされます。
 - 生成: `python3 scripts/build.py`（`src/pages/**/*.html` を生成し、`src/assets/**` を `public/` にコピー）。
+- 変更分ビルド: `python3 scripts/build_changed.py`（Git変更ファイルだけを生成・コピー。`src/partials` / `src/layouts` 変更時は `--full` 推奨）。
 - 差分ビルド: `python3 scripts/build_one.py src/pages/...`（指定したページのみ生成し、`src/assets/**` を `public/` にコピー）。
 - 最小ビルド: `python3 scripts/build_min.py --page src/pages/... --asset src/assets/...`（指定ページと指定アセットだけ生成）。
 - Git: `public/` は `.gitignore` で除外しています。
@@ -189,6 +190,7 @@ gcloud run services describe "${SERVICE}" \
 ## CI/CD（GitHub Actions 自動デプロイ）
 `main` に push された最新コミットをトリガーに、静的ビルド（`scripts/build.py`）→ Cloud Run へのデプロイ（ソースから）まで自動化しています。
 
+- GitHub Pages: `.github/workflows/pages.yml` が `scripts/build.py` で `public/` を生成し、Pages にデプロイします。
 - ワークフロー: `.github/workflows/deploy-cloudrun.yml`
 - トリガー: `push`（ブランチ `main`）
 - 実行手順:
@@ -221,12 +223,12 @@ gcloud run services describe "${SERVICE}" \
 - ブランチ名やサービス名を変更する場合は、`.github/workflows/deploy-cloudrun.yml` を編集してください。
 
 ## 作業ルール（抜粋）
-- 新規ページは `public/` 直下に `*.html` として追加し、必要に応じてナビゲーションからリンク。
-- スタイルは当面 `public/styles.css` に集約（分割が必要になったら検討）。
+- 新規ページは `src/pages/` 配下に追加し、ビルドで `public/` に生成する。
+- スタイルは当面 `src/assets/styles.css` に集約（分割が必要になったら検討）。
 - 命名・コード規約、コミット/PR ルールは `AGENTS.md` を参照。
 
 ## 次のステップ（簡易テンプレート生成）
-静的モックの制作効率と一貫性を高めるため、Python 製の最小テンプレート生成エンジンを導入します。部分テンプレート（ヘッダー/フッター等）を共通化し、ビルドで `public/` に HTML を生成します。
+静的モックの制作効率と一貫性を高めるため、Python 製の最小テンプレート生成エンジンを導入済みです。部分テンプレート（ヘッダー/フッター等）を共通化し、ビルドで `public/` に HTML を生成します。
 
 - 目的: 手作業のコピペを排除し、共通パーツとレイアウトを再利用可能にする。
 - コア機能: 変数置換、`layout` 適用、`include` での部分テンプレート読み込み。
@@ -238,8 +240,8 @@ gcloud run services describe "${SERVICE}" \
 - ビルド実行例（予定）:
   - `python3 scripts/build.py`（`src/pages/*.html` を走査→出力先は `public/`）
 - 運用方針:
-  - 導入後は `public/*.html` を直接編集しない。ソース（`src/`）を編集→ビルド→プレビュー。
-  - CSS/画像など静的アセットはこれまで通り `public/` 配下に配置。
+  - `public/*.html` を直接編集しない。ソース（`src/`）を編集→ビルド→プレビュー。
+  - CSS/画像など静的アセットは `src/assets/` に配置し、ビルドで `public/` にコピー。
 
 将来（テンプレート生成が安定後）に MVC 実装へ移行します。その際は、分割粒度・変数命名・スタイル変数（色/間隔/タイポ）を整理して移植性を高めます。
 
