@@ -30,6 +30,3 @@
 - **2025-12-26**: Added minimal build helper. (by Codex)
     - 変更したファイル: `scripts/build_min.py`, `README.md`
     - 詳細: 指定ページと指定アセットのみ生成する最小ビルドを追加。
-- **2025-12-26**: Removed mock data fallback in admin karte. (by Codex)
-    - 変更したファイル: `src/assets/js/admin-karte.js`
-    - 詳細: モックタイムラインを削除し、API失敗/空データ時は空状態表示に統一。

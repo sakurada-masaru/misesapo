@@ -1,10 +1,12 @@
 # プロジェクトステータス
 
-## 現在のステータス: フェーズ1 完了 (Customer Portal Prototype Phase 1 Complete)
-**ミッション:** 「ミセサポ AI Transformation (AIX)」の基盤構築とカスタマーポータルのプロトタイプ完成
+## 現在のステータス: フェーズ1.5 実装・検証完了 (Admin Premium Karte Complete)
+**ミッション:** 管理用プレミアムカルテの実装とAPI連携ロジックの検証完了。
 
 - [x] AI Transformation (AIX) 全体マスタープランの策定と承認
 - [x] カスタマーポータルの主要6機能のプロトタイプ実装
+- [x] 管理用プレミアムカルテ (`admin/customers/karte.html`) の実装と導線追加
+- [x] 開発サーバー（`dev_server.py`）のマルチディレクトリ同期対応
 - [x] プレミアムデザインシステム (`customer-dashboard.css`) の適用
 - [x] AI アドバイザー対話ロジックの実装
 - [x] 管理側 Karte UI のカスタマー側への完全移植・最適化

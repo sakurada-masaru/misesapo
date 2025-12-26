@@ -1,8 +1,9 @@
 # TODO List (タスクキュー)
 
 ## 優先度: 高 (Next Actions for Codex)
-- [ ] **カスタマーポータルの拡張**: `src/customer/pages/` において、管理側と同等の「店舗カルテ」を表示する仕組みの実装
-- [ ] **データ項目の同期**: `chart.html` の変更を `admin-karte.js` に反映 (Jamieの修正により基盤は完成)
+- [x] **カスタマーポータルの拡張**: `src/customer/pages/` において、管理側と同等の「店舗カルテ」を表示する仕組みの実装
+- [x] **データの同期**: 管理用プレミアムカルテ (`admin/customers/karte.html`) の実装と `admin-karte.js` の整備
+- [x] **実データ連携 (Codex)**: `admin-karte.js` 内のモックデータを API からの取得ロジックに完全置換
 - [ ] **UI洗練**: データ項目増加に合わせたレイアウト調整
 - [ ] **エラーハンドリング**: API通信失敗時のエラー表示強化
 

@@ -1,5 +1,4 @@
 const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
 const API_BASE = IS_LOCAL
   ? '/api/proxy'
   : 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
@@ -339,19 +338,12 @@ async function loadKarteData() {
   if (!response.ok) {
     renderTimeline([]);
     renderVitals(null);
-    setStatusPill('取得失敗', 'alert');
+    setStatusPill('要確認', 'alert');
     return;
   }
 
   const data = await response.json().catch(() => ({}));
   const items = Array.isArray(data) ? data : (data.items || data.kartes || []);
-
-  if (items.length === 0) {
-    renderTimeline([]);
-    renderVitals(null);
-    setStatusPill('未診断', 'warn');
-    return;
-  }
   const sorted = items.slice().sort((a, b) => {
     const aDate = new Date(pickFirst(a.created_at, a.updated_at) || 0).getTime();
     const bDate = new Date(pickFirst(b.created_at, b.updated_at) || 0).getTime();
