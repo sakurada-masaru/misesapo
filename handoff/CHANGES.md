@@ -24,3 +24,9 @@
 - **2025-12-26**: Removed leftover date-select debug log comments. (by Codex)
     - 変更したファイル: `src/assets/js/script.js`, `public/js/script.js`
     - 詳細: 日付選択のデバッグ用consoleログコメントを削除し、完全サイレント化。
+- **2025-12-26**: Added single-page build helper. (by Codex)
+    - 変更したファイル: `scripts/build_one.py`
+    - 詳細: 指定した `src/pages` のHTMLだけ生成し、`src/assets` を同期する軽量ビルドを追加。
+- **2025-12-26**: Added minimal build helper. (by Codex)
+    - 変更したファイル: `scripts/build_min.py`, `README.md`
+    - 詳細: 指定ページと指定アセットのみ生成する最小ビルドを追加。
