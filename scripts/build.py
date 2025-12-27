@@ -46,6 +46,7 @@ CUSTOMER_PAGES_DIR = SRC / "customer" / "pages"     # 部下が担当：お客�
 STAFF_PAGES_DIR = SRC / "staff" / "pages"          # ユーザーが担当：清掃員ページ
 SALES_PAGES_DIR = SRC / "sales" / "pages"          # ユーザーが担当：営業マンページ
 ADMIN_PAGES_DIR = SRC / "admin" / "pages"           # ユーザーが担当：管理ページ
+CORPORATE_ASSETS_DIR = SRC / "corporate" / "assets"
 
 
 RE_INCLUDE = re.compile(r"@include\(['\"](.*?)['\"]\)")
@@ -518,35 +519,39 @@ def convert_csv_to_json(csv_path: Path, json_path: Path) -> None:
 
 
 def copy_assets(outputs: List[str]) -> None:
-    if not ASSETS_DIR.exists():
-        return
     base_path = get_base_path()
-    for src_path in ASSETS_DIR.rglob("*"):
-        if src_path.is_dir():
+    
+    asset_dirs = [ASSETS_DIR, CORPORATE_ASSETS_DIR]
+    
+    for asset_root in asset_dirs:
+        if not asset_root.exists():
             continue
-        # mirror under public/ stripping the leading 'assets/'
-        rel = src_path.relative_to(ASSETS_DIR)
-        dst_path = PUBLIC / rel
-        ensure_dir(dst_path)
-        
-        # Process CSS files to fix absolute paths for GitHub Pages
-        if src_path.suffix == ".css" and base_path != "/":
-            content = read_text(src_path)
-            base_prefix = base_path.rstrip("/")
-            # Fix CSS url() syntax for absolute paths
-            content = re.sub(r'url\(["\']?/([^"\']*)["\']?\)', 
-                           lambda m: f'url("{base_prefix}/{m.group(1)}")',
-                           content)
-            dst_path.write_text(content, encoding="utf-8")
-        else:
-            # Use copy instead of copy2 to avoid timeout issues with extended attributes
-            # Extended attributes are not needed for the build output
-            try:
-                shutil.copy(src_path, dst_path)
-            except (OSError, IOError) as e:
-                print(f"[build:error] copy failed for {src_path.name}: {e}")
-                raise
-        outputs.append(str(dst_path))
+            
+        for src_path in asset_root.rglob("*"):
+            if src_path.is_dir():
+                continue
+            # mirror under public/ stripping the leading root
+            rel = src_path.relative_to(asset_root)
+            dst_path = PUBLIC / rel
+            ensure_dir(dst_path)
+            
+            # Process CSS files to fix absolute paths for GitHub Pages
+            if src_path.suffix == ".css" and base_path != "/":
+                content = read_text(src_path)
+                base_prefix = base_path.rstrip("/")
+                # Fix CSS url() syntax for absolute paths
+                content = re.sub(r'url\(["\']?/([^"\']*)["\']?\)', 
+                               lambda m: f'url("{base_prefix}/{m.group(1)}")',
+                               content)
+                dst_path.write_text(content, encoding="utf-8")
+            else:
+                # Use copy instead of copy2 to avoid timeout issues with extended attributes
+                try:
+                    shutil.copy(src_path, dst_path)
+                except (OSError, IOError) as e:
+                    print(f"[build:error] copy failed for {src_path.name}: {e}")
+                    raise
+            outputs.append(str(dst_path))
     
     # Copy logo_144x144.png to public/favicon.ico for browser auto-detection
     logo_path = ASSETS_DIR / "images" / "logo_144x144.png"

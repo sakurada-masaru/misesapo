@@ -3153,21 +3153,30 @@
     window.filteredStoresGlobal = filteredStores;
 
     // データ更新時にv3も更新
-    const originalFilterAndRender = filterAndRender;
-    filterAndRender = function () {
-      originalFilterAndRender();
+    const originalFilterAndRender = typeof filterAndRender === 'function' ? filterAndRender : null;
+    window.filterAndRender = function () {
+      if (originalFilterAndRender) originalFilterAndRender();
+
+      // グローバル変数を同期
       window.allStoresGlobal = allStores;
       window.allClientsGlobal = allClients;
       window.allBrandsGlobal = allBrands;
       window.filteredStoresGlobal = filteredStores;
+
       if (window.CustomerManagementV3) {
+        // V3内部の状態も同期（必要に応じて）
         window.CustomerManagementV3.allStores = allStores;
         window.CustomerManagementV3.allClients = allClients;
         window.CustomerManagementV3.allBrands = allBrands;
         window.CustomerManagementV3.filteredData = filteredStores;
-        window.CustomerManagementV3.renderCurrentView();
+        // 循環参照を防ぐため、既にV3から呼ばれている場合はレンダリングをスキップ
+        if (!window.isUnifiedSearching) {
+          window.CustomerManagementV3.renderCurrentView();
+        }
       }
     };
+    // 既存の参照も差し替え
+    filterAndRender = window.filterAndRender;
 
     // 一括操作用のグローバル変数
     window.selectedItems = new Set();
@@ -3492,6 +3501,9 @@
 
 
 
+    // グローバルに公開
+    window.renderTable = renderTable;
+    window.loadStores = loadStores;
   })();
 </script>
 

@@ -1624,6 +1624,11 @@ function renderAnnouncements(announcements) {
         // 表示を更新
         item.classList.remove('unread');
         item.classList.add('read');
+
+        // サイドバーのバッジも更新
+        if (window.AdminSidebar && window.AdminSidebar.updateNotificationBadges) {
+          window.AdminSidebar.updateNotificationBadges();
+        }
       } catch (error) {
         console.error('Error marking announcement read:', error);
       }
@@ -1694,15 +1699,14 @@ async function loadTodayDailyReport() {
       if (response && response.ok) {
         const data = await response.json();
         if (data.content !== undefined) {
-          // APIから取得したデータを表示
+          // APIから取得したデータを表示（ユーザー要望によりデフォルトはクリア状態に）
           const textarea = document.getElementById('daily-report-content');
           if (textarea) {
-            textarea.value = data.content || '';
-            // クリアボタンを表示
-            const clearBtn = document.getElementById('daily-report-clear-btn');
-            if (clearBtn && textarea.value.trim()) {
-              clearBtn.style.display = 'inline-flex';
-            }
+            // textarea.value = data.content || '';
+            // const clearBtn = document.getElementById('daily-report-clear-btn');
+            // if (clearBtn && textarea.value.trim()) {
+            //   clearBtn.style.display = 'inline-flex';
+            // }
           }
           // APIから取得したデータをlocalStorageにも保存
           localStorage.setItem(storageKey, JSON.stringify(data));
@@ -1740,12 +1744,11 @@ async function loadTodayDailyReport() {
       const data = JSON.parse(saved);
       const textarea = document.getElementById('daily-report-content');
       if (textarea) {
-        textarea.value = data.content || '';
-        // クリアボタンを表示
-        const clearBtn = document.getElementById('daily-report-clear-btn');
-        if (clearBtn && textarea.value.trim()) {
-          clearBtn.style.display = 'inline-flex';
-        }
+        // textarea.value = data.content || '';
+        // const clearBtn = document.getElementById('daily-report-clear-btn');
+        // if (clearBtn && textarea.value.trim()) {
+        //   clearBtn.style.display = 'inline-flex';
+        // }
       }
       upsertDailyReportList(listStorageKey, {
         id: data.id || `report_${currentUser.id}_${today}`,
@@ -2071,10 +2074,11 @@ async function saveDailyReport() {
       showSuccessMessage('日報をローカルに保存しました（API保存に失敗）');
     }
 
-    // クリアボタンを表示
+    // 保存完了後、入力内容をクリア
+    textarea.value = '';
     const clearBtn = document.getElementById('daily-report-clear-btn');
-    if (clearBtn && content) {
-      clearBtn.style.display = 'inline-flex';
+    if (clearBtn) {
+      clearBtn.style.display = 'none';
     }
   } catch (error) {
     console.error('Error saving daily report:', error);
@@ -4680,10 +4684,125 @@ async function loadOSNextSchedule(user) {
   }
 }
 
+// 案件受託
+async function acceptSchedule(scheduleId, btn) {
+  if (!confirm('この案件を受託しますか？')) return;
+
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 受託中...';
+    }
+
+    const headers = await buildAuthHeaders(true);
+    const updateData = {
+      status: 'in_progress',
+      worker_id: currentUser?.id || '',
+      accepted_at: new Date().toISOString()
+    };
+
+    const response = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(updateData)
+    });
+
+    if (!response.ok) throw new Error('受託に失敗しました');
+
+    showSuccessMessage('案件を受託しました');
+
+    // UI更新
+    if (typeof loadOSNextSchedule === 'function') {
+      loadOSNextSchedule(currentUser);
+    }
+    // スケジュール一覧も更新（もしあれば）
+    if (typeof renderOSScheduleList === 'function') {
+      // renderOSScheduleListは内部でfetchしていない可能性があるので、再読み込みが必要かもしれない
+      // しかし、現状ではloadOSNextScheduleがメイン
+    }
+
+    // ページ全体のスケジュールリストを再読み込み
+    const scheduleListContent = document.getElementById('schedule-list-content');
+    if (scheduleListContent) {
+      // OS課のMyPageにいる場合、スケジュールリストを再読み込みする関数を呼ぶ
+      // loadOSNextScheduleがメインの情報を更新するので、リストも必要なら再取得する
+      // ここでは簡易的に画面をリロードするか、またはデータを再取得する
+      setTimeout(() => window.location.reload(), 1000);
+    }
+
+  } catch (error) {
+    console.error('[OS Mypage] Accept schedule error:', error);
+    showErrorMessage('受託に失敗しました: ' + error.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '受託';
+    }
+  }
+}
+
+// 作業開始
+async function startWork(scheduleId, btn) {
+  if (!confirm('作業を開始しますか？')) return;
+
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 開始中...';
+    }
+
+    // 位置情報を取得（オプション）
+    let location = null;
+    if (navigator.geolocation) {
+      try {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+        });
+        location = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        };
+      } catch (geoError) {
+        console.warn('[OS Mypage] 位置情報の取得に失敗しました:', geoError);
+      }
+    }
+
+    const headers = await buildAuthHeaders(true);
+    const updateData = {
+      status: 'in_progress',
+      started_at: new Date().toISOString()
+    };
+    if (location) {
+      updateData.start_location = location;
+    }
+
+    const response = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(updateData)
+    });
+
+    if (!response.ok) throw new Error('作業開始に失敗しました');
+
+    showSuccessMessage('作業を開始しました');
+
+    setTimeout(() => window.location.reload(), 1000);
+
+  } catch (error) {
+    console.error('[OS Mypage] Start work error:', error);
+    showErrorMessage('作業開始に失敗しました: ' + error.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '作業開始';
+    }
+  }
+}
+
 // グローバル関数として公開
 window.toggleTodo = toggleTodo;
 window.addTodo = addTodo;
 window.deleteTodo = deleteTodo;
 window.updateTodoText = updateTodoText;
+window.acceptSchedule = acceptSchedule;
+window.startWork = startWork;
 
 // アコーディオン機能は削除されました

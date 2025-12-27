@@ -1036,8 +1036,14 @@
 
     // 既存のテーブルビューも更新
     if (typeof window.filterAndRender === 'function') {
-      // 統合検索の結果を既存のフィルターに反映
-      window.filteredStoresGlobal = filteredData;
+      window.isUnifiedSearching = true; // 循環参照防止フラグ
+      try {
+        // 統合検索の結果を既存のフィルターに反映
+        window.filteredStoresGlobal = filteredData;
+        window.filterAndRender();
+      } finally {
+        window.isUnifiedSearching = false;
+      }
     }
   }
 

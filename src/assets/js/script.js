@@ -31,10 +31,10 @@ if (btn && g_nav) {
 const key_title_inners = document.querySelectorAll('.key-title-inner');
 const kv_anime = (entries, obs) => {
     entries.forEach((entry) => {
-        if(entry.isIntersecting) {
+        if (entry.isIntersecting) {
             entry.target.animate(
                 {
-                    translate:[0, '100%'],
+                    translate: [0, '100%'],
                 },
                 {
                     duration: 1000,
@@ -60,17 +60,17 @@ key_title_inners.forEach((key_title_inner) => {
     フェードアップ
 =====================================================*/
 // 重複実行を防ぐため、IIFEでラップ
-(function() {
+(function () {
     'use strict';
     // 既に実行済みかチェック
     if (window.fadeUpsInitialized) return;
     window.fadeUpsInitialized = true;
-    
+
     const fadeUps = document.querySelectorAll('.fadeUp');
     if (fadeUps.length > 0) {
         const fadeUpAnime = (entries, obs) => {
             entries.forEach((entry) => {
-                if(entry.isIntersecting) {
+                if (entry.isIntersecting) {
                     entry.target.animate(
                         {
                             opacity: [0, 1],
@@ -103,7 +103,7 @@ key_title_inners.forEach((key_title_inner) => {
 const border_lines = document.querySelectorAll('.border-line');
 const border_lineAnime = (entries, obs) => {
     entries.forEach((entry) => {
-        if(entry.isIntersecting) {
+        if (entry.isIntersecting) {
             entry.target.animate(
                 {
                     width: [0, '100%'],
@@ -135,10 +135,10 @@ border_lines.forEach((border_line) => {
 const pink_sliders = document.querySelectorAll('.pink-slide');
 const pink_slidersAnime = (entries, obs) => {
     entries.forEach((entry, index) => {
-        if(entry.isIntersecting) {
+        if (entry.isIntersecting) {
             entry.target.animate(
                 {
-                    width:['100%', 0],
+                    width: ['100%', 0],
                 },
                 {
                     duration: 1000,
@@ -167,7 +167,7 @@ pink_sliders.forEach((pink_slide) => {
 const fadeIns = document.querySelectorAll('.fadeIn');
 const fadeInAnime = (entries, obs) => {
     entries.forEach((entry) => {
-        if(entry.isIntersecting) {
+        if (entry.isIntersecting) {
             entry.target.animate(
                 [
                     {
@@ -209,7 +209,7 @@ fadeIns.forEach((fadeIn) => {
 const opacityIns = document.querySelectorAll('.opacityIn');
 const opacityInsAnime = (entries, obs) => {
     entries.forEach((entry) => {
-        if(entry.isIntersecting) {
+        if (entry.isIntersecting) {
             entry.target.animate(
                 {
                     opacity: [0, 1]
@@ -244,56 +244,56 @@ const swiperLeftContainer = document.querySelector('.swiper-left');
 const swiperRightContainer = document.querySelector('.swiper-right');
 
 if (swiperLeftContainer) {
-   const leftSlides = swiperLeftContainer.querySelectorAll('.swiper-slide');
-   if (leftSlides.length >= 3) {
-      swiper01 = new Swiper('.swiper-left', {
-         loop: true,
-         loopAdditionalSlides: 1,
-         effect: 'slide',
-         speed: 5000,
-         slidesPerView: 'auto',
-         allowTouchMove: false,
-         centerSlides: true,
-         autoplay: {
-            delay: 0,
-            disableOnInteraction: false,
-         }
-      });
-   }
+    const leftSlides = swiperLeftContainer.querySelectorAll('.swiper-slide');
+    if (leftSlides.length >= 3) {
+        swiper01 = new Swiper('.swiper-left', {
+            loop: true,
+            loopAdditionalSlides: 1,
+            effect: 'slide',
+            speed: 5000,
+            slidesPerView: 'auto',
+            allowTouchMove: false,
+            centerSlides: true,
+            autoplay: {
+                delay: 0,
+                disableOnInteraction: false,
+            }
+        });
+    }
 }
 
 if (swiperRightContainer) {
-   const rightSlides = swiperRightContainer.querySelectorAll('.swiper-slide');
-   if (rightSlides.length >= 3) {
-      swiper02 = new Swiper('.swiper-right', {
-         loop: true,
-         loopAdditionalSlides: 1,
-         effect: 'slide',
-         speed: 5000,
-         slidesPerView: 'auto',
-         allowTouchMove: false,
-         centerSlides: true,
-         autoplay: {
-            reverseDirection: true,//左から右へ自動スクロールができるようにする
-            delay: 0,
-            disableOnInteraction: false,
-         }
-      });
-   }
+    const rightSlides = swiperRightContainer.querySelectorAll('.swiper-slide');
+    if (rightSlides.length >= 3) {
+        swiper02 = new Swiper('.swiper-right', {
+            loop: true,
+            loopAdditionalSlides: 1,
+            effect: 'slide',
+            speed: 5000,
+            slidesPerView: 'auto',
+            allowTouchMove: false,
+            centerSlides: true,
+            autoplay: {
+                reverseDirection: true,//左から右へ自動スクロールができるようにする
+                delay: 0,
+                disableOnInteraction: false,
+            }
+        });
+    }
 }
 // ウィンドウリサイズ時のイベントリスナー
 window.addEventListener('resize', () => {
-  // swiper01 の自動再生を再開
-  if (swiper01 && swiper01.autoplay) {
-    // swiper01.update(); // 必要に応じてSwiperのインスタンスを更新
-    swiper01.autoplay.start(); // 自動再生を開始
-  }
+    // swiper01 の自動再生を再開
+    if (swiper01 && swiper01.autoplay) {
+        // swiper01.update(); // 必要に応じてSwiperのインスタンスを更新
+        swiper01.autoplay.start(); // 自動再生を開始
+    }
 
-  // swiper02 の自動再生を再開
-  if (swiper02 && swiper02.autoplay) {
-    // swiper02.update(); // 必要に応じてSwiperのインスタンスを更新
-    swiper02.autoplay.start(); // 自動再生を開始
-  }
+    // swiper02 の自動再生を再開
+    if (swiper02 && swiper02.autoplay) {
+        // swiper02.update(); // 必要に応じてSwiperのインスタンスを更新
+        swiper02.autoplay.start(); // 自動再生を開始
+    }
 });
 
 
@@ -304,15 +304,15 @@ window.addEventListener('resize', () => {
 const mediaQuery = window.matchMedia('(max-width: 933px)'); //768px未満にマッチ
 let swiper03;
 function handleTabletChange(e) {
-    if(e.matches) {//メディアクエリの条件（e.matches）に基づいてSwiperの初期化または破棄を行う（.matchesは、キープロパティ）
+    if (e.matches) {//メディアクエリの条件（e.matches）に基づいてSwiperの初期化または破棄を行う（.matchesは、キープロパティ）
         // 767.98px以下の場合（モバイル・タブレット）
-        if(!swiper03) {
+        if (!swiper03) {
             const swiperCardsContainer = document.querySelector('.swiper-cards');
             if (swiperCardsContainer) {
                 const cardsSlides = swiperCardsContainer.querySelectorAll('.swiper-slide');
                 // ループモードにはスライドが3つ以上必要
                 const useLoop = cardsSlides.length >= 3;
-                
+
                 swiper03 = new Swiper('.swiper-cards', {
                     slidesPerView: 1, // コンテナ内に表示させるスライド数（CSSでサイズ指定する場合は 'auto'）
                     centeredSlides: true, // アクティブなスライドを中央に配置する
@@ -339,7 +339,7 @@ function handleTabletChange(e) {
         }
     } else {
         // 768px以上の場合（PC）
-        if(swiper03) {
+        if (swiper03) {
             swiper03.destroy(true, true);
             swiper03 = undefined;
         }
@@ -348,8 +348,8 @@ function handleTabletChange(e) {
 // 初期チェック
 handleTabletChange(mediaQuery);//初期ロード時に handleTabletChange(mediaQuery) を呼び出して現在の状態を確認し、Swiperを適切に処理する
 // リスナーを追加して、メディアクエリの状態変化を監視
-  // Safari 13以前では .addListener() を使用する必要がある場合がある
-  if (mediaQuery.addEventListener) {
+// Safari 13以前では .addListener() を使用する必要がある場合がある
+if (mediaQuery.addEventListener) {
     mediaQuery.addEventListener('change', handleTabletChange);
 } else if (mediaQuery.addListener) { // Safari 13 以前のフォールバック
     mediaQuery.addListener(handleTabletChange);
@@ -361,41 +361,47 @@ handleTabletChange(mediaQuery);//初期ロード時に handleTabletChange(mediaQ
 ===================================*/
 const pagetop = document.querySelector('.pagetop');
 const kvImageBox = document.querySelector('.key-visual');
-const footer_for_topbtn =document.querySelector('footer');
+const footer_for_topbtn = document.querySelector('footer');
 
 const topBtnOptions = {
     threshold: 0.5
 };
 
 if (pagetop) {
-const pagetopAnime = (entries) => {
-    entries.forEach((entry) => {
-        if(entry.isIntersecting) {//kvImageBoxが画面上に現れたらTOPページへ戻るボタンを外す
-            pagetop.classList.remove('topActive');
-        } else {
-            pagetop.classList.add('topActive');
-        }
+    const pagetopAnime = (entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {//kvImageBoxが画面上に現れたらTOPページへ戻るボタンを外す
+                pagetop.classList.remove('topActive');
+            } else {
+                pagetop.classList.add('topActive');
+            }
+        });
+    }
+
+    pagetop.addEventListener('click', (e) => {
+        e.preventDefault();//aタグのデフォルトイベントをキャンセルする(一瞬でTOPに戻るのを防ぐ)
+        window.scroll({
+            top: 0,
+            behavior: "smooth"
+        });
     });
-}
-    
-pagetop.addEventListener('click', (e) => {
-    e.preventDefault();//aタグのデフォルトイベントをキャンセルする(一瞬でTOPに戻るのを防ぐ)
-    window.scroll({
-        top: 0,
-        behavior: "smooth"
-    });
-});
-    
-// footerの表示監視
+
+    // footerの表示監視
     if (footer_for_topbtn) {
-const footer_topbtn_Observer = new IntersectionObserver((entries) => {
+        const footer_topbtn_Observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                     // footerが表示されたら2rem
                     pagetop.style.bottom = "2rem";
                 } else {
                     // footerが非表示で、kvImageBoxも画面外の場合は12rem
-                    if (kvImageBox && !kvImageBox.getBoundingClientRect().top < window.innerHeight) {
+                    if (kvImageBox) {
+                        const kvRect = kvImageBox.getBoundingClientRect();
+                        if (kvRect.top < 0 || kvRect.top >= window.innerHeight) {
+                            pagetop.style.bottom = "12rem";
+                        }
+                    } else {
+                        // kvImageBoxがない場合はデフォルトで12rem
                         pagetop.style.bottom = "12rem";
                     }
                 }
@@ -408,8 +414,8 @@ const footer_topbtn_Observer = new IntersectionObserver((entries) => {
 
     // kvImageBoxの表示監視
     if (kvImageBox) {
-const topBtnObserver = new IntersectionObserver(pagetopAnime, topBtnOptions);
-topBtnObserver.observe(kvImageBox);
+        const topBtnObserver = new IntersectionObserver(pagetopAnime, topBtnOptions);
+        topBtnObserver.observe(kvImageBox);
     }
 }
 
@@ -424,10 +430,10 @@ const footer = document.querySelector('footer');
 // 初期表示時は確実に非表示にする
 document.addEventListener('DOMContentLoaded', () => {
     if (order_bottom_box) {
-    order_bottom_box.classList.remove('bottom-box-active');
-    // スタイルを直接指定して確実に非表示に
-    order_bottom_box.style.opacity = '0';
-    order_bottom_box.style.visibility = 'hidden';
+        order_bottom_box.classList.remove('bottom-box-active');
+        // スタイルを直接指定して確実に非表示に
+        order_bottom_box.style.opacity = '0';
+        order_bottom_box.style.visibility = 'hidden';
     }
 });
 
@@ -455,13 +461,23 @@ const order_bottom_boxAnime = (entries) => {
 // footerの表示監視
 const footerObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
+        if (!order_bottom_box) return;
+
         if (entry.isIntersecting) {
             // footerが表示されたら非表示
             order_bottom_box.classList.remove('bottom-box-active');
             order_bottom_box.style.opacity = '0';
         } else {
             // footerが非表示で、kvImageBoxも画面外の場合は表示
-            if (!kvImageBox.getBoundingClientRect().top < window.innerHeight) {
+            if (kvImageBox) {
+                const kvRect = kvImageBox.getBoundingClientRect();
+                // KVが画面上部よりも上に完全に出ているか、画面下部よりも下にある場合
+                if (kvRect.top < 0 || kvRect.top >= window.innerHeight) {
+                    order_bottom_box.classList.add('bottom-box-active');
+                    order_bottom_box.style.opacity = '1';
+                }
+            } else {
+                // kvImageBoxがない場合は常に表示
                 order_bottom_box.classList.add('bottom-box-active');
                 order_bottom_box.style.opacity = '1';
             }
@@ -478,10 +494,10 @@ const order_bottom_boxOptions = {
 
 const order_bottom_boxObserver = new IntersectionObserver(order_bottom_boxAnime, order_bottom_boxOptions);
 if (kvImageBox) {
-order_bottom_boxObserver.observe(kvImageBox);
+    order_bottom_boxObserver.observe(kvImageBox);
 }
 if (footer) {
-footerObserver.observe(footer);
+    footerObserver.observe(footer);
 }
 
 
@@ -504,108 +520,108 @@ able_options.forEach((able_option) => {
 /*===================================
    発注フォーム(年月日における処理)
 ===================================*/
-(function() {
+(function () {
     'use strict';
-    
-// DOM要素の取得
-        const yearSelect = document.getElementById('year');
-        const monthSelect = document.getElementById('month');
-        const daySelect = document.getElementById('day');
+
+    // DOM要素の取得
+    const yearSelect = document.getElementById('year');
+    const monthSelect = document.getElementById('month');
+    const daySelect = document.getElementById('day');
 
     // 要素が存在しない場合は処理をスキップ
     if (!yearSelect || !monthSelect || !daySelect) {
         return;
     }
 
-        // 年のオプションを生成 (例: 当年から5年先まで)
-        const currentYear = new Date().getFullYear();
-        const startYear = currentYear; 
-        const endYear = currentYear + 5;
+    // 年のオプションを生成 (例: 当年から5年先まで)
+    const currentYear = new Date().getFullYear();
+    const startYear = currentYear;
+    const endYear = currentYear + 5;
 
-        for (let i = startYear; i <= endYear; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = i;
-            yearSelect.appendChild(option);
-        }
+    for (let i = startYear; i <= endYear; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        yearSelect.appendChild(option);
+    }
 
-        // 月のオプションを生成
-        for (let i = 1; i <= 12; i++) {
+    // 月のオプションを生成
+    for (let i = 1; i <= 12; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = String(i).padStart(2, '0'); // 01, 02 ...
+        monthSelect.appendChild(option);
+    }
+
+    // 日のオプションを更新する関数
+    function updateDays() {
+        const selectedYear = parseInt(yearSelect.value);
+        const selectedMonth = parseInt(monthSelect.value);
+        const currentDayValue = daySelect.value; // 文字列として現在の値を取得
+        const currentDay = currentDayValue ? parseInt(currentDayValue) : null; // 現在選択されている日を数値として保持 (存在する場合)
+
+        daySelect.innerHTML = ''; // 日のオプションをクリア
+
+        // 特定の月の日数を取得 (閏年を考慮)
+        // 月は0から始まるため、selectedMonth - 1 する
+        const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+
+        for (let i = 1; i <= daysInMonth; i++) {
             const option = document.createElement('option');
             option.value = i;
             option.textContent = String(i).padStart(2, '0'); // 01, 02 ...
-            monthSelect.appendChild(option);
+            daySelect.appendChild(option);
         }
 
-        // 日のオプションを更新する関数
-        function updateDays() {
-            const selectedYear = parseInt(yearSelect.value);
-            const selectedMonth = parseInt(monthSelect.value);
-            const currentDayValue = daySelect.value; // 文字列として現在の値を取得
-            const currentDay = currentDayValue ? parseInt(currentDayValue) : null; // 現在選択されている日を数値として保持 (存在する場合)
+        // 以前選択されていた日が存在し、新しい日数範囲内であれば再選択
+        if (currentDay && currentDay <= daysInMonth) {
+            daySelect.value = currentDay;
+        } else if (daySelect.options.length > 0) {
+            // 範囲外になった場合、もしくは初期選択時でcurrentDayがnullの場合、最初の日を選択
+            daySelect.value = daySelect.options[0].value;
+        }
+    }
 
-            daySelect.innerHTML = ''; // 日のオプションをクリア
+    // 初期値を設定 (画像に合わせて 2025年7月1日)
+    function setInitialDate() {
+        const initialYear = 2025;
+        const initialMonth = 7; // July
+        const initialDay = 1;   // 1st
 
-            // 特定の月の日数を取得 (閏年を考慮)
-            // 月は0から始まるため、selectedMonth - 1 する
-            const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-
-            for (let i = 1; i <= daysInMonth; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = String(i).padStart(2, '0'); // 01, 02 ...
-                daySelect.appendChild(option);
-            }
-            
-            // 以前選択されていた日が存在し、新しい日数範囲内であれば再選択
-            if (currentDay && currentDay <= daysInMonth) {
-                daySelect.value = currentDay;
-            } else if (daySelect.options.length > 0) {
-                 // 範囲外になった場合、もしくは初期選択時でcurrentDayがnullの場合、最初の日を選択
-                daySelect.value = daySelect.options[0].value;
-            }
+        // 年のオプションが存在するか確認し設定
+        let yearExists = Array.from(yearSelect.options).some(opt => parseInt(opt.value) === initialYear);
+        if (yearExists) {
+            yearSelect.value = initialYear;
+        } else if (yearSelect.options.length > 0) {
+            yearSelect.value = yearSelect.options[0].value; // 初期年が存在しない場合、最初のオプションを選択
         }
 
-        // 初期値を設定 (画像に合わせて 2025年7月1日)
-        function setInitialDate() {
-            const initialYear = 2025;
-            const initialMonth = 7; // July
-            const initialDay = 1;   // 1st
-
-            // 年のオプションが存在するか確認し設定
-            let yearExists = Array.from(yearSelect.options).some(opt => parseInt(opt.value) === initialYear);
-            if(yearExists) {
-                 yearSelect.value = initialYear;
-            } else if (yearSelect.options.length > 0) {
-                yearSelect.value = yearSelect.options[0].value; // 初期年が存在しない場合、最初のオプションを選択
-            }
-
-            // 月のオプションが存在するか確認し設定
-            let monthExists = Array.from(monthSelect.options).some(opt => parseInt(opt.value) === initialMonth);
-            if(monthExists) {
-                 monthSelect.value = initialMonth;
-            } else if (monthSelect.options.length > 0) {
-                monthSelect.value = monthSelect.options[0].value; // 初期月が存在しない場合、最初のオプションを選択
-            }
-            
-            updateDays(); // 日のオプションを更新 (年と月が設定された後)
-
-            // 日のオプションが存在するか確認し設定
-            let dayExists = Array.from(daySelect.options).some(opt => parseInt(opt.value) === initialDay);
-            if(dayExists) {
-                daySelect.value = initialDay;
-            } else if (daySelect.options.length > 0) {
-                 // updateDays後なので、daySelect.options[0]は常に存在するはず (月が1日以上ある限り)
-                daySelect.value = daySelect.options[0].value; // 初期日が存在しない/無効な場合、最初の有効な日を選択
-            }
+        // 月のオプションが存在するか確認し設定
+        let monthExists = Array.from(monthSelect.options).some(opt => parseInt(opt.value) === initialMonth);
+        if (monthExists) {
+            monthSelect.value = initialMonth;
+        } else if (monthSelect.options.length > 0) {
+            monthSelect.value = monthSelect.options[0].value; // 初期月が存在しない場合、最初のオプションを選択
         }
 
-        // イベントリスナーを設定
-        yearSelect.addEventListener('change', updateDays);
-        monthSelect.addEventListener('change', updateDays);
+        updateDays(); // 日のオプションを更新 (年と月が設定された後)
 
-        // 初期の日付を設定し、日のオプションを生成
-        setInitialDate(); // これがupdateDaysを呼び出し、最終的にdaySelectも設定する
+        // 日のオプションが存在するか確認し設定
+        let dayExists = Array.from(daySelect.options).some(opt => parseInt(opt.value) === initialDay);
+        if (dayExists) {
+            daySelect.value = initialDay;
+        } else if (daySelect.options.length > 0) {
+            // updateDays後なので、daySelect.options[0]は常に存在するはず (月が1日以上ある限り)
+            daySelect.value = daySelect.options[0].value; // 初期日が存在しない/無効な場合、最初の有効な日を選択
+        }
+    }
+
+    // イベントリスナーを設定
+    yearSelect.addEventListener('change', updateDays);
+    monthSelect.addEventListener('change', updateDays);
+
+    // 初期の日付を設定し、日のオプションを生成
+    setInitialDate(); // これがupdateDaysを呼び出し、最終的にdaySelectも設定する
 
 })();
 

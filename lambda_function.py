@@ -791,7 +791,7 @@ TODOS_TABLE = dynamodb.Table('todos')
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
 S3_REGION = os.environ.get('S3_REGION', 'ap-northeast-1')
-ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*').split(',')
+ALLOWED_ORIGINS = [origin.strip() for origin in os.environ.get('ALLOWED_ORIGINS', '*').split(',') if origin.strip()]
 
 # Google Calendar API設定（※このプロジェクトでは今後Googleカレンダーを使用しない方針）
 # - Google側の共有を外しても、システムが誤って同期処理を試みると権限エラーが発生し得るため、
@@ -809,13 +809,23 @@ DRAFT_KEY = 'cleaning-manual/draft.json'
 SERVICES_KEY = 'services/service_items.json'
 WIKI_KEY = 'wiki/wiki_entries.json'
 
+def resolve_cors_origin(event_headers: dict) -> str:
+    if "*" in ALLOWED_ORIGINS:
+        return "*"
+    origin = event_headers.get("origin") or event_headers.get("Origin") or ""
+    if origin in ALLOWED_ORIGINS:
+        return origin
+    return ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "*"
+
+
 def lambda_handler(event, context):
     """
     S3に画像をアップロード、または清掃マニュアルデータの読み書きを行うLambda関数
     """
     # CORSヘッダー
+    event_headers = event.get("headers") or {}
     headers = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': resolve_cors_origin(event_headers),
         'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
         'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,OPTIONS',
         'Access-Control-Allow-Credentials': 'false',
@@ -2109,8 +2119,20 @@ def verify_firebase_token(id_token):
         email = payload.get('email', '')
         name = payload.get('name') or payload.get('given_name', '') or email.split('@')[0] if email else ''
         
-        # ロールを取得（カスタムクレームから）
-        role = payload.get('custom:role') or payload.get('role', 'cleaning')
+        # ロールを取得（カスタムクレーム、グループ、またはデフォルト）
+        role = payload.get('custom:role') or payload.get('role')
+        
+        # Cognitoグループをチェック
+        groups = payload.get('cognito:groups', [])
+        if not role and groups:
+            if 'admin' in groups or 'ADMIN' in groups:
+                role = 'admin'
+            elif 'staff' in groups or 'STAFF' in groups:
+                role = 'cleaning'
+        
+        # デフォルトロール
+        if not role:
+            role = 'cleaning'
         
         return {
             'uid': uid,
@@ -5512,10 +5534,11 @@ def get_attendance(event, headers):
                 }
             else:
                 return {
-                    'statusCode': 404,
+                    'statusCode': 200,
                     'headers': headers,
                     'body': json.dumps({
-                        'error': '勤怠記録が見つかりません'
+                        'message': '勤怠記録が見つかりません',
+                        'data': None
                     }, ensure_ascii=False)
                 }
         else:
@@ -9162,10 +9185,11 @@ def get_daily_reports(event, headers):
                 }
             else:
                 return {
-                    'statusCode': 404,
+                    'statusCode': 200,
                     'headers': headers,
                     'body': json.dumps({
-                        'error': '日報が見つかりません'
+                        'message': '日報が見つかりません',
+                        'data': None
                     }, ensure_ascii=False)
                 }
         else:
@@ -9658,4 +9682,3 @@ def delete_todo(todo_id, headers):
                 'message': str(e)
             }, ensure_ascii=False)
         }
-

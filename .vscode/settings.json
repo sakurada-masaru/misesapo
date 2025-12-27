@@ -1,2 +1,4 @@
 {
+    "aws.cloudformation.enabled": false,
+    "aws.sam.enabled": false
 }

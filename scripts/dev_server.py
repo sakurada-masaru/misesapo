@@ -196,7 +196,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         """GETリクエスト: 静的ファイル配信またはAPI"""
-        if self.path.startswith('/api/proxy/'):
+        if self.path.startswith('/api/proxy2/'):
+            self.handle_api_proxy2()
+        elif self.path.startswith('/api/proxy/'):
             self.handle_api_proxy()
         elif self.path.startswith('/api/'):
             self.handle_api_get()
@@ -385,9 +387,19 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             super().do_GET()
     
     def handle_api_proxy(self):
-        """AWS APIへのプロキシ処理（CORS回避用）"""
+        """AWS APIへのプロキシ処理（CORS回避用）- Main API"""
         target_base = "https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod"
         proxy_path = self.path.replace('/api/proxy', '')
+        self._do_proxy(target_base, proxy_path)
+    
+    def handle_api_proxy2(self):
+        """AWS APIへのプロキシ処理（CORS回避用）- Report API"""
+        target_base = "https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod"
+        proxy_path = self.path.replace('/api/proxy2', '')
+        self._do_proxy(target_base, proxy_path)
+    
+    def _do_proxy(self, target_base, proxy_path):
+        """共通プロキシ処理"""
         target_url = target_base + proxy_path
         
         print(f"[DevServer] Proxying {self.command}: {target_url}")
@@ -516,7 +528,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         """POSTリクエスト: API処理"""
-        if self.path.startswith('/api/proxy/'):
+        if self.path.startswith('/api/proxy2/'):
+            self.handle_api_proxy2()
+        elif self.path.startswith('/api/proxy/'):
             self.handle_api_proxy()
         elif self.path.startswith('/api/'):
             self.handle_api_post()
@@ -524,7 +538,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             self.send_error(404, "Not Found")
     def do_PUT(self):
         """PUTリクエスト: API処理（更新用）"""
-        if self.path.startswith('/api/proxy/'):
+        if self.path.startswith('/api/proxy2/'):
+            self.handle_api_proxy2()
+        elif self.path.startswith('/api/proxy/'):
             self.handle_api_proxy()
         elif self.path.startswith('/api/'):
             self.handle_api_put()
@@ -534,7 +550,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
     
     def do_DELETE(self):
         """DELETEリクエスト: API処理（削除用）"""
-        if self.path.startswith('/api/proxy/'):
+        if self.path.startswith('/api/proxy2/'):
+            self.handle_api_proxy2()
+        elif self.path.startswith('/api/proxy/'):
             self.handle_api_proxy()
         elif self.path.startswith('/api/'):
             self.handle_api_delete()

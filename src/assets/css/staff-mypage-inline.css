@@ -1,4 +1,6 @@
-body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+body {
+  font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+}
 
 /* 出退勤セクション内のカレンダー */
 .attendance-calendar-section {
@@ -104,11 +106,28 @@ body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 
   padding: 4px 0;
   font-size: 0.7rem;
 }
+
 /* Brand theme variables (default + variants) */
-body { --primary: #FF679C; --primary-600: #E35687; }
-body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
-body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
-body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+body {
+  --primary: #FF679C;
+  --primary-600: #E35687;
+}
+
+body.theme-pink {
+  --primary: #FF679C;
+  --primary-600: #E35687;
+}
+
+body.theme-blue {
+  --primary: #2563eb;
+  --primary-600: #1d4ed8;
+}
+
+body.theme-emerald {
+  --primary: #10b981;
+  --primary-600: #059669;
+}
+
 /* Note: :root also defines the same brand color; inline vars ensure early paint */
 
 /* Staff signin page: hide all headers */
@@ -140,16 +159,19 @@ body[class*="page-admin-"] #default-header-wrapper {
   height: 0;
   overflow: visible;
 }
+
 body[class*="page-admin-"] #default-header-wrapper .site-header {
   background: transparent;
   box-shadow: none;
   padding: 0;
   min-height: 0;
 }
+
 body[class*="page-admin-"] #default-header-wrapper .inner {
   justify-content: flex-end;
   padding: 0;
 }
+
 body[class*="page-admin-"] #default-header-wrapper .nav-left,
 body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
 body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
@@ -157,6 +179,7 @@ body[class*="page-admin-"] #default-header-wrapper .spacer,
 body[class*="page-admin-"] #default-header-wrapper .role-badge {
   display: none !important;
 }
+
 body[class*="page-admin-"] #default-header-wrapper .nav-right {
   position: fixed;
   top: 16px;
@@ -167,12 +190,14 @@ body[class*="page-admin-"] #default-header-wrapper .nav-right {
   background: #fff;
   border-radius: 999px;
   padding: 6px 18px;
-  box-shadow: 0 12px 30px rgba(15,23,42,0.18);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
   z-index: 300;
 }
+
 body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
   font-weight: 600;
 }
+
 body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
   width: 36px;
   height: 36px;
@@ -197,61 +222,155 @@ body[class*="sales-"] #main {
   margin: 0;
   padding: 0;
 }
-.draggable-container{
+
+.draggable-container {
   position: relative !important;
 }
-.staff-mypage .main-content{
+
+.staff-mypage .main-content {
   width: 100% !important;
   height: auto !important;
   min-height: 100vh;
   margin-left: 240px;
   padding: 24px;
 }
-.container .draggable-container{
+
+.container .draggable-container {
   width: 80% !important;
 }
-.container-section{
+
+.container-section {
   max-width: 800px;
   margin-bottom: 0;
   border-radius: 12px;
   overflow: hidden;
 }
+
 #mypage-content {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   padding: 16px 12px 160px;
 }
+
 .mypage-main-grid-container {
   flex: 1;
   padding: 16px;
   overflow-y: auto;
 }
+
 .mypage-main-grid {
   display: grid !important;
   grid-template-columns: 2.5fr 4.5fr 0.5fr 2.5fr !important;
   gap: 12px;
   width: 100%;
-  align-items: start;
+  align-items: stretch;
+  /* startからstretchに変更して高さを揃える */
 }
+
 .mypage-column {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  height: 100%;
+  /* カラムの高さを100%にする */
 }
+
 .mypage-column-left {
   grid-column: 1;
 }
+
 .mypage-column-center {
   grid-column: 2;
 }
+
 .mypage-column-right {
   grid-column: 4;
 }
+
+/* User Request: Make Daily Report, Todo, and Announcements fill the column height */
+#attendance {
+  flex: 0 0 auto;
+  /* Keep attendance natural height */
+}
+
+#announcements {
+  flex: 1;
+  /* Fill remaining space in left column */
+  display: flex;
+  flex-direction: column;
+}
+
+#announcements .container-section,
+#announcements .card {
+  height: 100%;
+}
+
+#daily-reports {
+  flex: 1;
+  /* Fill remaining space in center column */
+  display: flex;
+  flex-direction: column;
+}
+
+#daily-reports .container-section,
+#daily-reports .card {
+  height: 100%;
+}
+
+#schedule-list {
+  flex: 0 0 auto;
+  /* Keep schedule list natural height (or should this be the filler?) */
+  /* User said "Daily Report height", implying Daily Report should grow. */
+}
+
+#todo {
+  flex: 1;
+  /* Fill remaining space in right column */
+  display: flex;
+  flex-direction: column;
+}
+
+
+#todo .container-section,
+#todo .card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Make inner content grow */
+.daily-report-form-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+}
+
+.daily-report-textarea {
+  flex: 1 !important;
+  /* Force grow */
+  resize: none;
+  /* Disable manual resize to avoid layout break */
+}
+
+/* Ensure todo list takes available space */
+.todo-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.todo-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
 @media (max-width: 1200px) {
   .mypage-main-grid {
     grid-template-columns: 1fr !important;
   }
+
   .mypage-column-left,
   .mypage-column-center,
   .mypage-column-right {
@@ -259,71 +378,89 @@ body[class*="sales-"] #main {
   }
 }
 
-.basic-info-value{
-font-size: 1rem;
+.basic-info-value {
+  font-size: 1rem;
 }
+
 .basic-info-row {
   display: flex;
   gap: 12px;
   padding: 6px 0;
   border-bottom: 1px solid #e5e7eb;
 }
+
 .basic-info-row .basic-info-item {
   flex: 1;
   border-bottom: none;
   padding: 0;
 }
-.status-label{
-font-size: 1rem !important;
-}
-.status-time{
-font-size: 1.5rem !important;
-font-weight: 600;
-}
-.btn-attendance{
+
+.status-label {
   font-size: 1rem !important;
 }
-.summary-label{
-font-size: 1rem !important;
+
+.status-time {
+  font-size: 1.5rem !important;
+  font-weight: 600;
 }
-.summary-value{
+
+.btn-attendance {
+  font-size: 1rem !important;
+}
+
+.summary-label {
+  font-size: 1rem !important;
+}
+
+.summary-value {
   font-size: 1rem !important;
   padding: 5px;
 }
-.empty-state{
+
+.empty-state {
   font-size: 1rem !important;
 }
-.basic-info-label{
+
+.basic-info-label {
   font-size: 1rem !important;
 }
-.daily-report-date-label{
+
+.daily-report-date-label {
   font-size: 1rem !important;
 }
-.daily-report-date{
+
+.daily-report-date {
   font-size: 1rem !important;
 }
-.todo-input{
+
+.todo-input {
   font-size: 1rem !important;
 }
-.filter-btn{
+
+.filter-btn {
   font-size: 1rem !important;
 }
-.todo-empty{
+
+.todo-empty {
   font-size: 1rem !important;
 }
-.daily-report-textarea{
+
+.daily-report-textarea {
   font-size: 1rem !important;
 }
-.btn-sm{
-font-size: 1rem !important;
+
+.btn-sm {
+  font-size: 1rem !important;
 }
+
 .digital-clock-date-header {
   font-size: 0.875rem;
   font-weight: normal;
   color: #6b7280;
   margin-left: 8px;
 }
-.digital-clock-display{
+
+.digital-clock-display {
   font-size: 4rem !important;
   font-weight: 600;
   text-align: center;
@@ -464,6 +601,7 @@ font-size: 1rem !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 16px;
 }
+
 .container-header {
   display: flex;
   align-items: center;
@@ -472,6 +610,7 @@ font-size: 1rem !important;
   padding-bottom: 8px;
   border-bottom: 1px solid #e5e7eb;
 }
+
 .container-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -482,18 +621,22 @@ font-size: 1rem !important;
   margin: 0;
   flex: 1;
 }
+
 @media (max-width: 767.98px) {
   .staff-mypage.main-content {
     margin-left: 0 !important;
   }
+
   .mypage-main-grid {
     grid-template-columns: 1fr !important;
     gap: 16px;
   }
+
   .mypage-main-grid-container {
     padding: 12px;
   }
 }
+
 @media (max-width: 768px) {
   .sidebar.open {
     padding-top: 70px;

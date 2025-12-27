@@ -2,7 +2,7 @@
  * 共通サイドバー機能
  */
 
-(function() {
+(function () {
   'use strict';
 
   // ページ識別子のマッピング
@@ -46,24 +46,24 @@
   function getCurrentPage() {
     const path = window.location.pathname;
     const pathParts = path.split('/').filter(p => p && !p.endsWith('.html'));
-    
+
     // 各ページマッピングをチェック
     for (const [pageId, keywords] of Object.entries(PAGE_MAPPING)) {
       if (keywords.every(keyword => pathParts.includes(keyword) || path.includes(keyword))) {
         return pageId;
       }
     }
-    
+
     // スタッフマイページの場合はmypageを返す
     if (path.includes('/staff/mypage')) {
       return 'mypage';
     }
-    
+
     // ユーザー向けマイページの場合はmypageを返す
     if (path.includes('/mypage') && !path.includes('/staff/')) {
       return 'mypage';
     }
-    
+
     // デフォルトはdashboard
     return 'dashboard';
   }
@@ -74,7 +74,7 @@
   function setActiveNavItem() {
     const currentPage = getCurrentPage();
     const navItems = document.querySelectorAll('.sidebar-nav .nav-item[data-page]');
-    
+
     navItems.forEach(item => {
       const pageId = item.getAttribute('data-page');
       if (pageId === currentPage) {
@@ -93,7 +93,7 @@
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
-    
+
     if (!sidebar) return;
 
     // ローカルストレージから状態を読み込み（PCのみ）
@@ -106,7 +106,7 @@
 
     // PC用トグルボタンのイベント
     if (sidebarToggle) {
-      sidebarToggle.addEventListener('click', function() {
+      sidebarToggle.addEventListener('click', function () {
         sidebar.classList.toggle('collapsed');
         const collapsed = sidebar.classList.contains('collapsed');
         localStorage.setItem('sidebar-collapsed', collapsed.toString());
@@ -137,21 +137,21 @@
 
     // モバイルメニューボタンのイベント
     if (mobileMenuButton) {
-      mobileMenuButton.addEventListener('click', function() {
+      mobileMenuButton.addEventListener('click', function () {
         const isOpening = !sidebar.classList.contains('open');
-        
+
         if (isOpening) {
           // メニューを開く：リップルアニメーション開始
           rippleOverlay.classList.remove('collapsing');
-          
+
           // ボタンの位置を取得
           const buttonRect = mobileMenuButton.getBoundingClientRect();
           const buttonCenterX = buttonRect.left + buttonRect.width / 2;
           const buttonCenterY = buttonRect.top + buttonRect.height / 2;
-          
+
           // リップルオーバーレイの初期サイズ
           const initialSize = 100;
-          
+
           // リップルオーバーレイの位置をボタンの中心に設定
           rippleOverlay.style.width = initialSize + 'px';
           rippleOverlay.style.height = initialSize + 'px';
@@ -161,45 +161,45 @@
           rippleOverlay.style.transformOrigin = 'center center';
           rippleOverlay.style.display = 'block';
           rippleOverlay.style.opacity = '0';
-          
+
           // リップルアニメーション開始
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               rippleOverlay.classList.add('animating');
             });
           });
-          
+
           // アニメーション完了後にサイドバーを表示
           setTimeout(() => {
             sidebar.classList.add('open');
-        if (sidebarOverlay) {
+            if (sidebarOverlay) {
               sidebarOverlay.classList.add('active');
-        }
-        // ボタンのアイコンを変更
-        const icon = mobileMenuButton.querySelector('i');
-        if (icon) {
-            icon.className = 'fas fa-times';
+            }
+            // ボタンのアイコンを変更
+            const icon = mobileMenuButton.querySelector('i');
+            if (icon) {
+              icon.className = 'fas fa-times';
             }
           }, 400); // リップルアニメーションの時間（0.4s）
-          } else {
+        } else {
           // メニューを閉じる：リップルアニメーションで閉じる
           sidebar.classList.remove('open');
           if (sidebarOverlay) {
             sidebarOverlay.classList.remove('active');
           }
-          
+
           // リップルオーバーレイを上にスライドアウト
           if (rippleOverlay.classList.contains('animating')) {
             rippleOverlay.classList.remove('animating');
             rippleOverlay.classList.add('collapsing');
           }
-          
+
           // ボタンのアイコンを変更
           const icon = mobileMenuButton.querySelector('i');
           if (icon) {
             icon.className = 'fas fa-bars';
           }
-          
+
           // アニメーション完了後にリセット
           setTimeout(() => {
             resetRippleOverlay();
@@ -210,21 +210,21 @@
 
     // オーバーレイクリックでサイドバーを閉じる
     if (sidebarOverlay) {
-      sidebarOverlay.addEventListener('click', function() {
+      sidebarOverlay.addEventListener('click', function () {
         sidebar.classList.remove('open');
         sidebarOverlay.classList.remove('active');
-        
+
         // リップルオーバーレイを上にスライドアウト
         if (rippleOverlay && rippleOverlay.classList.contains('animating')) {
           rippleOverlay.classList.remove('animating');
           rippleOverlay.classList.add('collapsing');
         }
-        
+
         const icon = mobileMenuButton?.querySelector('i');
         if (icon) {
           icon.className = 'fas fa-bars';
         }
-        
+
         // アニメーション完了後にリセット
         setTimeout(() => {
           resetRippleOverlay();
@@ -236,7 +236,7 @@
     if (window.innerWidth <= 768) {
       const navItems = sidebar.querySelectorAll('.nav-item');
       navItems.forEach(item => {
-        item.addEventListener('click', function() {
+        item.addEventListener('click', function () {
           sidebar.classList.remove('open');
           if (sidebarOverlay) {
             sidebarOverlay.classList.remove('active');
@@ -251,9 +251,9 @@
 
     // ウィンドウリサイズ時の処理
     let resizeTimer;
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function() {
+      resizeTimer = setTimeout(function () {
         if (window.innerWidth > 768) {
           // PC表示に切り替え
           sidebar.classList.remove('open');
@@ -385,7 +385,7 @@
 
       // 管理者ロールのみ管理ダッシュボードを表示
       if (userRole === 'admin' || userRole === '管理者') {
-          adminDashboardLink.style.display = 'flex';
+        adminDashboardLink.style.display = 'flex';
         if (navDivider) {
           navDivider.style.display = 'block';
         }
@@ -459,7 +459,7 @@
         try {
           // キャッシュを無効化するためにタイムスタンプを追加
           const timestamp = new Date().getTime();
-          
+
           // まずAWS APIから最新データを取得
           const apiResponse = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(email)}&t=${timestamp}&_=${Date.now()}`, {
             cache: 'no-store'
@@ -475,7 +475,7 @@
               }
             }
           }
-          
+
           // APIで取得できない場合のみ、ローカルのworkers.jsonをフォールバックとして使用
           if (!userId) {
             console.warn('[AdminSidebar] API取得に失敗、ローカルのworkers.jsonを試行');
@@ -483,12 +483,12 @@
               const localResponse = await fetch(`/data/workers.json?t=${timestamp}&_=${Date.now()}`, {
                 cache: 'no-store'
               });
-          if (localResponse.ok) {
-            const localWorkers = await localResponse.json();
-            if (Array.isArray(localWorkers) && localWorkers.length > 0) {
-              const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
-              if (matchingUser && matchingUser.id) {
-                userId = matchingUser.id;
+              if (localResponse.ok) {
+                const localWorkers = await localResponse.json();
+                if (Array.isArray(localWorkers) && localWorkers.length > 0) {
+                  const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+                  if (matchingUser && matchingUser.id) {
+                    userId = matchingUser.id;
                     console.log('[AdminSidebar] Found ID from local workers.json (fallback):', userId);
                   }
                 }
@@ -602,7 +602,7 @@
           const parsedUser = JSON.parse(storedCognitoUser);
           if (parsedUser.role) {
             return parsedUser.role;
-      }
+          }
         }
       } catch (e) {
         console.warn('[AdminSidebar] Error parsing stored cognito_user:', e);
@@ -624,17 +624,87 @@
   }
 
   /**
+   * 業務連絡の未読件数を取得してバッジを更新
+   */
+  async function updateNotificationBadges() {
+    const badgeAnnouncements = document.getElementById('badge-announcements');
+    const badgeMypage = document.getElementById('badge-mypage');
+
+    if (!badgeAnnouncements && !badgeMypage) return;
+
+    try {
+      // APIベースURL（既知のものを試行）
+      const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+      // トークンを取得
+      let idToken = localStorage.getItem('cognito_id_token');
+      if (!idToken && window.CognitoAuth && typeof window.CognitoAuth.getIdToken === 'function') {
+        idToken = window.CognitoAuth.getIdToken();
+      }
+
+      if (!idToken) {
+        const storedUser = localStorage.getItem('cognito_user');
+        if (storedUser) {
+          try {
+            const parsed = JSON.parse(storedUser);
+            idToken = parsed.idToken || (parsed.tokens && parsed.tokens.idToken);
+          } catch (e) { }
+        }
+      }
+
+      if (!idToken) {
+        console.log('[AdminSidebar] No token found for badges');
+        return;
+      }
+
+      console.log('[AdminSidebar] Fetching unread announcements...');
+      const response = await fetch(`${REPORT_API}/staff/announcements`, {
+        headers: {
+          'Authorization': `Bearer ${idToken}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const announcements = data.announcements || [];
+        const unreadCount = announcements.filter(a => !a.is_read).length;
+
+        if (unreadCount > 0) {
+          if (badgeAnnouncements) {
+            badgeAnnouncements.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            badgeAnnouncements.style.display = 'flex';
+          }
+          if (badgeMypage) {
+            badgeMypage.style.display = 'flex';
+            // マイページバッジは件数を出さず赤い丸だけにする（デザイン上の都合）
+            badgeMypage.textContent = '';
+          }
+        } else {
+          if (badgeAnnouncements) badgeAnnouncements.style.display = 'none';
+          if (badgeMypage) badgeMypage.style.display = 'none';
+        }
+      }
+    } catch (error) {
+      console.warn('[AdminSidebar] Error updating notification badges:', error);
+    }
+  }
+
+  /**
    * 初期化
    */
   async function init() {
     // DOMContentLoaded後に実行
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', async function() {
+      document.addEventListener('DOMContentLoaded', async function () {
         setActiveNavItem();
         initSidebarToggle();
         await updateRoleBadge();
         await toggleSidebarElementsByRole();
         setupMypageLink();
+        updateNotificationBadges();
+
+        // 3分ごとにバッジを更新
+        setInterval(updateNotificationBadges, 3 * 60 * 1000);
       });
     } else {
       setActiveNavItem();
@@ -642,6 +712,10 @@
       updateRoleBadge();
       await toggleSidebarElementsByRole();
       setupMypageLink();
+      updateNotificationBadges();
+
+      // 3分ごとにバッジを更新
+      setInterval(updateNotificationBadges, 3 * 60 * 1000);
     }
   }
 
@@ -672,7 +746,8 @@
     toggleSidebarElementsByRole: toggleSidebarElementsByRole,
     getCurrentUserRole: getCurrentUserRole,
     hasAdminAccess: hasAdminAccess,
-    setupMypageLink: setupMypageLink
+    setupMypageLink: setupMypageLink,
+    updateNotificationBadges: updateNotificationBadges
   };
 
   // staffLogoutをグローバルに公開（すべてのマイページで使用可能にする）

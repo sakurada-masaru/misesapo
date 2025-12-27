@@ -3,6 +3,10 @@
 @json('data/meta/staff_announcements_body_class.json', $body_class)
 
 <link rel="stylesheet" href="/css/admin-sidebar.css">
+<!-- SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
 <script src="/js/cognito_config.js"></script>
 <script src="/js/cognito_auth.js"></script>
 <script src="/js/client_auth.js"></script>
@@ -113,6 +117,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    padding-top: 24px;
   }
 
   .page-header h1 i {
@@ -129,7 +134,7 @@
     background: #fff;
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     border: 2px solid #e5e7eb;
     cursor: pointer;
     transition: all 0.2s;
@@ -137,7 +142,7 @@
 
   .announcement-card:hover {
     border-color: var(--primary, #3b82f6);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
   .announcement-card.unread {
@@ -251,7 +256,7 @@
       margin-left: 0 !important;
       width: 100% !important;
     }
-    
+
     .staff-announcements {
       padding: 12px;
     }
@@ -282,7 +287,7 @@
       if (cognitoIdToken) {
         return cognitoIdToken;
       }
-      
+
       const authData = localStorage.getItem('misesapo_auth');
       if (authData) {
         const parsed = JSON.parse(authData);
@@ -290,7 +295,7 @@
           return parsed.token;
         }
       }
-      
+
       return 'mock-token';
     } catch (error) {
       console.error('Error getting ID token:', error);
@@ -321,10 +326,10 @@
   // 業務連絡を読み込み
   async function loadAnnouncements() {
     const listEl = document.getElementById('announcements-list');
-    
+
     try {
       listEl.innerHTML = '<div class="loading">読み込み中...</div>';
-      
+
       const idToken = await getFirebaseIdToken();
       const response = await fetch(`${REPORT_API}/staff/announcements`, {
         method: 'GET',
@@ -332,14 +337,14 @@
           'Authorization': `Bearer ${idToken}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('業務連絡の取得に失敗しました');
       }
-      
+
       const data = await response.json();
       const announcements = data.announcements || [];
-      
+
       renderAnnouncements(announcements);
     } catch (error) {
       console.error('Error loading announcements:', error);
@@ -350,19 +355,19 @@
   // 業務連絡を表示
   function renderAnnouncements(announcements) {
     const listEl = document.getElementById('announcements-list');
-    
+
     if (announcements.length === 0) {
       listEl.innerHTML = '<div class="empty-state"><i class="fas fa-bullhorn"></i><p>業務連絡はありません</p></div>';
       return;
     }
-    
+
     let html = '';
     announcements.forEach(announcement => {
       const createdDate = formatDate(announcement.created_at);
       const newBadge = announcement.is_new ? '<span class="badge new">NEW</span>' : '';
       const unreadBadge = !announcement.is_read ? '<span class="badge unread">未読</span>' : '';
       const readClass = announcement.is_read ? 'read' : 'unread';
-      
+
       // 期限表示
       let deadlineHtml = '';
       if (announcement.has_deadline && announcement.deadline) {
@@ -377,7 +382,7 @@
           </div>
         `;
       }
-      
+
       html += `
         <div class="announcement-card ${readClass}" data-id="${announcement.id}">
           <div class="announcement-card-header">
@@ -398,15 +403,15 @@
         </div>
       `;
     });
-    
+
     listEl.innerHTML = html;
-    
+
     // クリックイベントを追加（既読マーク）
     listEl.querySelectorAll('.announcement-card').forEach(card => {
       card.addEventListener('click', async () => {
         const announcementId = card.dataset.id;
         if (!announcementId) return;
-        
+
         // 既読マーク
         if (!card.classList.contains('read')) {
           try {
@@ -417,7 +422,7 @@
                 'Authorization': `Bearer ${idToken}`
               }
             });
-            
+
             // 表示を更新
             card.classList.remove('unread');
             card.classList.add('read');
@@ -437,7 +442,7 @@
   function checkUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
     const announcementId = urlParams.get('id');
-    
+
     if (announcementId) {
       // 詳細表示（将来的に実装）
       loadAnnouncements();
@@ -451,4 +456,3 @@
     checkUrlParams();
   });
 </script>
-

@@ -76,7 +76,9 @@
             </tr>
           </thead>
           <tbody id="announcements-tbody">
-            <tr><td colspan="6" class="loading-cell"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</td></tr>
+            <tr>
+              <td colspan="6" class="loading-cell"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -93,56 +95,92 @@
         </button>
       </div>
       <form id="announcement-form">
-        <div class="modal-body modal-body-scrollable">
+        <div class="modal-body modal-body-scrollable p-0">
           <input type="hidden" id="announcement-id" name="id">
-          
-          <div class="form-group">
-            <label for="announcement-title">タイトル <span class="required">*</span></label>
-            <input type="text" id="announcement-title" name="title" required placeholder="例: 来週の清掃スケジュール変更について">
-          </div>
 
-          <div class="form-group">
-            <label for="announcement-content">本文 <span class="required">*</span></label>
-            <textarea id="announcement-content" name="content" rows="8" required placeholder="業務連絡の内容を入力してください"></textarea>
-          </div>
+          <div class="modal-section-grid">
+            <!-- 左カラム：基本情報 & スケジュール -->
+            <div class="modal-column">
+              <div class="form-group-card">
+                <label for="announcement-title" class="section-label">基本情報</label>
+                <div class="form-field">
+                  <label for="announcement-title">タイトル <span class="required">*</span></label>
+                  <input type="text" id="announcement-title" name="title" required placeholder="例: 来週の清掃スケジュール変更について"
+                    class="premium-input">
+                </div>
+                <div class="form-field">
+                  <label for="announcement-content">本文 <span class="required">*</span></label>
+                  <textarea id="announcement-content" name="content" rows="12" required placeholder="業務連絡の内容を入力してください"
+                    class="premium-textarea"></textarea>
+                </div>
+              </div>
 
-          <div class="form-group">
-            <label>送信先 <span class="required">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label">
-                <input type="radio" name="target_type" value="all" checked>
-                <span>全社員</span>
-              </label>
-              <label class="radio-label">
-                <input type="radio" name="target_type" value="individual">
-                <span>個別送信</span>
-              </label>
+              <div class="form-group-card mt-4">
+                <label class="section-label">スケジュール設定</label>
+                <div class="form-field">
+                  <label class="premium-checkbox">
+                    <input type="checkbox" id="has-deadline" name="has_deadline">
+                    <span class="label-text">提出・確認期限を設定する</span>
+                  </label>
+                </div>
+
+                <div class="form-field animate-fade" id="deadline-group" style="display: none;">
+                  <label for="announcement-deadline">期限日時 <span class="required">*</span></label>
+                  <div class="input-with-icon">
+                    <i class="far fa-calendar-alt"></i>
+                    <input type="datetime-local" id="announcement-deadline" name="deadline" class="premium-input pl-10">
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div class="form-group" id="target-staff-group" style="display: none;">
-            <label for="target-staff-select">対象者を選択 <span class="required">*</span></label>
-            <select id="target-staff-select" name="target_staff_ids" multiple size="8" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
-              <option value="">読み込み中...</option>
-            </select>
-            <p class="form-hint">Ctrlキー（Mac: Cmdキー）を押しながらクリックで複数選択できます</p>
-          </div>
+            <!-- 右カラム：設定 -->
+            <div class="modal-column">
+              <div class="form-group-card">
+                <label class="section-label">送信設定</label>
+                <div class="form-field">
+                  <label>送信先範囲 <span class="required">*</span></label>
+                  <div class="segmented-control">
+                    <input type="radio" name="target_type" value="all" id="target-all" checked>
+                    <label for="target-all">全社員</label>
+                    <input type="radio" name="target_type" value="individual" id="target-individual">
+                    <label for="target-individual">個別選択</label>
+                  </div>
+                </div>
 
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="has-deadline" name="has_deadline">
-              <span>期限を設定する</span>
-            </label>
-          </div>
+                <div class="form-field" id="target-staff-group" style="display: none;">
+                  <label for="target-staff-select">対象スタッフを選択 <span class="required">*</span></label>
+                  <div class="staff-selector-container">
+                    <select id="target-staff-select" name="target_staff_ids" multiple size="10"
+                      class="premium-select-list">
+                      <option value="">読み込み中...</option>
+                    </select>
+                    <p class="form-hint"><i class="fas fa-info-circle"></i> Mac: Cmd+クリック / Win: Ctrl+クリックで複数選択</p>
+                  </div>
+                </div>
+              </div>
 
-          <div class="form-group" id="deadline-group" style="display: none;">
-            <label for="announcement-deadline">期限日時 <span class="required">*</span></label>
-            <input type="datetime-local" id="announcement-deadline" name="deadline">
+              <div class="form-group-card mt-4">
+                <label class="section-label">通知設定</label>
+                <div class="form-field">
+                  <div class="notification-options">
+                    <label class="premium-checkbox sound-option">
+                      <input type="checkbox" name="notify_sound" id="notify-sound-toggle">
+                      <span class="label-text">通知音を鳴らす (スマホ・PC対応)</span>
+                    </label>
+                    <p class="form-hint mt-2"><i class="fas fa-volume-up"></i> 通知受信時に端末で音が鳴ります</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline" onclick="document.getElementById('announcement-dialog').close()">キャンセル</button>
-          <button type="submit" class="btn btn-primary" id="btn-save-announcement">保存</button>
+          <button type="button" class="btn btn-outline-premium"
+            onclick="document.getElementById('announcement-dialog').close()">キャンセル</button>
+          <button type="submit" class="btn btn-primary-premium" id="btn-save-announcement">
+            <i class="fas fa-paper-plane"></i> 業務連絡を発信
+          </button>
         </div>
       </form>
     </div>
@@ -163,7 +201,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="document.getElementById('detail-dialog').close()">閉じる</button>
+        <button type="button" class="btn btn-outline"
+          onclick="document.getElementById('detail-dialog').close()">閉じる</button>
         <button type="button" class="btn btn-primary" id="btn-edit-announcement">編集</button>
         <button type="button" class="btn btn-danger" id="btn-delete-announcement">削除</button>
       </div>
@@ -172,46 +211,206 @@
 </main>
 
 <style>
-  .admin-announcements {
+  /* プレミアムモーダルスタイル (美装化) */
+  .modal-dialog-large {
+    width: 900px;
+    max-width: 95vw;
+    border-radius: 20px;
+    background: #fdfdfd;
+    border: none;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-header {
+    background: #fff;
+    padding: 24px 32px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .modal-header h3 {
+    color: var(--primary) !important;
+    /* ピンクリテラルに合わせる場合は #FF6BA6 */
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+
+  .modal-section-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 32px;
+    /* パディングを有効活用 */
+    padding: 32px;
+  }
+
+  .form-group-card {
+    background: #fff;
+    border: 1px solid #f1f5f9;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  }
+
+  .section-label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--primary) !important;
+    margin-bottom: 24px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #ffe4ee;
     width: 100%;
   }
 
-  .radio-group {
-    display: flex;
-    gap: 24px;
-    margin-top: 8px;
+  .form-field {
+    margin-bottom: 24px;
   }
 
-  .radio-label {
+  .form-field label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 10px;
+  }
+
+  .premium-input,
+  .premium-textarea {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #f1f5f9;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.25s ease;
+    background: #fbfcfe;
+    color: #1e293b;
+  }
+
+  .premium-input:focus,
+  .premium-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(255, 107, 166, 0.15);
+  }
+
+  .premium-textarea {
+    resize: none;
+    line-height: 1.7;
+  }
+
+  /* セグメンテッドコントロール */
+  .segmented-control {
+    display: flex;
+    background: #f1f5f9;
+    padding: 5px;
+    border-radius: 14px;
+    gap: 5px;
+  }
+
+  .segmented-control input[type="radio"] {
+    display: none;
+  }
+
+  .segmented-control label {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 0 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .segmented-control input[type="radio"]:checked+label {
+    background: #fff;
+    color: var(--primary);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  /* プレミアムチェックボックス */
+  .premium-checkbox {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 14px;
     cursor: pointer;
+    padding: 14px 18px;
+    background: #fff5f8;
+    border-radius: 12px;
+    border: 2px solid #ffe4ee;
+    transition: all 0.2s;
   }
 
-  .radio-label input[type="radio"] {
-    width: 18px;
-    height: 18px;
+  .premium-checkbox input {
+    width: 20px;
+    height: 20px;
     cursor: pointer;
+    accent-color: var(--primary);
   }
 
-  .checkbox-label {
+  .premium-checkbox:hover {
+    background: #fff1f6;
+  }
+
+  .premium-checkbox .label-text {
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #475569;
+    padding-left: 8px;
+    /* チェックマークとの余白を確保 */
+    line-height: 1.4;
+  }
+
+  /* プレミアムボタン */
+  .modal-footer {
+    padding: 24px 32px;
+    background: #fff;
+    border-top: 1px solid #f1f5f9;
     display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
+    justify-content: flex-end;
+    gap: 16px;
   }
 
-  .checkbox-label input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
+  .btn-primary-premium {
+    background: var(--primary) !important;
+    color: #fff !important;
+    padding: 14px 32px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 1rem;
+    border: none;
+    box-shadow: 0 8px 15px rgba(255, 107, 166, 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-primary-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 20px rgba(255, 107, 166, 0.35);
+    filter: brightness(1.05);
+  }
+
+  .btn-outline-premium {
+    background: #fff;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+    padding: 14px 28px;
+    border-radius: 14px;
+    font-weight: 700;
+  }
+
+  .btn-outline-premium:hover {
+    background: #f8fafc;
+    border-color: var(--primary);
+    color: var(--primary);
   }
 
   .form-hint {
     font-size: 0.85rem;
-    color: #6b7280;
-    margin-top: 4px;
+    color: #94a3b8;
+    margin-top: 8px;
   }
 
   .read-status-table {
@@ -253,31 +452,94 @@
   let allStaff = [];
   let currentAnnouncementId = null;
 
-  // IDトークン取得（Cognito/localStorageから取得）
-  async function getFirebaseIdToken() {
+  // アクセス制御：管理者ロールのみアクセス可能
+  async function checkAdminAccess() {
     try {
-      const cognitoIdToken = localStorage.getItem('cognito_id_token');
-      if (cognitoIdToken) {
-        return cognitoIdToken;
-      }
-      
-      const authData = localStorage.getItem('misesapo_auth');
-      if (authData) {
-        const parsed = JSON.parse(authData);
-        if (parsed.token) {
-          return parsed.token;
+      if (!window.CognitoAuth) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        if (!window.CognitoAuth) {
+          window.location.href = '/staff/signin.html?redirect=' + encodeURIComponent(window.location.pathname);
+          return false;
         }
       }
-      
-      return 'mock-token';
+      const idToken = await getCognitoIdToken();
+      if (!idToken) {
+        window.location.href = '/staff/signin.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return false;
+      }
+
+      // トークンをデコードして管理者権限をチェック（簡易版）
+      try {
+        const payload = JSON.parse(atob(idToken.split('.')[1]));
+        const groups = payload['cognito:groups'] || [];
+        const role = payload['custom:role'] || payload['role'];
+        const isAdmin = groups.includes('admin') || groups.includes('ADMIN') || role === 'admin';
+
+        if (!isAdmin) {
+          console.warn('[Announcements] User is not an admin:', payload.email);
+          alert('管理者権限が必要です');
+          window.location.href = '/staff/signin.html';
+          return false;
+        }
+      } catch (e) {
+        console.error('[Announcements] Failed to parse token for permission check:', e);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[Announcements] Auth error:', error);
+      return false;
+    }
+  }
+
+  // Cognito ID Token取得
+  async function getCognitoIdToken() {
+    try {
+      // 1. localStorageから取得
+      let token = localStorage.getItem('cognito_id_token');
+
+      // 2. CognitoAuthオブジェクトから取得
+      if (!token && window.CognitoAuth) {
+        token = await window.CognitoAuth.getIdToken();
+      }
+
+      // 3. その他（互換性のため）
+      if (!token) {
+        const cognitoUser = localStorage.getItem('cognito_user');
+        if (cognitoUser) {
+          const parsed = JSON.parse(cognitoUser);
+          token = parsed.tokens?.idToken || parsed.idToken;
+        }
+      }
+
+      // トークンの有効期限チェック
+      if (token && token !== 'mock-token') {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const exp = payload.exp * 1000;
+          if (Date.now() >= exp) {
+            console.warn('[Announcements] Token expired');
+            // 有効期限切れの場合はnullを返して再認証を促す
+            return null;
+          }
+        } catch (e) {
+          console.error('[Announcements] Invalid token format');
+          return null;
+        }
+      }
+
+      return token;
     } catch (error) {
       console.error('Error getting ID token:', error);
-      return 'mock-token';
+      return null;
     }
   }
 
   // 初期化
   document.addEventListener('DOMContentLoaded', async () => {
+    const hasAccess = await checkAdminAccess();
+    if (!hasAccess) return;
+
     await loadStaff();
     await loadAnnouncements();
     setupEventListeners();
@@ -290,13 +552,10 @@
       if (response.ok) {
         const data = await response.json();
         allStaff = Array.isArray(data) ? data : (data.items || data.workers || []);
-        
-        // 清掃員のみフィルター
-        allStaff = allStaff.filter(staff => staff.role_code === '99');
-        
+
         // セレクトボックスに追加
         const select = document.getElementById('target-staff-select');
-        select.innerHTML = allStaff.map(staff => 
+        select.innerHTML = allStaff.map(staff =>
           `<option value="${staff.id}">${staff.name || staff.email || 'Unknown'}</option>`
         ).join('');
       }
@@ -308,26 +567,26 @@
   // 業務連絡一覧を読み込み
   async function loadAnnouncements() {
     try {
-      const idToken = await getFirebaseIdToken();
+      const idToken = await getCognitoIdToken();
       const response = await fetch(`${REPORT_API}/admin/announcements`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${idToken}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('業務連絡の取得に失敗しました');
       }
-      
+
       const data = await response.json();
       allAnnouncements = data.announcements || [];
-      
+
       updateStats();
       renderTable();
     } catch (error) {
       console.error('Error loading announcements:', error);
-      document.getElementById('announcements-tbody').innerHTML = 
+      document.getElementById('announcements-tbody').innerHTML =
         '<tr><td colspan="6" class="loading-cell">読み込みに失敗しました</td></tr>';
     }
   }
@@ -337,14 +596,14 @@
     const total = allAnnouncements.length;
     const all = allAnnouncements.filter(a => a.target_type === 'all').length;
     const individual = allAnnouncements.filter(a => a.target_type === 'individual').length;
-    
+
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     const thisWeek = allAnnouncements.filter(a => {
       const created = new Date(a.created_at);
       return created >= weekAgo;
     }).length;
-    
+
     document.getElementById('stat-total').textContent = total;
     document.getElementById('stat-all').textContent = all;
     document.getElementById('stat-individual').textContent = individual;
@@ -356,23 +615,23 @@
     const tbody = document.getElementById('announcements-tbody');
     const searchQuery = document.getElementById('search-input').value.toLowerCase();
     const filterType = document.getElementById('filter-type').value;
-    
+
     let filtered = allAnnouncements.filter(a => {
-      const matchesSearch = !searchQuery || 
+      const matchesSearch = !searchQuery ||
         a.title.toLowerCase().includes(searchQuery) ||
         a.content.toLowerCase().includes(searchQuery);
       const matchesType = !filterType || a.target_type === filterType;
       return matchesSearch && matchesType;
     });
-    
+
     // 作成日でソート（降順）
     filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    
+
     if (filtered.length === 0) {
       tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">業務連絡がありません</td></tr>';
       return;
     }
-    
+
     tbody.innerHTML = filtered.map(announcement => {
       const createdDate = new Date(announcement.created_at);
       const dateStr = createdDate.toLocaleDateString('ja-JP', {
@@ -382,21 +641,21 @@
         hour: '2-digit',
         minute: '2-digit'
       });
-      
-      const targetText = announcement.target_type === 'all' 
-        ? '全社員' 
+
+      const targetText = announcement.target_type === 'all'
+        ? '全社員'
         : `個別 (${announcement.target_staff_ids?.length || 0}名)`;
-      
+
       const deadlineText = announcement.has_deadline && announcement.deadline
         ? new Date(announcement.deadline).toLocaleDateString('ja-JP', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
         : '-';
-      
+
       return `
         <tr>
           <td>${dateStr}</td>
@@ -475,12 +734,24 @@
         editAnnouncement(currentAnnouncementId);
       }
     });
-
     document.getElementById('btn-delete-announcement').addEventListener('click', () => {
       if (currentAnnouncementId) {
         deleteAnnouncement(currentAnnouncementId);
       }
     });
+
+    // 通知音トグル
+    document.getElementById('notify-sound-toggle').addEventListener('change', (e) => {
+      if (e.target.checked) {
+        playNotificationSound();
+      }
+    });
+  }
+
+  // 通知音を再生
+  function playNotificationSound() {
+    const audio = new Audio('/assets/eyecatch_se1.mp3');
+    audio.play().catch(err => console.error('Sound play error:', err));
   }
 
   // 新規作成ダイアログを開く
@@ -498,35 +769,39 @@
     try {
       const form = document.getElementById('announcement-form');
       const formData = new FormData(form);
-      
+
       const announcementId = formData.get('id');
       const title = formData.get('title');
       const content = formData.get('content');
       const targetType = formData.get('target_type');
       const hasDeadline = formData.get('has_deadline') === 'on';
       const deadline = formData.get('deadline');
-      
+
       let targetStaffIds = [];
       if (targetType === 'individual') {
         const select = document.getElementById('target-staff-select');
         targetStaffIds = Array.from(select.selectedOptions).map(opt => opt.value);
       }
-      
+
       const data = {
         title,
         content,
         target_type: targetType,
         target_staff_ids: targetStaffIds,
         has_deadline: hasDeadline,
-        deadline: hasDeadline && deadline ? new Date(deadline).toISOString() : null
+        deadline: hasDeadline && deadline ? new Date(deadline).toISOString() : null,
+        notify_push: formData.get('notify_push') === 'on',
+        notify_email: formData.get('notify_email') === 'on',
+        notify_line: formData.get('notify_line') === 'on',
+        notify_sound: formData.get('notify_sound') === 'on'
       };
-      
-      const idToken = await getFirebaseIdToken();
-      const url = announcementId 
+
+      const idToken = await getCognitoIdToken();
+      const url = announcementId
         ? `${REPORT_API}/admin/announcements/${announcementId}`
         : `${REPORT_API}/admin/announcements`;
       const method = announcementId ? 'PUT' : 'POST';
-      
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -535,11 +810,11 @@
         },
         body: JSON.stringify(data)
       });
-      
+
       if (!response.ok) {
         throw new Error('保存に失敗しました');
       }
-      
+
       document.getElementById('announcement-dialog').close();
       await loadAnnouncements();
       alert('保存しました');
@@ -553,20 +828,20 @@
   async function viewDetail(announcementId) {
     try {
       currentAnnouncementId = announcementId;
-      const idToken = await getFirebaseIdToken();
+      const idToken = await getCognitoIdToken();
       const response = await fetch(`${REPORT_API}/admin/announcements/${announcementId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${idToken}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('取得に失敗しました');
       }
-      
+
       const announcement = await response.json();
-      
+
       const createdDate = new Date(announcement.created_at);
       const dateStr = createdDate.toLocaleDateString('ja-JP', {
         year: 'numeric',
@@ -575,21 +850,21 @@
         hour: '2-digit',
         minute: '2-digit'
       });
-      
+
       const deadlineText = announcement.has_deadline && announcement.deadline
         ? new Date(announcement.deadline).toLocaleDateString('ja-JP', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
         : '期限なし';
-      
-      const targetText = announcement.target_type === 'all' 
-        ? '全社員' 
+
+      const targetText = announcement.target_type === 'all'
+        ? '全社員'
         : `個別送信 (${announcement.target_staff_ids?.length || 0}名)`;
-      
+
       let readStatusHtml = '';
       if (announcement.read_status && announcement.read_status.length > 0) {
         readStatusHtml = `
@@ -616,7 +891,7 @@
           </table>
         `;
       }
-      
+
       document.getElementById('announcement-detail-content').innerHTML = `
         <div>
           <h3>${escapeHtml(announcement.title)}</h3>
@@ -632,7 +907,7 @@
           ${readStatusHtml}
         </div>
       `;
-      
+
       document.getElementById('detail-dialog').showModal();
     } catch (error) {
       console.error('Error loading detail:', error);
@@ -644,12 +919,12 @@
   async function editAnnouncement(announcementId) {
     const announcement = allAnnouncements.find(a => a.id === announcementId);
     if (!announcement) return;
-    
+
     document.getElementById('form-title').textContent = '業務連絡編集';
     document.getElementById('announcement-id').value = announcement.id;
     document.getElementById('announcement-title').value = announcement.title;
     document.getElementById('announcement-content').value = announcement.content;
-    
+
     // 送信先
     document.querySelector(`input[name="target_type"][value="${announcement.target_type}"]`).checked = true;
     if (announcement.target_type === 'individual') {
@@ -659,7 +934,7 @@
         opt.selected = announcement.target_staff_ids?.includes(opt.value);
       });
     }
-    
+
     // 期限
     if (announcement.has_deadline && announcement.deadline) {
       document.getElementById('has-deadline').checked = true;
@@ -669,7 +944,7 @@
         .toISOString().slice(0, 16);
       document.getElementById('announcement-deadline').value = localDateTime;
     }
-    
+
     document.getElementById('detail-dialog').close();
     document.getElementById('announcement-dialog').showModal();
   }
@@ -677,20 +952,20 @@
   // 削除
   async function deleteAnnouncement(announcementId) {
     if (!confirm('この業務連絡を削除しますか？')) return;
-    
+
     try {
-      const idToken = await getFirebaseIdToken();
+      const idToken = await getCognitoIdToken();
       const response = await fetch(`${REPORT_API}/admin/announcements/${announcementId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${idToken}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('削除に失敗しました');
       }
-      
+
       document.getElementById('detail-dialog').close();
       await loadAnnouncements();
       alert('削除しました');
@@ -707,4 +982,3 @@
     return div.innerHTML;
   }
 </script>
-
