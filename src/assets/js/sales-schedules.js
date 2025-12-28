@@ -58,6 +58,7 @@ let allClients = [];
 let allBrands = [];
 let allServices = [];
 let selectedCleaningItems = [];
+let selectedWorkers = [];
 let filteredSchedules = [];
 let currentPage = 1;
 const perPage = 20;
