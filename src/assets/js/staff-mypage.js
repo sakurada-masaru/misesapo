@@ -5725,7 +5725,9 @@ async function openJobDetail(jobId) {
 
   const date = job.scheduled_date || job.date || '';
   const time = job.scheduled_time || job.time_slot || '';
-  const storeName = job.store_name || job.brand_name || '店舗名未設定';
+  const brandName = job.brand_name || '';
+  const clientName = job.client_name || '';
+  const storeName = job.store_name || '';
   const address = job.address || '';
   const notes = job.notes || '';
   const items = job.cleaning_items || [];
@@ -5760,7 +5762,18 @@ async function openJobDetail(jobId) {
         <button onclick="closeJobDetailModal()" style="border: none; background: none; font-size: 1.5rem; color: #9ca3af; cursor: pointer;">&times;</button>
       </div>
       <div style="padding: 20px;">
-        <h2 style="margin: 0 0 16px 0; font-size: 1.25rem; color: #111827;">${escapeHtml(storeName)}</h2>
+        <!-- ブランド名を大きく表示 -->
+        <h2 style="margin: 0 0 8px 0; font-size: 1.4rem; color: #111827; font-weight: 700;">${escapeHtml(brandName || storeName || '店舗未設定')}</h2>
+        
+        <!-- 法人名 -->
+        ${clientName ? `<div style="font-size: 0.9rem; color: #6b7280; margin-bottom: 8px;">
+          <i class="fas fa-building" style="width: 16px; color: #9ca3af;"></i> ${escapeHtml(clientName)}
+        </div>` : ''}
+        
+        <!-- 店舗名（ブランド名と異なる場合） -->
+        ${storeName && storeName !== brandName ? `<div style="font-size: 0.9rem; color: #6b7280; margin-bottom: 16px;">
+          <i class="fas fa-store" style="width: 16px; color: #9ca3af;"></i> ${escapeHtml(storeName)}
+        </div>` : '<div style="margin-bottom: 16px;"></div>'}
         
         <div style="margin-bottom: 16px;">
           <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 4px;">日時</div>
