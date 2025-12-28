@@ -1180,10 +1180,31 @@ function setupEventListeners() {
 
         // Success
         formStatus.textContent = '保存しました';
+
+        // Update Local Cache Immediately
+        const savedId = isNew ? (schedResult.id || schedResult.item?.id) : id;
+        // Merge existing fields with input fields to ensure cache is rich
+        const baseItem = isNew ? {} : (allSchedules.find(s => String(s.id) === String(id)) || {});
+        const savedItem = {
+          ...baseItem,
+          ...scheduleData,
+          id: savedId,
+          // Ensure survey_data is saved too
+          survey_data: scheduleData.survey_data,
+          ...schedResult
+        };
+
+        const existingIdx = allSchedules.findIndex(s => String(s.id) === String(savedId));
+        if (existingIdx !== -1) {
+          allSchedules[existingIdx] = savedItem;
+        } else {
+          allSchedules.push(savedItem);
+        }
+
         setTimeout(() => {
           formStatus.textContent = '';
           if (scheduleDialog) scheduleDialog.close();
-          loadSchedules(); // Reload
+          loadSchedules(); // Reload for full sync
         }, 1000);
 
       } catch (err) {
