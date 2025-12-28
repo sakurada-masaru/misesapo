@@ -958,7 +958,16 @@ function openAddDialog(dateStr) {
   // Clear Store Selection
   document.getElementById('schedule-store').value = '';
   document.getElementById('schedule-store-search').value = '';
-  document.getElementById('schedule-store-summary-text').textContent = '未選択';
+
+  // Clear store details fields
+  const detailsSection = document.getElementById('selected-store-details');
+  if (detailsSection) detailsSection.style.display = 'none';
+  const clientNameEl = document.getElementById('schedule-client-name');
+  if (clientNameEl) clientNameEl.value = '';
+  const brandNameEl = document.getElementById('schedule-brand-name');
+  if (brandNameEl) brandNameEl.value = '';
+  const storeNameEl = document.getElementById('schedule-store-name');
+  if (storeNameEl) storeNameEl.value = '';
 
   // Reset Karte Fields
   resetSurveyFields();
