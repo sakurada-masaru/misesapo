@@ -192,7 +192,12 @@
 
   <!-- フィルター -->
   <div class="filter-section">
-    <div class="filter-row">
+    <div class="action-bar" style="justify-content: flex-start; gap: 16px;">
+      <div class="filter-group">
+        <label><i class="fas fa-calendar-alt"></i> 年月</label>
+        <input type="month" id="month-picker" onchange="changeMonth()"
+          style="border:1px solid #e5e7eb; border-radius:8px; padding:6px 10px;">
+      </div>
       <div class="filter-group">
         <label>店舗</label>
         <select id="store-filter">
@@ -200,24 +205,6 @@
         </select>
       </div>
       <div class="filter-group">
-        <label>清掃員</label>
-        <select id="worker-filter">
-          <option value="">全員</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>ステータス</label>
-        <select id="status-filter">
-          <option value="">全て</option>
-          <option value="draft">未確定</option>
-          <option value="scheduled">確定</option>
-          <option value="in_progress">作業中</option>
-          <option value="completed">完了</option>
-          <option value="cancelled">キャンセル</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>表示範囲</label>
         <select id="date-range-filter">
           <option value="future" selected>今後のみ</option>
           <option value="all">全て</option>
