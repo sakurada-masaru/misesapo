@@ -5869,7 +5869,7 @@ function closeJobDetailModal() {
 
 async function acceptJob(jobId) {
   if (!currentUser || !currentUser.id) {
-    alert('ログインが必要です');
+    alert('ログイン情報が取得できません。ページを再読み込みしてください。');
     return;
   }
 
@@ -5877,6 +5877,8 @@ async function acceptJob(jobId) {
 
   try {
     const headers = await buildAuthHeaders(true);
+    console.log('[AcceptJob] Sending request for job:', jobId, 'user:', currentUser.id);
+
     const res = await fetch(`${API_BASE}/schedules/${jobId}`, {
       method: 'PUT',
       headers,
@@ -5887,19 +5889,26 @@ async function acceptJob(jobId) {
       })
     });
 
-    if (!res.ok) throw new Error('Failed to accept job');
-
-    alert('案件を受託しました！スケジュールに追加されました。');
-    closeJobDetailModal();
-    loadJobBoard(); // リロード
-
-    // スケジュール一覧も更新
-    if (typeof loadScheduleList === 'function') {
-      loadScheduleList();
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      console.error('[AcceptJob] Error response:', res.status, errorData);
+      throw new Error(errorData.error || errorData.message || `HTTP ${res.status}`);
     }
 
+    alert('案件を受託しました！スケジュールに追加されました。');
+
+    // モーダルを閉じる
+    closeJobDetailModal();
+    closeOsDayModal();
+
+    // データを再読み込み
+    await loadOsSchedules();
+    renderOsCalendar();
+    loadJobBoard();
+    loadMyAcceptedJobs();
+
   } catch (error) {
-    console.error('[JobBoard] Accept error:', error);
+    console.error('[AcceptJob] Error:', error);
     alert('受託に失敗しました: ' + error.message);
   }
 }
