@@ -5345,3 +5345,148 @@ async function addServiceToSchedule(scheduleId, service) {
 }
 window.showAddServiceModal = showAddServiceModal;
 window.closeAddServiceModal = closeAddServiceModal;
+
+// 作業指示書モーダル表示
+async function showWorkInstructionModal(scheduleId) {
+  const schedule = window.scheduleById[scheduleId];
+  if (!schedule) {
+    alert('スケジュール情報が見つかりません');
+    return;
+  }
+
+  const storeId = schedule.store_id || schedule.storeId;
+  if (!storeId) {
+    alert('店舗情報が紐付いていません');
+    return;
+  }
+
+  // モーダル準備
+  const modalId = 'work-instruction-modal';
+  let modal = document.getElementById(modalId);
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'custom-modal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+    document.body.appendChild(modal);
+  }
+
+  // ローディング表示
+  modal.innerHTML = '<div style="background:white; padding:20px; border-radius:8px;">読み込み中...</div>';
+  modal.style.display = 'flex';
+
+  try {
+    // データ取得（並列）
+    // ※カルテAPIは未実装の可能性があるため、失敗しても続行する
+    const [storeRes, chartRes] = await Promise.allSettled([
+      fetch(`${API_BASE}/stores/${storeId}`),
+      fetch(`${API_BASE}/stores/${storeId}/chart`)
+    ]);
+
+    let store = null;
+    let chart = null;
+
+    if (storeRes.status === 'fulfilled' && storeRes.value.ok) {
+      store = await storeRes.value.json();
+    }
+
+    if (chartRes.status === 'fulfilled' && chartRes.value.ok) {
+      chart = await chartRes.value.json();
+    }
+
+    // モーダルコンテンツ構築
+    const serviceItems = schedule.service_items || [];
+    const serviceListHtml = serviceItems.length > 0
+      ? `<div style="display:flex; flex-wrap:wrap; gap:4px;">${serviceItems.map(item => `<span style="background:#ffecf2; color:#ff679c; padding:2px 8px; border-radius:4px; font-size:0.8rem;">#${typeof item === 'object' ? item.name : item}</span>`).join('')}</div>`
+      : '<div style="color:#9ca3af; font-size:0.9rem;">登録なし</div>';
+
+    const memberListHtml = schedule.member_names && schedule.member_names.length > 0
+      ? `<div style="display:flex; flex-wrap:wrap; gap:4px;">${schedule.member_names.map(name => `<span style="background:#eff6ff; color:#2563eb; padding:2px 8px; border-radius:4px; font-size:0.8rem;">${name}</span>`).join('')}</div>`
+      : '<div style="color:#9ca3af; font-size:0.9rem;">未定</div>';
+
+    // 問診票データ（カルテ）
+    let karteHtml = '';
+    if (chart) {
+      const notes = chart.notes || '特記事項なし';
+      const equipment = chart.equipment && chart.equipment.length > 0 ? chart.equipment.join(', ') : '情報なし';
+      const consumables = chart.consumables && chart.consumables.length > 0 ? chart.consumables.map(c => c.name).join(', ') : '情報なし';
+
+      karteHtml = `
+                <div style="margin-top: 16px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: #fffbeb;">
+                    <h4 style="margin:0 0 8px 0; font-size:1rem; color:#b45309;"><i class="fas fa-clipboard-list" style="margin-right:6px;"></i>問診票 / カルテ情報</h4>
+                    <div style="font-size:0.9rem; margin-bottom:8px;"><strong><i class="fas fa-sticky-note"></i> 特記事項:</strong><br><span style="white-space:pre-wrap;">${escapeHtml(notes)}</span></div>
+                    <div style="font-size:0.9rem; margin-bottom:8px;"><strong><i class="fas fa-tools"></i> 設備:</strong> ${escapeHtml(equipment)}</div>
+                    <div style="font-size:0.9rem;"><strong><i class="fas fa-box"></i> 消耗品:</strong> ${escapeHtml(consumables)}</div>
+                    <div style="margin-top:8px; text-align:right;">
+                         <a href="/staff/os/karte.html?store_id=${storeId}" style="font-size:0.8rem; color:#b45309; text-decoration:underline;">カルテ詳細へ ></a>
+                    </div>
+                </div>
+            `;
+    } else {
+      karteHtml = `
+                <div style="margin-top: 16px; border: 1px dashed #d1d5db; border-radius: 8px; padding: 12px; background: #f9fafb; text-align:center;">
+                    <div style="color:#6b7280; font-size:0.9rem;">カルテ情報が見つかりませんでした</div>
+                    <a href="/staff/os/karte.html?store_id=${storeId}" style="font-size:0.8rem; color:#2563eb; text-decoration:underline;">カルテを確認・作成する ></a>
+                </div>
+            `;
+    }
+
+    const storeName = store ? (store.name || '店舗名不明') : '店舗情報取得失敗';
+    const storeAddress = store ? (store.address || '住所不明') : '';
+    const storePhone = store ? (store.phone || store.tel || '') : '';
+    const mapUrl = storeAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(storeAddress)}` : '#';
+
+    modal.innerHTML = `
+            <div class="custom-modal-content" style="background: white; border-radius: 8px; width: 95%; max-width: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; max-height: 90vh;">
+                <div class="custom-modal-header" style="background: #f3f4f6; padding: 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0;">
+                    <h3 style="margin:0; font-size:1.1rem; font-weight:bold; color:#111827;">作業指示書</h3>
+                    <button onclick="closeWorkInstructionModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#6b7280;">&times;</button>
+                </div>
+                <div class="custom-modal-body" style="overflow-y: auto; padding: 16px;">
+                    <!-- 基本情報 -->
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="margin:0 0 8px 0; font-size:0.85rem; color:#6b7280; text-transform:uppercase;">基本情報</h4>
+                        <div style="font-size:1.1rem; font-weight:bold; margin-bottom:4px;">${escapeHtml(storeName)}</div>
+                        ${storeAddress ? `<div style="font-size:0.9rem; margin-bottom:4px;"><i class="fas fa-map-marker-alt" style="width:16px; text-align:center; color:#ef4444;"></i> ${escapeHtml(storeAddress)} <a href="${mapUrl}" target="_blank" style="color:#2563eb; margin-left:4px;"><i class="fas fa-external-link-alt"></i></a></div>` : ''}
+                        ${storePhone ? `<div style="font-size:0.9rem;"><i class="fas fa-phone" style="width:16px; text-align:center; color:#10b981;"></i> <a href="tel:${storePhone}" style="color:inherit; text-decoration:none;">${escapeHtml(storePhone)}</a></div>` : ''}
+                    </div>
+
+                    <!-- メンバー -->
+                    <div style="margin-bottom: 16px; border-top: 1px solid #f3f4f6; padding-top: 12px;">
+                        <h4 style="margin:0 0 8px 0; font-size:0.85rem; color:#6b7280; text-transform:uppercase;">担当メンバー</h4>
+                        ${memberListHtml}
+                    </div>
+
+                    <!-- 清掃項目 -->
+                    <div style="margin-bottom: 0; border-top: 1px solid #f3f4f6; padding-top: 12px;">
+                        <h4 style="margin:0 0 8px 0; font-size:0.85rem; color:#6b7280; text-transform:uppercase;">清掃項目</h4>
+                        ${serviceListHtml}
+                    </div>
+
+                    <!-- 問診票 -->
+                    ${karteHtml}
+
+                </div>
+                <div class="custom-modal-footer" style="padding: 16px; border-top: 1px solid #e5e7eb; text-align: center;">
+                    <button onclick="closeWorkInstructionModal()" style="width:100%; padding: 12px; background: #374151; color: white; border: none; border-radius: 8px; font-weight:bold;">閉じる</button>
+                </div>
+            </div>
+        `;
+
+  } catch (e) {
+    console.error('Failed to load instruction data', e);
+    modal.innerHTML = `
+            <div style="background:white; padding:20px; border-radius:8px; text-align:center;">
+                <p>読み込みに失敗しました</p>
+                <button onclick="closeWorkInstructionModal()" style="padding:8px 16px;">閉じる</button>
+            </div>
+        `;
+  }
+}
+
+function closeWorkInstructionModal() {
+  const modal = document.getElementById('work-instruction-modal');
+  if (modal) modal.style.display = 'none';
+}
+window.showWorkInstructionModal = showWorkInstructionModal;
+window.closeWorkInstructionModal = closeWorkInstructionModal;
