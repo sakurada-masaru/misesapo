@@ -688,47 +688,25 @@ function renderCalendar() {
     num.textContent = day;
     cel.appendChild(num);
 
-    // Items
+    // Items (Summary Count Only)
     const daysItems = calSchedules.filter(s => (s.date || s.scheduled_date) === dateStr);
 
     if (daysItems.length > 0) {
-      const eventsContainer = document.createElement('div');
-      eventsContainer.className = 'day-events';
+      const summary = document.createElement('div');
+      summary.className = 'day-summary-badge';
+      summary.textContent = `${daysItems.length}件`;
+      summary.style.marginTop = '4px';
+      summary.style.fontSize = '0.8rem';
+      summary.style.background = '#FF679C'; // Primary Brand Color
+      summary.style.color = '#fff';
+      summary.style.borderRadius = '12px';
+      summary.style.padding = '2px 8px';
+      summary.style.display = 'inline-block';
 
-      // Limit display count
-      const maxDisplay = 3;
-      const displayItems = daysItems.slice(0, maxDisplay);
-
-      displayItems.forEach(s => {
-        const store = allStores.find(x => x.id === (s.store_id || s.client_id)) || {};
-        const el = document.createElement('div');
-        el.className = `day-event status-${s.status}`;
-        if (new Date(dateStr) < new Date().setHours(0, 0, 0, 0)) {
-          el.classList.add('past');
-        }
-
-        const timeLabel = s.time_slot ? s.time_slot.split('-')[0] : '';
-        el.textContent = `${timeLabel} ${store.name || s.store_name || '件名なし'}`;
-        el.title = `${s.time_slot || ''} ${store.name}`;
-
-        el.onclick = (e) => {
-          e.stopPropagation();
-          openEditDialog(s.id);
-        };
-        eventsContainer.appendChild(el);
-      });
-
-      if (daysItems.length > maxDisplay) {
-        const more = document.createElement('div');
-        more.className = 'day-event-more';
-        more.textContent = `+他${daysItems.length - maxDisplay}件`;
-        eventsContainer.appendChild(more);
-      }
-
-      cel.appendChild(eventsContainer);
+      cel.appendChild(summary);
     }
 
-    // Show Daily Schedules on click (background)
+    // Show Daily Schedules on click
     cel.onclick = () => showDailySchedules(dateStr);
 
     calendarDays.appendChild(cel);
