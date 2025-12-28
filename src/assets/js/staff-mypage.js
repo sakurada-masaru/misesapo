@@ -5590,4 +5590,274 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     console.error('[Debug] showWorkInstructionModal is missing!');
   }
+
+  // ジョブボードを読み込む
+  loadJobBoard();
 });
+
+// ========== ジョブボード機能 ==========
+
+async function loadJobBoard() {
+  const container = document.getElementById('job-board-list');
+  if (!container) return;
+
+  try {
+    // 全スケジュールを取得
+    const res = await fetch(`${API_BASE}/schedules`);
+    if (!res.ok) throw new Error('Failed to fetch schedules');
+    const schedules = await res.json();
+
+    // 募集中（draft）かつ担当者未割当の案件をフィルター
+    const openJobs = (Array.isArray(schedules) ? schedules : schedules.items || [])
+      .filter(s => s.status === 'draft' && !s.worker_id && !s.assigned_to)
+      .sort((a, b) => {
+        const dateA = new Date(a.scheduled_date || a.date);
+        const dateB = new Date(b.scheduled_date || b.date);
+        return dateA - dateB;
+      })
+      .slice(0, 5); // 最新5件のみ表示
+
+    if (openJobs.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="padding: 24px; text-align: center; color: #6b7280;">
+          <i class="fas fa-check-circle" style="font-size: 2rem; color: #10b981; margin-bottom: 8px;"></i>
+          <p style="margin: 0;">現在募集中の案件はありません</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = openJobs.map(job => {
+      const date = job.scheduled_date || job.date || '';
+      const time = job.scheduled_time || job.time_slot || '';
+      const storeName = job.store_name || job.brand_name || '店舗名未設定';
+      const address = job.address || '';
+      const items = job.cleaning_items || [];
+      const itemNames = items.slice(0, 3).map(i => i.name || i.title || i).join(', ');
+
+      return `
+        <div class="job-card" onclick="openJobDetail('${job.id}')" style="
+          background: linear-gradient(135deg, #fff 0%, #fafafa 100%);
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 16px;
+          margin-bottom: 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <span style="
+              background: linear-gradient(135deg, #3b82f6, #2563eb);
+              color: white;
+              padding: 4px 10px;
+              border-radius: 6px;
+              font-size: 0.8rem;
+              font-weight: 600;
+            ">${date} ${time}</span>
+            <span style="
+              background: #fef3c7;
+              color: #92400e;
+              padding: 3px 8px;
+              border-radius: 4px;
+              font-size: 0.7rem;
+              font-weight: 500;
+            ">募集中</span>
+          </div>
+          <div style="font-weight: 700; font-size: 1.05rem; color: #111827; margin-bottom: 4px;">
+            ${escapeHtml(storeName)}
+          </div>
+          ${address ? `<div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 8px;">
+            <i class="fas fa-map-marker-alt" style="margin-right: 4px;"></i>${escapeHtml(address)}
+          </div>` : ''}
+          ${itemNames ? `<div style="font-size: 0.75rem; color: #9ca3af;">
+            <i class="fas fa-broom" style="margin-right: 4px;"></i>${escapeHtml(itemNames)}${items.length > 3 ? ` 他${items.length - 3}件` : ''}
+          </div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    console.error('[JobBoard] Error loading jobs:', error);
+    container.innerHTML = `
+      <div class="empty-state" style="padding: 16px; text-align: center; color: #ef4444;">
+        <i class="fas fa-exclamation-triangle"></i> 読み込みに失敗しました
+        <button onclick="loadJobBoard()" style="display: block; margin: 12px auto 0; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+          再読み込み
+        </button>
+      </div>
+    `;
+  }
+}
+
+// ジョブ詳細ダイアログ
+let allJobsCache = [];
+
+async function openJobDetail(jobId) {
+  // キャッシュから取得またはAPI再取得
+  let job = allJobsCache.find(j => j.id === jobId);
+  if (!job) {
+    try {
+      const res = await fetch(`${API_BASE}/schedules`);
+      const data = await res.json();
+      allJobsCache = Array.isArray(data) ? data : (data.items || []);
+      job = allJobsCache.find(j => j.id === jobId);
+    } catch (e) {
+      console.error('Failed to fetch job', e);
+    }
+  }
+
+  if (!job) {
+    alert('案件情報が見つかりません');
+    return;
+  }
+
+  const date = job.scheduled_date || job.date || '';
+  const time = job.scheduled_time || job.time_slot || '';
+  const storeName = job.store_name || job.brand_name || '店舗名未設定';
+  const address = job.address || '';
+  const notes = job.notes || '';
+  const items = job.cleaning_items || [];
+  const sd = job.survey_data || {};
+
+  // モーダル作成
+  let modal = document.getElementById('job-detail-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'job-detail-modal';
+    modal.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    `;
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div style="
+      background: white;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    ">
+      <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700;">案件詳細</h3>
+        <button onclick="closeJobDetailModal()" style="border: none; background: none; font-size: 1.5rem; color: #9ca3af; cursor: pointer;">&times;</button>
+      </div>
+      <div style="padding: 20px;">
+        <h2 style="margin: 0 0 16px 0; font-size: 1.25rem; color: #111827;">${escapeHtml(storeName)}</h2>
+        
+        <div style="margin-bottom: 16px;">
+          <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 4px;">日時</div>
+          <div style="font-weight: 600; font-size: 1rem;">${date} ${time}</div>
+        </div>
+
+        ${address ? `
+        <div style="margin-bottom: 16px;">
+          <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 4px;">住所</div>
+          <div>${escapeHtml(address)}</div>
+          <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" style="color: #3b82f6; font-size: 0.85rem;">
+            <i class="fas fa-map-marker-alt"></i> 地図を開く
+          </a>
+        </div>
+        ` : ''}
+
+        <div style="margin-bottom: 16px;">
+          <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 8px;">清掃内容</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            ${items.length > 0 ? items.map(i => `
+              <span style="background: #f3f4f6; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem;">${escapeHtml(i.name || i.title || i)}</span>
+            `).join('') : '<span style="color: #9ca3af;">指定なし</span>'}
+          </div>
+        </div>
+
+        ${notes ? `
+        <div style="margin-bottom: 16px;">
+          <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 4px;">特記事項</div>
+          <div style="background: #f9fafb; padding: 12px; border-radius: 8px; font-size: 0.9rem; white-space: pre-wrap;">${escapeHtml(notes)}</div>
+        </div>
+        ` : ''}
+
+        ${sd.key_location ? `
+        <div style="margin-bottom: 12px;">
+          <strong style="font-size: 0.8rem; color: #6b7280;">鍵の場所:</strong>
+          <span style="margin-left: 8px;">${escapeHtml(sd.key_location)}</span>
+        </div>
+        ` : ''}
+      </div>
+
+      <div style="padding: 20px; border-top: 1px solid #e5e7eb; background: #f9fafb;">
+        <button onclick="acceptJob('${job.id}')" style="
+          width: 100%;
+          padding: 14px;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 1rem;
+          font-weight: 700;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        ">
+          <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+          この案件を受託する
+        </button>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+}
+
+function closeJobDetailModal() {
+  const modal = document.getElementById('job-detail-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function acceptJob(jobId) {
+  if (!currentUser || !currentUser.id) {
+    alert('ログインが必要です');
+    return;
+  }
+
+  if (!confirm('この案件を受託しますか？')) return;
+
+  try {
+    const headers = await buildAuthHeaders(true);
+    const res = await fetch(`${API_BASE}/schedules/${jobId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        worker_id: currentUser.id,
+        assigned_to: currentUser.id,
+        status: 'scheduled'
+      })
+    });
+
+    if (!res.ok) throw new Error('Failed to accept job');
+
+    alert('案件を受託しました！スケジュールに追加されました。');
+    closeJobDetailModal();
+    loadJobBoard(); // リロード
+
+    // スケジュール一覧も更新
+    if (typeof loadScheduleList === 'function') {
+      loadScheduleList();
+    }
+
+  } catch (error) {
+    console.error('[JobBoard] Accept error:', error);
+    alert('受託に失敗しました: ' + error.message);
+  }
+}
+
+// グローバル登録
+window.loadJobBoard = loadJobBoard;
+window.openJobDetail = openJobDetail;
+window.closeJobDetailModal = closeJobDetailModal;
+window.acceptJob = acceptJob;
+

@@ -184,8 +184,8 @@
       </a>
       <div class="nav-divider" data-role-required="admin,operation,general_affairs" style="display: none;"></div>
       <a href="/staff/os/mypage" class="nav-item active" data-page="mypage">
-        <i class="fas fa-user-circle"></i>
-        <span class="nav-label">マイページ</span>
+        <i class="fas fa-bolt"></i>
+        <span class="nav-label">アクティビティ</span>
         <span class="nav-badge" id="badge-mypage" style="display: none;"></span>
       </a>
       <a href="/staff/os/reports" class="nav-item" data-page="reports">
@@ -450,6 +450,28 @@
               </div>
             </section>
 
+            <!-- ジョブボード（募集中案件）セクション -->
+            <section id="job-board">
+              <div class="container-section">
+                <div class="container-header">
+                  <h2 class="container-title drag-handle">
+                    <i class="fas fa-grip-vertical"></i>
+                    <i class="fas fa-briefcase"></i>
+                    募集中の案件
+                  </h2>
+                  <a href="/staff/os/available-jobs" class="btn btn-text btn-sm" title="全ての募集案件">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span>もっと見る</span>
+                  </a>
+                </div>
+                <div class="card accordion-content" style="max-height: 400px; overflow-y: auto;">
+                  <div id="job-board-list">
+                    <div class="empty-state"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
           </div>
 
 
@@ -461,8 +483,8 @@
 
   <nav class="quick-actions-dock" aria-label="クイックアクション">
     <a href="/staff/os/mypage" class="dock-item is-active">
-      <i class="fas fa-user"></i>
-      <span>マイページ</span>
+      <i class="fas fa-bolt"></i>
+      <span>アクティビティ</span>
     </a>
     <a href="/staff/os/schedule" class="dock-item">
       <i class="fas fa-calendar"></i>
