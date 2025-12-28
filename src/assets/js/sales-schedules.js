@@ -559,6 +559,70 @@ function setupCleaningItemsSearch() {
   });
 }
 
+function setupWorkerSearch() {
+  const input = document.getElementById('worker-search-input');
+  const results = document.getElementById('worker-search-results');
+  const container = document.getElementById('selected-workers-container');
+
+  if (!input || !results) return;
+
+  window.renderSelectedWorkers = () => {
+    if (selectedWorkers.length === 0) {
+      container.innerHTML = '<span style="color:#9ca3af; font-size:0.85rem;">オープン（未割当）</span>';
+      return;
+    }
+    container.innerHTML = selectedWorkers.map((w, i) => `
+          <span class="cleaning-tag" style="background:#f3f4f6;padding:4px 8px;border-radius:4px;margin-right:4px;display:inline-flex;align-items:center;">
+             <i class="fas fa-user-circle" style="color:#d1d5db;margin-right:4px;"></i>
+             ${escapeHtml(w.name)}
+             <span onclick="removeWorker(${i})" style="cursor:pointer;margin-left:6px;color:#999;font-weight:bold;">&times;</span>
+          </span>
+      `).join('');
+  };
+
+  window.removeWorker = (i) => {
+    selectedWorkers.splice(i, 1);
+    renderSelectedWorkers();
+  };
+
+  const showResults = (query = '') => {
+    const q = query.toLowerCase();
+    const filtered = q ? allWorkers.filter(w => (w.name || '').toLowerCase().includes(q)) : allWorkers;
+
+    if (filtered.length === 0) {
+      results.innerHTML = '<div style="padding:12px;color:#9ca3af;text-align:center;">見つかりません</div>';
+    } else {
+      results.innerHTML = filtered.map(w => `
+              <div class="search-item" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;transition:background 0.2s;" 
+                   onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'"
+                   data-id="${w.id}" data-name="${escapeHtml(w.name)}">
+                   <div style="font-weight:500; color:#374151;">${escapeHtml(w.name)}</div>
+              </div>
+          `).join('');
+
+      results.querySelectorAll('.search-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.dataset.id;
+          if (!selectedWorkers.some(x => String(x.id) === String(id))) {
+            selectedWorkers.push({ id: id, name: el.dataset.name });
+            renderSelectedWorkers();
+          }
+          input.value = '';
+          results.style.display = 'none';
+        });
+      });
+    }
+    results.style.display = 'block';
+  };
+
+  input.addEventListener('input', () => showResults(input.value.trim()));
+  input.addEventListener('focus', () => showResults(input.value.trim()));
+
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !results.contains(e.target)) results.style.display = 'none';
+  });
+}
+
 // --- Status & Filtering ---
 function updateNewProjectAlert() {
   // Only count 'draft' where worker_id is empty (Unassigned)
