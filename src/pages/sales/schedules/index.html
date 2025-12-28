@@ -123,6 +123,37 @@
     margin-bottom: 16px;
     font-size: 0.95rem;
   }
+
+  /* Filter Pills */
+  .filter-pill {
+    cursor: pointer;
+  }
+
+  .filter-pill input {
+    display: none;
+  }
+
+  .filter-pill span {
+    display: inline-block;
+    padding: 6px 12px;
+    background: #f1f5f9;
+    color: #64748b;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+
+  .filter-pill input:checked+span {
+    background: #fdf2f8;
+    /* Light Pink */
+    color: #db2777;
+    /* Deep Pink */
+    border-color: #fce7f3;
+    background: #FF679C;
+    color: white;
+  }
 </style>
 
 <main id="main" class="container sales-schedules" style="padding-bottom: 80px; margin-bottom: 80px;">
@@ -285,15 +316,17 @@
             <div class="form-field">
               <label for="schedule-store-search">店舗・ブランド・法人名 <span class="required">*</span></label>
               <div class="store-search-wrapper">
-                <div class="store-search-controls">
-                  <select id="store-category-filter" class="store-category-filter">
-                    <option value="">全て</option>
-                    <option value="store">店舗名</option>
-                    <option value="brand">ブランド名</option>
-                    <option value="client">法人名</option>
-                  </select>
-                  <input type="text" id="schedule-store-search" placeholder="検索..." autocomplete="off" required>
+                <div class="store-search-type-selector" style="display:flex; gap:8px; margin-bottom:8px;">
+                  <label class="filter-pill"><input type="radio" name="store_search_mode" value=""
+                      checked><span>全て</span></label>
+                  <label class="filter-pill"><input type="radio" name="store_search_mode"
+                      value="store"><span>店舗</span></label>
+                  <label class="filter-pill"><input type="radio" name="store_search_mode"
+                      value="brand"><span>ブランド</span></label>
+                  <label class="filter-pill"><input type="radio" name="store_search_mode"
+                      value="client"><span>法人</span></label>
                 </div>
+                <input type="text" id="schedule-store-search" placeholder="検索..." autocomplete="off" required>
                 <input type="hidden" id="schedule-store" name="store_id">
                 <div class="store-search-results" id="schedule-store-results" style="display: none;"></div>
               </div>

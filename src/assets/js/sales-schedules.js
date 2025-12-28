@@ -387,14 +387,18 @@ function setupStoreSearch() {
   const searchInput = document.getElementById('schedule-store-search');
   const resultsDiv = document.getElementById('schedule-store-results');
   const hiddenInput = document.getElementById('schedule-store');
-  const categoryFilter = document.getElementById('store-category-filter');
   const summaryText = document.getElementById('schedule-store-summary-text');
 
   if (!searchInput || !resultsDiv) return;
 
+  const getFilterMode = () => {
+    const el = document.querySelector('input[name="store_search_mode"]:checked');
+    return el ? el.value : '';
+  };
+
   const updateDropdown = () => {
     const query = searchInput.value.trim().toLowerCase();
-    const cat = categoryFilter ? categoryFilter.value : '';
+    const cat = getFilterMode();
 
     if (query.length === 0) {
       resultsDiv.style.display = 'none';
@@ -403,15 +407,28 @@ function setupStoreSearch() {
 
     let filtered = allStores.filter(store => {
       const sName = (store.name || '').toLowerCase();
-      // Only searching by Store Name for simplicity, can expand
-      return sName.includes(query);
+      const sBrand = (store.brand_name || '').toLowerCase();
+      const sClient = (store.client_name || '').toLowerCase();
+
+      if (cat === 'store') return sName.includes(query);
+      if (cat === 'brand') return sBrand.includes(query);
+      if (cat === 'client') return sClient.includes(query);
+
+      // All
+      return sName.includes(query) || sBrand.includes(query) || sClient.includes(query);
     });
 
     if (filtered.length === 0) {
       resultsDiv.innerHTML = '<div class="store-search-item no-results">見つかりません</div>';
     } else {
       resultsDiv.innerHTML = filtered.map(s =>
-        `<div class="store-search-item" data-id="${s.id}" data-name="${escapeHtml(s.name)}">${escapeHtml(s.name)}</div>`
+        `<div class="store-search-item" data-id="${s.id}" data-name="${escapeHtml(s.name)}">
+            <div style="font-weight:bold;">${escapeHtml(s.name)}</div>
+            <div style="font-size:0.75rem;color:#666;">
+               ${s.brand_name ? '<span class="tag">Brand</span> ' + escapeHtml(s.brand_name) : ''} 
+               ${s.client_name ? '<span class="tag">Corp</span> ' + escapeHtml(s.client_name) : ''}
+            </div>
+        </div>`
       ).join('');
     }
     resultsDiv.style.display = 'block';
@@ -433,6 +450,8 @@ function setupStoreSearch() {
   };
 
   searchInput.addEventListener('input', updateDropdown);
+  document.querySelectorAll('input[name="store_search_mode"]').forEach(r => r.addEventListener('change', updateDropdown));
+
   document.addEventListener('click', e => {
     if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) resultsDiv.style.display = 'none';
   });
