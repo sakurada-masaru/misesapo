@@ -95,6 +95,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadServices(),
   ]);
 
+  enrichStoreData();
+
   // Load Schedules
   await loadSchedules();
 
@@ -162,6 +164,23 @@ async function loadServices() {
     const data = await res.json();
     allServices = Array.isArray(data) ? data : (data.items || []);
   } catch (e) { console.error(e); }
+}
+
+function enrichStoreData() {
+  if (!allStores) return;
+  allStores.forEach(s => {
+    if (s.brand_id) {
+      const b = allBrands.find(x => String(x.id) === String(s.brand_id));
+      if (b) {
+        s.brand_name = b.name;
+        if (!s.client_id && b.client_id) s.client_id = b.client_id;
+      }
+    }
+    if (s.client_id) {
+      const c = allClients.find(x => String(x.id) === String(s.client_id));
+      if (c) s.client_name = c.name;
+    }
+  });
 }
 
 // --- Karte (Survey) Data Loading & Handling ---
@@ -459,7 +478,18 @@ function setupStoreSearch() {
   };
 
   searchInput.addEventListener('input', updateDropdown);
-  document.querySelectorAll('input[name="store_search_mode"]').forEach(r => r.addEventListener('change', updateDropdown));
+  document.querySelectorAll('input[name="store_search_mode"]').forEach(r => {
+    r.addEventListener('change', () => {
+      updateDropdown();
+      const mode = r.value;
+      const placeholderMap = {
+        'store': '店舗名を検索...',
+        'brand': 'ブランド名を検索...',
+        'client': '法人名を検索...'
+      };
+      searchInput.placeholder = placeholderMap[mode] || '店舗・ブランド・法人を検索...';
+    });
+  });
 
   document.addEventListener('click', e => {
     if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) resultsDiv.style.display = 'none';
