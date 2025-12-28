@@ -250,7 +250,7 @@ body[class*="sales-"] #main {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 16px 12px 160px;
+  padding: 0px 0px 160px;
 }
 
 .mypage-main-grid-container {

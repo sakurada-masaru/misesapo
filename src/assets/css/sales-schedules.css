@@ -1297,3 +1297,12 @@
   }
 }
 
+
+/* 清掃スケジュールセクション（清掃員・営業用） */
+@media (max-width: 768px) {
+  .schedule-calendar,
+  .schedule-list {
+    padding: 16px;
+    margin-bottom: 100px;
+  }
+}

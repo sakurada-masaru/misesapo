@@ -792,6 +792,8 @@ TODOS_TABLE = dynamodb.Table('todos')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
 S3_REGION = os.environ.get('S3_REGION', 'ap-northeast-1')
 ALLOWED_ORIGINS = [origin.strip() for origin in os.environ.get('ALLOWED_ORIGINS', '*').split(',') if origin.strip()]
+if 'https://misesapo.co.jp' not in ALLOWED_ORIGINS and '*' not in ALLOWED_ORIGINS:
+    ALLOWED_ORIGINS.append('https://misesapo.co.jp')
 
 # Google Calendar API設定（※このプロジェクトでは今後Googleカレンダーを使用しない方針）
 # - Google側の共有を外しても、システムが誤って同期処理を試みると権限エラーが発生し得るため、
@@ -912,7 +914,7 @@ def lambda_handler(event, context):
                 return get_announcements(headers)
             elif method == 'POST' or method == 'PUT':
                 return create_announcement(event, headers)
-        elif normalized_path == '/staff/reports':
+        elif normalized_path == '/staff/reports' or normalized_path == '/staff/os/reports':
             # レポートデータの読み書き
             if method == 'GET':
                 return get_reports(event, headers)

@@ -539,7 +539,7 @@
   }
 
   .details-btn-text {
-    display: none;
+    display: inline;
   }
 
   .details-btn {
