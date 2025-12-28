@@ -5215,7 +5215,7 @@ async function showAddServiceModal(scheduleId) {
   const services = await getMasterServices();
 
   // 現在のスケジュール情報を再取得（最新のサービス状況を知るため）
-  const schedule = scheduleById[scheduleId]; // キャッシュ利用
+  const schedule = window.scheduleById[scheduleId]; // キャッシュ利用
   if (!schedule) return;
 
   // 現在選択済みのIDリスト
@@ -5301,7 +5301,7 @@ async function addServiceToSchedule(scheduleId, service) {
   if (!confirm(`${service.title || service.name} を追加しますか？`)) return;
 
   try {
-    const schedule = scheduleById[scheduleId];
+    const schedule = window.scheduleById[scheduleId];
     if (!schedule) throw new Error('Schedule not found');
 
     const currentItems = schedule.service_items || [];
