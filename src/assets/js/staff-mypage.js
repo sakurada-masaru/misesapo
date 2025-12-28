@@ -6141,6 +6141,7 @@ function closeOsDayModal() {
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     initOsCalendar();
+    loadMyAcceptedJobs();
   }, 500);
 });
 
@@ -6150,4 +6151,122 @@ window.renderOsCalendar = renderOsCalendar;
 window.openOsDaySchedules = openOsDaySchedules;
 window.closeOsDayModal = closeOsDayModal;
 
+// ========== 受託中の依頼セクション ==========
 
+async function loadMyAcceptedJobs() {
+  const container = document.getElementById('my-accepted-jobs-list');
+  if (!container) return;
+
+  // ユーザーIDを取得
+  const userId = currentUser?.id;
+  if (!userId) {
+    container.innerHTML = `<div class="empty-state">ログイン情報を取得中...</div>`;
+    // 少し待ってリトライ
+    setTimeout(() => loadMyAcceptedJobs(), 1000);
+    return;
+  }
+
+  try {
+    // スケジュールデータを取得（キャッシュがあれば使用）
+    if (osAllSchedules.length === 0) {
+      await loadOsSchedules();
+    }
+
+    // 自分が受託している案件をフィルター（worker_id または assigned_to が自分のID）
+    const myJobs = osAllSchedules.filter(s => {
+      const wid = String(s.worker_id || '');
+      const aid = String(s.assigned_to || '');
+      const uid = String(userId);
+      return wid === uid || aid === uid || wid.includes(uid) || aid.includes(uid);
+    }).sort((a, b) => {
+      // 日付の近い順
+      const dateA = new Date(a.scheduled_date || a.date);
+      const dateB = new Date(b.scheduled_date || b.date);
+      return dateA - dateB;
+    });
+
+    if (myJobs.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="padding: 24px; text-align: center; color: #6b7280;">
+          <i class="fas fa-inbox" style="font-size: 2rem; color: #d1d5db; margin-bottom: 8px;"></i>
+          <p style="margin: 0;">受託中の依頼はありません</p>
+          <p style="margin: 8px 0 0; font-size: 0.85rem; color: #9ca3af;">カレンダーから案件を受託してください</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = myJobs.map(job => {
+      const date = job.scheduled_date || job.date || '';
+      const time = job.scheduled_time || job.time_slot || '';
+      const storeName = job.store_name || job.brand_name || '店舗未設定';
+      const address = job.address || '';
+      const items = (job.cleaning_items || []).slice(0, 2).map(i => i.name || i).join(', ');
+      const status = job.status;
+
+      let statusLabel = '予定';
+      let statusColor = '#3b82f6';
+      if (status === 'in_progress') {
+        statusLabel = '作業中';
+        statusColor = '#f59e0b';
+      } else if (status === 'completed') {
+        statusLabel = '完了';
+        statusColor = '#10b981';
+      }
+
+      return `
+        <div onclick="openJobDetail('${job.id}')" style="
+          background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+          border: 1px solid #e5e7eb;
+          border-left: 4px solid ${statusColor};
+          border-radius: 10px;
+          padding: 14px;
+          margin-bottom: 10px;
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+            <span style="
+              background: ${statusColor};
+              color: white;
+              padding: 3px 10px;
+              border-radius: 5px;
+              font-size: 0.75rem;
+              font-weight: 600;
+            ">${date} ${time}</span>
+            <span style="
+              background: ${statusColor}20;
+              color: ${statusColor};
+              padding: 2px 8px;
+              border-radius: 4px;
+              font-size: 0.7rem;
+              font-weight: 600;
+            ">${statusLabel}</span>
+          </div>
+          <div style="font-weight: 700; font-size: 1rem; color: #111827; margin-bottom: 4px;">
+            ${escapeHtml(storeName)}
+          </div>
+          ${address ? `<div style="font-size: 0.78rem; color: #6b7280; margin-bottom: 4px;">
+            <i class="fas fa-map-marker-alt" style="width: 14px;"></i> ${escapeHtml(address.substring(0, 25))}${address.length > 25 ? '...' : ''}
+          </div>` : ''}
+          ${items ? `<div style="font-size: 0.75rem; color: #9ca3af;">
+            <i class="fas fa-broom" style="width: 14px;"></i> ${escapeHtml(items)}
+          </div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    console.error('[MyAcceptedJobs] Error:', error);
+    container.innerHTML = `
+      <div class="empty-state" style="padding: 16px; text-align: center; color: #ef4444;">
+        <i class="fas fa-exclamation-triangle"></i> 読み込みに失敗しました
+        <button onclick="loadMyAcceptedJobs()" style="display: block; margin: 12px auto 0; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+          再読み込み
+        </button>
+      </div>
+    `;
+  }
+}
+
+window.loadMyAcceptedJobs = loadMyAcceptedJobs;
