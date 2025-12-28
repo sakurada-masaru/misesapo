@@ -747,6 +747,10 @@ function openAddDialog(dateStr) {
   selectedCleaningItems = [];
   document.getElementById('cleaning-items-selected').innerHTML = '';
 
+  // Hide Print Button (New Request)
+  const printBtn = document.getElementById('print-request-btn');
+  if (printBtn) printBtn.style.display = 'none';
+
   if (scheduleDialog) scheduleDialog.showModal();
 }
 window.openAddDialog = openAddDialog;
@@ -806,14 +810,11 @@ function openEditDialog(id) {
   loadKarteData(storeId);
 
   // Update Print Button visibility/action
+  // Update Print Button visibility/action
   const printBtn = document.getElementById('print-request-btn');
   if (printBtn) {
-    if (isNew) {
-      printBtn.style.display = 'none';
-    } else {
-      printBtn.style.display = 'inline-flex';
-      printBtn.onclick = () => printScheduleRequest(id);
-    }
+    printBtn.style.display = 'inline-flex';
+    printBtn.onclick = () => printScheduleRequest(id);
   }
 }
 window.openEditDialog = openEditDialog;
