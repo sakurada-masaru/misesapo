@@ -652,18 +652,23 @@ function renderCalendar() {
     cel.appendChild(num);
 
     // Items
+    // Items (Summary Count Only)
     const daysItems = filteredSchedules.filter(s => (s.date || s.scheduled_date) === dateStr);
-    daysItems.forEach(s => {
-      const ev = document.createElement('div');
-      ev.className = `day-event status-${s.status}`;
-      const sName = allStores.find(x => x.id === (s.store_id || s.client_id))?.name || '名称なし';
-      ev.textContent = sName;
-      ev.onclick = (e) => {
-        e.stopPropagation();
-        openEditDialog(s.id);
-      };
-      cel.appendChild(ev);
-    });
+
+    if (daysItems.length > 0) {
+      const summary = document.createElement('div');
+      summary.className = 'day-summary-badge';
+      summary.textContent = `${daysItems.length}件`;
+      summary.style.marginTop = '4px';
+      summary.style.fontSize = '0.8rem';
+      summary.style.background = '#FF679C'; // Primary Brand Color
+      summary.style.color = '#fff';
+      summary.style.borderRadius = '12px';
+      summary.style.padding = '2px 8px';
+      summary.style.display = 'inline-block';
+
+      cel.appendChild(summary);
+    }
 
     // Show Daily Schedules on click
     cel.onclick = () => showDailySchedules(dateStr);
