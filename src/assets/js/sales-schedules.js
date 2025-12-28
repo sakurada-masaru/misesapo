@@ -443,19 +443,18 @@ function setupStoreSearch() {
       resultsDiv.innerHTML = filtered.map(s =>
         `<div class="store-search-item" data-id="${s.id}" data-name="${escapeHtml(s.name)}">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-               <div style="font-weight:700; color:#111827; display:flex; align-items:center; gap:8px;">
-                 <div style="width:24px; height:24px; background:#f3f4f6; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                   <i class="fas fa-store" style="color:#9ca3af; font-size:0.8rem;"></i>
-                 </div>
-                 ${escapeHtml(s.name)}
+               <div style="font-weight:700; color:#111827; font-size:1rem;">
+                  ${s.brand_name ? escapeHtml(s.brand_name) : (s.client_name ? escapeHtml(s.client_name) : '<span style="color:#999;font-weight:400;font-size:0.85rem;">所属なし</span>')}
                </div>
-               <!-- Potential Status Badge Here -->
+               ${s.client_name && s.brand_name ? `<div style="font-size:0.7rem; color:#6b7280; background:#f3f4f6; padding:2px 6px; border-radius:4px;">${escapeHtml(s.client_name)}</div>` : ''}
             </div>
-            <div style="font-size:0.75rem; color:#6b7280; display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-left:32px;">
-               ${s.brand_name ? `<span class="search-tag brand">Brand</span> ${escapeHtml(s.brand_name)}` : ''} 
-               ${s.client_name ? `<span class="search-tag corp">Corp</span> ${escapeHtml(s.client_name)}` : ''}
+            
+            <div style="display:flex; align-items:center; gap:6px; margin-top:4px; color:#4b5563; font-size:0.85rem;">
+                 <i class="fas fa-store" style="color:#d1d5db; font-size:0.75rem;"></i>
+                 <span>${escapeHtml(s.name)}</span>
             </div>
-            ${s.address ? `<div style="font-size:0.75rem; color:#9ca3af; margin-left:32px; display:flex; align-items:center; gap:4px;"><i class="fas fa-map-marker-alt" style="font-size:0.7rem;"></i> ${escapeHtml(s.address)}</div>` : ''}
+            
+            ${s.address ? `<div style="font-size:0.75rem; color:#9ca3af; margin-top:2px; margin-left:20px;">${escapeHtml(s.address)}</div>` : ''}
         </div>`
       ).join('');
     }
