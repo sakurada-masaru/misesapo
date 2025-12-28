@@ -636,7 +636,7 @@ function getCalendarSchedules() {
 
 function renderCalendar() {
   const calendarDays = document.getElementById('calendar-days');
-  const monthLabel = document.getElementById('current-month');
+  const monthLabel = document.getElementById('calendar-month');
   if (!calendarDays || !monthLabel) return;
 
   calendarDays.innerHTML = '';
