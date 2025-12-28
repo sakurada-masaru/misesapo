@@ -618,20 +618,38 @@ function renderPagination() {
 window.goToPage = p => { currentPage = p; renderTable(); };
 
 // --- Calendar Render ---
+// Helper to get schedules ignoring date range (for Calendar)
+function getCalendarSchedules() {
+  const storeId = document.getElementById('store-filter')?.value;
+  const workerId = document.getElementById('worker-filter')?.value;
+  const status = document.getElementById('status-filter')?.value;
+
+  return allSchedules.filter(s => {
+    const sStoreId = s.store_id || s.client_id;
+    const sWorkerId = s.worker_id || s.assigned_to;
+    if (storeId && sStoreId !== storeId) return false;
+    if (workerId && sWorkerId !== workerId) return false;
+    if (status && s.status !== status) return false;
+    return true;
+  });
+}
+
 function renderCalendar() {
   const calendarDays = document.getElementById('calendar-days');
-  if (!calendarDays) return;
-
-  document.getElementById('calendar-month').textContent =
-    `${currentMonth.getFullYear()}年${currentMonth.getMonth() + 1}月`;
+  const monthLabel = document.getElementById('current-month');
+  if (!calendarDays || !monthLabel) return;
 
   calendarDays.innerHTML = '';
+  monthLabel.textContent = `${currentMonth.getFullYear()}年 ${currentMonth.getMonth() + 1}月`;
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const startDay = firstDay.getDay();
+
+  // Get items for calendar (ignoring date range filter)
+  const calSchedules = getCalendarSchedules();
 
   // Empty prefix cells
   for (let i = 0; i < startDay; i++) {
@@ -651,9 +669,8 @@ function renderCalendar() {
     num.textContent = day;
     cel.appendChild(num);
 
-    // Items
     // Items (Summary Count Only)
-    const daysItems = filteredSchedules.filter(s => (s.date || s.scheduled_date) === dateStr);
+    const daysItems = calSchedules.filter(s => (s.date || s.scheduled_date) === dateStr);
 
     if (daysItems.length > 0) {
       const summary = document.createElement('div');
@@ -685,7 +702,9 @@ function showDailySchedules(dateStr) {
 
   dateTitle.textContent = dateStr;
 
-  const items = filteredSchedules.filter(s => (s.date || s.scheduled_date) === dateStr);
+  // Use same logic as calendar (ignore global list filter)
+  const calSchedules = getCalendarSchedules();
+  const items = calSchedules.filter(s => (s.date || s.scheduled_date) === dateStr);
 
   if (items.length === 0) {
     listEl.innerHTML = '<div class="empty-state">この日の依頼はありません</div>';
