@@ -471,7 +471,18 @@ function setupStoreSearch() {
         hiddenInput.value = id;
         searchInput.value = name;
         resultsDiv.style.display = 'none';
-        if (summaryText) summaryText.textContent = name;
+
+        // 選択した店舗データを取得
+        const selectedStore = allStores.find(s => s.id === id);
+
+        // 法人名・ブランド名・店舗名フィールドを表示して入力
+        const detailsSection = document.getElementById('selected-store-details');
+        if (detailsSection && selectedStore) {
+          detailsSection.style.display = 'block';
+          document.getElementById('schedule-client-name').value = selectedStore.client_name || '';
+          document.getElementById('schedule-brand-name').value = selectedStore.brand_name || '';
+          document.getElementById('schedule-store-name').value = selectedStore.name || '';
+        }
 
         // LOAD KARTE DATA
         loadKarteData(id);
@@ -1142,6 +1153,11 @@ function setupEventListeners() {
 
         const scheduleData = {
           store_id: storeId,
+          client_name: document.getElementById('schedule-client-name')?.value || '',
+          brand_name: document.getElementById('schedule-brand-name')?.value || '',
+          store_name: document.getElementById('schedule-store-name')?.value || '',
+          address: document.getElementById('schedule-address')?.value || '',
+          phone: document.getElementById('schedule-phone')?.value || '',
           scheduled_date: document.getElementById('schedule-date').value,
           scheduled_time: document.getElementById('schedule-time').value,
           sales_id: document.getElementById('schedule-sales').value || null,
