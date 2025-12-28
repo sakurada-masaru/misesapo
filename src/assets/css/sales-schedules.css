@@ -8,7 +8,8 @@
   max-width: 100%;
   margin: 0;
   padding: 16px;
-  padding-bottom: 80px; /* ボトムタブのスペース */
+  padding-bottom: 80px;
+  /* ボトムタブのスペース */
   background: #f9fafb;
   min-height: 100vh;
   box-sizing: border-box;
@@ -72,7 +73,9 @@
   flex-wrap: wrap;
 }
 
-.new-project-alert.hidden { display: none; }
+.new-project-alert.hidden {
+  display: none;
+}
 
 .new-project-alert-icon {
   width: 40px;
@@ -127,7 +130,7 @@
   border-radius: 8px;
   padding: 10px 12px;
   margin-bottom: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .filter-row {
@@ -193,7 +196,7 @@
   background: #fff;
   border-radius: 12px;
   padding: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border: 1px solid #e5e7eb;
   transition: all 0.2s;
   width: 100%;
@@ -203,7 +206,7 @@
 }
 
 .schedule-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .cleaning-tags {
@@ -371,7 +374,7 @@
   color: #6b7280;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 /* ステータスバッジ */
@@ -384,11 +387,30 @@
   white-space: nowrap;
 }
 
-.status-draft { background: #fff3cd; color: #856404; }
-.status-scheduled { background: #dbeafe; color: #1d4ed8; }
-.status-in_progress { background: #fef3c7; color: #b45309; }
-.status-completed { background: #d1fae5; color: #047857; }
-.status-cancelled { background: #fee2e2; color: #b91c1c; }
+.status-draft {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-scheduled {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-in_progress {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-completed {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.status-cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
+}
 
 
 /* 店舗・清掃員情報 */
@@ -470,12 +492,32 @@
   font-size: 0.875rem;
 }
 
-.action-btn.edit { background: #dbeafe; color: #1d4ed8; }
-.action-btn.edit:hover { background: #bfdbfe; }
-.action-btn.delete { background: #fee2e2; color: #b91c1c; }
-.action-btn.delete:hover { background: #fecaca; }
-.action-btn.assign { background: #ffc107; color: #333; }
-.action-btn.assign:hover { background: #e0a800; }
+.action-btn.edit {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.action-btn.edit:hover {
+  background: #bfdbfe;
+}
+
+.action-btn.delete {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.action-btn.delete:hover {
+  background: #fecaca;
+}
+
+.action-btn.assign {
+  background: #ffc107;
+  color: #333;
+}
+
+.action-btn.assign:hover {
+  background: #e0a800;
+}
 
 /* ボトムタブナビゲーション */
 .bottom-tabs {
@@ -585,8 +627,13 @@
   color: #6b7280;
 }
 
-.calendar-day-header.sun { color: #ef4444; }
-.calendar-day-header.sat { color: #3b82f6; }
+.calendar-day-header.sun {
+  color: #ef4444;
+}
+
+.calendar-day-header.sat {
+  color: #3b82f6;
+}
 
 .calendar-grid {
   display: grid;
@@ -633,8 +680,13 @@
   background: #fde68a;
 }
 
-.calendar-day.sun .day-number { color: #ef4444; }
-.calendar-day.sat .day-number { color: #3b82f6; }
+.calendar-day.sun .day-number {
+  color: #ef4444;
+}
+
+.calendar-day.sat .day-number {
+  color: #3b82f6;
+}
 
 .day-number {
   font-size: 0.8rem;
@@ -666,11 +718,25 @@
   opacity: 0.85;
 }
 
-.day-event.status-draft { background: #f59e0b; }
-.day-event.status-scheduled { background: #3b82f6; }
-.day-event.status-in_progress { background: #8b5cf6; }
-.day-event.status-completed { background: #10b981; }
-.day-event.status-cancelled { background: #6b7280; }
+.day-event.status-draft {
+  background: #f59e0b;
+}
+
+.day-event.status-scheduled {
+  background: #3b82f6;
+}
+
+.day-event.status-in_progress {
+  background: #8b5cf6;
+}
+
+.day-event.status-completed {
+  background: #10b981;
+}
+
+.day-event.status-cancelled {
+  background: #6b7280;
+}
 
 /* 過去のスケジュールは黒く表示 */
 .day-event.past {
@@ -695,12 +761,12 @@
   max-width: 560px;
   width: 90vw;
   max-height: 90vh;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 }
 
 .schedule-dialog::backdrop,
 .delete-dialog::backdrop {
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .dialog-content {
@@ -828,24 +894,73 @@
 
 .store-search-results {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   left: 0;
   right: 0;
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  max-height: 300px;
+  border-radius: 12px;
+  max-height: 320px;
   overflow-y: auto;
   z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  margin-top: 4px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
 }
 
 .store-search-item {
   padding: 12px 16px;
   cursor: pointer;
   border-bottom: 1px solid #f3f4f6;
-  transition: background 0.15s;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.store-search-item:last-child {
+  border-bottom: none;
+}
+
+.store-search-item:hover {
+  background: #fdf2f8;
+  /* Light Pink hover */
+}
+
+.store-search-item.no-results {
+  padding: 20px;
+  text-align: center;
+  color: #9ca3af;
+  cursor: default;
+}
+
+.store-search-item.no-results:hover {
+  background: transparent;
+}
+
+.search-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #666;
+  background: #f3f4f6;
+  margin-right: 4px;
+}
+
+.search-tag.brand {
+  color: #db2777;
+  background: #fce7f3;
+}
+
+.search-tag.corp {
+  color: #4f46e5;
+  background: #e0e7ff;
+}
+
+.search-tag.store {
+  color: #059669;
+  background: #ecfdf5;
 }
 
 .store-search-item:hover {
@@ -911,7 +1026,7 @@
   max-height: 300px;
   overflow-y: auto;
   z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-top: 4px;
 }
 
@@ -987,8 +1102,13 @@
   font-size: 0.9rem;
 }
 
-.form-status.success { color: #047857; }
-.form-status.error { color: #b91c1c; }
+.form-status.success {
+  color: #047857;
+}
+
+.form-status.error {
+  color: #b91c1c;
+}
 
 .dialog-actions {
   display: flex;
@@ -1165,7 +1285,7 @@
   background: #ffffff;
   border-radius: 12px;
   padding: 32px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .schedule-form-new .form-row {
@@ -1280,18 +1400,23 @@
   .sales-schedules-new {
     padding: 16px;
   }
+
   .schedule-form-new {
     padding: 24px;
   }
+
   .schedule-form-new .form-row {
     flex-direction: column;
   }
+
   .schedule-form-new .form-field.half {
     flex: 1;
   }
+
   .schedule-form-new .form-actions {
     flex-direction: column-reverse;
   }
+
   .schedule-form-new .form-actions .btn {
     width: 100%;
   }
@@ -1300,6 +1425,7 @@
 
 /* 清掃スケジュールセクション（清掃員・営業用） */
 @media (max-width: 768px) {
+
   .schedule-calendar,
   .schedule-list {
     padding: 16px;

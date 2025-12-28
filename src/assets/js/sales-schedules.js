@@ -419,15 +419,24 @@ function setupStoreSearch() {
     });
 
     if (filtered.length === 0) {
-      resultsDiv.innerHTML = '<div class="store-search-item no-results">見つかりません</div>';
+      resultsDiv.innerHTML = '<div class="store-search-item no-results">該当する店舗は見つかりません</div>';
     } else {
       resultsDiv.innerHTML = filtered.map(s =>
         `<div class="store-search-item" data-id="${s.id}" data-name="${escapeHtml(s.name)}">
-            <div style="font-weight:bold;">${escapeHtml(s.name)}</div>
-            <div style="font-size:0.75rem;color:#666;">
-               ${s.brand_name ? '<span class="tag">Brand</span> ' + escapeHtml(s.brand_name) : ''} 
-               ${s.client_name ? '<span class="tag">Corp</span> ' + escapeHtml(s.client_name) : ''}
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+               <div style="font-weight:700; color:#111827; display:flex; align-items:center; gap:8px;">
+                 <div style="width:24px; height:24px; background:#f3f4f6; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                   <i class="fas fa-store" style="color:#9ca3af; font-size:0.8rem;"></i>
+                 </div>
+                 ${escapeHtml(s.name)}
+               </div>
+               <!-- Potential Status Badge Here -->
             </div>
+            <div style="font-size:0.75rem; color:#6b7280; display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-left:32px;">
+               ${s.brand_name ? `<span class="search-tag brand">Brand</span> ${escapeHtml(s.brand_name)}` : ''} 
+               ${s.client_name ? `<span class="search-tag corp">Corp</span> ${escapeHtml(s.client_name)}` : ''}
+            </div>
+            ${s.address ? `<div style="font-size:0.75rem; color:#9ca3af; margin-left:32px; display:flex; align-items:center; gap:4px;"><i class="fas fa-map-marker-alt" style="font-size:0.7rem;"></i> ${escapeHtml(s.address)}</div>` : ''}
         </div>`
       ).join('');
     }
