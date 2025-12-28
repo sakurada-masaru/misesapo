@@ -1078,17 +1078,8 @@ function setupEventListeners() {
         if (!storeId) throw new Error('店舗を選択してください');
 
         // 1. Save Schedule
-        const checkedWorkers = Array.from(document.querySelectorAll('#worker-selection-list input[type="checkbox"]:checked'))
-          .map(cb => cb.value);
-
-        // If multiple, join by comma? Schema likely implies singular worker_id.
-        // However, "Uber" model often has one assignee.
-        // We will save the FIRST one as primary `worker_id` for compatibility,
-        // BUT if we want to support multiple, we'd need a `worker_ids` field.
-        // User said "Selectable via checkboxes".
-        // I'll save `worker_id` as the JOINED string if possible, or just the first.
-        // Existing system seems to expect one ID.
-        const primaryWorkerId = checkedWorkers.length > 0 ? checkedWorkers[0] : null;
+        // Use selectedWorkers state
+        const primaryWorkerId = selectedWorkers.length > 0 ? selectedWorkers.map(w => w.id).join(',') : null;
 
         const scheduleData = {
           store_id: storeId,
