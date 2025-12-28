@@ -244,6 +244,14 @@
     if (scheduleParam && scheduleById[String(scheduleParam)]) {
       scheduleSelect.value = String(scheduleParam);
       applyScheduleSelection(String(scheduleParam));
+
+      // 作業開始モードまたは未着手の場合、開始モーダルを表示
+      const mode = urlParams.get('mode');
+      const schedule = scheduleById[String(scheduleParam)];
+      if (schedule && (mode === 'start' || schedule.status === 'scheduled') && schedule.status !== 'in_progress' && schedule.status !== 'completed') {
+        // 少し遅延させて表示（画面描画を待つ）
+        setTimeout(() => showStartModal(schedule), 500);
+      }
     }
   }
 
@@ -8929,5 +8937,162 @@
       updateCleaningItemsList();
     };
   };
+
+  // 作業開始モーダルを表示
+  function showStartModal(schedule) {
+    // 既存のモーダルがあれば削除
+    const existingModal = document.getElementById('work-start-modal');
+    if (existingModal) existingModal.remove();
+
+    // サービス項目（チェックボックス用）
+    let serviceItemsHtml = '';
+    const serviceItems = schedule.service_items || (schedule.service_names ? (Array.isArray(schedule.service_names) ? schedule.service_names : [schedule.service_names]) : []);
+
+    // 文字列かオブジェクトかで分岐
+    const items = serviceItems.map(item => typeof item === 'object' ? item.name : item);
+
+    if (items.length > 0) {
+      serviceItemsHtml = `
+        <div class="start-modal-items">
+          <p class="start-modal-subtitle">本日の実施項目を選択してください：</p>
+          <div class="start-modal-checklist">
+            ${items.map(item => `
+              <label class="start-modal-check-item">
+                <input type="checkbox" name="start_service_item" value="${escapeHtml(item)}" checked>
+                <span>${escapeHtml(item)}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      serviceItemsHtml = '<p class="start-modal-empty">清掃項目が指定されていません</p>';
+    }
+
+    const currentUser = getCurrentUserFromStorage();
+    const userName = currentUser ? currentUser.name : '担当者';
+
+    const modalHtml = `
+      <div id="work-start-modal" class="modal-overlay" style="display: flex; align-items: center; justify-content: center; z-index: 9999; background: rgba(0,0,0,0.5);">
+        <div class="modal-content" style="width: 90%; max-width: 400px; padding: 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="width: 60px; height: 60px; background: #ecfdf5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+              <i class="fas fa-play" style="font-size: 24px; color: #059669; margin-left: 4px;"></i>
+            </div>
+            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #111827;">作業を開始します</h3>
+            <p style="margin: 8px 0 0; color: #6b7280; font-size: 0.9rem;">${escapeHtml(userName)} さん、お疲れ様です。<br>項目の確認をお願いします。</p>
+          </div>
+
+          ${serviceItemsHtml}
+
+          <div style="margin-top: 24px;">
+            <button id="btn-start-work-modal" style="width: 100%; background: #059669; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2);">
+              <i class="fas fa-stopwatch"></i> 作業開始して時間を記録
+            </button>
+            <button onclick="document.getElementById('work-start-modal').remove()" style="width: 100%; background: transparent; color: #6b7280; border: none; padding: 12px; margin-top: 8px; font-size: 0.875rem; cursor: pointer;">
+              キャンセル（詳細確認のみ）
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // 開始ボタン処理
+    document.getElementById('btn-start-work-modal').onclick = async function () {
+      const btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 開始処理中...';
+
+      try {
+        await startWork(schedule.id);
+
+        // 成功したらモーダルを閉じる
+        document.getElementById('work-start-modal').remove();
+
+        // 選択された項目に対応するセクションを開く（簡易実装：まずは最初の項目を開く）
+        // 実際にはチェックされた項目を取得して...となるが、まずはシンプルに
+        const checkedItems = Array.from(document.querySelectorAll('input[name="start_service_item"]:checked')).map(cb => cb.value);
+        if (checkedItems.length > 0) {
+          // TODO: 項目名からセクションIDを特定して開くロジックが必要だが、
+          // 現状のセクションIDがランダム生成のため、とりあえず「新規追加」フローを促すか、
+          // 各項目に対応する空セクションを追加する
+
+          // ここではシンプルにトーストを出して終了
+          if (window.showToast) window.showToast('作業を開始しました', 'success');
+        }
+
+      } catch (error) {
+        console.error('Start work failed:', error);
+        alert('作業開始に失敗しました: ' + error.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-stopwatch"></i> 作業開始して時間を記録';
+      }
+    };
+  }
+
+  // 作業開始API呼び出し
+  async function startWork(scheduleId) {
+    // 位置情報を取得（オプション）
+    let location = null;
+    if (navigator.geolocation) {
+      try {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+        });
+        location = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        };
+      } catch (geoError) {
+        console.warn('[Report] 位置情報の取得に失敗しました:', geoError);
+      }
+    }
+
+    const idToken = await getFirebaseIdToken();
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    if (idToken) {
+      headers['Authorization'] = `Bearer ${idToken}`;
+    }
+
+    const updateData = {
+      status: 'in_progress',
+      started_at: new Date().toISOString()
+    };
+    if (location) {
+      updateData.start_location = location;
+    }
+
+    const response = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(updateData)
+    });
+
+    if (!response.ok) throw new Error('作業開始に失敗しました');
+
+    // スケジュールデータのステータスを更新（リロードなしでUI反映するため）
+    if (scheduleById[scheduleId]) {
+      scheduleById[scheduleId].status = 'in_progress';
+      scheduleById[scheduleId].started_at = updateData.started_at;
+    }
+  }
+
+  // HTMLエスケープヘルパー
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, function (m) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[m];
+    });
+  }
 
 })();

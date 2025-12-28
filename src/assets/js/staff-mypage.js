@@ -4785,9 +4785,14 @@ async function loadOSNextSchedule(user) {
           <!-- 案件ベースの作業開始・終了ボタン -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             ${!isWorking
-          ? `<button class="btn-attendance" onclick="startWork('${nextSchedule.id}', this)" style="grid-column: 1 / -1; background: #ff679c; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer;">
-                  <i class="fas fa-play" style="margin-right: 8px;"></i> 作業開始をつける
-                </button>`
+          ? `
+                <button class="btn-attendance" onclick="window.location.href='/staff/os/schedule'" style="background: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer;">
+                  <i class="fas fa-info-circle" style="margin-right: 8px;"></i> 詳細確認
+                </button>
+                <button class="btn-attendance" onclick="window.location.href='/staff/os/reports/new?schedule_id=${nextSchedule.id}&mode=start'" style="background: #ff679c; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer;">
+                  <i class="fas fa-play" style="margin-right: 8px;"></i> 作業開始
+                </button>
+            `
           : `
                 <div style="grid-column: 1 / -1; background: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 8px;">
                    <div style="font-size: 0.8125rem; color: #065f46; font-weight: 600;">作業中（${startedAtStr}開始）</div>
@@ -5105,15 +5110,8 @@ async function handleQuickReportClick(event) {
   const nextScheduleSection = document.getElementById('schedule-info-content');
   const workingBadge = nextScheduleSection?.querySelector('.fa-play-circle');
 
-  if (!workingBadge) {
-    await showConfirmDialog(
-      '作業が開始されていません',
-      'レポートを作成するには、先にマイページの「直近の清掃案件」から【作業開始】を記録してください。',
-      'OK',
-      ''
-    );
-    return;
-  }
+  // 作業チェック（ブロック）を削除
+  // if (!workingBadge) { ... }
 
   // 作業中ボタン（レポート作成）からscheduleIdを取得
   const reportBtn = nextScheduleSection.querySelector('button[onclick*="handleReportCreation"]');
