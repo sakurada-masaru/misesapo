@@ -215,8 +215,8 @@
 <!-- クイックアクションドック -->
 <nav class="quick-actions-dock" aria-label="クイックアクション">
   <a href="/sales/mypage" class="dock-item">
-    <i class="fas fa-user-circle"></i>
-    <span>マイページ</span>
+    <i class="fas fa-chart-line"></i>
+    <span>アクティビティ</span>
   </a>
   <a href="/sales/dashboard" class="dock-item">
     <i class="fas fa-user-plus"></i>
@@ -226,242 +226,252 @@
     <i class="fas fa-calendar"></i>
     <span>スケジュール</span>
   </a>
-  <a href="/sales/schedules" class="dock-item">
-    <i class="fas fa-file-invoice"></i> <!-- Icon changed -->
-    <span>依頼書</span> <!-- Renamed from 案件 -->
-  </a>
-</nav>
-
-<!-- 依頼書作成モーダル -->
-<dialog id="schedule-dialog" class="schedule-dialog">
-  <div class="dialog-content">
-    <button type="button" class="dialog-close" onclick="document.getElementById('schedule-dialog').close()">
-      <i class="fas fa-times"></i>
-    </button>
-    <h3 id="dialog-title">依頼書作成</h3>
-    <form id="schedule-form">
-      <input type="hidden" id="schedule-id" name="id">
-
-      <!-- 顧客選択セクション -->
-      <div class="hierarchy-section">
-        <div class="hierarchy-header">
-          <i class="fas fa-building"></i> 顧客選択
-          <button type="button" class="btn btn-sm btn-text" id="reload-customers-data-btn" style="margin-left:auto;">
-            <i class="fas fa-sync-alt"></i> 更新
-          </button>
-        </div>
-        <div class="form-row">
-          <div class="form-field">
-            <label for="schedule-store-search">店舗・ブランド・法人名 <span class="required">*</span></label>
-            <div class="store-search-wrapper">
-              <div class="store-search-controls">
-                <select id="store-category-filter" class="store-category-filter">
-                  <option value="">全て</option>
-                  <option value="store">店舗名</option>
-                  <option value="brand">ブランド名</option>
-                  <option value="client">法人名</option>
-                </select>
-                <input type="text" id="schedule-store-search" placeholder="検索..." autocomplete="off" required>
-              </div>
-              <input type="hidden" id="schedule-store" name="store_id">
-              <div class="store-search-results" id="schedule-store-results" style="display: none;"></div>
-            </div>
-            <div id="schedule-store-summary" style="margin-top:8px;color:#6b7280;font-size:0.875rem;">
-              <span id="schedule-store-summary-text">未選択</span>
-            </div>
-          </div>
-        </div>
+  <!-- 日次依頼一覧モーダル -->
+  <dialog id="daily-schedule-dialog" class="schedule-dialog">
+    <div class="dialog-content">
+      <h3>
+        <span id="daily-dialog-date"></span> の依頼一覧
+        <button type="button" class="close-btn" onclick="document.getElementById('daily-schedule-dialog').close()"
+          style="float:right; border:none; background:none; font-size:1.2rem; cursor:pointer;">&times;</button>
+      </h3>
+      <div id="daily-schedule-list" style="padding:16px; overflow-y:auto; flex:1;">
+        <!-- Schedules will be rendered here -->
       </div>
-
-      <!-- 依頼基本情報セクション -->
-      <div class="request-basic-info-section">
-        <div class="hierarchy-header" style="color:#ff679c; border-bottom:1px solid #ff679c; padding-bottom:4px;">
-          <i class="fas fa-clock"></i> 依頼基本情報
-        </div>
-        <div class="form-row">
-          <div class="form-field half">
-            <label for="schedule-date">日付 <span class="required">*</span></label>
-            <input type="date" id="schedule-date" name="scheduled_date" required>
-          </div>
-          <div class="form-field half">
-            <label for="schedule-time">時間 <span class="required">*</span></label>
-            <input type="time" id="schedule-time" name="scheduled_time" required>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-field">
-            <label>清掃内容 <span class="required">*</span></label>
-            <div class="cleaning-items-search-wrapper">
-              <input type="text" id="cleaning-items-search" placeholder="清掃内容を追加..." autocomplete="off">
-              <div class="cleaning-items-results" id="cleaning-items-results" style="display: none;"></div>
-            </div>
-            <div class="cleaning-items-selected" id="cleaning-items-selected" style="margin-top:8px;"></div>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-field half">
-            <label for="schedule-sales">営業担当</label>
-            <select id="schedule-sales" name="sales_id">
-              <option value="">未設定</option>
-            </select>
-          </div>
-          <div class="form-field half">
-            <label>指定清掃員（OS）</label>
-            <div style="display:flex; gap:8px; align-items:flex-start;">
-              <div id="selected-workers-display"
-                style="flex:1; border:1px solid #e2e8f0; border-radius:4px; padding:8px; min-height:42px; background:#f9fafb; font-size:0.9rem; color:#4b5563;">
-                <span style="color:#9ca3af;">オープン（未割当）</span>
-              </div>
-              <button type="button" class="btn btn-secondary btn-sm"
-                onclick="document.getElementById('worker-selection-dialog').showModal()" style="height:42px;">
-                <i class="fas fa-users"></i> 選択
-              </button>
-            </div>
-            <small style="color:#666;">※選択しない場合「オープン」となります</small>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-field">
-            <label for="schedule-notes">備考</label>
-            <textarea id="schedule-notes" name="notes" rows="2" placeholder="特記事項があれば入力"></textarea>
-          </div>
-        </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary"
+          onclick="document.getElementById('daily-schedule-dialog').close()">閉じる</button>
       </div>
+    </div>
+  </dialog>
+  <dialog id="schedule-dialog" class="schedule-dialog">
+    <div class="dialog-content">
+      <button type="button" class="dialog-close" onclick="document.getElementById('schedule-dialog').close()">
+        <i class="fas fa-times"></i>
+      </button>
+      <h3 id="dialog-title">依頼書作成</h3>
+      <form id="schedule-form">
+        <input type="hidden" id="schedule-id" name="id">
 
-      <!-- カルテ（問診票）セクション -->
-      <div class="hierarchy-section">
-        <div class="hierarchy-header">
-          <i class="fas fa-clipboard-list"></i> カルテ情報
-          <small style="color:#64748b; font-weight:normal; margin-left:8px;">※この内容は顧客カルテにも保存されます</small>
-        </div>
-
-        <!-- 基本ヒアリング (Stacked) -->
-        <div class="intake-category">
-          <div class="intake-category-title"><i class="fas fa-clipboard-check"></i> 基本ヒアリング</div>
-          <div class="form-row">
-            <div class="form-field">
-              <label style="font-weight:600; font-size:0.9rem; margin-bottom:4px; display:block;">清掃の悩み</label>
-              <textarea class="form-field" id="survey-issue" rows="2"></textarea>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-field">
-              <label style="font-weight:600; font-size:0.9rem; margin-bottom:4px; display:block;">店内環境</label>
-              <textarea class="form-field" id="survey-environment" rows="2"></textarea>
-            </div>
+        <!-- 顧客選択セクション -->
+        <div class="hierarchy-section">
+          <div class="hierarchy-header">
+            <i class="fas fa-building"></i> 顧客選択
+            <button type="button" class="btn btn-sm btn-text" id="reload-customers-data-btn" style="margin-left:auto;">
+              <i class="fas fa-sync-alt"></i> 更新
+            </button>
           </div>
           <div class="form-row">
             <div class="form-field">
-              <label style="font-weight:600; font-size:0.9rem; margin-bottom:4px; display:block;">通常清掃の頻度</label>
-              <input class="form-field" id="survey-cleaning-frequency" type="text" placeholder="例：毎日30分">
-            </div>
-          </div>
-        </div>
-
-        <!-- 店舗仕様 -->
-        <div class="intake-category">
-          <div class="intake-category-title"><i class="fas fa-store"></i> 店舗仕様</div>
-          <!-- Compact fields kept as is, but ensuring wrapper exists if needed -->
-          <div class="info-item form-item">
-            <div class="compact-fields">
-              <label class="compact-field">
-                <span>平米数/坪数</span>
-                <input class="form-field" id="survey-area-sqm" type="text">
-              </label>
-              <label class="compact-field">
-                <span>出入口</span>
-                <input class="form-field" id="survey-entrances" type="text">
-              </label>
-              <label class="compact-field">
-                <span>天井高さ</span>
-                <input class="form-field" id="survey-ceiling-height" type="text">
-              </label>
-              <label class="compact-field">
-                <span>鍵の位置</span>
-                <input class="form-field" id="survey-key-location" type="text">
-              </label>
-              <label class="compact-field">
-                <span>ブレーカー</span>
-                <input class="form-field" id="survey-breaker-location" type="text">
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- 設備・内装 (Stacked Checkboxes) -->
-        <div class="intake-category">
-          <div class="intake-category-title"><i class="fas fa-cogs"></i> 設備・内装</div>
-          <div class="info-item form-item">
-            <div class="compact-fields">
-              <label class="compact-field"><span>壁材質</span><input class="form-field" id="survey-wall-material"
-                  type="text"></label>
-              <label class="compact-field"><span>床材質</span><input class="form-field" id="survey-floor-material"
-                  type="text"></label>
-              <label class="compact-field"><span>トイレ数</span><input class="form-field" id="survey-toilet-count"
-                  type="text"></label>
-            </div>
-          </div>
-          <div class="form-row" style="margin-top:16px;">
-            <div class="form-field">
-              <label style="font-weight:600; font-size:0.9rem; margin-bottom:8px; display:block;">設備チェック</label>
-              <div class="checkbox-group" id="survey-equipment" style="display:flex; flex-wrap:wrap; gap:8px;">
-                <label class="checkbox-chip"><input type="checkbox" value="aircon"><span>空調</span></label>
-                <label class="checkbox-chip"><input type="checkbox" value="duct"><span>ダクト</span></label>
-                <label class="checkbox-chip"><input type="checkbox" value="hood"><span>フード</span></label>
-                <label class="checkbox-chip"><input type="checkbox" value="grease_trap"><span>グリスト</span></label>
-                <label class="checkbox-chip"><input type="checkbox" value="floor"><span>床</span></label>
-                <label class="checkbox-chip"><input type="checkbox" value="drain"><span>排水溝</span></label>
+              <label for="schedule-store-search">店舗・ブランド・法人名 <span class="required">*</span></label>
+              <div class="store-search-wrapper">
+                <div class="store-search-controls">
+                  <select id="store-category-filter" class="store-category-filter">
+                    <option value="">全て</option>
+                    <option value="store">店舗名</option>
+                    <option value="brand">ブランド名</option>
+                    <option value="client">法人名</option>
+                  </select>
+                  <input type="text" id="schedule-store-search" placeholder="検索..." autocomplete="off" required>
+                </div>
+                <input type="hidden" id="schedule-store" name="store_id">
+                <div class="store-search-results" id="schedule-store-results" style="display: none;"></div>
+              </div>
+              <div id="schedule-store-summary" style="margin-top:8px;color:#6b7280;font-size:0.875rem;">
+                <span id="schedule-store-summary-text">未選択</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 注意事項・計画 (Stacked) -->
-        <div class="intake-category">
-          <div class="intake-category-title"><i class="fas fa-exclamation-circle"></i> 注意事項・計画</div>
+        <!-- 依頼基本情報セクション -->
+        <div class="request-basic-info-section">
+          <div class="hierarchy-header" style="color:#ff679c; border-bottom:1px solid #ff679c; padding-bottom:4px;">
+            <i class="fas fa-clock"></i> 依頼基本情報
+          </div>
           <div class="form-row">
-            <div class="form-field">
-              <label style="font-weight:600; font-size:0.9rem; margin-bottom:4px; display:block;">特に気になる場所</label>
-              <textarea class="form-field" id="survey-hotspots" rows="2"></textarea>
+            <div class="form-field half">
+              <label for="schedule-date">日付 <span class="required">*</span></label>
+              <input type="date" id="schedule-date" name="scheduled_date" required>
+            </div>
+            <div class="form-field half">
+              <label for="schedule-time">時間 <span class="required">*</span></label>
+              <input type="time" id="schedule-time" name="scheduled_time" required>
             </div>
           </div>
           <div class="form-row">
             <div class="form-field">
-              <label style="font-weight:600; font-size:0.9rem; margin-bottom:4px; display:block;">注意事項（特記事項）</label>
-              <textarea class="form-field" id="survey-notes" rows="2"></textarea>
+              <label>清掃内容 <span class="required">*</span></label>
+              <div class="cleaning-items-search-wrapper">
+                <input type="text" id="cleaning-items-search" placeholder="清掃内容を追加..." autocomplete="off">
+                <div class="cleaning-items-results" id="cleaning-items-results" style="display: none;"></div>
+              </div>
+              <div class="cleaning-items-selected" id="cleaning-items-selected" style="margin-top:8px;"></div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field half">
+              <label for="schedule-sales">営業担当</label>
+              <select id="schedule-sales" name="sales_id">
+                <option value="">未設定</option>
+              </select>
+            </div>
+            <div class="form-field half">
+              <label>指定清掃員（OS）</label>
+              <div style="display:flex; gap:8px; align-items:flex-start;">
+                <div id="selected-workers-display"
+                  style="flex:1; border:1px solid #e2e8f0; border-radius:4px; padding:8px; min-height:42px; background:#f9fafb; font-size:0.9rem; color:#4b5563;">
+                  <span style="color:#9ca3af;">オープン（未割当）</span>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm"
+                  onclick="document.getElementById('worker-selection-dialog').showModal()" style="height:42px;">
+                  <i class="fas fa-users"></i> 選択
+                </button>
+              </div>
+              <small style="color:#666;">※選択しない場合「オープン」となります</small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label for="schedule-notes">備考</label>
+              <textarea id="schedule-notes" name="notes" rows="2" placeholder="特記事項があれば入力"></textarea>
             </div>
           </div>
         </div>
-      </div>
-      <div class="info-item form-item">
-        <span class="info-label">注意事項（特記事項）</span>
-        <textarea class="form-field" id="survey-notes" rows="2"></textarea>
-      </div>
-  </div>
-  </div>
 
-  <div class="form-status" id="form-status"></div>
-  <div class="dialog-actions">
-    <button type="button" class="btn btn-secondary"
-      onclick="document.getElementById('schedule-dialog').close()">キャンセル</button>
-    <button type="submit" class="btn btn-primary">依頼書を作成</button>
-  </div>
-  </form>
-  </div>
-</dialog>
+        <!-- カルテ（問診票）セクション -->
+        <div class="hierarchy-section">
+          <div class="hierarchy-header">
+            <i class="fas fa-clipboard-list"></i> カルテ情報
+            <small style="color:#64748b; font-weight:normal; margin-left:8px;">※この内容は顧客カルテにも保存されます</small>
+          </div>
 
-<!-- 削除確認ダイアログ -->
-<dialog id="delete-dialog" class="delete-dialog">
-  <div class="dialog-content dialog-sm">
-    <h3>削除確認</h3>
-    <p id="delete-message">この依頼書を削除しますか？</p>
+          <!-- 基本ヒアリング (Stacked) -->
+          <div class="intake-category">
+            <div class="intake-category-title"><i class="fas fa-clipboard-check"></i> 基本ヒアリング</div>
+            <div class="form-row">
+              <div class="form-field">
+                <label style="font-weight:600; font-size:0.9rem; margin-bottom:4px; display:block;">清掃の悩み</label>
+                <textarea class="form-field" id="survey-issue" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label style="font-weight:600; font-size:0.9rem; margin-bottom:4px; display:block;">店内環境</label>
+                <textarea class="form-field" id="survey-environment" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label style="font-weight:600; font-size:0.9rem; margin-bottom:4px; display:block;">通常清掃の頻度</label>
+                <input class="form-field" id="survey-cleaning-frequency" type="text" placeholder="例：毎日30分">
+              </div>
+            </div>
+          </div>
+
+          <!-- 店舗仕様 -->
+          <div class="intake-category">
+            <div class="intake-category-title"><i class="fas fa-store"></i> 店舗仕様</div>
+            <!-- Compact fields kept as is, but ensuring wrapper exists if needed -->
+            <div class="info-item form-item">
+              <div class="compact-fields">
+                <label class="compact-field">
+                  <span>平米数/坪数</span>
+                  <input class="form-field" id="survey-area-sqm" type="text">
+                </label>
+                <label class="compact-field">
+                  <span>出入口</span>
+                  <input class="form-field" id="survey-entrances" type="text">
+                </label>
+                <label class="compact-field">
+                  <span>天井高さ</span>
+                  <input class="form-field" id="survey-ceiling-height" type="text">
+                </label>
+                <label class="compact-field">
+                  <span>鍵の位置</span>
+                  <input class="form-field" id="survey-key-location" type="text">
+                </label>
+                <label class="compact-field">
+                  <span>ブレーカー</span>
+                  <input class="form-field" id="survey-breaker-location" type="text">
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 設備・内装 (Stacked Checkboxes) -->
+          <div class="intake-category">
+            <div class="intake-category-title"><i class="fas fa-cogs"></i> 設備・内装</div>
+            <div class="info-item form-item">
+              <div class="compact-fields">
+                <label class="compact-field"><span>壁材質</span><input class="form-field" id="survey-wall-material"
+                    type="text"></label>
+                <label class="compact-field"><span>床材質</span><input class="form-field" id="survey-floor-material"
+                    type="text"></label>
+                <label class="compact-field"><span>トイレ数</span><input class="form-field" id="survey-toilet-count"
+                    type="text"></label>
+              </div>
+            </div>
+            <div class="form-row" style="margin-top:16px;">
+              <div class="form-field">
+                <label style="font-weight:600; font-size:0.9rem; margin-bottom:8px; display:block;">設備チェック</label>
+                <div class="checkbox-group" id="survey-equipment" style="display:flex; flex-wrap:wrap; gap:8px;">
+                  <label class="checkbox-chip"><input type="checkbox" value="aircon"><span>空調</span></label>
+                  <label class="checkbox-chip"><input type="checkbox" value="duct"><span>ダクト</span></label>
+                  <label class="checkbox-chip"><input type="checkbox" value="hood"><span>フード</span></label>
+                  <label class="checkbox-chip"><input type="checkbox" value="grease_trap"><span>グリスト</span></label>
+                  <label class="checkbox-chip"><input type="checkbox" value="floor"><span>床</span></label>
+                  <label class="checkbox-chip"><input type="checkbox" value="drain"><span>排水溝</span></label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 注意事項・計画 (Stacked) -->
+          <div class="intake-category">
+            <div class="intake-category-title"><i class="fas fa-exclamation-circle"></i> 注意事項・計画</div>
+            <div class="form-row">
+              <div class="form-field">
+                <label style="font-weight:600; font-size:0.9rem; margin-bottom:4px; display:block;">特に気になる場所</label>
+                <textarea class="form-field" id="survey-hotspots" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label style="font-weight:600; font-size:0.9rem; margin-bottom:4px; display:block;">注意事項（特記事項）</label>
+                <textarea class="form-field" id="survey-notes" rows="2"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="info-item form-item">
+          <span class="info-label">注意事項（特記事項）</span>
+          <textarea class="form-field" id="survey-notes" rows="2"></textarea>
+        </div>
+    </div>
+    </div>
+
+    <div class="form-status" id="form-status"></div>
     <div class="dialog-actions">
       <button type="button" class="btn btn-secondary"
-        onclick="document.getElementById('delete-dialog').close()">キャンセル</button>
-      <button type="button" class="btn btn-danger" id="confirm-delete">削除</button>
+        onclick="document.getElementById('schedule-dialog').close()">キャンセル</button>
+      <button type="submit" class="btn btn-primary">依頼書を作成</button>
     </div>
-  </div>
-</dialog>
+    </form>
+    </div>
+  </dialog>
 
-<script src="/js/aws-s3-upload.js"></script>
-<script src="/js/sales-schedules.js"></script>
+  <!-- 削除確認ダイアログ -->
+  <dialog id="delete-dialog" class="delete-dialog">
+    <div class="dialog-content dialog-sm">
+      <h3>削除確認</h3>
+      <p id="delete-message">この依頼書を削除しますか？</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary"
+          onclick="document.getElementById('delete-dialog').close()">キャンセル</button>
+        <button type="button" class="btn btn-danger" id="confirm-delete">削除</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="/js/aws-s3-upload.js"></script>
+  <script src="/js/sales-schedules.js"></script>

@@ -665,11 +665,45 @@ function renderCalendar() {
       cel.appendChild(ev);
     });
 
-    // Add Request on click
-    cel.onclick = () => openAddDialog(dateStr);
+    // Show Daily Schedules on click
+    cel.onclick = () => showDailySchedules(dateStr);
 
     calendarDays.appendChild(cel);
   }
+}
+
+function showDailySchedules(dateStr) {
+  const dialog = document.getElementById('daily-schedule-dialog');
+  const listEl = document.getElementById('daily-schedule-list');
+  const dateTitle = document.getElementById('daily-dialog-date');
+  if (!dialog || !listEl) return;
+
+  dateTitle.textContent = dateStr;
+
+  const items = filteredSchedules.filter(s => (s.date || s.scheduled_date) === dateStr);
+
+  if (items.length === 0) {
+    listEl.innerHTML = '<div class="empty-state">この日の依頼はありません</div>';
+  } else {
+    listEl.innerHTML = items.map(s => {
+      const store = allStores.find(x => x.id === (s.store_id || s.client_id)) || {};
+      const statusLabel = getStatusLabel(s.status);
+      return `
+        <div class="schedule-card" onclick="openEditDialog('${s.id}'); document.getElementById('daily-schedule-dialog').close();" style="cursor:pointer; border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px;">
+           <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span class="status-badge status-${s.status}">${statusLabel}</span>
+              <span style="font-size:0.8rem; color:#666;">${s.time_slot || ''}</span>
+           </div>
+           <div style="font-weight:bold; color:#333;">${escapeHtml(store.name || s.store_name || '店舗未設定')}</div>
+           <div style="font-size:0.85rem; color:#666; margin-top:4px;">
+              担当: ${s.worker_id ? (allWorkers.find(w => w.id === s.worker_id)?.name || '未定') : '未割当'}
+           </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  dialog.showModal();
 }
 
 document.getElementById('prev-month')?.addEventListener('click', () => {
