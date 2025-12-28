@@ -4822,6 +4822,12 @@ async function loadOSNextSchedule(user) {
               <div style="font-size: 0.7rem; font-weight: 700; color: #9ca3af; margin-bottom: 4px; text-transform: uppercase;">Services</div>
               <div style="display: flex; gap: 4px; flex-wrap: wrap;">
                 ${serviceNames.map(name => `<span style="background: #ffecf2; color: #ff679c; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">#${escapeHtml(name)}</span>`).join('')}
+                <button onclick="showAddServiceModal('${nextSchedule.id}')" style="background: #fff; border: 1px dashed #d1d5db; color: #6b7280; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: pointer; margin-left: 4px;" title="清掃項目を追加">
+                  <i class="fas fa-plus"></i>
+                </button>
+                <button onclick="showAddServiceModal('${nextSchedule.id}')" style="background: #fff; border: 1px dashed #d1d5db; color: #6b7280; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: pointer; margin-left: 4px;" title="清掃項目を追加">
+                  <i class="fas fa-plus"></i>
+                </button>
               </div>
             </div>
           </div>
