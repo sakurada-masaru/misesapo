@@ -349,26 +349,22 @@
           </div>
           <!-- 中央カラム -->
           <div class="mypage-column mypage-column-center">
-            <!-- 今月の総案件数 -->
-            <section id="monthly-schedules">
+            <!-- アクティビティ（最近の動き） -->
+            <section id="recent-activity">
               <div class="container-section">
                 <div class="container-header">
                   <h2 class="container-title drag-handle">
                     <i class="fas fa-grip-vertical"></i>
-                    <i class="fas fa-calendar-check"></i>
-                    今月の総案件数
+                    <i class="fas fa-history"></i>
+                    アクティビティ
                   </h2>
+                  <a href="/sales/schedules" class="btn btn-text btn-sm">
+                    すべて見る
+                  </a>
                 </div>
-                <div class="card accordion-content">
-                  <div class="monthly-schedules-content">
-                    <div class="schedules-count-display">
-                      <span class="schedules-count-number" id="monthly-schedules-count">0</span>
-                      <span class="schedules-count-label">件</span>
-                    </div>
-                    <div class="schedules-count-description">
-                      <i class="fas fa-info-circle"></i>
-                      <span>今月のスケジュール登録数</span>
-                    </div>
+                <div class="card accordion-content" style="padding:0;">
+                  <div id="activity-feed" class="activity-feed">
+                    <div class="empty-state" style="padding:20px;">読み込み中...</div>
                   </div>
                 </div>
               </div>

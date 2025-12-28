@@ -908,7 +908,7 @@ def lambda_handler(event, context):
                 return get_training_videos_data(headers)
             elif method == 'PUT' or method == 'POST':
                 return save_training_videos_data(event, headers)
-        elif normalized_path == '/announcements':
+        elif normalized_path == '/announcements' or normalized_path == '/staff/announcements' or normalized_path == '/admin/announcements':
             # お知らせデータの読み書き
             if method == 'GET':
                 return get_announcements(headers)

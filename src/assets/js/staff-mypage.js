@@ -97,7 +97,91 @@ async function loadCurrentUser() {
     // 日付が変わったかチェックして初期化
     initializeAttendanceForToday();
 
-    // ユーザーIDまたはメールアドレスを取得（優先順位: URLパラメータ > 認証情報）
+    // ... existing code ...
+    async function loadRecentActivity(userId) {
+      const feed = document.getElementById('activity-feed');
+      if (!feed) return;
+
+      try {
+        // Fetch schedules
+        // Ideally: /schedules?sales_id=userId
+        // But API might not support filtering by sales_id directly?
+        // Let's fetch all and filter client-side for now (MVP).
+        const res = await fetch(`${API_BASE}/schedules`);
+        if (!res.ok) throw new Error('Failed to load activity');
+        const data = await res.json();
+        const items = Array.isArray(data) ? data : (data.items || []);
+
+        // Filter: Created by/Sales ID = userId OR just show all for Sales Dashboard feel?
+        // "MyPage" usually means MY data.
+        // If `sales_id` matches.
+        const myActivity = items.filter(s => {
+          // Loose match on sales_id if exists
+          if (s.sales_id && String(s.sales_id) === String(userId)) return true;
+          // If created_by matches (if available)
+          if (s.created_by && String(s.created_by) === String(userId)) return true;
+          // If draft and no sales_id, maybe show? No, explicit assignment better.
+          return false;
+        });
+
+        // If 0 found, maybe show all Drafts?
+        // Let's show "All Drafts" + "My Scheduled" for now to be useful.
+        const relevant = items.filter(s => {
+          const isMine = (s.sales_id && String(s.sales_id) === String(userId));
+          const isDraft = s.status === 'draft';
+          // Activity: Show things I manage (Mine) OR things needing attention (Drafts)
+          return isMine || isDraft;
+        });
+
+        // Sort by date desc (Recent first)
+        relevant.sort((a, b) => {
+          const da = new Date(a.updated_at || a.created_at || a.date);
+          const db = new Date(b.updated_at || b.created_at || b.date);
+          return db - da; // Desc
+        });
+
+        if (relevant.length === 0) {
+          feed.innerHTML = '<div class="empty-state">アクティビティはありません</div>';
+          return;
+        }
+
+        feed.innerHTML = relevant.slice(0, 10).map(item => {
+          let icon = 'fa-file';
+          let color = '#9ca3af';
+          let text = '更新しました';
+
+          if (item.status === 'draft') {
+            icon = 'fa-pen'; color = '#f59e0b'; text = '依頼書を作成しました（未割当）';
+            if (item.worker_id) { text = '依頼書（担当者決定待ち）'; }
+          } else if (item.status === 'scheduled') {
+            icon = 'fa-check'; color = '#3b82f6'; text = '清掃員が決定しました';
+          } else if (item.status === 'completed') {
+            icon = 'fa-check-double'; color = '#10b981'; text = '完了報告がありました';
+          }
+
+          const dateStr = item.date || item.scheduled_date || '日付未定';
+          const storeName = (item.store_name || '店舗未設定'); // Should try to match store ID if possible, but store_name might be in item?
+
+          return `
+               <div class="activity-item" style="padding:12px; border-bottom:1px solid #f3f4f6; display:flex; gap:12px; align-items:start;">
+                  <div class="activity-icon" style="background:${color}20; color:${color}; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i class="fas ${icon}"></i>
+                  </div>
+                  <div class="activity-content">
+                     <div style="font-size:0.9rem; font-weight:600; color:#374151;">${escapeHtml(storeName)}</div>
+                     <div style="font-size:0.85rem; color:#6b7280;">${text}</div>
+                     <div style="font-size:0.75rem; color:#9ca3af; margin-top:4px;">${dateStr}</div>
+                  </div>
+                  <a href="#" onclick="openEditDialog('${item.id}'); return false;" style="margin-left:auto; color:#9ca3af;"><i class="fas fa-chevron-right"></i></a>
+               </div>
+             `;
+        }).join('');
+
+      } catch (e) {
+        console.error(e);
+        feed.innerHTML = '<div class="empty-state">読み込みエラー</div>';
+      }
+    }
     let userId = null;
     let userEmail = null;
 
@@ -5490,3 +5574,15 @@ function closeWorkInstructionModal() {
 }
 window.showWorkInstructionModal = showWorkInstructionModal;
 window.closeWorkInstructionModal = closeWorkInstructionModal;
+console.log('[Debug] showWorkInstructionModal registered to window');
+
+document.addEventListener('DOMContentLoaded', () => {
+  // 既存のDOMContentLoadedがある場合は重複に注意が必要だが、
+  // ここではグローバル登録の確認用として
+  console.log('[Debug] DOMContentLoaded in staff-mypage.js');
+  if (typeof window.showWorkInstructionModal === 'function') {
+    console.log('[Debug] showWorkInstructionModal is available');
+  } else {
+    console.error('[Debug] showWorkInstructionModal is missing!');
+  }
+});
