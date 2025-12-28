@@ -18,10 +18,14 @@
     max-width: 800px;
     width: 95%;
     max-height: 90vh;
+    max-height: 90dvh;
+    /* Mobile friendly */
     padding: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    border-radius: 8px;
+    /* Ensure rounded corners */
   }
 
   .schedule-dialog h3 {
@@ -33,12 +37,18 @@
     top: 0;
     background: #fff;
     z-index: 10;
+    flex-shrink: 0;
+    /* Prevent shrinking */
   }
 
   .schedule-dialog form {
     padding: 16px;
     overflow-y: auto;
     flex: 1;
+    -webkit-overflow-scrolling: touch;
+    /* iOS smooth scrolling */
+    overscroll-behavior: contain;
+    /* Prevent body scroll chaining */
   }
 
   .dialog-actions {
@@ -216,7 +226,7 @@
     <i class="fas fa-calendar"></i>
     <span>スケジュール</span>
   </a>
-  <a href="/sales/estimates" class="dock-item">
+  <a href="/sales/schedules" class="dock-item">
     <i class="fas fa-file-invoice"></i> <!-- Icon changed -->
     <span>依頼書</span> <!-- Renamed from 案件 -->
   </a>
