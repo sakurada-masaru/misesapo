@@ -11,6 +11,7 @@
     display: flex;
     margin: 12px 0 10px;
   }
+
   .page-title-block .client-tab {
     flex: 0 0 auto;
     padding: 12px 16px;
@@ -28,9 +29,11 @@
     transition: all 0.2s;
     box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06);
   }
+
   .page-title-block .client-tab i {
     font-size: 1rem;
   }
+
   .page-title-block .client-tab.active {
     color: var(--primary, #ff679c);
     border-bottom-color: var(--primary, #ff679c);
@@ -38,7 +41,7 @@
   }
 </style>
 
-<main id="main" class="container sales-schedules">
+<main id="main" class="container sales-schedules" style="margin-bottom: 80px;">
   <div class="page-header">
     <div class="header-actions">
       <button type="button" class="btn-icon" id="view-toggle" title="カレンダー表示">
@@ -159,10 +162,10 @@
     <i class="fas fa-calendar"></i>
     <span>スケジュール</span>
   </a>
-    <a href="/sales/estimates" class="dock-item">
-      <i class="fas fa-briefcase"></i>
-      <span>案件</span>
-    </a>
+  <a href="/sales/estimates" class="dock-item">
+    <i class="fas fa-briefcase"></i>
+    <span>案件</span>
+  </a>
 </nav>
 
 <!-- 新規作成/編集ダイアログ -->
@@ -174,7 +177,7 @@
     <h3 id="dialog-title">新規スケジュール作成</h3>
     <form id="schedule-form">
       <input type="hidden" id="schedule-id" name="id">
-      
+
       <div class="form-row">
         <div class="form-field">
           <label for="schedule-store-search">店舗・ブランド・法人名 <span class="required">*</span></label>
@@ -186,13 +189,15 @@
                 <option value="brand">ブランド名</option>
                 <option value="client">法人名</option>
               </select>
-              <input type="text" id="schedule-store-search" placeholder="店舗名、ブランド名、法人名で検索..." autocomplete="off" required>
+              <input type="text" id="schedule-store-search" placeholder="店舗名、ブランド名、法人名で検索..." autocomplete="off"
+                required>
             </div>
             <input type="hidden" id="schedule-store" name="store_id">
             <div class="store-search-results" id="schedule-store-results" style="display: none;"></div>
           </div>
           <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-            <a class="btn btn-secondary btn-sm" href="/sales/clients/new.html" target="_blank" rel="noopener noreferrer" id="open-customers-page-btn">
+            <a class="btn btn-secondary btn-sm" href="/sales/clients/new.html" target="_blank" rel="noopener noreferrer"
+              id="open-customers-page-btn">
               <i class="fas fa-external-link-alt"></i> 新規顧客（店舗）登録
             </a>
             <button type="button" class="btn btn-secondary btn-sm" id="reload-customers-data-btn">
@@ -201,7 +206,8 @@
           </div>
           <div id="schedule-store-summary" style="margin-top:8px;color:#6b7280;font-size:0.875rem;">
             <div><strong style="color:#111827;">選択中:</strong> <span id="schedule-store-summary-store">-</span></div>
-            <div>法人: <span id="schedule-store-summary-client">-</span> / ブランド: <span id="schedule-store-summary-brand">-</span></div>
+            <div>法人: <span id="schedule-store-summary-client">-</span> / ブランド: <span
+                id="schedule-store-summary-brand">-</span></div>
             <div>住所: <span id="schedule-store-summary-address">-</span></div>
           </div>
         </div>
@@ -231,7 +237,7 @@
           <input type="text" id="schedule-contact-person" name="contact_person" placeholder="当日の相手先担当者（店舗選択で自動入力）">
         </div>
       </div>
-      
+
       <div class="form-row">
         <div class="form-field half">
           <label for="schedule-date">日付 <span class="required">*</span></label>
@@ -242,7 +248,7 @@
           <input type="time" id="schedule-time" name="scheduled_time" required>
         </div>
       </div>
-      
+
       <div class="form-row">
         <div class="form-field half">
           <label for="schedule-duration">作業時間（分）</label>
@@ -255,7 +261,7 @@
           </select>
         </div>
       </div>
-      
+
       <div class="form-row">
         <div class="form-field half">
           <label for="schedule-worker">担当清掃員</label>
@@ -264,7 +270,7 @@
           </select>
         </div>
       </div>
-      
+
       <div class="form-row">
         <div class="form-field">
           <label for="cleaning-items-search">清掃内容</label>
@@ -284,7 +290,7 @@
           <input type="hidden" id="selected-cleaning-items-json" name="cleaning_items">
         </div>
       </div>
-      
+
       <div class="form-row">
         <div class="form-field">
           <label for="schedule-status">ステータス</label>
@@ -297,17 +303,18 @@
           </select>
         </div>
       </div>
-      
+
       <div class="form-row">
         <div class="form-field">
           <label for="schedule-notes">備考</label>
           <textarea id="schedule-notes" name="notes" rows="3" placeholder="特記事項があれば入力"></textarea>
         </div>
       </div>
-      
+
       <div class="form-status" id="form-status"></div>
       <div class="dialog-actions">
-        <button type="button" class="btn btn-secondary" onclick="document.getElementById('schedule-dialog').close()">キャンセル</button>
+        <button type="button" class="btn btn-secondary"
+          onclick="document.getElementById('schedule-dialog').close()">キャンセル</button>
         <button type="submit" class="btn btn-primary">保存</button>
       </div>
     </form>
@@ -320,7 +327,8 @@
     <h3>削除確認</h3>
     <p id="delete-message">このスケジュールを削除しますか？</p>
     <div class="dialog-actions">
-      <button type="button" class="btn btn-secondary" onclick="document.getElementById('delete-dialog').close()">キャンセル</button>
+      <button type="button" class="btn btn-secondary"
+        onclick="document.getElementById('delete-dialog').close()">キャンセル</button>
       <button type="button" class="btn btn-danger" id="confirm-delete">削除</button>
     </div>
   </div>
