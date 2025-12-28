@@ -327,14 +327,23 @@
             const today = new Date().toLocaleDateString('ja-JP');
             const container = document.getElementById('report-container');
 
-            const workerName = data.worker_name || '未定';
+            const workerName = data.worker_name || '未定'; // Might need to fetch name if only ID is present? 
+            // Actually sales-schedules.js handles enrichment? 
+            // Checking: sales-schedules.js passes 's'. s has 'worker_id'. 
+            // It does NOT automatically add worker_name unless I enriched it.
+            // But let's assume for now we focus on Survey Data. (User complaint is about Input Content).
+            // NOTE: data object passed from opener might be raw.
+
             const storeName = data.store_name || '名称なし';
             const items = data.cleaning_items || [];
+            const sd = data.survey_data || {};
+
+            // Equipment join
+            const equip = Array.isArray(sd.equipment) ? sd.equipment.join(', ') : '';
 
             container.innerHTML = `
             <div class="header">
                 <div class="logo">
-                    <!-- Logo placeholder -->
                     <div style="font-size: 20px; font-weight: bold; color: #FF679C;">MISESAPO</div>
                     <div style="font-size: 10px;">店舗清掃管理システム</div>
                 </div>
@@ -352,11 +361,15 @@
                         <th>作業予定日</th>
                         <td>${data.date || data.scheduled_date}</td>
                         <th>作業時間</th>
-                        <td>${data.time || data.scheduled_time} 〜 (想定)</td>
+                        <td>${data.time || data.scheduled_time || data.time_slot} 〜 (想定)</td>
                     </tr>
                     <tr>
                         <th>担当者</th>
-                        <td colspan="3">${workerName}</td>
+                        <td colspan="3">
+                            ${data.worker_name ? data.worker_name :
+                    (data.selectedWorkers && data.selectedWorkers.length > 0 ?
+                        data.selectedWorkers.map(w => w.name).join(', ') : '未定')}
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -386,7 +399,7 @@
                         ${!items.length ? '<div>指定なし</div>' : items.map(item => `
                             <div class="check-item">
                                 <span class="check-box checked"></span>
-                                <span>${item.name || item}</span>
+                                <span>${item.name || item.title || item}</span>
                             </div>
                         `).join('')}
                     </div>
@@ -395,28 +408,35 @@
 
             <div class="section">
                 <div class="section-title">特記事項・備考</div>
-                <div style="border: 1px solid #ccc; padding: 15px; min-height: 80px; white-space: pre-wrap;">${data.notes || 'なし'}</div>
+                <div style="border: 1px solid #ccc; padding: 15px; min-height: 50px; white-space: pre-wrap;">${data.notes || 'なし'}</div>
             </div>
             
             <div class="section">
-                <div class="section-title">店舗仕様・共有事項</div>
+                <div class="section-title">店舗仕様・カルテ情報</div>
                  <div class="karte-grid">
-                    <div class="karte-item">
-                        <label>清掃の悩み</label>
-                        <div>${data.survey_issue || '-'}</div>
-                    </div>
-                    <div class="karte-item">
-                        <label>現場環境</label>
-                        <div>${data.survey_environment || '-'}</div>
-                    </div>
-                    <div class="karte-item">
-                        <label>鍵の場所</label>
-                        <div>${data.survey_key_location || '-'}</div>
-                    </div>
-                     <div class="karte-item">
-                        <label>ブレーカー位置</label>
-                        <div>${data.survey_breaker_location || '-'}</div>
-                    </div>
+                    <div class="karte-item"><label>清掃の悩み</label><div>${sd.issue || '-'}</div></div>
+                    <div class="karte-item"><label>現場環境</label><div>${sd.environment || '-'}</div></div>
+                    <div class="karte-item"><label>通常頻度</label><div>${sd.cleaning_frequency || '-'}</div></div>
+                    <div class="karte-item"><label>広さ/坪数</label><div>${sd.area_sqm || '-'}</div></div>
+                    <div class="karte-item"><label>出入口</label><div>${sd.entrances || '-'}</div></div>
+                    <div class="karte-item"><label>天井高</label><div>${sd.ceiling_height || '-'}</div></div>
+                    <div class="karte-item"><label>鍵の場所</label><div>${sd.key_location || '-'}</div></div>
+                    <div class="karte-item"><label>ブレーカー</label><div>${sd.breaker_location || '-'}</div></div>
+                    <div class="karte-item"><label>壁材質</label><div>${sd.wall_material || '-'}</div></div>
+                    <div class="karte-item"><label>床材質</label><div>${sd.floor_material || '-'}</div></div>
+                    <div class="karte-item"><label>トイレ数</label><div>${sd.toilet_count || '-'}</div></div>
+                    <div class="karte-item"><label>気になる場所</label><div>${sd.hotspots || '-'}</div></div>
+                 </div>
+                 
+                 <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+                     <div style="display:flex; border-bottom:1px solid #eee; padding-bottom:8px;">
+                        <label style="width:100px; font-weight:bold; color:#555;">設備有無</label>
+                        <div style="flex:1;">${equip || 'なし'}</div>
+                     </div>
+                     <div style="display:flex; padding-top:4px;">
+                        <label style="width:100px; font-weight:bold; color:#555;">注意事項</label>
+                        <div style="flex:1; white-space:pre-wrap;">${sd.notes || 'なし'}</div>
+                     </div>
                  </div>
             </div>
 
