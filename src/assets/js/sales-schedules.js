@@ -103,6 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
   setupStoreSearch();
   setupCleaningItemsSearch();
+  setupWorkerSearch();
 
   // Initial Render (Calendar)
   renderCalendar();
