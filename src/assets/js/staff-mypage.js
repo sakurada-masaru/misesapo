@@ -5861,3 +5861,239 @@ window.openJobDetail = openJobDetail;
 window.closeJobDetailModal = closeJobDetailModal;
 window.acceptJob = acceptJob;
 
+// ========== OSカレンダー機能（営業と共有スケジュール） ==========
+
+let osCalendarDate = new Date();
+let osAllSchedules = [];
+
+async function initOsCalendar() {
+  const prevBtn = document.getElementById('cal-prev-month');
+  const nextBtn = document.getElementById('cal-next-month');
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      osCalendarDate.setMonth(osCalendarDate.getMonth() - 1);
+      renderOsCalendar();
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      osCalendarDate.setMonth(osCalendarDate.getMonth() + 1);
+      renderOsCalendar();
+    });
+  }
+
+  // スケジュールデータを取得
+  await loadOsSchedules();
+  renderOsCalendar();
+}
+
+async function loadOsSchedules() {
+  try {
+    const res = await fetch(`${API_BASE}/schedules`);
+    if (!res.ok) throw new Error('Failed to fetch schedules');
+    const data = await res.json();
+    osAllSchedules = Array.isArray(data) ? data : (data.items || []);
+    allJobsCache = osAllSchedules; // ジョブ詳細用にもキャッシュ
+  } catch (error) {
+    console.error('[OSCalendar] Error loading schedules:', error);
+    osAllSchedules = [];
+  }
+}
+
+function renderOsCalendar() {
+  const container = document.getElementById('os-calendar-days');
+  const monthLabel = document.getElementById('cal-current-month');
+  if (!container) return;
+
+  const year = osCalendarDate.getFullYear();
+  const month = osCalendarDate.getMonth();
+
+  if (monthLabel) {
+    monthLabel.textContent = `${year}年${month + 1}月`;
+  }
+
+  // 月の最初と最後の日
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startDayOfWeek = firstDay.getDay();
+  const daysInMonth = lastDay.getDate();
+
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  // スケジュールを日付ごとにグループ化
+  const schedulesByDate = {};
+  osAllSchedules.forEach(s => {
+    const date = s.scheduled_date || s.date;
+    if (!date) return;
+    if (!schedulesByDate[date]) schedulesByDate[date] = [];
+    schedulesByDate[date].push(s);
+  });
+
+  // カレンダーHTML生成
+  let html = '';
+
+  // 前月の空白セル
+  for (let i = 0; i < startDayOfWeek; i++) {
+    html += `<div style="aspect-ratio: 1; min-height: 40px;"></div>`;
+  }
+
+  // 日付セル
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const daySchedules = schedulesByDate[dateStr] || [];
+    const hasSchedules = daySchedules.length > 0;
+    const isToday = dateStr === todayStr;
+    const dayOfWeek = new Date(year, month, day).getDay();
+    const isSunday = dayOfWeek === 0;
+    const isSaturday = dayOfWeek === 6;
+
+    // ステータス別カウント
+    const draftCount = daySchedules.filter(s => s.status === 'draft' && !s.worker_id).length;
+    const scheduledCount = daySchedules.filter(s => s.status !== 'draft' || s.worker_id).length;
+
+    let bgColor = '#fff';
+    let borderColor = '#e5e7eb';
+    if (isToday) {
+      bgColor = '#eff6ff';
+      borderColor = '#3b82f6';
+    } else if (hasSchedules) {
+      bgColor = draftCount > 0 ? '#fef3c7' : '#ecfdf5';
+    }
+
+    let textColor = '#111827';
+    if (isSunday) textColor = '#ef4444';
+    else if (isSaturday) textColor = '#3b82f6';
+
+    html += `
+      <div onclick="openOsDaySchedules('${dateStr}')" style="
+        aspect-ratio: 1;
+        min-height: 40px;
+        background: ${bgColor};
+        border: 2px solid ${borderColor};
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: ${hasSchedules ? 'pointer' : 'default'};
+        transition: all 0.2s;
+        position: relative;
+      ">
+        <span style="font-weight: ${isToday ? '700' : '500'}; color: ${textColor}; font-size: 0.9rem;">${day}</span>
+        ${hasSchedules ? `
+          <div style="display: flex; gap: 2px; margin-top: 2px;">
+            ${draftCount > 0 ? `<span style="background: #f59e0b; color: white; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px;">${draftCount}</span>` : ''}
+            ${scheduledCount > 0 ? `<span style="background: #10b981; color: white; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px;">${scheduledCount}</span>` : ''}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+// 日付クリックで案件一覧モーダル表示
+async function openOsDaySchedules(dateStr) {
+  const daySchedules = osAllSchedules.filter(s => {
+    const d = s.scheduled_date || s.date;
+    return d === dateStr;
+  });
+
+  if (daySchedules.length === 0) return;
+
+  // モーダル作成
+  let modal = document.getElementById('os-day-schedules-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'os-day-schedules-modal';
+    modal.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    `;
+    document.body.appendChild(modal);
+  }
+
+  // スケジュールカードHTML
+  const cardsHtml = daySchedules.map(s => {
+    const time = s.scheduled_time || s.time_slot || '';
+    const storeName = s.store_name || s.brand_name || '店舗未設定';
+    const items = (s.cleaning_items || []).slice(0, 3).map(i => i.name || i).join(', ');
+    const isDraft = s.status === 'draft' && !s.worker_id;
+    const statusLabel = isDraft ? '募集中' : (s.status === 'completed' ? '完了' : 'アサイン済');
+    const statusColor = isDraft ? '#f59e0b' : (s.status === 'completed' ? '#6b7280' : '#10b981');
+
+    return `
+      <div onclick="openJobDetail('${s.id}')" style="
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      ">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-weight: 600; color: #3b82f6;">${time || '時間未定'}</span>
+          <span style="background: ${statusColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">
+            ${statusLabel}
+          </span>
+        </div>
+        <div style="font-weight: 700; font-size: 1rem; color: #111827; margin-bottom: 4px;">
+          ${escapeHtml(storeName)}
+        </div>
+        ${items ? `<div style="font-size: 0.8rem; color: #6b7280;"><i class="fas fa-broom"></i> ${escapeHtml(items)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  modal.innerHTML = `
+    <div style="
+      background: #f9fafb;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    ">
+      <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; background: white; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700;">
+          <i class="fas fa-calendar-day" style="color: #3b82f6; margin-right: 8px;"></i>
+          ${dateStr} の案件 (${daySchedules.length}件)
+        </h3>
+        <button onclick="closeOsDayModal()" style="border: none; background: none; font-size: 1.5rem; color: #9ca3af; cursor: pointer;">&times;</button>
+      </div>
+      <div style="padding: 16px; overflow-y: auto; max-height: calc(80vh - 80px);">
+        ${cardsHtml}
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+}
+
+function closeOsDayModal() {
+  const modal = document.getElementById('os-day-schedules-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+// 初期化時にカレンダーも初期化
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    initOsCalendar();
+  }, 500);
+});
+
+// グローバル登録
+window.initOsCalendar = initOsCalendar;
+window.renderOsCalendar = renderOsCalendar;
+window.openOsDaySchedules = openOsDaySchedules;
+window.closeOsDayModal = closeOsDayModal;
+
+

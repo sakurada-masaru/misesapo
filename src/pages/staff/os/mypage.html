@@ -259,110 +259,45 @@
         <div class="mypage-main-grid" id="mypage-grid">
           <!-- 左カラム -->
           <div class="mypage-column mypage-column-left">
-            <!-- 出退勤セクション（時計と出退勤記録を統合） -->
-            <section id="attendance">
+            <!-- スケジュールカレンダー（営業と共有） -->
+            <section id="schedule-calendar-section">
               <div class="container-section">
                 <div class="container-header">
                   <h2 class="container-title drag-handle">
                     <i class="fas fa-grip-vertical"></i>
-                    <i class="fas fa-clock"></i>
-                    出退勤
+                    <i class="fas fa-calendar-alt"></i>
+                    スケジュール
                   </h2>
-                  <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-text btn-sm" id="clock-format-toggle" title="24時間/12時間切り替え">
-                      <i class="fas fa-exchange-alt"></i>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn btn-text btn-sm" id="cal-prev-month" title="前月">
+                      <i class="fas fa-chevron-left"></i>
                     </button>
-                    <button class="btn btn-text btn-sm" id="request-correction-btn">
-                      <i class="fas fa-edit"></i>
-                      <span>修正依頼</span>
+                    <span id="cal-current-month"
+                      style="font-weight: 600; min-width: 100px; text-align: center;">2025年1月</span>
+                    <button class="btn btn-text btn-sm" id="cal-next-month" title="次月">
+                      <i class="fas fa-chevron-right"></i>
                     </button>
                   </div>
                 </div>
-                <div class="card accordion-content">
-                  <!-- 基本情報（名前・部署） -->
-                  <div class="attendance-basic-info"
-                    style="padding: 16px; border-bottom: 1px solid #e5e7eb; margin-bottom: 16px;">
-                    <div class="basic-info-row" style="display: flex; gap: 24px; flex-wrap: wrap;">
-                      <div class="basic-info-item">
-                        <span class="basic-info-label">名前</span>
-                        <span class="basic-info-value" id="basic-info-name">-</span>
-                      </div>
-                      <div class="basic-info-item">
-                        <span class="basic-info-label">部署</span>
-                        <span class="basic-info-value" id="basic-info-department">-</span>
-                      </div>
-                    </div>
-                    <div class="basic-info-item" style="margin-top: 12px;">
-                      <span class="basic-info-label">ログインID</span>
-                      <span class="basic-info-value" id="basic-info-email">-</span>
-                    </div>
+                <div class="card accordion-content" style="padding: 12px;">
+                  <!-- カレンダーグリッド -->
+                  <div id="os-calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">
+                    <div style="text-align: center; font-size: 0.75rem; color: #ef4444; font-weight: 600;">日</div>
+                    <div style="text-align: center; font-size: 0.75rem; color: #6b7280; font-weight: 600;">月</div>
+                    <div style="text-align: center; font-size: 0.75rem; color: #6b7280; font-weight: 600;">火</div>
+                    <div style="text-align: center; font-size: 0.75rem; color: #6b7280; font-weight: 600;">水</div>
+                    <div style="text-align: center; font-size: 0.75rem; color: #6b7280; font-weight: 600;">木</div>
+                    <div style="text-align: center; font-size: 0.75rem; color: #6b7280; font-weight: 600;">金</div>
+                    <div style="text-align: center; font-size: 0.75rem; color: #3b82f6; font-weight: 600;">土</div>
                   </div>
-
-                  <!-- 直近の清掃案件（スケジュール）情報 -->
-                  <div class="os-schedule-info" id="os-schedule-info"
-                    style="margin-bottom: 16px; padding: 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    <div class="schedule-info-header"
-                      style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                      <h3 style="margin: 0; font-size: 1rem; font-weight: 600; color: #111827;">
-                        <i class="fas fa-calendar-check" style="margin-right: 8px; color: #ff679c;"></i>
-                        直近の清掃案件
-                      </h3>
-                      <span class="schedule-refresh-indicator" id="schedule-refresh-indicator"
-                        style="font-size: 0.75rem; color: #6b7280;">
-                        <i class="fas fa-sync-alt"></i>
-                      </span>
-                    </div>
-                    <div class="schedule-info-content" id="schedule-info-content">
-                      <div class="schedule-loading" style="text-align: center; padding: 20px; color: #6b7280;">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <span style="margin-left: 8px;">読み込み中...</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 出退勤記録セクション（上部） -->
-                  <div class="attendance-card"
-                    style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
-                    <!-- 今日の出退勤状況 -->
-                    <div class="attendance-today-grid">
-                      <div class="attendance-status-box" id="attendance-status">
-                        <div class="status-indicator" id="status-indicator"></div>
-                        <div class="status-info">
-                          <span class="status-label" id="status-label">未出勤</span>
-                          <span class="status-time" id="status-time">--:--</span>
-                        </div>
-                      </div>
-                      <div class="attendance-action-box">
-                        <button class="btn-attendance btn-clock-in" id="attendance-toggle-btn">
-                          <i class="fas fa-sign-in-alt"></i>
-                          <span id="toggle-btn-text">出勤</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 時計（中央） -->
-                  <div class="digital-clock-card"
-                    style="background: transparent; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 16px; margin-top: 20px;">
-                    <div class="digital-clock-display" id="digital-clock-display">00:00:00</div>
-                    <div class="digital-clock-alarm" id="digital-clock-alarm-section"
-                      style="display: none; margin-top: 12px;">
-                      <div class="alarm-status" id="alarm-status">
-                        <i class="fas fa-bell"></i>
-                        <span id="alarm-time-display">--:--</span>
-                      </div>
-                      <button class="btn btn-sm btn-alarm-toggle" id="alarm-toggle-btn">
-                        <i class="fas fa-bell-slash"></i>
-                      </button>
-                    </div>
-                    <button class="btn btn-sm btn-alarm-set" id="alarm-set-btn" style="margin-top: 8px;">
-                      <i class="fas fa-plus"></i>
-                      アラーム設定
-                    </button>
+                  <div id="os-calendar-days"
+                    style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px;">
+                    <!-- 日付セルはJSで生成 -->
                   </div>
                 </div>
               </div>
             </section>
+
             <!-- 業務連絡通知セクション -->
             <section id="announcements">
               <div class="container-section">
