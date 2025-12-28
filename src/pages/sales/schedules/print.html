@@ -168,6 +168,99 @@
             font-size: 10px;
             color: #999;
         }
+
+        /* Mobile Responsive Styles (Screen Only) */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 12px;
+                background: #f3f4f6;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 100%;
+                padding: 20px 16px;
+                height: auto;
+                min-height: auto;
+                border: none;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+
+            .header {
+                flex-direction: column-reverse;
+                align-items: flex-start;
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+
+            .header .logo {
+                margin-bottom: 0;
+            }
+
+            .meta-info {
+                text-align: left;
+                width: 100%;
+                padding-bottom: 12px;
+                border-bottom: 1px solid #eee;
+            }
+
+            /* Responsive Tables */
+            table {
+                display: block;
+                width: 100%;
+            }
+
+            tbody,
+            tr,
+            th,
+            td {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            tr {
+                margin-bottom: 12px;
+                border: 1px solid #e5e7eb;
+                border-radius: 6px;
+                overflow: hidden;
+            }
+
+            th {
+                width: 100%;
+                background: #f9fafb;
+                color: #4b5563;
+                font-weight: 600;
+                padding: 8px 12px;
+                border: none;
+                border-bottom: 1px solid #f3f4f6;
+            }
+
+            td {
+                width: 100%;
+                border: none;
+                padding: 10px 12px;
+            }
+
+            /* Two column fields like Date/Time become stacked pairs automatically with display:block */
+
+            .karte-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .footer {
+                flex-direction: column;
+                align-items: center;
+                gap: 24px;
+            }
+
+            .sign-box {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
     </style>
 </head>
 
