@@ -295,6 +295,28 @@
       </div>
     </div>
   </dialog>
+  <dialog id="print-preview-dialog"
+    style="border:none;border-radius:12px;padding:0;width:95%;max-width:900px;height:90vh;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="display:flex;flex-direction:column;height:100%;">
+      <div
+        style="padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;background:#fff;">
+        <h3 style="margin:0;font-size:1.1rem;font-weight:600;color:#333;">依頼書プレビュー</h3>
+        <button onclick="document.getElementById('print-preview-dialog').close()"
+          style="border:none;background:none;font-size:1.5rem;cursor:pointer;color:#666;line-height:1;">&times;</button>
+      </div>
+      <!-- Iframe Container -->
+      <div style="flex:1;background:#525659;padding:0;overflow:hidden;position:relative;">
+        <iframe id="print-preview-frame" style="width:100%;height:100%;border:none;display:block;"></iframe>
+      </div>
+      <div
+        style="padding:16px;display:flex;justify-content:flex-end;gap:12px;border-top:1px solid #eee;background:#fff;">
+        <button class="btn btn-secondary" onclick="document.getElementById('print-preview-dialog').close()">閉じる</button>
+        <button class="btn btn-primary" onclick="document.getElementById('print-preview-frame').contentWindow.print()">
+          <i class="fas fa-print"></i> 印刷する
+        </button>
+      </div>
+    </div>
+  </dialog>
   <dialog id="schedule-dialog" class="schedule-dialog">
     <div class="dialog-content">
       <button type="button" class="dialog-close" onclick="document.getElementById('schedule-dialog').close()">

@@ -919,12 +919,9 @@ window.getScheduleData = function (id) {
 };
 
 window.printScheduleRequest = function (id) {
-  const s = getScheduleData(id);
+  const s = allSchedules.find(x => x.id === id);
   if (!s) { alert('データが見つかりません'); return; }
 
-  // Store in local storage to ensure data persistence for the popup
-  // We also augment it with store info if needed, though the print page logic handles some.
-  // Let's attach store address/phone to the object for easier printing if not present.
   const store = allStores.find(st => st.id === (s.store_id || s.client_id));
   const enrichment = {
     store_address: store?.address,
@@ -933,7 +930,18 @@ window.printScheduleRequest = function (id) {
   };
 
   localStorage.setItem('preview_schedule_data', JSON.stringify(enrichment));
-  window.open(`/sales/schedules/print.html?id=${id}`, '_blank', 'width=900,height=1000,resizable=yes,scrollbars=yes');
+
+  // Try opening in modal
+  const dialog = document.getElementById('print-preview-dialog');
+  const iframe = document.getElementById('print-preview-frame');
+
+  if (dialog && iframe) {
+    iframe.src = `/sales/schedules/print.html?id=${id}`;
+    dialog.showModal();
+  } else {
+    // Fallback
+    window.open(`/sales/schedules/print.html?id=${id}`, '_blank', 'width=900,height=1000,resizable=yes,scrollbars=yes');
+  }
 };
 
 // --- Handle Submit ---
