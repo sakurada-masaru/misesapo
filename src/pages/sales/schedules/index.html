@@ -60,6 +60,27 @@
     z-index: 10;
   }
 
+  #calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: #e2e8f0;
+    border: 1px solid #e2e8f0;
+  }
+
+  .calendar-day {
+    background: #fff;
+    min-height: 100px;
+    padding: 4px;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .calendar-day.empty {
+    background: #f8fafc;
+    cursor: default;
+  }
+
   .hierarchy-section {
     margin-bottom: 20px;
     background: #f8fafc;
