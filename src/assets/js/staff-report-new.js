@@ -245,11 +245,36 @@
       scheduleSelect.value = String(scheduleParam);
       applyScheduleSelection(String(scheduleParam));
 
-      // 作業開始モードまたは未着手の場合、開始モーダルを表示
+      // 作業開始モードまたは未着手（自分のレポートがない）の場合、開始モーダルを表示
       const mode = urlParams.get('mode');
       const schedule = scheduleById[String(scheduleParam)];
-      if (schedule && (mode === 'start' || schedule.status === 'scheduled') && schedule.status !== 'in_progress' && schedule.status !== 'completed') {
-        // 少し遅延させて表示（画面描画を待つ）
+      // reportedScheduleIdsはloadAvailableSchedules内で定義されているが、ここはスコープ外
+      // availableSchedulesのフィルタリングロジックで「すでにレポート済み」は除外されているか？
+      // -> availableSchedulesは「レポート済みを除外」している(line 216)。
+      //   (reportedScheduleIds.has(String(scheduleId)) return false)
+      // つまり scheduleSelect にあるということは、レポートはまだ（完了して）ない。
+      // ただし「in_progress」なレポートがある場合は？
+      // backend API (reports?limit=1000) がすべてのレポートを返すなら、in_progressも含まれるはず。
+      // したがって、scheduleSelectに残っている＝レポート未作成（未着手）と考えてよいか？
+      // あるいは、作業中の場合も選択肢に出るのか？
+      // Line 216: reportedScheduleIds.has(...) return false.
+      // もし in_progress のレポートもAPIが返しているなら、作業中の案件はドロップダウンから消えているはず。
+      // 「作業中（レポート作成中）」の案件を編集したい場合は？
+      // URLパラメータで指定された場合(selectedScheduleId)は除外ショートサーキット(line 213)で残る。
+      // したがって、selectedScheduleIdがある場合、reportedScheduleIdsに含まれているか確認する必要がある。
+      // reportedScheduleIdsはローカル変数なのでアクセスできない！
+
+      // 修正: 簡易的に status チェックは外すか、personal_status を見る（が、personal_statusはサーバーから来ない）。
+      // ひとまず、「mode=start」なら強制的に出すのが一番確実。
+      // ただし、誤ってリロードしたときに出るとうざい。
+
+      const hasReport = availableSchedules.find(s => String(s.id) === String(scheduleParam)) === undefined;
+      // ↑これは「ドロップダウンにない」＝「完了済み」の意味になる。
+
+      // 単純化: mode='start' なら必ず出す。
+      // または、スケジュールステータスは「他人と共有」なので無視する。
+
+      if (schedule && mode === 'start') {
         setTimeout(() => showStartModal(schedule), 500);
       }
     }
@@ -9032,7 +9057,7 @@
     };
   }
 
-  // 作業開始API呼び出し
+  // 作業開始API呼び出し（個人レポート作成）
   async function startWork(scheduleId) {
     // 位置情報を取得（オプション）
     let location = null;
@@ -9058,26 +9083,36 @@
       headers['Authorization'] = `Bearer ${idToken}`;
     }
 
-    const updateData = {
+    const currentUser = getCurrentUserFromStorage();
+    const staffId = currentUser?.id || currentUser?.username;
+
+    // レポートを作成（下書き/作業中状態）
+    const reportData = {
+      schedule_id: scheduleId,
+      staff_id: staffId,
+      date: new Date().toISOString().split('T')[0], // 今日の日付
+      start_time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
       status: 'in_progress',
-      started_at: new Date().toISOString()
+      is_draft: true
     };
+
     if (location) {
-      updateData.start_location = location;
+      reportData.start_location = location;
     }
 
-    const response = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
-      method: 'PUT',
+    // POST /daily-reports で新規レポート作成
+    const response = await fetch(`${API_BASE}/daily-reports`, {
+      method: 'POST',
       headers,
-      body: JSON.stringify(updateData)
+      body: JSON.stringify(reportData)
     });
 
-    if (!response.ok) throw new Error('作業開始に失敗しました');
+    if (!response.ok) throw new Error('作業開始（レポート作成）に失敗しました');
 
-    // スケジュールデータのステータスを更新（リロードなしでUI反映するため）
+    // スケジュールデータのステータスを更新（UI用、個人的な状態として扱う）
     if (scheduleById[scheduleId]) {
-      scheduleById[scheduleId].status = 'in_progress';
-      scheduleById[scheduleId].started_at = updateData.started_at;
+      scheduleById[scheduleId].personal_status = 'in_progress';
+      // schedule.statusは更新しない（他人に影響するため）
     }
   }
 

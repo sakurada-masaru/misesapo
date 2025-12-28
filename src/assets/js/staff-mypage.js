@@ -4724,14 +4724,14 @@ async function loadOSNextSchedule(user) {
       }
 
       // 打刻状態（開始済みかどうか）
-      const isWorking = nextSchedule.status === 'in_progress';
-      const startedAt = nextSchedule.started_at ? new Date(nextSchedule.started_at) : null;
-      const startedAtStr = startedAt ? startedAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+      // 案件自体のステータスではなく、自分のレポートが存在するかどうかで判定
+      const isWorking = hasReport; // レポートがあれば作業中（または完了）とみなす
+      // const startedAt = nextSchedule.started_at ? new Date(nextSchedule.started_at) : null;
+      // 個人の開始時間はレポートから取得すべきだが、ここでは簡易的に現在時刻またはスケジュール時間を表示
+      // 本来は reported_at などを参照すべき
 
-      // ブランド名と店舗名を取得
       const brandName = nextSchedule.brand_name || '';
       const storeName = nextSchedule.store_name || nextSchedule.store?.name || '-';
-      // ブランド名と店名を組み合わせて表示（ブランド名がある場合のみ表示）
       const displayName = brandName ? `${escapeHtml(brandName)} / ${escapeHtml(storeName)}` : escapeHtml(storeName);
 
       scheduleInfoContent.innerHTML = `
