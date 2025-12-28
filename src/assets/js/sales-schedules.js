@@ -732,15 +732,29 @@ function showDailySchedules(dateStr) {
       const store = allStores.find(x => x.id === (s.store_id || s.client_id)) || {};
       const statusLabel = getStatusLabel(s.status);
       return `
-        <div class="schedule-card" onclick="openEditDialog('${s.id}'); document.getElementById('daily-schedule-dialog').close();" style="cursor:pointer; border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px;">
-           <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-              <span class="status-badge status-${s.status}">${statusLabel}</span>
-              <span style="font-size:0.8rem; color:#666;">${s.time_slot || ''}</span>
+        <div class="schedule-card" style="border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px; position:relative; transition:background 0.2s;">
+           
+           <!-- Main Click Area: Open Print View -->
+           <div onclick="printScheduleRequest('${s.id}')" style="cursor:pointer;">
+             <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span class="status-badge status-${s.status}">${statusLabel}</span>
+                <span style="font-size:0.8rem; color:#666;">${s.time_slot || ''}</span>
+             </div>
+             <div style="font-weight:bold; color:#333; margin-bottom:4px;">${escapeHtml(store.name || s.store_name || '店舗未設定')}</div>
+             <div style="font-size:0.85rem; color:#666;">
+                担当: ${s.worker_id ? (allWorkers.find(w => w.id === s.worker_id)?.name || '未定') : '未割当'}
+             </div>
+             <div style="margin-top:8px; font-size:0.8rem; color:#FF679C; font-weight:600;">
+               <i class="fas fa-print"></i> 依頼書を確認
+             </div>
            </div>
-           <div style="font-weight:bold; color:#333;">${escapeHtml(store.name || s.store_name || '店舗未設定')}</div>
-           <div style="font-size:0.85rem; color:#666; margin-top:4px;">
-              担当: ${s.worker_id ? (allWorkers.find(w => w.id === s.worker_id)?.name || '未定') : '未割当'}
-           </div>
+
+           <!-- Edit Button (Distinct) -->
+           <button onclick="openEditDialog('${s.id}'); document.getElementById('daily-schedule-dialog').close();" 
+                   style="position:absolute; top:10px; right:12px; border:1px solid #ddd; background:#fff; color:#666; border-radius:4px; padding:4px 8px; cursor:pointer;" title="詳細・編集">
+             <i class="fas fa-pen"></i>
+           </button>
+
         </div>
       `;
     }).join('');
