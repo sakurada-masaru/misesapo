@@ -451,10 +451,18 @@
     </div>
 
     <div class="form-status" id="form-status"></div>
-    <div class="dialog-actions">
-      <button type="button" class="btn btn-secondary"
-        onclick="document.getElementById('schedule-dialog').close()">キャンセル</button>
-      <button type="submit" class="btn btn-primary">依頼書を作成</button>
+    <div class="dialog-actions" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <!-- Print Button (Hidden for new) -->
+        <button type="button" class="btn btn-outline" id="print-request-btn" style="display:none; margin-right:auto;">
+          <i class="fas fa-print"></i> 依頼書発行
+        </button>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button type="button" class="btn btn-secondary"
+          onclick="document.getElementById('schedule-dialog').close()">キャンセル</button>
+        <button type="submit" class="btn btn-primary" id="save-btn">保存</button>
+      </div>
     </div>
     </form>
     </div>

@@ -803,11 +803,43 @@ function openEditDialog(id) {
   if (s.notes) document.getElementById('schedule-notes').value = s.notes;
 
   // Karte Data?
-  // If editing, we should probably fetch the karte data again OR use what's in the schedule if snapshot was saved?
-  // Actually, karte is live customer data. So fetching live karte is correct.
   loadKarteData(storeId);
+
+  // Update Print Button visibility/action
+  const printBtn = document.getElementById('print-request-btn');
+  if (printBtn) {
+    if (isNew) {
+      printBtn.style.display = 'none';
+    } else {
+      printBtn.style.display = 'inline-flex';
+      printBtn.onclick = () => printScheduleRequest(id);
+    }
+  }
 }
 window.openEditDialog = openEditDialog;
+
+// --- Print / Preview ---
+window.getScheduleData = function (id) {
+  return allSchedules.find(s => s.id === id);
+};
+
+window.printScheduleRequest = function (id) {
+  const s = getScheduleData(id);
+  if (!s) { alert('データが見つかりません'); return; }
+
+  // Store in local storage to ensure data persistence for the popup
+  // We also augment it with store info if needed, though the print page logic handles some.
+  // Let's attach store address/phone to the object for easier printing if not present.
+  const store = allStores.find(st => st.id === (s.store_id || s.client_id));
+  const enrichment = {
+    store_address: store?.address,
+    store_phone: store?.phone,
+    ...s
+  };
+
+  localStorage.setItem('preview_schedule_data', JSON.stringify(enrichment));
+  window.open(`/sales/schedules/print.html?id=${id}`, '_blank', 'width=900,height=1000,resizable=yes,scrollbars=yes');
+};
 
 // --- Handle Submit ---
 
