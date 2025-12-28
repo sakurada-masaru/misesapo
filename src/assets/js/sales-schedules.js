@@ -742,10 +742,32 @@ document.getElementById('next-month')?.addEventListener('click', () => {
 
 // --- Dialogs (Request Creation) ---
 
+function setScheduleFormReadOnly(isReadOnly) {
+  const form = document.getElementById('schedule-form');
+  if (!form) return;
+  const elements = form.querySelectorAll('input, select, textarea');
+  elements.forEach(el => {
+    if (el.type !== 'hidden') el.disabled = isReadOnly;
+  });
+
+  // Specific Action Buttons inside the form area
+  const workerBtn = document.querySelector('.request-basic-info-section button.btn-secondary'); // Worker select
+  if (workerBtn) workerBtn.disabled = isReadOnly;
+
+  const reloadBtn = document.getElementById('reload-customers-data-btn');
+  if (reloadBtn) reloadBtn.disabled = isReadOnly;
+}
+
 function openAddDialog(dateStr) {
   if (scheduleForm) scheduleForm.reset();
+
+  // Mode: Create (Editable)
+  setScheduleFormReadOnly(false);
   document.getElementById('dialog-title').textContent = '依頼書作成';
   document.getElementById('schedule-id').value = '';
+
+  document.getElementById('edit-btn').style.display = 'none';
+  document.getElementById('save-btn').style.display = 'inline-block';
 
   // Set Date
   if (dateStr) document.getElementById('schedule-date').value = dateStr;
@@ -778,12 +800,31 @@ function openEditDialog(id) {
   const s = allSchedules.find(x => x.id === id);
   if (!s) return;
 
-  // Assuming edit is similar to add for now, but pre-filled
-  // Note: If user wants edits restricted, we might disable fields here.
-  // For now, allow edit.
+  // Populate Fields
+  openAddDialog(s.date || s.scheduled_date); // Reuse population logic? No, openAddDialog resets things. 
+  // We need to call openAddDialog to reset, THEN fill.
+  // BUT openAddDialog sets mode to Create. We need to override mode AFTER calling it, OR split/duplicate logic.
+  // Let's rely on openAddDialog for reset, then override to ReadOnly.
 
-  openAddDialog(s.date || s.scheduled_date);
-  document.getElementById('dialog-title').textContent = '依頼書編集';
+  // Override to ReadOnly (View Mode)
+  setScheduleFormReadOnly(true);
+  document.getElementById('dialog-title').textContent = '依頼書詳細';
+
+  // Setup Actions
+  const editBtn = document.getElementById('edit-btn');
+  const saveBtn = document.getElementById('save-btn');
+
+  editBtn.style.display = 'inline-block';
+  saveBtn.style.display = 'none';
+
+  editBtn.onclick = () => {
+    // Enable Edit Mode
+    setScheduleFormReadOnly(false);
+    editBtn.style.display = 'none';
+    saveBtn.style.display = 'inline-block';
+    document.getElementById('dialog-title').textContent = '依頼書編集';
+  };
+
   document.getElementById('schedule-id').value = s.id;
 
   // Workers (Checkboxes)
