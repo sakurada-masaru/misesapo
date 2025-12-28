@@ -1097,14 +1097,18 @@ function setupEventListeners() {
           status: 'draft',
           cleaning_items: selectedCleaningItems,
           survey_data: {
-            issue: document.getElementById('survey-issue').value,
-            environment: document.getElementById('survey-environment').value,
-            cleaning_frequency: document.getElementById('survey-cleaning-frequency').value,
-            area_sqm: document.getElementById('survey-area-sqm').value,
-            entrance: document.getElementById('survey-entrance').value,
-            floor_type: document.getElementById('survey-floor-type').value,
-            water_supply: document.getElementById('survey-water-supply').value,
-            drainage: document.getElementById('survey-drainage').value
+            issue: document.getElementById('survey-issue')?.value || '',
+            environment: document.getElementById('survey-environment')?.value || '',
+            cleaning_frequency: document.getElementById('survey-cleaning-frequency')?.value || '',
+            area_sqm: document.getElementById('survey-area-sqm')?.value || '',
+            entrances: document.getElementById('survey-entrances')?.value || '',
+            ceiling_height: document.getElementById('survey-ceiling-height')?.value || '',
+            key_location: document.getElementById('survey-key-location')?.value || '',
+            breaker_location: document.getElementById('survey-breaker-location')?.value || '',
+            wall_material: document.getElementById('survey-wall-material')?.value || '',
+            floor_material: document.getElementById('survey-floor-material')?.value || '',
+            toilet_count: document.getElementById('survey-toilet-count')?.value || '',
+            equipment: Array.from(document.querySelectorAll('#survey-equipment input:checked')).map(cb => cb.value)
           },
         };
 
