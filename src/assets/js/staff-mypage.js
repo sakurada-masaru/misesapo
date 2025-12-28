@@ -1600,7 +1600,7 @@ async function loadAnnouncements() {
     }
 
     console.log('[Announcements] Attempting to load announcements with token');
-    const response = await fetch(`${REPORT_API}/staff/announcements`, {
+    const response = await fetch(`${REPORT_API}/announcements`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${idToken}`
@@ -1703,7 +1703,7 @@ function renderAnnouncements(announcements) {
       // 既読マーク
       try {
         const idToken = await getCognitoIdToken();
-        await fetch(`${REPORT_API}/staff/announcements/${announcementId}/read`, {
+        await fetch(`${REPORT_API}/announcements/${announcementId}/read`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${idToken}`
