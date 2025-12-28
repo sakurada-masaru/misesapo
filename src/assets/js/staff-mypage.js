@@ -4658,6 +4658,14 @@ async function loadOSNextSchedule(user) {
     // 直近のスケジュール（最初の1件）
     const nextSchedule = upcomingSchedules[0];
 
+    // キャッシュ更新 (showAddServiceModalなどで使用)
+    if (window.scheduleById) {
+      upcomingSchedules.forEach(s => window.scheduleById[s.id] = s);
+    } else {
+      window.scheduleById = {};
+      upcomingSchedules.forEach(s => window.scheduleById[s.id] = s);
+    }
+
     if (nextSchedule) {
       const scheduleDate = nextSchedule.scheduled_date || nextSchedule.date;
       const scheduleTime = nextSchedule.scheduled_time || nextSchedule.time || nextSchedule.time_slot || '00:00';
@@ -5188,6 +5196,8 @@ window.startWork = startWork;
 
 // サービス一覧（キャッシュ用）
 let masterServices = [];
+// スケジュールキャッシュ（グローバル）
+window.scheduleById = window.scheduleById || {};
 
 async function getMasterServices() {
   if (masterServices.length > 0) return masterServices;
