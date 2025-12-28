@@ -1078,12 +1078,31 @@ window.printScheduleRequest = function (id) {
   if (!s) { alert('データが見つかりません'); return; }
 
   const store = allStores.find(st => st.id === (s.store_id || s.client_id));
+
+  // Get worker name(s)
+  let workerName = '未定';
+  if (s.worker_id) {
+    const wIds = String(s.worker_id).split(',');
+    const names = wIds.map(wid => {
+      const w = allWorkers.find(x => String(x.id) === String(wid));
+      return w ? w.name : null;
+    }).filter(Boolean);
+    if (names.length > 0) workerName = names.join(', ');
+  }
+
+  // Build enriched data object for preview
   const enrichment = {
-    store_address: store?.address,
-    store_phone: store?.phone,
-    ...s
+    ...s,
+    store_name: store?.name || s.store_name || '店舗名未設定',
+    store_address: store?.address || '',
+    store_phone: store?.phone || '',
+    worker_name: workerName,
+    // Ensure survey_data is explicitly included
+    survey_data: s.survey_data || {},
+    cleaning_items: s.cleaning_items || []
   };
 
+  console.log('Preview Data:', enrichment); // Debug log
   localStorage.setItem('preview_schedule_data', JSON.stringify(enrichment));
 
   // Try opening in modal
