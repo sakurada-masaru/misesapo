@@ -1150,10 +1150,27 @@ def lambda_handler(event, context):
             }
         elif normalized_path == '/daily-reports':
             # 日報の取得・作成
-            if method == 'GET':
-                return get_daily_reports(event, headers)
-            elif method == 'POST':
-                return create_or_update_daily_report(event, headers)
+            # クエリパラメータで分岐
+            query_params = event.get('queryStringParameters') or {}
+            
+            if query_params.get('type') == 'cleaning':
+                # 清掃レポート（Cleaning Reports）
+                if method == 'GET':
+                    return get_reports(event, headers)
+                elif method == 'POST':
+                    return create_report(event, headers)
+                elif method == 'PUT':
+                    return update_report(event, headers)
+            elif query_params.get('type') == 'cleaning_image':
+                # 画像アップロード
+                if method == 'POST':
+                    return upload_report_image(event, headers)
+            else:
+                # 既存の日報（Daily Reports）
+                if method == 'GET':
+                    return get_daily_reports(event, headers)
+                elif method == 'POST':
+                    return create_or_update_daily_report(event, headers)
         elif normalized_path.startswith('/daily-reports/'):
             # 日報の詳細・更新・削除
             report_id = normalized_path.split('/')[-1]

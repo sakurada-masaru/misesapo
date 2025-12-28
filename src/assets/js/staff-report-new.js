@@ -5,7 +5,7 @@
 
 (function () {
   const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-  const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+  const REPORT_API = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
   const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg'; // デフォルト画像パス
 
   // データ（グローバルスコープに公開）
@@ -7446,9 +7446,11 @@
       const idToken = await getFirebaseIdToken();
 
       // 編集モードの場合はPUT、新規作成の場合はPOST
+      // 編集モードの場合はPUT、新規作成の場合はPOST
+      // CORS修正: /daily-reportsエンドポイントを使用
       const url = isEditMode
-        ? `${REPORT_API}/staff/reports/${reportId}`
-        : `${REPORT_API}/staff/reports`;
+        ? `${REPORT_API}/daily-reports/${reportId}?type=cleaning`
+        : `${REPORT_API}/daily-reports?type=cleaning`;
       const method = isEditMode ? 'PUT' : 'POST';
 
       // 編集モードの場合はstatusをpendingに戻す
@@ -7819,7 +7821,7 @@
               store_id: storeIdForImages || undefined
             };
 
-            const uploadResponse = await fetch(`${REPORT_API}/staff/report-images`, {
+            const uploadResponse = await fetch(`${REPORT_API}/daily-reports?type=cleaning_image`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

@@ -4070,3 +4070,15 @@ html {
 }
 
 /* 送信ボタンセクション */
+/* レポート提出セクション（スマホ用余白） */
+@media (max-width: 768px) {
+  .submit-section {
+    padding: 14px;
+    margin-bottom: 100px;
+  }
+}
+
+/* タブコンテンツの余白調整 */
+.tab-content {
+    padding-bottom: 120px;
+}
