@@ -953,11 +953,10 @@ function openEditDialog(id) {
   const s = allSchedules.find(x => x.id === id);
   if (!s) return;
 
-  // Populate Fields
-  openAddDialog(s.date || s.scheduled_date); // Reuse population logic? No, openAddDialog resets things. 
-  // We need to call openAddDialog to reset, THEN fill.
-  // BUT openAddDialog sets mode to Create. We need to override mode AFTER calling it, OR split/duplicate logic.
-  // Let's rely on openAddDialog for reset, then override to ReadOnly.
+  // Populate Fields via openAddDialog to reset first
+  openAddDialog(s.date || s.scheduled_date);
+  // Restore ID
+  document.getElementById('schedule-id').value = s.id;
 
   // Override to ReadOnly (View Mode)
   setScheduleFormReadOnly(true);
@@ -978,17 +977,19 @@ function openEditDialog(id) {
     document.getElementById('dialog-title').textContent = '依頼書編集';
   };
 
-  document.getElementById('schedule-id').value = s.id;
+  // Populate Sales & Time
+  if (s.sales_id) document.getElementById('schedule-sales').value = s.sales_id;
+  document.getElementById('schedule-time').value = s.time_slot || s.scheduled_time || '';
 
-  // Workers (Checkboxes)
-  const workerId = s.worker_id || s.assigned_to;
-  // Handle multiple (stub)
-  const assignedIds = workerId ? String(workerId).split(',') : [];
-
-  document.querySelectorAll('#worker-selection-list input[type="checkbox"]').forEach(cb => {
-    cb.checked = assignedIds.includes(String(cb.value));
+  // Workers (New Logic using selectedWorkers state)
+  selectedWorkers = [];
+  const wIds = (s.worker_id || s.assigned_to) ? String(s.worker_id || s.assigned_to).split(',') : [];
+  wIds.forEach(wid => {
+    const w = allWorkers.find(x => String(x.id) === String(wid));
+    if (w) selectedWorkers.push({ id: w.id, name: w.name });
   });
-  updateSelectedWorkersDisplay();
+  if (window.renderSelectedWorkers) window.renderSelectedWorkers();
+
   // Store
   const storeId = s.store_id || s.client_id;
   if (storeId) {
@@ -999,9 +1000,6 @@ function openEditDialog(id) {
       document.getElementById('schedule-store-summary-text').textContent = store.name;
     }
   }
-
-  // Time & fields
-  document.getElementById('schedule-time').value = s.time_slot || s.scheduled_time || '';
 
   // Items
   if (s.cleaning_items) {
@@ -1019,10 +1017,28 @@ function openEditDialog(id) {
   // Notes
   if (s.notes) document.getElementById('schedule-notes').value = s.notes;
 
-  // Karte Data?
-  loadKarteData(storeId);
+  // Survey Data (Full Population)
+  const sd = s.survey_data || {};
+  document.getElementById('survey-issue').value = sd.issue || '';
+  document.getElementById('survey-environment').value = sd.environment || '';
+  document.getElementById('survey-cleaning-frequency').value = sd.cleaning_frequency || '';
+  document.getElementById('survey-area-sqm').value = sd.area_sqm || '';
+  document.getElementById('survey-entrances').value = sd.entrances || '';
+  document.getElementById('survey-ceiling-height').value = sd.ceiling_height || '';
+  document.getElementById('survey-key-location').value = sd.key_location || '';
+  document.getElementById('survey-breaker-location').value = sd.breaker_location || '';
+  document.getElementById('survey-wall-material').value = sd.wall_material || '';
+  document.getElementById('survey-floor-material').value = sd.floor_material || '';
+  document.getElementById('survey-toilet-count').value = sd.toilet_count || '';
+  document.getElementById('survey-hotspots').value = sd.hotspots || '';
+  if (document.getElementById('survey-notes')) document.getElementById('survey-notes').value = sd.notes || '';
 
-  // Update Print Button visibility/action
+  // Equipment Checkboxes (Populate)
+  const eq = Array.isArray(sd.equipment) ? sd.equipment : [];
+  document.querySelectorAll('#survey-equipment input[type="checkbox"]').forEach(cb => {
+    cb.checked = eq.includes(cb.value);
+  });
+
   // Update Print Button visibility/action
   const printBtn = document.getElementById('print-request-btn');
   if (printBtn) {
