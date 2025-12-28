@@ -896,19 +896,37 @@ document.getElementById('next-month')?.addEventListener('click', () => {
 // --- Dialogs (Request Creation) ---
 
 function setScheduleFormReadOnly(isReadOnly) {
-  const form = document.getElementById('schedule-form');
-  if (!form) return;
-  const elements = form.querySelectorAll('input, select, textarea');
-  elements.forEach(el => {
-    if (el.type !== 'hidden') el.disabled = isReadOnly;
-  });
+  // Use Dialog context if possible, or fallback to form. Target schedule-dialog specifically.
+  const dialog = document.getElementById('schedule-dialog');
+  const container = dialog || document.getElementById('schedule-form');
 
-  // Specific Action Buttons inside the form area
-  const workerBtn = document.querySelector('.request-basic-info-section button.btn-secondary'); // Worker select
-  if (workerBtn) workerBtn.disabled = isReadOnly;
+  if (!container) return;
+
+  const elements = container.querySelectorAll('input, select, textarea');
+  elements.forEach(el => {
+    // Exclude hidden inputs
+    if (el.type !== 'hidden') {
+      el.disabled = isReadOnly;
+      // Visual feedback for search inputs if needed
+      if (isReadOnly && (el.id === 'worker-search-input' || el.id === 'cleaning-items-search')) {
+        el.placeholder = '';
+      } else if (!isReadOnly) {
+        if (el.id === 'worker-search-input') el.placeholder = '担当者を検索...';
+        if (el.id === 'cleaning-items-search') el.placeholder = '清掃内容を検索...';
+      }
+    }
+  });
 
   const reloadBtn = document.getElementById('reload-customers-data-btn');
   if (reloadBtn) reloadBtn.disabled = isReadOnly;
+
+  // Toggle "Remove (x)" buttons on tags
+  // Workers and Cleaning Items use spans with onclick inside .cleaning-tag or similar
+  // We hide the 'x' button in ReadOnly mode
+  const removeButtons = container.querySelectorAll('[onclick*="removeWorker"], [onclick*="removeCleaningItem"]');
+  removeButtons.forEach(btn => {
+    btn.style.display = isReadOnly ? 'none' : 'inline-block';
+  });
 }
 
 function openAddDialog(dateStr) {
