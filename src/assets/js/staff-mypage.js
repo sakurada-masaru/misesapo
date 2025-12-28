@@ -276,6 +276,11 @@ async function loadCurrentUser() {
         if (response.ok) {
           currentUser = await response.json();
           console.log('[Mypage] Found user by ID from API:', currentUser.name);
+
+          // Fix: Load Activity here if user found
+          if (typeof loadRecentActivity === 'function') {
+            loadRecentActivity(currentUser.id);
+          }
         } else if (response.status === 404) {
           // 404エラーの場合、URLパラメータのIDが無効な可能性がある
           console.warn('[Mypage] User not found by URL param ID:', userId, '- will try email or Cognito auth');

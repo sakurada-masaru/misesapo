@@ -792,6 +792,7 @@ TODOS_TABLE = dynamodb.Table('todos')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
 S3_REGION = os.environ.get('S3_REGION', 'ap-northeast-1')
 ALLOWED_ORIGINS = [origin.strip() for origin in os.environ.get('ALLOWED_ORIGINS', '*').split(',') if origin.strip()]
+# Add misesapo.co.jp explicitly to avoid CORS issues
 if 'https://misesapo.co.jp' not in ALLOWED_ORIGINS and '*' not in ALLOWED_ORIGINS:
     ALLOWED_ORIGINS.append('https://misesapo.co.jp')
 
