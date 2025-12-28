@@ -519,31 +519,40 @@ function setupCleaningItemsSearch() {
     renderSelected();
   };
 
-  input.addEventListener('input', () => {
-    const q = input.value.trim().toLowerCase();
-    if (!q) { results.style.display = 'none'; return; }
+  const showResults = (query = '') => {
+    const q = query.toLowerCase();
+    // Show all available services if query is empty
+    const filtered = q ? allServices.filter(s => (s.title || s.name || '').toLowerCase().includes(q)) : allServices;
 
-    const filtered = allServices.filter(s => (s.title || s.name || '').toLowerCase().includes(q));
     if (filtered.length === 0) {
-      results.innerHTML = '<div style="padding:8px;">見つかりません</div>';
+      results.innerHTML = '<div style="padding:12px;color:#9ca3af;text-align:center;">見つかりません</div>';
     } else {
       results.innerHTML = filtered.map(s => `
-                <div class="search-item" style="padding:8px;cursor:pointer;hover:bg-gray-100;" data-id="${s.id}" data-name="${s.title || s.name}">
+                <div class="search-item" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;transition:background 0.2s;" 
+                     onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'"
+                     data-id="${s.id}" data-name="${escapeHtml(s.title || s.name)}">
                     ${escapeHtml(s.title || s.name)}
                 </div>
             `).join('');
 
       results.querySelectorAll('.search-item').forEach(el => {
         el.addEventListener('click', () => {
-          selectedCleaningItems.push({ id: el.dataset.id, name: el.dataset.name });
-          renderSelected();
+          // Prevent duplicates
+          const id = el.dataset.id;
+          if (!selectedCleaningItems.some(x => String(x.id || x) === String(id))) {
+            selectedCleaningItems.push({ id: id, name: el.dataset.name });
+            renderSelected();
+          }
           input.value = '';
           results.style.display = 'none';
         });
       });
     }
     results.style.display = 'block';
-  });
+  };
+
+  input.addEventListener('input', () => showResults(input.value.trim()));
+  input.addEventListener('focus', () => showResults(input.value.trim()));
 
   document.addEventListener('click', e => {
     if (!input.contains(e.target) && !results.contains(e.target)) results.style.display = 'none';
