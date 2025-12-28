@@ -4694,34 +4694,65 @@ async function loadOSNextSchedule(user) {
       let serviceNames = [];
       let memberNames = [];
 
+      // チームメンバーの状況を取得（レポートベース）
+      let teamMembers = [];
+
+      // 1. レポート提出者（作業中・完了）
+      if (hasReport) { // hasReport is true if *I* have report? No, fetch response check lines 4700.
+        // reports variable is scoped inside if(reportRes.ok). I need to access it.
+        // I should move reports fetching logic or extraction logic.
+      }
+
+      // Rewrite fetching logic to scope 'reports' variable
+      let reports = [];
       try {
-        // レポートの有無をチェック
         const reportRes = await fetch(`${REPORT_API}/daily-reports?type=cleaning&schedule_id=${nextSchedule.id}`, { headers });
         if (reportRes.ok) {
-          const reports = await reportRes.json();
-          const list = Array.isArray(reports) ? reports : (reports.items || []);
-          // 自分が提出したレポートがあるか確認
-          hasReport = list.some(r => window.DataUtils?.IdUtils?.isSame(r.staff_id, user.id) || r.staff_id === user.id);
+          const json = await reportRes.json();
+          reports = Array.isArray(json) ? json : (json.items || []);
         }
+      } catch (e) { console.warn(e); }
 
-        // サービス名の取得
-        if (nextSchedule.service_items && Array.isArray(nextSchedule.service_items)) {
-          serviceNames = nextSchedule.service_items.map(item => typeof item === 'object' ? item.name : item);
-        } else if (nextSchedule.service_names) {
-          serviceNames = Array.isArray(nextSchedule.service_names) ? nextSchedule.service_names : [nextSchedule.service_names];
-        }
+      hasReport = reports.some(r => window.DataUtils?.IdUtils?.isSame(r.staff_id, user.id) || r.staff_id === user.id);
 
-        // メンバー名の取得
-        if (nextSchedule.member_names && Array.isArray(nextSchedule.member_names)) {
-          memberNames = nextSchedule.member_names;
-        } else if (nextSchedule.worker_name) {
-          memberNames = [nextSchedule.worker_name];
-        } else {
-          memberNames = [user.name]; // 自分のみ
-        }
-      } catch (err) {
-        console.warn('[OS Mypage] Additional data load failed:', err);
+      // Map reports to member status
+      // Create a map of staff_id/name -> status
+      const memberStatusMap = new Map();
+      reports.forEach(r => {
+        // Staff Name is needed. Report might have staff_name?
+        // If not, we might only have staff_id. We might need to map ID to Name if possible.
+        // But reports usually contain staff_name snapshot.
+        const name = r.staff_name || r.worker_name || 'Unknown';
+        const status = r.status; // in_progress, completed
+        memberStatusMap.set(name, status);
+      });
+
+      // 2. Assigned Members (Static) - Merge with reports
+      let assignedNames = [];
+      if (nextSchedule.member_names && Array.isArray(nextSchedule.member_names)) {
+        assignedNames = nextSchedule.member_names;
+      } else if (nextSchedule.worker_name) {
+        assignedNames = [nextSchedule.worker_name];
+      } else {
+        assignedNames = [user.name];
       }
+
+      // Build display list
+      // Priority: Report Status > Assigned (Not Started)
+      // We iterate over assignedNames and check status.
+      // ALSO add anyone who reported but isn't in assignedNames (just in case).
+
+      teamMembers = assignedNames.map(name => {
+        const status = memberStatusMap.get(name) || 'not_started';
+        // Remove from map to track unassigned reporters
+        memberStatusMap.delete(name);
+        return { name, status };
+      });
+
+      // Add remaining reporters
+      memberStatusMap.forEach((status, name) => {
+        teamMembers.push({ name, status });
+      });
 
       // 打刻状態（開始済みかどうか）
       // 案件自体のステータスではなく、自分のレポートが存在するかどうかで判定
@@ -4769,9 +4800,22 @@ async function loadOSNextSchedule(user) {
           <!-- 担当メンバー / サービス内容 -->
           <div style="display: flex; flex-direction: column; gap: 10px; padding: 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 20px;">
             <div>
-              <div style="font-size: 0.7rem; font-weight: 700; color: #9ca3af; margin-bottom: 4px; text-transform: uppercase;">Assigned Members</div>
+              <div style="font-size: 0.7rem; font-weight: 700; color: #9ca3af; margin-bottom: 4px; text-transform: uppercase;">Team Status</div>
               <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                ${memberNames.map(name => `<span style="background: #fff; border: 1px solid #e5e7eb; color: #374151; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${escapeHtml(name)}</span>`).join('')}
+                ${teamMembers.map(m => {
+          let style = 'background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb;';
+          let icon = '';
+          if (m.status === 'in_progress') {
+            style = 'background: #ecfdf5; color: #059669; border: 1px solid #10b981;';
+            icon = '<i class="fas fa-play-circle" style="margin-right:4px;"></i>';
+          } else if (m.status === 'completed' || m.status === 'approved') {
+            style = 'background: #eff6ff; color: #2563eb; border: 1px solid #3b82f6;';
+            icon = '<i class="fas fa-check-circle" style="margin-right:4px;"></i>';
+          }
+          return `<span style="${style} padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center;">
+                              ${icon}${escapeHtml(m.name)}
+                            </span>`;
+        }).join('')}
               </div>
             </div>
             <div style="border-top: 1px dashed #e5e7eb; padding-top: 8px;">
