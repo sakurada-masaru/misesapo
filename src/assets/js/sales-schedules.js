@@ -589,16 +589,19 @@ function setupWorkerSearch() {
 
   const showResults = (query = '') => {
     const q = query.toLowerCase();
-    const filtered = q ? allWorkers.filter(w => (w.name || '').toLowerCase().includes(q)) : allWorkers;
+    // Filter for OS Department only
+    const osWorkers = allWorkers.filter(w => w.department === 'OS' || w.department === 'OS課');
+    const filtered = q ? osWorkers.filter(w => (w.name || '').toLowerCase().includes(q)) : osWorkers;
 
     if (filtered.length === 0) {
-      results.innerHTML = '<div style="padding:12px;color:#9ca3af;text-align:center;">見つかりません</div>';
+      results.innerHTML = '<div style="padding:12px;color:#9ca3af;text-align:center;">条件に一致するOSスタッフがいません</div>';
     } else {
       results.innerHTML = filtered.map(w => `
               <div class="search-item" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;transition:background 0.2s;" 
                    onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'"
                    data-id="${w.id}" data-name="${escapeHtml(w.name)}">
                    <div style="font-weight:500; color:#374151;">${escapeHtml(w.name)}</div>
+                   <div style="font-size:0.75rem; color:#9ca3af;">${escapeHtml(w.department || '')}</div>
               </div>
           `).join('');
 
