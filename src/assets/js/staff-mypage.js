@@ -5630,7 +5630,9 @@ async function loadJobBoard() {
     container.innerHTML = openJobs.map(job => {
       const date = job.scheduled_date || job.date || '';
       const time = job.scheduled_time || job.time_slot || '';
-      const storeName = job.store_name || job.brand_name || '店舗名未設定';
+      const brandName = job.brand_name || '';
+      const clientName = job.client_name || '';
+      const storeName = job.store_name || '';
       const address = job.address || '';
       const items = job.cleaning_items || [];
       const itemNames = items.slice(0, 3).map(i => i.name || i.title || i).join(', ');
@@ -5664,10 +5666,19 @@ async function loadJobBoard() {
               font-weight: 500;
             ">募集中</span>
           </div>
-          <div style="font-weight: 700; font-size: 1.05rem; color: #111827; margin-bottom: 4px;">
-            ${escapeHtml(storeName)}
+          <!-- ブランド名を大きく -->
+          <div style="font-weight: 700; font-size: 1.1rem; color: #111827; margin-bottom: 4px;">
+            ${escapeHtml(brandName || storeName || '店舗未設定')}
           </div>
-          ${address ? `<div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 8px;">
+          <!-- 法人名 -->
+          ${clientName ? `<div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 2px;">
+            <i class="fas fa-building" style="width: 14px; color: #9ca3af;"></i> ${escapeHtml(clientName)}
+          </div>` : ''}
+          <!-- 店舗名 -->
+          ${storeName && storeName !== brandName ? `<div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 4px;">
+            <i class="fas fa-store" style="width: 14px; color: #9ca3af;"></i> ${escapeHtml(storeName)}
+          </div>` : ''}
+          ${address ? `<div style="font-size: 0.78rem; color: #6b7280; margin-bottom: 4px;">
             <i class="fas fa-map-marker-alt" style="margin-right: 4px;"></i>${escapeHtml(address)}
           </div>` : ''}
           ${itemNames ? `<div style="font-size: 0.75rem; color: #9ca3af;">
@@ -6076,7 +6087,9 @@ async function openOsDaySchedules(dateStr) {
   // スケジュールカードHTML
   const cardsHtml = daySchedules.map(s => {
     const time = s.scheduled_time || s.time_slot || '';
-    const storeName = s.store_name || s.brand_name || '店舗未設定';
+    const brandName = s.brand_name || '';
+    const clientName = s.client_name || '';
+    const storeName = s.store_name || '';
     const items = (s.cleaning_items || []).slice(0, 3).map(i => i.name || i).join(', ');
     const isDraft = s.status === 'draft' && !s.worker_id;
     const statusLabel = isDraft ? '募集中' : (s.status === 'completed' ? '完了' : 'アサイン済');
@@ -6098,10 +6111,19 @@ async function openOsDaySchedules(dateStr) {
             ${statusLabel}
           </span>
         </div>
-        <div style="font-weight: 700; font-size: 1rem; color: #111827; margin-bottom: 4px;">
-          ${escapeHtml(storeName)}
+        <!-- ブランド名を大きく表示 -->
+        <div style="font-weight: 700; font-size: 1.15rem; color: #111827; margin-bottom: 4px;">
+          ${escapeHtml(brandName || storeName || '店舗未設定')}
         </div>
-        ${items ? `<div style="font-size: 0.8rem; color: #6b7280;"><i class="fas fa-broom"></i> ${escapeHtml(items)}</div>` : ''}
+        <!-- 法人名 -->
+        ${clientName ? `<div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 2px;">
+          <i class="fas fa-building" style="width: 14px; color: #9ca3af;"></i> ${escapeHtml(clientName)}
+        </div>` : ''}
+        <!-- 店舗名（ブランド名と異なる場合） -->
+        ${storeName && storeName !== brandName ? `<div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 4px;">
+          <i class="fas fa-store" style="width: 14px; color: #9ca3af;"></i> ${escapeHtml(storeName)}
+        </div>` : ''}
+        ${items ? `<div style="font-size: 0.8rem; color: #9ca3af;"><i class="fas fa-broom"></i> ${escapeHtml(items)}</div>` : ''}
       </div>
     `;
   }).join('');
