@@ -1142,6 +1142,8 @@ function setupEventListeners() {
             wall_material: document.getElementById('survey-wall-material')?.value || '',
             floor_material: document.getElementById('survey-floor-material')?.value || '',
             toilet_count: document.getElementById('survey-toilet-count')?.value || '',
+            hotspots: document.getElementById('survey-hotspots')?.value || '',
+            notes: document.getElementById('survey-notes')?.value || '',
             equipment: Array.from(document.querySelectorAll('#survey-equipment input:checked')).map(cb => cb.value)
           },
         };
