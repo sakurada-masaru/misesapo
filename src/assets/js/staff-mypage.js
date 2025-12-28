@@ -4841,8 +4841,8 @@ async function loadOSNextSchedule(user) {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             ${!isWorking
           ? `
-                <button class="btn-attendance" onclick="window.location.href='/staff/os/schedule'" style="background: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer;">
-                  <i class="fas fa-info-circle" style="margin-right: 8px;"></i> 詳細確認
+                <button class="btn-attendance" onclick="showWorkInstructionModal('${nextSchedule.id}')" style="background: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer;">
+                  <i class="fas fa-file-alt" style="margin-right: 8px;"></i> 詳細確認（作業指示書）
                 </button>
                 <button class="btn-attendance" onclick="window.location.href='/staff/os/reports/new?schedule_id=${nextSchedule.id}&mode=start'" style="background: #ff679c; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer;">
                   <i class="fas fa-play" style="margin-right: 8px;"></i> 作業開始
