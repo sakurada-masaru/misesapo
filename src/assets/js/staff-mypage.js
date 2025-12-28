@@ -4825,9 +4825,6 @@ async function loadOSNextSchedule(user) {
                 <button onclick="showAddServiceModal('${nextSchedule.id}')" style="background: #fff; border: 1px dashed #d1d5db; color: #6b7280; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: pointer; margin-left: 4px;" title="清掃項目を追加">
                   <i class="fas fa-plus"></i>
                 </button>
-                <button onclick="showAddServiceModal('${nextSchedule.id}')" style="background: #fff; border: 1px dashed #d1d5db; color: #6b7280; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: pointer; margin-left: 4px;" title="清掃項目を追加">
-                  <i class="fas fa-plus"></i>
-                </button>
               </div>
             </div>
           </div>
@@ -5188,3 +5185,154 @@ window.acceptSchedule = acceptSchedule;
 window.startWork = startWork;
 
 // アコーディオン機能は削除されました
+
+// サービス一覧（キャッシュ用）
+let masterServices = [];
+
+async function getMasterServices() {
+  if (masterServices.length > 0) return masterServices;
+  try {
+    const res = await fetch(`${API_BASE}/services`);
+    if (res.ok) {
+      const json = await res.json();
+      masterServices = Array.isArray(json) ? json : (json.items || []);
+    }
+  } catch (e) { console.error('Failed to load services', e); }
+  return masterServices;
+}
+
+async function showAddServiceModal(scheduleId) {
+  const services = await getMasterServices();
+
+  // 現在のスケジュール情報を再取得（最新のサービス状況を知るため）
+  const schedule = scheduleById[scheduleId]; // キャッシュ利用
+  if (!schedule) return;
+
+  // 現在選択済みのIDリスト
+  const currentServiceItems = schedule.service_items || [];
+  const currentIds = new Set();
+  const currentNames = new Set();
+
+  currentServiceItems.forEach(item => {
+    if (typeof item === 'object' && item.id) currentIds.add(String(item.id));
+    if (typeof item === 'object' && item.name) currentNames.add(item.name);
+    if (typeof item === 'string') currentNames.add(item);
+  });
+
+  // モーダル生成
+  const modalId = 'add-service-modal';
+  let modal = document.getElementById(modalId);
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'custom-modal'; // 既存のモーダルクラス利用
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+
+    modal.innerHTML = `
+            <div class="custom-modal-content" style="background: white; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; max-height: 80vh;">
+                <div class="custom-modal-header" style="padding: 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin:0; font-size:1.1rem;">清掃項目の追加</h3>
+                    <button class="close-btn" onclick="closeAddServiceModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+                </div>
+                <div class="custom-modal-body" style="overflow-y: auto; padding: 16px;">
+                    <input type="text" id="service-search-input" placeholder="項目を検索..." style="width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <div id="service-list-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+                <div class="custom-modal-footer" style="padding: 16px; border-top: 1px solid #e5e7eb; text-align: right;">
+                    <button class="btn-cancel" onclick="closeAddServiceModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 4px;">キャンセル</button>
+                </div>
+            </div>
+        `;
+    document.body.appendChild(modal);
+  }
+
+  // リスト描画関数
+  const renderList = (filterText = '') => {
+    const container = document.getElementById('service-list-container');
+    container.innerHTML = '';
+    const filtered = services.filter(s => {
+      const name = s.title || s.name || '';
+      // 既に選択済みのものは除外
+      if (currentIds.has(String(s.id))) return false;
+      if (currentNames.has(name)) return false;
+      return name.toLowerCase().includes(filterText.toLowerCase());
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div style="color: #9ca3af; text-align: center;">該当する項目がありません</div>';
+      return;
+    }
+
+    filtered.forEach(s => {
+      const div = document.createElement('div');
+      div.style.cssText = 'padding: 10px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;';
+      div.innerHTML = `<span>${escapeHtml(s.title || s.name)}</span><i class="fas fa-plus-circle" style="color: #10b981;"></i>`;
+      div.onclick = () => addServiceToSchedule(scheduleId, s);
+      container.appendChild(div);
+    });
+  };
+
+  renderList();
+
+  // 検索イベント
+  const searchInput = document.getElementById('service-search-input');
+  searchInput.oninput = (e) => renderList(e.target.value);
+  searchInput.value = '';
+
+  modal.style.display = 'flex';
+}
+
+function closeAddServiceModal() {
+  const modal = document.getElementById('add-service-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function addServiceToSchedule(scheduleId, service) {
+  if (!confirm(`${service.title || service.name} を追加しますか？`)) return;
+
+  try {
+    const schedule = scheduleById[scheduleId];
+    if (!schedule) throw new Error('Schedule not found');
+
+    const currentItems = schedule.service_items || [];
+    const newItem = { id: service.id, name: service.title || service.name };
+    const newItems = [...currentItems, newItem];
+
+    // ローカル更新（即時反映のため）
+    schedule.service_items = newItems;
+    schedule.service_names = newItems.map(i => i.name);
+
+    // API更新 (PUT)
+    const idToken = await getCognitoIdToken();
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`
+    };
+
+    // 既存のスケジュール情報をベースに更新
+    const updateBody = {
+      ...schedule,
+      service_items: newItems
+    };
+
+    const res = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(updateBody)
+    });
+
+    if (res.ok) {
+      closeAddServiceModal();
+      loadOSNextSchedule();
+    } else {
+      console.error('Update failed', await res.json());
+      alert('更新に失敗しました。');
+      loadOSNextSchedule();
+    }
+  } catch (e) {
+    console.error(e);
+    alert('エラーが発生しました');
+  }
+}
+window.showAddServiceModal = showAddServiceModal;
+window.closeAddServiceModal = closeAddServiceModal;
