@@ -3924,6 +3924,11 @@ def create_schedule(event, headers):
                     schedule_item['worker_id'] = worker_id
                     schedule_item['assigned_to'] = worker_id  # GSI用
                 
+                # カルテ情報（survey_data）を追加
+                survey_data = body_json.get('survey_data')
+                if survey_data:
+                    schedule_item['survey_data'] = survey_data
+                
                 # 見積もりIDを紐付け（存在する場合）
                 if estimate_id:
                     schedule_item['estimate_id'] = estimate_id
@@ -4346,9 +4351,10 @@ def update_schedule(schedule_id, event, headers):
         expression_attribute_names = {}
         
         updatable_fields = [
-            'date', 'time_slot', 'order_type', 'client_id', 'client_name',
-            'brand_name', 'store_name', 'address', 'phone', 'email', 'cleaning_items',
-            'notes', 'status', 'assigned_to'
+            'date', 'time_slot', 'scheduled_date', 'scheduled_time', 'order_type', 
+            'client_id', 'store_id', 'client_name', 'brand_name', 'store_name', 
+            'address', 'phone', 'email', 'cleaning_items', 'notes', 'status', 
+            'assigned_to', 'worker_id', 'sales_id', 'survey_data'
         ]
         
         for field in updatable_fields:
