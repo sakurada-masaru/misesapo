@@ -280,6 +280,7 @@ function getSurveyValue(id) {
 }
 
 function buildSurveyPayload(storeId) {
+  // Build payload for Master Karte update
   const equipment = Array.from(document.querySelectorAll('#survey-equipment input[type="checkbox"]:checked'))
     .map(input => input.value);
 
