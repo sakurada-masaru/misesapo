@@ -1096,7 +1096,16 @@ function setupEventListeners() {
           // For now, assume primary assignment is what matters for "Accepted".
           status: 'draft',
           cleaning_items: selectedCleaningItems,
-          notes: document.getElementById('schedule-notes').value || ''
+          survey_data: {
+            issue: document.getElementById('survey-issue').value,
+            environment: document.getElementById('survey-environment').value,
+            cleaning_frequency: document.getElementById('survey-cleaning-frequency').value,
+            area_sqm: document.getElementById('survey-area-sqm').value,
+            entrance: document.getElementById('survey-entrance').value,
+            floor_type: document.getElementById('survey-floor-type').value,
+            water_supply: document.getElementById('survey-water-supply').value,
+            drainage: document.getElementById('survey-drainage').value
+          },
         };
 
         // If worker assigned, status = scheduled.
