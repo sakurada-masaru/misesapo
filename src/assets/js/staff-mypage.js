@@ -5833,8 +5833,8 @@ async function openJobDetail(jobId) {
           依頼書を見る
         </button>
 
-        ${(job.status === 'draft' && !job.worker_id) ? `
-        <!-- 受託ボタン（募集中の場合のみ表示） -->
+        ${(!job.worker_id && !job.assigned_to) ? `
+        <!-- 受託ボタン（担当者未定の場合に表示） -->
         <button onclick="acceptJob('${job.id}')" style="
           width: 100%;
           padding: 14px;
@@ -5851,7 +5851,7 @@ async function openJobDetail(jobId) {
           この案件を受託する
         </button>
         ` : `
-        <div style="text-align: center; color: #10b981; font-weight: 600;">
+        <div style="text-align: center; color: #10b981; font-weight: 600; padding: 8px;">
           <i class="fas fa-check-circle"></i> アサイン済み
         </div>
         `}
