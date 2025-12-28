@@ -6259,43 +6259,111 @@ async function loadMyAcceptedJobs() {
       }
 
       return `
-        <div onclick="openJobDetail('${job.id}')" style="
+        <div style="
           background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
           border: 1px solid #e5e7eb;
           border-left: 4px solid ${statusColor};
           border-radius: 10px;
           padding: 14px;
           margin-bottom: 10px;
-          cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s;
         ">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
-            <span style="
-              background: ${statusColor};
-              color: white;
-              padding: 3px 10px;
-              border-radius: 5px;
-              font-size: 0.75rem;
-              font-weight: 600;
-            ">${date} ${time}</span>
-            <span style="
-              background: ${statusColor}20;
-              color: ${statusColor};
-              padding: 2px 8px;
-              border-radius: 4px;
-              font-size: 0.7rem;
-              font-weight: 600;
-            ">${statusLabel}</span>
+          <div onclick="openJobDetail('${job.id}')" style="cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+              <span style="
+                background: ${statusColor};
+                color: white;
+                padding: 3px 10px;
+                border-radius: 5px;
+                font-size: 0.75rem;
+                font-weight: 600;
+              ">${date} ${time}</span>
+              <span style="
+                background: ${statusColor}20;
+                color: ${statusColor};
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.7rem;
+                font-weight: 600;
+              ">${statusLabel}</span>
+            </div>
+            <div style="font-weight: 700; font-size: 1rem; color: #111827; margin-bottom: 4px;">
+              ${escapeHtml(storeName)}
+            </div>
+            ${address ? `<div style="font-size: 0.78rem; color: #6b7280; margin-bottom: 4px;">
+              <i class="fas fa-map-marker-alt" style="width: 14px;"></i> ${escapeHtml(address.substring(0, 25))}${address.length > 25 ? '...' : ''}
+            </div>` : ''}
+            ${items ? `<div style="font-size: 0.75rem; color: #9ca3af;">
+              <i class="fas fa-broom" style="width: 14px;"></i> ${escapeHtml(items)}
+            </div>` : ''}
           </div>
-          <div style="font-weight: 700; font-size: 1rem; color: #111827; margin-bottom: 4px;">
-            ${escapeHtml(storeName)}
+          
+          <!-- ステータスに応じたアクションボタン -->
+          <div style="margin-top: 10px; display: flex; gap: 8px;">
+            ${status === 'scheduled' ? `
+              <button onclick="event.stopPropagation(); startWork('${job.id}')" style="
+                flex: 1;
+                padding: 10px;
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+              ">
+                <i class="fas fa-play-circle"></i> 作業開始
+              </button>
+            ` : status === 'in_progress' ? `
+              <button onclick="event.stopPropagation(); completeWork('${job.id}')" style="
+                flex: 1;
+                padding: 10px;
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+              ">
+                <i class="fas fa-check-circle"></i> 作業完了
+              </button>
+              <a href="/staff/os/reports/new?schedule_id=${job.id}" onclick="event.stopPropagation();" style="
+                flex: 1;
+                padding: 10px;
+                background: linear-gradient(135deg, #3b82f6, #2563eb);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                cursor: pointer;
+                text-decoration: none;
+                text-align: center;
+                box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+              ">
+                <i class="fas fa-file-alt"></i> レポート
+              </a>
+            ` : `
+              <a href="/staff/os/reports/new?schedule_id=${job.id}" onclick="event.stopPropagation();" style="
+                flex: 1;
+                padding: 10px;
+                background: linear-gradient(135deg, #3b82f6, #2563eb);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                cursor: pointer;
+                text-decoration: none;
+                text-align: center;
+                box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+              ">
+                <i class="fas fa-file-alt"></i> レポート作成
+              </a>
+            `}
           </div>
-          ${address ? `<div style="font-size: 0.78rem; color: #6b7280; margin-bottom: 4px;">
-            <i class="fas fa-map-marker-alt" style="width: 14px;"></i> ${escapeHtml(address.substring(0, 25))}${address.length > 25 ? '...' : ''}
-          </div>` : ''}
-          ${items ? `<div style="font-size: 0.75rem; color: #9ca3af;">
-            <i class="fas fa-broom" style="width: 14px;"></i> ${escapeHtml(items)}
-          </div>` : ''}
         </div>
       `;
     }).join('');
@@ -6314,3 +6382,60 @@ async function loadMyAcceptedJobs() {
 }
 
 window.loadMyAcceptedJobs = loadMyAcceptedJobs;
+
+// 作業開始
+async function startWork(jobId) {
+  if (!confirm('作業を開始しますか？')) return;
+
+  try {
+    const headers = await buildAuthHeaders(true);
+    const res = await fetch(`${API_BASE}/schedules/${jobId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        status: 'in_progress'
+      })
+    });
+
+    if (!res.ok) throw new Error('Failed to start work');
+
+    alert('作業を開始しました！');
+    await loadOsSchedules();
+    renderOsCalendar();
+    loadMyAcceptedJobs();
+
+  } catch (error) {
+    console.error('[StartWork] Error:', error);
+    alert('作業開始に失敗しました: ' + error.message);
+  }
+}
+window.startWork = startWork;
+
+// 作業完了
+async function completeWork(jobId) {
+  if (!confirm('作業を完了しますか？')) return;
+
+  try {
+    const headers = await buildAuthHeaders(true);
+    const res = await fetch(`${API_BASE}/schedules/${jobId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        status: 'completed'
+      })
+    });
+
+    if (!res.ok) throw new Error('Failed to complete work');
+
+    alert('作業が完了しました！お疲れ様でした。');
+    await loadOsSchedules();
+    renderOsCalendar();
+    loadMyAcceptedJobs();
+
+  } catch (error) {
+    console.error('[CompleteWork] Error:', error);
+    alert('作業完了に失敗しました: ' + error.message);
+  }
+}
+window.completeWork = completeWork;
+
