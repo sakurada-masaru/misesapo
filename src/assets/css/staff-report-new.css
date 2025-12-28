@@ -236,7 +236,7 @@
 
 #tab-content-new {
   padding-bottom: 0;
-  margin-bottom: 0;
+  margin-bottom: 0px;
   padding-top: 0;
 }
 
@@ -3640,8 +3640,15 @@ body.dark-mode .modal-footer {
   }
 
   .submit-section {
-    padding: 12px;
+    position: relative;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    padding: 8px 16px;
+    flex-shrink: 0;
+    display: flex;
     gap: 8px;
+    align-items: stretch;
+    margin-bottom: 80px;
   }
 
   .btn-submit,
