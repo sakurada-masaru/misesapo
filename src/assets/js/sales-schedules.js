@@ -1156,8 +1156,20 @@ function setupEventListeners() {
           client_name: document.getElementById('schedule-client-name')?.value || '',
           brand_name: document.getElementById('schedule-brand-name')?.value || '',
           store_name: document.getElementById('schedule-store-name')?.value || '',
-          address: document.getElementById('schedule-address')?.value || '',
-          phone: document.getElementById('schedule-phone')?.value || '',
+          address: (() => {
+            const el = document.getElementById('schedule-address');
+            if (el) return el.value;
+            // 店舗データから取得
+            const store = allStores.find(s => s.id === storeId);
+            return store?.address || '';
+          })(),
+          phone: (() => {
+            const el = document.getElementById('schedule-phone');
+            if (el) return el.value;
+            // 店舗データから取得
+            const store = allStores.find(s => s.id === storeId);
+            return store?.phone || '';
+          })(),
           scheduled_date: document.getElementById('schedule-date').value,
           scheduled_time: document.getElementById('schedule-time').value,
           sales_id: document.getElementById('schedule-sales').value || null,
