@@ -378,16 +378,24 @@
                 <div class="section-title">作業実施店舗</div>
                 <table>
                     <tr>
+                        <th>法人名</th>
+                        <td>${data.client_name || '-'}</td>
+                    </tr>
+                    <tr>
+                        <th>ブランド名</th>
+                        <td style="font-weight: bold; font-size: 1.1em;">${data.brand_name || '-'}</td>
+                    </tr>
+                    <tr>
                         <th>店舗名</th>
                         <td>${storeName}</td>
                     </tr>
                     <tr>
                         <th>住所</th>
-                        <td>${data.store_address || '-'}</td>
+                        <td>${data.store_address || data.address || '-'}</td>
                     </tr>
                     <tr>
                         <th>電話番号</th>
-                        <td>${data.store_phone || '-'}</td>
+                        <td>${data.store_phone || data.phone || '-'}</td>
                     </tr>
                 </table>
             </div>
