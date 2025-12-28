@@ -5791,6 +5791,26 @@ async function openJobDetail(jobId) {
       </div>
 
       <div style="padding: 20px; border-top: 1px solid #e5e7eb; background: #f9fafb;">
+        <!-- 依頼書を見るボタン -->
+        <button onclick="viewRequestForm('${job.id}')" style="
+          width: 100%;
+          padding: 12px;
+          background: linear-gradient(135deg, #3b82f6, #2563eb);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 0.95rem;
+          font-weight: 600;
+          cursor: pointer;
+          margin-bottom: 12px;
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        ">
+          <i class="fas fa-file-alt" style="margin-right: 8px;"></i>
+          依頼書を見る
+        </button>
+
+        ${(job.status === 'draft' && !job.worker_id) ? `
+        <!-- 受託ボタン（募集中の場合のみ表示） -->
         <button onclick="acceptJob('${job.id}')" style="
           width: 100%;
           padding: 14px;
@@ -5806,6 +5826,11 @@ async function openJobDetail(jobId) {
           <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
           この案件を受託する
         </button>
+        ` : `
+        <div style="text-align: center; color: #10b981; font-weight: 600;">
+          <i class="fas fa-check-circle"></i> アサイン済み
+        </div>
+        `}
       </div>
     </div>
   `;
@@ -5860,6 +5885,35 @@ window.loadJobBoard = loadJobBoard;
 window.openJobDetail = openJobDetail;
 window.closeJobDetailModal = closeJobDetailModal;
 window.acceptJob = acceptJob;
+
+// 依頼書を見る（営業と同じプレビュー）
+async function viewRequestForm(scheduleId) {
+  // スケジュールデータを取得
+  const schedule = osAllSchedules.find(s => s.id === scheduleId) || allJobsCache.find(s => s.id === scheduleId);
+
+  if (!schedule) {
+    alert('スケジュールデータが見つかりません');
+    return;
+  }
+
+  // プレビュー用にデータを準備（営業側と同じ形式）
+  const enrichedData = {
+    ...schedule,
+    store_name: schedule.store_name || schedule.brand_name || '店舗名未設定',
+    store_address: schedule.address || '',
+    store_phone: schedule.phone || '',
+    worker_name: schedule.worker_id ? '担当者あり' : '未定',
+    survey_data: schedule.survey_data || {},
+    cleaning_items: schedule.cleaning_items || []
+  };
+
+  // LocalStorageに保存（プレビューページが読み取る）
+  localStorage.setItem('preview_schedule_data', JSON.stringify(enrichedData));
+
+  // プレビューページを開く
+  window.open(`/sales/schedules/print.html?id=${scheduleId}`, '_blank', 'width=900,height=1000,resizable=yes,scrollbars=yes');
+}
+window.viewRequestForm = viewRequestForm;
 
 // ========== OSカレンダー機能（営業と共有スケジュール） ==========
 
