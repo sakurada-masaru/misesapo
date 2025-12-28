@@ -813,8 +813,9 @@ function openEditDialog(id) {
   // Update Print Button visibility/action
   const printBtn = document.getElementById('print-request-btn');
   if (printBtn) {
-    printBtn.style.display = 'inline-flex';
+    printBtn.style.setProperty('display', 'inline-flex', 'important');
     printBtn.onclick = () => printScheduleRequest(id);
+    console.log('Print button activated for:', id);
   }
 }
 window.openEditDialog = openEditDialog;
