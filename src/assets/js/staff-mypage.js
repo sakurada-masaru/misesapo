@@ -5833,28 +5833,48 @@ async function openJobDetail(jobId) {
           依頼書を見る
         </button>
 
-        ${(!job.worker_id && !job.assigned_to) ? `
-        <!-- 受託ボタン（担当者未定の場合に表示） -->
-        <button onclick="acceptJob('${job.id}')" style="
-          width: 100%;
-          padding: 14px;
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-          border: none;
-          border-radius: 10px;
-          font-size: 1rem;
-          font-weight: 700;
-          cursor: pointer;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        ">
-          <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
-          この案件を受託する
-        </button>
-        ` : `
-        <div style="text-align: center; color: #10b981; font-weight: 600; padding: 8px;">
-          <i class="fas fa-check-circle"></i> アサイン済み
-        </div>
-        `}
+        ${(() => {
+      // 受託可能かチェック（開始時間3時間前から）
+      const scheduleDateTime = new Date(`${date}T${time || '00:00'}`);
+      const now = new Date();
+      const threeHoursBefore = new Date(scheduleDateTime.getTime() - 3 * 60 * 60 * 1000);
+      const canAccept = now >= threeHoursBefore && !job.worker_id && !job.assigned_to;
+      const isNotAssigned = !job.worker_id && !job.assigned_to;
+
+      if (canAccept) {
+        return `
+              <!-- 受託ボタン（開始3時間前から表示） -->
+              <button onclick="acceptJob('${job.id}')" style="
+                width: 100%;
+                padding: 14px;
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: white;
+                border: none;
+                border-radius: 10px;
+                font-size: 1rem;
+                font-weight: 700;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+              ">
+                <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+                この案件を受託する
+              </button>
+            `;
+      } else if (isNotAssigned) {
+        return `
+              <div style="text-align: center; color: #6b7280; font-size: 0.85rem; padding: 12px; background: #f3f4f6; border-radius: 8px;">
+                <i class="fas fa-clock" style="margin-right: 4px;"></i>
+                受託は開始3時間前から可能です
+              </div>
+            `;
+      } else {
+        return `
+              <div style="text-align: center; color: #10b981; font-weight: 600; padding: 8px;">
+                <i class="fas fa-check-circle"></i> アサイン済み
+              </div>
+            `;
+      }
+    })()}
       </div>
     </div>
   `;
