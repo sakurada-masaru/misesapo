@@ -732,27 +732,31 @@ function showDailySchedules(dateStr) {
       const store = allStores.find(x => x.id === (s.store_id || s.client_id)) || {};
       const statusLabel = getStatusLabel(s.status);
       return `
-        <div class="schedule-card" style="border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:6px; position:relative; transition:background 0.2s;">
+        <div class="schedule-card" style="border:1px solid #e5e7eb; padding:12px; margin-bottom:10px; border-radius:12px; position:relative; transition:all 0.2s; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
            
            <!-- Main Click Area: Open Print View -->
-           <div onclick="printScheduleRequest('${s.id}')" style="cursor:pointer;">
-             <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+           <div onclick="printScheduleRequest('${s.id}')" style="cursor:pointer; padding-right:40px;">
+             <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center;">
                 <span class="status-badge status-${s.status}">${statusLabel}</span>
-                <span style="font-size:0.8rem; color:#666;">${s.time_slot || ''}</span>
+                <span style="font-size:0.8rem; color:#6b7280;">${s.time_slot || ''}</span>
              </div>
-             <div style="font-weight:bold; color:#333; margin-bottom:4px;">${escapeHtml(store.name || s.store_name || '店舗未設定')}</div>
-             <div style="font-size:0.85rem; color:#666;">
-                担当: ${s.worker_id ? (allWorkers.find(w => w.id === s.worker_id)?.name || '未定') : '未割当'}
+             <div style="font-weight:700; color:#111827; margin-bottom:6px; font-size:1rem; line-height:1.4;">${escapeHtml(store.name || s.store_name || '店舗未設定')}</div>
+             <div style="font-size:0.85rem; color:#6B7280; display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+                <i class="fas fa-user-circle" style="color:#9ca3af;"></i>
+                <span>${s.worker_id ? (allWorkers.find(w => w.id === s.worker_id)?.name || '未定') : '未割当'}</span>
              </div>
-             <div style="margin-top:8px; font-size:0.8rem; color:#FF679C; font-weight:600;">
-               <i class="fas fa-print"></i> 依頼書を確認
+             <div style="font-size:0.85rem; color:#FF679C; font-weight:600; display:flex; align-items:center; gap:6px;">
+               <i class="fas fa-file-alt"></i> 依頼書プレビュー
              </div>
            </div>
 
            <!-- Edit Button (Distinct) -->
            <button onclick="openEditDialog('${s.id}'); document.getElementById('daily-schedule-dialog').close();" 
-                   style="position:absolute; top:10px; right:12px; border:1px solid #ddd; background:#fff; color:#666; border-radius:4px; padding:4px 8px; cursor:pointer;" title="詳細・編集">
-             <i class="fas fa-pen"></i>
+                   style="position:absolute; top:12px; right:12px; width:36px; height:36px; border:none; background:#f3f4f6; color:#6b7280; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;"
+                   onmouseover="this.style.background='#e5e7eb';this.style.color='#374151'" 
+                   onmouseout="this.style.background='#f3f4f6';this.style.color='#6b7280'"
+                   title="詳細編集">
+             <i class="fas fa-pen" style="font-size:0.9rem;"></i>
            </button>
 
         </div>
