@@ -155,8 +155,27 @@
     const contentArea = document.getElementById('report-content');
     const existingSections = contentArea ? contentArea.querySelectorAll('.section-card') : [];
 
-    // スケジュールから清掃項目を取得
-    const cleaningItemsList = schedule.cleaning_items || schedule.service_items || (schedule.service_names ? (Array.isArray(schedule.service_names) ? schedule.service_names : [schedule.service_names]) : []);
+    // URLから選択された項目を取得
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedItemsParam = urlParams.get('selected_items');
+    let selectedItems = null;
+
+    if (selectedItemsParam) {
+      try {
+        selectedItems = JSON.parse(decodeURIComponent(selectedItemsParam));
+        console.log('[Report] Loaded selected items from URL:', selectedItems);
+      } catch (e) {
+        console.error('Failed to parse selected_items:', e);
+      }
+    }
+
+    // スケジュールから清掃項目を取得（URL指定があればそちらを優先）
+    let cleaningItemsList = [];
+    if (selectedItems && Array.isArray(selectedItems)) {
+      cleaningItemsList = selectedItems;
+    } else {
+      cleaningItemsList = schedule.cleaning_items || schedule.service_items || (schedule.service_names ? (Array.isArray(schedule.service_names) ? schedule.service_names : [schedule.service_names]) : []);
+    }
 
     if (contentArea && existingSections.length === 0 && cleaningItemsList.length > 0) {
       console.log('[Report] Auto-expanding cleaning items:', cleaningItemsList);

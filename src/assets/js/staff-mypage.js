@@ -6498,7 +6498,7 @@ async function loadMyAcceptedJobs() {
               ">
                 <i class="fas fa-check-circle"></i> 作業完了
               </button>
-              <a href="/staff/os/reports/new?schedule_id=${job.id}" onclick="event.stopPropagation();" style="
+              <button onclick="event.stopPropagation(); openReportCreationModal('${job.id}')" style="
                 flex: 1;
                 padding: 10px;
                 background: linear-gradient(135deg, #3b82f6, #2563eb);
@@ -6508,14 +6508,13 @@ async function loadMyAcceptedJobs() {
                 font-size: 0.9rem;
                 font-weight: 600;
                 cursor: pointer;
-                text-decoration: none;
                 text-align: center;
                 box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
               ">
                 <i class="fas fa-file-alt"></i> レポート
-              </a>
+              </button>
             ` : `
-              <a href="/staff/os/reports/new?schedule_id=${job.id}" onclick="event.stopPropagation();" style="
+              <button onclick="event.stopPropagation(); openReportCreationModal('${job.id}')" style="
                 flex: 1;
                 padding: 10px;
                 background: linear-gradient(135deg, #3b82f6, #2563eb);
@@ -6525,12 +6524,11 @@ async function loadMyAcceptedJobs() {
                 font-size: 0.9rem;
                 font-weight: 600;
                 cursor: pointer;
-                text-decoration: none;
                 text-align: center;
                 box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
               ">
                 <i class="fas fa-file-alt"></i> レポート作成
-              </a>
+              </button>
             `}
           </div>
         </div>
@@ -6614,3 +6612,89 @@ async function completeWork(jobId) {
 }
 window.completeWork = completeWork;
 
+
+// レポート作成前の清掃項目選択モーダル
+window.openReportCreationModal = function (scheduleId) {
+  // スケジュールを検索
+  const schedule = osAllSchedules.find(s => String(s.id) === String(scheduleId));
+  if (!schedule) {
+    console.error('Schedule not found:', scheduleId);
+    // スケジュールが見つからない場合は直接遷移（フェールセーフ）
+    window.location.href = `/staff/os/reports/new?schedule_id=${scheduleId}`;
+    return;
+  }
+
+  // 既存のモーダルがあれば削除
+  const existingModal = document.getElementById('report-creation-modal');
+  if (existingModal) existingModal.remove();
+
+  // 清掃項目を取得
+  const cleaningItems = schedule.cleaning_items || schedule.service_items || (schedule.service_names ? (Array.isArray(schedule.service_names) ? schedule.service_names : [schedule.service_names]) : []);
+
+  let itemsHtml = '';
+  if (cleaningItems.length > 0) {
+    itemsHtml = cleaningItems.map(item => {
+      const name = typeof item === 'object' ? (item.name || item.item_name || item.title) : item;
+      // HTMLエスケープヘルパーがない場合は簡易実装を使用
+      const escape = (str) => {
+        if (!str) return '';
+        return str.replace(/[&<>"']/g, function (m) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        });
+      };
+      return `
+        <label style="display: flex; align-items: center; padding: 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
+          <input type="checkbox" name="report_cleaning_item" value="${escape(name)}" checked style="width: 20px; height: 20px; margin-right: 12px; accent-color: #3b82f6;">
+          <span style="font-weight: 500; color: #374151;">${escape(name)}</span>
+        </label>
+      `;
+    }).join('');
+  } else {
+    itemsHtml = '<p style="color: #6b7280; text-align: center;">登録された清掃項目はありません。<br>レポート画面で自由に追加してください。</p>';
+  }
+
+  const modalHtml = `
+    <div id="report-creation-modal" class="modal-overlay" style="display: flex; align-items: center; justify-content: center; z-index: 10000; background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; right: 0; bottom: 0;">
+      <div class="modal-content" style="width: 90%; max-width: 450px; background: white; padding: 24px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="width: 50px; height: 50px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+            <i class="fas fa-tasks" style="font-size: 24px; color: #3b82f6;"></i>
+          </div>
+          <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #111827;">担当する作業を選択</h3>
+          <p style="margin: 8px 0 0; color: #6b7280; font-size: 0.9rem;">今回レポートを作成する清掃項目を選んでください。</p>
+        </div>
+
+        <div style="max-height: 300px; overflow-y: auto; margin-bottom: 24px;">
+          ${itemsHtml}
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+          <button onclick="document.getElementById('report-creation-modal').remove()" style="flex: 1; padding: 12px; background: white; border: 1px solid #e5e7eb; color: #374151; border-radius: 8px; font-weight: 600; cursor: pointer;">
+            キャンセル
+          </button>
+          <button onclick="submitReportCreationWithOptions('${scheduleId}')" style="flex: 2; padding: 12px; background: #3b82f6; border: none; color: white; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fas fa-pencil-alt"></i> レポート作成へ
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+};
+
+window.submitReportCreationWithOptions = function (scheduleId) {
+  const checkboxes = document.querySelectorAll('input[name="report_cleaning_item"]:checked');
+  const selectedItems = Array.from(checkboxes).map(cb => cb.value);
+
+  // URLを作成
+  let url = `/staff/os/reports/new?schedule_id=${scheduleId}`;
+  if (selectedItems.length > 0) {
+    // 項目をJSON文字列化してエンコードして渡す
+    const itemsParam = encodeURIComponent(JSON.stringify(selectedItems));
+    url += `&selected_items=${itemsParam}`;
+  }
+
+  // 遷移
+  window.location.href = url;
+};
