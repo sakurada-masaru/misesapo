@@ -3004,6 +3004,7 @@ def create_report(event, headers):
             'work_items': body_json['work_items'],
             'sections': processed_sections,
             'location': body_json.get('location'),
+            'schedule_id': body_json.get('schedule_id'),  # スケジュールIDを保存
             'satisfaction': {
                 'rating': None,
                 'comment': None,
@@ -3029,6 +3030,24 @@ def create_report(event, headers):
         # DynamoDBに保存
         REPORTS_TABLE.put_item(Item=report_item)
         
+        # スケジュール情報も更新（report_idを紐付け）
+        schedule_id = body_json.get('schedule_id')
+        if schedule_id:
+            try:
+                print(f"[DEBUG] Updating schedule {schedule_id} with report_id {report_id}")
+                SCHEDULES_TABLE.update_item(
+                    Key={'id': schedule_id},
+                    UpdateExpression='SET report_id = :rid, #s = :status, updated_at = :updated_at',
+                    ExpressionAttributeNames={'#s': 'status'},
+                    ExpressionAttributeValues={
+                        ':rid': report_id,
+                        ':status': 'completed',
+                        ':updated_at': now
+                    }
+                )
+            except Exception as e:
+                print(f"[ERROR] Failed to update schedule {schedule_id}: {str(e)}")
+
         return {
             'statusCode': 200,
             'headers': headers,

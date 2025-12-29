@@ -6514,21 +6514,39 @@ async function loadMyAcceptedJobs() {
                 <i class="fas fa-file-alt"></i> レポート
               </button>
             ` : `
-              <button onclick="event.stopPropagation(); openReportCreationModal('${job.id}')" style="
-                flex: 1;
-                padding: 10px;
-                background: linear-gradient(135deg, #3b82f6, #2563eb);
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-size: 0.9rem;
-                font-weight: 600;
-                cursor: pointer;
-                text-align: center;
-                box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-              ">
-                <i class="fas fa-file-alt"></i> レポート作成
-              </button>
+              ${job.report_id ? `
+                <button onclick="event.stopPropagation(); window.open('/reports/shared/' + job.report_id + '/view', '_blank')" style="
+                  flex: 1;
+                  padding: 10px;
+                  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+                  color: white;
+                  border: none;
+                  border-radius: 8px;
+                  font-size: 0.9rem;
+                  font-weight: 600;
+                  cursor: pointer;
+                  text-align: center;
+                  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+                ">
+                  <i class="fas fa-eye"></i> レポート閲覧
+                </button>
+              ` : `
+                <button onclick="event.stopPropagation(); openReportCreationModal('${job.id}')" style="
+                  flex: 1;
+                  padding: 10px;
+                  background: linear-gradient(135deg, #3b82f6, #2563eb);
+                  color: white;
+                  border: none;
+                  border-radius: 8px;
+                  font-size: 0.9rem;
+                  font-weight: 600;
+                  cursor: pointer;
+                  text-align: center;
+                  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+                ">
+                  <i class="fas fa-file-alt"></i> レポート作成
+                </button>
+              `}
             `}
           </div>
         </div>
