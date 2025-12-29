@@ -6442,9 +6442,14 @@
 
               // URL更新後に再度自動保存
               autoSave();
+            } else {
+              console.error('[ImmediateUpload] Failed: No URL returned');
+              // アップロード失敗をユーザーに通知
+              alert('画像のアップロードに失敗しました。再試行してください。');
             }
           }).catch(err => {
             console.error('[ImmediateUpload] Failed:', err);
+            alert('画像のアップロードエラー: ' + err.message);
           });
           // ------------------------------------
 
