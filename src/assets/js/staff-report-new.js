@@ -7673,10 +7673,14 @@
             return value;
           }).filter(Boolean);
 
+          const hInfo = s.haccp_info;
+          let typeStr = hInfo ? (hInfo.work_type || '実施') : '';
+          if (hInfo?.abnormal) typeStr += ' [異常あり]';
+
           return {
             item_id: itemId,
             item_name: itemName,
-            details: {},
+            details: hInfo ? { type: typeStr } : {},
             photos: photos,
             comments: comments,
             subtitles: subtitles
@@ -7741,7 +7745,16 @@
       cleaning_end_time: document.getElementById('report-end').value || '',
       work_items: workItems,
       sections: validSectionData,
-      status: 'pending' // 清掃員からの提出は「保留」状態
+      status: 'pending', // 清掃員からの提出は「保留」状態
+      haccp_info: {
+        weather: document.getElementById('report-weather')?.value || '',
+        work_type: document.querySelector('input[name="work_type"]:checked')?.value || 'regular',
+        abnormality_record: {
+          correction: document.getElementById('haccp-correction-text')?.value || '',
+          confirmer: document.getElementById('haccp-confirmer')?.value || '',
+          next_date: document.getElementById('haccp-next-date')?.value || ''
+        }
+      }
     };
 
     console.log('[Submit] Report data:', reportData);
@@ -9408,5 +9421,281 @@
       }[m];
     });
   }
+
+  /* HACCP 清掃実施記録ロジック (Added for User Request) */
+  (function () {
+    const HACCP_CONFIG = [
+      {
+        category: '排水・油脂管理',
+        items: [
+          { id: 'h-grease', name: 'グリストラップ', options: ['清掃', '汚泥除去', '分解', '非分解'] },
+          { id: 'h-gutter', name: 'U字溝・グレーチング', options: ['清掃'] },
+          { id: 'h-pipe', name: '配管', options: ['高圧洗浄', '内部'] }
+        ]
+      },
+      {
+        category: '換気・排気設備',
+        items: [
+          { id: 'h-hood', name: 'レンジフード', options: ['洗浄', '分解'] },
+          { id: 'h-duct', name: 'ダクト', options: ['洗浄', '内部'] },
+          { id: 'h-shutter', name: '防火シャッター', options: ['清掃'] },
+          { id: 'h-fan', name: '換気扇', options: ['洗浄'] },
+          { id: 'h-exhaust-fan', name: '排気ファン', options: ['清掃', '分解'] },
+          { id: 'h-belt', name: '排気ファンベルト', options: ['交換', '調整', '保守'] }
+        ]
+      },
+      {
+        category: '厨房・調理関連設備',
+        items: [
+          { id: 'h-kitchen-equip', name: '厨房機器', options: ['洗浄', '分解'] },
+          { id: 'h-wall-kitchen', name: '壁（厨房）', options: ['清掃'] },
+          { id: 'h-sink', name: 'シンク', options: ['洗浄'] }
+        ]
+      },
+      {
+        category: '空調設備',
+        items: [
+          { id: 'h-ac-filter', name: 'エアコンフィルター', options: ['洗浄'] },
+          { id: 'h-ac-body', name: 'エアコン本体', options: ['分解洗浄', '内部'] }
+        ]
+      },
+      {
+        category: '床・フロア',
+        items: [
+          { id: 'h-floor', name: '床（フロア）', options: ['清掃', '除菌', '保護'] },
+          { id: 'h-flooring', name: 'フローリング', options: ['清掃'] },
+          { id: 'h-tile', name: 'タイル', options: ['清掃'] },
+          { id: 'h-carpet', name: 'カーペット', options: ['清掃'] },
+          { id: 'h-wax', name: 'ワックスがけ', options: ['実施'] },
+          { id: 'h-coating', name: 'コーティング', options: ['処理'] }
+        ]
+      },
+      {
+        category: '共用部・その他',
+        items: [
+          { id: 'h-window', name: '窓', options: ['清掃'] },
+          { id: 'h-door', name: 'ドア', options: ['清掃'] },
+          { id: 'h-light', name: '照明器具', options: ['清掃'] },
+          { id: 'h-vent-hole', name: '換気口', options: ['清掃'] },
+          { id: 'h-toilet', name: 'トイレ', options: ['清掃'] },
+          { id: 'h-handwash', name: '手洗い場', options: ['清掃'] },
+          { id: 'h-mirror', name: '鏡', options: ['清掃'] },
+          { id: 'h-wall', name: '壁面', options: ['清掃'] },
+          { id: 'h-ceiling', name: '天井', options: ['清掃'] },
+          { id: 'h-elevator', name: 'エレベーター', options: ['清掃'] },
+          { id: 'h-stairs', name: '階段', options: ['清掃'] },
+          { id: 'h-trash', name: 'ゴミ箱', options: ['清掃'] }
+        ]
+      }
+    ];
+
+    function renderHaccpForm() {
+      const container = document.getElementById('haccp-form-container');
+      if (!container) return;
+
+      let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">';
+
+      HACCP_CONFIG.forEach(cat => {
+        html += `
+          <div style="background: white; border: 1px solid #eee; border-radius: 8px; padding: 12px;">
+            <h4 style="margin: 0 0 10px; font-size: 0.95rem; color: #111827; border-bottom: 2px solid #3b82f6; padding-bottom: 4px;">${cat.category}</h4>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+        `;
+        cat.items.forEach(item => {
+          html += `
+            <div class="haccp-item-row" data-id="${item.id}" style="border-bottom: 1px dashed #f3f4f6; padding-bottom: 8px;">
+              <label style="display: flex; align-items: center; cursor: pointer; font-weight: 500;">
+                <input type="checkbox" class="haccp-item-check" data-id="${item.id}" data-name="${item.name}" style="margin-right: 8px; transform: scale(1.1);">
+                ${item.name}
+              </label>
+              <div class="haccp-item-details" style="display:none; margin-top: 6px; padding-left: 24px; font-size: 0.85rem;">
+                 <div style="margin-bottom: 4px;">
+                    <span style="color:#6b7280; margin-right:4px;">作業:</span>
+                    ${(item.options || ['清掃']).map((opt, i) => `
+                      <label style="margin-right: 8px; cursor: pointer;"><input type="radio" name="opt-${item.id}" value="${opt}" ${i === 0 ? 'checked' : ''} class="haccp-opt-radio"> ${opt}</label>
+                    `).join('')}
+                 </div>
+                 <div>
+                    <span style="color:#6b7280; margin-right:4px;">異常:</span>
+                    <label style="margin-right: 8px; cursor: pointer; color: #10b981;"><input type="radio" name="abn-${item.id}" value="no" checked class="haccp-abn-radio"> なし</label>
+                    <label style="margin-right: 8px; cursor: pointer; color: #ef4444;"><input type="radio" name="abn-${item.id}" value="yes" class="haccp-abn-radio"> あり</label>
+                 </div>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div></div>';
+      });
+      html += '</div>';
+
+      // Abnormality Section (Pattern 3)
+      html += `
+        <div id="haccp-abnormality-area" style="margin-top: 24px; padding: 16px; background: #fff1f2; border: 1px solid #fecaca; border-radius: 8px; display: none;">
+          <h4 style="color: #991b1b; margin: 0 0 12px;"><i class="fas fa-exclamation-triangle"></i> 【様式③】異常・是正対応記録</h4>
+          <div id="haccp-abnormality-list" style="margin-bottom: 12px; font-weight: bold; color: #dc2626;"></div>
+          <div style="margin-top: 12px; font-size: 0.9rem;">
+              <div class="form-group" style="margin-bottom: 12px;">
+                  <label class="form-label" style="display:block; margin-bottom:4px; font-weight:bold;">対応内容・是正処置</label>
+                  <textarea id="haccp-correction-text" class="form-input" rows="3" placeholder="異常内容の詳細、応急対応、是正措置などを記入してください" style="width:100%; border:1px solid #d1d5db; border-radius:6px; padding:8px;"></textarea>
+              </div>
+              <div style="display: flex; gap: 16px;">
+                  <div class="form-group" style="flex:1;">
+                      <label class="form-label" style="display:block; margin-bottom:4px; font-weight:bold;">完了確認者</label>
+                      <input type="text" id="haccp-confirmer" class="form-input" placeholder="店舗責任者名など" style="width:100%; border:1px solid #d1d5db; border-radius:6px; padding:8px;">
+                  </div>
+                  <div class="form-group" style="flex:1;">
+                      <label class="form-label" style="display:block; margin-bottom:4px; font-weight:bold;">次回推奨時期</label>
+                      <input type="text" id="haccp-next-date" class="form-input" placeholder="例: 2026年1月頃" style="width:100%; border:1px solid #d1d5db; border-radius:6px; padding:8px;">
+                  </div>
+              </div>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+
+      // Toggle Button Logic
+      const toggleBtn = document.getElementById('haccp-toggle-btn');
+      if (toggleBtn) {
+        toggleBtn.onclick = function () {
+          const isHidden = (container.style.display === 'none');
+          container.style.display = isHidden ? 'block' : 'none';
+          // Icon is now optional or custom
+          const icon = document.getElementById('haccp-toggle-icon');
+          if (icon) icon.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+        };
+      }
+
+      // Checkbox Listeners
+      container.querySelectorAll('.haccp-item-check').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+          const row = e.target.closest('.haccp-item-row');
+          const details = row.querySelector('.haccp-item-details');
+          const name = e.target.dataset.name;
+          const id = e.target.dataset.id;
+
+          if (e.target.checked) {
+            details.style.display = 'block';
+            if (window.addCleaningItemSection) {
+              addSectionByHaccp(name, id);
+            }
+          } else {
+            details.style.display = 'none';
+            removeSectionByHaccp(name);
+          }
+          updateAbnormalityVisibility();
+        });
+      });
+
+      // Radio Listeners
+      container.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          const row = e.target.closest('.haccp-item-row');
+          const chk = row.querySelector('.haccp-item-check');
+          if (chk.checked) {
+            updateSectionDataByHaccp(chk.dataset.name, chk.dataset.id);
+          }
+          if (e.target.name.startsWith('abn-')) {
+            updateAbnormalityVisibility();
+          }
+        });
+      });
+    }
+
+    function addSectionByHaccp(name, haccpId) {
+      // Find if already exists
+      const existingId = Object.keys(sections).find(id => sections[id].item_name === name);
+      if (existingId) {
+        updateSectionDataByHaccp(name, haccpId, existingId);
+        return;
+      }
+
+      window.addCleaningItemSection();
+      const sectionId = `section-${sectionCounter}`; // Use global counter
+
+      // Update UI logic
+      // We need to wait for DOM update? No, sync.
+      setTimeout(() => {
+        const sectionEl = document.querySelector(`[data-section-id="${sectionId}"]`);
+        if (sectionEl) {
+          const select = sectionEl.querySelector('.cleaning-item-select');
+          let found = false;
+          for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === name) {
+              select.options[i].selected = true;
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            select.value = '__other__';
+            select.dispatchEvent(new Event('change'));
+            const custom = sectionEl.querySelector('.cleaning-item-custom');
+            if (custom) {
+              custom.value = name;
+              custom.dispatchEvent(new Event('input')); // Updates sections[id].item_name
+            }
+          } else {
+            select.dispatchEvent(new Event('change'));
+          }
+
+          // Add tag or mark as HACCP auto-generated
+          sectionEl.dataset.haccpSource = 'true';
+
+          updateSectionDataByHaccp(name, haccpId, sectionId);
+        }
+      }, 50);
+    }
+
+    function removeSectionByHaccp(name) {
+      const sectionId = Object.keys(sections).find(id => sections[id].item_name === name);
+      if (sectionId) {
+        delete sections[sectionId];
+        const el = document.querySelector(`[data-section-id="${sectionId}"]`);
+        if (el) el.remove();
+      }
+    }
+
+    function updateSectionDataByHaccp(name, haccpId, specificSectionId) {
+      const sectionId = specificSectionId || Object.keys(sections).find(id => sections[id].item_name === name);
+      if (!sectionId || !sections[sectionId]) return;
+
+      const row = document.querySelector(`.haccp-item-row[data-id="${haccpId}"]`);
+      if (!row) return;
+
+      const workType = row.querySelector(`input[name="opt-${haccpId}"]:checked`)?.value;
+      const abnormal = row.querySelector(`input[name="abn-${haccpId}"]:checked`)?.value;
+
+      sections[sectionId].haccp_info = {
+        id: haccpId,
+        work_type: workType,
+        abnormal: abnormal === 'yes'
+      };
+    }
+
+    function updateAbnormalityVisibility() {
+      const container = document.getElementById('haccp-form-container');
+      const abnArea = document.getElementById('haccp-abnormality-area');
+      const abnList = document.getElementById('haccp-abnormality-list');
+
+      const abnormals = Array.from(container.querySelectorAll('.haccp-abn-radio[value="yes"]:checked'))
+        .map(radio => {
+          const row = radio.closest('.haccp-item-row');
+          return row.querySelector('.haccp-item-check').dataset.name;
+        });
+
+      if (abnormals.length > 0) {
+        abnArea.style.display = 'block';
+        abnList.innerHTML = `<strong>異常項目:</strong> ${abnormals.join(', ')}`;
+      } else {
+        abnArea.style.display = 'none';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderHaccpForm();
+    });
+
+  })();
 
 })();

@@ -147,6 +147,26 @@
             この店舗の過去のレポート（カルテ）を見る
           </button>
         </div>
+
+        <!-- HACCP Additional Info -->
+        <div class="form-row two-col haccp-info-row"
+          style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #eee;">
+          <div class="form-group">
+            <label class="date-time-label" for="report-weather">天候 (任意)</label>
+            <input type="text" id="report-weather" class="form-input" placeholder="例: 晴れ">
+          </div>
+          <div class="form-group">
+            <label class="date-time-label">作業区分</label>
+            <div class="radio-group" style="display: flex; gap: 12px; margin-top: 8px; font-size: 0.9rem;">
+              <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;"><input type="radio"
+                  name="work_type" value="regular" checked> 定期</label>
+              <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;"><input type="radio"
+                  name="work_type" value="temporary"> 臨時</label>
+              <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;"><input type="radio"
+                  name="work_type" value="correction"> 是正</label>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 画像ストックエリア -->
@@ -189,6 +209,43 @@
 
   <!-- 新規作成タブ -->
   <div id="tab-content-new" class="tab-content active">
+
+    <!-- HACCP Toggle Section -->
+    <div style="padding: 16px 16px 0;">
+      <button type="button" id="haccp-toggle-btn" class="haccp-toggle-btn" style="
+        width: 100%;
+        padding: 12px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-weight: 600;
+        color: #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        cursor: pointer;
+      ">
+        <span><i class="fas fa-clipboard-check" style="color: #3b82f6; margin-right: 8px;"></i> HACCP 清掃実施記録 (様式
+          1-3)</span>
+        <i class="fas fa-chevron-down" id="haccp-toggle-icon"></i>
+      </button>
+
+      <div id="haccp-form-container" style="
+        display: none;
+        margin-top: 10px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 16px;
+      ">
+        <!-- JS will render content here -->
+        <div class="loading-spinner" style="text-align: center; padding: 20px; color: #6b7280;">
+          <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+        </div>
+      </div>
+    </div>
+
     <form id="report-form" class="report-form">
 
       <!-- コンテンツエリア -->
