@@ -793,8 +793,15 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-imag
 S3_REGION = os.environ.get('S3_REGION', 'ap-northeast-1')
 ALLOWED_ORIGINS = [origin.strip() for origin in os.environ.get('ALLOWED_ORIGINS', '*').split(',') if origin.strip()]
 # Add misesapo.co.jp explicitly to avoid CORS issues
-if 'https://misesapo.co.jp' not in ALLOWED_ORIGINS and '*' not in ALLOWED_ORIGINS:
-    ALLOWED_ORIGINS.append('https://misesapo.co.jp')
+# Add misesapo.co.jp explicitly to avoid CORS issues
+# 本番環境で環境変数設定が漏れていても動作するように、確実にリストに追加する
+_required_origins = [
+    'https://misesapo.co.jp', 
+    'https://www.misesapo.co.jp'
+]
+for _org in _required_origins:
+    if _org not in ALLOWED_ORIGINS and '*' not in ALLOWED_ORIGINS:
+        ALLOWED_ORIGINS.append(_org)
 
 # Google Calendar API設定（※このプロジェクトでは今後Googleカレンダーを使用しない方針）
 # - Google側の共有を外しても、システムが誤って同期処理を試みると権限エラーが発生し得るため、
