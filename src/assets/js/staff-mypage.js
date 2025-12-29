@@ -6570,7 +6570,8 @@ async function startWork(jobId) {
 
     if (!res.ok) throw new Error('Failed to start work');
 
-    alert('作業を開始しました！');
+    const timeStr = new Date(now).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    alert(`作業を開始しました！ (${timeStr})`);
     await loadOsSchedules();
     renderOsCalendar();
     loadMyAcceptedJobs();
@@ -6600,7 +6601,8 @@ async function completeWork(jobId) {
 
     if (!res.ok) throw new Error('Failed to complete work');
 
-    alert('作業が完了しました！お疲れ様でした。');
+    const timeStr = new Date(now).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    alert(`作業が完了しました！お疲れ様でした。 (${timeStr})`);
     await loadOsSchedules();
     renderOsCalendar();
     loadMyAcceptedJobs();
