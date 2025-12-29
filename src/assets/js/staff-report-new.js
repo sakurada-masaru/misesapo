@@ -5277,11 +5277,93 @@
   }
 
   // セクション内画像コンテンツの画像追加モーダルを開く
-  // 管理レポート作成画面では、メディア選択モーダルを直接開く
   window.openCleaningItemImageAddModal = function (sectionId, imageContentId, category) {
-    // メディア選択モーダルを直接開く
-    openMediaSelectionDialog(sectionId, imageContentId, category);
+    // ネイティブライクなアクションシートを表示
+    showImageSourceSelectionSheet(sectionId, imageContentId, category);
   };
+
+  // 画像ソース選択アクションシートを表示する
+  function showImageSourceSelectionSheet(sectionId, imageContentId, category) {
+    let sheetOverlay = document.getElementById('image-source-sheet-overlay');
+
+    if (!sheetOverlay) {
+      sheetOverlay = document.createElement('div');
+      sheetOverlay.id = 'image-source-sheet-overlay';
+      sheetOverlay.className = 'image-source-sheet-overlay';
+      sheetOverlay.innerHTML = `
+        <div class="image-source-sheet">
+          <div class="image-source-options">
+            <button type="button" class="image-source-btn camera" id="btn-source-camera">
+              <i class="fas fa-camera"></i> カメラで撮影
+            </button>
+            <button type="button" class="image-source-btn library" id="btn-source-library">
+              <i class="fas fa-photo-video"></i> 写真ライブラリから選択
+            </button>
+          </div>
+          <button type="button" class="image-source-cancel" id="btn-source-cancel">キャンセル</button>
+        </div>
+      `;
+      document.body.appendChild(sheetOverlay);
+
+      // オーバーレイクリックで閉じる
+      sheetOverlay.addEventListener('click', (e) => {
+        if (e.target === sheetOverlay) closeImageSourceSheet();
+      });
+
+      // キャンセルボタン
+      document.getElementById('btn-source-cancel').addEventListener('click', closeImageSourceSheet);
+    }
+
+    // イベントリスナーを毎回リセットして再設定（クロージャで引数を渡すため）
+    const btnCamera = document.getElementById('btn-source-camera');
+    const btnLibrary = document.getElementById('btn-source-library');
+
+    // 古いリスナーを削除するためにクローン
+    const newBtnCamera = btnCamera.cloneNode(true);
+    const newBtnLibrary = btnLibrary.cloneNode(true);
+
+    btnCamera.parentNode.replaceChild(newBtnCamera, btnCamera);
+    btnLibrary.parentNode.replaceChild(newBtnLibrary, btnLibrary);
+
+    newBtnCamera.addEventListener('click', () => {
+      closeImageSourceSheet();
+      // 少し待ってからカメラ起動
+      setTimeout(() => {
+        if (typeof openCleaningItemImageCamera === 'function') {
+          openCleaningItemImageCamera(sectionId, imageContentId, category);
+        } else {
+          console.error('openCleaningItemImageCamera function not found');
+        }
+      }, 300);
+    });
+
+    newBtnLibrary.addEventListener('click', () => {
+      closeImageSourceSheet();
+      setTimeout(() => {
+        if (typeof openCleaningItemImageLibraryPicker === 'function') {
+          openCleaningItemImageLibraryPicker(sectionId, imageContentId, category);
+        } else {
+          console.error('openCleaningItemImageLibraryPicker function not found');
+        }
+      }, 300);
+    });
+
+    // 表示
+    sheetOverlay.style.display = 'flex';
+    // リフロー強制してアニメーション適用
+    void sheetOverlay.offsetWidth;
+    sheetOverlay.classList.add('active');
+  }
+
+  function closeImageSourceSheet() {
+    const sheetOverlay = document.getElementById('image-source-sheet-overlay');
+    if (sheetOverlay) {
+      sheetOverlay.classList.remove('active');
+      setTimeout(() => {
+        sheetOverlay.style.display = 'none';
+      }, 300);
+    }
+  }
 
   // メディア選択ダイアログを開く
   let mediaSelectionFolders = [];
