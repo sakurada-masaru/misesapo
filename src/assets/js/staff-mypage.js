@@ -182,6 +182,115 @@ async function loadCurrentUser() {
         feed.innerHTML = '<div class="empty-state">読み込みエラー</div>';
       }
     }
+
+    // 営業マン向けアラート機能
+    async function loadSalesAlerts(userId) {
+      const alertsList = document.getElementById('sales-alerts-list');
+      const alertCount = document.getElementById('sales-alert-count');
+      if (!alertsList) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/schedules`);
+        if (!res.ok) throw new Error('Failed to load schedules');
+        const data = await res.json();
+        const items = Array.isArray(data) ? data : (data.items || []);
+
+        const alerts = [];
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        items.forEach(schedule => {
+          const isMine = schedule.sales_id && String(schedule.sales_id) === String(userId);
+          const scheduleDate = schedule.scheduled_date || schedule.date;
+
+          // 1. 担当者未アサインの案件（draft状態でworker_idなし）
+          if (isMine && !schedule.worker_id && schedule.status === 'draft') {
+            alerts.push({
+              type: 'warning',
+              icon: 'fa-user-slash',
+              color: '#f59e0b',
+              title: '担当者未アサイン',
+              message: `${schedule.brand_name || schedule.store_name || '案件'} (${scheduleDate})`,
+              scheduleId: schedule.id,
+              priority: scheduleDate === today ? 1 : (scheduleDate === tomorrow ? 2 : 3)
+            });
+          }
+
+          // 2. 今日の案件で作業開始されていない
+          if (isMine && scheduleDate === today && schedule.status === 'scheduled' && !schedule.work_started_at) {
+            const scheduleTime = schedule.scheduled_time || '00:00';
+            const [h, m] = scheduleTime.split(':').map(Number);
+            const scheduledDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+            if (now > scheduledDateTime) {
+              alerts.push({
+                type: 'danger',
+                icon: 'fa-clock',
+                color: '#ef4444',
+                title: '作業遅延の可能性',
+                message: `${schedule.brand_name || schedule.store_name || '案件'} - 予定時刻超過`,
+                scheduleId: schedule.id,
+                priority: 0
+              });
+            }
+          }
+
+          // 3. 明日の案件でワーカー未アサイン
+          if (isMine && scheduleDate === tomorrow && !schedule.worker_id) {
+            alerts.push({
+              type: 'urgent',
+              icon: 'fa-exclamation-circle',
+              color: '#dc2626',
+              title: '明日の案件でワーカー未定',
+              message: `${schedule.brand_name || schedule.store_name || '案件'}`,
+              scheduleId: schedule.id,
+              priority: 0
+            });
+          }
+        });
+
+        // 優先度でソート
+        alerts.sort((a, b) => a.priority - b.priority);
+
+        if (alertCount) {
+          alertCount.textContent = alerts.length;
+          alertCount.style.display = alerts.length > 0 ? 'inline' : 'none';
+        }
+
+        if (alerts.length === 0) {
+          alertsList.innerHTML = `
+            <div class="empty-state" style="padding: 20px; text-align: center; color: #6b7280;">
+              <i class="fas fa-check-circle" style="font-size: 2rem; color: #10b981; margin-bottom: 8px;"></i>
+              <p style="margin: 0;">現在アラートはありません</p>
+            </div>
+          `;
+          return;
+        }
+
+        alertsList.innerHTML = alerts.map(alert => `
+          <div onclick="window.location.href='/sales/schedules?highlight=${alert.scheduleId}'" style="
+            padding: 12px 16px;
+            border-left: 4px solid ${alert.color};
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: background 0.2s;
+          " onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <i class="fas ${alert.icon}" style="color: ${alert.color}; font-size: 1.1rem;"></i>
+              <div style="flex: 1;">
+                <div style="font-weight: 600; font-size: 0.9rem; color: #111827;">${alert.title}</div>
+                <div style="font-size: 0.8rem; color: #6b7280;">${alert.message}</div>
+              </div>
+              <i class="fas fa-chevron-right" style="color: #d1d5db;"></i>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (e) {
+        console.error('[SalesAlerts] Error:', e);
+        alertsList.innerHTML = '<div class="empty-state" style="padding: 16px; color: #6b7280;">アラートの読み込みに失敗しました</div>';
+      }
+    }
     let userId = null;
     let userEmail = null;
 
@@ -280,6 +389,10 @@ async function loadCurrentUser() {
           // Fix: Load Activity here if user found
           if (typeof loadRecentActivity === 'function') {
             loadRecentActivity(currentUser.id);
+          }
+          // 営業アラートも読み込む
+          if (typeof loadSalesAlerts === 'function') {
+            loadSalesAlerts(currentUser.id);
           }
         } else if (response.status === 404) {
           // 404エラーの場合、URLパラメータのIDが無効な可能性がある
