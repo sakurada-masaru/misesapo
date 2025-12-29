@@ -6407,6 +6407,44 @@
             uploaded: false
           };
           imageContent.photos[category].push(imageData);
+
+          // --- 即時アップロード (復元対策) ---
+          // 画像選択時にバックグラウンドでS3へアップロードを行い、URLを永続化する
+          const cleaningDate = document.getElementById('report-date')?.value || '';
+          // uploadSectionImagesはimageStockを参照するため、直前のaddImagesToStockで追加された画像が使用される
+          // 進捗表示(onProgress)はnullでサイレント実行
+          uploadSectionImages([{ imageId: imageId }], cleaningDate, category, null).then(urls => {
+            if (urls && urls.length > 0) {
+              const uploadedUrl = urls[0];
+              console.log('[ImmediateUpload] Success:', uploadedUrl);
+
+              // データを更新
+              imageData.url = uploadedUrl;
+              imageData.uploaded = true;
+              // blobUrlをS3 URLで上書きすることで、AutoSave時に永続的なURLが保存される
+              imageData.blobUrl = uploadedUrl;
+
+              // DOM要素の更新（blobUrlがS3 URLに変わっても表示は維持される）
+              const thumb = imageList.querySelector(`[data-image-id="${imageId}"]`);
+              if (thumb) {
+                thumb.dataset.imageUrl = uploadedUrl;
+                // アップロード完了マーク（任意）
+                const mark = document.createElement('div');
+                mark.className = 'uploaded-mark';
+                mark.innerHTML = '<i class="fas fa-cloud-upload-alt"></i>';
+                mark.style.cssText = 'position:absolute; bottom:5px; right:5px; background:rgba(76, 175, 80, 0.9); color:white; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:10px; z-index:5;';
+                thumb.appendChild(mark);
+              }
+
+              // URL更新後に再度自動保存
+              autoSave();
+            }
+          }).catch(err => {
+            console.error('[ImmediateUpload] Failed:', err);
+          });
+          // ------------------------------------
+
+          // 自動保存（初期状態）
           console.log('[ImageUpload] Image added to section (file upload):', {
             sectionId,
             imageContentId,
