@@ -223,6 +223,20 @@
                     style="${isCustom ? 'display:block' : 'display:none'}; margin-top:8px;" 
                     value="${isCustom ? escapeHtml(itemName) : ''}" 
                     oninput="updateCleaningItemCustom('${sectionId}', this.value)">
+                  <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
+                    <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${sectionId}')" title="画像挿入">
+                      <i class="fas fa-image"></i>
+                      <span>画像挿入</span>
+                    </button>
+                    <button type="button" class="cleaning-item-insert-btn" onclick="addCommentToCleaningItem('${sectionId}')" title="コメント挿入">
+                      <i class="fas fa-comment"></i>
+                      <span>コメント挿入</span>
+                    </button>
+                    <button type="button" class="cleaning-item-insert-btn" onclick="addSubtitleToCleaningItem('${sectionId}')" title="サブタイトル挿入">
+                      <i class="fas fa-heading"></i>
+                      <span>サブタイトル挿入</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             `;

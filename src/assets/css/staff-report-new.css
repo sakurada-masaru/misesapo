@@ -4082,3 +4082,58 @@ html {
 .tab-content {
     padding-bottom: 120px;
 }
+
+/* 清掃項目内の追加アクションボタン */
+.cleaning-item-insert-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.cleaning-item-insert-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 80px;
+}
+
+.cleaning-item-insert-btn i {
+  font-size: 1.2rem;
+  color: #FF679C;
+}
+
+.cleaning-item-insert-btn:hover {
+  background: #fff;
+  border-color: #FF679C;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.cleaning-item-insert-btn:active {
+  transform: translateY(0);
+  background: #fdf2f8;
+}
+
+/* ダークモード対応 */
+body.dark-mode .cleaning-item-insert-btn {
+  background: #1f2937;
+  border-color: #374151;
+  color: #d1d5db;
+}
+
+body.dark-mode .cleaning-item-insert-btn:hover {
+  border-color: #FF679C;
+  background: #374151;
+}
