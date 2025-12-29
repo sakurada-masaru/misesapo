@@ -8554,9 +8554,10 @@
     const endTime = document.getElementById('report-end')?.value || '';
 
     // 常に現在のsectionsを使用（localStorageではなく、メモリ上の最新データを使用）
-    // 現在アクティブなタブのsectionsを使用
+    // 修正: 常に現在のグローバルsectionsを使用する
     const activeTab = typeof currentActiveTab !== 'undefined' ? currentActiveTab : 'new';
-    const savedSections = sectionsByTab[activeTab] || sections;
+    const savedSections = sections;
+    // const savedSections = sectionsByTab[activeTab] || sections;
     console.log('[Preview] Using sections from tab:', activeTab);
     console.log('[Preview] sectionsByTab:', sectionsByTab);
 
