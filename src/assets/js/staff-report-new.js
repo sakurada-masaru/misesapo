@@ -150,6 +150,84 @@
       document.getElementById('report-end').value = endTime;
     }
 
+    // 清掃項目の自動展開
+    // 既存のセクションが空の場合のみ展開（手動入力を上書きしない）
+    const contentArea = document.getElementById('report-content');
+    const existingSections = contentArea ? contentArea.querySelectorAll('.section-card') : [];
+
+    // スケジュールから清掃項目を取得
+    const cleaningItemsList = schedule.cleaning_items || schedule.service_items || (schedule.service_names ? (Array.isArray(schedule.service_names) ? schedule.service_names : [schedule.service_names]) : []);
+
+    if (contentArea && existingSections.length === 0 && cleaningItemsList.length > 0) {
+      console.log('[Report] Auto-expanding cleaning items:', cleaningItemsList);
+
+      cleaningItemsList.forEach(item => {
+        const itemName = typeof item === 'object' ? (item.name || item.item_name || item.title) : item;
+        if (!itemName) return;
+
+        sectionCounter++;
+        const sectionId = `section-${sectionCounter}`;
+        sections[sectionId] = {
+          type: 'cleaning',
+          item_name: itemName
+        };
+
+        // マスタに存在するかチェック
+        let isCustom = true;
+        if (serviceItems && serviceItems.length > 0) {
+          const found = serviceItems.find(si => si.title === itemName);
+          if (found) isCustom = false;
+        } else {
+          // serviceItemsが未ロードの場合はとりあえずカスタム扱い
+          isCustom = true;
+        }
+
+        const options = serviceItems.map(si =>
+          `<option value="${escapeHtml(si.title)}" ${(si.title === itemName) ? 'selected' : ''}>${escapeHtml(si.title)}</option>`
+        ).join('');
+
+        const html = `
+              <div class="section-card" data-section-id="${sectionId}">
+                <div class="section-header">
+                  <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
+                  <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+                <div class="section-body">
+                  <select class="cleaning-item-select" onchange="updateCleaningItem('${sectionId}', this.value)">
+                    <option value="">項目を選択</option>
+                    ${options}
+                    <option value="__other__" ${isCustom ? 'selected' : ''}>その他（自由入力）</option>
+                  </select>
+                  <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" 
+                    style="${isCustom ? 'display:block' : 'display:none'}; margin-top:8px;" 
+                    value="${isCustom ? escapeHtml(itemName) : ''}" 
+                    oninput="updateCleaningItemCustom('${sectionId}', this.value)">
+                </div>
+              </div>
+            `;
+
+        // 挿入場所: .section-add-icons-area の直前
+        const sectionAddIconsArea = document.getElementById('section-add-icons-area');
+        if (sectionAddIconsArea && sectionAddIconsArea.parentNode === contentArea) {
+          sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
+        } else {
+          contentArea.insertAdjacentHTML('beforeend', html);
+        }
+
+        const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+        if (newCard && typeof setupSectionDragAndDrop === 'function') {
+          setupSectionDragAndDrop(newCard);
+        }
+      });
+
+      // 清掃項目のリスト表示を更新
+      if (typeof updateCleaningItemsList === 'function') {
+        updateCleaningItemsList();
+      }
+    }
+
     if (typeof checkDetailsInputStatus === 'function') {
       checkDetailsInputStatus();
     }
