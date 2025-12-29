@@ -6270,6 +6270,15 @@ async function loadMyAcceptedJobs() {
       const items = (job.cleaning_items || []).slice(0, 2).map(i => i.name || i).join(', ');
       const status = job.status;
 
+      // 作業時刻を整形
+      const formatTime = (isoStr) => {
+        if (!isoStr) return '';
+        const d = new Date(isoStr);
+        return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+      };
+      const workStartedAt = job.work_started_at ? formatTime(job.work_started_at) : '';
+      const workCompletedAt = job.work_completed_at ? formatTime(job.work_completed_at) : '';
+
       let statusLabel = '予定';
       let statusColor = '#3b82f6';
       if (status === 'in_progress') {
@@ -6326,6 +6335,22 @@ async function loadMyAcceptedJobs() {
             ${items ? `<div style="font-size: 0.75rem; color: #9ca3af;">
               <i class="fas fa-broom" style="width: 14px;"></i> ${escapeHtml(items)}
             </div>` : ''}
+            
+            <!-- 作業時刻表示 -->
+            ${(workStartedAt || workCompletedAt) ? `
+            <div style="margin-top: 8px; padding: 8px; background: #f3f4f6; border-radius: 6px; font-size: 0.78rem;">
+              ${workStartedAt ? `<div style="display: flex; align-items: center; color: #f59e0b; margin-bottom: 4px;">
+                <i class="fas fa-play-circle" style="width: 16px;"></i>
+                <span style="color: #6b7280;">開始:</span>
+                <span style="font-weight: 600; margin-left: 4px;">${workStartedAt}</span>
+              </div>` : ''}
+              ${workCompletedAt ? `<div style="display: flex; align-items: center; color: #10b981;">
+                <i class="fas fa-check-circle" style="width: 16px;"></i>
+                <span style="color: #6b7280;">終了:</span>
+                <span style="font-weight: 600; margin-left: 4px;">${workCompletedAt}</span>
+              </div>` : ''}
+            </div>
+            ` : ''}
           </div>
           
           <!-- ステータスに応じたアクションボタン -->
@@ -6420,11 +6445,13 @@ async function startWork(jobId) {
 
   try {
     const headers = await buildAuthHeaders(true);
+    const now = new Date().toISOString();
     const res = await fetch(`${API_BASE}/schedules/${jobId}`, {
       method: 'PUT',
       headers,
       body: JSON.stringify({
-        status: 'in_progress'
+        status: 'in_progress',
+        work_started_at: now
       })
     });
 
@@ -6448,11 +6475,13 @@ async function completeWork(jobId) {
 
   try {
     const headers = await buildAuthHeaders(true);
+    const now = new Date().toISOString();
     const res = await fetch(`${API_BASE}/schedules/${jobId}`, {
       method: 'PUT',
       headers,
       body: JSON.stringify({
-        status: 'completed'
+        status: 'completed',
+        work_completed_at: now
       })
     });
 
