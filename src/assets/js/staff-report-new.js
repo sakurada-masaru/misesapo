@@ -1969,6 +1969,28 @@
     const photos = section.photos || {};
     const imageType = section.image_type || (photos.completed && !photos.before && !photos.after ? 'completed' : 'before_after');
 
+    // 画像URLのバリデーション用ヘルパー
+    const getValidSrc = (item) => {
+      let url = item;
+      if (typeof item === 'object' && item !== null) {
+        url = item.url || item.warehouseUrl || item.blobUrl || '';
+      }
+      if (typeof url !== 'string' || !url) return DEFAULT_NO_PHOTO_IMAGE;
+
+      // UUIDのみ（http/https/blob/data/相対パス で始まらない）場合はプレースホルダー
+      if (!url.match(/^(http|https|blob|data|\/)/)) {
+        return DEFAULT_NO_PHOTO_IMAGE;
+      }
+      return url;
+    };
+
+    const getOriginalUrl = (item) => {
+      if (typeof item === 'object' && item !== null) {
+        return item.url || item.warehouseUrl || item.blobUrl || '';
+      }
+      return String(item || '');
+    };
+
     // セクションタイプに応じてデータを設定
     if (imageType === 'completed') {
       sections[sectionId] = {
@@ -2001,14 +2023,18 @@
                       <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
                     </div>
                   ` : ''}
-                  ${(photos.completed || []).map(url => `
-                    <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="completed" data-image-url="${url}">
-                      <img src="${url}" alt="Completed" draggable="false">
-                      <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'completed', '${url}', '', this)">
+                  ${(photos.completed || []).map(item => {
+        const src = getValidSrc(item);
+        const originalUrl = getOriginalUrl(item);
+        return `
+                    <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="completed" data-image-url="${originalUrl}">
+                      <img src="${src}" alt="Completed" draggable="false">
+                      <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'completed', '${originalUrl}', '', this)">
                         <i class="fas fa-times"></i>
                       </button>
                     </div>
-                  `).join('')}
+                  `;
+      }).join('')}
                   <label class="image-add-btn" style="cursor: pointer;">
                     <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${sectionId}" data-category="completed" style="display:none;">
                     <i class="fas fa-plus"></i>
@@ -2056,14 +2082,18 @@
             <div class="image-category">
               <div class="image-category-title before"><i class="fas fa-clock"></i> 作業前</div>
               <div class="image-list" id="${sectionId}-before">
-                  ${(photos.before || []).map(url => `
-                    <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="before" data-image-url="${url}">
-                      <img src="${url}" alt="Before" draggable="false">
-                      <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'before', '${url}', '', this)">
+                  ${(photos.before || []).map(item => {
+        const src = getValidSrc(item);
+        const originalUrl = getOriginalUrl(item);
+        return `
+                    <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="before" data-image-url="${originalUrl}">
+                      <img src="${src}" alt="Before" draggable="false">
+                      <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'before', '${originalUrl}', '', this)">
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
-                `).join('')}
+                `;
+      }).join('')}
                 <label class="image-add-btn" style="cursor: pointer;">
                   <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${sectionId}" data-category="before" style="display:none;">
                   <i class="fas fa-plus"></i>
@@ -2074,14 +2104,18 @@
             <div class="image-category">
               <div class="image-category-title after"><i class="fas fa-check-circle"></i> 作業後</div>
               <div class="image-list" id="${sectionId}-after">
-                  ${(photos.after || []).map(url => `
-                    <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="after" data-image-url="${url}">
-                      <img src="${url}" alt="After" draggable="false">
-                      <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'after', '${url}', '', this)">
+                  ${(photos.after || []).map(item => {
+        const src = getValidSrc(item);
+        const originalUrl = getOriginalUrl(item);
+        return `
+                    <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="after" data-image-url="${originalUrl}">
+                      <img src="${src}" alt="After" draggable="false">
+                      <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'after', '${originalUrl}', '', this)">
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
-                `).join('')}
+                `;
+      }).join('')}
                 <label class="image-add-btn" style="cursor: pointer;">
                   <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${sectionId}" data-category="after" style="display:none;">
                   <i class="fas fa-plus"></i>
