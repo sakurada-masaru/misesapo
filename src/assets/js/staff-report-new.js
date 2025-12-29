@@ -6135,18 +6135,22 @@
     // 画像IDを生成
     const imageId = `cleaning-item-image-${imageContentId}-${category}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+    // Blobデータ(ArrayBuffer)を取得 (アップロード用)
+    const arrayBuffer = await optimizedBlob.arrayBuffer();
+
     // 画像をストックに追加
     const imageData = {
       id: imageId,
       blobUrl: blobUrl,
       fileName: file.name,
-      uploaded: false
+      uploaded: false,
+      blobData: arrayBuffer,
+      fileType: file.type || 'image/jpeg',
+      fileSize: optimizedBlob.size
     };
 
-    // 画像ストックに追加
-    if (window.addImagesToStock) {
-      await window.addImagesToStock([imageData]);
-    }
+    // 画像ストックに直接追加 (addImagesToStockはFileオブジェクト専用のため使用しない)
+    imageStock.push(imageData);
 
     // 画像を表示
     const imageThumb = document.createElement('div');
