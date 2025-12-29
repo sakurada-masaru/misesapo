@@ -1973,12 +1973,16 @@
     const getValidSrc = (item) => {
       let url = item;
       if (typeof item === 'object' && item !== null) {
-        url = item.url || item.warehouseUrl || item.blobUrl || '';
+        // 保存データ（Draft/Server）からの読み込み時、blobUrlは期限切れのため使用しない
+        // S3のURL(url)または倉庫URL(warehouseUrl)のみを使用
+        url = item.url || item.warehouseUrl || '';
       }
       if (typeof url !== 'string' || !url) return DEFAULT_NO_PHOTO_IMAGE;
 
-      // UUIDのみ（http/https/blob/data/相対パス で始まらない）場合はプレースホルダー
-      if (!url.match(/^(http|https|blob|data|\/)/)) {
+      // 1. UUIDのみ（http等で始まらない）
+      // 2. blob: で始まる（期限切れリンク）
+      // 上記の場合はプレースホルダーを表示
+      if (!url.match(/^(http|https|data|\/)/) || url.startsWith('blob:')) {
         return DEFAULT_NO_PHOTO_IMAGE;
       }
       return url;
