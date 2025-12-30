@@ -107,10 +107,30 @@ async function loadCurrentUser() {
         // Ideally: /schedules?sales_id=userId
         // But API might not support filtering by sales_id directly?
         // Let's fetch all and filter client-side for now (MVP).
-        const res = await fetch(`${API_BASE}/schedules`);
+        // Fetch schedules and reference data
+        const [res, resStores, resClients, resBrands] = await Promise.all([
+          fetch(`${API_BASE}/schedules`),
+          fetch(`${API_BASE}/stores`).catch(e => ({ ok: false })),
+          fetch(`${API_BASE}/clients`).catch(e => ({ ok: false })),
+          fetch(`${API_BASE}/brands`).catch(e => ({ ok: false }))
+        ]);
+
         if (!res.ok) throw new Error('Failed to load activity');
         const data = await res.json();
         const items = Array.isArray(data) ? data : (data.items || []);
+
+        // Safe parse helpers
+        const safeJson = async (r) => {
+          if (!r || !r.ok) return [];
+          try {
+            const j = await r.json();
+            return Array.isArray(j) ? j : (j.items || []);
+          } catch (e) { return []; }
+        };
+
+        const allStores = await safeJson(resStores);
+        const allClients = await safeJson(resClients);
+        const allBrands = await safeJson(resBrands);
 
         // Filter: Created by/Sales ID = userId OR just show all for Sales Dashboard feel?
         // "MyPage" usually means MY data.
@@ -151,8 +171,8 @@ async function loadCurrentUser() {
           let text = '更新しました';
 
           if (item.status === 'draft') {
-            icon = 'fa-pen'; color = '#f59e0b'; text = '依頼書を作成しました（未割当）';
-            if (item.worker_id) { text = '依頼書（担当者決定待ち）'; }
+            icon = 'fa-pen'; color = '#f59e0b'; text = '依頼書を作成しました';
+            if (item.worker_id) { text = '担当者決定待ち'; }
           } else if (item.status === 'scheduled') {
             icon = 'fa-check'; color = '#3b82f6'; text = '清掃員が決定しました';
           } else if (item.status === 'completed') {
@@ -160,7 +180,13 @@ async function loadCurrentUser() {
           }
 
           const dateStr = item.date || item.scheduled_date || '日付未定';
-          const storeName = (item.store_name || '店舗未設定'); // Should try to match store ID if possible, but store_name might be in item?
+
+          // Name Resolution
+          const store = allStores.find(s => String(s.id) === String(item.store_id || item.client_id)) || {};
+          const client = allClients.find(c => String(c.id) === String(item.client_id || store.client_id)) || {};
+          const brand = allBrands.find(b => String(b.id) === String(item.brand_id || store.brand_id)) || {};
+
+          const storeName = store.name || item.store_name || '店舗未設定';
 
           return `
                <div class="activity-item" style="padding:12px; border-bottom:1px solid #f3f4f6; display:flex; gap:12px; align-items:start;">
@@ -168,8 +194,12 @@ async function loadCurrentUser() {
                     <i class="fas ${icon}"></i>
                   </div>
                   <div class="activity-content">
-                     <div style="font-size:0.9rem; font-weight:600; color:#374151;">${escapeHtml(storeName)}</div>
-                     <div style="font-size:0.85rem; color:#6b7280;">${text}</div>
+                     <div style="font-size:0.7rem; color:#6b7280; margin-bottom:2px; line-height:1.2;">
+                        ${client.name ? escapeHtml(client.name) : ''} 
+                        ${brand.name ? `<span style="color:#d1d5db; margin:0 4px;">|</span>${escapeHtml(brand.name)}` : ''}
+                     </div>
+                     <div style="font-size:0.95rem; font-weight:600; color:#374151;">${escapeHtml(storeName)}</div>
+                     <div style="font-size:0.85rem; color:#4b5563;">${text}</div>
                      <div style="font-size:0.75rem; color:#9ca3af; margin-top:4px;">${dateStr}</div>
                   </div>
                   <a href="/sales/schedules?open_id=${item.id}" style="margin-left:auto; color:#9ca3af;"><i class="fas fa-chevron-right"></i></a>
