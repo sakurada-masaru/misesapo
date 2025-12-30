@@ -9734,5 +9734,6 @@
       renderHaccpLauncher();
     });
 
-  })();
+  };
+})();
 
