@@ -1288,123 +1288,13 @@ function setupEventListeners() {
       }
     });
   }
-  store_id: storeId,
-    client_name: document.getElementById('schedule-client-name')?.value || '',
-      brand_name: document.getElementById('schedule-brand-name')?.value || '',
-        store_name: document.getElementById('schedule-store-name')?.value || '',
-          address: (() => {
-            const el = document.getElementById('schedule-address');
-            if (el) return el.value;
-            // 店舗データから取得
-            const store = allStores.find(s => s.id === storeId);
-            return store?.address || '';
-          })(),
-            phone: (() => {
-              const el = document.getElementById('schedule-phone');
-              if (el) return el.value;
-              // 店舗データから取得
-              const store = allStores.find(s => s.id === storeId);
-              return store?.phone || '';
-            })(),
-              scheduled_date: document.getElementById('schedule-date').value,
-                scheduled_time: document.getElementById('schedule-time').value,
-                  sales_id: document.getElementById('schedule-sales').value || null,
-                    worker_id: primaryWorkerId,
-                      // Store ALL selected in notes or a custom field if backend ignores extra fields?
-                      // For now, assume primary assignment is what matters for "Accepted".
-                      status: 'draft',
-                        cleaning_items: selectedCleaningItems,
-                          survey_data: {
-    issue: document.getElementById('survey-issue')?.value || '',
-      environment: document.getElementById('survey-environment')?.value || '',
-        cleaning_frequency: document.getElementById('survey-cleaning-frequency')?.value || '',
-          area_sqm: document.getElementById('survey-area-sqm')?.value || '',
-            entrances: document.getElementById('survey-entrances')?.value || '',
-              ceiling_height: document.getElementById('survey-ceiling-height')?.value || '',
-                key_location: document.getElementById('survey-key-location')?.value || '',
-                  breaker_location: document.getElementById('survey-breaker-location')?.value || '',
-                    wall_material: document.getElementById('survey-wall-material')?.value || '',
-                      floor_material: document.getElementById('survey-floor-material')?.value || '',
-                        toilet_count: document.getElementById('survey-toilet-count')?.value || '',
-                          hotspots: document.getElementById('survey-hotspots')?.value || '',
-                            notes: document.getElementById('survey-notes')?.value || '',
-                              equipment: Array.from(document.querySelectorAll('#survey-equipment input:checked')).map(cb => cb.value)
-  },
-};
 
-// If worker assigned, status = scheduled.
-// If NO worker assigned (Open), status = draft.
-if (scheduleData.worker_id) {
-  scheduleData.status = 'scheduled';
-} else {
-  scheduleData.status = 'draft'; // Open
-}
 
-if (!isNew) scheduleData.id = id;
-
-const schedRes = await fetch(`${API_BASE}/schedules${isNew ? '' : '/' + id}`, {
-  method: isNew ? 'POST' : 'PUT',
-  headers: authHeaders,
-  body: JSON.stringify(scheduleData)
-});
-if (!schedRes.ok) throw new Error('スケジュールの保存に失敗しました');
-const schedResult = await schedRes.json();
-
-// 2. Save Karte (Simultaneous)
-const kartePayload = buildSurveyPayload(storeId);
-if (kartePayload) {
-  // Try Saving Karte
-  const karteRes = await fetch(`${API_BASE}/kartes`, {
-    method: 'POST',
-    headers: authHeaders,
-    body: JSON.stringify(kartePayload)
+  document.getElementById('add-schedule-btn')?.addEventListener('click', () => openAddDialog());
+  document.getElementById('reload-customers-data-btn')?.addEventListener('click', async () => {
+    await Promise.all([loadStores(), loadClients(), loadBrands()]);
+    alert('顧客データを更新しました');
   });
-  if (!karteRes.ok) {
-    console.warn('カルテの保存に失敗しました', await karteRes.text());
-  }
-}
-
-// Success
-formStatus.textContent = '保存しました';
-
-// Update Local Cache Immediately
-const savedId = isNew ? (schedResult.id || schedResult.item?.id) : id;
-// Merge existing fields with input fields to ensure cache is rich
-const baseItem = isNew ? {} : (allSchedules.find(s => String(s.id) === String(id)) || {});
-const savedItem = {
-  ...baseItem,
-  ...scheduleData,
-  id: savedId,
-  // Ensure survey_data is saved too
-  survey_data: scheduleData.survey_data,
-  ...schedResult
-};
-
-const existingIdx = allSchedules.findIndex(s => String(s.id) === String(savedId));
-if (existingIdx !== -1) {
-  allSchedules[existingIdx] = savedItem;
-} else {
-  allSchedules.push(savedItem);
-}
-
-setTimeout(() => {
-  formStatus.textContent = '';
-  if (scheduleDialog) scheduleDialog.close();
-  loadSchedules(); // Reload for full sync
-}, 1000);
-
-} catch (err) {
-  console.error(err);
-  formStatus.textContent = 'エラー: ' + err.message;
-}
-    });
-  }
-
-document.getElementById('add-schedule-btn')?.addEventListener('click', () => openAddDialog());
-document.getElementById('reload-customers-data-btn')?.addEventListener('click', async () => {
-  await Promise.all([loadStores(), loadClients(), loadBrands()]);
-  alert('顧客データを更新しました');
-});
 }
 
 
