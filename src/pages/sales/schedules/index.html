@@ -480,24 +480,72 @@
             </div>
             <div class="step-content">
               <div class="row g-2" style="display:flex; flex-wrap:wrap; gap:10px;">
-                <div class="col-md-6" style="flex:1;">
-                  <label class="form-label small">実施日 <span style="color:red;">必須</span></label>
-                  <input type="date" class="form-control form-control-sm" id="schedule-date" required
-                    style="width:100%; padding:6px;">
-                </div>
-                <div class="col-md-6" style="flex:1;">
-                  <label class="form-label small">時間帯</label>
-                  <input type="text" list="time-options" class="form-control form-control-sm" id="schedule-time"
-                    placeholder="例：09:00 - 12:00" style="width:100%; padding:6px;">
-                  <datalist id="time-options">
-                    <option value="09:00 - 12:00">
-                    <option value="13:00 - 16:00">
-                    <option value="10:00 - 15:00">
-                    <option value="22:00 - 02:00">
-                  </datalist>
+
+                <!-- Basic Schedule -->
+                <div style="display:flex; gap:10px; width:100%; flex-wrap:wrap;">
+                  <div class="col-md-4" style="flex:1; min-width:150px;">
+                    <label class="form-label small">実施日 <span style="color:red;">必須</span></label>
+                    <input type="date" class="form-control form-control-sm" id="schedule-date" required
+                      style="width:100%; padding:6px;">
+                  </div>
+                  <div class="col-md-4" style="flex:1; min-width:150px;">
+                    <label class="form-label small">時間帯</label>
+                    <input type="text" list="time-options" class="form-control form-control-sm" id="schedule-time"
+                      placeholder="例: 09:00 - 12:00" style="width:100%; padding:6px;">
+                    <datalist id="time-options">
+                      <option value="09:00 - 12:00">
+                      <option value="13:00 - 16:00">
+                      <option value="14:00 - 17:00">
+                      <option value="22:00 - 02:00">
+                    </datalist>
+                  </div>
+                  <div class="col-md-4" style="flex:1; min-width:150px;">
+                    <label class="form-label small">作業種別</label>
+                    <select id="schedule-work-type" class="form-select form-select-sm"
+                      style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                      <option value="periodic">定期清掃</option>
+                      <option value="spot">臨時（スポット）</option>
+                      <option value="special">特別清掃</option>
+                      <option value="other">その他</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div class="col-12" style="width:100%;">
+                <!-- Logistics -->
+                <div style="width:100%; margin-top:8px;">
+                  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:200px;">
+                      <label class="form-label small">駐車位置指示</label>
+                      <input type="text" class="form-control form-control-sm" id="schedule-parking"
+                        placeholder="例：店舗裏口Aスペース" style="width:100%; padding:6px;">
+                    </div>
+                    <div style="flex:1; min-width:200px;">
+                      <label class="form-label small">鍵の受け渡し</label>
+                      <input type="text" class="form-control form-control-sm" id="schedule-key-info"
+                        placeholder="例：キーボックス(No.1234)" style="width:100%; padding:6px;">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Attendance -->
+                <div style="width:100%; margin-top:8px; display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap;">
+                  <div style="flex-shrink:0;">
+                    <label class="form-label small d-block">立会いの有無</label>
+                    <div style="display:flex; gap:10px;">
+                      <label><input type="radio" name="attendance_required" value="none" checked> 無し</label>
+                      <label><input type="radio" name="attendance_required" value="start"> 開始時</label>
+                      <label><input type="radio" name="attendance_required" value="end"> 終了時</label>
+                      <label><input type="radio" name="attendance_required" value="full"> 常時</label>
+                    </div>
+                  </div>
+                  <div style="flex:1; min-width:200px;">
+                    <label class="form-label small">立会い担当者・連絡先</label>
+                    <input type="text" class="form-control form-control-sm" id="schedule-attendance-notes"
+                      placeholder="例: 店長 090-xxxx-xxxx" style="width:100%; padding:6px;">
+                  </div>
+                </div>
+
+                <div class="col-12" style="width:100%; margin-top:10px;">
                   <label class="form-label small">清掃実施項目</label>
                   <div class="search-box-wrapper" style="position:relative;">
                     <input type="text" class="form-control form-control-sm" id="cleaning-items-search"
@@ -512,33 +560,34 @@
                 <div class="col-12" style="width:100%;">
                   <label class="form-label small">特記事項・注意事項</label>
                   <textarea class="form-control form-control-sm" id="schedule-notes" rows="3"
-                    placeholder="清掃員への申し送り事項など" style="width:100%; padding:6px;"></textarea>
+                    placeholder="清掃員への申し送り事項など、詳細を記述してください" style="width:100%; padding:6px;"></textarea>
                 </div>
 
                 <div style="width:100%; margin:20px 0; border-bottom:1px dashed #ddd;"></div>
 
-                <div class="col-md-6" style="flex:1;">
-                  <label class="form-label small">担当清掃員 (OS)</label>
-                  <div style="position:relative;">
-                    <input type="text" class="form-control form-control-sm" id="worker-search-input"
-                      placeholder="氏名で検索..." style="width:100%; padding:6px;">
-                    <div id="worker-search-results" class="search-results-dropdown"
-                      style="display:none; position:absolute; top:100%; background:white; border:1px solid #ccc; width:100%; z-index:10;">
+                <div style="display:flex; gap:10px; width:100%; flex-wrap:wrap;">
+                  <div class="col-md-6" style="flex:1; min-width:200px;">
+                    <label class="form-label small">担当清掃員 (OS)</label>
+                    <div style="position:relative;">
+                      <input type="text" class="form-control form-control-sm" id="worker-search-input"
+                        placeholder="氏名で検索..." style="width:100%; padding:6px;">
+                      <div id="worker-search-results" class="search-results-dropdown"
+                        style="display:none; position:absolute; top:100%; background:white; border:1px solid #ccc; width:100%; z-index:10;">
+                      </div>
                     </div>
+                    <div id="selected-workers-container" class="mt-2"></div>
                   </div>
-                  <div id="selected-workers-container" class="mt-2"></div>
-                </div>
 
-                <div class="col-md-6" style="flex:1;">
-                  <label class="form-label small">担当営業</label>
-                  <select id="schedule-sales" class="form-select form-select-sm" style="width:100%; padding:6px;">
-                    <option value="">（自動設定）</option>
-                  </select>
+                  <div class="col-md-6" style="flex:1; min-width:200px;">
+                    <label class="form-label small">担当営業</label>
+                    <select id="schedule-sales" class="form-select form-select-sm" style="width:100%; padding:6px;">
+                      <option value="">（自動設定）</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-
         </div>
 
         <div class="modal-footer d-flex justify-content-between"
