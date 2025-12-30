@@ -360,31 +360,10 @@
         const itemName = typeof item === 'object' ? (item.name || item.item_name || item.title) : item;
         if (!itemName) return;
 
-        sectionCounter++;
-        const sectionId = `section-${sectionCounter}`;
-        sections[sectionId] = {
-          type: 'cleaning',
-          item_name: itemName
-        };
-
-        const html = renderCleaningSectionHtml(sectionId, itemName);
-
-        // 挿入場所: .section-add-icons-area の直前
-        const sectionAddIconsArea = document.getElementById('section-add-icons-area');
-        if (sectionAddIconsArea && sectionAddIconsArea.parentNode === contentArea) {
-          sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
+        if (typeof window.addCleaningItemSection === 'function') {
+          window.addCleaningItemSection(itemName);
         } else {
-          contentArea.insertAdjacentHTML('beforeend', html);
-        }
-
-        const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
-        if (newCard && typeof setupSectionDragAndDrop === 'function') {
-          setupSectionDragAndDrop(newCard);
-        }
-
-        // HACCP UIを初期化
-        if (itemName && window.updateCleaningItem) {
-          window.updateCleaningItem(sectionId, itemName);
+          console.error('addCleaningItemSection function is not defined');
         }
       });
 
@@ -9655,37 +9634,12 @@
     <head>
       <meta charset="UTF-8">
       <title>作業実施報告書 - ${escapeHtml(brandName)} ${escapeHtml(storeName)}</title>
+      <link rel="stylesheet" href="/src/assets/css/staff-report-preview.css?v=${Date.now()}">
       <style>
-        @page { size: A4; margin: 15mm; }
-        body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; color: #333; line-height: 1.6; padding: 20px; max-width: 210mm; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 30px; }
-        .title { font-size: 24px; font-weight: bold; }
-        .meta { font-size: 12px; text-align: right; }
-        .store-info { border: 1px solid #333; padding: 15px; margin-bottom: 30px; background: #f8f8f8; }
-        .store-name { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
-        
-        .report-section { margin-bottom: 30px; break-inside: avoid; }
-        .section-heading { font-size: 16px; font-weight: bold; background: #eee; padding: 5px 10px; border-left: 5px solid #666; margin-bottom: 10px; }
-        .section-subtitle { font-weight: bold; margin: 5px 0; }
-        .section-comment { margin-bottom: 10px; white-space: pre-wrap; font-size: 0.95em;}
-        
-        .photos-container { margin-top: 10px; }
-        .photo-pair { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        .photo-single { margin-bottom: 15px; }
-        .photo-box { flex: 1; border: 1px solid #ddd; padding: 5px; text-align: center; background: white; }
-        .photo-img { width: 100%; height: 200px; object-fit: contain; background: #f0f0f0; }
-        .photo-label { font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #555; }
-        .photo-arrow { font-size: 20px; color: #999; }
-        .no-photo { height: 200px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px; background: #f9f9f9; }
-        
-        @media print {
-            body { padding: 0; }
-            .no-print { display: none; }
-            .report-section { break-inside: avoid; }
-        }
-        .footer { margin-top: 50px; display: flex; justify-content: flex-end; break-inside: avoid; }
-        .signature-box { border: 1px solid #333; width: 80px; height: 80px; position: relative; margin-left: 20px; }
-        .signature-title { position: absolute; top: 0; left: 0; width: 100%; border-bottom: 1px solid #333; text-align: center; font-size: 10px; background: #eee; padding: 2px 0; }
+         /* 印刷時の強制設定 */
+         @media print {
+            body { -webkit-print-color-adjust: exact; }
+         }
       </style>
     </head>
     <body>
