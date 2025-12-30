@@ -4725,7 +4725,6 @@
       // 画像データはクリア（再追加が必要）
       newSection.photos = { completed: [] };
     }
-  }
 
   if (html) {
     // 元のセクションの後に挿入
@@ -4806,7 +4805,7 @@
   }
 }
 
-  // セクションカードの選択モード表示を更新
+  };  // セクションカードの選択モード表示を更新
   function updateSectionCardsForSelection() {
   const sectionCards = document.querySelectorAll('.section-card');
   sectionCards.forEach(card => {
