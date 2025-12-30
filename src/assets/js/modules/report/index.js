@@ -107,6 +107,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    // Direct Image Upload Handler (from SectionRenderer)
+    window.handleSectionImageUpload = (input, sectionId, category) => {
+        console.log('[ImageUpload] Triggered for:', sectionId, category);
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            imageManager.uploadToSection(file, sectionId, category);
+            input.value = ''; // Reset input so same file can be selected again if needed
+        }
+    };
+
     // We also need to tell SectionRenderer how to render HACCP fields.
     // Ideally SectionRenderer should have a reference to HaccpManager.
     // Since we created SectionManager earlier, let's look at how to inject this dependency.
