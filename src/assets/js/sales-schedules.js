@@ -739,6 +739,24 @@ function renderTable() {
 
   scheduleCardList.innerHTML = items.map(s => {
     const store = allStores.find(x => x.id === (s.store_id || s.client_id)) || {};
+    const client = allClients.find(c => String(c.id) === String(s.client_id || store.client_id));
+    const brand = allBrands.find(b => String(b.id) === String(s.brand_id || store.brand_id));
+
+    let workerName = '未割当';
+    if (s.worker_names) {
+      workerName = s.worker_names;
+    } else if (s.worker_id) {
+      // Handle potential comma-separated IDs if logic changes, but assume single for now or first one
+      const wIds = String(s.worker_id).split(',');
+      const names = wIds.map(id => {
+        const w = allWorkers.find(x => String(x.id) === String(id.trim()));
+        return w ? w.name : '不明';
+      });
+      workerName = names.join(', ');
+    } else if (s.assigned_to_user) {
+      workerName = s.assigned_to_user.name;
+    }
+
     const isDraft = s.status === 'draft';
     return `
             <div class="schedule-card ${isDraft ? 'draft-card' : ''}" onclick="openEditDialog('${s.id}')">
@@ -746,9 +764,13 @@ function renderTable() {
                   <span class="status-badge status-${s.status}">${getStatusLabel(s.status)}</span>
                   <span style="margin-left:auto;font-size:0.8rem;color:#666;">${s.date || s.scheduled_date}</span>
                </div>
-               <div style="font-weight:bold;margin:8px 0;">${escapeHtml(store.name || s.store_name || '店舗未設定')}</div>
-               <div style="font-size:0.85rem;color:#666;">
-                  清掃員: ${s.worker_id ? (allWorkers.find(w => w.id === s.worker_id)?.name || '不明') : '未割当'}
+               <div style="font-size:0.75rem; color:#888; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                   ${client ? escapeHtml(client.name) : ''} <span style="color:#ccc;">|</span> ${brand ? escapeHtml(brand.name) : ''}
+               </div>
+               <div style="font-weight:bold;margin:2px 0 6px 0; font-size:1rem;">${escapeHtml(store.name || s.store_name || '店舗未設定')}</div>
+               <div style="font-size:0.85rem;color:#444; border-top:1px dashed #eee; padding-top:4px; display:flex; align-items:center;">
+                  <i class="fas fa-user-friends" style="color:#9ca3af; margin-right:5px; font-size:0.8rem;"></i>
+                  ${escapeHtml(workerName)}
                </div>
             </div>
         `;
