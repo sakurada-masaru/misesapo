@@ -6705,13 +6705,15 @@ window.submitReportCreationWithOptions = function (scheduleId) {
   const checkboxes = document.querySelectorAll('input[name="report_cleaning_item"]:checked');
   const selectedItems = Array.from(checkboxes).map(cb => cb.value);
 
-  // URLを作成
-  let url = `/staff/os/reports/new?schedule_id=${scheduleId}`;
+  // Store items in SessionStorage to keep URL clean and handle large data
   if (selectedItems.length > 0) {
-    // 項目をJSON文字列化してエンコードして渡す
-    const itemsParam = encodeURIComponent(JSON.stringify(selectedItems));
-    url += `&selected_items=${itemsParam}`;
+    sessionStorage.setItem('pendingReportItems', JSON.stringify(selectedItems));
+  } else {
+    sessionStorage.removeItem('pendingReportItems');
   }
+
+  // URLを作成 (Clean URL with only ID)
+  let url = `/staff/os/reports/new?schedule_id=${scheduleId}`;
 
   // 遷移
   window.location.href = url;

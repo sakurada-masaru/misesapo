@@ -29,57 +29,89 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tabManager = new TabManager(stateManager);
     const sectionManager = new SectionManager(stateManager); // SectionRenderer is inside here
 
-    // URL Parameter Handling (Restoring legacy functionality)
+    // URL Parameter Handling
     const urlParams = new URLSearchParams(window.location.search);
-    const selectedItemsParam = urlParams.get('selected_items');
-    const servicesParam = urlParams.get('services');
+    const scheduleId = urlParams.get('schedule_id'); // Get schedule ID
 
-    if (selectedItemsParam) {
+    // Retrieve pending items from SessionStorage (Preferred) OR URL (Legacy fallback)
+    let selectedItems = [];
+
+    // 1. Try SessionStorage (Set by MyPage)
+    const pendingItemsJson = sessionStorage.getItem('pendingReportItems');
+    if (pendingItemsJson) {
         try {
-            const selectedItems = JSON.parse(decodeURIComponent(selectedItemsParam));
-            console.log('[Report Module] Loaded selected items:', selectedItems);
-
-            if (Array.isArray(selectedItems)) {
-                selectedItems.forEach(item => {
-                    const itemName = typeof item === 'object' ? (item.name || item.item_name || item.title) : item;
-                    if (itemName) {
-                        stateManager.addSection('new', {
-                            type: 'cleaning',
-                            item_name: itemName,
-                            // Initialize empty structure for compatibility
-                            subtitles: [],
-                            comments: [],
-                            imageContents: []
-                        });
-                    }
-                });
-            }
+            selectedItems = JSON.parse(pendingItemsJson);
+            console.log('[Report Module] Loaded pending items from SessionStorage:', selectedItems);
+            // Optional: Clear session storage to avoid reuse? 
+            // sessionStorage.removeItem('pendingReportItems'); // Keep for safety for now, or clear on submit
         } catch (e) {
-            console.error('[Report Module] Failed to parse selected_items:', e);
+            console.error('[Report Module] Failed to parse SessionStorage pending items:', e);
         }
-    } else if (servicesParam) {
-        // OS Service Injection
-        const services = servicesParam.split(',').filter(Boolean);
-        console.log('[Report Module] Injecting services:', services);
-        services.forEach(serviceName => {
-            stateManager.addSection('new', {
-                type: 'cleaning',
-                item_name: serviceName,
-                subtitles: [],
-                comments: [],
-                imageContents: []
-            });
-        });
     }
 
+    // 2. Fallback to URL 'selected_items'
+    if (selectedItems.length === 0) {
+        const selectedItemsParam = urlParams.get('selected_items');
+        if (selectedItemsParam) {
+            try {
+                selectedItems = JSON.parse(decodeURIComponent(selectedItemsParam));
+                console.log('[Report Module] Loaded items from URL:', selectedItems);
+            } catch (e) {
+                console.error('[Report Module] Failed to parse URL selected_items:', e);
+            }
+        }
+    }
 
+    // 3. Fallback to URL 'services'
+    if (selectedItems.length === 0) {
+        const servicesParam = urlParams.get('services');
+        if (servicesParam) {
+            selectedItems = servicesParam.split(',').filter(Boolean);
+            console.log('[Report Module] Loaded services from URL:', selectedItems);
+        }
+    }
 
     // Initialize Managers
-    // const haccpManager = new HaccpManager(stateManager); // Moved up
     const imageManager = new ImageManager(stateManager);
     const previewGenerator = new PreviewGenerator();
     const submitManager = new SubmitManager(stateManager, apiService);
     const autoSaveManager = new AutoSaveManager(stateManager);
+
+    // Context-sensitive initialization
+    let isRestored = false;
+    if (scheduleId) {
+        // Attempt to restore draft specific to this schedule
+        isRestored = autoSaveManager.restore(scheduleId);
+    }
+
+    // If NO draft was restored (or mismatch), initialize from params
+    if (!isRestored && selectedItems.length > 0) {
+        console.log('[Report Module] Initializing fresh report state from params.');
+        // Clear existing state just in case
+        // stateManager.reset(); // If such method exists, or rely on fresh instance
+
+        selectedItems.forEach(item => {
+            const itemName = typeof item === 'object' ? (item.name || item.item_name || item.title) : item;
+            if (itemName) {
+                stateManager.addSection('new', {
+                    type: 'cleaning',
+                    item_name: itemName,
+                    subtitles: [],
+                    comments: [],
+                    imageContents: []
+                });
+            }
+        });
+
+        // Save initial state immediately to establish correct scheduleId context
+        if (scheduleId) {
+            autoSaveManager.setScheduleId(scheduleId);
+            autoSaveManager.save();
+        }
+    } else {
+        console.log('[Report Module] Draft restored or no items to initialize.');
+        if (scheduleId) autoSaveManager.setScheduleId(scheduleId); // Ensure context is set if restored
+    }
 
     // Bind Submit Button
     const submitBtn = document.getElementById('report-submit-btn');

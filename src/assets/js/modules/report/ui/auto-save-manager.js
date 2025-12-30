@@ -9,14 +9,19 @@ export class AutoSaveManager {
         this.STORAGE_KEY = 'report_draft_v2';
         this.SAVE_DELAY = 2000; // 2 seconds
         this.timeout = null;
+        this.currentScheduleId = null;
 
-        // Initialize: Try to restore
-        this.restore();
+        // Note: restore() must now be called explicitly with scheduleId from index.js
+        // so we removed the automatic call from here.
 
         // Subscribe to state changes for auto-save
         this.state.subscribe(() => {
             this.scheduleSave();
         });
+    }
+
+    setScheduleId(id) {
+        this.currentScheduleId = id;
     }
 
     scheduleSave() {
@@ -27,8 +32,11 @@ export class AutoSaveManager {
     }
 
     save() {
+        if (!this.currentScheduleId) return; // Don't save if no context
+
         try {
             const dataToSave = {
+                scheduleId: this.currentScheduleId, // SAVE THE ID
                 sections: this.state.state.sections,
                 activeTab: this.state.state.activeTab,
                 meta: {
@@ -39,7 +47,7 @@ export class AutoSaveManager {
                 }
             };
 
-            // Also save global image stock
+            // Also save global image stock (uploaded only)
             if (this.state.state.imageStock.length > 0) {
                 // Warning: quota limits. Storing Base64 in local storage is risky.
                 // Should only store metadata if images are uploaded.
@@ -65,34 +73,45 @@ export class AutoSaveManager {
         }
     }
 
-    restore() {
+    restore(currentScheduleId) {
+        this.currentScheduleId = currentScheduleId; // Set context
+
         try {
             const json = localStorage.getItem(this.STORAGE_KEY);
-            if (!json) return;
+            if (!json) return false;
 
             const data = JSON.parse(json);
-            console.log('[AutoSave] Found draft:', data);
+
+            // CRITICAL: Check if the saved draft belongs to the current schedule
+            if (data.scheduleId !== currentScheduleId) {
+                console.log('[AutoSave] Draft belongs to different schedule. Discarding.', { saved: data.scheduleId, current: currentScheduleId });
+                this.clear(); // Clear mismatching data
+                return false; // Did not restore
+            }
+
+            console.log('[AutoSave] Found valid draft for this schedule:', data);
 
             // Restore logic
             if (data.activeTab) {
-                // this.state.setActiveTab(data.activeTab); // Need this method exposed?
+                this.state.state.activeTab = data.activeTab;
             }
 
             if (data.sections) {
                 // Deep merge or replace?
                 // Replacing is safer for full restore
                 this.state.state.sections = data.sections;
-                this.state.notify();
             }
 
             if (data.imageStock) {
                 this.state.state.imageStock = data.imageStock;
-                // Don't notify again immediately if not needed, but good to show stock
-                this.state.notify();
             }
+
+            this.state.notify();
+            return true; // Restored successfully
 
         } catch (e) {
             console.warn('[AutoSave] Failed to restore draft', e);
+            return false;
         }
     }
 
