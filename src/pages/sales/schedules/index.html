@@ -369,6 +369,36 @@
               <span class="step-title">詳細情報登録（HACCP・カルテ）</span>
             </div>
             <div class="step-content">
+              <!-- GUIDELINE ACCORDION -->
+              <details class="mb-3" style="border:1px solid #bfdbfe; border-radius:6px; background:#eff6ff;">
+                <summary style="padding:10px; cursor:pointer; font-weight:bold; color:#1d4ed8;">【参考】ミセサポ清掃基本原則・基準ガイド
+                </summary>
+                <div class="p-3 bg-white small"
+                  style="border-top:1px solid #bfdbfe; max-height:300px; overflow-y:auto; line-height:1.6;">
+                  <strong>■ ミセサポ清掃基本原則</strong><br>
+                  見た目の清潔さだけでなく、食品衛生上の危害要因を除去することを目的とする。<br>
+                  清掃は「洗浄 → 消毒 → 乾燥」を原則とする。清掃結果は必ず記録し、検証可能な状態を保つ。<br>
+                  HACCPの工程管理を阻害しない清掃を徹底する。<br><br>
+
+                  <strong>■ エリア別清掃基準</strong><br>
+                  <span style="color:#0369a1;font-weight:bold;">4-1. 調理エリア（厨房）</span><br>
+                  対象：床・壁・天井、調理台、排水溝、グリストラップ周辺<br>
+                  基準：油脂、食品残渣、粉塵の完全除去。水分の残留がない状態を維持。<br><br>
+
+                  <span style="color:#0369a1;font-weight:bold;">4-2. 厨房機器・設備</span><br>
+                  対象：冷蔵・冷凍庫、加熱調理機器、製氷機<br>
+                  留意点：温度管理機能を損なわない。分解可能部位は分解洗浄。内部残留防止。<br><br>
+
+                  <span style="color:#0369a1;font-weight:bold;">4-3. 手洗い設備・トイレ</span><br>
+                  基準：便器、床、ドアノブ、蛇口の洗浄・消毒。石けん・消毒剤補充。<br><br>
+
+                  <span style="color:#0369a1;font-weight:bold;">4-4. ねずみ・昆虫対策</span><br>
+                  重点箇所：排水溝、隙間、水溜まり。IPMの一環として位置付ける。<br><br>
+
+                  <strong>■ 清掃頻度基準</strong><br>
+                  日常清掃（毎日）、定期清掃（月1回以上）、分解・重点清掃（四半期〜年1回）
+                </div>
+              </details>
 
               <!-- HACCP -->
               <h6 class="section-sub-title"
@@ -395,6 +425,78 @@
                 <label class="form-label small text-muted">衛生管理特記事項</label>
                 <textarea class="form-control form-control-sm" id="modal-haccp-notes" rows="2"
                   placeholder="例：保健所からの指導事項など" style="width:100%; border-radius:4px; border:1px solid #ccc;"></textarea>
+              </div>
+
+              <div style="margin:20px 0; border-bottom:1px dashed #ddd;"></div>
+
+              <!-- Pre-Assessment (New) -->
+              <h6 class="section-sub-title"
+                style="font-weight:bold; color:#555; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:10px;">
+                <i class="fas fa-search-location"></i> エリア別現地調査（アセスメント）
+              </h6>
+
+              <!-- 1. Cooking Area -->
+              <div class="assessment-row mb-2" style="background:#f8fafc; padding:8px; border-radius:4px;">
+                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
+                  <span class="small fw-bold text-primary">4-1. 調理エリア（厨房）</span>
+                  <div class="assessment-radios">
+                    <label class="me-2 text-success small"><input type="radio" name="assess_area1" value="good">
+                      良好</label>
+                    <label class="me-2 text-warning small"><input type="radio" name="assess_area1" value="warn">
+                      要注意</label>
+                    <label class="text-danger small"><input type="radio" name="assess_area1" value="bad"> 不良</label>
+                  </div>
+                </div>
+                <input type="text" id="assess-note-area1" class="form-control form-control-sm"
+                  placeholder="状態詳細（油脂、残渣など）">
+              </div>
+
+              <!-- 2. Equipment -->
+              <div class="assessment-row mb-2" style="background:#f8fafc; padding:8px; border-radius:4px;">
+                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
+                  <span class="small fw-bold text-primary">4-2. 厨房機器・設備</span>
+                  <div class="assessment-radios">
+                    <label class="me-2 text-success small"><input type="radio" name="assess_area2" value="good">
+                      良好</label>
+                    <label class="me-2 text-warning small"><input type="radio" name="assess_area2" value="warn">
+                      要注意</label>
+                    <label class="text-danger small"><input type="radio" name="assess_area2" value="bad"> 不良</label>
+                  </div>
+                </div>
+                <input type="text" id="assess-note-area2" class="form-control form-control-sm"
+                  placeholder="状態詳細（温度管理、内部汚れなど）">
+              </div>
+
+              <!-- 3. Toilet/Handwash -->
+              <div class="assessment-row mb-2" style="background:#f8fafc; padding:8px; border-radius:4px;">
+                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
+                  <span class="small fw-bold text-primary">4-3. 手洗い設備・トイレ</span>
+                  <div class="assessment-radios">
+                    <label class="me-2 text-success small"><input type="radio" name="assess_area3" value="good">
+                      良好</label>
+                    <label class="me-2 text-warning small"><input type="radio" name="assess_area3" value="warn">
+                      要注意</label>
+                    <label class="text-danger small"><input type="radio" name="assess_area3" value="bad"> 不良</label>
+                  </div>
+                </div>
+                <input type="text" id="assess-note-area3" class="form-control form-control-sm"
+                  placeholder="状態詳細（補充状況、汚れなど）">
+              </div>
+
+              <!-- 4. IPM -->
+              <div class="assessment-row mb-2" style="background:#f8fafc; padding:8px; border-radius:4px;">
+                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
+                  <span class="small fw-bold text-primary">4-4. ねずみ・昆虫対策</span>
+                  <div class="assessment-radios">
+                    <label class="me-2 text-success small"><input type="radio" name="assess_area4" value="good">
+                      良好</label>
+                    <label class="me-2 text-warning small"><input type="radio" name="assess_area4" value="warn">
+                      要注意</label>
+                    <label class="text-danger small"><input type="radio" name="assess_area4" value="bad"> 不良</label>
+                  </div>
+                </div>
+                <input type="text" id="assess-note-area4" class="form-control form-control-sm"
+                  placeholder="状態詳細（隙間、水溜まりなど）">
               </div>
 
               <div style="margin:20px 0; border-bottom:1px dashed #ddd;"></div>

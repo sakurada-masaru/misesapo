@@ -994,12 +994,20 @@ function openAddDialog(dateStr) {
   // Reset Karte Fields
   resetSurveyFields();
 
+  // Reset Assessment
+  ['area1', 'area2', 'area3', 'area4'].forEach(area => {
+    document.querySelectorAll(`input[name="assess_${area}"]`).forEach(cb => cb.checked = false);
+    const note = document.getElementById(`assess-note-${area}`);
+    if (note) note.value = '';
+  });
+
   // Reset Worker Selection
   document.querySelectorAll('#worker-selection-list input[type="checkbox"]').forEach(cb => cb.checked = false);
   updateSelectedWorkersDisplay();
 
   // Reset selection lists
   selectedCleaningItems = [];
+  document.querySelectorAll('input[name="work_items_check[]"]').forEach(cb => cb.checked = false);
   document.getElementById('cleaning-items-selected').innerHTML = '';
 
   // Hide Print Button (New Request)
@@ -1118,8 +1126,25 @@ function openEditDialog(id) {
   }
 
   // Items
-  if (s.cleaning_items) {
-    selectedCleaningItems = Array.isArray(s.cleaning_items) ? s.cleaning_items : [];
+  // Items (Split between Checklist and Tags)
+  selectedCleaningItems = [];
+  // Reset all checkboxes first
+  document.querySelectorAll('input[name="work_items_check[]"]').forEach(cb => cb.checked = false);
+
+  if (s.cleaning_items && Array.isArray(s.cleaning_items)) {
+    s.cleaning_items.forEach(item => {
+      const name = item.name || item.title;
+      // Try to find matching checkbox
+      const checkbox = document.querySelector(`input[name="work_items_check[]"][value="${name}"]`);
+      if (checkbox) {
+        checkbox.checked = true;
+      } else {
+        // If not in checklist, add to tags
+        selectedCleaningItems.push(item);
+      }
+    });
+
+    // Render Tags
     const container = document.getElementById('cleaning-items-selected');
     if (container) {
       container.innerHTML = selectedCleaningItems.map((item, i) => `
@@ -1158,6 +1183,19 @@ function openEditDialog(id) {
 
   // Survey Data (Full Population)
   const sd = s.survey_data || {};
+
+  // Restore Assessment
+  if (sd.assessment) {
+    ['area1', 'area2', 'area3', 'area4'].forEach(area => {
+      if (sd.assessment[area]) {
+        const r = document.querySelector(`input[name="assess_${area}"][value="${sd.assessment[area].status}"]`);
+        if (r) r.checked = true;
+        const noteInput = document.getElementById(`assess-note-${area}`);
+        if (noteInput) noteInput.value = sd.assessment[area].note || '';
+      }
+    });
+  }
+
   document.getElementById('survey-issue').value = sd.issue || '';
   document.getElementById('survey-environment').value = sd.environment || '';
   document.getElementById('survey-cleaning-frequency').value = sd.cleaning_frequency || '';
@@ -1275,7 +1313,15 @@ function setupEventListeners() {
         worker_id: selectedWorkers.length > 0 ? selectedWorkers.map(w => w.id).join(',') : null,
 
         // Items
-        cleaning_items: selectedCleaningItems,
+        // Items (Merge Checklist + Search Results)
+        cleaning_items: [
+          ...selectedCleaningItems,
+          ...Array.from(document.querySelectorAll('input[name="work_items_check[]"]:checked')).map(cb => ({
+            id: null,
+            name: cb.value,
+            type: 'checklist'
+          }))
+        ],
 
         // Notes
         notes: document.getElementById('schedule-notes').value,
@@ -1285,8 +1331,30 @@ function setupEventListeners() {
         haccp_notes: document.getElementById('modal-haccp-notes').value,
 
         // Status & Survey
-        status: 'scheduled', // or keep existing status if edit? 
-        survey_data: buildSurveyPayload(storeId) // Attach Karte Data
+        status: 'scheduled',
+        survey_data: {
+          // Assessment (Pre-check)
+          assessment: {
+            area1: { status: document.querySelector('input[name="assess_area1"]:checked')?.value || '', note: document.getElementById('assess-note-area1')?.value || '' },
+            area2: { status: document.querySelector('input[name="assess_area2"]:checked')?.value || '', note: document.getElementById('assess-note-area2')?.value || '' },
+            area3: { status: document.querySelector('input[name="assess_area3"]:checked')?.value || '', note: document.getElementById('assess-note-area3')?.value || '' },
+            area4: { status: document.querySelector('input[name="assess_area4"]:checked')?.value || '', note: document.getElementById('assess-note-area4')?.value || '' }
+          },
+          // Karte Data
+          environment: document.getElementById('survey-environment')?.value || '',
+          issue: document.getElementById('survey-issue')?.value || '',
+          area_sqm: document.getElementById('survey-area-sqm')?.value || '',
+          entrances: document.getElementById('survey-entrances')?.value || '',
+          ceiling_height: document.getElementById('survey-ceiling-height')?.value || '',
+          key_location: document.getElementById('survey-key-location')?.value || '',
+          breaker_location: document.getElementById('survey-breaker-location')?.value || '',
+          wall_material: document.getElementById('survey-wall-material')?.value || '',
+          floor_material: document.getElementById('survey-floor-material')?.value || '',
+          toilet_count: document.getElementById('survey-toilet-count')?.value || '',
+          hotspots: document.getElementById('survey-hotspots')?.value || '',
+          notes: document.getElementById('survey-notes')?.value || '',
+          equipment: Array.from(document.querySelectorAll('#survey-equipment input:checked')).map(cb => cb.value)
+        }
       };
 
       // Update logic for existing ID
