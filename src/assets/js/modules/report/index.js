@@ -361,19 +361,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         scheduleSelect.innerHTML = '<option value="">読み込み中...</option>';
         scheduleSelect.disabled = true;
 
-        const schedules = await apiService.fetchSchedules();
+        let schedules = [];
+        try {
+            schedules = await apiService.fetchSchedules();
+        } catch (e) {
+            console.error('Failed to load schedules', e);
+            scheduleSelect.innerHTML = '<option value="">読み込み失敗</option>';
+            return;
+        }
 
-        // Expose globally for other modules/logic to access
+        // Expose globally
         window.osAllSchedules = schedules;
-        // Also update state manager if it has a setter
-        stateManager.setSchedules(schedules);
-
-        // Filter logic could be added here (e.g. active only)
-        // For now, map all
+        // Update state
+        if (stateManager.setSchedules) {
+            stateManager.setSchedules(schedules);
+        }
 
         scheduleSelect.innerHTML = '<option value="">案件を選択してください</option>';
         schedules.forEach(schedule => {
-            // Simplified label formatting
             const date = schedule.date || schedule.scheduled_date || '';
             const time = schedule.time || schedule.time_slot || '';
             const storeName = schedule.store_name || schedule.storeName || '店舗名不明';
@@ -382,73 +387,61 @@ document.addEventListener('DOMContentLoaded', async () => {
             const option = document.createElement('option');
             option.value = schedule.id;
             option.textContent = label;
+            // Store data for easy access
+            option.dataset.json = JSON.stringify(schedule);
             scheduleSelect.appendChild(option);
         });
 
         scheduleSelect.disabled = false;
 
-        // Check URL params for auto-selection (Enhancement)
+        // Auto-selection from URL
         const urlParams = new URLSearchParams(window.location.search);
         const scheduleParam = urlParams.get('schedule_id');
         if (scheduleParam) {
             scheduleSelect.value = scheduleParam;
-            // Dispatch change event to trigger listeners
-            scheduleSelect.dispatchEvent(new Event('change'));
-
-            // Explicitly update request sheet immediately
-            const targetSchedule = schedules.find(s => String(s.id) === String(scheduleParam));
-            if (targetSchedule) {
-                updateRequestSheet(targetSchedule);
+            // If the value was successfully set (it exists in options)
+            if (scheduleSelect.value === scheduleParam) {
+                // Trigger updates
+                handleScheduleSelection(scheduleParam);
             }
         }
-        // Store full data if needed?
-        // stateManager usually doesn't store ALL schedules, just current selection
-        option.dataset.json = JSON.stringify(schedule);
-        scheduleSelect.appendChild(option);
-    });
+    }
 
-scheduleSelect.disabled = false;
+    // Handle Schedule Selection Change
+    function handleScheduleSelection(scheduleId) {
+        const schedules = window.osAllSchedules || [];
+        const schedule = schedules.find(s => String(s.id) === String(scheduleId));
 
-// Check for schedule_id in URL
-const urlParams = new URLSearchParams(window.location.search);
-const scheduleIdParam = urlParams.get('schedule_id');
+        if (schedule) {
+            console.log('[Schedule] Selected:', schedule);
 
-if (scheduleIdParam) {
-    const targetOption = scheduleSelect.querySelector(`option[value="${scheduleIdParam}"]`);
-    if (targetOption) {
-        scheduleSelect.value = scheduleIdParam;
-        // Manually trigger update
-        const schedule = JSON.parse(targetOption.dataset.json);
-        console.log('[Schedule] Auto-selected from URL:', schedule);
+            // 1. Update Request Sheet (Side Panel)
+            updateRequestSheet(schedule);
 
-        const dateInput = document.getElementById('report-date');
-        if (dateInput && (schedule.date || schedule.scheduled_date)) {
-            dateInput.value = schedule.date || schedule.scheduled_date;
+            // 2. Set Date Input
+            const dateInput = document.getElementById('report-date');
+            if (dateInput && (schedule.date || schedule.scheduled_date)) {
+                dateInput.value = schedule.date || schedule.scheduled_date;
+            }
+
+            // 3. Update Brand/Store inputs if they exist (Helper for user)
+            // (Assuming these inputs might be read-only or auto-filled)
+            if (schedule.store) {
+                const storeInput = document.getElementById('report-store-search');
+                if (storeInput) storeInput.value = schedule.store.name || '';
+            }
         }
     }
-}
 
-// Listen for change
-scheduleSelect.addEventListener('change', (e) => {
-    const selectedOpt = scheduleSelect.options[scheduleSelect.selectedIndex];
-    if (selectedOpt && selectedOpt.dataset.json) {
-        const schedule = JSON.parse(selectedOpt.dataset.json);
-        console.log('[Schedule] Selected:', schedule);
-
-        // Set meta data
-        const dateInput = document.getElementById('report-date');
-        if (dateInput && (schedule.date || schedule.scheduled_date)) {
-            dateInput.value = schedule.date || schedule.scheduled_date;
-        }
-
-        // Inject cleaning items from schedule if needed
-        // Legacy behavior: auto-add cleaning items if not manually added?
-        // For V2, we might want to ask or just add
-    }
-});
+    // Bind Change Event for Schedule Select
+    const scheduleSelect = document.getElementById('report-schedule-select');
+    if (scheduleSelect) {
+        scheduleSelect.addEventListener('change', (e) => {
+            handleScheduleSelection(e.target.value);
+        });
     }
 
-loadSchedules();
+    loadSchedules();
 
-console.log('[Report Module] Ready', { stateManager, apiService, tabManager, sectionManager, previewGenerator });
+    console.log('[Report Module] Ready', { stateManager, apiService, tabManager, sectionManager, previewGenerator });
 });
