@@ -197,8 +197,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const clientName = schedule.client_name || (schedule.client ? schedule.client.name : '') || '';
 
         // Mock data or real data if available
+        // Sales module saves 'notes' -> 'notes'. 'precautions' is not explicitly saved yet, so we fallback or check if it's added later.
         const notes = schedule.notes || '特になし';
-        const precautions = schedule.precautions || '入店時、裏口のインターホンを押してください。';
+
+        // Caution: 'precautions' might not exist in sales data yet. 
+        // We can display store-level info if we had it, or just use notes if precautions is missing.
+        const precautions = schedule.precautions || schedule.store?.precautions || '特になし';
 
         const itemsHtml = cleaningItems.length > 0
             ? cleaningItems.map(item => `<li style="margin-bottom:4px;">${typeof item === 'object' ? (item.name || item.item_name) : item}</li>`).join('')
