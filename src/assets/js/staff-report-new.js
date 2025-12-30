@@ -158,6 +158,105 @@
     return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
   }
 
+  function openCleaningItemSelectionModal() {
+    let modal = document.getElementById('cleaning-item-selection-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'cleaning-item-selection-modal';
+      modal.className = 'modal-overlay';
+      modal.style.cssText = 'display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;';
+
+      const content = document.createElement('div');
+      content.className = 'modal-content';
+      content.style.cssText = 'background:#fff; border-radius:12px; padding:24px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; display:flex; flex-direction:column;';
+
+      const header = document.createElement('div');
+      header.innerHTML = '<h3 style="font-size:1.25rem; font-weight:600; color:#111827; margin-bottom:16px;">清掃項目を選択</h3>';
+
+      const body = document.createElement('div');
+      body.style.cssText = 'flex:1; overflow-y:auto;';
+
+      const categories = {};
+      HACCP_CONFIG.forEach(cat => { categories[cat.category] = cat.items.map(i => i.name); });
+      const handledItems = new Set();
+      Object.values(categories).flat().forEach(name => handledItems.add(name));
+      const otherItems = (window.serviceItems || []).filter(i => !handledItems.has(i.title)).map(i => i.title);
+      if (otherItems.length > 0) categories['その他'] = otherItems;
+
+      Object.entries(categories).forEach(([catName, items]) => {
+        const group = document.createElement('div');
+        group.style.marginBottom = '20px';
+        group.innerHTML = `<h4 style="font-size:0.9rem; font-weight:bold; color:#6b7280; margin-bottom:8px; border-bottom:1px solid #e5e7eb; padding-bottom:4px;">${escapeHtml(catName)}</h4>`;
+        const grid = document.createElement('div');
+        grid.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px;';
+        items.forEach(name => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = name;
+          btn.style.cssText = 'padding:10px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:6px; cursor:pointer; text-align:left; font-size:0.9rem; transition:background 0.2s;';
+          btn.onmouseover = () => btn.style.background = '#e5e7eb';
+          btn.onmouseout = () => btn.style.background = '#f3f4f6';
+          btn.onclick = () => { modal.style.display = 'none'; window.addCleaningItemSection(name); };
+          grid.appendChild(btn);
+        });
+        group.appendChild(grid);
+        body.appendChild(group);
+      });
+
+      const freeBtn = document.createElement('button');
+      freeBtn.textContent = 'その他（自由入力）';
+      freeBtn.style.cssText = 'width:100%; padding:12px; background:#fff; border:2px dashed #d1d5db; border-radius:6px; color:#6b7280; font-weight:600; margin-top:16px; cursor:pointer;';
+      freeBtn.onclick = () => { modal.style.display = 'none'; window.addCleaningItemSection('__other__'); };
+
+      const footer = document.createElement('div');
+      footer.style.marginTop = '16px';
+      footer.style.display = 'flex';
+      footer.style.justifyContent = 'flex-end';
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'キャンセル';
+      cancelBtn.style.cssText = 'padding:8px 16px; background:#fff; border:1px solid #d1d5db; border-radius:6px; cursor:pointer;';
+      cancelBtn.onclick = () => modal.style.display = 'none';
+      footer.appendChild(cancelBtn);
+
+      content.appendChild(header); content.appendChild(body); content.appendChild(freeBtn); content.appendChild(footer);
+      modal.appendChild(content);
+      modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+      document.body.appendChild(modal);
+    }
+    modal = document.getElementById('cleaning-item-selection-modal');
+    modal.style.display = 'flex';
+  }
+
+  function renderCleaningSectionHtml(sectionId, itemName) {
+    const isCustom = (itemName === '__other__' || !itemName);
+    const displayTitle = !isCustom ? itemName : '清掃項目';
+
+    return `
+      <div class="section-card" data-section-id="${sectionId}">
+        <div class="section-header">
+          <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
+          <span class="section-title"><i class="fas fa-list"></i> ${escapeHtml(displayTitle)}</span>
+          <div class="section-header-actions">
+            <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー"><i class="fas fa-copy"></i></button>
+            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <div class="section-body">
+          <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" 
+            style="${isCustom ? 'display:block' : 'display:none'}; margin-top:8px;" 
+            value="${!isCustom ? escapeHtml(itemName) : ''}" 
+            oninput="updateCleaningItemCustom('${sectionId}', this.value)">
+          <div id="haccp-section-${sectionId}" class="haccp-section-container" style="display:none; margin-top:12px; padding:12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px;"></div>
+          <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
+            <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${sectionId}')" title="画像挿入"><i class="fas fa-image"></i><span>画像挿入</span></button>
+            <button type="button" class="cleaning-item-insert-btn" onclick="addCommentToCleaningItem('${sectionId}')" title="コメント挿入"><i class="fas fa-comment"></i><span>コメント挿入</span></button>
+            <button type="button" class="cleaning-item-insert-btn" onclick="addSubtitleToCleaningItem('${sectionId}')" title="サブタイトル挿入"><i class="fas fa-heading"></i><span>サブタイトル挿入</span></button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   function applyScheduleToForm(schedule) {
     if (!schedule) return;
 
@@ -267,55 +366,7 @@
           item_name: itemName
         };
 
-        // マスタに存在するかチェック（HACCP項目含む）
-        const mergedTitles = getMergedServiceItemTitles();
-        let isCustom = true;
-        if (mergedTitles.includes(itemName)) {
-          isCustom = false;
-        }
-
-        const options = mergedTitles.map(title =>
-          `<option value="${escapeHtml(title)}" ${(title === itemName) ? 'selected' : ''}>${escapeHtml(title)}</option>`
-        ).join('');
-
-        const html = `
-              <div class="section-card" data-section-id="${sectionId}">
-                <div class="section-header">
-                  <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
-                  <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-                <div class="section-body">
-                  <select class="cleaning-item-select" onchange="updateCleaningItem('${sectionId}', this.value)">
-                    <option value="">項目を選択</option>
-                    ${options}
-                    <option value="__other__" ${isCustom ? 'selected' : ''}>その他（自由入力）</option>
-                  </select>
-                  <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" 
-                    style="${isCustom ? 'display:block' : 'display:none'}; margin-top:8px;" 
-                    value="${isCustom ? escapeHtml(itemName) : ''}" 
-                    oninput="updateCleaningItemCustom('${sectionId}', this.value)">
-                  <div id="haccp-section-${sectionId}" class="haccp-section-container" style="display:none; margin-top:12px; padding:12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px;">
-                     <!-- HACCP UI will be rendered here -->
-                  </div>
-                  <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
-                    <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${sectionId}')" title="画像挿入">
-                      <i class="fas fa-image"></i>
-                      <span>画像挿入</span>
-                    </button>
-                    <button type="button" class="cleaning-item-insert-btn" onclick="addCommentToCleaningItem('${sectionId}')" title="コメント挿入">
-                      <i class="fas fa-comment"></i>
-                      <span>コメント挿入</span>
-                    </button>
-                    <button type="button" class="cleaning-item-insert-btn" onclick="addSubtitleToCleaningItem('${sectionId}')" title="サブタイトル挿入">
-                      <i class="fas fa-heading"></i>
-                      <span>サブタイトル挿入</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            `;
+        const html = renderCleaningSectionHtml(sectionId, itemName);
 
         // 挿入場所: .section-add-icons-area の直前
         const sectionAddIconsArea = document.getElementById('section-add-icons-area');
@@ -1995,28 +2046,7 @@
         item_name: item.item_name || item.item_id
       };
 
-      const options = serviceItems.map(si =>
-        `<option value="${escapeHtml(si.title)}" ${(si.title === item.item_name) ? 'selected' : ''}>${escapeHtml(si.title)}</option>`
-      ).join('');
-
-      const html = `
-        <div class="section-card" data-section-id="${sectionId}">
-          <div class="section-header">
-            <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
-            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-          <div class="section-body">
-            <select class="cleaning-item-select" onchange="updateCleaningItem('${sectionId}', this.value)">
-              <option value="">項目を選択</option>
-              ${options}
-              <option value="__other__">その他（自由入力）</option>
-            </select>
-            <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:none; margin-top:8px;" oninput="updateCleaningItemCustom('${sectionId}', this.value)">
-          </div>
-        </div>
-      `;
+      const html = renderCleaningSectionHtml(sectionId, item.item_name || item.item_id);
       document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
       const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
       if (newCard) setupSectionDragAndDrop(newCard);
@@ -4627,262 +4657,40 @@
 
     let html = '';
     if (newSection.type === 'cleaning') {
-      const options = getMergedServiceItemTitles().map(title =>
-        `<option value="${escapeHtml(title)}" ${(title === newSection.item_name) ? 'selected' : ''}>${escapeHtml(title)}</option>`
-      ).join('');
+      const itemName = newSection.item_name || '';
+      const tempHtml = renderCleaningSectionHtml(newSectionId, itemName);
 
+      let contentHtml = '';
+      if (newSection.textFields) {
+        newSection.textFields.forEach(textField => {
+          contentHtml += `<div class="cleaning-item-text-field-container" style="position:relative; margin-top:8px;"><textarea class="form-input cleaning-item-text-field" placeholder="テキストを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemTextField('${newSectionId}', '${textField.id}', this.value)">${escapeHtml(textField.value || '')}</textarea><button type="button" class="cleaning-item-text-field-delete" onclick="deleteCleaningItemTextField('${newSectionId}', '${textField.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;"><i class="fas fa-times"></i></button></div>`;
+        });
+      }
+      if (newSection.subtitles) {
+        newSection.subtitles.forEach(subtitle => {
+          contentHtml += `<div class="cleaning-item-subtitle-container" style="position:relative; margin-top:8px;"><input type="text" class="form-input cleaning-item-subtitle" placeholder="サブタイトルを入力" style="width:100%; font-weight:600; font-size:1rem;" oninput="updateCleaningItemSubtitle('${newSectionId}', '${subtitle.id}', this.value)" value="${escapeHtml(subtitle.value || '')}"><button type="button" class="cleaning-item-subtitle-delete" onclick="deleteCleaningItemSubtitle('${newSectionId}', '${subtitle.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;"><i class="fas fa-times"></i></button></div>`;
+        });
+      }
+      if (newSection.comments) {
+        newSection.comments.forEach(comment => {
+          contentHtml += `<div class="cleaning-item-comment-container" style="position:relative; margin-top:8px;"><textarea class="form-input cleaning-item-comment" placeholder="コメントを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemComment('${newSectionId}', '${comment.id}', this.value)">${escapeHtml(comment.value || '')}</textarea><button type="button" class="cleaning-item-comment-delete" onclick="deleteCleaningItemComment('${newSectionId}', '${comment.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;"><i class="fas fa-times"></i></button></div>`;
+        });
+      }
+      if (newSection.imageContents) {
+        newSection.imageContents.forEach(imageContent => {
+          const imageType = imageContent.imageType || 'before_after';
+          if (imageType === 'before_after') {
+            contentHtml += `<div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;"><div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;"><button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${newSectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;"><i class="fas fa-times"></i></button></div><div class="image-grid image-grid-before-after"><div class="image-category image-category-before"><div class="image-category-title before"><i class="fas fa-camera"></i> 施工前</div><div class="image-list image-list-before" id="${imageContent.id}-before"><div class="image-placeholder"><img src="${DEFAULT_NO_PHOTO_IMAGE}" class="default-no-photo-image"></div><label class="image-add-btn" style="cursor: pointer;"><input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${newSectionId}" data-image-content-id="${imageContent.id}" data-category="before" style="display:none;"><i class="fas fa-plus"></i><span>追加</span></label></div></div><div class="image-category image-category-after"><div class="image-category-title after"><i class="fas fa-magic"></i> 施工後</div><div class="image-list image-list-after" id="${imageContent.id}-after"><div class="image-placeholder"><img src="${DEFAULT_NO_PHOTO_IMAGE}" class="default-no-photo-image"></div><label class="image-add-btn" style="cursor: pointer;"><input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${newSectionId}" data-image-content-id="${imageContent.id}" data-category="after" style="display:none;"><i class="fas fa-plus"></i><span>追加</span></label></div></div></div></div>`;
+          }
+        });
+      }
+
+      html = tempHtml.replace('<div class="cleaning-item-insert-actions"', contentHtml + '<div class="cleaning-item-insert-actions"');
+      // 画像データはクリア（再追加が必要）
+      newSection.photos = { before: [], after: [] };
+    } else if (newSection.image_type === 'completed') {
       html = `
-        <div class="section-card" data-section-id="${newSectionId}">
-          <div class="section-header">
-            <input type="checkbox" class="section-select-checkbox" data-section-id="${newSectionId}" onchange="toggleSectionSelection('${newSectionId}')">
-            <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
-            <div class="section-header-actions">
-              <button type="button" class="section-copy" onclick="copySection('${newSectionId}')" title="コピー">
-                <i class="fas fa-copy"></i>
-              </button>
-              <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')" title="削除">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </div>
-          <div class="section-body">
-            <select class="cleaning-item-select" onchange="updateCleaningItem('${newSectionId}', this.value)">
-              <option value="">項目を選択</option>
-              ${options}
-              <option value="__other__">その他（自由入力）</option>
-            </select>
-            <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${newSection.item_name && !getMergedServiceItemTitles().includes(newSection.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItemCustom('${newSectionId}', this.value)" value="${escapeHtml(newSection.item_name || '')}">
-            
-            <div id="haccp-section-${newSectionId}" class="haccp-section-container" style="display:none; margin-top:12px; padding:12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px;">
-               <!-- HACCP UI will be rendered here -->
-            </div>
-            ${(newSection.textFields || []).map(textField => `
-              <div class="cleaning-item-text-field-container" style="position:relative; margin-top:8px;">
-                <textarea class="form-input cleaning-item-text-field" placeholder="テキストを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemTextField('${newSectionId}', '${textField.id}', this.value)">${escapeHtml(textField.value || '')}</textarea>
-                <button type="button" class="cleaning-item-text-field-delete" onclick="deleteCleaningItemTextField('${newSectionId}', '${textField.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-            `).join('')}
-            ${(newSection.subtitles || []).map(subtitle => `
-              <div class="cleaning-item-subtitle-container" style="position:relative; margin-top:8px;">
-                <input type="text" class="form-input cleaning-item-subtitle" placeholder="サブタイトルを入力" style="width:100%; font-weight:600; font-size:1rem;" oninput="updateCleaningItemSubtitle('${newSectionId}', '${subtitle.id}', this.value)" value="${escapeHtml(subtitle.value || '')}">
-                <button type="button" class="cleaning-item-subtitle-delete" onclick="deleteCleaningItemSubtitle('${newSectionId}', '${subtitle.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-            `).join('')}
-            ${(newSection.comments || []).map(comment => `
-              <div class="cleaning-item-comment-container" style="position:relative; margin-top:8px;">
-                <textarea class="form-input cleaning-item-comment" placeholder="コメントを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemComment('${newSectionId}', '${comment.id}', this.value)">${escapeHtml(comment.value || '')}</textarea>
-                <button type="button" class="cleaning-item-comment-delete" onclick="deleteCleaningItemComment('${newSectionId}', '${comment.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-            `).join('')}
-            ${(newSection.imageContents || []).map(imageContent => {
-        const imageType = imageContent.imageType || 'before_after';
-        if (imageType === 'before_after') {
-          return `
-                  <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
-                    <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
-                      <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${newSectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
-                        <i class="fas fa-times"></i>
-                      </button>
-                    </div>
-                    <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                      <div class="image-category">
-                        <div class="image-category-title before" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
-                          <i class="fas fa-clock"></i> 作業前
-                        </div>
-                        <div class="image-list" id="${imageContent.id}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
-                          ${(imageContent.photos?.before || []).map(photo => `
-                            <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="before" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
-                              <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
-                              <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${newSectionId}', '${imageContent.id}', 'before', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
-                                <i class="fas fa-times"></i>
-                              </button>
-                            </div>
-                          `).join('')}
-                          <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                            <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${newSectionId}" data-image-content-id="${imageContent.id}" data-category="before" style="display:none;">
-                            <i class="fas fa-plus"></i>
-                            <span>追加</span>
-                          </label>
-                        </div>
-                      </div>
-                      <div class="image-category">
-                        <div class="image-category-title after" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
-                          <i class="fas fa-check-circle"></i> 作業後
-                        </div>
-                          <div class="image-list" id="${imageContent.id}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
-                          ${(imageContent.photos?.after || []).map(photo => `
-                            <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="after" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
-                              <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
-                              <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${newSectionId}', '${imageContent.id}', 'after', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
-                                <i class="fas fa-times"></i>
-                              </button>
-                            </div>
-                          `).join('')}
-                          <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                            <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${newSectionId}" data-image-content-id="${imageContent.id}" data-category="after" style="display:none;">
-                            <i class="fas fa-plus"></i>
-                            <span>追加</span>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                `;
-        } else {
-          // 次回ご提案タブかどうかを判定
-          const activeTab = document.querySelector('.tab-btn.active');
-          const isProposal = activeTab && activeTab.dataset.tab === 'proposal';
-          const labelText = isProposal ? 'ご提案箇所' : '施工後';
-          return `
-                  <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
-                    <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
-                      <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${newSectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
-                        <i class="fas fa-times"></i>
-                      </button>
-                    </div>
-                    <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
-                      <div class="image-category">
-                        <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
-                          <i class="fas fa-star"></i> ${labelText}
-                        </div>
-                        <div class="image-list" id="${imageContent.id}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
-                          ${(imageContent.photos?.completed || []).map(photo => `
-                            <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="completed" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
-                              <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
-                              <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${newSectionId}', '${imageContent.id}', 'completed', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
-                                <i class="fas fa-times"></i>
-                              </button>
-                            </div>
-                          `).join('')}
-                          <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                            <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${newSectionId}" data-image-content-id="${imageContent.id}" data-category="completed" style="display:none;">
-                            <i class="fas fa-plus"></i>
-                            <span>追加</span>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                `;
-        }
-      }).join('')}
-            <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
-              <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${newSectionId}')" title="画像挿入">
-                <i class="fas fa-image"></i>
-                <span>画像挿入</span>
-              </button>
-              <button type="button" class="cleaning-item-insert-btn" onclick="addCommentToCleaningItem('${newSectionId}')" title="コメント挿入">
-                <i class="fas fa-comment"></i>
-                <span>コメント挿入</span>
-              </button>
-              <button type="button" class="cleaning-item-insert-btn" onclick="addSubtitleToCleaningItem('${newSectionId}')" title="サブタイトル挿入">
-                <i class="fas fa-heading"></i>
-                <span>サブタイトル挿入</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    } else if (newSection.type === 'comment') {
-      html = `
-        <div class="section-card" data-section-id="${newSectionId}">
-          <div class="section-header">
-            <input type="checkbox" class="section-select-checkbox" data-section-id="${newSectionId}" onchange="toggleSectionSelection('${newSectionId}')">
-            <span class="section-title"><i class="fas fa-comment"></i> コメント</span>
-            <div class="section-header-actions">
-              <button type="button" class="section-copy" onclick="copySection('${newSectionId}')" title="コピー">
-                <i class="fas fa-copy"></i>
-              </button>
-              <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')" title="削除">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </div>
-          <div class="section-body">
-            <textarea class="form-input section-textarea" placeholder="コメントを入力..." oninput="updateSectionContent('${newSectionId}', this.value)">${escapeHtml(newSection.content || '')}</textarea>
-          </div>
-        </div>
-      `;
-    } else if (newSection.type === 'work_content') {
-      html = `
-        <div class="section-card" data-section-id="${newSectionId}">
-          <div class="section-header">
-            <input type="checkbox" class="section-select-checkbox" data-section-id="${newSectionId}" onchange="toggleSectionSelection('${newSectionId}')">
-            <span class="section-title"><i class="fas fa-tasks"></i> 作業内容</span>
-            <div class="section-header-actions">
-              <button type="button" class="section-copy" onclick="copySection('${newSectionId}')" title="コピー">
-                <i class="fas fa-copy"></i>
-              </button>
-              <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')" title="削除">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </div>
-          <div class="section-body">
-            <textarea class="form-input section-textarea" placeholder="作業内容を入力..." oninput="updateSectionContent('${newSectionId}', this.value)">${escapeHtml(newSection.content || '')}</textarea>
-          </div>
-        </div>
-      `;
-    } else if (newSection.type === 'image') {
-      // 画像セクションのコピーは複雑なため、簡易版（画像は再追加が必要）
-      if (newSection.image_type === 'before_after') {
-        html = `
-          <div class="section-card" data-section-id="${newSectionId}">
-            <div class="section-header">
-              <input type="checkbox" class="section-select-checkbox" data-section-id="${newSectionId}" onchange="toggleSectionSelection('${newSectionId}')">
-              <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後）</span>
-              <div class="section-header-actions">
-                <button type="button" class="section-copy" onclick="copySection('${newSectionId}')" title="コピー">
-                  <i class="fas fa-copy"></i>
-                </button>
-                <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')" title="削除">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
-            </div>
-            <div class="section-body">
-              <div class="image-grid">
-                <div class="image-category">
-                  <div class="image-category-title before"><i class="fas fa-clock"></i> 作業前</div>
-                  <div class="image-list" id="${newSectionId}-before">
-                    <div class="image-placeholder">
-                      <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
-                    </div>
-                    <label class="image-add-btn" style="cursor: pointer;">
-                      <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${newSectionId}" data-category="before" style="display:none;">
-                      <i class="fas fa-plus"></i>
-                      <span>追加</span>
-                    </label>
-                  </div>
-                </div>
-                <div class="image-category">
-                  <div class="image-category-title after"><i class="fas fa-check-circle"></i> 作業後</div>
-                  <div class="image-list" id="${newSectionId}-after">
-                    <div class="image-placeholder">
-                      <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
-                    </div>
-                    <label class="image-add-btn" style="cursor: pointer;">
-                      <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${newSectionId}" data-category="after" style="display:none;">
-                      <i class="fas fa-plus"></i>
-                      <span>追加</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-        // 画像データはクリア（再追加が必要）
-        newSection.photos = { before: [], after: [] };
-      } else if (newSection.image_type === 'completed') {
-        html = `
-          <div class="section-card" data-section-id="${newSectionId}">
+      < div class="section-card" data - section - id="${newSectionId}" >
             <div class="section-header">
               <input type="checkbox" class="section-select-checkbox" data-section-id="${newSectionId}" onchange="toggleSectionSelection('${newSectionId}')">
               <span class="section-title"><i class="fas fa-star"></i> 画像（施工後）</span>
@@ -4912,303 +4720,303 @@
                 </div>
               </div>
             </div>
-          </div>
-        `;
-        // 画像データはクリア（再追加が必要）
-        newSection.photos = { completed: [] };
-      }
-    }
-
-    if (html) {
-      // 元のセクションの後に挿入
-      const originalElement = document.querySelector(`[data-section-id="${sectionId}"]`);
-      if (originalElement && originalElement.nextSibling) {
-        originalElement.insertAdjacentHTML('afterend', html);
-      } else {
-        reportContent.insertAdjacentHTML('beforeend', html);
-      }
-
-      // セクション内画像コンテンツのイベントリスナーを設定（清掃項目セクションの場合）
-      if (newSection.type === 'cleaning' && newSection.imageContents && newSection.imageContents.length > 0) {
-        setTimeout(() => {
-          newSection.imageContents.forEach(imageContent => {
-            const imageType = imageContent.imageType || 'before_after';
-            setupCleaningItemImageUpload(imageContent.id, newSectionId, imageType);
-
-            // HACCP UIを初期化（清掃項目セクションの場合）
-            if (newSection.type === 'cleaning' && newSection.item_name && window.updateCleaningItem) {
-              window.updateCleaningItem(newSectionId, newSection.item_name);
-              // TODO: 保存されたHACCP値（work_type, abnormal...）を復元したい場合はここで追記が必要
-              // 現在の実装ではコピー時はUIのみで値はデフォルトになる可能性が高い
-            }
-
-            // ドラッグ&ドロップを設定
-            if (imageType === 'before_after') {
-              const beforeList = document.getElementById(`${imageContent.id}-before`);
-              const afterList = document.getElementById(`${imageContent.id}-after`);
-              if (beforeList) setupImageListDragAndDrop(beforeList, newSectionId, 'before', imageContent.id);
-              if (afterList) setupImageListDragAndDrop(afterList, newSectionId, 'after', imageContent.id);
-
-              // 画像サムネイルにドラッグ&ドロップを設定
-              if (beforeList) {
-                beforeList.querySelectorAll('.image-thumb').forEach(thumb => {
-                  const url = thumb.dataset.imageUrl;
-                  const imageId = thumb.dataset.imageId;
-                  if (url) {
-                    setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'before', url, imageId);
-                  }
-                });
-              }
-              if (afterList) {
-                afterList.querySelectorAll('.image-thumb').forEach(thumb => {
-                  const url = thumb.dataset.imageUrl;
-                  const imageId = thumb.dataset.imageId;
-                  if (url) {
-                    setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'after', url, imageId);
-                  }
-                });
-              }
-            } else if (imageType === 'completed') {
-              const completedList = document.getElementById(`${imageContent.id}-completed`);
-              if (completedList) {
-                setupImageListDragAndDrop(completedList, newSectionId, 'completed', imageContent.id);
-
-                // 画像サムネイルにドラッグ&ドロップを設定
-                completedList.querySelectorAll('.image-thumb').forEach(thumb => {
-                  const url = thumb.dataset.imageUrl;
-                  const imageId = thumb.dataset.imageId;
-                  if (url) {
-                    setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'completed', url, imageId);
-                  }
-                });
-              }
-            }
-          });
-        }, 0);
-      }
-
-      // ドラッグ&ドロップを設定
-      const newCard = document.querySelector(`[data-section-id="${newSectionId}"]`);
-      if (newCard) {
-        setupSectionDragAndDrop(newCard);
-      }
-
-      updateCleaningItemsList();
-      autoSave();
+          </div >
+      `;
+      // 画像データはクリア（再追加が必要）
+      newSection.photos = { completed: [] };
     }
   }
+
+  if (html) {
+    // 元のセクションの後に挿入
+    const originalElement = document.querySelector(`[data - section - id="${sectionId}"]`);
+    if (originalElement && originalElement.nextSibling) {
+      originalElement.insertAdjacentHTML('afterend', html);
+    } else {
+      reportContent.insertAdjacentHTML('beforeend', html);
+    }
+
+    // セクション内画像コンテンツのイベントリスナーを設定（清掃項目セクションの場合）
+    if (newSection.type === 'cleaning' && newSection.imageContents && newSection.imageContents.length > 0) {
+      setTimeout(() => {
+        newSection.imageContents.forEach(imageContent => {
+          const imageType = imageContent.imageType || 'before_after';
+          setupCleaningItemImageUpload(imageContent.id, newSectionId, imageType);
+
+          // HACCP UIを初期化（清掃項目セクションの場合）
+          if (newSection.type === 'cleaning' && newSection.item_name && window.updateCleaningItem) {
+            window.updateCleaningItem(newSectionId, newSection.item_name);
+            // TODO: 保存されたHACCP値（work_type, abnormal...）を復元したい場合はここで追記が必要
+            // 現在の実装ではコピー時はUIのみで値はデフォルトになる可能性が高い
+          }
+
+          // ドラッグ&ドロップを設定
+          if (imageType === 'before_after') {
+            const beforeList = document.getElementById(`${imageContent.id} -before`);
+            const afterList = document.getElementById(`${imageContent.id} -after`);
+            if (beforeList) setupImageListDragAndDrop(beforeList, newSectionId, 'before', imageContent.id);
+            if (afterList) setupImageListDragAndDrop(afterList, newSectionId, 'after', imageContent.id);
+
+            // 画像サムネイルにドラッグ&ドロップを設定
+            if (beforeList) {
+              beforeList.querySelectorAll('.image-thumb').forEach(thumb => {
+                const url = thumb.dataset.imageUrl;
+                const imageId = thumb.dataset.imageId;
+                if (url) {
+                  setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'before', url, imageId);
+                }
+              });
+            }
+            if (afterList) {
+              afterList.querySelectorAll('.image-thumb').forEach(thumb => {
+                const url = thumb.dataset.imageUrl;
+                const imageId = thumb.dataset.imageId;
+                if (url) {
+                  setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'after', url, imageId);
+                }
+              });
+            }
+          } else if (imageType === 'completed') {
+            const completedList = document.getElementById(`${imageContent.id} -completed`);
+            if (completedList) {
+              setupImageListDragAndDrop(completedList, newSectionId, 'completed', imageContent.id);
+
+              // 画像サムネイルにドラッグ&ドロップを設定
+              completedList.querySelectorAll('.image-thumb').forEach(thumb => {
+                const url = thumb.dataset.imageUrl;
+                const imageId = thumb.dataset.imageId;
+                if (url) {
+                  setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'completed', url, imageId);
+                }
+              });
+            }
+          }
+        });
+      }, 0);
+    }
+
+    // ドラッグ&ドロップを設定
+    const newCard = document.querySelector(`[data - section - id="${newSectionId}"]`);
+    if (newCard) {
+      setupSectionDragAndDrop(newCard);
+    }
+
+    updateCleaningItemsList();
+    autoSave();
+  }
+}
 
   // セクションカードの選択モード表示を更新
   function updateSectionCardsForSelection() {
-    const sectionCards = document.querySelectorAll('.section-card');
-    sectionCards.forEach(card => {
-      const sectionId = card.dataset.sectionId;
-      if (!sectionId) return;
+  const sectionCards = document.querySelectorAll('.section-card');
+  sectionCards.forEach(card => {
+    const sectionId = card.dataset.sectionId;
+    if (!sectionId) return;
 
-      // チェックボックスは常に表示される（HTMLに既に含まれている）
-      const checkbox = card.querySelector('.section-select-checkbox[data-section-id]');
-      if (checkbox) {
-        checkbox.checked = selectedSectionIds.has(sectionId);
-      }
+    // チェックボックスは常に表示される（HTMLに既に含まれている）
+    const checkbox = card.querySelector('.section-select-checkbox[data-section-id]');
+    if (checkbox) {
+      checkbox.checked = selectedSectionIds.has(sectionId);
+    }
 
-      // 選択状態を反映
-      if (selectedSectionIds.has(sectionId)) {
-        card.classList.add('section-selected');
-      } else {
-        card.classList.remove('section-selected');
-      }
-    });
-  }
-
-  // セクション選択をトグル（常に動作する）
-  function toggleSectionSelectionInternal(sectionId) {
+    // 選択状態を反映
     if (selectedSectionIds.has(sectionId)) {
-      selectedSectionIds.delete(sectionId);
+      card.classList.add('section-selected');
     } else {
-      selectedSectionIds.add(sectionId);
+      card.classList.remove('section-selected');
     }
+  });
+}
 
-    // セクションカードの選択状態を更新
-    const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
-    const checkbox = document.querySelector(`.section-select-checkbox[data-section-id="${sectionId}"]`);
-    if (sectionCard) {
-      if (selectedSectionIds.has(sectionId)) {
-        sectionCard.classList.add('section-selected');
-        if (checkbox) checkbox.checked = true;
-      } else {
-        sectionCard.classList.remove('section-selected');
-        if (checkbox) checkbox.checked = false;
-      }
-    }
+// セクション選択をトグル（常に動作する）
+function toggleSectionSelectionInternal(sectionId) {
+  if (selectedSectionIds.has(sectionId)) {
+    selectedSectionIds.delete(sectionId);
+  } else {
+    selectedSectionIds.add(sectionId);
+  }
 
-    // ボタンの表示を更新
-    const sectionCopyBtn = document.getElementById('section-copy-btn');
-    const sectionBulkDeleteBtn = document.getElementById('section-bulk-delete-btn');
-    if (sectionCopyBtn) {
-      if (selectedSectionIds.size > 0) {
-        sectionCopyBtn.innerHTML = `<i class="fas fa-copy"></i><span>コピー (${selectedSectionIds.size})</span>`;
-      } else {
-        sectionCopyBtn.innerHTML = '<i class="fas fa-copy"></i><span>コピー</span>';
-      }
-    }
-    if (sectionBulkDeleteBtn) {
-      if (selectedSectionIds.size > 0) {
-        sectionBulkDeleteBtn.innerHTML = `<i class="fas fa-trash"></i><span>削除 (${selectedSectionIds.size})</span>`;
-      } else {
-        sectionBulkDeleteBtn.innerHTML = '<i class="fas fa-trash"></i><span>削除</span>';
-      }
+  // セクションカードの選択状態を更新
+  const sectionCard = document.querySelector(`[data - section - id= "${sectionId}"]`);
+  const checkbox = document.querySelector(`.section - select - checkbox[data - section - id="${sectionId}"]`);
+  if (sectionCard) {
+    if (selectedSectionIds.has(sectionId)) {
+      sectionCard.classList.add('section-selected');
+      if (checkbox) checkbox.checked = true;
+    } else {
+      sectionCard.classList.remove('section-selected');
+      if (checkbox) checkbox.checked = false;
     }
   }
 
-  // 清掃項目更新
-  window.updateCleaningItem = function (sectionId, value) {
-    const card = document.querySelector(`[data-section-id="${sectionId}"]`);
-    if (!card) return;
-
-    const customInput = card.querySelector('.cleaning-item-custom');
-    const select = card.querySelector('.cleaning-item-select');
-    const haccpContainer = card.querySelector('.haccp-section-container');
-
-    let isCustom = (value === '__other__');
-    let effectiveName = value;
-
-    if (isCustom) {
-      if (customInput) {
-        customInput.style.display = 'block';
-        if (customInput.value === '') {
-          customInput.focus();
-        }
-      }
-      if (sections[sectionId]) {
-        if (!customInput || !customInput.value) {
-          sections[sectionId].item_name = '';
-        }
-      }
-      effectiveName = 'その他（自由入力）';
-    } else if (value && value !== '') {
-      if (customInput) {
-        customInput.style.display = 'none';
-      }
-      if (sections[sectionId]) {
-        sections[sectionId].item_name = value;
-      }
+  // ボタンの表示を更新
+  const sectionCopyBtn = document.getElementById('section-copy-btn');
+  const sectionBulkDeleteBtn = document.getElementById('section-bulk-delete-btn');
+  if (sectionCopyBtn) {
+    if (selectedSectionIds.size > 0) {
+      sectionCopyBtn.innerHTML = `< i class="fas fa-copy" ></i > <span>コピー (${selectedSectionIds.size})</span>`;
     } else {
-      // 未選択
-      if (customInput) customInput.style.display = 'none';
-      if (haccpContainer) haccpContainer.style.display = 'none';
-      return;
+      sectionCopyBtn.innerHTML = '<i class="fas fa-copy"></i><span>コピー</span>';
+    }
+  }
+  if (sectionBulkDeleteBtn) {
+    if (selectedSectionIds.size > 0) {
+      sectionBulkDeleteBtn.innerHTML = `< i class="fas fa-trash" ></i > <span>削除 (${selectedSectionIds.size})</span>`;
+    } else {
+      sectionBulkDeleteBtn.innerHTML = '<i class="fas fa-trash"></i><span>削除</span>';
+    }
+  }
+}
+
+// 清掃項目更新
+window.updateCleaningItem = function (sectionId, value) {
+  const card = document.querySelector(`[data - section - id= "${sectionId}"]`);
+  if (!card) return;
+
+  const customInput = card.querySelector('.cleaning-item-custom');
+  const select = card.querySelector('.cleaning-item-select');
+  const haccpContainer = card.querySelector('.haccp-section-container');
+
+  let isCustom = (value === '__other__');
+  let effectiveName = value;
+
+  if (isCustom) {
+    if (customInput) {
+      customInput.style.display = 'block';
+      if (customInput.value === '') {
+        customInput.focus();
+      }
+    }
+    if (sections[sectionId]) {
+      if (!customInput || !customInput.value) {
+        sections[sectionId].item_name = '';
+      }
+    }
+    effectiveName = 'その他（自由入力）';
+  } else if (value && value !== '') {
+    if (customInput) {
+      customInput.style.display = 'none';
+    }
+    if (sections[sectionId]) {
+      sections[sectionId].item_name = value;
+    }
+  } else {
+    // 未選択
+    if (customInput) customInput.style.display = 'none';
+    if (haccpContainer) haccpContainer.style.display = 'none';
+    return;
+  }
+
+  // HACCP Logic (Applied to ALL non-empty items)
+  if (haccpContainer) {
+    let hit = null;
+    for (const cat of HACCP_CONFIG) {
+      const item = cat.items.find(it => it.name === value);
+      if (item) { hit = { item, category: cat.category }; break; }
     }
 
-    // HACCP Logic (Applied to ALL non-empty items)
-    if (haccpContainer) {
-      let hit = null;
-      for (const cat of HACCP_CONFIG) {
-        const item = cat.items.find(it => it.name === value);
-        if (item) { hit = { item, category: cat.category }; break; }
-      }
+    // Fallback for non-HACCP items (Generic Form)
+    if (!hit) {
+      hit = {
+        item: {
+          id: value,
+          name: effectiveName,
+          options: ['清掃', '点検', '交換', 'その他']
+        },
+        category: ''
+      };
+    }
 
-      // Fallback for non-HACCP items (Generic Form)
-      if (!hit) {
-        hit = {
-          item: {
-            id: value,
-            name: effectiveName,
-            options: ['清掃', '点検', '交換', 'その他']
-          },
-          category: ''
-        };
-      }
+    haccpContainer.style.display = 'block';
 
-      haccpContainer.style.display = 'block';
+    // Check if re-render needed
+    const currentItemId = haccpContainer.dataset.currentItem;
 
-      // Check if re-render needed
-      const currentItemId = haccpContainer.dataset.currentItem;
+    if (currentItemId !== hit.item.id) {
+      haccpContainer.dataset.currentItem = hit.item.id;
 
-      if (currentItemId !== hit.item.id) {
-        haccpContainer.dataset.currentItem = hit.item.id;
+      // Restore existing data if available
+      const existingData = sections[sectionId]?.haccp_info || {};
+      const savedWorkType = existingData.work_type;
+      const savedAbnormal = existingData.abnormal;
+      const savedCorrection = existingData.correction || '';
+      const savedConfirmer = existingData.confirmer || '';
+      const savedNextDate = existingData.next_date || '';
 
-        // Restore existing data if available
-        const existingData = sections[sectionId]?.haccp_info || {};
-        const savedWorkType = existingData.work_type;
-        const savedAbnormal = existingData.abnormal;
-        const savedCorrection = existingData.correction || '';
-        const savedConfirmer = existingData.confirmer || '';
-        const savedNextDate = existingData.next_date || '';
+      const headerHtml = hit.category ?
+        `< div class="haccp-smart-header" style = "font-size:0.85rem; color:#3b82f6; margin-bottom:8px; font-weight:bold; border-bottom:1px solid #eff6ff; padding-bottom:4px;" > ${hit.category}</div > ` :
+        '';
 
-        const headerHtml = hit.category ?
-          `<div class="haccp-smart-header" style="font-size:0.85rem; color:#3b82f6; margin-bottom:8px; font-weight:bold; border-bottom:1px solid #eff6ff; padding-bottom:4px;">${hit.category}</div>` :
-          '';
-
-        haccpContainer.innerHTML = `
+      haccpContainer.innerHTML = `
                       ${headerHtml}
-                      <div class="haccp-smart-body">
-                          <div class="haccp-opt-row" style="margin-bottom:12px;">
-                              <span style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:6px;">作業内容</span>
-                              <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                                  ${(hit.item.options || ['清掃']).map((opt, idx) => {
-          const isChecked = savedWorkType ? (savedWorkType === opt) : (idx === 0);
-          return `
+    <div class="haccp-smart-body">
+      <div class="haccp-opt-row" style="margin-bottom:12px;">
+        <span style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:6px;">作業内容</span>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          ${(hit.item.options || ['清掃']).map((opt, idx) => {
+        const isChecked = savedWorkType ? (savedWorkType === opt) : (idx === 0);
+        return `
                                       <label style="display:flex; align-items:center; background:white; padding:6px 10px; border:1px solid #d1d5db; border-radius:14px; font-size:0.85rem; cursor:pointer;">
                                           <input type="radio" name="sect-${sectionId}-opt" value="${opt}" ${isChecked ? 'checked' : ''} style="margin-right:6px;"> ${opt}
                                       </label>
                                   `}).join('')}
-                              </div>
-                          </div>
-                          <div class="haccp-abn-row">
-                              <span style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:6px;">異常有無</span>
-                              <div style="display:flex; gap:16px;">
-                                  <label style="cursor:pointer; color:#10b981; font-weight:bold; display:flex; align-items:center;">
-                                      <input type="radio" name="sect-${sectionId}-abn" value="no" ${savedAbnormal ? '' : 'checked'} style="margin-right:6px;"> 異常なし
-                                  </label>
-                                  <label style="cursor:pointer; color:#ef4444; font-weight:bold; display:flex; align-items:center;">
-                                      <input type="radio" name="sect-${sectionId}-abn" value="yes" ${savedAbnormal ? 'checked' : ''} style="margin-right:6px;"> 異常あり
-                                  </label>
-                              </div>
-                          </div>
-                          
-                          <div class="haccp-correction-form" style="display:${savedAbnormal ? 'block' : 'none'}; margin-top:12px; border-top:1px dashed #e5e7eb; padding-top:12px; background:#fef2f2; padding:12px; border-radius:6px;">
-                               <p style="font-size:0.85rem; color:#ef4444; font-weight:bold; margin-bottom:8px;"><i class="fas fa-exclamation-triangle"></i> 是正・重点対応記録</p>
-                               <textarea class="form-input haccp-correction-text" rows="2" placeholder="詳細・応急対応内容" style="width:100%; font-size:0.9rem; margin-bottom:8px; border:1px solid #fecaca;">${escapeHtml(savedCorrection)}</textarea>
-                               <div style="display:flex; gap:8px;">
-                                   <input type="text" class="form-input haccp-confirmer" placeholder="確認者" style="flex:1; font-size:0.9rem; border:1px solid #fecaca;" value="${escapeHtml(savedConfirmer)}">
-                                   <input type="text" class="form-input haccp-next-date" placeholder="次回時期" style="flex:1; font-size:0.9rem; border:1px solid #fecaca;" value="${escapeHtml(savedNextDate)}">
-                               </div>
-                          </div>
-                      </div>
-                   `;
+        </div>
+      </div>
+      <div class="haccp-abn-row">
+        <span style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:6px;">異常有無</span>
+        <div style="display:flex; gap:16px;">
+          <label style="cursor:pointer; color:#10b981; font-weight:bold; display:flex; align-items:center;">
+            <input type="radio" name="sect-${sectionId}-abn" value="no" ${savedAbnormal ? '' : 'checked'} style="margin-right:6px;"> 異常なし
+          </label>
+          <label style="cursor:pointer; color:#ef4444; font-weight:bold; display:flex; align-items:center;">
+            <input type="radio" name="sect-${sectionId}-abn" value="yes" ${savedAbnormal ? 'checked' : ''} style="margin-right:6px;"> 異常あり
+          </label>
+        </div>
+      </div>
 
-        // Attach Listeners
-        const abnRadios = haccpContainer.querySelectorAll(`input[name="sect-${sectionId}-abn"]`);
-        const corrForm = haccpContainer.querySelector('.haccp-correction-form');
+      <div class="haccp-correction-form" style="display:${savedAbnormal ? 'block' : 'none'}; margin-top:12px; border-top:1px dashed #e5e7eb; padding-top:12px; background:#fef2f2; padding:12px; border-radius:6px;">
+        <p style="font-size:0.85rem; color:#ef4444; font-weight:bold; margin-bottom:8px;"><i class="fas fa-exclamation-triangle"></i> 是正・重点対応記録</p>
+        <textarea class="form-input haccp-correction-text" rows="2" placeholder="詳細・応急対応内容" style="width:100%; font-size:0.9rem; margin-bottom:8px; border:1px solid #fecaca;">${escapeHtml(savedCorrection)}</textarea>
+        <div style="display:flex; gap:8px;">
+          <input type="text" class="form-input haccp-confirmer" placeholder="確認者" style="flex:1; font-size:0.9rem; border:1px solid #fecaca;" value="${escapeHtml(savedConfirmer)}">
+            <input type="text" class="form-input haccp-next-date" placeholder="次回時期" style="flex:1; font-size:0.9rem; border:1px solid #fecaca;" value="${escapeHtml(savedNextDate)}">
+            </div>
+        </div>
+      </div>
+      `;
 
-        abnRadios.forEach(r => {
-          r.addEventListener('change', (e) => {
-            const isAbnormal = e.target.value === 'yes';
-            if (isAbnormal) {
-              if (window.jQuery) $(corrForm).slideDown(200);
-              else corrForm.style.display = 'block';
-            } else {
-              if (window.jQuery) $(corrForm).slideUp(200);
-              else corrForm.style.display = 'none';
-            }
-            saveSectionHaccpData(sectionId);
-          });
-        });
+      // Attach Listeners
+      const abnRadios = haccpContainer.querySelectorAll(`input[name="sect-${sectionId}-abn"]`);
+      const corrForm = haccpContainer.querySelector('.haccp-correction-form');
 
-        haccpContainer.querySelectorAll('input, textarea').forEach(el => {
-          el.addEventListener('change', () => saveSectionHaccpData(sectionId));
-          if (el.tagName === 'TEXTAREA' || el.type === 'text') {
-            el.addEventListener('input', () => saveSectionHaccpData(sectionId));
+      abnRadios.forEach(r => {
+        r.addEventListener('change', (e) => {
+          const isAbnormal = e.target.value === 'yes';
+          if (isAbnormal) {
+            if (window.jQuery) $(corrForm).slideDown(200);
+            else corrForm.style.display = 'block';
+          } else {
+            if (window.jQuery) $(corrForm).slideUp(200);
+            else corrForm.style.display = 'none';
           }
+          saveSectionHaccpData(sectionId);
         });
+      });
 
-        // Init Data
-        saveSectionHaccpData(sectionId);
-      }
+      haccpContainer.querySelectorAll('input, textarea').forEach(el => {
+        el.addEventListener('change', () => saveSectionHaccpData(sectionId));
+        if (el.tagName === 'TEXTAREA' || el.type === 'text') {
+          el.addEventListener('input', () => saveSectionHaccpData(sectionId));
+        }
+      });
+
+      // Init Data
+      saveSectionHaccpData(sectionId);
     }
+  }
 
-    updateCleaningItemsList();
-  };
+  updateCleaningItemsList();
+};
 
 
 function saveSectionHaccpData(sectionId) {
@@ -5402,7 +5210,7 @@ function createCleaningItemImageTypeModal() {
           <button type="button" class="btn btn-outline" onclick="document.getElementById('cleaning-item-image-type-modal').style.display='none'" style="padding:8px 16px; background:#fff; border:1px solid #d1d5db; border-radius:6px; cursor:pointer; color:#374151;">キャンセル</button>
         </div>
       </div>
-    `;
+      `;
   document.body.appendChild(modal);
 
   // ボタンのイベントリスナーを設定
@@ -5488,24 +5296,24 @@ function addCleaningItemImageContent(sectionId, imageType = 'before_after', isPr
     // 施工後タイプ（次回ご提案タブの場合は「ご提案箇所」に変更）
     const labelText = isProposal ? 'ご提案箇所' : '施工後';
     imageContentHtml = `
-        <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
-          <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${sectionId}', '${imageContentId}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
-          <div class="image-category">
-            <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
-              <i class="fas fa-star"></i> ${labelText}
-            </div>
-            <div class="image-list" id="${imageContentId}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
-              <button type="button" class="image-add-btn cleaning-item-image-add-btn" onclick="openCleaningItemImageAddModal('${sectionId}', '${imageContentId}', 'completed')" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem; background:transparent; padding:0;">
-                <i class="fas fa-plus"></i>
-                <span>追加</span>
-              </button>
-            </div>
+      <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
+        <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${sectionId}', '${imageContentId}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
+        <div class="image-category">
+          <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
+            <i class="fas fa-star"></i> ${labelText}
+          </div>
+          <div class="image-list" id="${imageContentId}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
+            <button type="button" class="image-add-btn cleaning-item-image-add-btn" onclick="openCleaningItemImageAddModal('${sectionId}', '${imageContentId}', 'completed')" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem; background:transparent; padding:0;">
+              <i class="fas fa-plus"></i>
+              <span>追加</span>
+            </button>
           </div>
         </div>
+      </div>
       `;
   }
 
@@ -5568,17 +5376,17 @@ function showImageSourceSelectionSheet(sectionId, imageContentId, category) {
     sheetOverlay.id = 'image-source-sheet-overlay';
     sheetOverlay.className = 'image-source-sheet-overlay';
     sheetOverlay.innerHTML = `
-        <div class="image-source-sheet">
-          <div class="image-source-options">
-            <button type="button" class="image-source-btn camera" id="btn-source-camera">
-              <i class="fas fa-camera"></i> カメラで撮影
-            </button>
-            <button type="button" class="image-source-btn library" id="btn-source-library">
-              <i class="fas fa-photo-video"></i> 写真ライブラリから選択
-            </button>
-          </div>
-          <button type="button" class="image-source-cancel" id="btn-source-cancel">キャンセル</button>
+      <div class="image-source-sheet">
+        <div class="image-source-options">
+          <button type="button" class="image-source-btn camera" id="btn-source-camera">
+            <i class="fas fa-camera"></i> カメラで撮影
+          </button>
+          <button type="button" class="image-source-btn library" id="btn-source-library">
+            <i class="fas fa-photo-video"></i> 写真ライブラリから選択
+          </button>
         </div>
+        <button type="button" class="image-source-cancel" id="btn-source-cancel">キャンセル</button>
+      </div>
       `;
     document.body.appendChild(sheetOverlay);
 
@@ -6048,14 +5856,14 @@ async function loadMediaImages() {
       });
 
       return `
-          <div class="media-item" data-image-id="${img.image_id}" data-image-data='${imageData.replace(/'/g, "&apos;")}' style="position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid #e5e7eb; transition:all 0.2s;">
-            <img src="${img.url}" alt="Media" style="width:100%; height:100%; object-fit:cover;" loading="lazy">
-            <div class="media-item-overlay" style="position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s;">
-              <i class="fas fa-check-circle" style="color:#fff; font-size:2rem;"></i>
-            </div>
-            <div class="media-item-badge" style="position:absolute; top:4px; right:4px; padding:4px 8px; background:rgba(255,103,156,0.9); color:#fff; border-radius:4px; font-size:0.7rem; font-weight:600;">${categoryLabel}</div>
-          </div>
-        `;
+      <div class="media-item" data-image-id="${img.image_id}" data-image-data='${imageData.replace(/' /g, "&apos;")}' style="position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid #e5e7eb; transition:all 0.2s;">
+      <img src="${img.url}" alt="Media" style="width:100%; height:100%; object-fit:cover;" loading="lazy">
+        <div class="media-item-overlay" style="position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s;">
+          <i class="fas fa-check-circle" style="color:#fff; font-size:2rem;"></i>
+        </div>
+        <div class="media-item-badge" style="position:absolute; top:4px; right:4px; padding:4px 8px; background:rgba(255,103,156,0.9); color:#fff; border-radius:4px; font-size:0.7rem; font-weight:600;">${categoryLabel}</div>
+    </div>
+    `;
     }).join('');
 
     // クリックイベントを設定
@@ -6084,10 +5892,10 @@ function updateMediaSelectionInfo(totalCount) {
 
   const selectedCount = document.querySelectorAll('#media-selection-grid .media-item.selected').length;
   if (totalCount !== undefined) {
-    infoEl.textContent = `全${totalCount}件中${selectedCount}件選択中`;
+    infoEl.textContent = `全${totalCount}件中${selectedCount} 件選択中`;
   } else {
     const total = document.querySelectorAll('#media-selection-grid .media-item').length;
-    infoEl.textContent = `全${total}件中${selectedCount}件選択中`;
+    infoEl.textContent = `全${total}件中${selectedCount} 件選択中`;
   }
 }
 
@@ -6102,7 +5910,7 @@ window.closeMediaSelectionDialog = function () {
   const originalHTML = mediaDialog.dataset.originalImageListHTML;
 
   if (originalHTML !== undefined && imageContentId && category) {
-    const imageList = document.getElementById(`${imageContentId}-${category}`);
+    const imageList = document.getElementById(`${imageContentId} -${category} `);
     if (imageList) {
       const currentImages = imageList.querySelectorAll('.image-thumb');
       if (currentImages.length === 0) {
@@ -6139,9 +5947,9 @@ function addImageToCleaningItemFromMedia(sectionId, imageContentId, category, im
     imageData
   });
 
-  const imageList = document.getElementById(`${imageContentId}-${category}`);
+  const imageList = document.getElementById(`${imageContentId} -${category} `);
   if (!imageList) {
-    console.warn('[addImageToCleaningItemFromMedia] Image list not found:', `${imageContentId}-${category}`);
+    console.warn('[addImageToCleaningItemFromMedia] Image list not found:', `${imageContentId} -${category} `);
     return;
   }
 
@@ -6157,7 +5965,7 @@ function addImageToCleaningItemFromMedia(sectionId, imageContentId, category, im
   const date = imageData?.cleaning_date ? new Date(imageData.cleaning_date).toLocaleDateString('ja-JP') : '';
 
   imageThumb.innerHTML = `
-      <img src="${imageUrl}" alt="Selected from media" loading="lazy">
+      < img src = "${imageUrl}" alt = "Selected from media" loading = "lazy" >
       <div class="image-thumb-info" style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); padding:8px; color:#fff; font-size:0.7rem;">
         <div style="font-weight:600;">${folderName}</div>
         <div style="opacity:0.9;">${categoryLabel} ${date}</div>
@@ -6232,7 +6040,7 @@ function openCleaningItemImageWarehouseDialog(sectionId, imageContentId, categor
   if (!warehouseDialog) return;
 
   // 既存の画像リストを保存（キャンセル時に復元するため）
-  const imageList = document.getElementById(`${imageContentId}-${category}`);
+  const imageList = document.getElementById(`${imageContentId} -${category} `);
   if (imageList) {
     warehouseDialog.dataset.originalImageListHTML = imageList.innerHTML;
   }
@@ -6283,7 +6091,7 @@ window.closeWarehouseDialog = function () {
 
     // 画像が選択されていない場合（キャンセル時）は、元の画像リストを復元
     if (originalHTML !== undefined) {
-      const imageList = document.getElementById(`${imageContentId}-${category}`);
+      const imageList = document.getElementById(`${imageContentId} -${category} `);
       if (imageList) {
         // 現在の画像リストが空または追加ボタンのみの場合、元のHTMLを復元
         const currentImages = imageList.querySelectorAll('.image-thumb');
@@ -6364,7 +6172,7 @@ function openCleaningItemImageCamera(sectionId, imageContentId, category) {
 
 // セクション内画像コンテンツに画像ファイルをアップロード
 async function handleCleaningItemImageFileUpload(file, sectionId, imageContentId, category) {
-  const imageList = document.getElementById(`${imageContentId}-${category}`);
+  const imageList = document.getElementById(`${imageContentId} -${category} `);
   if (!imageList) return;
 
   // 画像を最適化
@@ -6372,7 +6180,7 @@ async function handleCleaningItemImageFileUpload(file, sectionId, imageContentId
   const blobUrl = URL.createObjectURL(optimizedBlob);
 
   // 画像IDを生成
-  const imageId = `cleaning-item-image-${imageContentId}-${category}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const imageId = `cleaning - item - image - ${imageContentId} -${category} -${Date.now()} -${Math.random().toString(36).substr(2, 9)} `;
 
   // Blobデータ(ArrayBuffer)を取得 (アップロード用)
   const arrayBuffer = await optimizedBlob.arrayBuffer();
@@ -6483,7 +6291,7 @@ async function handleCleaningItemImageFileUpload(file, sectionId, imageContentId
 
 // AWS画像倉庫からセクション内画像コンテンツに画像を追加
 async function addImageToCleaningItemFromWarehouse(sectionId, imageContentId, category, imageId, imageUrl) {
-  const imageList = document.getElementById(`${imageContentId}-${category}`);
+  const imageList = document.getElementById(`${imageContentId} -${category} `);
   if (!imageList) return;
 
   // 画像を表示
@@ -6572,7 +6380,7 @@ async function handleCleaningItemImageUpload(event, sectionId, imageContentId, c
   const files = Array.from(event.target.files);
   if (files.length === 0) return;
 
-  const imageList = document.getElementById(`${imageContentId}-${category}`);
+  const imageList = document.getElementById(`${imageContentId} -${category} `);
   if (!imageList) return;
 
   for (const file of files) {
@@ -6581,7 +6389,7 @@ async function handleCleaningItemImageUpload(event, sectionId, imageContentId, c
     const blobUrl = URL.createObjectURL(optimizedBlob);
 
     // 画像IDを生成
-    const imageId = `cleaning-item-image-${imageContentId}-${category}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const imageId = `cleaning - item - image - ${imageContentId} -${category} -${Date.now()} -${Math.random().toString(36).substr(2, 9)} `;
 
     // 画像をストックに追加
     const imageData = {
@@ -6668,7 +6476,7 @@ async function handleCleaningItemImageUpload(event, sectionId, imageContentId, c
             imageData.blobUrl = uploadedUrl;
 
             // DOM要素の更新（blobUrlがS3 URLに変わっても表示は維持される）
-            const thumb = imageList.querySelector(`[data-image-id="${imageId}"]`);
+            const thumb = imageList.querySelector(`[data - image - id= "${imageId}"]`);
             if (thumb) {
               thumb.dataset.imageUrl = uploadedUrl;
               // アップロード完了マーク（任意）
@@ -6734,7 +6542,7 @@ window.removeCleaningItemImage = function (sectionId, imageContentId, category, 
 
 // セクション内画像コンテンツを削除
 window.deleteCleaningItemImageContent = function (sectionId, imageContentId) {
-  const imageContentContainer = document.querySelector(`.cleaning-item-image-content[data-image-content-id="${imageContentId}"]`);
+  const imageContentContainer = document.querySelector(`.cleaning - item - image - content[data - image - content - id="${imageContentId}"]`);
   if (imageContentContainer) {
     imageContentContainer.remove();
   }
@@ -6750,9 +6558,9 @@ window.deleteCleaningItemImageContent = function (sectionId, imageContentId) {
 // 清掃項目セクションにコメントを追加
 window.addCommentToCleaningItem = function (sectionId) {
   // セクションを検索（タブに関係なく検索）
-  const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
+  const sectionBody = document.querySelector(`[data - section - id= "${sectionId}"] .section - body`);
   if (!sectionBody) {
-    console.warn(`[addCommentToCleaningItem] sectionBody not found for sectionId: ${sectionId}`);
+    console.warn(`[addCommentToCleaningItem] sectionBody not found for sectionId: ${sectionId} `);
     return;
   }
 
@@ -6760,7 +6568,7 @@ window.addCommentToCleaningItem = function (sectionId) {
   if (!insertActions) return;
 
   // 新しいコメントフィールドを作成
-  const commentId = `cleaning-item-comment-${sectionId}-${Date.now()}`;
+  const commentId = `cleaning - item - comment - ${sectionId} -${Date.now()} `;
   const commentContainer = document.createElement('div');
   commentContainer.className = 'cleaning-item-comment-container';
   commentContainer.dataset.commentId = commentId;
@@ -6816,9 +6624,9 @@ window.addCommentToCleaningItem = function (sectionId) {
 // 清掃項目セクションにサブタイトルを追加
 window.addSubtitleToCleaningItem = function (sectionId) {
   // セクションを検索（タブに関係なく検索）
-  const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
+  const sectionBody = document.querySelector(`[data - section - id= "${sectionId}"] .section - body`);
   if (!sectionBody) {
-    console.warn(`[addSubtitleToCleaningItem] sectionBody not found for sectionId: ${sectionId}`);
+    console.warn(`[addSubtitleToCleaningItem] sectionBody not found for sectionId: ${sectionId} `);
     return;
   }
 
@@ -6826,7 +6634,7 @@ window.addSubtitleToCleaningItem = function (sectionId) {
   if (!insertActions) return;
 
   // 新しいサブタイトルフィールドを作成
-  const subtitleId = `cleaning-item-subtitle-${sectionId}-${Date.now()}`;
+  const subtitleId = `cleaning - item - subtitle - ${sectionId} -${Date.now()} `;
   const subtitleContainer = document.createElement('div');
   subtitleContainer.className = 'cleaning-item-subtitle-container';
   subtitleContainer.dataset.subtitleId = subtitleId;
@@ -6902,10 +6710,10 @@ window.deleteCleaningItemComment = function (sectionId, commentId) {
     sections[sectionId].comments = sections[sectionId].comments.filter(c => c.id !== commentId);
   }
   // data属性を使用して要素を検索（複数の方法で試行）
-  const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+  const sectionCard = document.querySelector(`[data - section - id= "${sectionId}"]`);
   if (sectionCard) {
     // 方法1: data-comment-id属性で検索
-    let commentContainer = sectionCard.querySelector(`.cleaning-item-comment-container[data-comment-id="${commentId}"]`);
+    let commentContainer = sectionCard.querySelector(`.cleaning - item - comment - container[data - comment - id="${commentId}"]`);
     // 方法2: 見つからない場合は、すべてのコンテナを検索してIDを確認
     if (!commentContainer) {
       const containers = sectionCard.querySelectorAll('.cleaning-item-comment-container');
@@ -6917,7 +6725,7 @@ window.deleteCleaningItemComment = function (sectionId, commentId) {
     }
     // 方法3: ボタンの親要素を取得
     if (!commentContainer) {
-      const deleteBtn = sectionCard.querySelector(`.cleaning-item-comment-delete[data-comment-id="${commentId}"]`);
+      const deleteBtn = sectionCard.querySelector(`.cleaning - item - comment - delete [data - comment - id="${commentId}"]`);
       if (deleteBtn) {
         commentContainer = deleteBtn.closest('.cleaning-item-comment-container');
       }
@@ -6951,10 +6759,10 @@ window.deleteCleaningItemSubtitle = function (sectionId, subtitleId) {
     sections[sectionId].subtitles = sections[sectionId].subtitles.filter(s => s.id !== subtitleId);
   }
   // data属性を使用して要素を検索（複数の方法で試行）
-  const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+  const sectionCard = document.querySelector(`[data - section - id="${sectionId}"]`);
   if (sectionCard) {
     // 方法1: data-subtitle-id属性で検索
-    let subtitleContainer = sectionCard.querySelector(`.cleaning-item-subtitle-container[data-subtitle-id="${subtitleId}"]`);
+    let subtitleContainer = sectionCard.querySelector(`.cleaning - item - subtitle - container[data - subtitle - id="${subtitleId}"]`);
     // 方法2: 見つからない場合は、すべてのコンテナを検索してIDを確認
     if (!subtitleContainer) {
       const containers = sectionCard.querySelectorAll('.cleaning-item-subtitle-container');
@@ -6966,7 +6774,7 @@ window.deleteCleaningItemSubtitle = function (sectionId, subtitleId) {
     }
     // 方法3: ボタンの親要素を取得
     if (!subtitleContainer) {
-      const deleteBtn = sectionCard.querySelector(`.cleaning-item-subtitle-delete[data-subtitle-id="${subtitleId}"]`);
+      const deleteBtn = sectionCard.querySelector(`.cleaning - item - subtitle - delete [data - subtitle - id="${subtitleId}"]`);
       if (deleteBtn) {
         subtitleContainer = deleteBtn.closest('.cleaning-item-subtitle-container');
       }
@@ -7004,7 +6812,7 @@ window.deleteCleaningItemTextField = function (sectionId, fieldId) {
   if (sections[sectionId] && sections[sectionId].textFields) {
     sections[sectionId].textFields = sections[sectionId].textFields.filter(f => f.id !== fieldId);
   }
-  const fieldContainer = document.querySelector(`[data-section-id="${sectionId}"] .cleaning-item-text-field-container textarea[oninput*="${fieldId}"]`)?.closest('.cleaning-item-text-field-container');
+  const fieldContainer = document.querySelector(`[data - section - id="${sectionId}"] .cleaning - item - text - field - container textarea[oninput *= "${fieldId}"]`)?.closest('.cleaning-item-text-field-container');
   if (fieldContainer) {
     fieldContainer.remove();
   }
@@ -7026,7 +6834,7 @@ function updateCleaningItemsList() {
     container.innerHTML = '<span class="items-list-empty">項目を追加してください</span>';
   } else {
     container.innerHTML = items.map(name =>
-      `<span class="items-list-tag">${escapeHtml(name)}</span>`
+      `< span class="items-list-tag" > ${escapeHtml(name)}</span > `
     ).join('');
   }
 }
@@ -7052,8 +6860,8 @@ async function loadWarehouseImages() {
 
   try {
     // Lambda関数は 'date' パラメータを期待している
-    let url = `${REPORT_API}/staff/report-images?date=${date}`;
-    if (category) url += `&category=${category}`;
+    let url = `${REPORT_API} /staff/report - images ? date = ${date} `;
+    if (category) url += `& category=${category} `;
 
     console.log('[Warehouse] Loading images:', { date, category, url });
 
@@ -7062,7 +6870,7 @@ async function loadWarehouseImages() {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[Warehouse] Error response:', response.status, errorText);
-      throw new Error(`読み込みに失敗しました (${response.status}): ${errorText}`);
+      throw new Error(`読み込みに失敗しました(${response.status}): ${errorText} `);
     }
 
     const data = await response.json();
@@ -7076,14 +6884,14 @@ async function loadWarehouseImages() {
     }
 
     grid.innerHTML = warehouseImages.map(img => `
-        <div class="library-item" data-url="${img.url}" onclick="toggleLibraryImage(this, '${img.url}')">
-          <img src="${img.url}" alt="Image" loading="lazy">
+      < div class="library-item" data - url="${img.url}" onclick = "toggleLibraryImage(this, '${img.url}')" >
+        <img src="${img.url}" alt="Image" loading="lazy">
         </div>
-      `).join('');
+    `).join('');
 
   } catch (error) {
     console.error('[Warehouse] Error loading warehouse:', error);
-    grid.innerHTML = `<p style="text-align:center;color:#dc2626;padding:20px;">読み込みに失敗しました<br><small>${error.message}</small></p>`;
+    grid.innerHTML = `< p style = "text-align:center;color:#dc2626;padding:20px;" > 読み込みに失敗しました < br > <small>${error.message}</small></p > `;
   }
 }
 
@@ -7143,7 +6951,7 @@ function saveSelectedImages() {
   });
 
   // UIに画像を追加
-  const container = document.getElementById(`${sectionId}-${category}`);
+  const container = document.getElementById(`${sectionId} -${category} `);
   const addBtn = container.querySelector('.image-add-btn');
 
   // デフォルト画像（placeholder）を削除
@@ -7181,11 +6989,11 @@ function createImageThumb(sectionId, category, url, imageId = null) {
     thumb.dataset.imageId = imageId;
   }
   thumb.innerHTML = `
-      <img src="${url}" alt="Photo" draggable="false">
-      <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', '${category}', '${url}', '${imageId || ''}', this)">
+      < img src = "${url}" alt = "Photo" draggable = "false" >
+        <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', '${category}', '${url}', '${imageId || ''}', this)">
           <i class="fas fa-times"></i>
         </button>
-      `;
+    `;
 
   // 画像サムネイルのドラッグ&ドロップを設定
   setupImageThumbDragAndDrop(thumb, sectionId, category, url, imageId);
@@ -7424,14 +7232,14 @@ function moveImage(sourceSectionId, sourceCategory, url, targetSectionId, target
 
   // UIから削除
   const sourceThumb = document.querySelector(
-    `.image-thumb[data-section-id="${sourceSectionId}"][data-category="${sourceCategory}"][data-image-url="${url}"]`
+    `.image - thumb[data - section - id="${sourceSectionId}"][data - category="${sourceCategory}"][data - image - url= "${url}"]`
   );
   if (sourceThumb) {
     sourceThumb.remove();
   }
 
   // UIに追加
-  const targetContainer = document.getElementById(`${targetSectionId}-${targetCategory}`);
+  const targetContainer = document.getElementById(`${targetSectionId} -${targetCategory} `);
   if (!targetContainer) return;
 
   // デフォルト画像（placeholder）を削除
@@ -7641,14 +7449,14 @@ function moveCleaningItemImage(sourceSectionId, sourceImageContentId, sourceCate
 
   // UIから削除
   const sourceThumb = document.querySelector(
-    `.image-thumb[data-image-content-id="${sourceImageContentId}"][data-category="${sourceCategory}"][data-image-url="${url}"]`
+    `.image - thumb[data - image - content - id="${sourceImageContentId}"][data - category="${sourceCategory}"][data - image - url= "${url}"]`
   );
   if (sourceThumb) {
     sourceThumb.remove();
   }
 
   // UIに追加
-  const targetList = document.getElementById(`${targetImageContentId}-${targetCategory}`);
+  const targetList = document.getElementById(`${targetImageContentId} -${targetCategory} `);
   if (!targetList) return;
 
   const addBtn = targetList.querySelector('.image-add-btn');
@@ -7695,10 +7503,10 @@ function moveCleaningItemImage(sourceSectionId, sourceImageContentId, sourceCate
 
 // セクション内画像コンテンツから画像を削除
 window.removeImageFromSection = function (imageContentId, category, imageId) {
-  const imageList = document.getElementById(`${imageContentId}-${category}`);
+  const imageList = document.getElementById(`${imageContentId} -${category} `);
   if (!imageList) return;
 
-  const imageThumb = imageList.querySelector(`.image-thumb[data-image-id="${imageId}"]`);
+  const imageThumb = imageList.querySelector(`.image - thumb[data - image - id="${imageId}"]`);
   if (imageThumb) {
     imageThumb.remove();
   }
@@ -7719,7 +7527,7 @@ window.removeImageFromSection = function (imageContentId, category, imageId) {
     if (addBtn && !imageList.querySelector('.image-placeholder')) {
       const placeholderDiv = document.createElement('div');
       placeholderDiv.className = 'image-placeholder';
-      placeholderDiv.innerHTML = `<img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">`;
+      placeholderDiv.innerHTML = `< img src = "${DEFAULT_NO_PHOTO_IMAGE}" alt = "写真を撮り忘れました" class="default-no-photo-image" > `;
       imageList.insertBefore(placeholderDiv, addBtn);
     }
   }
@@ -7749,14 +7557,14 @@ window.removeImage = function (sectionId, category, url, imageId, btn) {
   btn.closest('.image-thumb').remove();
 
   // 画像がなくなった場合、デフォルト画像を表示
-  const container = document.getElementById(`${sectionId}-${category}`);
+  const container = document.getElementById(`${sectionId} -${category} `);
   if (container && arr.length === 0) {
     const placeholder = container.querySelector('.image-placeholder');
     if (!placeholder) {
       const addBtn = container.querySelector('.image-add-btn');
       const placeholderDiv = document.createElement('div');
       placeholderDiv.className = 'image-placeholder';
-      placeholderDiv.innerHTML = `<img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">`;
+      placeholderDiv.innerHTML = `< img src = "${DEFAULT_NO_PHOTO_IMAGE}" alt = "写真を撮り忘れました" class="default-no-photo-image" > `;
       container.insertBefore(placeholderDiv, addBtn);
     }
   }
@@ -8012,7 +7820,7 @@ async function handleSubmit(e) {
     // 編集モードの場合はPUT、新規作成の場合はPOST
     // CORS修正: /daily-reportsエンドポイントを使用
     const url = isEditMode
-      ? `${REPORT_API}/daily-reports/${reportId}?type=cleaning`
+      ? `${REPORT_API} /daily-reports/${reportId}?type = cleaning`
       : `${REPORT_API}/daily-reports?type=cleaning`;
     const method = isEditMode ? 'PUT' : 'POST';
 
