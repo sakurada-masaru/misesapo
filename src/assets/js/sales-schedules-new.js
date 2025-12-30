@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // DOM要素を取得
   scheduleForm = document.getElementById('schedule-form');
   formStatus = document.getElementById('form-status');
-  
+
   // DataUtilsが利用可能になるまで待つ（最大5秒）
   let retries = 0;
   const maxRetries = 50; // 5秒間待機（100ms × 50）
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await new Promise(resolve => setTimeout(resolve, 100));
     retries++;
   }
-  
+
   if (typeof DataUtils === 'undefined') {
     console.error('DataUtils is not loaded after waiting');
     if (formStatus) {
@@ -97,19 +97,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     return;
   }
-  
+
   await Promise.all([
-    loadStores(), 
-    loadWorkers(), 
-    loadClients(), 
-    loadBrands(), 
+    loadStores(),
+    loadWorkers(),
+    loadClients(),
+    loadBrands(),
     loadServices()
   ]);
-  
+
   setupEventListeners();
-  setupStoreSearch();
+  setupEventListeners();
+  setupHierarchicalSelection(); // Changed from setupStoreSearch
   setupCleaningItemsSearch();
-  
+  setupCleaningItemsSearch();
+
   // URLパラメータから日付を取得、なければ今日の日付をデフォルトに設定
   const dateInput = document.getElementById('schedule-date');
   if (dateInput) {
@@ -210,7 +212,7 @@ async function loadServices() {
 function populateSalesSelects() {
   const scheduleSalesEl = document.getElementById('schedule-sales');
   if (!scheduleSalesEl) return;
-  
+
   // 管理画面と同じ基準で「営業」を抽出（role / roles / department など）
   const isSalesPerson = (w) => {
     if (!w) return false;
@@ -221,10 +223,10 @@ function populateSalesSelects() {
   };
   let salesWorkers = allWorkers.filter(isSalesPerson);
   if (salesWorkers.length === 0) salesWorkers = allWorkers;
-  const options = salesWorkers.map(w => 
+  const options = salesWorkers.map(w =>
     `<option value="${w.id}">${escapeHtml(w.name || '')}</option>`
   ).join('');
-  
+
   scheduleSalesEl.innerHTML = '<option value="">未設定</option>' + options;
 }
 
@@ -232,167 +234,140 @@ function populateSalesSelects() {
 function populateWorkerSelects() {
   const scheduleWorkerEl = document.getElementById('schedule-worker');
   if (!scheduleWorkerEl) return;
-  
+
   const cleaningWorkers = allWorkers.filter(w => w.role === 'staff' || w.role === 'worker');
-  const options = cleaningWorkers.map(w => 
+  const options = cleaningWorkers.map(w =>
     `<option value="${w.id}">${escapeHtml(w.name || '')}</option>`
   ).join('');
-  
+
   if (scheduleWorkerEl) {
     scheduleWorkerEl.innerHTML = '<option value="">全員（オープン）</option>' + options;
   }
 }
 
-// 店舗検索機能のセットアップ（カテゴリ絞り込み機能付き）
-function setupStoreSearch() {
-  const searchInput = document.getElementById('schedule-store-search');
-  const resultsDiv = document.getElementById('schedule-store-results');
-  const hiddenInput = document.getElementById('schedule-store');
-  const categoryFilter = document.getElementById('store-category-filter');
-  // 選択サマリー
-  const summaryStoreEl = document.getElementById('schedule-store-summary-store');
-  const summaryClientEl = document.getElementById('schedule-store-summary-client');
-  const summaryBrandEl = document.getElementById('schedule-store-summary-brand');
-  const summaryAddressEl = document.getElementById('schedule-store-summary-address');
-  
-  if (!searchInput || !resultsDiv || !hiddenInput) return;
-  
-  function setSummary({ storeName = '-', clientName = '-', brandName = '-', address = '-' } = {}) {
-    if (summaryStoreEl) summaryStoreEl.textContent = storeName || '-';
-    if (summaryClientEl) summaryClientEl.textContent = clientName || '-';
-    if (summaryBrandEl) summaryBrandEl.textContent = brandName || '-';
-    if (summaryAddressEl) summaryAddressEl.textContent = address || '-';
-  }
+// 階層型選択UIのセットアップ
+function setupHierarchicalSelection() {
+  const clientSelect = document.getElementById('select-client');
+  const brandSelect = document.getElementById('select-brand');
+  const storeSelect = document.getElementById('select-store');
+  const hiddenStoreInput = document.getElementById('schedule-store');
 
-  function setContactFields({ address = '', phone = '', email = '', contactPerson = '' } = {}) {
-    const addressEl = document.getElementById('schedule-address');
-    const phoneEl = document.getElementById('schedule-phone');
-    const emailEl = document.getElementById('schedule-email');
-    const contactEl = document.getElementById('schedule-contact-person');
-    if (addressEl) addressEl.value = address || '';
-    if (phoneEl) phoneEl.value = phone || '';
-    if (emailEl) emailEl.value = email || '';
-    if (contactEl) contactEl.value = contactPerson || '';
-  }
-  
-  function getClientName(clientId) {
-    if (!clientId) return '';
-    const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId));
-    return client ? (client.name || client.company_name || '') : '';
-  }
-  
-  function getBrandName(brandId) {
-    if (!brandId) return '';
-    const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId));
-    return brand ? brand.name : '';
-  }
-  
-  function updateStoreDropdown() {
-    const query = searchInput.value.trim().toLowerCase();
-    const category = categoryFilter ? categoryFilter.value : '';
-    
-    if (query.length === 0) {
-      resultsDiv.style.display = 'none';
+  // 表示用エレメント
+  const displayAddress = document.getElementById('display-address');
+  const displayPhone = document.getElementById('display-phone');
+  const storeInfoDisplay = document.getElementById('store-info-display');
+
+  if (!clientSelect) return;
+
+  // 1. Initial Load of Clients
+  const populateClients = () => {
+    clientSelect.innerHTML = '<option value="">法人を選択してください</option>';
+    allClients.forEach(client => {
+      const option = document.createElement('option');
+      option.value = client.id;
+      option.textContent = client.name || client.company_name;
+      clientSelect.appendChild(option);
+    });
+  };
+
+  // 2. Client Change -> Populate Brands
+  clientSelect.addEventListener('change', () => {
+    const clientId = clientSelect.value;
+
+    // Reset lower levels
+    brandSelect.innerHTML = '<option value="">先に法人を選択してください</option>';
+    brandSelect.disabled = true;
+    storeSelect.innerHTML = '<option value="">先にブランドを選択してください</option>';
+    storeSelect.disabled = true;
+    hiddenStoreInput.value = '';
+    storeInfoDisplay.style.display = 'none';
+
+    if (!clientId) return;
+
+    // Filter brands by client
+    // Note: brand object typically has client_id
+    const filteredBrands = allBrands.filter(b => String(b.client_id) === String(clientId));
+
+    if (filteredBrands.length === 0) {
+      brandSelect.innerHTML = '<option value="">紐づくブランドがありません</option>';
       return;
     }
-    
-    // 店舗名、ブランド名、法人名で部分一致検索
-    let filtered = allStores.filter(store => {
-      const storeName = (store.name || '').toLowerCase();
-      const brandId = store.brand_id;
-      const brandName = getBrandName(brandId).toLowerCase();
-      const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null);
-      const clientName = getClientName(clientId).toLowerCase();
-      
-      // カテゴリで絞り込み
-      if (category === 'store' && !storeName.includes(query)) return false;
-      if (category === 'brand' && !brandName.includes(query)) return false;
-      if (category === 'client' && !clientName.includes(query)) return false;
-      
-      // キーワード検索
-      return storeName.includes(query) || brandName.includes(query) || clientName.includes(query);
+
+    brandSelect.innerHTML = '<option value="">ブランドを選択してください</option>';
+    filteredBrands.forEach(brand => {
+      const option = document.createElement('option');
+      option.value = brand.id;
+      option.textContent = brand.name;
+      brandSelect.appendChild(option);
     });
-    
-    if (filtered.length === 0) {
-      resultsDiv.innerHTML = '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
-      resultsDiv.style.display = 'block';
+    brandSelect.disabled = false;
+  });
+
+  // 3. Brand Change -> Populate Stores
+  brandSelect.addEventListener('change', () => {
+    const brandId = brandSelect.value;
+
+    // Reset lower levels
+    storeSelect.innerHTML = '<option value="">先にブランドを選択してください</option>';
+    storeSelect.disabled = true;
+    hiddenStoreInput.value = '';
+    storeInfoDisplay.style.display = 'none';
+
+    if (!brandId) return;
+
+    // Filter stores by brand
+    const filteredStores = allStores.filter(s => String(s.brand_id) === String(brandId));
+
+    if (filteredStores.length === 0) {
+      storeSelect.innerHTML = '<option value="">紐づく店舗がありません</option>';
       return;
     }
-    
-    resultsDiv.innerHTML = filtered.map(store => {
-      const storeName = store.name || '';
-      const brandId = store.brand_id;
-      const brandName = getBrandName(brandId);
-      const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null);
-      const clientName = getClientName(clientId);
-      
-      let displayText = '';
-      let categoryLabel = '';
-      if (category === 'store' || (!category && storeName.toLowerCase().includes(query))) {
-        displayText = storeName;
-        categoryLabel = '<span class="store-search-item-category">店舗</span>';
-      } else if (category === 'brand' || (!category && brandName.toLowerCase().includes(query))) {
-        displayText = brandName;
-        categoryLabel = '<span class="store-search-item-category">ブランド</span>';
-      } else if (category === 'client' || (!category && clientName.toLowerCase().includes(query))) {
-        displayText = clientName;
-        categoryLabel = '<span class="store-search-item-category">法人</span>';
-      } else {
-        displayText = storeName;
-        if (brandName) displayText += ` / ${brandName}`;
-        if (clientName) displayText += ` (${clientName})`;
-      }
-      
-      return `<div class="store-search-item" data-id="${store.id}" data-name="${escapeHtml(storeName)}">${categoryLabel}${escapeHtml(displayText)}</div>`;
-    }).join('');
-    
-    resultsDiv.style.display = 'block';
-    
-    // クリックイベント
-    resultsDiv.querySelectorAll('.store-search-item').forEach(item => {
-      if (item.classList.contains('no-results')) return;
-      item.addEventListener('click', function() {
-        const id = this.dataset.id;
-        const name = this.dataset.name;
-        hiddenInput.value = id;
-        searchInput.value = name;
-        resultsDiv.style.display = 'none';
 
-        // サマリーと連絡先の自動入力
-        const store = allStores.find(s => s.id === id || String(s.id) === String(id)) || {};
-        const storeName = store.name || name || '';
-        const brandId = store.brand_id;
-        const brandName = getBrandName(brandId) || '';
-        const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId || String(b.id) === String(brandId))?.client_id : null);
-        const clientName = getClientName(clientId) || '';
-        const address = (store.address || `${store.postcode ? '〒' + store.postcode + ' ' : ''}${store.pref || ''}${store.city || ''}${store.address1 || ''}${store.address2 || ''}`).trim();
-        setSummary({ storeName, clientName, brandName, address });
-        setContactFields({
-          address,
-          phone: store.phone || store.tel || '',
-          email: store.email || '',
-          contactPerson: store.contact_person || store.contactPerson || ''
-        });
-      });
+    storeSelect.innerHTML = '<option value="">店舗を選択してください</option>';
+    filteredStores.forEach(store => {
+      const option = document.createElement('option');
+      option.value = store.id;
+      option.textContent = store.name;
+      storeSelect.appendChild(option);
     });
-  }
-  
-  searchInput.addEventListener('input', updateStoreDropdown);
-  searchInput.addEventListener('focus', updateStoreDropdown);
-  if (categoryFilter) {
-    categoryFilter.addEventListener('change', updateStoreDropdown);
-  }
-  
-  // 外側をクリックしたら閉じる
-  document.addEventListener('click', (e) => {
-    if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target) && (!categoryFilter || !categoryFilter.contains(e.target))) {
-      resultsDiv.style.display = 'none';
+    storeSelect.disabled = false;
+  });
+
+  // 4. Store Change -> Set Hidden Input and Show Info
+  storeSelect.addEventListener('change', () => {
+    const storeId = storeSelect.value;
+    hiddenStoreInput.value = storeId;
+
+    if (!storeId) {
+      storeInfoDisplay.style.display = 'none';
+      return;
+    }
+
+    const store = allStores.find(s => String(s.id) === String(storeId));
+    if (store) {
+      const address = (store.address || `${store.postcode ? '〒' + store.postcode + ' ' : ''}${store.pref || ''}${store.city || ''}${store.address1 || ''}${store.address2 || ''}`).trim();
+      displayAddress.textContent = address || '未登録';
+      displayPhone.textContent = store.phone || store.tel || '未登録';
+      storeInfoDisplay.style.display = 'block';
+
+      // Set other hidden/auto fields
+      const addressEl = document.getElementById('schedule-address');
+      const phoneEl = document.getElementById('schedule-phone');
+      const emailEl = document.getElementById('schedule-email');
+      const contactEl = document.getElementById('schedule-contact-person');
+
+      if (addressEl && !addressEl.value) addressEl.value = address;
+      if (phoneEl && !phoneEl.value) phoneEl.value = store.phone || store.tel || '';
+      if (emailEl && !emailEl.value) emailEl.value = store.email || '';
+      if (contactEl && !contactEl.value) contactEl.value = store.contact_person || '';
     }
   });
 
-  // 初期表示（未選択）
-  setSummary();
+  // Add delay to ensure data load
+  setTimeout(populateClients, 500);
 }
+
+// (Old setupStoreSearch removed)
 
 // 清掃内容検索機能のセットアップ（店舗検索と同様のUI）
 function setupCleaningItemsSearch() {
@@ -400,54 +375,54 @@ function setupCleaningItemsSearch() {
   const resultsDiv = document.getElementById('cleaning-items-results');
   const selectedDiv = document.getElementById('cleaning-items-selected');
   const categoryFilter = document.getElementById('cleaning-category-filter');
-  
+
   if (!searchInput || !resultsDiv || !selectedDiv) return;
-  
+
   function updateCleaningItemsDropdown() {
     const query = searchInput.value.trim().toLowerCase();
     const category = categoryFilter ? categoryFilter.value : '';
-    
+
     // サービス名で部分一致検索（検索クエリが空の場合は全件表示）
     let filtered = allServices.filter(service => {
       const serviceName = (service.title || service.name || '').toLowerCase();
-      
+
       // 検索クエリが空の場合は全件表示
       if (query.length === 0) {
         return true;
       }
-      
+
       // カテゴリで絞り込み（現時点ではサービス名のみ）
       if (category === 'service' && !serviceName.includes(query)) return false;
-      
+
       // キーワード検索
       return serviceName.includes(query);
     });
-    
+
     if (filtered.length === 0) {
       resultsDiv.innerHTML = '<div class="cleaning-item-result no-results">該当する清掃内容が見つかりません</div>';
       resultsDiv.style.display = 'block';
       return;
     }
-    
+
     resultsDiv.innerHTML = filtered.map(service => {
       const serviceName = service.title || service.name || '';
       const serviceId = service.id || '';
       const categoryLabel = '<span class="store-search-item-category">サービス</span>';
       return `<div class="cleaning-item-result" data-id="${serviceId}" data-name="${escapeHtml(serviceName)}">${categoryLabel}${escapeHtml(serviceName)}</div>`;
     }).join('');
-    
+
     resultsDiv.style.display = 'block';
-    
+
     // クリックイベント
     resultsDiv.querySelectorAll('.cleaning-item-result').forEach(item => {
       if (item.classList.contains('no-results')) return;
-      item.addEventListener('click', function() {
+      item.addEventListener('click', function () {
         const id = this.dataset.id;
         const name = this.dataset.name;
-        
+
         // 既に選択されている場合は追加しない
         if (selectedCleaningItems.find(item => item.id === id)) return;
-        
+
         selectedCleaningItems.push({ id, name });
         updateCleaningItemsSelected();
         searchInput.value = '';
@@ -455,13 +430,13 @@ function setupCleaningItemsSearch() {
       });
     });
   }
-  
+
   function updateCleaningItemsSelected() {
     if (selectedCleaningItems.length === 0) {
       selectedDiv.innerHTML = '<div style="color: #9ca3af; font-size: 0.875rem; padding: 8px;">選択された清掃内容がありません</div>';
       return;
     }
-    
+
     selectedDiv.innerHTML = selectedCleaningItems.map((item, index) => {
       return `
         <div class="cleaning-item-tag">
@@ -471,28 +446,28 @@ function setupCleaningItemsSearch() {
       `;
     }).join('');
   }
-  
-  window.removeCleaningItem = function(index) {
+
+  window.removeCleaningItem = function (index) {
     selectedCleaningItems.splice(index, 1);
     updateCleaningItemsSelected();
   };
-  
+
   searchInput.addEventListener('input', updateCleaningItemsDropdown);
-  searchInput.addEventListener('focus', function() {
+  searchInput.addEventListener('focus', function () {
     // フォーカス時は検索クエリに関係なく全サービスを表示
     updateCleaningItemsDropdown();
   });
   if (categoryFilter) {
     categoryFilter.addEventListener('change', updateCleaningItemsDropdown);
   }
-  
+
   // 外側をクリックしたら閉じる
   document.addEventListener('click', (e) => {
     if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target) && (!categoryFilter || !categoryFilter.contains(e.target))) {
       resultsDiv.style.display = 'none';
     }
   });
-  
+
   // 初期表示
   updateCleaningItemsSelected();
 }
@@ -503,13 +478,13 @@ function setupEventListeners() {
   if (scheduleForm) {
     scheduleForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const storeId = document.getElementById('schedule-store').value;
       if (!storeId) {
         alert('店舗を選択してください');
         return;
       }
-      
+
       // 清掃内容を取得
       const cleaningItems = selectedCleaningItems.map(item => ({
         name: item.name,
@@ -524,7 +499,7 @@ function setupEventListeners() {
         ? (selectedStore.client_id || (brandId ? allBrands.find(b => b.id === brandId || String(b.id) === String(brandId))?.client_id : null))
         : null;
       const clientName = storeFound ? (allClients.find(c => c.id === clientId || String(c.id) === String(clientId))?.name || '') : '';
-      
+
       const data = {
         store_id: storeId,
         scheduled_date: document.getElementById('schedule-date').value,
@@ -543,7 +518,11 @@ function setupEventListeners() {
         address: (document.getElementById('schedule-address')?.value || '').trim(),
         phone: (document.getElementById('schedule-phone')?.value || '').trim(),
         email: (document.getElementById('schedule-email')?.value || '').trim(),
-        contact_person: (document.getElementById('schedule-contact-person')?.value || '').trim()
+        contact_person: (document.getElementById('schedule-contact-person')?.value || '').trim(),
+
+        // HACCP Data
+        haccp_instructions: Array.from(document.querySelectorAll('input[name="haccp_instruction[]"]:checked')).map(cb => cb.value),
+        haccp_notes: (document.getElementById('haccp-notes')?.value || '').trim()
       };
 
       data.created_at = new Date().toISOString();
@@ -554,7 +533,7 @@ function setupEventListeners() {
           formStatus.textContent = '保存中...';
           formStatus.className = 'form-status';
         }
-        
+
         const response = await fetch(`${API_BASE}/schedules`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -566,7 +545,7 @@ function setupEventListeners() {
             formStatus.textContent = '保存しました';
             formStatus.className = 'form-status success';
           }
-          
+
           // スケジュール一覧ページにリダイレクト
           setTimeout(() => {
             window.location.href = '/sales/schedules';
