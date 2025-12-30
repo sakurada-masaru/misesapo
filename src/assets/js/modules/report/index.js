@@ -355,6 +355,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Load Schedules ---
     async function loadSchedules() {
+        // Use the select element defined in the outer scope or get it again
         const scheduleSelect = document.getElementById('report-schedule-select');
         if (!scheduleSelect) return;
 
@@ -416,7 +417,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('[Schedule] Selected:', schedule);
 
             // 1. Update Request Sheet (Side Panel)
-            updateRequestSheet(schedule);
+            if (typeof updateRequestSheet === 'function') {
+                updateRequestSheet(schedule);
+            }
 
             // 2. Set Date Input
             const dateInput = document.getElementById('report-date');
@@ -424,24 +427,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 dateInput.value = schedule.date || schedule.scheduled_date;
             }
 
-            // 3. Update Brand/Store inputs if they exist (Helper for user)
-            // (Assuming these inputs might be read-only or auto-filled)
+            // 3. Update Brand/Store inputs if they exist
             if (schedule.store) {
                 const storeInput = document.getElementById('report-store-search');
+                const brandInput = document.getElementById('report-brand-search');
+
                 if (storeInput) storeInput.value = schedule.store.name || '';
+                // Simple attempt to set brand name if available, often loaded separately
+                if (brandInput && schedule.store.brand) brandInput.value = schedule.store.brand.name || '';
             }
         }
     }
 
     // Bind Change Event for Schedule Select
-    const scheduleSelect = document.getElementById('report-schedule-select');
-    if (scheduleSelect) {
-        scheduleSelect.addEventListener('change', (e) => {
+    const scheduleSelectEl = document.getElementById('report-schedule-select');
+    if (scheduleSelectEl) {
+        scheduleSelectEl.addEventListener('change', (e) => {
             handleScheduleSelection(e.target.value);
         });
     }
 
+    // Start loading
     loadSchedules();
 
-    console.log('[Report Module] Ready', { stateManager, apiService, tabManager, sectionManager, previewGenerator });
+    console.log('[Report Module] Ready v2', { stateManager, apiService, tabManager, sectionManager, previewGenerator });
 });
