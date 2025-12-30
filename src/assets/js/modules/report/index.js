@@ -363,6 +363,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const schedules = await apiService.fetchSchedules();
 
+        // Expose globally for other modules/logic to access
+        window.osAllSchedules = schedules;
+        // Also update state manager if it has a setter
+        stateManager.setSchedules(schedules);
+
         // Filter logic could be added here (e.g. active only)
         // For now, map all
 
@@ -377,54 +382,73 @@ document.addEventListener('DOMContentLoaded', async () => {
             const option = document.createElement('option');
             option.value = schedule.id;
             option.textContent = label;
-            // Store full data if needed?
-            // stateManager usually doesn't store ALL schedules, just current selection
-            option.dataset.json = JSON.stringify(schedule);
             scheduleSelect.appendChild(option);
         });
 
         scheduleSelect.disabled = false;
 
-        // Check for schedule_id in URL
+        // Check URL params for auto-selection (Enhancement)
         const urlParams = new URLSearchParams(window.location.search);
-        const scheduleIdParam = urlParams.get('schedule_id');
+        const scheduleParam = urlParams.get('schedule_id');
+        if (scheduleParam) {
+            scheduleSelect.value = scheduleParam;
+            // Dispatch change event to trigger listeners
+            scheduleSelect.dispatchEvent(new Event('change'));
 
-        if (scheduleIdParam) {
-            const targetOption = scheduleSelect.querySelector(`option[value="${scheduleIdParam}"]`);
-            if (targetOption) {
-                scheduleSelect.value = scheduleIdParam;
-                // Manually trigger update
-                const schedule = JSON.parse(targetOption.dataset.json);
-                console.log('[Schedule] Auto-selected from URL:', schedule);
-
-                const dateInput = document.getElementById('report-date');
-                if (dateInput && (schedule.date || schedule.scheduled_date)) {
-                    dateInput.value = schedule.date || schedule.scheduled_date;
-                }
+            // Explicitly update request sheet immediately
+            const targetSchedule = schedules.find(s => String(s.id) === String(scheduleParam));
+            if (targetSchedule) {
+                updateRequestSheet(targetSchedule);
             }
         }
+        // Store full data if needed?
+        // stateManager usually doesn't store ALL schedules, just current selection
+        option.dataset.json = JSON.stringify(schedule);
+        scheduleSelect.appendChild(option);
+    });
 
-        // Listen for change
-        scheduleSelect.addEventListener('change', (e) => {
-            const selectedOpt = scheduleSelect.options[scheduleSelect.selectedIndex];
-            if (selectedOpt && selectedOpt.dataset.json) {
-                const schedule = JSON.parse(selectedOpt.dataset.json);
-                console.log('[Schedule] Selected:', schedule);
+scheduleSelect.disabled = false;
 
-                // Set meta data
-                const dateInput = document.getElementById('report-date');
-                if (dateInput && (schedule.date || schedule.scheduled_date)) {
-                    dateInput.value = schedule.date || schedule.scheduled_date;
-                }
+// Check for schedule_id in URL
+const urlParams = new URLSearchParams(window.location.search);
+const scheduleIdParam = urlParams.get('schedule_id');
 
-                // Inject cleaning items from schedule if needed
-                // Legacy behavior: auto-add cleaning items if not manually added?
-                // For V2, we might want to ask or just add
-            }
-        });
+if (scheduleIdParam) {
+    const targetOption = scheduleSelect.querySelector(`option[value="${scheduleIdParam}"]`);
+    if (targetOption) {
+        scheduleSelect.value = scheduleIdParam;
+        // Manually trigger update
+        const schedule = JSON.parse(targetOption.dataset.json);
+        console.log('[Schedule] Auto-selected from URL:', schedule);
+
+        const dateInput = document.getElementById('report-date');
+        if (dateInput && (schedule.date || schedule.scheduled_date)) {
+            dateInput.value = schedule.date || schedule.scheduled_date;
+        }
+    }
+}
+
+// Listen for change
+scheduleSelect.addEventListener('change', (e) => {
+    const selectedOpt = scheduleSelect.options[scheduleSelect.selectedIndex];
+    if (selectedOpt && selectedOpt.dataset.json) {
+        const schedule = JSON.parse(selectedOpt.dataset.json);
+        console.log('[Schedule] Selected:', schedule);
+
+        // Set meta data
+        const dateInput = document.getElementById('report-date');
+        if (dateInput && (schedule.date || schedule.scheduled_date)) {
+            dateInput.value = schedule.date || schedule.scheduled_date;
+        }
+
+        // Inject cleaning items from schedule if needed
+        // Legacy behavior: auto-add cleaning items if not manually added?
+        // For V2, we might want to ask or just add
+    }
+});
     }
 
-    loadSchedules();
+loadSchedules();
 
-    console.log('[Report Module] Ready', { stateManager, apiService, tabManager, sectionManager, previewGenerator });
+console.log('[Report Module] Ready', { stateManager, apiService, tabManager, sectionManager, previewGenerator });
 });

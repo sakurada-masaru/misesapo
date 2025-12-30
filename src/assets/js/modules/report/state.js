@@ -12,6 +12,7 @@ export class ReportStateManager {
                 proposal: {}
             },
             imageStock: [], // Array of image objects
+            schedules: [],   // Store loaded schedules
             meta: {
                 brandId: null,
                 storeId: null,
