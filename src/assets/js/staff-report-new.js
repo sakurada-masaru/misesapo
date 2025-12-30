@@ -4183,74 +4183,41 @@
   };
 
   // 清掃項目セクション追加
-  window.addCleaningItemSection = function () {
+  // 清掃項目セクション追加
+  window.addCleaningItemSection = function (itemNameOrTab) {
+    // 引数がタブ名（'new'/'proposal'）やイベントオブジェクト、あるいは未指定の場合はモーダルを表示
+    if (!itemNameOrTab || itemNameOrTab === 'new' || itemNameOrTab === 'proposal' || typeof itemNameOrTab === 'object') {
+      openCleaningItemSelectionModal();
+      return;
+    }
+
+    // 具体的な項目名が指定された場合は、その項目のセクションを追加
+    const itemName = itemNameOrTab;
+    const isCustom = (itemName === '__other__' || !itemName);
+
     // 現在アクティブなタブを確認
     const activeTab = document.querySelector('.tab-btn.active');
     const isProposalTab = activeTab && activeTab.dataset.tab === 'proposal';
     const reportContentId = isProposalTab ? 'report-content-proposal' : 'report-content';
+    const reportContent = document.getElementById(reportContentId);
+
+    if (!reportContent) return;
 
     sectionCounter++;
     const sectionId = `section-${sectionCounter}`;
-    sections[sectionId] = { type: 'cleaning', item_name: '', textFields: [], subtitles: [], comments: [] };
+    sections[sectionId] = {
+      type: 'cleaning',
+      item_name: isCustom ? '' : itemName,
+      textFields: [], subtitles: [], comments: []
+    };
 
-    const options = getMergedServiceItemTitles().map(title =>
-      `<option value="${escapeHtml(title)}">${escapeHtml(title)}</option>`
-    ).join('');
+    // 新しい描画関数を使用
+    const html = renderCleaningSectionHtml(sectionId, itemName);
 
-    const html = `
-      <div class="section-card" data-section-id="${sectionId}">
-        <div class="section-header">
-          <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
-          <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
-          <div class="section-header-actions">
-            <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー">
-              <i class="fas fa-copy"></i>
-            </button>
-            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
-            <i class="fas fa-trash"></i>
-          </button>
-          </div>
-        </div>
-        <div class="section-body">
-          <select class="cleaning-item-select" onchange="updateCleaningItem('${sectionId}', this.value)">
-            <option value="">項目を選択</option>
-            ${options}
-            <option value="__other__">その他（自由入力）</option>
-          </select>
-          <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:none; margin-top:8px;" oninput="updateCleaningItemCustom('${sectionId}', this.value)">
-          
-          <div id="haccp-section-${sectionId}" class="haccp-section-container" style="display:none; margin-top:12px; padding:12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px;">
-             <!-- HACCP UI will be rendered here -->
-          </div>
-
-          <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
-            <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${sectionId}')" title="画像挿入">
-              <i class="fas fa-image"></i>
-              <span>画像挿入</span>
-            </button>
-            <button type="button" class="cleaning-item-insert-btn" onclick="addCommentToCleaningItem('${sectionId}')" title="コメント挿入">
-              <i class="fas fa-comment"></i>
-              <span>コメント挿入</span>
-            </button>
-            <button type="button" class="cleaning-item-insert-btn" onclick="addSubtitleToCleaningItem('${sectionId}')" title="サブタイトル挿入">
-              <i class="fas fa-heading"></i>
-              <span>サブタイトル挿入</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    const reportContent = document.getElementById(reportContentId);
+    // 挿入場所: .section-add-icons-area の直前
     const sectionAddIconsAreaId = isProposalTab ? 'section-add-icons-area-proposal' : 'section-add-icons-area';
     const sectionAddIconsArea = document.getElementById(sectionAddIconsAreaId);
 
-    if (!reportContent) {
-      console.error(`[addCleaningItemSection] reportContent not found: ${reportContentId}`);
-      return;
-    }
-
-    // セクション追加アイコンエリアの前に挿入
     if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
       sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
     } else {
@@ -4260,24 +4227,21 @@
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
-      // セクションが追加されたら選択モードボタンを表示
-      const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
-      if (sectionSelectModeBtn && Object.keys(sections).length > 0) {
-        sectionSelectModeBtn.style.display = 'flex';
+      // HACCP UIを初期化
+      if (window.updateCleaningItem) {
+        window.updateCleaningItem(sectionId, itemName);
       }
-      // 選択モードの場合はチェックボックスを表示
-      if (isSectionSelectMode) {
+      // セクション選択モードボタン更新
+      const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
+      if (sectionSelectModeBtn) sectionSelectModeBtn.style.display = 'flex';
+      if (typeof updateSectionCardsForSelection === 'function' && isSectionSelectMode) {
         updateSectionCardsForSelection();
       }
-      // セクション追加アイコンエリアは常に最後に配置されるため、個別に追加する必要はない
     }
 
-    // セクション追加アイコンエリアを常に最後に配置
-    if (sectionAddIconsArea && reportContent) {
-      reportContent.appendChild(sectionAddIconsArea);
+    if (typeof updateCleaningItemsList === 'function') {
+      updateCleaningItemsList();
     }
-
-    updateCleaningItemsList();
   };
 
   // 画像セクションタイプ選択モーダルを開く
