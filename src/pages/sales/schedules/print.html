@@ -414,6 +414,69 @@
                 </div>
             </div>
 
+            <!-- 物流・入館情報 -->
+            <div class="section">
+                <div class="section-title">物流・入館情報</div>
+                <table>
+                    <tr>
+                        <th>作業種別</th><td>${data.work_type === 'spot' ? 'スポット' : (data.work_type === 'periodic' ? '定期' : '未定')}</td>
+                        <th>立ち会い</th><td>${data.attendance_required === 'required' ? 'あり' : 'なし'} ${data.attendance_notes ? '(' + data.attendance_notes + ')' : ''}</td>
+                    </tr>
+                    <tr>
+                        <th>駐車スペース</th><td colspan="3">${data.parking_info || '指定なし'}</td>
+                    </tr>
+                     <tr>
+                        <th>鍵の受け渡し</th><td colspan="3">${data.key_info || '指定なし'}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- エリア別状態確認 -->
+            <div class="section">
+                <div class="section-title">エリア別状態確認（アセスメント）</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    ${(() => {
+                    const as = (data.survey_data && data.survey_data.assessment) || {};
+                    const labels = {
+                        area1: '調理エリア（厨房）',
+                        area2: '厨房機器・設備',
+                        area3: '手洗い設備・トイレ',
+                        area4: 'ねずみ・昆虫対策'
+                    };
+                    return Object.keys(labels).map(k => {
+                        const item = as[k] || {};
+                        let stText = '-';
+                        let stColor = '#333';
+                        if (item.status === 'good') { stText = '良好'; stColor = '#059669'; }
+                        else if (item.status === 'warning') { stText = '要注意'; stColor = '#CA8A04'; }
+                        else if (item.status === 'bad') { stText = '不良'; stColor = '#DC2626'; }
+
+                        if (stText === '-' && !item.note) return ''; // Skip empty
+
+                        return `
+                            <div style="border:1px solid #ddd; padding:8px 12px; display:flex; gap:10px; align-items:center; background:#fafafa;">
+                                <div style="font-weight:bold; width:160px; font-size:13px;">${labels[k]}</div>
+                                <div style="width:60px; font-weight:bold; color:${stColor}; font-size:13px;">${stText}</div>
+                                <div style="flex:1; font-size:12px; color:#555;">${item.note || ''}</div>
+                            </div>`;
+                    }).join('');
+                })()}
+                </div>
+            </div>
+
+            <!-- HACCP -->
+            <div class="section">
+                <div class="section-title">衛生基準（HACCP）確認</div>
+                 <div style="border: 1px solid #ccc; padding: 15px;">
+                    <div class="check-list">
+                         ${!data.haccp_instructions || !data.haccp_instructions.length ? '<div style="color:#999; font-size:12px;">指定なし</div>' : data.haccp_instructions.map(h => `
+                             <div class="check-item"><span class="check-box checked"></span><span>${h}</span></div>
+                         `).join('')}
+                    </div>
+                    ${data.haccp_notes ? `<div style="margin-top:10px; padding-top:10px; border-top:1px dashed #ccc; font-size:13px;"><strong>備考:</strong> ${data.haccp_notes}</div>` : ''}
+                </div>
+            </div>
+
             <div class="section">
                 <div class="section-title">特記事項・備考</div>
                 <div style="border: 1px solid #ccc; padding: 15px; min-height: 50px; white-space: pre-wrap;">${data.notes || 'なし'}</div>

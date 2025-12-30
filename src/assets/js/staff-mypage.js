@@ -5627,9 +5627,23 @@ async function showWorkInstructionModal(scheduleId) {
     }
 
     // モーダルコンテンツ構築
-    const serviceItems = schedule.service_items || [];
-    const serviceListHtml = serviceItems.length > 0
-      ? `<div style="display:flex; flex-wrap:wrap; gap:4px;">${serviceItems.map(item => `<span style="background:#ffecf2; color:#ff679c; padding:2px 8px; border-radius:4px; font-size:0.8rem;">#${typeof item === 'object' ? item.name : item}</span>`).join('')}</div>`
+    // モーダルコンテンツ構築
+    const cleaningItems = (schedule.cleaning_items && schedule.cleaning_items.length > 0)
+      ? schedule.cleaning_items
+      : (schedule.service_items || schedule.service_names || []);
+
+    const serviceListHtml = cleaningItems.length > 0
+      ? `<div style="display:flex; flex-direction:column; gap:6px;">${cleaningItems.map(item => {
+        const name = typeof item === 'object' ? (item.name || item.title) : item;
+        // If it's a simple string list (legacy), use tags. If object (new), use list style
+        const isSimple = typeof item === 'string';
+        return isSimple
+          ? `<span style="display:inline-block; background:#ffecf2; color:#ff679c; padding:2px 8px; border-radius:4px; font-size:0.8rem; margin-right:4px; margin-bottom:4px;">#${escapeHtml(name)}</span>`
+          : `<div style="display:flex; align-items:flex-start; gap:8px; padding:4px 0; border-bottom:1px dashed #f3f4f6;">
+                  <i class="fas fa-check-circle" style="color:#10b981; margin-top:3px; font-size:0.9rem;"></i>
+                  <span style="font-size:0.9rem; color:#374151;">${escapeHtml(name)}</span>
+                </div>`;
+      }).join('')}</div>`
       : '<div style="color:#9ca3af; font-size:0.9rem;">登録なし</div>';
 
     const memberListHtml = schedule.member_names && schedule.member_names.length > 0
@@ -5669,7 +5683,7 @@ async function showWorkInstructionModal(scheduleId) {
     const mapUrl = storeAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(storeAddress)}` : '#';
 
     modal.innerHTML = `
-            <div class="custom-modal-content" style="background: white; border-radius: 8px; width: 95%; max-width: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; max-height: 90vh;">
+            <div class="custom-modal-content" style="background: white; border-radius: 8px; width: 100%; max-width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; max-height: 95vh;">
                 <div class="custom-modal-header" style="background: #f3f4f6; padding: 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0;">
                     <h3 style="margin:0; font-size:1.1rem; font-weight:bold; color:#111827;">作業指示書</h3>
                     <button onclick="closeWorkInstructionModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#6b7280;">&times;</button>
@@ -5683,6 +5697,23 @@ async function showWorkInstructionModal(scheduleId) {
                         ${storePhone ? `<div style="font-size:0.9rem;"><i class="fas fa-phone" style="width:16px; text-align:center; color:#10b981;"></i> <a href="tel:${storePhone}" style="color:inherit; text-decoration:none;">${escapeHtml(storePhone)}</a></div>` : ''}
                     </div>
 
+                    <!-- 物流・入館 (New) -->
+                    <div style="margin-bottom: 16px; border-top: 1px solid #f3f4f6; padding-top: 12px;">
+                        <h4 style="margin:0 0 8px 0; font-size:0.85rem; color:#6b7280; text-transform:uppercase;">物流・入館情報</h4>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-size:0.9rem;">
+                           <div><span style="font-weight:600;">種別:</span> ${schedule.work_type === 'spot' ? 'スポット' : '定期'}</div>
+                           <div><span style="font-weight:600;">立ち会い:</span> ${schedule.attendance_required === 'required' ? `<span style="color:#d97706; font-weight:bold;">あり</span>` : 'なし'}</div>
+                        </div>
+                        ${schedule.attendance_notes ? `<div style="font-size:0.85rem; color:#666; margin-top:4px; padding-left:8px; border-left:2px solid #ccc;">${escapeHtml(schedule.attendance_notes)}</div>` : ''}
+                        
+                        <div style="margin-top:8px; font-size:0.9rem;">
+                           <span style="font-weight:600;">駐車:</span> ${escapeHtml(schedule.parking_info || '指定なし')}
+                        </div>
+                        <div style="margin-top:4px; font-size:0.9rem;">
+                           <span style="font-weight:600;">鍵:</span> ${escapeHtml(schedule.key_info || '指定なし')}
+                        </div>
+                    </div>
+
                     <!-- メンバー -->
                     <div style="margin-bottom: 16px; border-top: 1px solid #f3f4f6; padding-top: 12px;">
                         <h4 style="margin:0 0 8px 0; font-size:0.85rem; color:#6b7280; text-transform:uppercase;">担当メンバー</h4>
@@ -5690,13 +5721,55 @@ async function showWorkInstructionModal(scheduleId) {
                     </div>
 
                     <!-- 清掃項目 -->
-                    <div style="margin-bottom: 0; border-top: 1px solid #f3f4f6; padding-top: 12px;">
+                    <div style="margin-bottom: 16px; border-top: 1px solid #f3f4f6; padding-top: 12px;">
                         <h4 style="margin:0 0 8px 0; font-size:0.85rem; color:#6b7280; text-transform:uppercase;">清掃項目</h4>
-                        ${serviceListHtml}
+                        <div style="background:#fafafa; padding:12px; border-radius:8px; border:1px solid #f3f4f6;">
+                           ${serviceListHtml}
+                        </div>
+                        ${schedule.notes ? `<div style="margin-top:8px; padding:8px; background:#fffbeb; border-radius:4px; font-size:0.9rem; color:#b45309;"><i class="fas fa-exclamation-circle"></i> <strong>特記事項:</strong><br>${escapeHtml(schedule.notes)}</div>` : ''}
                     </div>
+
+                    <!-- エリア別アセスメント (New) -->
+                    ${schedule.survey_data && schedule.survey_data.assessment ? `
+                    <div style="margin-bottom: 16px; border-top: 1px solid #f3f4f6; padding-top: 12px;">
+                        <h4 style="margin:0 0 8px 0; font-size:0.85rem; color:#6b7280; text-transform:uppercase;">エリア別状態確認</h4>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            ${(() => {
+          const as = schedule.survey_data.assessment;
+          const labels = { area1: '調理エリア', area2: '機器・設備', area3: '手洗い・トイレ', area4: 'ねずみ・昆虫' };
+          return Object.keys(labels).map(k => {
+            const item = as[k] || {};
+            let stText = '-';
+            let stColor = '#9ca3af';
+            let bg = '#f9fafb';
+            if (item.status === 'good') { stText = '良好'; stColor = '#059669'; bg = '#ecfdf5'; }
+            else if (item.status === 'warning') { stText = '要注意'; stColor = '#d97706'; bg = '#fffbeb'; }
+            else if (item.status === 'bad') { stText = '不良'; stColor = '#dc2626'; bg = '#fef2f2'; }
+            if (stText === '-' && !item.note) return '';
+
+            return `<div style="display:flex; align-items:flex-start; gap:12px; padding:8px; background:${bg}; border-radius:6px;">
+                                        <div style="width:90px; font-size:0.85rem; font-weight:600; color:#374151;">${labels[k]}</div>
+                                        <div style="width:50px; font-size:0.85rem; font-weight:700; color:${stColor};">${stText}</div>
+                                        <div style="flex:1; font-size:0.85rem; color:#4b5563;">${escapeHtml(item.note || '')}</div>
+                                    </div>`;
+          }).join('')
+        })()}
+                        </div>
+                    </div>` : ''}
+
+                    <!-- HACCP (New) -->
+                    ${schedule.haccp_instructions && schedule.haccp_instructions.length > 0 ? `
+                    <div style="margin-bottom: 16px; border-top: 1px solid #f3f4f6; padding-top: 12px;">
+                        <h4 style="margin:0 0 8px 0; font-size:0.85rem; color:#6b7280; text-transform:uppercase;">衛生基準 (HACCP)</h4>
+                        <div style="border:1px solid #e5e7eb; border-radius:8px; padding:12px;">
+                             ${schedule.haccp_instructions.map(h => `<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;"><i class="fas fa-check-square" style="color:#10b981;"></i><span style="font-size:0.9rem;">${escapeHtml(h)}</span></div>`).join('')}
+                             ${schedule.haccp_notes ? `<div style="margin-top:8px; border-top:1px dashed #e5e7eb; padding-top:8px; font-size:0.85rem; color:#6b7280;">備考: ${escapeHtml(schedule.haccp_notes)}</div>` : ''}
+                        </div>
+                    </div>` : ''}
 
                     <!-- 問診票 -->
                     ${karteHtml}
+
 
                 </div>
                 <div class="custom-modal-footer" style="padding: 16px; border-top: 1px solid #e5e7eb; text-align: center;">
