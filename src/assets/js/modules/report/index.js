@@ -117,6 +117,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    // Comment Handlers
+    window.handleAddSectionComment = (sectionId) => {
+        const text = prompt('コメントを入力してください:');
+        if (text) {
+            const currentTab = stateManager.state.activeTab;
+            const section = stateManager.state.sections[currentTab][sectionId];
+            if (section) {
+                const comments = section.comments || [];
+                // Simple state update, could be optimized in stateManager
+                stateManager.updateSection(currentTab, sectionId, { comments: [...comments, text] });
+            }
+        }
+    };
+
+    window.handleDeleteSectionComment = (sectionId, idx) => {
+        if (!confirm('コメントを削除しますか？')) return;
+        const currentTab = stateManager.state.activeTab;
+        const section = stateManager.state.sections[currentTab][sectionId];
+        if (section && section.comments) {
+            const newComments = [...section.comments];
+            newComments.splice(idx, 1);
+            stateManager.updateSection(currentTab, sectionId, { comments: newComments });
+        }
+    };
+
     // We also need to tell SectionRenderer how to render HACCP fields.
     // Ideally SectionRenderer should have a reference to HaccpManager.
     // Since we created SectionManager earlier, let's look at how to inject this dependency.
