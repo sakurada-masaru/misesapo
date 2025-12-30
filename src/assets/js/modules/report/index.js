@@ -142,6 +142,63 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    // --- Custom Content Handlers ---
+    window.handleAddCustomContent = (sectionId, type) => {
+        const currentTab = stateManager.state.activeTab;
+        stateManager.addCustomContent(currentTab, sectionId, type);
+    };
+
+    window.handleRemoveCustomContent = (sectionId, contentId) => {
+        if (!confirm('削除してよろしいですか？')) return;
+        const currentTab = stateManager.state.activeTab;
+        stateManager.removeCustomContent(currentTab, sectionId, contentId);
+    };
+
+    window.handleUpdateCustomContent = (sectionId, contentId, updates) => {
+        const currentTab = stateManager.state.activeTab;
+        stateManager.updateCustomContent(currentTab, sectionId, contentId, updates);
+    };
+
+    window.handleCustomImageUpload = async (input, sectionId, contentId) => {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const currentTab = stateManager.state.activeTab;
+
+            // 1. Show preview immediately
+            const blobUrl = URL.createObjectURL(file);
+            stateManager.updateCustomContent(currentTab, sectionId, contentId, {
+                image: { blobUrl: blobUrl, status: 'uploading' }
+            });
+
+            try {
+                // 2. Upload
+                // Retrieve global API instance
+                const api = window.ApiServiceInstance;
+                if (!api) throw new Error('API Service unavailable');
+
+                const date = stateManager.state.meta.date || new Date().toISOString().split('T')[0];
+                const result = await api.uploadImage(file, 'extra', 'temp_report_id', date);
+
+                // 3. Update with remote URL
+                stateManager.updateCustomContent(currentTab, sectionId, contentId, {
+                    image: {
+                        blobUrl: blobUrl,
+                        url: result.url,
+                        status: 'uploaded',
+                        id: result.id
+                    }
+                });
+
+            } catch (error) {
+                console.error('Custom image upload failed', error);
+                alert('画像のアップロードに失敗しました');
+                stateManager.updateCustomContent(currentTab, sectionId, contentId, {
+                    image: { blobUrl: blobUrl, status: 'error' }
+                });
+            }
+        }
+    };
+
     // We also need to tell SectionRenderer how to render HACCP fields.
     // Ideally SectionRenderer should have a reference to HaccpManager.
     // Since we created SectionManager earlier, let's look at how to inject this dependency.

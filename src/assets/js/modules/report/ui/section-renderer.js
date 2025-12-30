@@ -85,24 +85,58 @@ export class SectionRenderer {
                             </div>
                         </div>
 
-                        <!-- Extra Actions: Add Comment / Add additional Image -->
+                        <!-- Extra Actions: Add Content -->
                         <div style="margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px;">
-                            <button type="button" onclick="window.handleAddSectionComment('${section.id}')" style="background: none; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: #6b7280; cursor: pointer;">
+                            <button type="button" onclick="window.handleAddCustomContent('${section.id}', 'text')" style="background: none; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: #6b7280; cursor: pointer;">
                                 <i class="fas fa-comment-dots"></i> コメント追加
                             </button>
-                            <button type="button" onclick="alert('任意画像の追加機能は開発中です（次期アップデート予定）')" style="background: none; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: #6b7280; cursor: pointer;">
+                            <button type="button" onclick="window.handleAddCustomContent('${section.id}', 'image')" style="background: none; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: #6b7280; cursor: pointer;">
                                 <i class="fas fa-image"></i> 画像追加
                             </button>
                         </div>
 
-                        <!-- Comments Area -->
-                        <div id="comments-${section.id}" style="margin-top: 8px;">
-                            ${(section.comments || []).map((comment, idx) => `
-                                <div style="background: #fdfeba; padding: 6px 10px; border-radius: 4px; margin-bottom: 4px; font-size: 0.9rem; display: flex; align-items: center; justify-content: space-between;">
-                                    <span>${escapeHtml(comment)}</span>
-                                    <button onclick="window.handleDeleteSectionComment('${section.id}', ${idx})" style="border: none; background: none; color: #aaa; cursor: pointer;">&times;</button>
-                                </div>
-                            `).join('')}
+                        <!-- Custom Contents Area -->
+                        <div id="custom-contents-${section.id}" style="margin-top: 12px;">
+                            ${(section.customContents || []).map(content => {
+                    if (content.type === 'text') {
+                        return `
+                                        <div class="custom-content-block" style="background:#f9fafb; padding:10px; border-radius:6px; margin-bottom:8px; border:1px solid #e5e7eb; position:relative;">
+                                            <button onclick="window.handleRemoveCustomContent('${section.id}', '${content.id}')" style="position:absolute; top:4px; right:4px; border:none; background:none; color:#9ca3af; cursor:pointer;">&times;</button>
+                                            <label style="font-size:0.75rem; color:#6b7280; display:block; margin-bottom:4px;">コメント・特記事項</label>
+                                            <textarea class="form-input" style="width:100%; min-height:60px; font-size:0.9rem;"
+                                                onchange="window.handleUpdateCustomContent('${section.id}', '${content.id}', { value: this.value })">${escapeHtml(content.value || '')}</textarea>
+                                        </div>
+                                    `;
+                    } else if (content.type === 'image') {
+                        const src = content.image ? (content.image.blobUrl || content.image.url) : '';
+                        const isUploading = content.image && content.image.status === 'uploading';
+
+                        return `
+                                        <div class="custom-content-block" style="background:#f9fafb; padding:10px; border-radius:6px; margin-bottom:8px; border:1px solid #e5e7eb; position:relative;">
+                                            <button onclick="window.handleRemoveCustomContent('${section.id}', '${content.id}')" style="position:absolute; top:4px; right:4px; border:none; background:none; color:#9ca3af; cursor:pointer;">&times;</button>
+                                            <label style="font-size:0.75rem; color:#6b7280; display:block; margin-bottom:4px;">追加画像</label>
+                                            
+                                            ${!src ? `
+                                                <label style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100px; border:2px dashed #d1d5db; border-radius:6px; cursor:pointer; background:white;">
+                                                    <i class="fas fa-camera" style="color:#9ca3af; font-size:1.5rem; margin-bottom:4px;"></i>
+                                                    <span style="font-size:0.8rem; color:#6b7280;">画像を撮影/選択</span>
+                                                    <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.handleCustomImageUpload(this, '${section.id}', '${content.id}')">
+                                                </label>
+                                            ` : `
+                                                <div style="position:relative; width:100%; height:200px; background:black; display:flex; justify-content:center; align-items:center; border-radius:6px; overflow:hidden;">
+                                                    <img src="${src}" style="max-width:100%; max-height:100%; object-fit:contain;">
+                                                    ${isUploading ? '<div style="position:absolute; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; color:white;"><i class="fas fa-spinner fa-spin"></i></div>' : ''}
+                                                </div>
+                                            `}
+                                            
+                                            <input type="text" placeholder="画像の説明（任意）" value="${escapeHtml(content.value || '')}"
+                                                style="width:100%; margin-top:8px; padding:6px; border:1px solid #d1d5db; border-radius:4px; font-size:0.85rem;"
+                                                onchange="window.handleUpdateCustomContent('${section.id}', '${content.id}', { value: this.value })">
+                                        </div>
+                                    `;
+                    }
+                    return '';
+                }).join('')}
                         </div>
                     `;
             })()}

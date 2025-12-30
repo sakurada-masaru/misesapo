@@ -191,5 +191,41 @@ export class ReportStateManager {
         // 2. Add to target section
         const targetTab = this.state.activeTab;
         this.addImageToSection(targetTab, targetSectionId, targetCategory, imageObj);
+        // --- Custom Content Handling ---
+
+        addCustomContent(tabName, sectionId, contentType) {
+            const section = this.state.sections[tabName][sectionId];
+            if (!section) return;
+
+            if (!section.customContents) section.customContents = [];
+
+            const newContent = {
+                id: `cc-${Date.now()}`,
+                type: contentType, // 'text' | 'image'
+                value: '', // For text
+                image: null // For image content { url, blobUrl, status }
+            };
+
+            section.customContents.push(newContent);
+            this.notify();
+        }
+
+        removeCustomContent(tabName, sectionId, contentId) {
+            const section = this.state.sections[tabName][sectionId];
+            if (!section || !section.customContents) return;
+
+            section.customContents = section.customContents.filter(c => c.id !== contentId);
+            this.notify();
+        }
+
+        updateCustomContent(tabName, sectionId, contentId, updates) {
+            const section = this.state.sections[tabName][sectionId];
+            if (!section || !section.customContents) return;
+
+            const index = section.customContents.findIndex(c => c.id === contentId);
+            if (index !== -1) {
+                section.customContents[index] = { ...section.customContents[index], ...updates };
+                this.notify();
+            }
+        }
     }
-}
