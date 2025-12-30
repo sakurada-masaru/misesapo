@@ -166,18 +166,15 @@
 
 .tab-content {
   display: none;
-  margin-top: 90px;
-  /* 固定ヘッダー（50px）+ タブ（40px）の高さ分 */
+  margin-top: 16px;
   padding-top: 0;
   height: calc(100vh - 90px);
   height: calc(100dvh - 90px);
-  /* 動的ビューポート高さ（キーボード対応） */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
   padding-right: 0;
   padding-bottom: 120px;
-  /* クイックメニュー分の余白 */
 }
 
 /* 非アクティブなタブは確実に非表示にする */
@@ -4080,7 +4077,7 @@ html {
 
 /* タブコンテンツの余白調整 */
 .tab-content {
-    padding-bottom: 120px;
+  padding-bottom: 120px;
 }
 
 /* 清掃項目内の追加アクションボタン */
