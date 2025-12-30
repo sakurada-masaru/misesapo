@@ -9071,12 +9071,8 @@ async function handleOsServiceInjection() {
 
   for (const serviceName of selectedServices) {
     if (typeof window.addCleaningItemSection === 'function') {
-      window.addCleaningItemSection();
-      const sectionIds = Object.keys(sections);
-      const lastSectionId = sectionIds[sectionIds.length - 1];
-      if (lastSectionId) {
-        updateCleaningItem(lastSectionId, serviceName);
-      }
+      // 項目名を指定してセクションを追加
+      window.addCleaningItemSection(serviceName);
     }
   }
 
