@@ -62,7 +62,7 @@ let selectedWorkers = [];
 let filteredSchedules = [];
 let currentPage = 1;
 const perPage = 20;
-let currentView = 'calendar'; // Default to calendar
+let currentView = 'list'; // Default to list (Request Management)
 let currentMonth = new Date();
 let deleteTargetId = null;
 
