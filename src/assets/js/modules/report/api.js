@@ -49,6 +49,9 @@ export class ReportApiService {
                     cleaning_date: cleaningDate
                 };
 
+                // Debug logging
+                console.log('[API] Uploading payload:', { ...payload, image_data: '<<BASE64_TRUNCATED>>' });
+
                 try {
                     const headers = await this._getAuthHeader();
                     const response = await fetch(`${REPORT_API}/staff/report-images`, {
