@@ -123,7 +123,9 @@ export class HaccpManager {
         const savedWorkType = currentData.work_type;
         const savedAbnormal = currentData.abnormal;
         const savedCorrection = currentData.correction || '';
-        const savedConfirmer = currentData.confirmer || '';
+        // Default to current user if not saved, otherwise empty string
+        const currentUser = window.currentUser ? (window.currentUser.displayName || window.currentUser.email) : '';
+        const savedConfirmer = currentData.confirmer || currentUser || '';
         const savedNextDate = currentData.next_date || '';
 
         const headerHtml = config.category ?
