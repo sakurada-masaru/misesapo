@@ -138,6 +138,16 @@
     return `${dateLabel}${timeLabel} ${storeLabel}`.trim();
   }
 
+  function getMergedServiceItemTitles() {
+    const titles = new Set((serviceItems || []).map(i => i.title));
+    HACCP_CONFIG.forEach(cat => {
+      cat.items.forEach(i => {
+        titles.add(i.name);
+      });
+    });
+    return Array.from(titles);
+  }
+
   function addMinutesToTime(timeString, minutes) {
     if (!timeString || !minutes) return '';
     const [h, m] = timeString.split(':').map(Number);
@@ -257,18 +267,15 @@
           item_name: itemName
         };
 
-        // マスタに存在するかチェック
+        // マスタに存在するかチェック（HACCP項目含む）
+        const mergedTitles = getMergedServiceItemTitles();
         let isCustom = true;
-        if (serviceItems && serviceItems.length > 0) {
-          const found = serviceItems.find(si => si.title === itemName);
-          if (found) isCustom = false;
-        } else {
-          // serviceItemsが未ロードの場合はとりあえずカスタム扱い
-          isCustom = true;
+        if (mergedTitles.includes(itemName)) {
+          isCustom = false;
         }
 
-        const options = serviceItems.map(si =>
-          `<option value="${escapeHtml(si.title)}" ${(si.title === itemName) ? 'selected' : ''}>${escapeHtml(si.title)}</option>`
+        const options = mergedTitles.map(title =>
+          `<option value="${escapeHtml(title)}" ${(title === itemName) ? 'selected' : ''}>${escapeHtml(title)}</option>`
         ).join('');
 
         const html = `
@@ -289,6 +296,9 @@
                     style="${isCustom ? 'display:block' : 'display:none'}; margin-top:8px;" 
                     value="${isCustom ? escapeHtml(itemName) : ''}" 
                     oninput="updateCleaningItemCustom('${sectionId}', this.value)">
+                  <div id="haccp-section-${sectionId}" class="haccp-section-container" style="display:none; margin-top:12px; padding:12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px;">
+                     <!-- HACCP UI will be rendered here -->
+                  </div>
                   <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
                     <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${sectionId}')" title="画像挿入">
                       <i class="fas fa-image"></i>
@@ -318,6 +328,11 @@
         const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
         if (newCard && typeof setupSectionDragAndDrop === 'function') {
           setupSectionDragAndDrop(newCard);
+        }
+
+        // HACCP UIを初期化
+        if (itemName && window.updateCleaningItem) {
+          window.updateCleaningItem(sectionId, itemName);
         }
       });
 
@@ -4152,8 +4167,8 @@
     const sectionId = `section-${sectionCounter}`;
     sections[sectionId] = { type: 'cleaning', item_name: '', textFields: [], subtitles: [], comments: [] };
 
-    const options = serviceItems.map(item =>
-      `<option value="${escapeHtml(item.title)}">${escapeHtml(item.title)}</option>`
+    const options = getMergedServiceItemTitles().map(title =>
+      `<option value="${escapeHtml(title)}">${escapeHtml(title)}</option>`
     ).join('');
 
     const html = `
@@ -4612,8 +4627,8 @@
 
     let html = '';
     if (newSection.type === 'cleaning') {
-      const options = serviceItems.map(item =>
-        `<option value="${escapeHtml(item.title)}" ${(item.title === newSection.item_name) ? 'selected' : ''}>${escapeHtml(item.title)}</option>`
+      const options = getMergedServiceItemTitles().map(title =>
+        `<option value="${escapeHtml(title)}" ${(title === newSection.item_name) ? 'selected' : ''}>${escapeHtml(title)}</option>`
       ).join('');
 
       html = `
@@ -4636,7 +4651,11 @@
               ${options}
               <option value="__other__">その他（自由入力）</option>
             </select>
-            <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${newSection.item_name && !serviceItems.find(si => si.title === newSection.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItemCustom('${newSectionId}', this.value)" value="${escapeHtml(newSection.item_name || '')}">
+            <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${newSection.item_name && !getMergedServiceItemTitles().includes(newSection.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItemCustom('${newSectionId}', this.value)" value="${escapeHtml(newSection.item_name || '')}">
+            
+            <div id="haccp-section-${newSectionId}" class="haccp-section-container" style="display:none; margin-top:12px; padding:12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px;">
+               <!-- HACCP UI will be rendered here -->
+            </div>
             ${(newSection.textFields || []).map(textField => `
               <div class="cleaning-item-text-field-container" style="position:relative; margin-top:8px;">
                 <textarea class="form-input cleaning-item-text-field" placeholder="テキストを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemTextField('${newSectionId}', '${textField.id}', this.value)">${escapeHtml(textField.value || '')}</textarea>
@@ -4915,6 +4934,13 @@
           newSection.imageContents.forEach(imageContent => {
             const imageType = imageContent.imageType || 'before_after';
             setupCleaningItemImageUpload(imageContent.id, newSectionId, imageType);
+
+            // HACCP UIを初期化（清掃項目セクションの場合）
+            if (newSection.type === 'cleaning' && newSection.item_name && window.updateCleaningItem) {
+              window.updateCleaningItem(newSectionId, newSection.item_name);
+              // TODO: 保存されたHACCP値（work_type, abnormal...）を復元したい場合はここで追記が必要
+              // 現在の実装ではコピー時はUIのみで値はデフォルトになる可能性が高い
+            }
 
             // ドラッグ&ドロップを設定
             if (imageType === 'before_after') {
