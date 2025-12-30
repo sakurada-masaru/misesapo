@@ -965,10 +965,10 @@
         }
 
         // タブ切り替え時に、そのタブのセクションデータを保存・復元
-        if (targetTab === 'new' || targetTab === 'proposal' || targetTab === 'edit') {
+        if (targetTab === 'new' || targetTab === 'proposal') {
           // 現在のタブのセクションデータを保存（sectionsオブジェクトをそのまま保存）
           const previousActiveTab = currentActiveTab || Array.from(tabButtons).find(btn => btn.classList.contains('active'))?.dataset.tab;
-          if (previousActiveTab && (previousActiveTab === 'new' || previousActiveTab === 'proposal' || previousActiveTab === 'edit')) {
+          if (previousActiveTab && (previousActiveTab === 'new' || previousActiveTab === 'proposal')) {
             sectionsByTab[previousActiveTab] = { ...sections };
           }
 
@@ -990,8 +990,7 @@
           }
 
           // 切り替え先のタブのDOMからセクションデータを再構築（DOMが既に存在する場合）
-          const reportContentId = targetTab === 'proposal' ? 'report-content-proposal' :
-            targetTab === 'edit' ? 'report-content-edit' : 'report-content';
+          const reportContentId = targetTab === 'proposal' ? 'report-content-proposal' : 'report-content';
           const reportContent = document.getElementById(reportContentId);
           if (reportContent) {
             const existingSectionCards = reportContent.querySelectorAll('.section-card');
@@ -4726,84 +4725,84 @@
       newSection.photos = { completed: [] };
     }
 
-  if (html) {
-    // 元のセクションの後に挿入
-    const originalElement = document.querySelector(`[data - section - id="${sectionId}"]`);
-    if (originalElement && originalElement.nextSibling) {
-      originalElement.insertAdjacentHTML('afterend', html);
-    } else {
-      reportContent.insertAdjacentHTML('beforeend', html);
-    }
+    if (html) {
+      // 元のセクションの後に挿入
+      const originalElement = document.querySelector(`[data - section - id="${sectionId}"]`);
+      if (originalElement && originalElement.nextSibling) {
+        originalElement.insertAdjacentHTML('afterend', html);
+      } else {
+        reportContent.insertAdjacentHTML('beforeend', html);
+      }
 
-    // セクション内画像コンテンツのイベントリスナーを設定（清掃項目セクションの場合）
-    if (newSection.type === 'cleaning' && newSection.imageContents && newSection.imageContents.length > 0) {
-      setTimeout(() => {
-        newSection.imageContents.forEach(imageContent => {
-          const imageType = imageContent.imageType || 'before_after';
-          setupCleaningItemImageUpload(imageContent.id, newSectionId, imageType);
+      // セクション内画像コンテンツのイベントリスナーを設定（清掃項目セクションの場合）
+      if (newSection.type === 'cleaning' && newSection.imageContents && newSection.imageContents.length > 0) {
+        setTimeout(() => {
+          newSection.imageContents.forEach(imageContent => {
+            const imageType = imageContent.imageType || 'before_after';
+            setupCleaningItemImageUpload(imageContent.id, newSectionId, imageType);
 
-          // HACCP UIを初期化（清掃項目セクションの場合）
-          if (newSection.type === 'cleaning' && newSection.item_name && window.updateCleaningItem) {
-            window.updateCleaningItem(newSectionId, newSection.item_name);
-            // TODO: 保存されたHACCP値（work_type, abnormal...）を復元したい場合はここで追記が必要
-            // 現在の実装ではコピー時はUIのみで値はデフォルトになる可能性が高い
-          }
-
-          // ドラッグ&ドロップを設定
-          if (imageType === 'before_after') {
-            const beforeList = document.getElementById(`${imageContent.id} -before`);
-            const afterList = document.getElementById(`${imageContent.id} -after`);
-            if (beforeList) setupImageListDragAndDrop(beforeList, newSectionId, 'before', imageContent.id);
-            if (afterList) setupImageListDragAndDrop(afterList, newSectionId, 'after', imageContent.id);
-
-            // 画像サムネイルにドラッグ&ドロップを設定
-            if (beforeList) {
-              beforeList.querySelectorAll('.image-thumb').forEach(thumb => {
-                const url = thumb.dataset.imageUrl;
-                const imageId = thumb.dataset.imageId;
-                if (url) {
-                  setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'before', url, imageId);
-                }
-              });
+            // HACCP UIを初期化（清掃項目セクションの場合）
+            if (newSection.type === 'cleaning' && newSection.item_name && window.updateCleaningItem) {
+              window.updateCleaningItem(newSectionId, newSection.item_name);
+              // TODO: 保存されたHACCP値（work_type, abnormal...）を復元したい場合はここで追記が必要
+              // 現在の実装ではコピー時はUIのみで値はデフォルトになる可能性が高い
             }
-            if (afterList) {
-              afterList.querySelectorAll('.image-thumb').forEach(thumb => {
-                const url = thumb.dataset.imageUrl;
-                const imageId = thumb.dataset.imageId;
-                if (url) {
-                  setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'after', url, imageId);
-                }
-              });
-            }
-          } else if (imageType === 'completed') {
-            const completedList = document.getElementById(`${imageContent.id} -completed`);
-            if (completedList) {
-              setupImageListDragAndDrop(completedList, newSectionId, 'completed', imageContent.id);
+
+            // ドラッグ&ドロップを設定
+            if (imageType === 'before_after') {
+              const beforeList = document.getElementById(`${imageContent.id} -before`);
+              const afterList = document.getElementById(`${imageContent.id} -after`);
+              if (beforeList) setupImageListDragAndDrop(beforeList, newSectionId, 'before', imageContent.id);
+              if (afterList) setupImageListDragAndDrop(afterList, newSectionId, 'after', imageContent.id);
 
               // 画像サムネイルにドラッグ&ドロップを設定
-              completedList.querySelectorAll('.image-thumb').forEach(thumb => {
-                const url = thumb.dataset.imageUrl;
-                const imageId = thumb.dataset.imageId;
-                if (url) {
-                  setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'completed', url, imageId);
-                }
-              });
+              if (beforeList) {
+                beforeList.querySelectorAll('.image-thumb').forEach(thumb => {
+                  const url = thumb.dataset.imageUrl;
+                  const imageId = thumb.dataset.imageId;
+                  if (url) {
+                    setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'before', url, imageId);
+                  }
+                });
+              }
+              if (afterList) {
+                afterList.querySelectorAll('.image-thumb').forEach(thumb => {
+                  const url = thumb.dataset.imageUrl;
+                  const imageId = thumb.dataset.imageId;
+                  if (url) {
+                    setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'after', url, imageId);
+                  }
+                });
+              }
+            } else if (imageType === 'completed') {
+              const completedList = document.getElementById(`${imageContent.id} -completed`);
+              if (completedList) {
+                setupImageListDragAndDrop(completedList, newSectionId, 'completed', imageContent.id);
+
+                // 画像サムネイルにドラッグ&ドロップを設定
+                completedList.querySelectorAll('.image-thumb').forEach(thumb => {
+                  const url = thumb.dataset.imageUrl;
+                  const imageId = thumb.dataset.imageId;
+                  if (url) {
+                    setupCleaningItemImageThumbDragAndDrop(thumb, newSectionId, imageContent.id, 'completed', url, imageId);
+                  }
+                });
+              }
             }
-          }
-        });
-      }, 0);
-    }
+          });
+        }, 0);
+      }
 
-    // ドラッグ&ドロップを設定
-    const newCard = document.querySelector(`[data - section - id="${newSectionId}"]`);
-    if (newCard) {
-      setupSectionDragAndDrop(newCard);
-    }
+      // ドラッグ&ドロップを設定
+      const newCard = document.querySelector(`[data - section - id="${newSectionId}"]`);
+      if (newCard) {
+        setupSectionDragAndDrop(newCard);
+      }
 
-    updateCleaningItemsList();
-    autoSave();
+      updateCleaningItemsList();
+      autoSave();
+    }
   }
-}
 }
   function updateSectionCardsForSelection() {
   const sectionCards = document.querySelectorAll('.section-card');
