@@ -172,7 +172,7 @@ async function loadCurrentUser() {
                      <div style="font-size:0.85rem; color:#6b7280;">${text}</div>
                      <div style="font-size:0.75rem; color:#9ca3af; margin-top:4px;">${dateStr}</div>
                   </div>
-                  <a href="#" onclick="openEditDialog('${item.id}'); return false;" style="margin-left:auto; color:#9ca3af;"><i class="fas fa-chevron-right"></i></a>
+                  <a href="/sales/schedules?open_id=${item.id}" style="margin-left:auto; color:#9ca3af;"><i class="fas fa-chevron-right"></i></a>
                </div>
              `;
         }).join('');

@@ -101,6 +101,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load Schedules
   await loadSchedules();
 
+  // Auto-open from URL param
+  const p = new URLSearchParams(window.location.search);
+  const oid = p.get('open_id');
+  if (oid) {
+    // Small delay to ensure render
+    setTimeout(() => {
+      if (typeof openEditDialog === 'function') openEditDialog(oid);
+      window.history.replaceState({}, '', window.location.pathname);
+    }, 500);
+  }
+
   setupEventListeners();
   setupEventListeners();
   setupHierarchicalSelection(); // Replaced items
