@@ -187,6 +187,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     };
+    // Helper to render HACCP info
+    const renderHaccpInfo = (schedule) => {
+        if (!schedule.haccp_instructions && !schedule.haccp_notes) return '';
+
+        const labels = {
+            'temp_control': '温度管理の徹底',
+            'cross_contamination': '交差汚染の防止',
+            'hand_washing': '手洗い・身だしなみ',
+            'cleaning_record': '清掃実施記録の確認'
+        };
+
+        const instructions = schedule.haccp_instructions || [];
+        const instructionList = instructions.length > 0
+            ? `<ul style="padding-left: 20px; margin:0; color:#059669;">` +
+            instructions.map(key => `<li>${labels[key] || key}</li>`).join('') +
+            `</ul>`
+            : '<div style="color:#6b7280;">指定なし</div>';
+
+        const haccpNotes = schedule.haccp_notes ? `<div style="margin-top:4px; font-size:0.85rem;">${schedule.haccp_notes}</div>` : '';
+
+        return `
+            <div style="margin-bottom: 12px; border: 1px dashed #10b981; padding: 8px; border-radius: 4px; background: #ecfdf5;">
+                <strong style="display:block; color:#059669; font-size:0.85rem; margin-bottom:4px;">
+                    <i class="fas fa-clipboard-check"></i> HACCP 指示事項
+                </strong>
+                ${instructionList}
+                ${haccpNotes}
+            </div>
+        `;
+    };
+
     // Populate Request Sheet based on selected schedule
     const updateRequestSheet = (schedule) => {
         const container = document.getElementById('request-sheet-content');
@@ -227,6 +258,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <strong style="display:block; color:#374151; font-size:0.85rem; margin-bottom:4px;">特記事項</strong>
                 <div style="color:#111827; white-space: pre-wrap;">${notes}</div>
             </div>
+            
+            ${renderHaccpInfo(schedule)}
+
              <div style="margin-bottom: 12px;">
                 <strong style="display:block; color:#ec4899; font-size:0.85rem; margin-bottom:4px;">注意事項 (入館ルール等)</strong>
                 <div style="color:#111827; white-space: pre-wrap; background:white; padding:8px; border:1px solid #fce7f3; border-radius:4px;">${precautions}</div>
