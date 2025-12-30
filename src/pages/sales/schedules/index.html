@@ -545,16 +545,135 @@
                   </div>
                 </div>
 
-                <div class="col-12" style="width:100%; margin-top:10px;">
-                  <label class="form-label small">清掃実施項目</label>
-                  <div class="search-box-wrapper" style="position:relative;">
-                    <input type="text" class="form-control form-control-sm" id="cleaning-items-search"
-                      placeholder="清掃メニューを検索..." style="width:100%; padding:6px;">
-                    <div id="cleaning-items-results" class="search-results-dropdown"
-                      style="display:none; position:absolute; top:100%; background:white; border:1px solid #ccc; width:100%; z-index:10;">
+                <div class="col-12" style="width:100%; margin-top:15px;">
+                  <label class="form-label small" style="font-weight:bold; color:#FF679C;">清掃実施項目（チェックリスト）</label>
+                  <div class="cleaning-checklist-container"
+                    style="background:#fff; border:1px solid #ffcae0; border-radius:6px; padding:15px; max-height:400px; overflow-y:auto;">
+
+                    <!-- Category 1 -->
+                    <div class="checklist-category mb-2">
+                      <h6 class="small text-muted border-bottom pb-1 mb-2">【排水・油脂管理】</h6>
+                      <div class="d-flex flex-wrap gap-2">
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="グリストラップ清掃">
+                          1. グリストラップ清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]"
+                            value="U字溝・グレーチング清掃"> 2. U字溝・グレーチング清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="配管高圧洗浄"> 3.
+                          配管高圧洗浄</label>
+                      </div>
+                    </div>
+
+                    <!-- Category 2 -->
+                    <div class="checklist-category mb-2">
+                      <h6 class="small text-muted border-bottom pb-1 mb-2">【換気・排気設備】</h6>
+                      <div class="d-flex flex-wrap gap-2">
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="レンジフード洗浄">
+                          4. レンジフード洗浄</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="ダクト洗浄"> 5.
+                          ダクト洗浄</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="防火シャッター清掃">
+                          6. 防火シャッター清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="換気扇洗浄"> 7.
+                          換気扇洗浄</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="排気ファン清掃">
+                          8. 排気ファン清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]"
+                            value="排気ファンベルト交換・調整"> 9. 排気ファンベルト交換・調整</label>
+                      </div>
+                    </div>
+
+                    <!-- Category 3 -->
+                    <div class="checklist-category mb-2">
+                      <h6 class="small text-muted border-bottom pb-1 mb-2">【厨房・調理関連設備】</h6>
+                      <div class="d-flex flex-wrap gap-2">
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="厨房機器洗浄">
+                          10. 厨房機器洗浄</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="壁清掃（厨房）">
+                          11. 壁清掃（厨房）</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="シンク洗浄"> 12.
+                          シンク洗浄</label>
+                      </div>
+                    </div>
+
+                    <!-- Category 4 -->
+                    <div class="checklist-category mb-2">
+                      <h6 class="small text-muted border-bottom pb-1 mb-2">【空調設備】</h6>
+                      <div class="d-flex flex-wrap gap-2">
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]"
+                            value="エアコンフィルター洗浄"> 13. エアコンフィルター洗浄</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="エアコン分解洗浄">
+                          14. エアコン分解洗浄</label>
+                      </div>
+                    </div>
+
+                    <!-- Category 5 -->
+                    <div class="checklist-category mb-2">
+                      <h6 class="small text-muted border-bottom pb-1 mb-2">【床・フロア】</h6>
+                      <div class="d-flex flex-wrap gap-2">
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="床清掃"> 15.
+                          床清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="フローリング清掃">
+                          16. フローリング清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="タイル清掃"> 17.
+                          タイル清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="カーペット清掃">
+                          18. カーペット清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="ワックスがけ">
+                          19. ワックスがけ</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="コーティング処理">
+                          20. コーティング処理</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="床面除菌"> 21.
+                          床面除菌</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="床面保護"> 22.
+                          床面保護</label>
+                      </div>
+                    </div>
+
+                    <!-- Category 6 -->
+                    <div class="checklist-category mb-0">
+                      <h6 class="small text-muted border-bottom pb-1 mb-2">【共用部・その他】</h6>
+                      <div class="d-flex flex-wrap gap-2">
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="窓清掃"> 23.
+                          窓清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="ドア清掃"> 24.
+                          ドア清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="照明器具清掃">
+                          25. 照明器具清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="換気口清掃"> 26.
+                          換気口清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="トイレ清掃"> 27.
+                          トイレ清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="手洗い場清掃">
+                          28. 手洗い場清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="鏡清掃"> 29.
+                          鏡清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="壁面清掃"> 30.
+                          壁面清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="天井清掃"> 31.
+                          天井清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="エレベーター清掃">
+                          32. エレベーター清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="階段清掃"> 33.
+                          階段清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="ゴミ箱清掃"> 34.
+                          ゴミ箱清掃</label>
+                      </div>
                     </div>
                   </div>
-                  <div id="cleaning-items-selected" class="mt-2" style="min-height:24px; padding-top:5px;"></div>
+                </div>
+
+                <!-- Keep Search for flexibility -->
+                <div class="col-12 mt-2" style="width:100%;">
+                  <details>
+                    <summary class="small text-muted" style="cursor:pointer;">その他の作業を追加（検索）</summary>
+                    <div class="search-box-wrapper mt-2" style="position:relative;">
+                      <input type="text" class="form-control form-control-sm" id="cleaning-items-search"
+                        placeholder="項目名を入力..." style="width:100%; padding:6px;">
+                      <div id="cleaning-items-results" class="search-results-dropdown"
+                        style="display:none; position:absolute; top:100%; bg:white; z-index:10;"></div>
+                    </div>
+                    <div id="cleaning-items-selected" class="mt-2"></div>
+                  </details>
                 </div>
 
                 <div class="col-12" style="width:100%;">
