@@ -4805,7 +4805,6 @@
   }
 }
 
-  };  // セクションカードの選択モード表示を更新
   function updateSectionCardsForSelection() {
   const sectionCards = document.querySelectorAll('.section-card');
   sectionCards.forEach(card => {
