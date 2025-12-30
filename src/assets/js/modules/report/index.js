@@ -21,8 +21,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.ApiServiceInstance = apiService;
 
     // Initialize UI Components
+    const haccpManager = new HaccpManager(stateManager);
+
+    // Pass haccpManager to SectionManager (which passes to SectionRenderer) or ensure global availability first
+    window.HaccpManagerInstance = haccpManager; // Keep for now as renderer checks window
+
     const tabManager = new TabManager(stateManager);
-    const sectionManager = new SectionManager(stateManager);
+    const sectionManager = new SectionManager(stateManager); // SectionRenderer is inside here
 
     // URL Parameter Handling (Restoring legacy functionality)
     const urlParams = new URLSearchParams(window.location.search);
@@ -70,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // Initialize Managers
-    const haccpManager = new HaccpManager(stateManager);
+    // const haccpManager = new HaccpManager(stateManager); // Moved up
     const imageManager = new ImageManager(stateManager);
     const previewGenerator = new PreviewGenerator();
     const submitManager = new SubmitManager(stateManager, apiService);
