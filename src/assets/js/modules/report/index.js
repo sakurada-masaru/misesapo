@@ -162,6 +162,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         scheduleSelect.disabled = false;
 
+        // Check for schedule_id in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const scheduleIdParam = urlParams.get('schedule_id');
+
+        if (scheduleIdParam) {
+            const targetOption = scheduleSelect.querySelector(`option[value="${scheduleIdParam}"]`);
+            if (targetOption) {
+                scheduleSelect.value = scheduleIdParam;
+                // Manually trigger update
+                const schedule = JSON.parse(targetOption.dataset.json);
+                console.log('[Schedule] Auto-selected from URL:', schedule);
+
+                const dateInput = document.getElementById('report-date');
+                if (dateInput && (schedule.date || schedule.scheduled_date)) {
+                    dateInput.value = schedule.date || schedule.scheduled_date;
+                }
+            }
+        }
+
         // Listen for change
         scheduleSelect.addEventListener('change', (e) => {
             const selectedOpt = scheduleSelect.options[scheduleSelect.selectedIndex];
