@@ -187,7 +187,71 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     };
+    // Populate Request Sheet based on selected schedule
+    const updateRequestSheet = (schedule) => {
+        const container = document.getElementById('request-sheet-content');
+        if (!container || !schedule) return;
 
+        const cleaningItems = schedule.cleaning_items || schedule.service_items || (schedule.service_names ? (Array.isArray(schedule.service_names) ? schedule.service_names : [schedule.service_names]) : []) || [];
+        const address = schedule.address || (schedule.store ? schedule.store.address : '') || '住所未設定';
+        const clientName = schedule.client_name || (schedule.client ? schedule.client.name : '') || '';
+
+        // Mock data or real data if available
+        const notes = schedule.notes || '特になし';
+        const precautions = schedule.precautions || '入店時、裏口のインターホンを押してください。';
+
+        const itemsHtml = cleaningItems.length > 0
+            ? cleaningItems.map(item => `<li style="margin-bottom:4px;">${typeof item === 'object' ? (item.name || item.item_name) : item}</li>`).join('')
+            : '<li>指定なし</li>';
+
+        container.innerHTML = `
+            <div style="margin-bottom: 12px;">
+                <strong style="display:block; color:#374151; font-size:0.85rem; margin-bottom:4px;">法人名</strong>
+                <div style="color:#111827;">${clientName || '---'}</div>
+            </div>
+            <div style="margin-bottom: 12px;">
+                <strong style="display:block; color:#374151; font-size:0.85rem; margin-bottom:4px;">所在地</strong>
+                <div style="color:#111827;">${address}</div>
+            </div>
+            <div style="margin-bottom: 12px;">
+                <strong style="display:block; color:#374151; font-size:0.85rem; margin-bottom:4px;">実施項目</strong>
+                <ul style="padding-left: 20px; margin:0; color:#111827;">
+                    ${itemsHtml}
+                </ul>
+            </div>
+            <div style="margin-bottom: 12px;">
+                <strong style="display:block; color:#374151; font-size:0.85rem; margin-bottom:4px;">特記事項</strong>
+                <div style="color:#111827; white-space: pre-wrap;">${notes}</div>
+            </div>
+             <div style="margin-bottom: 12px;">
+                <strong style="display:block; color:#ec4899; font-size:0.85rem; margin-bottom:4px;">注意事項 (入館ルール等)</strong>
+                <div style="color:#111827; white-space: pre-wrap; background:white; padding:8px; border:1px solid #fce7f3; border-radius:4px;">${precautions}</div>
+            </div>
+        `;
+    };
+
+    // Hook into schedule loading
+    const originalLoadSchedules = window.loadSchedules; // Assuming this function exists or we find where it is called
+    // Since loadSchedules is likely inside DOMContentLoaded or called by it, we act on 'schedule_id' detection
+
+    // Check if we have a selected schedule on load
+    const currentScheduleId = urlParams.get('schedule_id');
+    if (currentScheduleId) {
+        // Wait for apiService to fetch schedules, then find and update
+        // We can subscribe to a 'schedulesLoaded' event or just wait a bit, 
+        // OR better: In the fetchSchedules response handling.
+        // Let's use a simple poller since we don't have a clean event bus for this yet.
+        const checkSchedule = setInterval(() => {
+            if (window.osAllSchedules && window.osAllSchedules.length > 0) {
+                const schedule = window.osAllSchedules.find(s => String(s.id) === String(currentScheduleId));
+                if (schedule) {
+                    updateRequestSheet(schedule);
+                    clearInterval(checkSchedule);
+                }
+            }
+        }, 500);
+        setTimeout(() => clearInterval(checkSchedule), 10000); // 10s timeout
+    }
     window.handleDeleteSectionComment = (sectionId, idx) => {
         if (!confirm('コメントを削除しますか？')) return;
         const currentTab = stateManager.state.activeTab;
