@@ -96,15 +96,15 @@ export class SectionRenderer {
                         </div>
 
                         <!-- Comments Area -->
-                    <div id="comments-${section.id}" style="margin-top: 8px;">
-                        ${(section.comments || []).map((comment, idx) => `
-                               <div style="background: #fdfeba; padding: 6px 10px; border-radius: 4px; margin-bottom: 4px; font-size: 0.9rem; display: flex; align-items: center; justify-content: space-between;">
-                                   <span>${escapeHtml(comment)}</span>
-                                   <button onclick="window.handleDeleteSectionComment('${section.id}', ${idx})" style="border: none; background: none; color: #aaa; cursor: pointer;">&times;</button>
-                               </div>
-                           `).join('')}
-                    </div>
-                `;
+                        <div id="comments-${section.id}" style="margin-top: 8px;">
+                            ${(section.comments || []).map((comment, idx) => `
+                                <div style="background: #fdfeba; padding: 6px 10px; border-radius: 4px; margin-bottom: 4px; font-size: 0.9rem; display: flex; align-items: center; justify-content: space-between;">
+                                    <span>${escapeHtml(comment)}</span>
+                                    <button onclick="window.handleDeleteSectionComment('${section.id}', ${idx})" style="border: none; background: none; color: #aaa; cursor: pointer;">&times;</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
             })()}
                 </div>
             </div>
