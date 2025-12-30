@@ -85,8 +85,9 @@
     }
   ];
   let sections = {}; // セクションデータを保持（タブごとに分ける）
-  let sectionsByTab = { new: {}, proposal: {}, edit: {} }; // タブごとのセクションデータ
+  let sectionsByTab = { new: {}, proposal: {} }; // タブごとのセクションデータ
   let currentActiveTab = 'new'; // 現在アクティブなタブを追跡
+  let currentPreviewMode = 'normal'; // プレビューモード: 'normal' or 'formal'
 
   // 画像倉庫用
   let warehouseImages = [];
@@ -3122,12 +3123,17 @@
     if (addWorkContentBtn) addWorkContentBtn.addEventListener('click', addWorkContentSection);
 
     // プレビューボタンのイベントリスナー
+    // プレビューボタンのイベントリスナー
     const previewBtn = document.getElementById('preview-btn');
     const previewBtnProposal = document.getElementById('preview-btn-proposal');
+    const formalPreviewBtn = document.getElementById('formal-preview-btn');
+    const formalPreviewBtnProposal = document.getElementById('formal-preview-btn-proposal');
     const previewSaveConfirmBtn = document.getElementById('preview-save-confirm-btn');
     const previewSaveDialogClose = document.getElementById('preview-save-dialog-close');
     const previewSaveDialogCancel = document.getElementById('preview-save-dialog-cancel');
     const previewSaveDialog = document.getElementById('preview-save-dialog');
+
+    // ... (dialog related code omitted for brevity if unchanged, but I need to include context to replace correctly) ...
 
     // ダイアログを閉じる関数
     const closePreviewSaveDialog = () => {
@@ -3141,87 +3147,78 @@
     // 保存確認ダイアログを表示する関数
     const showPreviewSaveDialog = () => {
       console.log('[Preview] showPreviewSaveDialog called');
-      console.log('[Preview] previewSaveDialog element:', previewSaveDialog);
       if (previewSaveDialog) {
         try {
           previewSaveDialog.showModal();
-          console.log('[Preview] Dialog shown successfully');
         } catch (error) {
           console.error('[Preview] Error showing dialog:', error);
         }
-      } else {
-        console.warn('[Preview] previewSaveDialog element not found');
       }
     };
 
-    // ダイアログの閉じるボタン
-    if (previewSaveDialogClose) {
-      previewSaveDialogClose.addEventListener('click', closePreviewSaveDialog);
-    }
-
-    // キャンセルボタン
-    if (previewSaveDialogCancel) {
-      previewSaveDialogCancel.addEventListener('click', closePreviewSaveDialog);
-    }
-
-    // ダイアログの背景クリックで閉じる（SP対応）
+    // ダイアログのイベントリスナー (Close, Cancel, Background click)
+    if (previewSaveDialogClose) previewSaveDialogClose.addEventListener('click', closePreviewSaveDialog);
+    if (previewSaveDialogCancel) previewSaveDialogCancel.addEventListener('click', closePreviewSaveDialog);
     if (previewSaveDialog) {
-      // 背景クリックで閉じる
-      previewSaveDialog.addEventListener('click', (e) => {
-        if (e.target === previewSaveDialog) {
-          closePreviewSaveDialog();
-        }
-      });
-
-      // ESCキーで閉じる
-      previewSaveDialog.addEventListener('cancel', (e) => {
-        e.preventDefault();
-        closePreviewSaveDialog();
-      });
-
-      // SP画面でのタッチイベント対応
-      previewSaveDialog.addEventListener('touchstart', (e) => {
-        if (e.target === previewSaveDialog) {
-          e.preventDefault();
-          closePreviewSaveDialog();
-        }
-      }, { passive: false });
+      previewSaveDialog.addEventListener('click', (e) => { if (e.target === previewSaveDialog) closePreviewSaveDialog(); });
+      previewSaveDialog.addEventListener('cancel', (e) => { e.preventDefault(); closePreviewSaveDialog(); });
+      previewSaveDialog.addEventListener('touchstart', (e) => { if (e.target === previewSaveDialog) { e.preventDefault(); closePreviewSaveDialog(); } }, { passive: false });
     }
 
     if (previewBtn) {
-      console.log('[Preview] Preview button found, adding event listener');
       previewBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        console.log('[Preview] Preview button clicked');
+        currentPreviewMode = 'normal';
         showPreviewSaveDialog();
       });
     }
-    // レポート作成画面以外では存在しないため、警告を出さない
+
     if (previewBtnProposal) {
-      console.log('[Preview] Preview button (proposal) found, adding event listener');
       previewBtnProposal.addEventListener('click', (e) => {
         e.preventDefault();
-        console.log('[Preview] Preview button (proposal) clicked');
+        currentPreviewMode = 'normal';
+        showPreviewSaveDialog();
+      });
+    }
+
+    if (formalPreviewBtn) {
+      formalPreviewBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPreviewMode = 'formal';
+        showPreviewSaveDialog();
+      });
+    }
+
+    if (formalPreviewBtnProposal) {
+      formalPreviewBtnProposal.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPreviewMode = 'formal';
         showPreviewSaveDialog();
       });
     }
 
     // 保存してプレビューを表示
     if (previewSaveConfirmBtn) {
-      console.log('[Preview] Preview save confirm button found, adding event listener');
       previewSaveConfirmBtn.addEventListener('click', async () => {
-        console.log('[Preview] Preview save confirm button clicked');
         closePreviewSaveDialog();
 
         // レポートを一時保存してからプレビューを表示
         try {
           await saveReportForPreview();
-          console.log('[Preview] Report saved for preview');
-          if (window.openPreviewModal) {
-            console.log('[Preview] Opening preview modal');
-            await window.openPreviewModal();
+          console.log('[Preview] Report saved for preview, mode:', currentPreviewMode);
+
+          if (currentPreviewMode === 'formal') {
+            if (window.openFormalReportPreview) {
+              await window.openFormalReportPreview();
+            } else {
+              console.error('[Preview] openFormalReportPreview function not found');
+            }
           } else {
-            console.error('[Preview] openPreviewModal function not found');
+            if (window.openPreviewModal) {
+              await window.openPreviewModal();
+            } else {
+              console.error('[Preview] openPreviewModal function not found');
+            }
           }
         } catch (error) {
           console.error('[Preview] Error in preview flow:', error);
@@ -9592,6 +9589,186 @@ function escapeHtml(str) {
       }
     }, 100);
   }
+
+  // 正式レポート発行（印刷用ビュー）
+  window.openFormalReportPreview = async function () {
+    const brandName = document.getElementById('report-brand-search')?.value ||
+      document.getElementById('report-brand-name')?.value || '';
+    const storeName = document.getElementById('report-store-search')?.value ||
+      document.getElementById('report-store-name')?.value || '';
+    const date = document.getElementById('report-date')?.value || '';
+
+    // Sort sections by index
+    const sortedSectionKeys = Object.keys(sections).sort((a, b) => {
+      const numA = parseInt(a.replace('section-', ''));
+      const numB = parseInt(b.replace('section-', ''));
+      return numA - numB;
+    });
+
+    let sectionsHtml = '';
+
+    sortedSectionKeys.forEach(key => {
+      const section = sections[key];
+      if (!section) return;
+
+      // Photos
+      const beforePhotos = [];
+      const afterPhotos = [];
+      const completedPhotos = [];
+
+      if (section.imageContents) {
+        section.imageContents.forEach(ic => {
+          if (ic.photos) {
+            if (ic.photos.before) beforePhotos.push(...ic.photos.before);
+            if (ic.photos.after) afterPhotos.push(...ic.photos.after);
+            if (ic.photos.completed) completedPhotos.push(...ic.photos.completed);
+          }
+        });
+      }
+
+      // Cleaning Item Section
+      if (section.type === 'cleaning') {
+        const title = section.item_name === '__other__' ? 'その他' : section.item_name;
+
+        // Photos Grid
+        const hasBeforeAfter = beforePhotos.length > 0 || afterPhotos.length > 0;
+        const hasCompleted = completedPhotos.length > 0;
+
+        let photosHtml = '';
+
+        if (hasBeforeAfter) {
+          const maxLen = Math.max(beforePhotos.length, afterPhotos.length);
+          for (let i = 0; i < maxLen; i++) {
+            const before = beforePhotos[i];
+            const after = afterPhotos[i];
+
+            photosHtml += `
+                     <div class="photo-pair">
+                         <div class="photo-box">
+                             <div class="photo-label">作業前</div>
+                             ${before ? `<img src="${before.blobUrl || before.warehouseUrl || before.url}" class="photo-img">` : '<div class="no-photo">写真なし</div>'}
+                         </div>
+                         <div class="photo-arrow">➡</div>
+                         <div class="photo-box">
+                             <div class="photo-label">作業後</div>
+                             ${after ? `<img src="${after.blobUrl || after.warehouseUrl || after.url}" class="photo-img">` : '<div class="no-photo">写真なし</div>'}
+                         </div>
+                     </div>`;
+          }
+        }
+
+        if (hasCompleted) {
+          completedPhotos.forEach(p => {
+            photosHtml += `
+                     <div class="photo-single">
+                         <div class="photo-box">
+                             <div class="photo-label">完了</div>
+                             <img src="${p.blobUrl || p.warehouseUrl || p.url}" class="photo-img">
+                         </div>
+                     </div>`;
+          });
+        }
+
+        // Comments / Subtitles / TextFields
+        let textHtml = '';
+        if (section.subtitles) {
+          section.subtitles.forEach(s => textHtml += `<div class="section-subtitle">■ ${escapeHtml(s.value)}</div>`);
+        }
+        if (section.comments) {
+          section.comments.forEach(c => textHtml += `<div class="section-comment">${escapeHtml(c.value)}</div>`);
+        }
+
+        if (photosHtml || textHtml) {
+          sectionsHtml += `
+                 <div class="report-section">
+                     <div class="section-heading">${escapeHtml(title)}</div>
+                     ${textHtml}
+                     <div class="photos-container">${photosHtml}</div>
+                 </div>`;
+        }
+      }
+    });
+
+    const html = `
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+      <meta charset="UTF-8">
+      <title>作業実施報告書 - ${escapeHtml(brandName)} ${escapeHtml(storeName)}</title>
+      <style>
+        @page { size: A4; margin: 15mm; }
+        body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; color: #333; line-height: 1.6; padding: 20px; max-width: 210mm; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 30px; }
+        .title { font-size: 24px; font-weight: bold; }
+        .meta { font-size: 12px; text-align: right; }
+        .store-info { border: 1px solid #333; padding: 15px; margin-bottom: 30px; background: #f8f8f8; }
+        .store-name { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        
+        .report-section { margin-bottom: 30px; break-inside: avoid; }
+        .section-heading { font-size: 16px; font-weight: bold; background: #eee; padding: 5px 10px; border-left: 5px solid #666; margin-bottom: 10px; }
+        .section-subtitle { font-weight: bold; margin: 5px 0; }
+        .section-comment { margin-bottom: 10px; white-space: pre-wrap; font-size: 0.95em;}
+        
+        .photos-container { margin-top: 10px; }
+        .photo-pair { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .photo-single { margin-bottom: 15px; }
+        .photo-box { flex: 1; border: 1px solid #ddd; padding: 5px; text-align: center; background: white; }
+        .photo-img { width: 100%; height: 200px; object-fit: contain; background: #f0f0f0; }
+        .photo-label { font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #555; }
+        .photo-arrow { font-size: 20px; color: #999; }
+        .no-photo { height: 200px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px; background: #f9f9f9; }
+        
+        @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+            .report-section { break-inside: avoid; }
+        }
+        .footer { margin-top: 50px; display: flex; justify-content: flex-end; break-inside: avoid; }
+        .signature-box { border: 1px solid #333; width: 80px; height: 80px; position: relative; margin-left: 20px; }
+        .signature-title { position: absolute; top: 0; left: 0; width: 100%; border-bottom: 1px solid #333; text-align: center; font-size: 10px; background: #eee; padding: 2px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">作業実施報告書</div>
+        <div class="meta">
+          <div>報告日: ${new Date().toLocaleDateString('ja-JP')}</div>
+          <div>株式会社ミセサポ</div>
+        </div>
+      </div>
+      
+      <div class="store-info">
+        <div class="store-name">${escapeHtml(storeName)} 様</div>
+        <div>ブランド: ${escapeHtml(brandName)}</div>
+        <div>作業実施日: ${escapeHtml(date)}</div>
+      </div>
+      
+      <div class="content">
+        ${sectionsHtml || '<p>報告内容がありません。</p>'}
+      </div>
+
+      <div class="footer">
+        <div style="margin-right: 20px; align-self: flex-end;">確認欄:</div>
+        <div class="signature-box">
+          <div class="signature-title">施設確認印</div>
+        </div>
+      </div>
+      
+      <script>
+        window.onload = function() { setTimeout(function() { window.print(); }, 1000); };
+      </script>
+    </body>
+    </html>
+    `;
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    } else {
+      alert('ポップアップがブロックされました。ブラウザの設定を確認してください。');
+    }
+  };
 
   document.addEventListener('DOMContentLoaded', () => {
     renderHaccpLauncher();
