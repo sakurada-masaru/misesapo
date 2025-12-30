@@ -159,6 +159,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         stateManager.updateCustomContent(currentTab, sectionId, contentId, updates);
     };
 
+    window.handleSectionLayoutModeChange = (sectionId, mode) => {
+        const currentTab = stateManager.state.activeTab;
+        stateManager.updateSection(currentTab, sectionId, { layoutMode: mode });
+    };
+
     window.handleCustomImageUpload = async (input, sectionId, contentId) => {
         if (input.files && input.files[0]) {
             const file = input.files[0];

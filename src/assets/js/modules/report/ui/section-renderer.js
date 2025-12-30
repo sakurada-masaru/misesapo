@@ -22,6 +22,9 @@ export class SectionRenderer {
 
     renderCleaningSection(section) {
         const title = section.item_name || '清掃項目';
+        // Default layout mode is 'compare'
+        const layoutMode = section.layoutMode || 'compare';
+
         return `
             <div class="section-card" data-section-id="${section.id}">
                 <div class="section-header">
@@ -42,7 +45,7 @@ export class SectionRenderer {
                    <!-- HACCP Fields -->
                    ${window.HaccpManagerInstance ? window.HaccpManagerInstance.renderHaccpFields(section.id, section.item_name, section.haccp_info) : ''}
                    
-                   <!-- Dynamic Image Labels -->
+                   <!-- Dynamic Image Labels & Layout Switcher -->
                    ${(() => {
                 let beforeLabel = '作業前';
                 let afterLabel = '作業後';
@@ -52,13 +55,32 @@ export class SectionRenderer {
                     afterLabel = '捕獲・施工後';
                 }
 
-                return `
+                const pinkColor = '#ec4899'; // Pink accent
+
+                const switchButtons = `
+                    <div style="display: flex; gap: 4px; border: 1px solid #ddd; border-radius: 4px; padding: 2px; background: #fff;">
+                        <button type="button" onclick="window.handleSectionLayoutModeChange('${section.id}', 'compare')" 
+                            style="border: none; background: ${layoutMode === 'compare' ? pinkColor : 'transparent'}; color: ${layoutMode === 'compare' ? 'white' : '#666'}; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8rem;" title="作業前・作業後">
+                            <i class="fas fa-columns"></i>
+                        </button>
+                        <button type="button" onclick="window.handleSectionLayoutModeChange('${section.id}', 'single')" 
+                            style="border: none; background: ${layoutMode === 'single' ? pinkColor : 'transparent'}; color: ${layoutMode === 'single' ? 'white' : '#666'}; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8rem;" title="施工後のみ">
+                            <i class="fas fa-image"></i>
+                        </button>
+                    </div>
+                `;
+
+                let contentHtml = '';
+
+                if (layoutMode === 'compare') {
+                    // Pattern 1: Compare (Before -> After)
+                    contentHtml = `
                        <div class="cleaning-item-image-area" style="display:flex; gap:10px; margin-top:10px;">
                             <!-- Before Drop Zone -->
                             <div class="image-list" data-category="before" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 120px; padding: 10px; background: #fafafa; position:relative; overflow:hidden; display: flex; flex-direction: column; align-items: center;">
                                 <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                     <div style="font-size:0.8rem; font-weight:bold; color:#555;">${beforeLabel}</div>
-                                    <label style="cursor:pointer; background:#3b82f6; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; display:flex; align-items:center;">
+                                    <label style="cursor:pointer; background:${pinkColor}; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; display:flex; align-items:center;">
                                         <i class="fas fa-camera" style="margin-right:4px;"></i> 追加
                                         <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.handleSectionImageUpload(this, '${section.id}', 'before')">
                                     </label>
@@ -74,7 +96,7 @@ export class SectionRenderer {
                             <div class="image-list" data-category="after" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 120px; padding: 10px; background: #fafafa; position:relative; overflow:hidden; display: flex; flex-direction: column; align-items: center;">
                                 <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                     <div style="font-size:0.8rem; font-weight:bold; color:#555;">${afterLabel}</div>
-                                    <label style="cursor:pointer; background:#10b981; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; display:flex; align-items:center;">
+                                    <label style="cursor:pointer; background:${pinkColor}; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; display:flex; align-items:center;">
                                         <i class="fas fa-camera" style="margin-right:4px;"></i> 追加
                                         <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.handleSectionImageUpload(this, '${section.id}', 'after')">
                                     </label>
@@ -84,7 +106,34 @@ export class SectionRenderer {
                                 </div>
                             </div>
                         </div>
+                    `;
+                } else {
+                    // Pattern 2: Single (After/Construction only)
+                    contentHtml = `
+                       <div class="cleaning-item-image-area" style="margin-top:10px;">
+                            <!-- After Drop Zone Only (Full Width) -->
+                            <div class="image-list" data-category="after" style="width:100%; border: 2px dashed #ddd; border-radius: 6px; min-height: 150px; padding: 15px; background: #fafafa; position:relative; overflow:hidden; display: flex; flex-direction: column; align-items: center;">
+                                <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                    <div style="font-size:0.9rem; font-weight:bold; color:#555;">施工後</div>
+                                    <label style="cursor:pointer; background:${pinkColor}; color:white; padding:6px 12px; border-radius:4px; font-size:0.85rem; display:flex; align-items:center;">
+                                        <i class="fas fa-camera" style="margin-right:6px;"></i> 写真を追加
+                                        <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.handleSectionImageUpload(this, '${section.id}', 'after')">
+                                    </label>
+                                </div>
+                                <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; width:100%;">
+                                    ${this._renderPhotos(section, 'after')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
 
+                return `
+                        <div style="display:flex; justify-content:flex-end; margin-bottom:0px;">
+                            ${switchButtons}
+                        </div>
+                        ${contentHtml}
+                        
                         <!-- Custom Contents Area -->
                         <div id="custom-contents-${section.id}" style="margin-top: 12px;">
                             ${(section.customContents || []).map(content => {
@@ -92,7 +141,7 @@ export class SectionRenderer {
                         return `
                                         <div class="custom-content-block" style="background:#f9fafb; padding:10px; border-radius:6px; margin-bottom:8px; border:1px solid #e5e7eb; position:relative;">
                                             <button onclick="window.handleRemoveCustomContent('${section.id}', '${content.id}')" style="position:absolute; top:4px; right:4px; border:none; background:none; color:#9ca3af; cursor:pointer;">&times;</button>
-                                            <label style="font-size:0.75rem; color:#6b7280; display:block; margin-bottom:4px;">コメント・特記事項</label>
+                                            <label style="font-size:0.75rem; color:${pinkColor}; display:block; margin-bottom:4px;">コメント・特記事項</label>
                                             <textarea class="form-input" style="width:100%; min-height:60px; font-size:0.9rem;"
                                                 onchange="window.handleUpdateCustomContent('${section.id}', '${content.id}', { value: this.value })">${escapeHtml(content.value || '')}</textarea>
                                         </div>
@@ -104,7 +153,7 @@ export class SectionRenderer {
                         return `
                                         <div class="custom-content-block" style="background:#f9fafb; padding:10px; border-radius:6px; margin-bottom:8px; border:1px solid #e5e7eb; position:relative;">
                                             <button onclick="window.handleRemoveCustomContent('${section.id}', '${content.id}')" style="position:absolute; top:4px; right:4px; border:none; background:none; color:#9ca3af; cursor:pointer;">&times;</button>
-                                            <label style="font-size:0.75rem; color:#6b7280; display:block; margin-bottom:4px;">追加画像</label>
+                                            <label style="font-size:0.75rem; color:${pinkColor}; display:block; margin-bottom:4px;">追加画像</label>
                                             
                                             ${!src ? `
                                                 <label style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100px; border:2px dashed #d1d5db; border-radius:6px; cursor:pointer; background:white;">
@@ -131,11 +180,11 @@ export class SectionRenderer {
 
                         <!-- Extra Actions: Add Content -->
                         <div style="margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px;">
-                            <button type="button" onclick="window.handleAddCustomContent('${section.id}', 'text')" style="background: none; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: #6b7280; cursor: pointer;">
-                                <i class="fas fa-comment-dots"></i> コメント追加
+                            <button type="button" onclick="window.handleAddCustomContent('${section.id}', 'text')" style="background: white; border: 1px solid ${pinkColor}; border-radius: 4px; padding: 6px 12px; font-size: 0.8rem; color: ${pinkColor}; cursor: pointer; display:flex; align-items:center;">
+                                <i class="fas fa-comment-dots" style="margin-right:4px;"></i> コメント追加
                             </button>
-                            <button type="button" onclick="window.handleAddCustomContent('${section.id}', 'image')" style="background: none; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: #6b7280; cursor: pointer;">
-                                <i class="fas fa-image"></i> 画像追加
+                            <button type="button" onclick="window.handleAddCustomContent('${section.id}', 'image')" style="background: ${pinkColor}; border: 1px solid ${pinkColor}; border-radius: 4px; padding: 6px 12px; font-size: 0.8rem; color: white; cursor: pointer; display:flex; align-items:center;">
+                                <i class="fas fa-camera" style="margin-right:4px;"></i> 画像追加
                             </button>
                         </div>
                     `;
