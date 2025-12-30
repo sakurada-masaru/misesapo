@@ -238,19 +238,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentScheduleId = urlParams.get('schedule_id');
     if (currentScheduleId) {
         // Wait for apiService to fetch schedules, then find and update
-        // We can subscribe to a 'schedulesLoaded' event or just wait a bit, 
-        // OR better: In the fetchSchedules response handling.
-        // Let's use a simple poller since we don't have a clean event bus for this yet.
         const checkSchedule = setInterval(() => {
-            if (window.osAllSchedules && window.osAllSchedules.length > 0) {
-                const schedule = window.osAllSchedules.find(s => String(s.id) === String(currentScheduleId));
+            // Check global variable OR state manager OR if loadSchedules has populated the select dropdown
+            const schedules = window.osAllSchedules || (stateManager.state.schedules) || [];
+
+            if (schedules.length > 0) {
+                const schedule = schedules.find(s => String(s.id) === String(currentScheduleId));
                 if (schedule) {
                     updateRequestSheet(schedule);
                     clearInterval(checkSchedule);
                 }
             }
-        }, 500);
-        setTimeout(() => clearInterval(checkSchedule), 10000); // 10s timeout
+        }, 300); // Check every 300ms
+        setTimeout(() => clearInterval(checkSchedule), 15000); // 15s timeout
     }
     window.handleDeleteSectionComment = (sectionId, idx) => {
         if (!confirm('コメントを削除しますか？')) return;
