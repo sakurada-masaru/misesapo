@@ -42,37 +42,50 @@ export class SectionRenderer {
                    <!-- HACCP Fields -->
                    ${window.HaccpManagerInstance ? window.HaccpManagerInstance.renderHaccpFields(section.id, section.item_name, section.haccp_info) : ''}
                    
-                   <div class="cleaning-item-image-area" style="display:flex; gap:10px; margin-top:10px;">
-                        <!-- Before Drop Zone -->
-                        <div class="image-list" data-category="before" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 120px; padding: 10px; background: #fafafa; position:relative; overflow:hidden;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                                <div style="font-size:0.8rem; font-weight:bold; color:#555;">作業前</div>
-                                <label style="cursor:pointer; background:#3b82f6; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; display:flex; align-items:center;">
-                                    <i class="fas fa-camera" style="margin-right:4px;"></i> 追加
-                                    <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.handleSectionImageUpload(this, '${section.id}', 'before')">
-                                </label>
-                            </div>
-                            <div style="display:flex; flex-wrap:wrap;">
-                                ${this._renderPhotos(section, 'before')}
-                            </div>
-                        </div>
-                        
-                        <div style="align-self:center; font-size:1.5rem; color:#ccc;">➡</div>
+                   <!-- Dynamic Image Labels -->
+                   ${(() => {
+                let beforeLabel = '作業前';
+                let afterLabel = '作業後';
+                // Determine if Pest Control
+                if (section.item_name && (section.item_name.includes('駆除') || section.item_name.includes('防除') || section.item_name.includes('捕獲'))) {
+                    beforeLabel = '設置箇所・状況';
+                    afterLabel = '捕獲・施工後';
+                }
 
-                        <!-- After Drop Zone -->
-                        <div class="image-list" data-category="after" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 120px; padding: 10px; background: #fafafa; position:relative; overflow:hidden;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                                <div style="font-size:0.8rem; font-weight:bold; color:#555;">作業後</div>
-                                <label style="cursor:pointer; background:#10b981; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; display:flex; align-items:center;">
-                                    <i class="fas fa-camera" style="margin-right:4px;"></i> 追加
-                                    <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.handleSectionImageUpload(this, '${section.id}', 'after')">
-                                </label>
+                return `
+                       <div class="cleaning-item-image-area" style="display:flex; gap:10px; margin-top:10px;">
+                            <!-- Before Drop Zone -->
+                            <div class="image-list" data-category="before" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 120px; padding: 10px; background: #fafafa; position:relative; overflow:hidden;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                    <div style="font-size:0.8rem; font-weight:bold; color:#555;">${beforeLabel}</div>
+                                    <label style="cursor:pointer; background:#3b82f6; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; display:flex; align-items:center;">
+                                        <i class="fas fa-camera" style="margin-right:4px;"></i> 追加
+                                        <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.handleSectionImageUpload(this, '${section.id}', 'before')">
+                                    </label>
+                                </div>
+                                <div style="display:flex; flex-wrap:wrap;">
+                                    ${this._renderPhotos(section, 'before')}
+                                </div>
                             </div>
-                             <div style="display:flex; flex-wrap:wrap;">
-                                ${this._renderPhotos(section, 'after')}
+                            
+                            <div style="align-self:center; font-size:1.5rem; color:#ccc;">➡</div>
+
+                            <!-- After Drop Zone -->
+                            <div class="image-list" data-category="after" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 120px; padding: 10px; background: #fafafa; position:relative; overflow:hidden;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                    <div style="font-size:0.8rem; font-weight:bold; color:#555;">${afterLabel}</div>
+                                    <label style="cursor:pointer; background:#10b981; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; display:flex; align-items:center;">
+                                        <i class="fas fa-camera" style="margin-right:4px;"></i> 追加
+                                        <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.handleSectionImageUpload(this, '${section.id}', 'after')">
+                                    </label>
+                                </div>
+                                 <div style="display:flex; flex-wrap:wrap;">
+                                    ${this._renderPhotos(section, 'after')}
+                                </div>
                             </div>
-                        </div>
-                   </div>
+                       </div>
+                       `;
+            })()}
                 </div>
             </div>
         `;

@@ -69,6 +69,14 @@ export class HaccpManager {
                     { id: 'h-stairs', name: '階段', options: ['清掃'] },
                     { id: 'h-trash', name: 'ゴミ箱', options: ['清掃'] }
                 ]
+            },
+            {
+                category: '害虫防除',
+                items: [
+                    { id: 'h-pest-roach', name: 'ゴキブリ/チョウバエ駆除', options: ['駆除', '防除施工', '調査'] },
+                    { id: 'h-pest-rat', name: 'ネズミ駆除', options: ['駆除', '防除施工', '調査'] },
+                    { id: 'h-pest-all', name: '害虫駆除', options: ['駆除', '防除施工'] }
+                ]
             }
         ];
     }
@@ -82,14 +90,15 @@ export class HaccpManager {
         if (!itemName) return null;
 
         for (const cat of this.HACCP_CONFIG) {
-            const item = cat.items.find(it => it.name === itemName);
+            // Partial match for robustness (e.g. "エアコンフィルター洗浄" matches "エアコンフィルター")
+            // But prefer exact match if possible, or "includes" logic
+            const item = cat.items.find(it => itemName.includes(it.name));
             if (item) {
                 return { item, category: cat.category };
             }
         }
 
         // Fallback for items that need consistent form fields but aren't strictly in the config
-        // "Generic Form" behavior from legacy code
         return {
             item: {
                 id: null, // No specific ID
@@ -108,6 +117,7 @@ export class HaccpManager {
         if (!config) return '';
 
         const item = config.item;
+        const isPestControl = config.category === '害虫防除';
 
         // Data extraction
         const savedWorkType = currentData.work_type;
@@ -129,8 +139,13 @@ export class HaccpManager {
             `;
         }).join('');
 
-        // Radio buttons for Abnormalities
-        const abnormalities = ['異常なし', '破損', '汚損', '異音', '水漏れ', '詰まり', 'その他'];
+        // Radio buttons for Abnormalities or Pest Status
+        const abnormalities = isPestControl
+            ? ['生息なし', '生息あり(少量)', '生息あり(多量)', '死骸確認', 'その他']
+            : ['異常なし', '破損', '汚損', '異音', '水漏れ', '詰まり', 'その他'];
+
+        const labelText = isPestControl ? '生息状況・調査結果' : '異常の有無・状態';
+
         const abnormalHtml = abnormalities.map((abn, idx) => {
             const isChecked = savedAbnormal ? (savedAbnormal === abn) : (idx === 0);
             return `
@@ -153,8 +168,9 @@ export class HaccpManager {
                     </div>
 
                     <!-- Abnormalities -->
+                    <!-- Abnormalities -->
                     <div class="haccp-opt-row" style="margin-bottom:12px;">
-                        <span style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:6px;">異常の有無・状態</span>
+                        <span style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:6px;">${labelText}</span>
                         <div style="display:flex; flex-wrap:wrap; gap:8px;">
                             ${abnormalHtml}
                         </div>
