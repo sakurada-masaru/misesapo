@@ -4804,7 +4804,7 @@
     autoSave();
   }
 }
-
+}
   function updateSectionCardsForSelection() {
   const sectionCards = document.querySelectorAll('.section-card');
   sectionCards.forEach(card => {
