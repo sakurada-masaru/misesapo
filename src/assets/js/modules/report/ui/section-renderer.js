@@ -85,16 +85,6 @@ export class SectionRenderer {
                             </div>
                         </div>
 
-                        <!-- Extra Actions: Add Content -->
-                        <div style="margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px;">
-                            <button type="button" onclick="window.handleAddCustomContent('${section.id}', 'text')" style="background: none; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: #6b7280; cursor: pointer;">
-                                <i class="fas fa-comment-dots"></i> コメント追加
-                            </button>
-                            <button type="button" onclick="window.handleAddCustomContent('${section.id}', 'image')" style="background: none; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: #6b7280; cursor: pointer;">
-                                <i class="fas fa-image"></i> 画像追加
-                            </button>
-                        </div>
-
                         <!-- Custom Contents Area -->
                         <div id="custom-contents-${section.id}" style="margin-top: 12px;">
                             ${(section.customContents || []).map(content => {
@@ -137,6 +127,16 @@ export class SectionRenderer {
                     }
                     return '';
                 }).join('')}
+                        </div>
+
+                        <!-- Extra Actions: Add Content -->
+                        <div style="margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px;">
+                            <button type="button" onclick="window.handleAddCustomContent('${section.id}', 'text')" style="background: none; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: #6b7280; cursor: pointer;">
+                                <i class="fas fa-comment-dots"></i> コメント追加
+                            </button>
+                            <button type="button" onclick="window.handleAddCustomContent('${section.id}', 'image')" style="background: none; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: #6b7280; cursor: pointer;">
+                                <i class="fas fa-image"></i> 画像追加
+                            </button>
                         </div>
                     `;
             })()}
