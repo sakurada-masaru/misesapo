@@ -959,19 +959,37 @@ function openAddDialog(dateStr) {
   // Set Date
   if (dateStr) document.getElementById('schedule-date').value = dateStr;
 
-  // Clear Store Selection
-  document.getElementById('schedule-store').value = '';
-  document.getElementById('schedule-store-search').value = '';
+  // Clear Store Selection (Hierarchical)
+  const hiddenStore = document.getElementById('schedule-store');
+  if (hiddenStore) hiddenStore.value = '';
 
-  // Clear store details fields
-  const detailsSection = document.getElementById('selected-store-details');
-  if (detailsSection) detailsSection.style.display = 'none';
-  const clientNameEl = document.getElementById('schedule-client-name');
-  if (clientNameEl) clientNameEl.value = '';
-  const brandNameEl = document.getElementById('schedule-brand-name');
-  if (brandNameEl) brandNameEl.value = '';
-  const storeNameEl = document.getElementById('schedule-store-name');
-  if (storeNameEl) storeNameEl.value = '';
+  // Reset Dropdowns
+  const clientSelect = document.getElementById('modal-select-client');
+  const brandSelect = document.getElementById('modal-select-brand');
+  const storeSelect = document.getElementById('modal-select-store');
+
+  if (clientSelect) clientSelect.value = '';
+  if (brandSelect) {
+    brandSelect.innerHTML = '<option value="">先に法人を選択</option>';
+    brandSelect.disabled = true;
+    brandSelect.value = '';
+  }
+  if (storeSelect) {
+    storeSelect.innerHTML = '<option value="">先にブランドを選択</option>';
+    storeSelect.disabled = true;
+    storeSelect.value = '';
+  }
+
+  // Clear Info Display
+  const infoDisplay = document.getElementById('modal-store-info-display');
+  if (infoDisplay) infoDisplay.style.display = 'none';
+  if (document.getElementById('modal-display-address')) document.getElementById('modal-display-address').textContent = '-';
+  if (document.getElementById('modal-display-phone')) document.getElementById('modal-display-phone').textContent = '-';
+
+  // Remove old search logic references
+  // The following elements were removed in the refactor:
+  // schedule-store-search, selected-store-details, schedule-client-name, etc.
+  // We can safely remove lines trying to clear them.
 
   // Reset Karte Fields
   resetSurveyFields();
