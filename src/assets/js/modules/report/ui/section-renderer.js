@@ -79,7 +79,7 @@ export class SectionRenderer {
                             <!-- Before Drop Zone -->
                             <div class="image-list" data-category="before" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 120px; padding: 10px; background: #fafafa; position:relative; overflow:hidden; display: flex; flex-direction: column; align-items: center;">
                                 <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                                    <div style="font-size:0.8rem; font-weight:bold; color:#555;">${beforeLabel}</div>
+                                    <div style="font-size:0.8rem; font-weight:bold; color:${pinkColor};">${beforeLabel}</div>
                                     <label style="cursor:pointer; background:${pinkColor}; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; display:flex; align-items:center;">
                                         <i class="fas fa-camera" style="margin-right:4px;"></i> 追加
                                         <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.handleSectionImageUpload(this, '${section.id}', 'before')">
@@ -95,7 +95,7 @@ export class SectionRenderer {
                             <!-- After Drop Zone -->
                             <div class="image-list" data-category="after" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 120px; padding: 10px; background: #fafafa; position:relative; overflow:hidden; display: flex; flex-direction: column; align-items: center;">
                                 <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                                    <div style="font-size:0.8rem; font-weight:bold; color:#555;">${afterLabel}</div>
+                                    <div style="font-size:0.8rem; font-weight:bold; color:${pinkColor};">${afterLabel}</div>
                                     <label style="cursor:pointer; background:${pinkColor}; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; display:flex; align-items:center;">
                                         <i class="fas fa-camera" style="margin-right:4px;"></i> 追加
                                         <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.handleSectionImageUpload(this, '${section.id}', 'after')">
@@ -114,7 +114,7 @@ export class SectionRenderer {
                             <!-- After Drop Zone Only (Full Width) -->
                             <div class="image-list" data-category="after" style="width:100%; border: 2px dashed #ddd; border-radius: 6px; min-height: 150px; padding: 15px; background: #fafafa; position:relative; overflow:hidden; display: flex; flex-direction: column; align-items: center;">
                                 <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                    <div style="font-size:0.9rem; font-weight:bold; color:#555;">施工後</div>
+                                    <div style="font-size:0.9rem; font-weight:bold; color:${pinkColor};">施工後</div>
                                     <label style="cursor:pointer; background:${pinkColor}; color:white; padding:6px 12px; border-radius:4px; font-size:0.85rem; display:flex; align-items:center;">
                                         <i class="fas fa-camera" style="margin-right:6px;"></i> 写真を追加
                                         <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.handleSectionImageUpload(this, '${section.id}', 'after')">

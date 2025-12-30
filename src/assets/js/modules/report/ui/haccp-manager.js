@@ -129,7 +129,7 @@ export class HaccpManager {
         const savedNextDate = currentData.next_date || '';
 
         const headerHtml = config.category ?
-            `<div class="haccp-smart-header" style="font-size:0.85rem; color:#3b82f6; margin-bottom:8px; font-weight:bold; border-bottom:1px solid #eff6ff; padding-bottom:4px;">${config.category}</div>` : '';
+            `<div class="haccp-smart-header" style="font-size:0.85rem; color:#ec4899; margin-bottom:8px; font-weight:bold; border-bottom:1px solid #fdf2f8; padding-bottom:4px;">${config.category}</div>` : '';
 
         // Radio buttons for Work Content
         const optionsHtml = (item.options || ['清掃']).map((opt, idx) => {
@@ -141,67 +141,58 @@ export class HaccpManager {
             `;
         }).join('');
 
-        // Radio buttons for Abnormalities or Pest Status
-        const abnormalities = isPestControl
-            ? ['生息なし', '生息あり(少量)', '生息あり(多量)', '死骸確認', 'その他']
-            : ['異常なし', '破損', '汚損', '異音', '水漏れ', '詰まり', 'その他'];
-
+        // Abnormality Check (Using dynamic radio buttons)
+        const checkOptions = isPestControl ? ['生息なし', '生息あり(少量)', '生息あり(多量)', '死骸確認', 'その他'] : ['異常なし', '破損', '汚損', '異音', '水漏れ', '詰まり', 'その他'];
         const labelText = isPestControl ? '生息状況・調査結果' : '異常の有無・状態';
 
-        const abnormalHtml = abnormalities.map((abn, idx) => {
-            const isChecked = savedAbnormal ? (savedAbnormal === abn) : (idx === 0);
+        const checkOptionsHtml = checkOptions.map((opt, idx) => {
+            const isChecked = savedAbnormal ? (savedAbnormal === opt) : (idx === 0);
             return `
                 <label style="display:flex; align-items:center; background:white; padding:6px 10px; border:1px solid #d1d5db; border-radius:14px; font-size:0.85rem; cursor:pointer;">
-                    <input type="radio" name="sect-${sectionId}-abn" value="${abn}" ${isChecked ? 'checked' : ''} onchange="window.handleHaccpChange('${sectionId}', 'abnormal', this.value)" style="margin-right:6px;"> ${abn}
+                    <input type="radio" name="sect-${sectionId}-check" value="${opt}" ${isChecked ? 'checked' : ''} onchange="window.handleHaccpChange('${sectionId}', 'abnormal', this.value)" style="margin-right:6px;"> ${opt}
                 </label>
-            `;
+             `;
         }).join('');
 
         return `
-            <div class="haccp-form-container" style="background:#f9fafb; padding:12px; border-radius:8px; margin-top:12px; border:1px solid #e5e7eb;">
+            <div class="haccp-fields-area" style="background:#fff; border-radius:6px; padding:10px;">
                 ${headerHtml}
-                <div class="haccp-smart-body">
-                    <!-- Work Content -->
-                    <div class="haccp-opt-row" style="margin-bottom:12px;">
-                        <span style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:6px;">作業内容</span>
-                        <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                            ${optionsHtml}
-                        </div>
+                
+                <!-- Work Content -->
+                <div style="margin-bottom:10px;">
+                    <div style="font-size:0.75rem; color:#ec4899; margin-bottom:4px;">作業内容</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                        ${optionsHtml}
                     </div>
+                </div>
 
-                    <!-- Abnormalities -->
-                    <!-- Abnormalities -->
-                    <div class="haccp-opt-row" style="margin-bottom:12px;">
-                        <span style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:6px;">${labelText}</span>
-                        <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                            ${abnormalHtml}
-                        </div>
+                <!-- Abnormality/Status Check -->
+                <div style="margin-bottom:10px;">
+                    <div style="font-size:0.75rem; color:#ec4899; margin-bottom:4px;">${labelText}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                        ${checkOptionsHtml}
                     </div>
+                </div>
 
-                    <!-- Correction / Details -->
-                    <div style="margin-bottom:12px;">
-                        <span style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:6px;">処置内容・備考</span>
-                         <input type="text" class="form-input" value="${this._escape(savedCorrection)}" 
-                            placeholder="処置内容や特記事項を入力" 
-                            style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:0.9rem;"
-                            onchange="window.handleHaccpChange('${sectionId}', 'correction', this.value)">
+                <!-- Correction / Remarks -->
+                <div style="margin-bottom:10px;">
+                    <div style="font-size:0.75rem; color:#ec4899; margin-bottom:4px;">処置内容・備考</div>
+                    <textarea class="form-input" placeholder="処置内容や特記事項を入力" 
+                        onchange="window.handleHaccpChange('${sectionId}', 'correction', this.value)"
+                        style="min-height:40px; font-size:0.9rem;">${this._escape(savedCorrection)}</textarea>
+                </div>
+
+                <!-- Confirmer & Next Date -->
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1;">
+                        <div style="font-size:0.75rem; color:#ec4899; margin-bottom:4px;">確認者名</div>
+                        <input type="text" class="form-input" placeholder="確認者名" value="${this._escape(savedConfirmer)}"
+                             onchange="window.handleHaccpChange('${sectionId}', 'confirmer', this.value)" style="font-size:0.9rem;">
                     </div>
-
-                    <!-- Footer: Confirmer & Next Date -->
-                    <div style="display:flex; gap:12px;">
-                        <div style="flex:1;">
-                            <span style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:6px;">確認者</span>
-                            <input type="text" class="form-input" value="${this._escape(savedConfirmer)}"
-                                placeholder="確認者名"
-                                style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:0.9rem;"
-                                onchange="window.handleHaccpChange('${sectionId}', 'confirmer', this.value)">
-                        </div>
-                         <div style="flex:1;">
-                            <span style="display:block; font-size:0.8rem; color:#6b7280; margin-bottom:6px;">次回実施予定日</span>
-                            <input type="date" class="form-input" value="${this._escape(savedNextDate)}"
-                                style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:0.9rem;"
-                                onchange="window.handleHaccpChange('${sectionId}', 'next_date', this.value)">
-                        </div>
+                    <div style="flex:1;">
+                        <div style="font-size:0.75rem; color:#ec4899; margin-bottom:4px;">次回実施予定日</div>
+                        <input type="date" class="form-input" value="${this._escape(savedNextDate)}"
+                             onchange="window.handleHaccpChange('${sectionId}', 'next_date', this.value)" style="font-size:0.9rem;">
                     </div>
                 </div>
             </div>
