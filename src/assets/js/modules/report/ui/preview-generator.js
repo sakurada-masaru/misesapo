@@ -24,7 +24,7 @@ export class PreviewGenerator {
      <head>
        <meta charset="UTF-8">
        <title>作業実施報告書 - ${this._escape(brandName)} ${this._escape(storeName)}</title>
-       <link rel="stylesheet" href="/src/assets/css/staff-report-preview.css?v=${Date.now()}">
+       <link rel="stylesheet" href="/css/staff-report-preview.css?v=${Date.now()}">
        <style>
           /* 印刷時の強制設定 */
           @media print {
