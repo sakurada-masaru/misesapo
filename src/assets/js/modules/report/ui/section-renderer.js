@@ -53,8 +53,7 @@ export class SectionRenderer {
                 }
 
                 return `
-                       return `
-                    < div class="cleaning-item-image-area" style = "display:flex; gap:10px; margin-top:10px;" >
+                       <div class="cleaning-item-image-area" style="display:flex; gap:10px; margin-top:10px;">
                             < !--Before Drop Zone-- >
                             <div class="image-list" data-category="before" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 120px; padding: 10px; background: #fafafa; position:relative; overflow:hidden; display: flex; flex-direction: column; align-items: center;">
                                 <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
@@ -110,40 +109,40 @@ export class SectionRenderer {
                 </div>
             </div>
         `;
-            }
+    }
 
     _renderPhotos(section, category) {
-            // Helper to render thumbnails
-            if (!section.imageContents || section.imageContents.length === 0) return '';
+        // Helper to render thumbnails
+        if (!section.imageContents || section.imageContents.length === 0) return '';
 
-            // Flattens all photos of that category from all imageContents
-            const photos = section.imageContents.flatMap(ic => ic.photos?.[category] || []);
+        // Flattens all photos of that category from all imageContents
+        const photos = section.imageContents.flatMap(ic => ic.photos?.[category] || []);
 
-            return photos.map(photo => {
-                let statusIcon = '';
-                let opacity = '1';
+        return photos.map(photo => {
+            let statusIcon = '';
+            let opacity = '1';
 
-                if (photo.status === 'uploading') {
-                    statusIcon = '<div style="position:absolute; inset:0; background:rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center;"><i class="fas fa-spinner fa-spin" style="color:#ec4899;"></i></div>';
-                } else if (photo.status === 'error') {
-                    statusIcon = '<div style="position:absolute; top:2px; right:2px; color:red;"><i class="fas fa-exclamation-circle"></i></div>';
-                    opacity = '0.7';
-                }
+            if (photo.status === 'uploading') {
+                statusIcon = '<div style="position:absolute; inset:0; background:rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center;"><i class="fas fa-spinner fa-spin" style="color:#ec4899;"></i></div>';
+            } else if (photo.status === 'error') {
+                statusIcon = '<div style="position:absolute; top:2px; right:2px; color:red;"><i class="fas fa-exclamation-circle"></i></div>';
+                opacity = '0.7';
+            }
 
-                // Prefer blobUrl for immediate display, fall back to url (remote)
-                const src = photo.blobUrl || photo.url || '';
+            // Prefer blobUrl for immediate display, fall back to url (remote)
+            const src = photo.blobUrl || photo.url || '';
 
-                return `
+            return `
            <div class="image-thumb" style="width:80px; height:80px; display:inline-block; margin:4px; position:relative; opacity:${opacity};">
                <img src="${src}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">
                ${statusIcon}
            </div>
            `;
-            }).join('');
-        }
-
-        renderImageSection(section) {
-            // ... similar logic for image only section
-            return `<div class="section-card">Image Section Placeholder</div>`;
-        }
+        }).join('');
     }
+
+    renderImageSection(section) {
+        // ... similar logic for image only section
+        return `<div class="section-card">Image Section Placeholder</div>`;
+    }
+}
