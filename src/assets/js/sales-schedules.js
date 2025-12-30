@@ -1417,3 +1417,144 @@ function getStatusLabel(s) {
   const map = { 'draft': '未確定', 'scheduled': '確定', 'in_progress': '作業中', 'completed': '完了' };
   return map[s] || s;
 }
+
+// --- Print Logic ---
+window.printScheduleRequest = function (id) {
+  const s = allSchedules.find(x => x.id === id);
+  if (!s) return;
+
+  const client = allClients.find(c => c.id === s.client_id) || {};
+  const brand = allBrands.find(b => b.id === s.brand_id) || {};
+  const store = allStores.find(st => st.id === s.store_id) || {};
+  const sd = s.survey_data || {};
+  const ass = sd.assessment || {};
+
+  const workerNames = s.worker_names || (s.assigned_to_user ? s.assigned_to_user.name : '未定');
+
+  const html = `
+    <!-- Page 1 -->
+    <div class="print-page">
+        <div class="print-header">
+            <h1 style="font-size:24px; margin:0;">清掃作業依頼書</h1>
+            <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                <span>発行日: ${new Date().toLocaleDateString()}</span>
+                <span>担当営業: ${escapeHtml(s.sales_user_name || '-')}</span>
+            </div>
+        </div>
+
+        <div class="print-section">
+            <h3>基本情報</h3>
+            <div class="print-row"><div class="print-label">顧客名</div><div class="print-value">${escapeHtml(client.name || '')}</div></div>
+            <div class="print-row"><div class="print-label">ブランド</div><div class="print-value">${escapeHtml(brand.name || '')}</div></div>
+            <div class="print-row"><div class="print-label">店舗名</div><div class="print-value" style="font-size:1.2em; font-weight:bold;">${escapeHtml(store.name || '')}</div></div>
+            <div class="print-row"><div class="print-label">住所</div><div class="print-value">${escapeHtml(store.address || '')}</div></div>
+            <div class="print-row"><div class="print-label">電話番号</div><div class="print-value">${escapeHtml(store.phone || '-')}</div></div>
+        </div>
+
+        <div class="print-section">
+            <h3>実施概要</h3>
+            <div class="print-row"><div class="print-label">実施日時</div><div class="print-value" style="font-weight:bold;">${s.date || s.scheduled_date} <span style="margin-left:10px;">${s.time_slot || s.scheduled_time || ''}</span></div></div>
+            <div class="print-row"><div class="print-label">作業種別</div><div class="print-value">${s.work_type === 'spot' ? '臨時（スポット）' : (s.work_type === 'special' ? '特別清掃' : '定期清掃')}</div></div>
+            <div class="print-row"><div class="print-label">担当清掃員</div><div class="print-value">${escapeHtml(workerNames)}</div></div>
+            <div class="print-row"><div class="print-label">立会い</div><div class="print-value">
+                ${s.attendance_required === 'none' ? '無し' : (s.attendance_required === 'start' ? '開始時' : (s.attendance_required === 'end' ? '終了時' : '常時'))}
+                ${s.attendance_notes ? `(${escapeHtml(s.attendance_notes)})` : ''}
+            </div></div>
+        </div>
+
+        <div class="print-section">
+            <h3>ロジスティクス</h3>
+            <div class="print-row"><div class="print-label">駐車位置</div><div class="print-value">${escapeHtml(s.parking_info || '-')}</div></div>
+            <div class="print-row"><div class="print-label">鍵受渡</div><div class="print-value">${escapeHtml(s.key_info || '-')}</div></div>
+        </div>
+
+        <div class="print-section">
+            <h3>清掃実施項目・特記事項</h3>
+            <div style="padding:10px; background:#f9f9f9; min-height:100px;">
+                <strong>■ 実施項目:</strong><br>
+                ${(s.cleaning_items || []).map(i => `・${escapeHtml(i.name || i.title)}`).join('<br>')}
+                <br><br>
+                <strong>■ 特記事項・注意事項:</strong><br>
+                <div style="white-space:pre-wrap;">${escapeHtml(s.notes || '特になし')}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 2 -->
+    <div class="print-page">
+        <div class="print-header">
+            <h3>詳細情報・現地調査アセスメント</h3>
+            <span>店舗名: ${escapeHtml(store.name || '')}</span>
+        </div>
+
+        <div class="print-section">
+            <h3>現地調査アセスメント (4エリア)</h3>
+            <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                <tr style="background:#eee;"><th style="border:1px solid #ccc; padding:5px;">エリア</th><th style="border:1px solid #ccc; padding:5px;">評価</th><th style="border:1px solid #ccc; padding:5px;">詳細メモ</th></tr>
+                <tr>
+                    <td style="border:1px solid #ccc; padding:5px;">調理エリア（厨房）</td>
+                    <td style="border:1px solid #ccc; padding:5px; text-align:center;">${formatAssessStatus(ass.area1?.status)}</td>
+                    <td style="border:1px solid #ccc; padding:5px;">${escapeHtml(ass.area1?.note || '')}</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #ccc; padding:5px;">厨房機器・設備</td>
+                    <td style="border:1px solid #ccc; padding:5px; text-align:center;">${formatAssessStatus(ass.area2?.status)}</td>
+                    <td style="border:1px solid #ccc; padding:5px;">${escapeHtml(ass.area2?.note || '')}</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #ccc; padding:5px;">手洗い設備・トイレ</td>
+                    <td style="border:1px solid #ccc; padding:5px; text-align:center;">${formatAssessStatus(ass.area3?.status)}</td>
+                    <td style="border:1px solid #ccc; padding:5px;">${escapeHtml(ass.area3?.note || '')}</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #ccc; padding:5px;">ねずみ・昆虫対策</td>
+                    <td style="border:1px solid #ccc; padding:5px; text-align:center;">${formatAssessStatus(ass.area4?.status)}</td>
+                    <td style="border:1px solid #ccc; padding:5px;">${escapeHtml(ass.area4?.note || '')}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="print-section">
+            <h3>HACCP 衛生管理指示</h3>
+            <div class="print-row"><div class="print-label">重点項目</div><div class="print-value">${(s.haccp_instructions || []).join(', ')}</div></div>
+            <div class="print-row"><div class="print-label">特記事項</div><div class="print-value">${escapeHtml(s.haccp_notes || '-')}</div></div>
+        </div>
+
+        <div class="print-section">
+            <h3>店舗カルテ情報</h3>
+             <div style="display:flex; flex-wrap:wrap;">
+                <div style="width:50%; margin-bottom:5px;"><strong>環境:</strong> ${escapeHtml(sd.environment || '-')}</div>
+                <div style="width:50%; margin-bottom:5px;"><strong>課題:</strong> ${escapeHtml(sd.issue || '-')}</div>
+                <div style="width:33%;"><strong>広さ:</strong> ${escapeHtml(sd.area_sqm || '-')}</div>
+                <div style="width:33%;"><strong>天井高:</strong> ${escapeHtml(sd.ceiling_height || '-')}</div>
+                <div style="width:33%;"><strong>入口数:</strong> ${escapeHtml(sd.entrances || '-')}</div>
+                <div style="width:100%; margin-top:5px;"><strong>設備詳細:</strong><br>
+                   鍵: ${escapeHtml(sd.key_location || '-')}, ブレーカー: ${escapeHtml(sd.breaker_location || '-')},
+                   壁: ${escapeHtml(sd.wall_material || '-')}, 床: ${escapeHtml(sd.floor_material || '-')}
+                </div>
+                <div style="width:100%; margin-top:5px;"><strong>重点箇所・備考:</strong> ${escapeHtml(sd.notes || '-')}</div>
+             </div>
+        </div>
+    </div>
+    `;
+
+  const container = document.getElementById('print-layout-container');
+  container.innerHTML = html;
+  container.style.display = 'block';
+
+  // Defer print to ensure DOM render
+  setTimeout(() => {
+    window.print();
+  }, 100);
+};
+
+window.addEventListener('afterprint', () => {
+  document.getElementById('print-layout-container').style.display = 'none';
+});
+
+function formatAssessStatus(st) {
+  if (st === 'good') return '◎ 良好';
+  if (st === 'warn') return '△ 要注意';
+  if (st === 'bad') return '× 不良';
+  return '-';
+}
