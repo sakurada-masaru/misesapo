@@ -102,7 +102,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadSchedules();
 
   setupEventListeners();
-  setupStoreSearch();
+  setupEventListeners();
+  setupHierarchicalSelection(); // Replaced items
+  setupCleaningItemsSearch();
   setupCleaningItemsSearch();
   setupWorkerSearch();
 
@@ -405,109 +407,111 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-function setupStoreSearch() {
-  const searchInput = document.getElementById('schedule-store-search');
-  const resultsDiv = document.getElementById('schedule-store-results');
-  const hiddenInput = document.getElementById('schedule-store');
-  const summaryText = document.getElementById('schedule-store-summary-text');
+// --- Hierarchical Selection Setup (Modal) ---
+function setupHierarchicalSelection() {
+  const clientSelect = document.getElementById('modal-select-client');
+  const brandSelect = document.getElementById('modal-select-brand');
+  const storeSelect = document.getElementById('modal-select-store');
+  const hiddenStoreInput = document.getElementById('schedule-store');
 
-  if (!searchInput || !resultsDiv) return;
+  if (!clientSelect) return;
 
-  const getFilterMode = () => {
-    const el = document.querySelector('input[name="store_search_mode"]:checked');
-    return el ? el.value : '';
+  const displayAddress = document.getElementById('modal-display-address');
+  const displayPhone = document.getElementById('modal-display-phone');
+  const storeInfoDisplay = document.getElementById('modal-store-info-display');
+
+  // Helper to populate Clients
+  const populateClients = () => {
+    clientSelect.innerHTML = '<option value="">法人を選択してください</option>';
+    allClients.forEach(c => {
+      const option = document.createElement('option');
+      option.value = c.id;
+      option.textContent = c.name || c.company_name;
+      clientSelect.appendChild(option);
+    });
   };
 
-  const updateDropdown = () => {
-    const query = searchInput.value.trim().toLowerCase();
-    const cat = getFilterMode();
+  // Client Change -> Brands
+  clientSelect.addEventListener('change', () => {
+    const clientId = clientSelect.value;
+    brandSelect.innerHTML = '<option value="">先に法人を選択</option>';
+    brandSelect.disabled = true;
+    storeSelect.innerHTML = '<option value="">先にブランドを選択</option>';
+    storeSelect.disabled = true;
+    hiddenStoreInput.value = '';
+    if (storeInfoDisplay) storeInfoDisplay.style.display = 'none';
 
-    if (query.length === 0) {
-      resultsDiv.style.display = 'none';
+    if (!clientId) return;
+
+    const brands = allBrands.filter(b => String(b.client_id) === String(clientId));
+    if (brands.length === 0) {
+      brandSelect.innerHTML = '<option value="">ブランドなし</option>';
       return;
     }
 
-    let filtered = allStores.filter(store => {
-      const sName = (store.name || '').toLowerCase();
-      const sBrand = (store.brand_name || '').toLowerCase();
-      const sClient = (store.client_name || '').toLowerCase();
-
-      if (cat === 'store') return sName.includes(query);
-      if (cat === 'brand') return sBrand.includes(query);
-      if (cat === 'client') return sClient.includes(query);
-
-      // All
-      return sName.includes(query) || sBrand.includes(query) || sClient.includes(query);
+    brandSelect.innerHTML = '<option value="">ブランドを選択</option>';
+    brands.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b.id;
+      opt.textContent = b.name;
+      brandSelect.appendChild(opt);
     });
+    brandSelect.disabled = false;
+  });
 
-    if (filtered.length === 0) {
-      resultsDiv.innerHTML = '<div class="store-search-item no-results">該当する店舗は見つかりません</div>';
-    } else {
-      resultsDiv.innerHTML = filtered.map(s =>
-        `<div class="store-search-item" data-id="${s.id}" data-name="${escapeHtml(s.name)}">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-               <div style="font-weight:700; color:#111827; font-size:1rem;">
-                  ${s.brand_name ? escapeHtml(s.brand_name) : (s.client_name ? escapeHtml(s.client_name) : '<span style="color:#999;font-weight:400;font-size:0.85rem;">所属なし</span>')}
-               </div>
-               ${s.client_name && s.brand_name ? `<div style="font-size:0.7rem; color:#6b7280; background:#f3f4f6; padding:2px 6px; border-radius:4px;">${escapeHtml(s.client_name)}</div>` : ''}
-            </div>
-            
-            <div style="display:flex; align-items:center; gap:6px; margin-top:4px; color:#4b5563; font-size:0.85rem;">
-                 <i class="fas fa-store" style="color:#d1d5db; font-size:0.75rem;"></i>
-                 <span>${escapeHtml(s.name)}</span>
-            </div>
-            
-            ${s.address ? `<div style="font-size:0.75rem; color:#9ca3af; margin-top:2px; margin-left:20px;">${escapeHtml(s.address)}</div>` : ''}
-        </div>`
-      ).join('');
+  // Brand Change -> Stores
+  brandSelect.addEventListener('change', () => {
+    const brandId = brandSelect.value;
+    storeSelect.innerHTML = '<option value="">先にブランドを選択</option>';
+    storeSelect.disabled = true;
+    hiddenStoreInput.value = '';
+    if (storeInfoDisplay) storeInfoDisplay.style.display = 'none';
+
+    if (!brandId) return;
+
+    const stores = allStores.filter(s => String(s.brand_id) === String(brandId));
+    if (stores.length === 0) {
+      storeSelect.innerHTML = '<option value="">店舗なし</option>';
+      return;
     }
-    resultsDiv.style.display = 'block';
 
-    // Click handlers
-    resultsDiv.querySelectorAll('.store-search-item:not(.no-results)').forEach(item => {
-      item.addEventListener('click', () => {
-        const id = item.dataset.id;
-        const name = item.dataset.name;
-        hiddenInput.value = id;
-        searchInput.value = name;
-        resultsDiv.style.display = 'none';
-
-        // 選択した店舗データを取得
-        const selectedStore = allStores.find(s => s.id === id);
-
-        // 法人名・ブランド名・店舗名フィールドを表示して入力
-        const detailsSection = document.getElementById('selected-store-details');
-        if (detailsSection && selectedStore) {
-          detailsSection.style.display = 'block';
-          document.getElementById('schedule-client-name').value = selectedStore.client_name || '';
-          document.getElementById('schedule-brand-name').value = selectedStore.brand_name || '';
-          document.getElementById('schedule-store-name').value = selectedStore.name || '';
-        }
-
-        // LOAD KARTE DATA
-        loadKarteData(id);
-      });
+    storeSelect.innerHTML = '<option value="">店舗を選択</option>';
+    stores.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name;
+      storeSelect.appendChild(opt);
     });
-  };
-
-  searchInput.addEventListener('input', updateDropdown);
-  document.querySelectorAll('input[name="store_search_mode"]').forEach(r => {
-    r.addEventListener('change', () => {
-      updateDropdown();
-      const mode = r.value;
-      const placeholderMap = {
-        'store': '店舗名を検索...',
-        'brand': 'ブランド名を検索...',
-        'client': '法人名を検索...'
-      };
-      searchInput.placeholder = placeholderMap[mode] || '店舗・ブランド・法人を検索...';
-    });
+    storeSelect.disabled = false;
   });
 
-  document.addEventListener('click', e => {
-    if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) resultsDiv.style.display = 'none';
+  // Store Change -> Set Value & Show Info
+  storeSelect.addEventListener('change', () => {
+    const storeId = storeSelect.value;
+    hiddenStoreInput.value = storeId;
+
+    if (!storeId) {
+      if (storeInfoDisplay) storeInfoDisplay.style.display = 'none';
+      return;
+    }
+
+    // Update Info Display
+    const store = allStores.find(s => String(s.id) === String(storeId));
+    if (store && storeInfoDisplay) {
+      storeInfoDisplay.style.display = 'block';
+      if (displayAddress) displayAddress.textContent = store.address || '未登録';
+      if (displayPhone) displayPhone.textContent = store.phone || store.tel || '未登録';
+    }
+
+    // Trigger Karte loading
+    loadKarteData(storeId);
   });
+
+  // Initial Population (Wait a bit for data load)
+  setTimeout(populateClients, 500);
 }
+
+// (Old setupStoreSearch removed)
 
 function setupCleaningItemsSearch() {
   const input = document.getElementById('cleaning-items-search');
@@ -1029,14 +1033,69 @@ function openEditDialog(id) {
   });
   if (window.renderSelectedWorkers) window.renderSelectedWorkers();
 
-  // Store
+  // Store & Hierarchy Population
   const storeId = s.store_id || s.client_id;
   if (storeId) {
     document.getElementById('schedule-store').value = storeId;
+
+    // Reverse populate logic
+    // We need to set Client -> Brand -> Store dropdowns
     const store = allStores.find(x => x.id === storeId);
     if (store) {
-      document.getElementById('schedule-store-search').value = store.name;
-      document.getElementById('schedule-store-summary-text').textContent = store.name;
+      const clientSelect = document.getElementById('modal-select-client');
+      const brandSelect = document.getElementById('modal-select-brand');
+      const storeSelect = document.getElementById('modal-select-store');
+
+      let clientId = store.client_id;
+      let brandId = store.brand_id;
+
+      // Try to find IDs if missing on store object directly (enrichment might help)
+      if (brandId && !clientId) {
+        const tempBrand = allBrands.find(b => b.id === brandId);
+        if (tempBrand) clientId = tempBrand.client_id;
+      }
+
+      if (clientId && clientSelect) {
+        clientSelect.value = clientId;
+        // Trigger change manually or simulate
+        clientSelect.dispatchEvent(new Event('change'));
+
+        // Allow time for brand populate (sync would be better but simple logic here)
+        // Ideally we re-use the populate logic but synchronous 
+        // Manual population for stability:
+
+        // Populate Brands
+        brandSelect.innerHTML = '<option value="">ブランドを選択</option>';
+        allBrands.filter(b => String(b.client_id) === String(clientId)).forEach(b => {
+          const opt = document.createElement('option');
+          opt.value = b.id;
+          opt.textContent = b.name;
+          brandSelect.appendChild(opt);
+        });
+        brandSelect.disabled = false;
+
+        if (brandId) {
+          brandSelect.value = brandId;
+          // Populate Stores
+          storeSelect.innerHTML = '<option value="">店舗を選択</option>';
+          allStores.filter(st => String(st.brand_id) === String(brandId)).forEach(st => {
+            const opt = document.createElement('option');
+            opt.value = st.id;
+            opt.textContent = st.name;
+            storeSelect.appendChild(opt);
+          });
+          storeSelect.disabled = false;
+          storeSelect.value = storeId;
+        }
+      }
+
+      // Show Info
+      const infoDisplay = document.getElementById('modal-store-info-display');
+      if (infoDisplay) {
+        infoDisplay.style.display = 'block';
+        document.getElementById('modal-display-address').textContent = store.address || '-';
+        document.getElementById('modal-display-phone').textContent = store.phone || '-';
+      }
     }
   }
 
@@ -1055,6 +1114,14 @@ function openEditDialog(id) {
 
   // Notes
   if (s.notes) document.getElementById('schedule-notes').value = s.notes;
+
+  // HACCP Data
+  if (s.haccp_instructions && Array.isArray(s.haccp_instructions)) {
+    document.querySelectorAll('input[name="haccp_instruction[]"]').forEach(cb => {
+      cb.checked = s.haccp_instructions.includes(cb.value);
+    });
+  }
+  if (s.haccp_notes) document.getElementById('modal-haccp-notes').value = s.haccp_notes;
 
   // Survey Data (Full Population)
   const sd = s.survey_data || {};
@@ -1119,7 +1186,9 @@ window.printScheduleRequest = function (id) {
     worker_name: workerName,
     // Ensure survey_data is explicitly included
     survey_data: s.survey_data || {},
-    cleaning_items: s.cleaning_items || []
+    cleaning_items: s.cleaning_items || [],
+    haccp_instructions: s.haccp_instructions || [], // Include HACCP
+    haccp_notes: s.haccp_notes || ''
   };
 
   console.log('Preview Data:', enrichment); // Debug log
@@ -1148,136 +1217,207 @@ function setupEventListeners() {
       const formStatus = document.getElementById('form-status');
       formStatus.textContent = '保存中...';
 
+      const storeId = document.getElementById('schedule-store').value;
+      if (!storeId) {
+        alert('店舗を選択してください');
+        formStatus.textContent = '';
+        return;
+      }
+
+      const payload = {
+        // ... (base fields)
+        store_id: storeId,
+        date: document.getElementById('schedule-date').value,
+        time_slot: document.getElementById('schedule-time').value,
+        sales_id: document.getElementById('schedule-sales').value,
+
+        // Worker
+        worker_id: selectedWorkers.length > 0 ? selectedWorkers.map(w => w.id).join(',') : null,
+
+        // Items
+        cleaning_items: selectedCleaningItems,
+
+        // Notes
+        notes: document.getElementById('schedule-notes').value,
+
+        // HACCP Data
+        haccp_instructions: Array.from(document.querySelectorAll('input[name="haccp_instruction[]"]:checked')).map(cb => cb.value),
+        haccp_notes: document.getElementById('modal-haccp-notes').value,
+
+        // Status & Survey
+        status: 'scheduled', // or keep existing status if edit? 
+        survey_data: buildSurveyPayload(storeId) // Attach Karte Data
+      };
+
+      // Update logic for existing ID
+      const scheduleId = document.getElementById('schedule-id').value;
+      let method = 'POST';
+      let url = `${API_BASE}/schedules`;
+
+      if (scheduleId) {
+        method = 'PUT';
+        url = `${API_BASE}/schedules/${scheduleId}`;
+        // Preserve existing status if editing
+        const existing = allSchedules.find(s => s.id === scheduleId);
+        if (existing) payload.status = existing.status;
+      } else {
+        payload.status = 'draft'; // New schedules default to draft
+      }
+
       try {
-        const authHeaders = await getAuthHeaders();
-        const id = document.getElementById('schedule-id').value;
-        const isNew = !id;
-        const storeId = document.getElementById('schedule-store').value;
-        // Validations
-        if (!storeId) throw new Error('店舗を選択してください');
-
-        // 1. Save Schedule
-        // Use selectedWorkers state
-        const primaryWorkerId = selectedWorkers.length > 0 ? selectedWorkers.map(w => w.id).join(',') : null;
-
-        const scheduleData = {
-          store_id: storeId,
-          client_name: document.getElementById('schedule-client-name')?.value || '',
-          brand_name: document.getElementById('schedule-brand-name')?.value || '',
-          store_name: document.getElementById('schedule-store-name')?.value || '',
-          address: (() => {
-            const el = document.getElementById('schedule-address');
-            if (el) return el.value;
-            // 店舗データから取得
-            const store = allStores.find(s => s.id === storeId);
-            return store?.address || '';
-          })(),
-          phone: (() => {
-            const el = document.getElementById('schedule-phone');
-            if (el) return el.value;
-            // 店舗データから取得
-            const store = allStores.find(s => s.id === storeId);
-            return store?.phone || '';
-          })(),
-          scheduled_date: document.getElementById('schedule-date').value,
-          scheduled_time: document.getElementById('schedule-time').value,
-          sales_id: document.getElementById('schedule-sales').value || null,
-          worker_id: primaryWorkerId,
-          // Store ALL selected in notes or a custom field if backend ignores extra fields?
-          // For now, assume primary assignment is what matters for "Accepted".
-          status: 'draft',
-          cleaning_items: selectedCleaningItems,
-          survey_data: {
-            issue: document.getElementById('survey-issue')?.value || '',
-            environment: document.getElementById('survey-environment')?.value || '',
-            cleaning_frequency: document.getElementById('survey-cleaning-frequency')?.value || '',
-            area_sqm: document.getElementById('survey-area-sqm')?.value || '',
-            entrances: document.getElementById('survey-entrances')?.value || '',
-            ceiling_height: document.getElementById('survey-ceiling-height')?.value || '',
-            key_location: document.getElementById('survey-key-location')?.value || '',
-            breaker_location: document.getElementById('survey-breaker-location')?.value || '',
-            wall_material: document.getElementById('survey-wall-material')?.value || '',
-            floor_material: document.getElementById('survey-floor-material')?.value || '',
-            toilet_count: document.getElementById('survey-toilet-count')?.value || '',
-            hotspots: document.getElementById('survey-hotspots')?.value || '',
-            notes: document.getElementById('survey-notes')?.value || '',
-            equipment: Array.from(document.querySelectorAll('#survey-equipment input:checked')).map(cb => cb.value)
-          },
-        };
-
-        // If worker assigned, status = scheduled.
-        // If NO worker assigned (Open), status = draft.
-        if (scheduleData.worker_id) {
-          scheduleData.status = 'scheduled';
-        } else {
-          scheduleData.status = 'draft'; // Open
-        }
-
-        if (!isNew) scheduleData.id = id;
-
-        const schedRes = await fetch(`${API_BASE}/schedules${isNew ? '' : '/' + id}`, {
-          method: isNew ? 'POST' : 'PUT',
-          headers: authHeaders,
-          body: JSON.stringify(scheduleData)
+        const res = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
-        if (!schedRes.ok) throw new Error('スケジュールの保存に失敗しました');
-        const schedResult = await schedRes.json();
 
-        // 2. Save Karte (Simultaneous)
-        const kartePayload = buildSurveyPayload(storeId);
-        if (kartePayload) {
-          // Try Saving Karte
-          const karteRes = await fetch(`${API_BASE}/kartes`, {
-            method: 'POST',
-            headers: authHeaders,
-            body: JSON.stringify(kartePayload)
-          });
-          if (!karteRes.ok) {
-            console.warn('カルテの保存に失敗しました', await karteRes.text());
-          }
-        }
-
-        // Success
-        formStatus.textContent = '保存しました';
-
-        // Update Local Cache Immediately
-        const savedId = isNew ? (schedResult.id || schedResult.item?.id) : id;
-        // Merge existing fields with input fields to ensure cache is rich
-        const baseItem = isNew ? {} : (allSchedules.find(s => String(s.id) === String(id)) || {});
-        const savedItem = {
-          ...baseItem,
-          ...scheduleData,
-          id: savedId,
-          // Ensure survey_data is saved too
-          survey_data: scheduleData.survey_data,
-          ...schedResult
-        };
-
-        const existingIdx = allSchedules.findIndex(s => String(s.id) === String(savedId));
-        if (existingIdx !== -1) {
-          allSchedules[existingIdx] = savedItem;
+        if (res.ok) {
+          formStatus.textContent = '保存しました';
+          formStatus.className = 'form-status success';
+          setTimeout(() => {
+            scheduleDialog.close();
+            loadSchedules(); // Reload List
+          }, 1000);
         } else {
-          allSchedules.push(savedItem);
+          throw new Error('Save Failed');
         }
-
-        setTimeout(() => {
-          formStatus.textContent = '';
-          if (scheduleDialog) scheduleDialog.close();
-          loadSchedules(); // Reload for full sync
-        }, 1000);
-
       } catch (err) {
         console.error(err);
-        formStatus.textContent = 'エラー: ' + err.message;
+        formStatus.textContent = 'エラーが発生しました';
+        formStatus.className = 'form-status error';
       }
     });
   }
+} try {
+  const authHeaders = await getAuthHeaders();
+  const id = document.getElementById('schedule-id').value;
+  const isNew = !id;
+  const storeId = document.getElementById('schedule-store').value;
+  // Validations
+  if (!storeId) throw new Error('店舗を選択してください');
 
-  document.getElementById('add-schedule-btn')?.addEventListener('click', () => openAddDialog());
-  document.getElementById('reload-customers-data-btn')?.addEventListener('click', async () => {
-    await Promise.all([loadStores(), loadClients(), loadBrands()]);
-    alert('顧客データを更新しました');
+  // 1. Save Schedule
+  // Use selectedWorkers state
+  const primaryWorkerId = selectedWorkers.length > 0 ? selectedWorkers.map(w => w.id).join(',') : null;
+
+  const scheduleData = {
+    store_id: storeId,
+    client_name: document.getElementById('schedule-client-name')?.value || '',
+    brand_name: document.getElementById('schedule-brand-name')?.value || '',
+    store_name: document.getElementById('schedule-store-name')?.value || '',
+    address: (() => {
+      const el = document.getElementById('schedule-address');
+      if (el) return el.value;
+      // 店舗データから取得
+      const store = allStores.find(s => s.id === storeId);
+      return store?.address || '';
+    })(),
+    phone: (() => {
+      const el = document.getElementById('schedule-phone');
+      if (el) return el.value;
+      // 店舗データから取得
+      const store = allStores.find(s => s.id === storeId);
+      return store?.phone || '';
+    })(),
+    scheduled_date: document.getElementById('schedule-date').value,
+    scheduled_time: document.getElementById('schedule-time').value,
+    sales_id: document.getElementById('schedule-sales').value || null,
+    worker_id: primaryWorkerId,
+    // Store ALL selected in notes or a custom field if backend ignores extra fields?
+    // For now, assume primary assignment is what matters for "Accepted".
+    status: 'draft',
+    cleaning_items: selectedCleaningItems,
+    survey_data: {
+      issue: document.getElementById('survey-issue')?.value || '',
+      environment: document.getElementById('survey-environment')?.value || '',
+      cleaning_frequency: document.getElementById('survey-cleaning-frequency')?.value || '',
+      area_sqm: document.getElementById('survey-area-sqm')?.value || '',
+      entrances: document.getElementById('survey-entrances')?.value || '',
+      ceiling_height: document.getElementById('survey-ceiling-height')?.value || '',
+      key_location: document.getElementById('survey-key-location')?.value || '',
+      breaker_location: document.getElementById('survey-breaker-location')?.value || '',
+      wall_material: document.getElementById('survey-wall-material')?.value || '',
+      floor_material: document.getElementById('survey-floor-material')?.value || '',
+      toilet_count: document.getElementById('survey-toilet-count')?.value || '',
+      hotspots: document.getElementById('survey-hotspots')?.value || '',
+      notes: document.getElementById('survey-notes')?.value || '',
+      equipment: Array.from(document.querySelectorAll('#survey-equipment input:checked')).map(cb => cb.value)
+    },
+  };
+
+  // If worker assigned, status = scheduled.
+  // If NO worker assigned (Open), status = draft.
+  if (scheduleData.worker_id) {
+    scheduleData.status = 'scheduled';
+  } else {
+    scheduleData.status = 'draft'; // Open
+  }
+
+  if (!isNew) scheduleData.id = id;
+
+  const schedRes = await fetch(`${API_BASE}/schedules${isNew ? '' : '/' + id}`, {
+    method: isNew ? 'POST' : 'PUT',
+    headers: authHeaders,
+    body: JSON.stringify(scheduleData)
   });
+  if (!schedRes.ok) throw new Error('スケジュールの保存に失敗しました');
+  const schedResult = await schedRes.json();
+
+  // 2. Save Karte (Simultaneous)
+  const kartePayload = buildSurveyPayload(storeId);
+  if (kartePayload) {
+    // Try Saving Karte
+    const karteRes = await fetch(`${API_BASE}/kartes`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify(kartePayload)
+    });
+    if (!karteRes.ok) {
+      console.warn('カルテの保存に失敗しました', await karteRes.text());
+    }
+  }
+
+  // Success
+  formStatus.textContent = '保存しました';
+
+  // Update Local Cache Immediately
+  const savedId = isNew ? (schedResult.id || schedResult.item?.id) : id;
+  // Merge existing fields with input fields to ensure cache is rich
+  const baseItem = isNew ? {} : (allSchedules.find(s => String(s.id) === String(id)) || {});
+  const savedItem = {
+    ...baseItem,
+    ...scheduleData,
+    id: savedId,
+    // Ensure survey_data is saved too
+    survey_data: scheduleData.survey_data,
+    ...schedResult
+  };
+
+  const existingIdx = allSchedules.findIndex(s => String(s.id) === String(savedId));
+  if (existingIdx !== -1) {
+    allSchedules[existingIdx] = savedItem;
+  } else {
+    allSchedules.push(savedItem);
+  }
+
+  setTimeout(() => {
+    formStatus.textContent = '';
+    if (scheduleDialog) scheduleDialog.close();
+    loadSchedules(); // Reload for full sync
+  }, 1000);
+
+} catch (err) {
+  console.error(err);
+  formStatus.textContent = 'エラー: ' + err.message;
+}
+    });
+  }
+
+document.getElementById('add-schedule-btn')?.addEventListener('click', () => openAddDialog());
+document.getElementById('reload-customers-data-btn')?.addEventListener('click', async () => {
+  await Promise.all([loadStores(), loadClients(), loadBrands()]);
+  alert('顧客データを更新しました');
+});
 }
 
 
