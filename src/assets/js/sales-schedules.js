@@ -1141,6 +1141,21 @@ function openEditDialog(id) {
   }
   if (s.haccp_notes) document.getElementById('modal-haccp-notes').value = s.haccp_notes;
 
+  // Restore Extended Request Details
+  if (document.getElementById('schedule-work-type')) document.getElementById('schedule-work-type').value = s.work_type || 'periodic';
+  if (document.getElementById('schedule-parking')) document.getElementById('schedule-parking').value = s.parking_info || '';
+  if (document.getElementById('schedule-key-info')) document.getElementById('schedule-key-info').value = s.key_info || '';
+  if (document.getElementById('schedule-attendance-notes')) document.getElementById('schedule-attendance-notes').value = s.attendance_notes || '';
+
+  if (s.attendance_required) {
+    const attRadio = document.querySelector(`input[name="attendance_required"][value="${s.attendance_required}"]`);
+    if (attRadio) attRadio.checked = true;
+  } else {
+    // Default to 'none' if undefined
+    const attNone = document.querySelector(`input[name="attendance_required"][value="none"]`);
+    if (attNone) attNone.checked = true;
+  }
+
   // Survey Data (Full Population)
   const sd = s.survey_data || {};
   document.getElementById('survey-issue').value = sd.issue || '';
@@ -1248,6 +1263,13 @@ function setupEventListeners() {
         date: document.getElementById('schedule-date').value,
         time_slot: document.getElementById('schedule-time').value,
         sales_id: document.getElementById('schedule-sales').value,
+
+        // Extended Details
+        work_type: document.getElementById('schedule-work-type')?.value || 'periodic',
+        parking_info: document.getElementById('schedule-parking')?.value || '',
+        key_info: document.getElementById('schedule-key-info')?.value || '',
+        attendance_required: document.querySelector('input[name="attendance_required"]:checked')?.value || 'none',
+        attendance_notes: document.getElementById('schedule-attendance-notes')?.value || '',
 
         // Worker
         worker_id: selectedWorkers.length > 0 ? selectedWorkers.map(w => w.id).join(',') : null,
