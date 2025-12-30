@@ -37,10 +37,14 @@ export class ReportApiService {
             reader.onload = async (e) => {
                 const base64Data = e.target.result; // Data URL
 
+                // Remove 'data:image/jpeg;base64,' prefix
+                const base64Content = base64Data.split(',')[1];
+
                 const payload = {
-                    image_data: base64Data,
+                    image_data: base64Content,
                     category: category,
                     file_name: imageFile.name,
+                    content_type: imageFile.type, // Add content type explicitly
                     report_id: reportId, // Optional
                     cleaning_date: cleaningDate
                 };
