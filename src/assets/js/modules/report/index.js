@@ -149,6 +149,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    // Side Panel Toggle Logic
+    const detailsBtn = document.getElementById('details-btn');
+    const sidePanel = document.getElementById('side-panel');
+    const sidePanelOverlay = document.getElementById('side-panel-overlay');
+    const sidePanelClose = document.getElementById('side-panel-close');
+
+    if (detailsBtn && sidePanel && sidePanelOverlay) {
+        const togglePanel = () => {
+            const isActive = sidePanel.classList.contains('active');
+            if (isActive) {
+                sidePanel.classList.remove('active');
+                sidePanelOverlay.classList.remove('active');
+                detailsBtn.classList.remove('active');
+            } else {
+                sidePanel.classList.add('active');
+                sidePanelOverlay.classList.add('active');
+                detailsBtn.classList.add('active');
+            }
+        };
+
+        detailsBtn.addEventListener('click', togglePanel);
+        if (sidePanelClose) sidePanelClose.addEventListener('click', togglePanel);
+        sidePanelOverlay.addEventListener('click', togglePanel);
+    }
+
     // Comment Handlers
     window.handleAddSectionComment = (sectionId) => {
         const text = prompt('コメントを入力してください:');
