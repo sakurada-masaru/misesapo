@@ -54,7 +54,7 @@ export class SectionRenderer {
 
                 return `
                        <div class="cleaning-item-image-area" style="display:flex; gap:10px; margin-top:10px;">
-                            < !--Before Drop Zone-- >
+                            <!-- Before Drop Zone -->
                             <div class="image-list" data-category="before" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 120px; padding: 10px; background: #fafafa; position:relative; overflow:hidden; display: flex; flex-direction: column; align-items: center;">
                                 <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                     <div style="font-size:0.8rem; font-weight:bold; color:#555;">${beforeLabel}</div>
