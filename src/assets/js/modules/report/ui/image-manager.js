@@ -192,4 +192,54 @@ export class ImageManager {
 
         return false;
     }
+
+    /**
+     * Upload an image directly to a section from a file input
+     */
+    async uploadToSection(file, sectionId, category) {
+        if (!file) return;
+
+        // 1. Create Placeholder
+        const tempId = `img-${Date.now()}`;
+        const blobUrl = URL.createObjectURL(file);
+        const imageObj = {
+            id: tempId,
+            url: null,
+            blobUrl: blobUrl,
+            status: 'uploading',
+            file: file, // Keep file ref if needed
+            name: file.name
+        };
+
+        // 2. Add to State immediately (UI Updates)
+        const tabName = this.state.state.activeTab;
+        this.state.addImageToSection(tabName, sectionId, category, imageObj);
+
+        try {
+            // 3. Upload Background
+            // Retrieve global API instance (a bit messy dependency but pragmatic)
+            const api = window.ApiServiceInstance;
+            if (!api) throw new Error('API Service not available');
+
+            const date = this.state.state.meta.date || new Date().toISOString().split('T')[0];
+
+            // Assuming uploadImage returns { url, id, ... }
+            const result = await api.uploadImage(file, category, 'temp_report_id', date);
+
+            // 4. Update State on Success
+            this.state.updateSectionImage(tabName, sectionId, category, tempId, {
+                status: 'uploaded',
+                url: result.url,
+                id: result.id // Updates temp ID to real ID
+            });
+            console.log('[ImageManager] Direct upload success:', result.url);
+
+        } catch (error) {
+            console.error('[ImageManager] Direct upload failed', error);
+            this.state.updateSectionImage(tabName, sectionId, category, tempId, {
+                status: 'error'
+            });
+            alert('画像のアップロードに失敗しました。');
+        }
+    }
 }

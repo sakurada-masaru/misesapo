@@ -118,6 +118,8 @@ export class ReportStateManager {
 
     // --- Image Handling ---
 
+    // --- Image Handling ---
+
     addImageToStock(imageObj) {
         this.state.imageStock.push(imageObj);
         this.notify();
@@ -128,9 +130,46 @@ export class ReportStateManager {
         if (index !== -1) {
             this.state.imageStock[index] = { ...this.state.imageStock[index], ...updates };
             this.notify();
-        } else {
-            // Also search in sections? For now, we only upload from stock upon addition.
-            // If we implement drop-to-upload directly, we'd need to search sections too.
+        }
+    }
+
+    // New: Add image directly to a section's category
+    addImageToSection(tabName, sectionId, category, imageObj) {
+        const section = this.state.sections[tabName][sectionId];
+        if (!section) return;
+
+        if (!section.imageContents) section.imageContents = [];
+        // Ensure at least one container exists
+        if (section.imageContents.length === 0) {
+            section.imageContents.push({
+                id: `ic-${Date.now()}`,
+                imageType: 'before_after',
+                photos: { before: [], after: [] }
+            });
+        }
+
+        const content = section.imageContents[0];
+        if (!content.photos) content.photos = { before: [], after: [] };
+        if (!content.photos[category]) content.photos[category] = [];
+
+        content.photos[category].push(imageObj);
+        this.notify();
+    }
+
+    // New: Update image inside a section
+    updateSectionImage(tabName, sectionId, category, tempId, updates) {
+        const section = this.state.sections[tabName][sectionId];
+        if (!section || !section.imageContents) return;
+
+        const content = section.imageContents[0];
+        if (!content || !content.photos || !content.photos[category]) return;
+
+        const photos = content.photos[category];
+        const index = photos.findIndex(img => img.id === tempId);
+
+        if (index !== -1) {
+            photos[index] = { ...photos[index], ...updates };
+            this.notify();
         }
     }
 
@@ -151,26 +190,6 @@ export class ReportStateManager {
 
         // 2. Add to target section
         const targetTab = this.state.activeTab;
-        const section = this.state.sections[targetTab][targetSectionId];
-
-        if (section) {
-            // Ensure imageContents structure exists
-            if (!section.imageContents) section.imageContents = [];
-
-            // Find or create correct imageContent group
-            // Simplified: Just use the first one or create new
-            let targetContent = section.imageContents[0];
-            if (!targetContent) {
-                targetContent = { id: `ic-${Date.now()}`, imageType: 'before_after', photos: { before: [], after: [] } };
-                section.imageContents.push(targetContent);
-            }
-
-            // Ensure photo arrays exist
-            if (!targetContent.photos[targetCategory]) targetContent.photos[targetCategory] = [];
-
-            targetContent.photos[targetCategory].push(imageObj);
-
-            this.notify();
-        }
+        this.addImageToSection(targetTab, targetSectionId, targetCategory, imageObj);
     }
 }
