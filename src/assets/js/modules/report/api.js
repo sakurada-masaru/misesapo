@@ -5,16 +5,11 @@ export class ReportApiService {
     constructor() { }
 
     async _getAuthHeader() {
-        if (typeof window.getFirebaseIdToken === 'function') {
-            const token = await window.getFirebaseIdToken();
-            return {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            };
-        } else {
-            console.warn('getFirebaseIdToken is not available. Using mock token or failing.');
-            return { 'Content-Type': 'application/json' };
-        }
+        // Firebase Auth is not used. Returning standard headers.
+        return {
+            'Content-Type': 'application/json'
+            // Add other auth headers here if needed (e.g., API Key)
+        };
     }
 
     async fetchSchedules() {

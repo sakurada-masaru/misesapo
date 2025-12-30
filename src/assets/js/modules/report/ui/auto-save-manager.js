@@ -35,19 +35,48 @@ export class AutoSaveManager {
         if (!this.currentScheduleId) return; // Don't save if no context
 
         try {
+            // Helper to sanitize image data types
+            const sanitizeImages = (sections) => {
+                const sanitized = JSON.parse(JSON.stringify(sections)); // Deep copy first
+
+                Object.keys(sanitized).forEach(tab => {
+                    Object.keys(sanitized[tab]).forEach(sectionId => {
+                        const section = sanitized[tab][sectionId];
+
+                        // Sanitize standard imageContents
+                        if (section.imageContents) {
+                            section.imageContents = section.imageContents.filter(img =>
+                                img.url && !img.url.startsWith('blob:') && img.status === 'uploaded'
+                            );
+                        }
+
+                        // Sanitize customContents (images)
+                        if (section.customContents) {
+                            section.customContents.forEach(content => {
+                                if (content.type === 'image' && content.image) {
+                                    // If image is blob or uploading, remove the image data but keep the block? 
+                                    // Or remove the block entirely? Let's clear the image property if invalid.
+                                    if (!content.image.url || content.image.url.startsWith('blob:')) {
+                                        content.image = null; // Clear invalid image
+                                    }
+                                }
+                            });
+                        }
+                    });
+                });
+                return sanitized;
+            };
+
             const dataToSave = {
                 scheduleId: this.currentScheduleId, // SAVE THE ID
-                sections: this.state.state.sections,
+                sections: sanitizeImages(this.state.state.sections),
                 activeTab: this.state.state.activeTab,
                 meta: {
-                    // Save input values that aren't in state (if any)
-                    // Ideally state should hold everything, but for now we look at DOM for inputs
-                    // Or just rely on what's in 'sections' and minimal global state
                     timestamp: Date.now()
                 }
             };
 
-            // Also save global image stock (uploaded only)
+            // Also save global image stock (uploaded only, no blobs)
             if (this.state.state.imageStock.length > 0) {
                 // Warning: quota limits. Storing Base64 in local storage is risky.
                 // Should only store metadata if images are uploaded.
@@ -57,7 +86,7 @@ export class AutoSaveManager {
 
                 // We only save 'uploaded' images with remote URLs.
                 dataToSave.imageStock = this.state.state.imageStock
-                    .filter(img => img.status === 'uploaded')
+                    .filter(img => img.status === 'uploaded' && img.url && !img.url.startsWith('blob:'))
                     .map(img => ({
                         id: img.id,
                         url: img.url,
