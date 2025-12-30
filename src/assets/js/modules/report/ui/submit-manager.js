@@ -1,0 +1,123 @@
+
+/**
+ * SubmitManager
+ * Handles the report submission process, including validation and API interaction.
+ */
+export class SubmitManager {
+    constructor(stateManager, apiService) {
+        this.state = stateManager;
+        this.api = apiService;
+    }
+
+    async handleSubmit() {
+        if (!confirm('レポートを提出しますか？')) return;
+
+        const submitBtn = document.getElementById('report-submit-btn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
+        }
+
+        try {
+            // 1. Gather Data
+            const reportData = this._buildReportData();
+
+            // 2. Validate
+            this._validate(reportData);
+
+            // 3. Save/Submit via API
+            // Check if we are in edit mode based on URL or state
+            const urlParams = new URLSearchParams(window.location.search);
+            const reportId = urlParams.get('id');
+            const isEditMode = !!reportId;
+
+            if (isEditMode) {
+                reportData.id = reportId;
+                // If re-submitting, we might want to reset status to 'pending' if it was requested changes
+                reportData.status = 'pending';
+            }
+
+            const result = await this.api.saveReport(reportData, isEditMode);
+            console.log('[Submit] Success:', result);
+
+            // 4. Post-submission UX
+            // Check if OS user
+            const isOsUser = window.location.pathname.includes('/staff/os/');
+            if (isOsUser) {
+                alert('レポートの提出を確認しました。\nマイページへ戻ります。');
+                window.location.href = '/staff/os/mypage';
+            } else {
+                alert('レポートを送信しました。');
+                window.location.href = '/staff/reports'; // or dashboard
+            }
+
+        } catch (error) {
+            console.error('[Submit] Error:', error);
+            alert(`送信エラー: ${error.message}`);
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> レポートを提出';
+            }
+        }
+    }
+
+    _buildReportData() {
+        // Collect Meta Data
+        const brandSelect = document.getElementById('report-brand-search'); // Input not select
+        const storeSelect = document.getElementById('report-store-search'); // Input
+        const dateInput = document.getElementById('report-date');
+        const scheduleSelect = document.getElementById('report-schedule-select');
+
+        // Logic to resolve IDs from names needed if inputs are just text
+        // For MVP/V2, let's assume UI puts ID in dataset or we use what's available
+        // Legacy code uses window.brands/stores to find ID from name input
+
+        let storeId = null;
+        let brandId = null;
+        let scheduleId = scheduleSelect ? scheduleSelect.value : null;
+
+        // Try to get IDs from selected schedule if available
+        if (scheduleSelect && scheduleSelect.selectedOptions[0]) {
+            const opt = scheduleSelect.selectedOptions[0];
+            if (opt.dataset.json) {
+                const sched = JSON.parse(opt.dataset.json);
+                storeId = sched.store_id;
+                // brandId might not be in schedule directly, but fetchable
+            }
+        }
+
+        // Collect Sections
+        const currentSections = this.state.getCurrentSections();
+        const sectionsArray = Object.values(currentSections);
+
+        // Transform sections to API format if necessary
+        // The API likely expects a JSON structure in 'content' or specific fields
+        // Legacy 'saveReport' sends the whole object. 
+        // We need to match the expected schema of the backend lambda.
+        // Assuming the backend stores 'sections' field as JSON or similar.
+
+        return {
+            date: dateInput ? dateInput.value : new Date().toISOString().split('T')[0],
+            store_id: storeId,
+            schedule_id: scheduleId,
+            status: 'pending', // Default status
+            sections: currentSections, // Send the dictionary or array? 
+            // Legacy sends a mapped structure. Let's send the map for now.
+            // Also need cleaning items metadata for indexing if backend requires it
+            cleaning_items: sectionsArray
+                .filter(s => s.type === 'cleaning')
+                .map(s => s.item_name)
+        };
+    }
+
+    _validate(data) {
+        if (!data.date) throw new Error('作業日を入力してください。');
+        // if (!data.store_id) throw new Error('店舗を選択してください。'); // Might be relaxed if free input allowed
+
+        const sections = Object.values(data.sections || {});
+        if (sections.length === 0) throw new Error('報告セクションがありません。少なくとも1つの項目を追加してください。');
+
+        // Check for empty required fields in sections if strict
+    }
+}
