@@ -202,14 +202,14 @@
 </main>
 
 <script>
-  (function() {
+  (function () {
     'use strict';
-    
+
     const API_ENDPOINT = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod/announcements';
     const announcementsList = document.getElementById('announcements-list');
-    
+
     if (!announcementsList) return;
-    
+
     // 日付フォーマット変換（ISO形式 → YYYY年MM月DD日 HH:MM）
     function formatDate(isoString) {
       try {
@@ -225,7 +225,7 @@
         return '';
       }
     }
-    
+
     // お知らせが新しいかどうか判定（7日以内）
     function isNew(publishedAt) {
       try {
@@ -238,7 +238,7 @@
         return false;
       }
     }
-    
+
     // 配信対象の表示名を取得
     function getTargetLabel(target) {
       const labels = {
@@ -249,7 +249,7 @@
       };
       return labels[target] || target;
     }
-    
+
     // 重要度の表示名を取得
     function getPriorityLabel(priority) {
       const labels = {
@@ -259,19 +259,19 @@
       };
       return labels[priority] || priority;
     }
-    
+
     // お知らせアイテムを生成
     function createAnnouncementItem(announcement) {
       const item = document.createElement('div');
       item.className = 'announcement-item';
-      
+
       // ヘッダー
       const header = document.createElement('div');
       header.className = 'announcement-header';
-      
+
       const title = document.createElement('h2');
       title.className = 'announcement-title';
-      
+
       if (announcement.link) {
         const link = document.createElement('a');
         link.href = announcement.link;
@@ -282,10 +282,10 @@
       } else {
         title.textContent = announcement.title || 'お知らせ';
       }
-      
+
       const badges = document.createElement('div');
       badges.className = 'announcement-badges';
-      
+
       // NEWバッジ
       if (isNew(announcement.published_at || announcement.created_at)) {
         const newBadge = document.createElement('span');
@@ -293,7 +293,7 @@
         newBadge.textContent = 'NEW';
         badges.appendChild(newBadge);
       }
-      
+
       // 重要度バッジ
       if (announcement.priority && announcement.priority !== 'normal') {
         const priorityBadge = document.createElement('span');
@@ -301,7 +301,7 @@
         priorityBadge.textContent = getPriorityLabel(announcement.priority);
         badges.appendChild(priorityBadge);
       }
-      
+
       // 配信対象バッジ
       if (announcement.target && announcement.target !== 'all') {
         const targetBadge = document.createElement('span');
@@ -309,24 +309,24 @@
         targetBadge.textContent = getTargetLabel(announcement.target);
         badges.appendChild(targetBadge);
       }
-      
+
       header.appendChild(title);
       header.appendChild(badges);
-      
+
       // メタ情報
       const meta = document.createElement('div');
       meta.className = 'announcement-meta';
-      
+
       const date = document.createElement('div');
       date.className = 'announcement-date';
       date.innerHTML = `<i class="fas fa-calendar-alt"></i> ${formatDate(announcement.published_at || announcement.created_at)}`;
       meta.appendChild(date);
-      
+
       // 本文
       const body = document.createElement('div');
       body.className = 'announcement-body';
       body.textContent = announcement.body || '';
-      
+
       // リンク
       let linkElement = null;
       if (announcement.link) {
@@ -337,33 +337,52 @@
         linkElement.className = 'announcement-link';
         linkElement.innerHTML = '詳細を見る <i class="fas fa-external-link-alt"></i>';
       }
-      
+
       // 要素を組み立て
       item.appendChild(header);
       item.appendChild(meta);
+
+      // 画像表示
+      if (announcement.image_url) {
+        const imageContainer = document.createElement('div');
+        imageContainer.style.marginBottom = '12px';
+
+        const img = document.createElement('img');
+        img.src = announcement.image_url;
+        img.alt = announcement.title || 'お知らせ画像';
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '400px';
+        img.style.borderRadius = '8px';
+        img.style.display = 'block';
+        img.loading = 'lazy';
+
+        imageContainer.appendChild(img);
+        item.appendChild(imageContainer);
+      }
+
       item.appendChild(body);
       if (linkElement) {
         item.appendChild(linkElement);
       }
-      
+
       return item;
     }
-    
+
     // お知らせを取得して表示
     async function loadAnnouncements() {
       try {
         announcementsList.innerHTML = '<div class="announcements-loading">読み込み中...</div>';
-        
+
         const response = await fetch(API_ENDPOINT);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const announcements = await response.json();
-        
+
         // リストをクリア
         announcementsList.innerHTML = '';
-        
+
         if (announcements.length === 0) {
           // お知らせがない場合
           announcementsList.innerHTML = '<div class="announcements-empty">現在お知らせはありません</div>';
@@ -380,7 +399,7 @@
         announcementsList.innerHTML = '<div class="announcements-error">お知らせの読み込みに失敗しました。しばらく時間をおいて再度お試しください。</div>';
       }
     }
-    
+
     // ページ読み込み時に実行
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', loadAnnouncements);
@@ -389,5 +408,3 @@
     }
   })();
 </script>
-
-

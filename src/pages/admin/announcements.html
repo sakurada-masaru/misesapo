@@ -113,6 +113,22 @@
                   <textarea id="announcement-content" name="content" rows="12" required placeholder="業務連絡の内容を入力してください"
                     class="premium-textarea"></textarea>
                 </div>
+
+                <div class="form-field">
+                  <label for="announcement-image">画像添付</label>
+                  <div class="image-upload-area">
+                    <input type="file" id="announcement-image" accept="image/*" class="premium-input">
+                    <div id="image-preview-container"
+                      style="display:none; margin-top:10px; position:relative; width: fit-content; border: 1px solid #e5e7eb; border-radius: 8px; padding: 4px;">
+                      <img id="image-preview" style="max-width:100%; max-height:200px; border-radius:4px;">
+                      <button type="button" id="btn-clear-image"
+                        style="position:absolute; top:-10px; right:-10px; background:#ef4444; color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:center;">
+                        <i class="fas fa-times" style="font-size: 12px;"></i>
+                      </button>
+                    </div>
+                    <input type="hidden" id="current-image-url" name="image_url">
+                  </div>
+                </div>
               </div>
 
               <div class="form-group-card mt-4">
@@ -444,6 +460,7 @@
 </style>
 
 <script src="/js/admin-sidebar.js"></script>
+<script src="/js/aws-s3-upload.js"></script>
 <script>
   const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
   const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
@@ -746,6 +763,25 @@
         playNotificationSound();
       }
     });
+
+    // 画像プレビュー
+    document.getElementById('announcement-image').addEventListener('change', function (e) {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById('image-preview').src = e.target.result;
+          document.getElementById('image-preview-container').style.display = 'block';
+        };
+        reader.readAsDataURL(this.files[0]);
+      }
+    });
+
+    // 画像削除
+    document.getElementById('btn-clear-image').addEventListener('click', () => {
+      document.getElementById('announcement-image').value = '';
+      document.getElementById('current-image-url').value = '';
+      document.getElementById('image-preview-container').style.display = 'none';
+    });
   }
 
   // 通知音を再生
@@ -761,6 +797,12 @@
     document.getElementById('announcement-id').value = '';
     document.getElementById('target-staff-group').style.display = 'none';
     document.getElementById('deadline-group').style.display = 'none';
+
+    // 画像リセット
+    document.getElementById('announcement-image').value = '';
+    document.getElementById('current-image-url').value = '';
+    document.getElementById('image-preview-container').style.display = 'none';
+
     document.getElementById('announcement-dialog').showModal();
   }
 
@@ -795,6 +837,35 @@
         notify_line: formData.get('notify_line') === 'on',
         notify_sound: formData.get('notify_sound') === 'on'
       };
+
+      // 画像アップロード処理
+      const imageInput = document.getElementById('announcement-image');
+      let imageUrl = document.getElementById('current-image-url').value;
+
+      if (imageInput.files.length > 0) {
+        // アップロード中表示などが必要だが、簡易的にアラート等は出さない
+        try {
+          if (window.AWSS3Upload) {
+            const file = imageInput.files[0];
+            const uploadRes = await window.AWSS3Upload.uploadImage(file, 'image', {
+              keyPrefix: 'announcements',
+              fileName: `ann_${Date.now()}_${file.name}`
+            });
+            imageUrl = uploadRes.url;
+          } else {
+            console.error('S3 Upload library not loaded');
+            // Fallback: base64 (not recommended for large files but good for MVP)
+            // ... actually better to fail if upload required
+            alert('画像アップロード機能が読み込まれていません');
+            return;
+          }
+        } catch (e) {
+          console.error('Image upload failed', e);
+          alert('画像のアップロードに失敗しました');
+          return;
+        }
+      }
+      data.image_url = imageUrl;
 
       const idToken = await getCognitoIdToken();
       const url = announcementId
@@ -896,6 +967,7 @@
         <div>
           <h3>${escapeHtml(announcement.title)}</h3>
           <div style="margin: 16px 0; padding: 16px; background: #f9fafb; border-radius: 8px;">
+            ${announcement.image_url ? `<img src="${announcement.image_url}" style="max-width:100%; max-height:400px; border-radius:8px; margin-bottom:16px; display:block;">` : ''}
             <p style="white-space: pre-wrap; line-height: 1.6;">${escapeHtml(announcement.content)}</p>
           </div>
           <div style="margin-top: 24px;">
@@ -924,6 +996,16 @@
     document.getElementById('announcement-id').value = announcement.id;
     document.getElementById('announcement-title').value = announcement.title;
     document.getElementById('announcement-content').value = announcement.content;
+
+    // 画像設定
+    document.getElementById('current-image-url').value = announcement.image_url || '';
+    if (announcement.image_url) {
+      document.getElementById('image-preview').src = announcement.image_url;
+      document.getElementById('image-preview-container').style.display = 'block';
+    } else {
+      document.getElementById('image-preview-container').style.display = 'none';
+      document.getElementById('image-preview').src = '';
+    }
 
     // 送信先
     document.querySelector(`input[name="target_type"][value="${announcement.target_type}"]`).checked = true;

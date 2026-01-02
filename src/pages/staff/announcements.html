@@ -395,6 +395,7 @@
           <div class="announcement-card-meta">
             <span><i class="fas fa-calendar"></i> ${createdDate}</span>
           </div>
+          ${announcement.image_url ? `<div style="margin-bottom:12px;"><img src="${announcement.image_url}" style="max-width:100%; border-radius:8px; max-height:400px; display:block;" loading="lazy"></div>` : ''}
           <div class="announcement-card-content">${escapeHtml(announcement.content)}</div>
           <div class="announcement-card-footer">
             ${deadlineHtml}
