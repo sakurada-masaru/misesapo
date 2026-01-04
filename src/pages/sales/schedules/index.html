@@ -614,6 +614,49 @@
                   </div>
                 </div>
 
+                <!-- Periodic Settings Block -->
+                <div id="periodic-settings"
+                  style="width:100%; display:none; background:#f0f9ff; padding:12px; border-radius:6px; margin-top:10px; border:1px solid #bae6fd;">
+                  <h6 class="small fw-bold text-primary mb-2" style="margin-top:0;"><i class="fas fa-sync-alt"></i>
+                    定期繰り返しの設定</h6>
+                  <div class="row g-2" style="display:flex; flex-wrap:wrap; gap:10px;">
+                    <div class="col-md-3" style="flex:1; min-width:120px;">
+                      <label class="form-label small">頻度</label>
+                      <select id="periodic-frequency" class="form-select form-select-sm"
+                        style="width:100%; padding:6px; border-radius:4px; border:1px solid #ccc;">
+                        <option value="weekly">毎週</option>
+                        <option value="biweekly">隔週</option>
+                        <option value="monthly">毎月</option>
+                      </select>
+                    </div>
+                    <div class="col-md-5" id="periodic-weekday-group" style="flex:2; min-width:200px;">
+                      <label class="form-label small">曜日指定</label>
+                      <div class="d-flex gap-2 bg-white px-2 py-1 rounded border"
+                        style="display:flex; gap:8px; background:white; padding:8px; border-radius:4px; border:1px solid #ccc; flex-wrap:wrap;">
+                        <label class="small mb-0" style="margin-right:4px;"><input type="checkbox" name="periodic_wday"
+                            value="1"> 月</label>
+                        <label class="small mb-0" style="margin-right:4px;"><input type="checkbox" name="periodic_wday"
+                            value="2"> 火</label>
+                        <label class="small mb-0" style="margin-right:4px;"><input type="checkbox" name="periodic_wday"
+                            value="3"> 水</label>
+                        <label class="small mb-0" style="margin-right:4px;"><input type="checkbox" name="periodic_wday"
+                            value="4"> 木</label>
+                        <label class="small mb-0" style="margin-right:4px;"><input type="checkbox" name="periodic_wday"
+                            value="5"> 金</label>
+                        <label class="small mb-0" style="margin-right:4px;"><input type="checkbox" name="periodic_wday"
+                            value="6"> 土</label>
+                        <label class="small mb-0"><input type="checkbox" name="periodic_wday" value="0"> 日</label>
+                      </div>
+                    </div>
+                    <div class="col-md-4" style="flex:1; min-width:150px;">
+                      <label class="form-label small">終了日（期間）</label>
+                      <input type="date" id="periodic-end-date" class="form-control form-control-sm"
+                        style="width:100%; padding:6px;">
+                      <div class="form-text" style="font-size:0.75rem; color:#666; margin-top:2px;">未指定時は1年後まで作成</div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Logistics -->
                 <div style="width:100%; margin-top:8px;">
                   <div style="display:flex; gap:10px; flex-wrap:wrap;">

@@ -773,6 +773,7 @@ function renderTable() {
             <div class="schedule-card ${isDraft ? 'draft-card' : ''}" onclick="openEditDialog('${s.id}')">
                <div class="schedule-card-header">
                   <span class="status-badge status-${s.status}">${getStatusLabel(s.status)}</span>
+                  ${(s.work_type === 'periodic' || s.work_type === 'regular') ? '<span style="background:#e0f2fe; color:#0369a1; border-radius:4px; padding:2px 6px; font-size:0.7rem; margin-left:6px; font-weight:bold;"><i class="fas fa-sync-alt"></i> 定期</span>' : ''}
                   <span style="margin-left:auto;font-size:0.8rem;color:#666;">${s.date || s.scheduled_date}</span>
                </div>
                <div style="font-size:0.75rem; color:#888; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
@@ -1313,7 +1314,68 @@ window.printScheduleRequest = function (id) {
 
 // --- Handle Submit ---
 
+function generatePeriodicDates(startStr, endStr, freq, weekdays) {
+  const dates = [];
+  const start = new Date(startStr);
+  let end = endStr ? new Date(endStr) : new Date(start);
+  if (!endStr) end.setFullYear(end.getFullYear() + 1);
+
+  // Hard caps
+  const MAX_ITEMS = 55; // Approx 1 year weekly
+
+  let current = new Date(start);
+
+  if (freq === 'monthly') {
+    while (current <= end && dates.length < 24) {
+      dates.push(new Date(current).toISOString().split('T')[0]);
+      current.setMonth(current.getMonth() + 1);
+    }
+  } else if (freq === 'biweekly') {
+    while (current <= end && dates.length < 30) {
+      dates.push(new Date(current).toISOString().split('T')[0]);
+      current.setDate(current.getDate() + 14);
+    }
+  } else {
+    // Weekly: Iterate days to find match
+    // Optimization: Iterate weeks? No, iterate days is safe enough for 1 year (365 iterations)
+    while (current <= end && dates.length < MAX_ITEMS) {
+      if (weekdays.includes(current.getDay())) {
+        dates.push(new Date(current).toISOString().split('T')[0]);
+      }
+      current.setDate(current.getDate() + 1);
+    }
+  }
+  return dates;
+}
+
 function setupEventListeners() {
+  // Periodic Toggle
+  const workTypeSelect = document.getElementById('schedule-work-type');
+  const freqSelect = document.getElementById('periodic-frequency');
+
+  if (workTypeSelect) {
+    workTypeSelect.addEventListener('change', (e) => {
+      const ps = document.getElementById('periodic-settings');
+      if (ps) ps.style.display = e.target.value === 'periodic' ? 'block' : 'none';
+    });
+  }
+
+  if (freqSelect) {
+    freqSelect.addEventListener('change', (e) => {
+      const wdGroup = document.getElementById('periodic-weekday-group');
+      // Only show weekdays for weekly
+      if (wdGroup) {
+        if (e.target.value === 'weekly') {
+          wdGroup.style.opacity = '1';
+          wdGroup.style.pointerEvents = 'auto';
+        } else {
+          wdGroup.style.opacity = '0.5';
+          wdGroup.style.pointerEvents = 'none';
+        }
+      }
+    });
+  }
+
   if (scheduleForm) {
     scheduleForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1328,25 +1390,17 @@ function setupEventListeners() {
         return;
       }
 
-      const payload = {
-        // ... (base fields)
+      const basePayload = {
         store_id: storeId,
         date: document.getElementById('schedule-date').value,
         time_slot: document.getElementById('schedule-time').value,
         sales_id: document.getElementById('schedule-sales').value,
-
-        // Extended Details
         work_type: document.getElementById('schedule-work-type')?.value || 'periodic',
         parking_info: document.getElementById('schedule-parking')?.value || '',
         key_info: document.getElementById('schedule-key-info')?.value || '',
         attendance_required: document.querySelector('input[name="attendance_required"]:checked')?.value || 'none',
         attendance_notes: document.getElementById('schedule-attendance-notes')?.value || '',
-
-        // Worker
         worker_id: selectedWorkers.length > 0 ? selectedWorkers.map(w => w.id).join(',') : null,
-
-        // Items
-        // Items (Merge Checklist + Search Results)
         cleaning_items: [
           ...selectedCleaningItems,
           ...Array.from(document.querySelectorAll('input[name="work_items_check[]"]:checked')).map(cb => ({
@@ -1355,25 +1409,17 @@ function setupEventListeners() {
             type: 'checklist'
           }))
         ],
-
-        // Notes
         notes: document.getElementById('schedule-notes').value,
-
-        // HACCP Data
         haccp_instructions: Array.from(document.querySelectorAll('input[name="haccp_instruction[]"]:checked')).map(cb => cb.value),
         haccp_notes: document.getElementById('modal-haccp-notes').value,
-
-        // Status & Survey
         status: 'scheduled',
         survey_data: {
-          // Assessment (Pre-check)
           assessment: {
             area1: { status: document.querySelector('input[name="assess_area1"]:checked')?.value || '', note: document.getElementById('assess-note-area1')?.value || '' },
             area2: { status: document.querySelector('input[name="assess_area2"]:checked')?.value || '', note: document.getElementById('assess-note-area2')?.value || '' },
             area3: { status: document.querySelector('input[name="assess_area3"]:checked')?.value || '', note: document.getElementById('assess-note-area3')?.value || '' },
             area4: { status: document.querySelector('input[name="assess_area4"]:checked')?.value || '', note: document.getElementById('assess-note-area4')?.value || '' }
           },
-          // Karte Data
           environment: document.getElementById('survey-environment')?.value || '',
           issue: document.getElementById('survey-issue')?.value || '',
           area_sqm: document.getElementById('survey-area-sqm')?.value || '',
@@ -1390,26 +1436,100 @@ function setupEventListeners() {
         }
       };
 
-      // Update logic for existing ID
       const scheduleId = document.getElementById('schedule-id').value;
+
+      // Periodic Generation Logic logic
+      const isPeriodicMode = basePayload.work_type === 'periodic' && !scheduleId;
+
+      if (isPeriodicMode) {
+        const freq = document.getElementById('periodic-frequency').value;
+        const wdays = Array.from(document.querySelectorAll('input[name="periodic_wday"]:checked')).map(cb => Number(cb.value));
+        const endDateVal = document.getElementById('periodic-end-date').value;
+
+        // Safety: If weekly and no wdays, use start date's day
+        if (freq === 'weekly' && wdays.length === 0) {
+          wdays.push(new Date(basePayload.date).getDay());
+        }
+
+        const targetDates = generatePeriodicDates(basePayload.date, endDateVal, freq, wdays);
+
+        if (targetDates.length === 0) {
+          alert('生成可能な日付がありません。日付や曜日設定を確認してください。');
+          formStatus.textContent = '';
+          return;
+        }
+
+        if (!confirm(`【定期反映】\n${targetDates.length}件の依頼書を一括作成します。\n期間: ${basePayload.date} ～ ${targetDates[targetDates.length - 1]}\nよろしいですか？`)) {
+          formStatus.textContent = '';
+          return;
+        }
+
+        let successCount = 0;
+        let failCount = 0;
+
+        // Batch process
+        for (const d of targetDates) {
+          const p = { ...basePayload, date: d, status: 'scheduled' }; // force scheduled?
+          // Use draft if preferred, but usually confirmed. Let's stick to status logic (new => draft)
+          // But basePayload sets 'scheduled' above line 1367 in original code? 
+          // Wait, I see "status: 'scheduled'" in my replacement block above. 
+          // In original code it was "status: 'scheduled'" in the object definition, then later overridden to 'draft' if new.
+          // I should respect the logic: New = draft? 
+          // User said "定期清掃の場合スケジュールに定期的にスケジュールが反映". Reflected in schedule usually means active.
+          // Let's set to 'scheduled' (Confirm) or 'draft' (Unconfirmed).
+          // I'll keep 'scheduled' as in my replacement block, but maybe override to draft if that was the convention.
+          // Original code: line 1405: payload.status = 'draft';
+          // Okay, I will set them to 'draft' so sales can confirm them.
+          p.status = 'draft';
+
+          try {
+            const res = await fetch(`${API_BASE}/schedules`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(p)
+            });
+            if (res.ok) successCount++;
+            else failCount++;
+          } catch (e) { failCount++; }
+
+          formStatus.textContent = `作成中... ${successCount}/${targetDates.length}`;
+        }
+
+        if (failCount === 0) {
+          formStatus.textContent = '完了しました';
+          formStatus.className = 'form-status success';
+          setTimeout(() => {
+            scheduleDialog.close();
+            loadSchedules();
+          }, 1000);
+        } else {
+          alert(`${successCount}件 作成完了, ${failCount}件 失敗`);
+          loadSchedules();
+        }
+        return; // End periodic flow
+      }
+
+      // -- Standard Single Save Flow --
       let method = 'POST';
       let url = `${API_BASE}/schedules`;
+
+      // Copy payload to avoid reference issues
+      const finalPayload = { ...basePayload };
 
       if (scheduleId) {
         method = 'PUT';
         url = `${API_BASE}/schedules/${scheduleId}`;
-        // Preserve existing status if editing
         const existing = allSchedules.find(s => s.id === scheduleId);
-        if (existing) payload.status = existing.status;
+        if (existing) finalPayload.status = existing.status;
       } else {
-        payload.status = 'draft'; // New schedules default to draft
+        finalPayload.status = 'draft';
       }
 
       try {
         const res = await fetch(url, {
           method: method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(finalPayload)
         });
 
         if (res.ok) {
@@ -1417,7 +1537,7 @@ function setupEventListeners() {
           formStatus.className = 'form-status success';
           setTimeout(() => {
             scheduleDialog.close();
-            loadSchedules(); // Reload List
+            loadSchedules();
           }, 1000);
         } else {
           throw new Error('Save Failed');
