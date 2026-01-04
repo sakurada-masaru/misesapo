@@ -776,8 +776,10 @@ function renderTable() {
                   ${(s.work_type === 'periodic' || s.work_type === 'regular') ? '<span style="background:#e0f2fe; color:#0369a1; border-radius:4px; padding:2px 6px; font-size:0.7rem; margin-left:6px; font-weight:bold;"><i class="fas fa-sync-alt"></i> 定期</span>' : ''}
                   <span style="margin-left:auto;font-size:0.8rem;color:#666;">${s.date || s.scheduled_date}</span>
                </div>
-               <div style="font-size:0.75rem; color:#888; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                   ${client ? escapeHtml(client.name) : ''} <span style="color:#ccc;">|</span> ${brand ? escapeHtml(brand.name) : ''}
+               <div style="font-size:0.75rem; color:#888; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:baseline;">
+                   <span>${client ? escapeHtml(client.name || client.company_name) : '-'}</span>
+                   <span style="color:#d1d5db; margin:0 6px;">|</span>
+                   <span style="font-size:1.1rem; font-weight:bold; color:#FF679C;">${brand ? escapeHtml(brand.name) : '-'}</span>
                </div>
                <div style="font-weight:bold;margin:2px 0 6px 0; font-size:1rem;">${escapeHtml(store.name || s.store_name || '店舗未設定')}</div>
                <div style="font-size:0.85rem;color:#444; border-top:1px dashed #eee; padding-top:4px; display:flex; align-items:center;">
