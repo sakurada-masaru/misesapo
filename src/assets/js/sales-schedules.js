@@ -896,16 +896,28 @@ function showDailySchedules(dateStr) {
   } else {
     listEl.innerHTML = items.map(s => {
       const store = allStores.find(x => x.id === (s.store_id || s.client_id)) || {};
+      const client = allClients.find(c => String(c.id) === String(s.client_id || store.client_id));
+      const brand = allBrands.find(b => String(b.id) === String(s.brand_id || store.brand_id));
       const statusLabel = getStatusLabel(s.status);
+      const isPeriodic = s.work_type === 'periodic' || s.work_type === 'regular';
+
       return `
         <div class="schedule-card" style="border:1px solid #e5e7eb; padding:12px; margin-bottom:10px; border-radius:12px; position:relative; transition:all 0.2s; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
            
            <!-- Main Click Area: Open Print View -->
            <div onclick="printScheduleRequest('${s.id}')" style="cursor:pointer; padding-right:40px;">
              <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center;">
-                <span class="status-badge status-${s.status}">${statusLabel}</span>
+                <div style="display:flex; align-items:center;">
+                    <span class="status-badge status-${s.status}">${statusLabel}</span>
+                    ${isPeriodic ? '<span style="background:#e0f2fe; color:#0369a1; border-radius:4px; padding:2px 6px; font-size:0.7rem; margin-left:6px; font-weight:bold;"><i class="fas fa-sync-alt"></i> 定期</span>' : ''}
+                </div>
                 <span style="font-size:0.8rem; color:#6b7280;">${s.time_slot || ''}</span>
              </div>
+
+             <div style="font-size:0.75rem; color:#6b7280; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                ${client ? escapeHtml(client.name || client.company_name) : '-'} <span style="color:#d1d5db; margin:0 4px;">|</span> ${brand ? escapeHtml(brand.name) : '-'}
+             </div>
+
              <div style="font-weight:700; color:#111827; margin-bottom:6px; font-size:1rem; line-height:1.4;">${escapeHtml(store.name || s.store_name || '店舗未設定')}</div>
              <div style="font-size:0.85rem; color:#6B7280; display:flex; align-items:center; gap:6px; margin-bottom:10px;">
                 <i class="fas fa-user-circle" style="color:#9ca3af;"></i>
