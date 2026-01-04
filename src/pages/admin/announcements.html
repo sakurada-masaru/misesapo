@@ -868,6 +868,12 @@
       data.image_url = imageUrl;
 
       const idToken = await getCognitoIdToken();
+      if (!idToken) {
+        alert('認証情報が見つかりません。再ログインしてください。');
+        window.location.href = '/staff/signin.html';
+        return;
+      }
+
       const url = announcementId
         ? `${REPORT_API}/admin/announcements/${announcementId}`
         : `${REPORT_API}/admin/announcements`;
@@ -883,7 +889,10 @@
       });
 
       if (!response.ok) {
-        throw new Error('保存に失敗しました');
+        if (response.status === 401) {
+          throw new Error('認証エラー: セッションが有効期限切れです。再ログインしてください。');
+        }
+        throw new Error(`保存に失敗しました (Status: ${response.status})`);
       }
 
       document.getElementById('announcement-dialog').close();
