@@ -914,8 +914,10 @@ function showDailySchedules(dateStr) {
                 <span style="font-size:0.8rem; color:#6b7280;">${s.time_slot || ''}</span>
              </div>
 
-             <div style="font-size:0.75rem; color:#6b7280; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                ${client ? escapeHtml(client.name || client.company_name) : '-'} <span style="color:#d1d5db; margin:0 4px;">|</span> ${brand ? escapeHtml(brand.name) : '-'}
+             <div style="font-size:0.75rem; color:#6b7280; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:baseline;">
+                <span>${client ? escapeHtml(client.name || client.company_name) : '-'}</span>
+                <span style="color:#d1d5db; margin:0 6px;">|</span>
+                <span style="font-size:1.1rem; font-weight:bold; color:#FF679C;">${brand ? escapeHtml(brand.name) : '-'}</span>
              </div>
 
              <div style="font-weight:700; color:#111827; margin-bottom:6px; font-size:1rem; line-height:1.4;">${escapeHtml(store.name || s.store_name || '店舗未設定')}</div>
@@ -924,7 +926,7 @@ function showDailySchedules(dateStr) {
                 <span>${s.worker_id ? (allWorkers.find(w => w.id === s.worker_id)?.name || '未定') : '未割当'}</span>
              </div>
              <div style="font-size:0.85rem; color:#FF679C; font-weight:600; display:flex; align-items:center; gap:6px;">
-               <i class="fas fa-file-alt"></i> 依頼書プレビュー
+               <i class="fas fa-file-alt"></i> 依頼内容を確認
              </div>
            </div>
 
