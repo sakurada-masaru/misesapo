@@ -429,8 +429,8 @@
         };
       }
 
-      // 部署名と本部名が同じ場合は直属メンバー
-      if (dept === parentDept) {
+      // 部署名と本部名が同じ場合、または本部ロールの場合は直属メンバー
+      if (dept === parentDept || user.role === 'headquarters') {
         organizationHierarchy[parentDept].directMembers.push(user);
       } else {
         if (!organizationHierarchy[parentDept].departments[dept]) {

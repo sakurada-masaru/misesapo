@@ -20,6 +20,11 @@ const ROLE_CONFIG = {
       password: null,
       displayName: '清掃員'
     },
+    headquarters: {
+      name: '本部',
+      password: null,
+      displayName: '本部'
+    },
     concierge: {
       name: 'コンシェルジュ',
       password: null,
@@ -91,7 +96,8 @@ const ROLE_CONFIG = {
     accounting: ['guest', 'accounting'],  // 経理
     human_resources: ['guest', 'human_resources'],  // 人事
     concierge: ['guest', 'customer', 'staff', 'concierge'],  // コンシェルジュ: 清掃員とユーザーの権限も持つ
-    admin: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'general_affairs', 'operation', 'accounting', 'human_resources', 'concierge', 'admin'],  // 管理者: すべての権限
+    headquarters: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'general_affairs', 'operation', 'accounting', 'human_resources', 'concierge', 'headquarters'], // 本部
+    admin: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'general_affairs', 'operation', 'accounting', 'human_resources', 'concierge', 'headquarters', 'admin'],  // 管理者: すべての権限
     developer: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'general_affairs', 'operation', 'accounting', 'human_resources', 'concierge', 'admin', 'developer'],  // 開発者: すべての権限
     master: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'general_affairs', 'operation', 'accounting', 'human_resources', 'concierge', 'admin', 'developer', 'master']  // マスター: すべての権限（最上位）
   },
@@ -109,6 +115,7 @@ const ROLE_CONFIG = {
     'contractor': '/staff/mypage',  // 外部委託は通常マイページ（PC向け）
     'concierge': '/sales/mypage',  // コンシェルジュは営業マイページ（SP用、クイックメニューあり）
     'sales': '/sales/mypage',  // 営業は営業マイページ（SP用、クイックメニューあり）
+    'headquarters': '/admin/dashboard', // 本部は管理ダッシュボード
     'admin': '/admin/dashboard',  // 管理者は管理ダッシュボード
     'developer': '/staff/developer/mypage',  // 開発者は開発マイページ（PC向け）
     'master': '/admin/sitemap',  // マスターはサイトマップ
@@ -164,10 +171,10 @@ const ROLE_CONFIG = {
     '/reports/': ['staff', 'customer', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
 
     // コンシェルジュ向けページ（コンシェルジュと管理者のみ）
-    '/sales/': ['concierge', 'admin', 'developer', 'master'],
+    '/sales/': ['concierge', 'headquarters', 'admin', 'developer', 'master'],
 
     // 管理者向けページ（管理者と開発者のみ）
-    '/admin/': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/admin/': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'headquarters', 'admin', 'developer', 'master'],
     '/admin/partners.html': ['admin', 'developer', 'master'],
     '/admin/partners/': ['admin', 'developer', 'master'],
     '/admin/partners/new.html': ['admin', 'developer', 'master'],
@@ -222,6 +229,16 @@ const ROLE_CONFIG = {
       { href: '/sales/estimates/new', label: '見積もり作成', icon: 'fa-file-invoice-dollar' },
       { href: '/sales/schedule', label: 'スケジュール', icon: 'fa-calendar' },
       { href: '/sales/orders', label: '発注管理', icon: 'fa-shopping-cart' }
+    ],
+    headquarters: [
+      { href: '/admin/dashboard', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/services', label: 'サービス管理', icon: 'fa-cogs' },
+      { href: '/admin/services/new', label: '新規サービス登録', icon: 'fa-plus-circle' },
+      { href: '/admin/clients', label: '顧客管理', icon: 'fa-users' },
+      { href: '/admin/orders', label: '発注管理', icon: 'fa-shopping-cart' },
+      { href: '/admin/users', label: 'ユーザーID管理', icon: 'fa-user-shield' },
+      { href: '/admin/partners', label: 'パートナー企業一覧', icon: 'fa-handshake' },
+      { href: '/cleaning-manual-admin', label: '清掃マニュアル', icon: 'fa-book' }
     ],
     admin: [
       { href: '/admin/dashboard', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
@@ -338,8 +355,8 @@ function matchPathPattern(path, pattern) {
  * ページへのアクセス権限をチェック
  */
 function checkPageAccess(path, userRole) {
-  // マスター、管理者、開発者はすべてのページにアクセス可能
-  if (userRole === 'master' || userRole === 'admin' || userRole === 'developer') {
+  // マスター、管理者、開発者、本部はすべてのページにアクセス可能
+  if (userRole === 'master' || userRole === 'admin' || userRole === 'developer' || userRole === 'headquarters') {
     return true;
   }
 
