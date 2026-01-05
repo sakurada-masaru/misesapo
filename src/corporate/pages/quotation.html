@@ -1,880 +1,1086 @@
 <!DOCTYPE html>
 <html lang="ja">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <base href="{{ base_path }}" />
-        <title>ミセサポなら『相見積もり不要！』 | ミセサポ</title>
-        <meta name="description" content="東京の飲食店清掃業者の相見積もりで、価格×品質を両立したミセサポ。相見積もり大歓迎で、継続しやすい価格と満足度の高い仕上がりを実現します。">
-        <meta name="keywords" content="ミセサポ,清掃業者,飲食店,相見積もり,東京,清掃会社">
 
-        <!--GoogleFonts(Noto Sans JP)-->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
-        <!--GoogleFonts(Noto Sans JP) end-->
-        <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
-        <link rel="stylesheet" href="/css/swiper-bundle.min.css">
-        <link rel="stylesheet" href="/css/style.css">
-        <link rel="stylesheet" href="/css/header.css">
-        <style>
-            .breadcrumb {
-                max-width: 1000px;
-                margin: 0 auto;
-                padding: 20px 20px 0;
-                font-size: 14px;
-                color: #666;
-            }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="{{ base_path }}" />
+    <title>ミセサポなら『相見積もり不要！』 | ミセサポ</title>
+    <meta name="description" content="東京の飲食店清掃業者の相見積もりで、価格×品質を両立したミセサポ。相見積もり大歓迎で、継続しやすい価格と満足度の高い仕上がりを実現します。">
+    <meta name="keywords" content="ミセサポ,清掃業者,飲食店,相見積もり,東京,清掃会社">
 
-            .breadcrumb-inner {
-                display: inline-block;
-                padding-bottom: 8px;
-                border-bottom: 1px solid #e5e5e5;
-            }
+    <!--GoogleFonts(Noto Sans JP)-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <!--GoogleFonts(Noto Sans JP) end-->
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <style>
+        .breadcrumb {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px 20px 0;
+            font-size: 14px;
+            color: #666;
+        }
 
-            .breadcrumb a {
-                color: #666;
-                text-decoration: none;
-                transition: color 0.3s ease;
-            }
+        .breadcrumb-inner {
+            display: inline-block;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e5e5;
+        }
 
-            .breadcrumb a:hover {
-                color: #FF679C;
-            }
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
 
-            .breadcrumb span {
-                margin: 0 8px;
-                color: #999;
-            }
+        .breadcrumb a:hover {
+            color: #FF679C;
+        }
 
-            .breadcrumb .current {
-                color: #333;
-                font-weight: 500;
-            }
+        .breadcrumb span {
+            margin: 0 8px;
+            color: #999;
+        }
 
-            /* ヒーローセクション */
+        .breadcrumb .current {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* ヒーローセクション */
+        .lp-hero {
+            background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+            color: #fff;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .lp-hero h1 {
+            font-size: 40px;
+            font-weight: 700;
+            line-height: 1.6;
+            padding: 30px;
+        }
+
+        .lp-hero p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto 40px;
+        }
+
+        .lp-hero-cta {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-hero-cta a {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #fff;
+            color: #FF679C;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .lp-hero-cta a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* セクション共通スタイル */
+        .lp-section {
+            max-width: 900px;
+            margin: 60px auto 0;
+        }
+
+        .lp-section .sec-image{
+            height: 150px;
+            display: block;
+            margin: 10px auto 20px;
+            width: auto;
+        }
+
+        .lp-section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            display: block;
+            margin: auto;
+            max-width: 900px;
+            padding-bottom: 20px;
+        }
+
+        .lp-section-subtitle {
+            font-size: clamp(20px, 3vw, 28px);
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #666;
+        }
+
+        .lp-section-text {
+            font-size: 16px;
+            padding-top: 10px;
+            color: #666;
+            max-width: 900px;
+        }
+
+        /* イントロセクション */
+        .lp-intro {
+            background: #FDEDED;
+        }
+
+        .lp-intro-box {
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-intro-box p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .lp-problems {
+            margin: 20px 0;
+            padding-left: 0;
+        }
+
+        .lp-problems p {
+            padding: 10px 0 10px 30px;
+            position: relative;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+        }
+
+        .lp-problems p::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-image: url('/images/moya_gr.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .lp-solution {
+            margin-top: 25px;
+            font-size: 18px;
+            line-height: 1.9;
+            color: #333;
+        }
+
+        .lp-highlight {
+            font-weight: bold;
+            color: #FF679C;
+            padding: 0 4px;
+        }
+
+        /* ポイントセクション */
+        .lp-points {
+            background: #fff;
+        }
+
+        .lp-points-list {
+            max-width: 900px;
+            margin: 50px auto 0;
+        }
+
+        .lp-point-item {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-point-item h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 5px;
+        }
+
+        .lp-point-item p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-point-item ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-point-item ul li {
+            padding: 5px 0 5px 30px;
+            position: relative;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-point-item ul li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* 理由セクション */
+        .lp-reasons {
+            background: #FDEDED;
+        }
+
+        .lp-reasons-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-reasons-box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 5px;
+        }
+
+        .lp-reasons-box p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+        }
+
+        .lp-reasons-box ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-reasons-box ul li {
+            padding: 5px 0 5px 30px;
+            position: relative;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-reasons-box ul li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom;
+        }
+
+        /* 比較テーブルセクション */
+
+        .lp-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .lp-table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: white;
+            /* font-size: 1.5rem; */
+            font-size: 16px;
+        }
+
+        .lp-table th,
+        .lp-table td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e5e5e5;
+            color: #333;
+        }
+
+        .lp-table th {
+            background: #FF679C;
+            color: white;
+            font-weight: 700;
+        }
+
+        .lp-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .lp-table-highlight {
+            background: #ffc2d7;
+            font-weight: 700;
+            color: #FF679C;
+            font-size: 17px;
+        }
+
+        .lp-table-note {
+            background: #FDEDED;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+            text-align: center;
+            border: 2px solid #FF679C;
+        }
+
+        .lp-table-note p {
+            font-size: 18px;
+            line-height: 1.9;
+            margin: 8px 0;
+            color: #333;
+        }
+
+        /* おすすめセクション */
+        .lp-recommend {
+            background: #FDEDED;
+        }
+
+        .lp-recommend-list {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .lp-recommend-item {
+            background: #fff;
+            padding: 15px 30px;
+            border-left: 4px solid #FF679C;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-size: 18px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .lp-recommend-item::before {
+            content: "";
+            position: absolute;
+            left: 20px;
+            top: 25px;
+            width: 24px;
+            height: 24px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .lp-recommend-item strong {
+            color: #FF679C;
+            font-weight: 700;
+        }
+
+        .lp-recommend-item span {
+            font-size: 16px;
+        }
+
+        /* CTAセクション */
+        .lp-cta {
+            background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+            color: #fff;
+            padding: 40px 20px;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .lp-cta h2 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .lp-cta p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            line-height: 1.8;
+            margin-bottom: 40px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .lp-cta-features {
+            padding: 30px 50px;
+            border-radius: 35px;
+            margin: 30px auto;
+            width: fit-content;
+            background-color: #fff;
+            font-weight: bold;
+
+        }
+
+        .lp-cta-feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .lp-cta-feature-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .lp-cta-feature-item span:first-child {
+            width: 25px;
+            height: 25px;
+            margin-right: 15px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: inline-block;
+        }
+
+        .lp-cta-feature-item span:last-child {
+            color: #FF679C;
+            font-size: 18px;
+        }
+
+        .lp-cta-feature-item span:last-child {
+            font-size: 25px;
+        }
+
+        .lp-cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-cta-buttons a {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #ffff00;
+            color: #FF679C;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .lp-cta-buttons a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            background: #ffeb3b;
+        }
+
+        .lp-contact-button {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #FF679C;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .lp-contact-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 103, 156, 0.4);
+            background: #E53888;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
             .lp-hero {
-                background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
-                color: #fff;
-                padding: 30px;
-                text-align: center;
+                padding: 100px 15px 60px;
             }
 
-            .lp-hero h1 {
-                font-size: 40px;
-                font-weight: 700;
-                line-height: 1.6;
-                padding: 30px;
-            }
-
-            .lp-hero p {
-                font-size: clamp(16px, 2.5vw, 20px);
-                line-height: 1.8;
-                max-width: 800px;
-                margin: 0 auto 40px;
-            }
-
-            .lp-hero-cta {
-                display: flex;
-                gap: 20px;
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .lp-hero-cta a {
-                display: inline-block;
-                padding: 16px 40px;
-                background: #fff;
-                color: #FF679C;
-                text-decoration: none;
-                border-radius: 50px;
-                font-weight: 700;
-                font-size: 18px;
-                transition: transform 0.3s ease, box-shadow 0.3s ease;
-            }
-
-            .lp-hero-cta a:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            }
-
-            /* セクション共通スタイル */
             .lp-section {
-                padding: 80px 20px;
-                max-width: 1200px;
-                margin: 0 auto;
+                padding: 60px 15px;
             }
 
-            .lp-section-title {
-                font-size: clamp(28px, 4vw, 40px);
-                font-weight: 700;
+            .lp-hero-cta,
+            .lp-cta-buttons {
+                flex-direction: column;
+            }
+
+            .lp-hero-cta a,
+            .lp-cta-buttons a {
+                width: 100%;
                 text-align: center;
-                margin-bottom: 20px;
-                color: #333;
-            }
-
-            .lp-section-subtitle {
-                font-size: clamp(20px, 3vw, 28px);
-                font-weight: 600;
-                text-align: center;
-                margin-bottom: 50px;
-                color: #666;
-            }
-
-            .lp-section-text {
-                font-size: clamp(16px, 2vw, 18px);
-                line-height: 1.8;
-                color: #666;
-                margin-bottom: 40px;
-            }
-
-            /* イントロセクション */
-            .lp-intro {
-                background: #FDEDED;
-            }
-
-            .lp-intro-box {
-                background: #fff;
-                padding: 40px;
-                border-radius: 12px;
-                margin-bottom: 30px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            }
-
-            .lp-intro-box p {
-                font-size: 16px;
-                line-height: 1.8;
-                color: #666;
-                margin-bottom: 15px;
-            }
-
-            .lp-problems {
-                margin: 20px 0;
-                padding-left: 0;
-            }
-
-            .lp-problems p {
-                padding: 10px 0 10px 30px;
-                position: relative;
-                font-size: 16px;
-                line-height: 1.8;
-                color: #666;
-            }
-
-            .lp-problems p::before {
-                content: "・";
-                position: absolute;
-                left: 0;
-                color: #FF679C;
-                font-weight: bold;
-                font-size: 20px;
-            }
-
-            .lp-solution {
-                margin-top: 25px;
-                font-size: 18px;
-                line-height: 1.9;
-                color: #333;
-            }
-
-            .lp-highlight {
-                background: linear-gradient(transparent 60%, #ffd1ed 60%);
-                font-weight: bold;
-                color: #FF679C;
-                padding: 0 4px;
-            }
-
-            /* ポイントセクション */
-            .lp-points {
-                background: #fff;
-            }
-
-            .lp-points-list {
-                max-width: 900px;
-                margin: 50px auto 0;
-            }
-
-            .lp-point-item {
-                background: #f9f9f9;
-                padding: 30px;
-                border-radius: 12px;
-                margin-bottom: 30px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            }
-
-            .lp-point-item h3 {
-                font-size: 24px;
-                font-weight: 700;
-                color: #FF679C;
-                margin-bottom: 15px;
-            }
-
-            .lp-point-item p {
-                font-size: 16px;
-                line-height: 1.8;
-                color: #666;
-            }
-
-            .lp-point-item ul {
-                list-style: none;
-                padding: 0;
-                margin: 20px 0 0 0;
-            }
-
-            .lp-point-item ul li {
-                padding: 10px 0 10px 30px;
-                position: relative;
-                font-size: 16px;
-                line-height: 1.8;
-                color: #666;
-            }
-
-            .lp-point-item ul li::before {
-                content: "✓";
-                position: absolute;
-                left: 0;
-                color: #FF679C;
-                font-weight: bold;
-                font-size: 20px;
-            }
-
-            /* 理由セクション */
-            .lp-reasons {
-                background: #FDEDED;
-            }
-
-            .lp-reasons-box {
-                background: #fff;
-                padding: 30px;
-                border-radius: 12px;
-                margin: 30px 0;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            }
-
-            .lp-reasons-box h3 {
-                font-size: 24px;
-                font-weight: 700;
-                color: #FF679C;
-                margin-bottom: 20px;
-            }
-
-            .lp-reasons-box p {
-                font-size: 16px;
-                line-height: 1.8;
-                color: #666;
-                margin-bottom: 15px;
-            }
-
-            .lp-reasons-box ul {
-                list-style: none;
-                padding: 0;
-                margin: 20px 0;
-            }
-
-            .lp-reasons-box ul li {
-                padding: 10px 0 10px 30px;
-                position: relative;
-                font-size: 16px;
-                line-height: 1.8;
-                color: #666;
-            }
-
-            .lp-reasons-box ul li::before {
-                content: "✓";
-                position: absolute;
-                left: 0;
-                color: #FF679C;
-                font-weight: bold;
-                font-size: 20px;
-            }
-
-            /* 比較テーブルセクション */
-            .lp-comparison {
-                background: #fff;
             }
 
             .lp-table-wrapper {
-                margin: 50px 0;
-                overflow-x: auto;
+                overflow-x: scroll;
             }
 
             .lp-table {
-                width: 100%;
-                border-collapse: collapse;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                background: white;
-                font-size: 1.5rem;
+                font-size: 1rem;
             }
 
             .lp-table th,
             .lp-table td {
-                padding: 15px;
-                text-align: center;
-                border: 1px solid #e5e5e5;
-                color: #333;
+                padding: 10px 5px;
             }
+        }
 
-            .lp-table th {
-                background: #FF679C;
-                color: white;
-                font-weight: 700;
-            }
+        .lp-point-main-text {
+            padding: 30px;
+            background: #f9f9f9;
+            border-radius: 12px;
+        }
 
-            .lp-table tr:nth-child(even) {
-                background: #f9f9f9;
-            }
+        .lp-quotation-keyword {
+            background: linear-gradient(transparent 60%, #ffd1ed 60%);
+            font-weight: bold;
+            color: #FF679C;
+            padding: 0 4px;
+        }
 
-            .lp-table-highlight {
-                background: #FDEDED;
-                font-weight: 700;
-                color: #FF679C;
-            }
+        .lp-list-with-image {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            margin: 20px 0;
+        }
 
-            .lp-table-note {
-                background: #FDEDED;
-                padding: 30px;
-                border-radius: 12px;
-                margin: 30px 0;
-                text-align: center;
-                border: 2px solid #FF679C;
-            }
+        .lp-list-with-image ul {
+            flex: 1;
+            max-width: 800px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
 
-            .lp-table-note p {
-                font-size: 18px;
-                line-height: 1.9;
-                margin: 8px 0;
-                color: #333;
-            }
+        .lp-point-item .lp-list-with-image ul,
+        .lp-reasons-box .lp-list-with-image ul {
+            margin: 0;
+        }
 
-            /* おすすめセクション */
-            .lp-recommend {
-                background: #FDEDED;
-            }
+        .lp-list-with-image img {
+            flex: 0 0 auto;
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            object-fit: contain;
+        }
 
-            .lp-recommend-list {
-                max-width: 900px;
-                margin: 50px auto 0;
-            }
+        /* 右側イラスト用のスタイル */
+        .lp-list-with-image {
+            align-items: center;
+        }
 
-            .lp-recommend-item {
-                background: #fff;
-                padding: 25px 30px;
-                border-left: 4px solid #FF679C;
-                margin-bottom: 20px;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                font-size: 18px;
-                line-height: 1.8;
-                color: #333;
-            }
-
-            .lp-recommend-item strong {
-                color: #FF679C;
-                font-weight: 700;
-            }
-
-            /* CTAセクション */
-            .lp-cta {
-                background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
-                color: #fff;
-                padding: 80px 20px;
-                text-align: center;
-            }
-
-            .lp-cta h2 {
-                font-size: clamp(28px, 4vw, 40px);
-                font-weight: 700;
-                margin-bottom: 20px;
-                color: #fff;
-            }
-
-            .lp-cta p {
-                font-size: clamp(16px, 2.5vw, 20px);
-                line-height: 1.8;
-                margin-bottom: 40px;
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-            .lp-cta-features {
-                padding: 30px 60px;
-                border-radius: 12px;
-                margin: 35px auto;
-                width: fit-content;
-                border: solid 1px #fff;
-            }
-
-            .lp-cta-feature-item {
-                display: flex;
-                align-items: center;
-                margin-bottom: 15px;
-            }
-
-            .lp-cta-feature-item:last-child {
-                margin-bottom: 0;
-            }
-
-            .lp-cta-feature-item span:first-child {
-                font-size: 25px;
-                margin-right: 15px;
-                color: #fff;
-            }
-
-            .lp-cta-feature-item span:last-child {
-                font-size: 25px;
-            }
-
-            .lp-cta-buttons {
-                display: flex;
-                gap: 20px;
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .lp-cta-buttons a {
-                display: inline-block;
-                padding: 16px 40px;
-                background: #fff;
-                color: #FF679C;
-                text-decoration: none;
-                border-radius: 50px;
-                font-weight: 700;
-                font-size: 18px;
-                transition: transform 0.3s ease, box-shadow 0.3s ease;
-            }
-
-            .lp-cta-buttons a:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            }
-
-            @media (max-width: 768px) {
-                .lp-hero {
-                    padding: 100px 15px 60px;
-                }
-
-                .lp-section {
-                    padding: 60px 15px;
-                }
-
-                .lp-hero-cta,
-                .lp-cta-buttons {
-                    flex-direction: column;
-                }
-
-                .lp-hero-cta a,
-                .lp-cta-buttons a {
-                    width: 100%;
-                    text-align: center;
-                }
-
-                .lp-table-wrapper {
-                    overflow-x: scroll;
-                }
-
-                .lp-table {
-                    font-size: 1rem;
-                }
-
-                .lp-table th,
-                .lp-table td {
-                    padding: 10px 5px;
-                }
-            }
-            .lp-point-main-text{
-                padding: 30px;
-                background: #f9f9f9;
-                border-radius: 12px;
-            }
-            
-            .lp-quotation-keyword {
-                background: linear-gradient(transparent 60%, #ffd1ed 60%);
-                font-weight: bold;
-                color: #FF679C;
-                padding: 0 4px;
-            }
-            
+        @media (max-width: 768px) {
             .lp-list-with-image {
-                display: flex;
-                gap: 30px;
-                align-items: flex-start;
-                margin: 20px 0;
+                flex-direction: column;
             }
-            
-            .lp-list-with-image ul {
-                flex: 1;
-                max-width: 800px;
-                list-style: none;
-                padding: 0;
-                margin: 0;
-            }
-            
-            .lp-point-item .lp-list-with-image ul,
-            .lp-reasons-box .lp-list-with-image ul {
-                margin: 0;
-            }
-            
+
             .lp-list-with-image img {
-                flex: 0 0 auto;
-                max-width: 250px;
-                width: 100%;
-                height: auto;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                object-fit: contain;
+                max-width: 100%;
             }
-            
-            @media (max-width: 768px) {
-                .lp-list-with-image {
-                    flex-direction: column;
-                }
-                
-                .lp-list-with-image img {
-                    max-width: 100%;
-                }
-            }
-            .header-text-icon{
+        }
+
+        .header-text-icon {
             font-size: 50px !important;
-    font-weight: bold;
-    padding: 0 30px;
-    color: #ffff00;
-    line-height: 1.2 !important;
-    }
-.quotation_text_h2{
-color: #ffff00 !important;
-border-bottom: 2px solid #ffff00;
-width: fit-content;
-padding-bottom: 5px;
-margin: auto;
-}
-        </style>
-    </head>
+            font-weight: bold;
+            padding: 0 30px;
+            color: #ffff00;
+            line-height: 1.2 !important;
+        }
 
-    <body>
-        <!-- 通常ヘッダー -->
-        <header class="normal-header visible">
-            <div class="normal-header-inner">
-                <div class="normal-header-logo">
-                    <a href="/">
-                        <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
-                    </a>
-                </div>
-                <nav class="normal-header-nav">
-                    <a href="/">TOP</a>
-                    <a href="/service">対応可能サービス</a>
-                    <a href="/lp#voice">お客様の声</a>
-                    <a href="/customers-support-desk">カスタマーズサポート</a>
-                    <a href="/index#news">お知らせ</a>
-                    <a href="/privacy-policy">規約＆ポリシー</a>
-                </nav>
+        .quotation_text_h2 {
+            color: #ffff00 !important;
+            border-bottom: 2px solid #ffff00;
+            width: fit-content;
+            padding-bottom: 5px;
+            margin: auto;
+        }
+
+        .quotation-main-text {
+            width: 100%;
+            margin: auto;
+        }
+
+        .lp-reasons-box span {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-point-main-text ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-point-main-text ul li {
+            padding: 5px 0 5px 30px;
+            position: relative;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-problems ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-problems ul li {
+            padding: 5px 0 5px 30px;
+            position: relative;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-main-text-box {
+            margin: 60px auto 0;
+            color: #000;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        .lp-main-text-box h3 {
+            font-size: 24px;
+            border-bottom: #000 2px solid;
+            width: fit-content;
+            padding-bottom: 5px;
+            margin: auto;
+        }
+
+        .lp-main-text-box h2 {
+            font-size: 32px;
+            color: #FF679C;
+        }
+
+        .lp-main-text-box ul {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-main-text-box ul li {
+            color: #FF679C;
+            background: #ffd1ed;
+            width: fit-content;
+            margin: 0 10px 30px;
+            font-size: 16px;
+            border-radius: 15px;
+            padding: 5px 10px;
+            font-weight: bold;
+        }
+
+        .lp-cta h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffff00;
+            border-bottom: 2px solid #ffff00;
+            width: fit-content;
+            margin: 0 auto 10px;
+            padding-bottom: 10px;
+        }
+
+        .lp-cta-sub-text {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffff00;
+            margin-bottom: 5px;
+            display: block;
+        }
+    </style>
+</head>
+
+<body style="color: #FDEDED;">
+    <!-- 通常ヘッダー -->
+    <header class="normal-header visible">
+        <div class="normal-header-inner">
+            <div class="normal-header-logo">
+                <a href="/">
+                    <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+                        onerror="this.style.display='none'">
+                </a>
             </div>
-        </header>
+            <nav class="normal-header-nav">
+                <a href="/">TOP</a>
+                <a href="/service">対応可能サービス</a>
+                <a href="/lp#voice">お客様の声</a>
+                <a href="/customers-support-desk">カスタマーズサポート</a>
+                <a href="/index#news">お知らせ</a>
+                <a href="/privacy-policy">規約＆ポリシー</a>
+            </nav>
+        </div>
+    </header>
 
-        <main>
-            <!-- パンくずリスト -->
-            <div class="breadcrumb">
-                <div class="breadcrumb-inner">
-                    <a href="/">TOP</a>
-                    <span>></span>
-                    <span class="current">東京飲食店清掃</span>
-                </div>
+    <main style="background: #FDEDED;">
+        <!-- パンくずリスト -->
+        <div class="breadcrumb">
+            <div class="breadcrumb-inner">
+                <a href="/">TOP</a>
+                <span>></span>
+                <span class="current">東京飲食店清掃</span>
             </div>
+        </div>
 
-            <!-- ヒーローセクション -->
-            <section class="lp-hero">
-                <img src="/images/quotation_kv.webp">
-                <h1>東京の飲食店清掃業者選び</h1>
-                <p class="header-text-icon">相見積もりでわかる<br>価格と品質の差</p>
-            </section>
+        <!-- ヒーローセクション -->
+        <section class="lp-hero-new" style="position: relative; background-size: cover; background-position: center;">
+            <picture>
+                <source media="(max-width: 768px)" srcset="/images/quotation_kv_sp.webp">
+                <img src="/images/quotation_kv.webp" style="width: 100%; height: auto; display: block;">
+            </picture>
+        </section>
 
-            <!-- イントロセクション -->
-            <section class="lp-section lp-intro">
-                <div class="lp-intro-box">
-                    <p>東京で飲食店を経営していると、日々の営業に加えて、店舗の清掃や衛生管理についても常に気を配らなければなりません。</p>
-                    <p>しかし実際には、</p>
-                    <div class="lp-problems">
-                        <p>清掃業者の料金が高く、継続的に依頼するのが難しい…</p>
-                        <p>どの清掃業者が自分の店に合っているのか分からず、比較自体が面倒…</p>
-                        <p>相見積もりを取ってみたものの、内容の違いが分からず結局判断ができない…</p>
-                        <p>安い業者を使ってみたが、仕上がりに満足できなかった…</p>
-                        <p>清掃のたびに立ち会いや確認が必要で、結局遅くまで残らないといけない…</p>
-                        <p>「ここは対象外」と言われ、結局自分たちで掃除している…</p>
-                    </div>
-                    <p>といった悩みを抱えている飲食店オーナーさまは少なくありません。</p>
-                    <p>清掃は「後回しにしがち」な業務である一方、店舗の印象・衛生管理・スタッフの働きやすさに直結する、非常に重要な要素です。</p>
-                    <p>また後回しにしてしまうことで設備の不具合が発生し、膨大な修理費が発生することも多々あります。</p>
-                    <div class="lp-solution">
-                        <p>ミセサポなら、東京の飲食店に特化した清掃業者として、<span class="lp-highlight">他社との価格差やサービス内容の違いが一目でわかる、わかりやすい相見積もり</span>をご案内できます。</p>
-                    </div>
-                </div>
-            </section>
+        <section class="lp-main-text-box">
+            <ul>
+                <li>#ミセサポ</li>
+                <li>#清掃業者</li>
+                <li>#飲食店</li>
+                <li>#相見積もり</li>
+            </ul>
+            <div>
+                <h3 class="lp-section-sub-title">東京の飲食店清掃業者選び</h3>
+                <h2 class="lp-section-main-title">相見積もりでわかる<br>価格と品質の差</h2>
+            </div>
+        </section>
 
-            <!-- なぜ相見積もりを取った方が良いの？ -->
-            <section class="lp-section lp-points">
-                <div class="lp-point-main-text">
-                
-                <h2 class="lp-section-title">なぜ「東京の飲食店清掃業者選び」は<span class="lp-quotation-keyword">相見積もり</span>を取った方が良いの？</h2>
-                <p class="lp-section-text">飲食店向けの清掃サービスは、一見するとどの業者も大きな差がないように思えますが、実際にはさまざまな条件によって<span class="lp-quotation-keyword">料金</span>や内容に大きな差が生まれます。</p>
-                <p class="lp-section-text">たとえば、</p>
-                <div class="lp-list-with-image">
-                    <ul style="list-style: none; padding: 0;">
-                        <li style="padding: 10px 0 10px 30px; position: relative; font-size: 16px; line-height: 1.8; color: #666;">
-                            <span style="position: absolute; left: 0; color: #FF679C; font-weight: bold; font-size: 20px;">✓</span>
-                            店舗規模（個人店か、複数店舗を展開するチェーン店か）
-                        </li>
-                        <li style="padding: 10px 0 10px 30px; position: relative; font-size: 16px; line-height: 1.8; color: #666;">
-                            <span style="position: absolute; left: 0; color: #FF679C; font-weight: bold; font-size: 20px;">✓</span>
-                            時間帯（営業時間外の深夜・早朝対応）
-                        </li>
-                        <li style="padding: 10px 0 10px 30px; position: relative; font-size: 16px; line-height: 1.8; color: #666;">
-                            <span style="position: absolute; left: 0; color: #FF679C; font-weight: bold; font-size: 20px;">✓</span>
-                            業態（焼肉・居酒屋・カフェ・レストランなど）
-                        </li>
-                        <li style="padding: 10px 0 10px 30px; position: relative; font-size: 16px; line-height: 1.8; color: #666;">
-                            <span style="position: absolute; left: 0; color: #FF679C; font-weight: bold; font-size: 20px;">✓</span>
-                            汚れの種類（油汚れ、臭い、排水詰まり、空調の汚れなど）
-                        </li>
+        <!-- イントロセクション -->
+        <section class="lp-section lp-intro">
+            <div class="lp-intro-box">
+                <p>東京で飲食店を経営していると、日々の営業に加えて、店舗の清掃や衛生管理についても常に気を配らなければなりません。
+                    <br>しかし実際には、
+                </p>
+                <div class="lp-problems">
+                    <ul>
+                        <li><span
+                                style="position: absolute; left: 0; width: 20px; height: 20px; background-image: url('/images/moya_gr.svg'); background-size: contain; background-repeat: no-repeat; background-position: center;"></span>清掃業者の料金が高く、<span
+                                class="bold">継続的に依頼</span>するのが難しい…</li>
+                        <li><span
+                                style="position: absolute; left: 0; width: 20px; height: 20px; background-image: url('/images/moya_gr.svg'); background-size: contain; background-repeat: no-repeat; background-position: center;"></span>どの清掃業者が自分の店に合っているのか分からず、<span
+                                class="bold">比較自体が面倒</span>…</li>
+                        <li><span
+                                style="position: absolute; left: 0; width: 20px; height: 20px; background-image: url('/images/moya_gr.svg'); background-size: contain; background-repeat: no-repeat; background-position: center;"></span>相見積もりを取ってみたものの、<span
+                                class="bold">内容の違いが分からず</span>結局判断ができない…</li>
+                        <li><span
+                                style="position: absolute; left: 0; width: 20px; height: 20px; background-image: url('/images/moya_gr.svg'); background-size: contain; background-repeat: no-repeat; background-position: center;"></span>安い業者を使ってみたが、<span
+                                class="bold">仕上がりに満足できなかった</span>…</li>
+                        <li><span
+                                style="position: absolute; left: 0; width: 20px; height: 20px; background-image: url('/images/moya_gr.svg'); background-size: contain; background-repeat: no-repeat; background-position: center;"></span>清掃のたびに<span
+                                class="bold">立ち会いや確認が必要</span>で、結局遅くまで残らないといけない…</li>
+                        <li><span
+                                style="position: absolute; left: 0; width: 20px; height: 20px; background-image: url('/images/moya_gr.svg'); background-size: contain; background-repeat: no-repeat; background-position: center;"></span><span
+                                class="bold">「ここは対象外」</span>と言われ、結局自分たちで掃除している…</li>
                     </ul>
                 </div>
-                <p class="lp-section-text" style="margin-top: 30px;">などの違いによって、清掃に必要な工程や時間、人員は大きく変わります。</p>
-                <p class="lp-section-text">実際、東京の飲食店清掃業者では、同じ清掃内容に見えても、<strong><span class="lp-quotation-keyword">月額</span>1〜3万円程度の<span class="lp-quotation-keyword">価格差</span>が出るケース</strong>も珍しくありません。</p>
-                </div>                
-                <div class="lp-point-item">
-                    <h3>だからこそ、ミセサポでは「<span class="lp-quotation-keyword">相見積もり</span>を取ること」を強くオススメしています！</h3>
-                    <p style="margin-bottom: 10px;">その理由は、</p>
-                    <div class="lp-list-with-image">
-                        <ul>
-                            <li>清掃業者ごとに<span class="lp-quotation-keyword">価格設定</span>や<span class="lp-quotation-keyword">見積もり基準</span>がまったく異なるから</li>
-                            <li>定期清掃の場合、月々の差額が年間では大きなコスト差になるから</li>
-                            <li>対応の丁寧さや説明の分かりやすさから、信頼できる業者かどうかが見えてくるから</li>
-                            <li>自社にとって"必要な清掃"と"不要な作業"を整理できるから</li>
-                            <li>価格だけでなく、品質や対応力をゆっくり比較できるから</li>
-                        </ul>
-                    </div>
-                    <p style="margin-top: 20px; font-weight: 700; color: #FF679C; font-size: 18px;">こうした理由から相見積もりを前提に選ばれる清掃業者として、ミセサポは多くの飲食店さまにご利用いただいています。</p>
+                <p>といった悩みを抱えている飲食店オーナーさまは少なくありません。<br>
+                    清掃は「後回しにしがち」な業務である一方、店舗の印象・衛生管理・スタッフの働きやすさに直結する、<span class="bold">非常に重要な要素</span>です。<br>
+                    また後回しにしてしまうことで設備の不具合が発生し、<span class="bold">膨大な修理費が発生</span>することも多々あります。</p>
+                <div class="lp-solution">
+                    <p style="font-size: 18px;margin-top: 20px; color: #FF679C;font-weight: 700;">
+                        ミセサポなら、東京の飲食店に特化した清掃業者として、他社との価格差やサービス内容の違いが一目でわかる、わかりやすい相見積もりをご案内できます。</p>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- 相見積もりをしてわかる、ミセサポを選ぶ理由 -->
-            <section class="lp-section lp-reasons">
+        <!-- なぜ相見積もりを取った方が良いの？ -->
+        <section class="lp-section">
+            <div class="lp-reasons-box">
+
+                <img class="sec-image" src="/images/quotation_image1.webp" alt="なぜ「東京の飲食店清掃業者選び」は相見積もりを取った方が良いの？">
+                <h2 class="lp-section-title">なぜ「東京の飲食店清掃業者選び」は相見積もりを取った方が良いの？</h2>
+                <p class="lp-section-text">
+                    飲食店向けの清掃サービスは、一見するとどの業者も大きな差がないように思えますが、実際にはさまざまな条件によって<span
+                        class="bold">料金や内容に大きな差</span>が生まれます。<br>
+                    たとえば、</p>
+                <ul>
+                    <li>
+                        <span class="bold">店舗規模</span>（個人店か、複数店舗を展開するチェーン店か）
+                    </li>
+                    <li>
+                        <span class="bold">時間帯</span>（営業時間外の深夜・早朝対応）
+                    </li>
+                    <li>
+                        <span class="bold">業態</span>（焼肉・居酒屋・カフェ・レストランなど）
+                    </li>
+                    <li>
+                        <span class="bold">汚れの種類</span>（油汚れ、臭い、排水詰まり、空調の汚れなど）
+                    </li>
+                </ul>
+                <p class="lp-section-text">
+                    などの違いによって、清掃に必要な工程や時間、人員は大きく変わります。<br>
+                    実際、東京の飲食店清掃業者では、同じ清掃内容に見えても、<span class="bold">月額1〜3万円程度の価格差</span>が出るケースも珍しくありません。
+                </p>
+
+                <h3 style="margin-top: 40px;">だからこそ、ミセサポでは「相見積もりを取ること」を強くオススメしています！</h3>
+                <p style="margin-bottom: 10px;">その理由は、</p>
+                <ul>
+                    <li>清掃業者ごとに<span class="bold">価格設定や見積もり基準</span>がまったく異なるから</li>
+                    <li>定期清掃の場合、月々の差額が<span class="bold">年間</span>では大きなコスト差になるから</li>
+                    <li>対応の丁寧さや説明の分かりやすさから、<span class="bold">信頼できる業者</span>かどうかが見えてくるから</li>
+                    <li>自社にとって<span class="bold">必要な清掃</span>と<span class="bold">不要な作業</span>を整理できるから</li>
+                    <li>価格だけでなく、<span class="bold">品質や対応力</span>をゆっくり比較できるから</li>
+                </ul>
+                <p style="margin-top: 20px; font-weight: 700; color: #FF679C; font-size: 18px;">▶
+                    こうした理由から相見積もりを前提に選ばれる清掃業者として、ミセサポは多くの飲食店さまにご利用いただいています。</p>
+            </div>
+        </section>
+
+        <!-- 相見積もりをしてわかる、ミセサポを選ぶ理由 -->
+        <section class="lp-section lp-reasons">
+
+            <div class="lp-reasons-box">
+                <img class="sec-image" src="/images/quotation_image2.webp" alt="相見積もりをしてわかる、ミセサポを選ぶ理由">
                 <h2 class="lp-section-title">相見積もりをしてわかる、ミセサポを選ぶ理由</h2>
-                
-                <div class="lp-reasons-box">
-                    <h3>継続しやすい価格</h3>
-                    <p>相見積もりで価格面においてミセサポが優位になる理由は、単なる「値下げ」や「安売り」ではありません。</p>
-                    <div class="lp-list-with-image">
-                        <ul>
-                            <li>飲食店専門に特化し、作業工程を細かくマニュアル化</li>
-                            <li>無駄な営業コストや管理費を徹底的に削減している</li>
-                            <li>定期清掃を前提にした効率的な人員配置とスケジュール管理</li>
-                            <li>東京エリアに特化することで、出張費の負担を削減</li>
-                            <li>お客さまにとって必要な作業だけを組み合わせた、無駄のない提案</li>
-                        </ul>
-                    </div>
-                    <p style="font-size:18px; 20px;color:#FF679C;font-weight: 700;">これにより、お客さまに無理なく継続いただける価格設定を実現しています。</p>
-                </div>
+                <h3>継続しやすい価格</h3>
+                <span>相見積もりで価格面においてミセサポが優位になる理由は、単なる「値下げ」や「安売り」ではありません。</span>
+                <ul>
+                    <li><span class="bold">飲食店専門に特化</span>し、作業工程を細かくマニュアル化</li>
+                    <li><span class="bold">無駄な営業コストや管理費</span>を徹底的に削減している</li>
+                    <li><span class="bold">定期清掃を前提</span>にした効率的な人員配置とスケジュール管理</li>
+                    <li>東京エリアに特化することで、<span class="bold">出張費の負担</span>を削減</li>
+                    <li>お客さまにとって<span class="bold">必要な作業だけ</span>を組み合わせた、無駄のない提案</li>
+                </ul>
+                <p style="font-size:18px; margin-top: 20px; color:#FF679C; font-weight: 700;">▶
+                    これにより、お客さまに無理なく継続いただける価格設定を実現しています。</p>
+                <h3 style="margin-top: 50px;">満足度の高い仕上がり</h3>
+                <span>また品質面でもミセサポが優位になる理由は、飲食店特化のノウハウと一貫した品質管理体制にあります。</span>
+                <ul>
+                    <li>東京の飲食店専門だから、急な依頼や営業時間に配慮した<span class="bold">柔軟な対応</span>が可能</li>
+                    <li>厨房・床・排水・エアコンなど、飲食店特有の<span class="bold">あらゆる問題</span>に幅広く対応</li>
+                    <li>清掃員はすべて<span class="bold">自社スタッフ</span>で教育・研修を徹底。作業内容ごとに基準を設け、仕上がりのムラを防止</li>
+                    <li>清掃を作業ではなく、<span class="bold">店舗運営の一部</span>として捉えている</li>
+                    <li>清掃内容や頻度を店舗状況に応じて見直し、<span class="bold">無駄のない</span>最適な提案ができる</li>
+                </ul>
+                <p style="margin-top: 20px;color:#FF679C; font-weight: 700; font-size: 18px;">
+                    ▶ これらの体制により、他の東京の飲食店向け清掃業者より、安価でありながら、高品質な仕上がりを実現しています。
+                </p>
+            </div>
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="mailto:info@misesapo.co.jp" class="lp-contact-button">
+                    お問い合わせをする
+                </a>
+            </div>
+        </section>
 
-                <div class="lp-reasons-box">
-                    <h3>満足度の高い仕上がり</h3>
-                    <p>また品質面でもミセサポが優位になる理由は、飲食店特化のノウハウと一貫した品質管理体制にあります。</p>
-                    <div class="lp-list-with-image">
-                        <ul>
-                            <li>東京の飲食店専門だから、急な依頼や営業時間に配慮した柔軟な対応が可能</li>
-                            <li>厨房・床・排水・エアコンなど、飲食店特有のあらゆる問題に幅広く対応</li>
-                            <li>清掃員はすべて自社スタッフで教育・研修を徹底。作業内容ごとに基準を設け、仕上がりのムラを防止</li>
-                            <li>清掃を"作業"ではなく、"店舗運営の一部"として捉えている</li>
-                            <li>清掃内容や頻度を店舗状況に応じて見直し、無駄のない最適な提案ができる</li>
-                        </ul>
-                    </div>
-                    <p style="margin-top: 20px;color:#FF679C; font-weight: 700; font-size: 18px;">
-                        これらの体制により、他の東京の飲食店向け清掃業者より、安価でありながら、高品質な仕上がりを実現しています。
-                    </p>
-                </div>
-                <div class="lp-hero-cta">
-                    <a href="#cta">無料見積もりを依頼する</a>
-                </div>
+        <!-- 東京の飲食店清掃業者｜相見積もりでわかる違い -->
+        <section class="lp-section lp-comparison">
+            <h2 class="lp-section-title">東京の飲食店清掃業者｜相見積もりでわかる違い</h2>
+            <div class="lp-table-wrapper">
+                <table class="lp-table">
+                    <thead>
+                        <tr>
+                            <th>比較項目</th>
+                            <th>一般的な清掃業者</th>
+                            <th class="lp-table-highlight">ミセサポ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>飲食店特化</td>
+                            <td>△</td>
+                            <td class="lp-table-highlight">◎</td>
+                        </tr>
+                        <tr>
+                            <td>料金の明確さ</td>
+                            <td>複雑でわかりにくい</td>
+                            <td class="lp-table-highlight">定額でわかりやすい</td>
+                        </tr>
+                        <tr>
+                            <td>相見積もり対応</td>
+                            <td>してほしくない</td>
+                            <td class="lp-table-highlight">大歓迎</td>
+                        </tr>
+                        <tr>
+                            <td>定期清掃の割引</td>
+                            <td>なし</td>
+                            <td class="lp-table-highlight">あり</td>
+                        </tr>
+                        <tr>
+                            <td>柔軟な作業対応</td>
+                            <td>△</td>
+                            <td class="lp-table-highlight">◎</td>
+                        </tr>
+                        <tr>
+                            <td>提案内容</td>
+                            <td>言われた作業のみ</td>
+                            <td class="lp-table-highlight">店舗状況に応じて提案</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="lp-section-text" style="max-width: 800px;">
+                ミセサポは<span class="lp-highlight">相見積もり大歓迎</span>です！
+                <br>
+                納得できる清掃業者選びのために、ぜひミセサポへ<span class="lp-highlight">相見積もり前提でご相談</span>ください！
+                <br>
+                これが<span class="lp-highlight">ミセサポのスタンス</span>です。
+            </p>
 
-            </section>
+        </section>
 
-            <!-- 東京の飲食店清掃業者｜相見積もりでわかる違い -->
-            <section class="lp-section lp-comparison">
-                <h2 class="lp-section-title">東京の飲食店清掃業者｜相見積もりでわかる違い</h2>
-                <div class="lp-table-wrapper">
-                    <table class="lp-table">
-                        <thead>
-                            <tr>
-                                <th>比較項目</th>
-                                <th>一般的な清掃業者</th>
-                                <th class="lp-table-highlight">ミセサポ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>飲食店特化</td>
-                                <td>△</td>
-                                <td class="lp-table-highlight">◎</td>
-                            </tr>
-                            <tr>
-                                <td>料金の明確さ</td>
-                                <td>複雑でわかりにくい</td>
-                                <td class="lp-table-highlight">定額でわかりやすい</td>
-                            </tr>
-                            <tr>
-                                <td>相見積もり対応</td>
-                                <td>してほしくない</td>
-                                <td class="lp-table-highlight">大歓迎</td>
-                            </tr>
-                            <tr>
-                                <td>定期清掃の割引</td>
-                                <td>なし</td>
-                                <td class="lp-table-highlight">あり</td>
-                            </tr>
-                            <tr>
-                                <td>柔軟な作業対応</td>
-                                <td>△</td>
-                                <td class="lp-table-highlight">◎</td>
-                            </tr>
-                            <tr>
-                                <td>提案内容</td>
-                                <td>言われた作業のみ</td>
-                                <td class="lp-table-highlight">店舗状況に応じて提案</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="lp-table-note">
-                    <p>ミセサポは<span class="lp-highlight">相見積もり大歓迎</span>です！</p>
-                    <p>納得できる清掃業者選びのために、ぜひミセサポへ<span class="lp-highlight">相見積もり前提でご相談</span>ください！</p>
-                    <p style="margin-top: 15px; font-weight: 700;">これがミセサポのスタンスです。</p>
-                </div>
-            </section>
 
-            <!-- ミセサポはこんな飲食店オーナーさまにおすすめ -->
-            <section class="lp-section lp-recommend">
-                <h2 class="lp-section-title">ミセサポはこんな飲食店オーナーさまにおすすめ</h2>
-                <div class="lp-recommend-list">
-                    <div class="lp-recommend-item">
-                        <strong>清掃業者の新規契約を検討している</strong><br>
-                        →東京で飲食店を1～複数経営しており、人件費と清掃費を抑えるため清掃業者の相見積もりを考えている方
-                    </div>
-                    <div class="lp-recommend-item">
-                        <strong>清掃業者の乗り換えを検討している</strong><br>
-                        →現在、決まった清掃業者を利用しているが料金が高いと感じており、他の清掃業者を検討している方
-                    </div>
-                    <div class="lp-recommend-item">
-                        <strong>ネットをみるだけではよくわからない</strong><br>
-                        →複数の清掃業者で相見積もりを取ってみたものの、違いが分からず迷っている方
-                    </div>
-                    <div class="lp-recommend-item">
-                        <strong>品質や対応力も気になる</strong><br>
-                        →相見積もりで、納得できる清掃業者を価格だけでなく品質や対応力も重視して選びたい方
-                    </div>
-                    <div class="lp-recommend-item">
-                        <strong>過去の清掃業者に不満</strong><br>
-                        →安さ重視で選んだ結果、仕上がりに不満を感じた経験がある方
-                    </div>
-                    <div class="lp-recommend-item">
-                        <strong>お店の面倒事を丸投げしたい</strong><br>
-                        →厨房・床・排水・エアコンなど、何でもまとめて任せられる清掃業者を探している方
-                    </div>
+        <!-- ミセサポはこんな飲食店オーナーさまにおすすめ -->
+        <section class="lp-section lp-recommend">
+            <img class="sec-image" src="/images/quotation_image3.webp" alt="ミセサポはこんな飲食店オーナーさまにおすすめ">
+            <h2 class="lp-section-title">ミセサポはこんな飲食店オーナーさまにおすすめ</h2>
+            <div class="lp-recommend-list">
+                <div class="lp-recommend-item">
+                    <strong>清掃業者の新規契約を検討している</strong><br>
+                    <span>▶ 東京で飲食店を1～複数経営しており、人件費と清掃費を抑えるため清掃業者の相見積もりを考えている方</span>
                 </div>
-                <p class="lp-section-text" style="text-align: center; margin-top: 40px; font-weight: 700;">1つでも当てはまれば、ミセサポは相見積もりの比較対象として最適です。<br>悩む前にぜひ一度ご相談ください！</p>
-            </section>
+                <div class="lp-recommend-item">
+                    <strong>清掃業者の乗り換えを検討している</strong><br>
+                    <span>▶ 現在、決まった清掃業者を利用しているが料金が高いと感じており、他の清掃業者を検討している方</span>
+                </div>
+                <div class="lp-recommend-item">
+                    <strong>ネットをみるだけではよくわからない</strong><br>
+                    <span>▶ 複数の清掃業者で相見積もりを取ってみたものの、違いが分からず迷っている方</span>
+                </div>
+                <div class="lp-recommend-item">
+                    <strong>品質や対応力も気になる</strong><br>
+                    <span>▶ 相見積もりで、納得できる清掃業者を価格だけでなく品質や対応力も重視して選びたい方</span>
+                </div>
+                <div class="lp-recommend-item">
+                    <strong>過去の清掃業者に不満</strong><br>
+                    <span>▶ 安さ重視で選んだ結果、仕上がりに不満を感じた経験がある方</span>
+                </div>
+                <div class="lp-recommend-item">
+                    <strong>お店の面倒事を丸投げしたい</strong><br>
+                    <span>▶ 厨房・床・排水・エアコンなど、何でもまとめて任せられる清掃業者を探している方</span>
+                </div>
+            </div>
+            <p style="font-size: 18px;margin-top: 20px; color: #FF679C;font-weight: 700;">1つでも当てはまれば、ミセサポは相見積もりの比較対象として最適です。<br>悩む前にぜひ一度ご相談ください！
+            </p>
+        </section>
 
-            <!-- 無料見積もり・ご相談 -->
-            <section id="cta" class="lp-cta">
-                <h2 class="quotation_text_h2">相見積もり大歓迎</h2>
-                <p>ミセサポでは、他社さまとの相見積もりを前提にしたお見積もりを行っています。</p>
-                
-                <div class="lp-cta-features">
-                    <div class="lp-cta-feature-item">
-                        <span>✓</span>
-                        <span>見積もり無料</span>
-                    </div>
-                    <div class="lp-cta-feature-item">
-                        <span>✓</span>
-                        <span>強引な営業は一切なし</span>
-                    </div>
-                    <div class="lp-cta-feature-item">
-                        <span>✓</span>
-                        <span>内容・価格を丁寧にご説明</span>
-                    </div>
-                </div>
-                
-                <p>東京の飲食店清掃業者で<br>
-                    「価格」「品質」「対応力」をしっかり比較したい方は<br>
-                    お気軽にミセサポへご相談ください。</p>
-                <div style="font-size: 15px;padding-bottom: 10px;">＼まずは無料見積もりから／</div>
-                <div class="lp-cta-buttons">
-                    <a href="/contact">無料見積もりを依頼する</a>
-                </div>
-            </section>
-        </main>
+        <!-- 無料見積もり・ご相談 -->
+        <section id="cta" class="lp-cta">
+            <h2 style="font-size: clamp(32px, 4vw, 48px); font-weight: 700;">相見積もり大歓迎</h2>
+            <p style="margin-bottom: 30px; font-size: 24px;">ミセサポでは、他社さまとの<span
+                    class="bold">相見積もりを前提</span>にしたお見積もりを行っています。</p>
 
-        <script src="/js/swiper-bundle.min.js"></script>
-        <script src="/js/script.js"></script>
-        <script>
-            // パスを解決（GitHub Pages対応）
-            function resolvePath(path) {
-                if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
-                    return path;
-                }
-                
-                const hostname = window.location.hostname;
-                const isLocalDev = hostname === 'localhost' || 
-                                  hostname === '127.0.0.1' ||
-                                  hostname === '';
-                
-                const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
-                
-                if (isLocalDev || isCustomDomain) {
-                    return path.startsWith('/') ? path : '/' + path;
-                }
-                
-                // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
-                let resolvedPath;
-                if (path.startsWith('/misesapo/')) {
-                    resolvedPath = path;
-                } else if (path.startsWith('/')) {
-                    resolvedPath = '/misesapo' + path;
-                } else {
-                    resolvedPath = '/misesapo/' + path;
-                }
-                
-                return window.location.origin + resolvedPath;
+            <div class="lp-cta-features">
+                <div class="lp-cta-feature-item">
+                    <span></span>
+                    <span>見積もり無料</span>
+                </div>
+                <div class="lp-cta-feature-item">
+                    <span></span>
+                    <span>強引な営業は一切なし</span>
+                </div>
+                <div class="lp-cta-feature-item">
+                    <span></span>
+                    <span>内容・価格を丁寧にご説明</span>
+                </div>
+            </div>
+
+            <p style="margin-top: 30px; margin-bottom: 20px; font-size: 24px;">東京の飲食店清掃業者で<br>
+                <span class="bold">「価格」「品質」「対応力」</span>をしっかり比較したい方は<br>
+                お気軽にミセサポへご相談ください。
+            </p>
+            <span class="lp-cta-sub-text">＼まずは無料見積もりから！／</span>
+            <div class="lp-cta-buttons">
+                <a href="mailto:info@misesapo.co.jp">お問い合わせをする</a>
+            </div>
+        </section>
+    </main>
+
+    <script src="/js/swiper-bundle.min.js"></script>
+    <script src="/js/script.js"></script>
+    <script>
+        // パスを解決（GitHub Pages対応）
+        function resolvePath(path) {
+            if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                return path;
             }
-            
-            // LPページでは通常ヘッダーを常時表示
-            document.addEventListener('DOMContentLoaded', function() {
-                const normalHeader = document.querySelector('.normal-header');
-                if (normalHeader) {
-                    normalHeader.classList.add('visible');
-                    // スクロールイベントでクラスを削除しないようにする
-                    const originalRemove = normalHeader.classList.remove;
-                    normalHeader.classList.remove = function(...args) {
-                        if (args[0] !== 'visible') {
-                            originalRemove.apply(this, args);
-                        }
-                    };
+
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' ||
+                hostname === '127.0.0.1' ||
+                hostname === '';
+
+            const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+
+            if (isLocalDev || isCustomDomain) {
+                return path.startsWith('/') ? path : '/' + path;
+            }
+
+            // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+            let resolvedPath;
+            if (path.startsWith('/misesapo/')) {
+                resolvedPath = path;
+            } else if (path.startsWith('/')) {
+                resolvedPath = '/misesapo' + path;
+            } else {
+                resolvedPath = '/misesapo/' + path;
+            }
+
+            return window.location.origin + resolvedPath;
+        }
+
+        // LPページでは通常ヘッダーを常時表示
+        document.addEventListener('DOMContentLoaded', function () {
+            const normalHeader = document.querySelector('.normal-header');
+            if (normalHeader) {
+                normalHeader.classList.add('visible');
+                // スクロールイベントでクラスを削除しないようにする
+                const originalRemove = normalHeader.classList.remove;
+                normalHeader.classList.remove = function (...args) {
+                    if (args[0] !== 'visible') {
+                        originalRemove.apply(this, args);
+                    }
+                };
+            }
+
+            // リンクを解決
+            document.querySelectorAll('a[href^="/"]').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                    link.href = resolvePath(href);
                 }
-                
-                // リンクを解決
-                document.querySelectorAll('a[href^="/"]').forEach(link => {
-                    const href = link.getAttribute('href');
-                    if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
-                        link.href = resolvePath(href);
-                    }
-                });
-                
-                // 画像を解決
-                document.querySelectorAll('img[src^="/"]').forEach(img => {
-                    const src = img.getAttribute('src');
-                    if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
-                        img.src = resolvePath(src);
-                    }
-                });
             });
-        </script>
-        <script src="/js/header.js"></script>
-    </body>
+
+            // 画像を解決
+            document.querySelectorAll('img[src^="/"]').forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+                    img.src = resolvePath(src);
+                }
+            });
+        });
+    </script>
+    <script src="/js/header.js"></script>
+</body>
+
 </html>

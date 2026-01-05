@@ -1322,9 +1322,10 @@
         .service-section-title {
             position: relative;
             text-align: center;
-            padding: 30px 0 20px;
+            padding: 50px 0 20px;
             pointer-events: none;
             z-index: 10;
+            background-color: #FDEDED;
         }
 
         .service-section-title img {
@@ -3014,6 +3015,45 @@ content: none;
 .normal-header-nav a {
     padding: 0px 10px;
 }
+.swiper-wrapper{
+    background: #FDEDED;
+}
+.about-coverage-content{
+    display:flex;
+    justify-content:center;
+    align-items: center;
+    flex-wrap:wrap;
+}
+.about-coverage-content a {
+    display: block;
+    width: 30%;
+    margin: 10px;
+}
+
+.about-coverage-content img{
+ width:100%;
+margin: 0;
+}
+
+@media (max-width: 768px) {
+    .about-coverage-content{
+    justify-content:normal;
+        padding-left: 20px;
+}
+    .about-coverage-content a {
+        width: 45%;
+    }
+    .about-coverage-content img {
+        width: 100%;
+    }
+}
+.event-container{
+margin: auto;
+width: fit-content;
+}
+.event-container img{
+width: 400px;
+}
 </style>
 </head>
     <body>
@@ -3121,7 +3161,7 @@ content: none;
         </div>
         <!-- マスク画像 -->
         <div class="hero-mask">
-                <img src="/images-admin/mask01.png" alt="" class="hero-mask-image" data-desktop-src="/images-admin/mask01.png" data-sp-src="/images-admin/mask-sp.png">
+                <img src="/images/mask01.svg" alt="" class="hero-mask-image" data-desktop-src="/images/mask01.svg" data-sp-src="/images-admin/mask-sp.png">
         </div>
 
         </div>
@@ -3158,9 +3198,7 @@ content: none;
                         </div>
                 </div>
         <!-- ヒーローセクション下部装飾画像 -->
-        <div class="hero-union-image">
-            <img src="/images/unionimage.svg" alt="" class="union-image">
-        </div>
+
 </section>
 
     <!-- 対応サービス一覧タイトル -->
@@ -3196,6 +3234,22 @@ content: none;
             <button class="misesapo-category-btn" data-category="other">3. その他</button>
                     </div>
                     </div>
+
+    <!-- イベント・キャンペーン -->
+    <section id="use" class="service-sections use-sections">
+        <div class="service-sections-header">
+            <p class="section-tag-label">EVENT/CAMPAIGN
+            </p>
+        <h2 class="service-sections-title">イベント/キャンペーン</h2>
+        </div>
+        <div class="event-container">
+            <a href="/event/2026_yakiniku.html"><img src="/images/2026_yakiniku.png" alt="2026年焼肉ビジネスフェア出店！"></a>
+        </div>
+        </div>
+    </section>
+    <!-- イベント・キャンペーン end -->
+                    
+
     <!-- ご利用イメージ -->
     <section id="use" class="service-sections use-sections">
         <div class="service-sections-header">
@@ -3435,6 +3489,22 @@ content: none;
         </div>
     </section>
 
+    <!-- ミセサポとはセクション -->
+    <section id="about" class="section-box about-coverage-section">
+        <div class="wrapper">
+            <div class="service-sections-header">
+                <p class="section-tag-label">about</p>
+                <h2 class="service-sections-title">ミセサポとは？</h2>
+            </div>
+            <div class="about-coverage-content">
+                <a href="nighttime.html"><img src="/images/nighttime_kv_sp.webp"></a>
+                <a href="quotation.html"><img src="/images/quotation_kv_sp.webp"></a>
+                <a href="chuo-ward.html"><img src="/images/chuo-word_kv_sp.webp"></a>
+            </div>
+        </div>
+    </section>
+
+
     <!-- フッター -->
     <footer class="site-footer">
         <div class="footer-copyright">
@@ -3485,7 +3555,7 @@ content: none;
                 <nav class="cosmetic-nav misesapo-mega-menu ishikawa-style">
                     <ul class="mega-menu-list">
                         <li class="mega-menu-item">
-                            <a href="/lp" class="mega-menu-link">
+                            <a href="#about" class="mega-menu-link">
                                 <span class="mega-menu-text">ミセサポとは？</span>
                             </a>
                         </li>
