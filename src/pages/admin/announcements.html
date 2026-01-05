@@ -48,6 +48,12 @@
         </div>
       </div>
 
+      <!-- Tabs -->
+      <div class="announcement-tabs">
+        <button id="tab-active" class="tab-btn active" onclick="switchTab('active')">有効な連絡</button>
+        <button id="tab-archived" class="tab-btn" onclick="switchTab('archived')">アーカイブ</button>
+      </div>
+
       <!-- フィルター -->
       <div class="filters-section">
         <div class="search-box">
@@ -457,6 +463,35 @@
     color: #dc2626;
     font-weight: 600;
   }
+
+  /* Tabs */
+  .announcement-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 1px;
+  }
+
+  .tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: #64748b;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+
+  .tab-btn:hover {
+    color: var(--primary-dark);
+  }
 </style>
 
 <script src="/js/admin-sidebar.js"></script>
@@ -468,6 +503,7 @@
   let allAnnouncements = [];
   let allStaff = [];
   let currentAnnouncementId = null;
+  let currentTab = 'active';
 
   // アクセス制御：管理者ロールのみアクセス可能
   async function checkAdminAccess() {
@@ -638,7 +674,11 @@
         a.title.toLowerCase().includes(searchQuery) ||
         a.content.toLowerCase().includes(searchQuery);
       const matchesType = !filterType || a.target_type === filterType;
-      return matchesSearch && matchesType;
+
+      const isArchived = !!a.is_archived;
+      const matchesTab = (currentTab === 'active' && !isArchived) || (currentTab === 'archived' && isArchived);
+
+      return matchesSearch && matchesType && matchesTab;
     });
 
     // 作成日でソート（降順）
@@ -685,10 +725,14 @@
             </button>
           </td>
           <td>
-            <button class="btn btn-text btn-sm" onclick="editAnnouncement('${announcement.id}')">
+            <button class="btn btn-text btn-sm" onclick="editAnnouncement('${announcement.id}')" title="編集">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-text btn-sm btn-danger" onclick="deleteAnnouncement('${announcement.id}')">
+            ${currentTab === 'active'
+          ? `<button class="btn btn-text btn-sm" style="color:#f59e0b;" onclick="toggleArchive('${announcement.id}', true)" title="アーカイブへ移動"><i class="fas fa-archive"></i></button>`
+          : `<button class="btn btn-text btn-sm" style="color:#10b981;" onclick="toggleArchive('${announcement.id}', false)" title="アーカイブから戻す"><i class="fas fa-box-open"></i></button>`
+        }
+            <button class="btn btn-text btn-sm btn-danger" onclick="deleteAnnouncement('${announcement.id}')" title="完全に削除">
               <i class="fas fa-trash"></i>
             </button>
           </td>
@@ -1041,6 +1085,50 @@
   }
 
   // 削除
+
+  // タブ切り替え
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    renderTable();
+  }
+
+  // アーカイブ切り替え
+  async function toggleArchive(id, toArchive) {
+    if (!confirm(toArchive ? 'この連絡をアーカイブに移動しますか？\n（スタッフ画面からは見えなくなりますが、アーカイブタブで確認できます）' : 'この連絡を有効に戻しますか？')) return;
+
+    const item = allAnnouncements.find(a => a.id === id);
+    if (!item) return;
+
+    // Update local first for speed (opt) or just wait reload.
+    // Let's copy object and set is_archived
+    const newItem = { ...item, is_archived: toArchive };
+
+    try {
+      const idToken = await getCognitoIdToken();
+      const response = await fetch(`${REPORT_API}/admin/announcements/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify(newItem)
+      });
+
+      if (!response.ok) throw new Error('更新に失敗しました');
+
+      // Reload
+      await loadAnnouncements();
+      alert(toArchive ? 'アーカイブしました' : 'アーカイブから戻しました');
+
+    } catch (e) {
+      console.error(e);
+      alert('エラーが発生しました: ' + e.message);
+    }
+  }
+
+  // 削除（既存関数）
   async function deleteAnnouncement(announcementId) {
     if (!confirm('この業務連絡を削除しますか？')) return;
 
