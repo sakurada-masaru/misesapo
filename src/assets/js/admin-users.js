@@ -593,8 +593,13 @@
       mypageUrl = `/staff/mypage.html?email=${encodeURIComponent(user.email)}`;
     }
 
-    const roleBadge = getRoleBadge(user.role);
-    const attendanceBadge = getAttendanceStatusBadge(user.id);
+    const roleBadge = (user.role === 'admin' || user.role === 'manager' || user.role_code === '1' || user.role_code === '2')
+      ? '<span style="font-size: 0.7rem; padding: 2px 6px; background: #fee2e2; color: #dc2626; border-radius: 4px;">管理者</span>'
+      : '';
+
+    // 出勤状況バッジ（簡易版）
+    const attendanceBadge = '<span style="font-size: 0.7rem; padding: 2px 6px; background: #f3f4f6; color: #6b7280; border-radius: 4px;">-</span>';
+
     const hasReport = userDailyReports[user.id];
     const reportBadge = hasReport
       ? `<span style="font-size: 0.7rem; padding: 2px 6px; background: #dcfce7; color: #166534; border-radius: 4px; cursor: pointer;" onclick="event.preventDefault(); window.viewDailyReport('${user.id}')" title="クリックして詳細を表示"><i class="fas fa-check-circle"></i> 提出済</span>`
