@@ -2203,11 +2203,41 @@ function insertDailyReportTemplate() {
   const textarea = document.getElementById('daily-report-content');
   if (!textarea) return;
 
-  const template = [
+  let template = [
     '1：本日の作業内容',
     '2：明日の作業予定',
     '3：コメント'
   ].join('\n');
+
+  // 営業マンの場合（URLパスまたはロールで判定）
+  const isSales = window.location.pathname.includes('/sales/') || (currentUser && currentUser.role === 'sales');
+
+  if (isSales) {
+    template = [
+      '1. 本日の目標',
+      '新規商談：3件',
+      '既存フォロー：5件',
+      '受注見込み確保：1件',
+      '',
+      '2. 業務内容・活動実績',
+      '| 訪問先/案件名 | 商談相手 | 活動内容 | 結果・進捗 |',
+      '| :--- | :--- | :--- | :--- |',
+      '',
+      '例| 株式会社A | B部長 | 初回提案 | サービス内容に興味あり。来週見積送付。 |',
+      '',
+      '',
+      '3. 本日の成果・振り返り',
+      '成果：例『△△工業様より受注をいただくことができた。',
+      '反省点：例〇〇商事様でのヒアリングが不足しており、不満点の深掘りが甘かった。',
+      '',
+      '4. 明日の予定・目標',
+      '例：株式会社Aへの見積作成・送付',
+      '例：リード顧客への電話アプローチ（10件）',
+      '',
+      '5. 所感・備考',
+      '例：競合他社の動きが活発になっていると感じます。来週の定例会議で共有します。'
+    ].join('\n');
+  }
 
   if (!textarea.value.trim()) {
     textarea.value = template;
