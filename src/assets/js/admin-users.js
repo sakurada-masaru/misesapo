@@ -500,61 +500,65 @@
         }
 
         return `
-          <div class="user-card" data-role="${user.role}">
-            <div class="user-card-header">
-              <div class="user-avatar-large">${(user.name || '?')[0]}</div>
-              <div class="user-card-info">
-                <h4 class="user-name">
-                  <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}">${escapeHtml(user.name || '-')}</a>
-                </h4>
-                <div class="user-id">${escapeHtml(user.id)}</div>
+            <div class="user-card" data-role="${user.role}" style="display: flex; flex-direction: column; height: 100%;">
+              <div class="user-card-header" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <div class="user-avatar-large" style="width: 48px; height: 48px; font-size: 1.25rem; flex-shrink: 0;">${(user.name || '?')[0]}</div>
+                <div class="user-card-info" style="min-width: 0; flex: 1;">
+                  <h4 class="user-name" style="margin: 0; font-size: 1.1rem; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" style="color: inherit; text-decoration: none;">${escapeHtml(user.name || '-')}</a>
+                  </h4>
+                  <div class="user-id" style="color: #6b7280; font-size: 0.85rem; font-family: monospace;">${escapeHtml(user.id)}</div>
+                </div>
               </div>
-            </div>
-            <div class="user-card-body">
-              <div class="user-detail">
-                <i class="fas fa-envelope"></i>
-                <span>${escapeHtml(user.email || '-')}</span>
-              </div>
-              <div class="user-detail">
-                <i class="fas fa-phone"></i>
-                <span>${escapeHtml(user.phone || '-')}</span>
-              </div>
-              ${jobBadges ? `<div class="job-badges">${jobBadges}</div>` : ''}
-              <div class="user-card-footer" style="display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid #f3f4f6;">
-                <div style="display: flex; align-items: center;">
-                  <span style="font-size: 0.75rem; color: #9ca3af; width: 65px; flex-shrink: 0;">アカウント</span>
-                  <div style="display: flex; gap: 4px; align-items: center;">
-                    ${roleBadge}
-                    <span class="status-badge status-${user.status || 'active'}">${user.status === 'inactive' ? '無効' : '有効'}</span>
+
+              <div class="user-card-body" style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                <div class="user-detail" style="display: flex; align-items: center; gap: 8px; height: 24px;">
+                  <div style="width: 20px; color: #9ca3af; text-align: center; flex-shrink: 0;"><i class="fas fa-envelope"></i></div>
+                  <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;" title="${escapeHtml(user.email || '-')}">${escapeHtml(user.email || '-')}</span>
+                </div>
+                <div class="user-detail" style="display: flex; align-items: center; gap: 8px; height: 24px;">
+                  <div style="width: 20px; color: #9ca3af; text-align: center; flex-shrink: 0;"><i class="fas fa-phone"></i></div>
+                  <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;">${escapeHtml(user.phone || '-')}</span>
+                </div>
+                
+                ${jobBadges ? `<div class="job-badges" style="margin: 8px 0; display: flex; flex-wrap: wrap; gap: 4px;">${jobBadges}</div>` : '<div style="height: 8px;"></div>'}
+                
+                <div class="user-card-footer" style="display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid #f3f4f6;">
+                  <div style="display: flex; align-items: center; height: 24px;">
+                    <span style="font-size: 0.75rem; color: #9ca3af; width: 65px; flex-shrink: 0;">アカウント</span>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                      ${roleBadge}
+                      <span class="status-badge status-${user.status || 'active'}">${user.status === 'inactive' ? '無効' : '有効'}</span>
+                    </div>
+                  </div>
+                  
+                  <div style="display: flex; align-items: center; height: 24px;">
+                     <span style="font-size: 0.75rem; color: #9ca3af; width: 65px; flex-shrink: 0;">出勤状況</span>
+                     ${attendanceBadge}
+                  </div>
+                  
+                  <div style="display: flex; align-items: center; height: 24px;">
+                     <span style="font-size: 0.75rem; color: #9ca3af; width: 65px; flex-shrink: 0;">日報提出</span>
+                     ${reportBadge}
                   </div>
                 </div>
-                
-                <div style="display: flex; align-items: center;">
-                   <span style="font-size: 0.75rem; color: #9ca3af; width: 65px; flex-shrink: 0;">出勤状況</span>
-                   ${attendanceBadge}
-                </div>
-                
-                <div style="display: flex; align-items: center;">
-                   <span style="font-size: 0.75rem; color: #9ca3af; width: 65px; flex-shrink: 0;">日報提出</span>
-                   ${reportBadge}
-                </div>
+              </div>
+
+              <div class="user-card-actions" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e5e7eb;">
+                <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" class="btn-icon" title="詳細" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: #4b5563; transition: background 0.2s;">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="${mypageUrl}" class="btn-icon" title="マイページ" target="_blank" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: #4b5563; transition: background 0.2s;">
+                  <i class="fas fa-external-link-alt"></i>
+                </a>
+                <button class="btn-icon" title="編集" onclick="editUser('${user.id}')" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: #4b5563; border: none; background: transparent; cursor: pointer; transition: background 0.2s;">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-icon delete" title="削除" onclick="confirmDelete('${user.id}')" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: #dc2626; border: none; background: transparent; cursor: pointer; transition: background 0.2s;">
+                  <i class="fas fa-trash"></i>
+                </button>
               </div>
             </div>
-            <div class="user-card-actions">
-              <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" class="btn-icon" title="詳細">
-                <i class="fas fa-eye"></i>
-              </a>
-              <a href="${mypageUrl}" class="btn-icon" title="マイページ" target="_blank">
-              <i class="fas fa-external-link-alt"></i>
-            </a>
-              <button class="btn-icon" title="編集" onclick="editUser('${user.id}')">
-              <i class="fas fa-edit"></i>
-            </button>
-              <button class="btn-icon delete" title="削除" onclick="confirmDelete('${user.id}')">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-          </div>
         `;
       }).join('');
 
