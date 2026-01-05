@@ -523,7 +523,7 @@
                   width: 52px; 
                   height: 52px; 
                   border-radius: 50%; 
-                  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+                  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
                   color: #fff;
                   display: flex; 
                   align-items: center; 
@@ -531,7 +531,7 @@
                   font-size: 1.4rem; 
                   font-weight: 600;
                   flex-shrink: 0;
-                  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+                  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
                 ">${(user.name || '?')[0]}</div>
                 <div style="flex: 1; min-width: 0;">
                   <div style="
