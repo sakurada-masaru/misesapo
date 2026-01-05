@@ -506,79 +506,120 @@
     const container = document.getElementById('departments-container');
     if (!container) return;
 
-    // 本部ごとの色設定
+    // 本部ごとのテーマカラー定義
     const parentColors = {
-      '経営管理本部': { bg: '#fef3c7', border: '#f59e0b', header: '#92400e' },
-      '運営本部': { bg: '#dbeafe', border: '#3b82f6', header: '#1e40af' },
-      '組織運営本部': { bg: '#f3e8ff', border: '#a855f7', header: '#7e22ce' },
-      '清掃事業部': { bg: '#dcfce7', border: '#22c55e', header: '#166534' },
-      '未分類': { bg: '#f3f4f6', border: '#9ca3af', header: '#4b5563' }
+      '経営管理本部': { bg: '#fff7ed', border: '#fdba74', headerBg: '#fff', headerText: '#9a3412', accent: '#f97316' },
+      '運営本部': { bg: '#eff6ff', border: '#93c5fd', headerBg: '#fff', headerText: '#1e40af', accent: '#3b82f6' },
+      '組織運営本部': { bg: '#faf5ff', border: '#d8b4fe', headerBg: '#fff', headerText: '#6b21a8', accent: '#a855f7' },
+      '清掃事業部': { bg: '#f0fdf4', border: '#86efac', headerBg: '#fff', headerText: '#166534', accent: '#22c55e' },
+      '未分類': { bg: '#f9fafb', border: '#d1d5db', headerBg: '#fff', headerText: '#374151', accent: '#6b7280' }
     };
 
     container.innerHTML = parentDepartments.map(parent => {
-      const colors = parentColors[parent.name] || parentColors['未分類'];
+      const theme = parentColors[parent.name] || parentColors['未分類'];
       const totalUsers = parent.directMembers.length +
         Object.values(parent.departments).reduce((sum, users) => sum + users.length, 0);
 
-      // 部署カードを生成
+      // 部署（子コンテナ）の生成
       const departmentCards = Object.entries(parent.departments).map(([deptName, users]) => {
         return `
           <div class="sub-department-section" style="
             background: #fff;
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 12px;
+            border: 1px solid ${theme.border};
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
           ">
             <h4 style="
-              font-size: 0.9rem;
-              font-weight: 600;
-              color: #374151;
-              margin: 0 0 12px 0;
-              padding-bottom: 8px;
-              border-bottom: 1px solid #e5e7eb;
-            ">${escapeHtml(deptName)} <span style="font-weight: normal; color: #9ca3af;">(${users.length}名)</span></h4>
-            <div class="user-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+              font-size: 1rem;
+              font-weight: 700;
+              color: ${theme.headerText};
+              margin: -8px 0 16px 0;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              padding-bottom: 12px;
+              border-bottom: 1px dashed ${theme.border};
+            ">
+              <span style="display:inline-block; width:6px; height:20px; background:${theme.accent}; border-radius:3px;"></span>
+              ${escapeHtml(deptName)}
+              <span style="font-size: 0.8rem; font-weight: normal; color: #6b7280; background: ${theme.bg}; padding: 2px 10px; border-radius: 99px;">${users.length}名</span>
+            </h4>
+            <div class="user-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
               ${users.map(user => renderUserCard(user)).join('')}
             </div>
           </div>
         `;
       }).join('');
 
-      // 直属メンバーカードを生成
-      const directMemberCards = parent.directMembers.length > 0 ? `
+      // 本部直属メンバー（管理者・本部長）の簡易表示
+      const directMemberHTML = parent.directMembers.length > 0 ? `
         <div class="direct-members" style="
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 12px;
-          margin-bottom: ${Object.keys(parent.departments).length > 0 ? '16px' : '0'};
+          margin-bottom: 20px; 
+          background: rgba(255,255,255,0.6); 
+          padding: 12px 16px; 
+          border-radius: 8px; 
+          border-left: 4px solid ${theme.accent};
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 16px;
         ">
-          ${parent.directMembers.map(user => renderUserCard(user)).join('')}
+          <span style="font-size: 0.85rem; font-weight: 700; color: ${theme.headerText}; text-transform: uppercase; letter-spacing: 0.05em;">HEADQUARTERS</span>
+          ${parent.directMembers.map(user => `
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="
+                width: 32px; height: 32px; border-radius: 50%;
+                background: ${theme.accent}; color: #fff;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 0.9rem; font-weight: 600;
+              ">${(user.name || '?')[0]}</div>
+              <div>
+                <div style="font-weight: 600; color: #374151; font-size: 0.95rem;">
+                  ${escapeHtml(user.name)} 
+                  <span style="font-size: 0.75rem; color: #6b7280; font-weight: normal;">(${escapeHtml(user.job || '管理者')})</span>
+                </div>
+              </div>
+            </div>
+          `).join('<span style="color: #cbd5e1;">|</span>')}
         </div>
       ` : '';
 
       return `
         <div class="parent-department-section" style="
-          background: ${colors.bg};
-          border: 2px solid ${colors.border};
+          background: #fff;
+          border-top: 5px solid ${theme.accent};
           border-radius: 12px;
-          padding: 16px;
-          margin-bottom: 24px;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+          padding: 32px;
+          margin-bottom: 40px;
+          position: relative;
         ">
-          <h3 style="
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: ${colors.header};
-            margin: 0 0 16px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          ">
-            <i class="fas fa-building" style="opacity: 0.7;"></i>
-            ${escapeHtml(parent.name)}
-            <span style="font-size: 0.85rem; font-weight: normal; color: ${colors.header}80;">(${totalUsers}名)</span>
-          </h3>
-          ${directMemberCards}
-          ${departmentCards}
+        <!-- 背景装飾 -->
+        <div style="position: absolute; top: 0; right: 0; width: 150px; height: 150px; background: radial-gradient(circle at top right, ${theme.bg} 0%, transparent 70%); border-radius: 0 12px 0 100%; opacity: 0.8; pointer-events: none;"></div>
+        
+          <div style="position: relative; z-index: 1;">
+            <div style="margin-bottom: 24px;">
+              <h3 style="
+                font-size: 1.4rem;
+                font-weight: 800;
+                color: ${theme.headerText};
+                margin: 0 0 4px 0;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+              ">
+                <i class="fas fa-building" style="color: ${theme.accent}; opacity: 0.8;"></i>
+                ${escapeHtml(parent.name)}
+              </h3>
+              <div style="font-size: 0.9rem; color: #6b7280; margin-left: 36px;">構成人数: ${totalUsers}名</div>
+            </div>
+            
+            ${directMemberHTML}
+            ${departmentCards}
+          </div>
         </div>
       `;
     }).join('');
@@ -593,64 +634,134 @@
       mypageUrl = `/staff/mypage.html?email=${encodeURIComponent(user.email)}`;
     }
 
-    const roleBadge = (user.role === 'admin' || user.role === 'manager' || user.role_code === '1' || user.role_code === '2')
-      ? '<span style="font-size: 0.7rem; padding: 2px 6px; background: #fee2e2; color: #dc2626; border-radius: 4px;">管理者</span>'
-      : '';
+    // 権限バッジ設定
+    let roleLabel = '一般';
+    let roleBg = '#f3f4f6';
+    let roleColor = '#4b5563';
 
-    // 出勤状況バッジ（簡易版）
-    const attendanceBadge = '<span style="font-size: 0.7rem; padding: 2px 6px; background: #f3f4f6; color: #6b7280; border-radius: 4px;">-</span>';
+    if (user.role === 'admin' || user.role_code === '1') {
+      roleLabel = '管理者';
+      roleBg = '#fee2e2';
+      roleColor = '#dc2626';
+    } else if (user.role === 'manager' || user.role_code === '2') {
+      roleLabel = 'マネージャー';
+      roleBg = '#ffedd5';
+      roleColor = '#c2410c';
+    } else if (user.role === 'developer') {
+      roleLabel = '開発者';
+      roleBg = '#e0e7ff';
+      roleColor = '#4338ca';
+    }
 
+    // アカウントステータス
+    const isInactive = user.status === 'inactive';
+    const statusLabel = isInactive ? '無効' : '有効';
+    const statusBg = isInactive ? '#fef2f2' : '#f0fdf4';
+    const statusColor = isInactive ? '#ef4444' : '#16a34a';
+
+    // 出勤状況バッジ
+    // const attendanceBadge = getAttendanceStatusBadge(user.id);
+    const attendanceBadgeHTML = `<span style="font-size: 0.75rem; padding: 2px 8px; background: #f3f4f6; color: #6b7280; border-radius: 9999px;">● 未出勤</span>`;
+
+    // 日報提出バッジ
     const hasReport = userDailyReports[user.id];
-    const reportBadge = hasReport
-      ? `<span style="font-size: 0.7rem; padding: 2px 6px; background: #dcfce7; color: #166534; border-radius: 4px; cursor: pointer;" onclick="event.preventDefault(); window.viewDailyReport('${user.id}')" title="クリックして詳細を表示"><i class="fas fa-check-circle"></i> 提出済</span>`
-      : `<span style="font-size: 0.7rem; padding: 2px 6px; background: #f3f4f6; color: #9ca3af; border-radius: 4px;"><i class="fas fa-minus-circle"></i> 未提出</span>`;
-    const jobTitle = user.job ? `<span style="font-size: 0.75rem; padding: 2px 6px; background: #fef3c7; color: #92400e; border-radius: 4px;">${escapeHtml(user.job)}</span>` : '';
+    const reportBadgeHTML = hasReport
+      ? `<span style="font-size: 0.75rem; padding: 2px 8px; background: #dcfce7; color: #166534; border-radius: 9999px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onclick="event.preventDefault(); window.viewDailyReport('${user.id}')"><i class="fas fa-check"></i> 提出済</span>`
+      : `<span style="font-size: 0.75rem; padding: 2px 8px; background: #f3f4f6; color: #9ca3af; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-minus"></i> 未提出</span>`;
+
+    // 役職表示
+    const jobTitleHTML = user.job
+      ? `<div style="margin-top: 8px;"><span style="font-size: 0.75rem; color: #d97706; background: #fffbeb; padding: 2px 8px; border-radius: 4px; border: 1px solid #fef3c7;">${escapeHtml(user.job)}</span></div>`
+      : '';
 
     return `
       <div class="user-card" data-role="${user.role}" style="
+        background: #fff;
+        border-radius: 12px;
+        padding: 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
         display: flex;
         flex-direction: column;
-        background: #fff;
-        border-radius: 10px;
-        padding: 14px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        border: 1px solid #e5e7eb;
-      ">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-          <div style="
-            width: 44px; height: 44px; border-radius: 50%;
-            background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
-            color: #fff; display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; font-weight: 600; flex-shrink: 0;
-          ">${(user.name || '?')[0]}</div>
-          <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" style="color: inherit; text-decoration: none;">${escapeHtml(user.name || '-')}</a>
+        height: 100%;
+        transition: transform 0.2s, box-shadow 0.2s;
+      " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 6px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 1px 3px rgba(0,0,0,0.05)'">
+        
+        <!-- ヘッダー部分 -->
+        <div style="padding: 16px; flex: 1;">
+          <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
+            <div style="
+              width: 48px; height: 48px; border-radius: 50%;
+              background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+              color: #fff; display: flex; align-items: center; justify-content: center;
+              font-size: 1.25rem; font-weight: 600; flex-shrink: 0;
+              box-shadow: 0 2px 4px rgba(236, 72, 153, 0.2);
+            ">${(user.name || '?')[0]}</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-weight: 700; color: #1f2937; font-size: 1rem; line-height: 1.4; display: flex; justify-content: space-between; align-items: start;">
+                <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" style="color: inherit; text-decoration: none;">${escapeHtml(user.name || '-')}</a>
+              </div>
+              <div style="font-size: 0.75rem; color: #6b7280; font-family: monospace; margin-top: 2px;">${escapeHtml(user.id)}</div>
+              ${jobTitleHTML}
             </div>
-            <div style="font-size: 0.75rem; color: #64748b; font-family: monospace;">${escapeHtml(user.id)}</div>
           </div>
-          ${jobTitle}
-        </div>
-        
-        <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-size: 0.85rem; color: #475569;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <i class="fas fa-envelope" style="width: 14px; color: #94a3b8;"></i>
-            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(user.email || '-')}">${escapeHtml(user.email || '-')}</span>
+          
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #f3f4f6;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #4b5563;">
+              <i class="fas fa-envelope" style="width: 14px; color: #9ca3af;"></i>
+              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(user.email || '-')}">${escapeHtml(user.email || '-')}</span>
+            </div>
+            ${user.phone ? `
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #4b5563;">
+              <i class="fas fa-phone" style="width: 14px; color: #9ca3af;"></i>
+              <span>${escapeHtml(user.phone)}</span>
+            </div>` : ''}
+          </div>
+
+          <!-- ステータスリスト -->
+          <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px 12px; align-items: center; font-size: 0.8rem;">
+            
+            <div style="display: flex; align-items: center; gap: 6px; color: #6b7280;">
+              <i class="fas fa-user-shield" style="width: 14px;"></i> アカウント
+            </div>
+            <div style="display: flex; gap: 4px;">
+              <span style="padding: 2px 8px; border-radius: 4px; background: ${roleBg}; color: ${roleColor}; font-weight: 500; font-size: 0.7rem;">${roleLabel}</span>
+              <span style="padding: 2px 8px; border-radius: 4px; background: ${statusBg}; color: ${statusColor}; font-weight: 500; font-size: 0.7rem;">${statusLabel}</span>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 6px; color: #6b7280;">
+              <i class="fas fa-clock" style="width: 14px;"></i> 出勤状況
+            </div>
+            <div>${attendanceBadgeHTML}</div>
+
+            <div style="display: flex; align-items: center; gap: 6px; color: #6b7280;">
+              <i class="fas fa-file-alt" style="width: 14px;"></i> 日報提出
+            </div>
+            <div>${reportBadgeHTML}</div>
+
           </div>
         </div>
         
-        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 10px; border-top: 1px solid #f1f5f9;">
-          ${roleBadge}
-          <span style="font-size: 0.7rem; padding: 2px 6px; background: ${user.status === 'inactive' ? '#fef2f2' : '#f0fdf4'}; color: ${user.status === 'inactive' ? '#dc2626' : '#16a34a'}; border-radius: 4px;">${user.status === 'inactive' ? '無効' : '有効'}</span>
-          ${attendanceBadge}
-          ${reportBadge}
-        </div>
-        
-        <div style="display: flex; justify-content: flex-end; gap: 4px; margin-top: 10px;">
-          <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #64748b; border-radius: 4px;" title="詳細"><i class="fas fa-eye"></i></a>
-          <a href="${mypageUrl}" target="_blank" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #64748b; border-radius: 4px;" title="マイページ"><i class="fas fa-external-link-alt"></i></a>
-          <button onclick="editUser('${user.id}')" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #64748b; border: none; background: transparent; border-radius: 4px; cursor: pointer;" title="編集"><i class="fas fa-edit"></i></button>
-          <button onclick="confirmDelete('${user.id}')" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #94a3b8; border: none; background: transparent; border-radius: 4px; cursor: pointer;" title="削除"><i class="fas fa-trash"></i></button>
+        <!-- アクションボタン -->
+        <div style="padding: 12px 16px; border-top: 1px solid #f3f4f6; display: flex; justify-content: flex-end; gap: 12px; background: #fff; border-radius: 0 0 12px 12px;">
+          <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" 
+             style="display: flex; align-items: center; gap: 4px; color: #6366f1; text-decoration: none; font-size: 0.85rem; font-weight: 500;" title="詳細">
+             <i class="fas fa-eye"></i> 詳細
+          </a>
+          <div style="flex: 1;"></div>
+          <a href="${mypageUrl}" target="_blank" 
+             style="color: #6b7280; transition: color 0.2s;" title="マイページ">
+             <i class="fas fa-external-link-alt"></i>
+          </a>
+          <button onclick="editUser('${user.id}')" 
+             style="color: #6b7280; border: none; background: transparent; cursor: pointer; transition: color 0.2s;" title="編集">
+             <i class="fas fa-edit"></i>
+          </button>
+          <button onclick="confirmDelete('${user.id}')" 
+             style="color: #9ca3af; border: none; background: transparent; cursor: pointer; transition: color 0.2s;" 
+             onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#9ca3af'" title="削除">
+             <i class="fas fa-trash"></i>
+          </button>
         </div>
       </div>
     `;

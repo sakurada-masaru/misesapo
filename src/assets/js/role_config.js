@@ -5,78 +5,78 @@
 const ROLE_CONFIG = {
   // ロール定義
   roles: {
-    guest: { 
-      name: 'ゲスト', 
+    guest: {
+      name: 'ゲスト',
       password: null,
       displayName: 'ゲスト'
     },
-    customer: { 
-      name: 'ユーザー（顧客）', 
+    customer: {
+      name: 'ユーザー（顧客）',
       password: null,
       displayName: 'ユーザー'
     },
-    staff: { 
-      name: '清掃員', 
+    staff: {
+      name: '清掃員',
       password: null,
       displayName: '清掃員'
     },
-    concierge: { 
-      name: 'コンシェルジュ', 
+    concierge: {
+      name: 'コンシェルジュ',
       password: null,
       displayName: 'コンシェルジュ'
     },
-    admin: { 
-      name: '管理者', 
+    admin: {
+      name: '管理者',
       password: null,
       displayName: '管理者'
     },
-    developer: { 
-      name: '開発者', 
+    developer: {
+      name: '開発者',
       password: null,
       displayName: '開発者'
     },
-    office: { 
-      name: '事務', 
+    office: {
+      name: '事務',
       password: null,
       displayName: '事務'
     },
-    designer: { 
-      name: 'デザイナー', 
+    designer: {
+      name: 'デザイナー',
       password: null,
       displayName: 'デザイナー'
     },
-    contractor: { 
-      name: '外部委託', 
+    contractor: {
+      name: '外部委託',
       password: null,
       displayName: '外部委託'
     },
-    general_affairs: { 
-      name: '総務', 
+    general_affairs: {
+      name: '総務',
       password: null,
       displayName: '総務'
     },
-    operation: { 
-      name: '運営', 
+    operation: {
+      name: '運営',
       password: null,
       displayName: '運営'
     },
-    accounting: { 
-      name: '経理', 
+    accounting: {
+      name: '経理',
       password: null,
       displayName: '経理'
     },
-    human_resources: { 
-      name: '人事', 
+    human_resources: {
+      name: '人事',
       password: null,
       displayName: '人事'
     },
-    master: { 
-      name: 'マスター', 
+    master: {
+      name: 'マスター',
       password: null,
       displayName: 'マスター'
     }
   },
-  
+
   // ロール階層（上位ロールは下位ロールの権限も持つ）
   // 階層: マスター > 開発者 > 管理者 > コンシェルジュ > 事務・デザイナー・総務・運営・経理・人事 > 清掃員・外部委託・ユーザー（同レベル）
   roleHierarchy: {
@@ -95,7 +95,7 @@ const ROLE_CONFIG = {
     developer: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'general_affairs', 'operation', 'accounting', 'human_resources', 'concierge', 'admin', 'developer'],  // 開発者: すべての権限
     master: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'general_affairs', 'operation', 'accounting', 'human_resources', 'concierge', 'admin', 'developer', 'master']  // マスター: すべての権限（最上位）
   },
-  
+
   // ロールごとのログイン後リダイレクト先
   defaultPages: {
     'customer': '/mypage',
@@ -114,7 +114,7 @@ const ROLE_CONFIG = {
     'master': '/admin/sitemap',  // マスターはサイトマップ
     'guest': '/'
   },
-  
+
   // ページ別アクセス制御（パスパターン）
   pageAccess: {
     // パブリックページ（全員アクセス可能）
@@ -147,7 +147,7 @@ const ROLE_CONFIG = {
     '/tokushoho': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/about.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/lp.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
-    
+
     // 顧客向けページ（ユーザーと清掃員がアクセス可能、コンシェルジュと管理者も可）
     '/mypage.html': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/mypage/': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
@@ -156,30 +156,30 @@ const ROLE_CONFIG = {
     '/order/': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/order-complete.html': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/order-confirm.html': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
-    
+
     // 清掃員向けページ（清掃員とユーザーがアクセス可能、コンシェルジュと管理者も可）
     '/staff/': ['staff', 'customer', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/schedule.html': ['staff', 'customer', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/report.html': ['staff', 'customer', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/reports/': ['staff', 'customer', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
-    
+
     // コンシェルジュ向けページ（コンシェルジュと管理者のみ）
     '/sales/': ['concierge', 'admin', 'developer', 'master'],
-    
+
     // 管理者向けページ（管理者と開発者のみ）
     '/admin/': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/admin/partners.html': ['admin', 'developer', 'master'],
     '/admin/partners/': ['admin', 'developer', 'master'],
     '/admin/partners/new.html': ['admin', 'developer', 'master'],
-    
+
     // 開発者向けページ（開発者のみ）
     '/admin/services/review.html': ['developer', 'master'],
-    
+
     // 清掃マニュアル管理画面（管理者・清掃員・コンシェルジュ・開発者・マスター）
     '/cleaning-manual-admin.html': ['admin', 'staff', 'office', 'designer', 'concierge', 'developer', 'master'],
     '/cleaning-manual.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master']
   },
-  
+
   // ロールごとのナビゲーション項目（推奨ナビゲーション）
   navigation: {
     guest: [
@@ -249,7 +249,7 @@ const ROLE_CONFIG = {
       { href: '/admin/sitemap', label: 'サイトマップ', icon: 'fa-sitemap', special: 'dropdown' }
     ]
   },
-  
+
   // マスター権限用のドロップダウンリスト項目（カテゴリ別）
   masterNavigation: {
     'パブリック': [
@@ -342,10 +342,10 @@ function checkPageAccess(path, userRole) {
   if (userRole === 'master' || userRole === 'admin' || userRole === 'developer') {
     return true;
   }
-  
+
   // パスを正規化（クエリパラメータやハッシュを除去）
   const normalizedPath = path.split('?')[0].split('#')[0];
-  
+
   // ページアクセス設定をチェック
   for (const [pattern, allowedRoles] of Object.entries(ROLE_CONFIG.pageAccess)) {
     if (matchPathPattern(normalizedPath, pattern)) {
@@ -354,7 +354,7 @@ function checkPageAccess(path, userRole) {
       return allowedRoles.some(role => userRoles.includes(role));
     }
   }
-  
+
   // デフォルトはアクセス不可
   return false;
 }
@@ -390,27 +390,47 @@ function getDefaultPageForRole(roleOrUser) {
     const user = roleOrUser;
     const role = (user.role || '').toLowerCase();
     const department = (user.department || '').toLowerCase();
-    
-    // 営業: 営業用マイページ（SP用、クイックメニューあり）
+    const parentDepartment = (user.parent_department || '').toLowerCase();
+
+    // parent_departmentベースでマイページを決定
+    // 運営本部 → 営業マイページ
+    if (parentDepartment.includes('運営本部')) {
+      return '/sales/mypage';
+    }
+    // 清掃事業部 → OS課マイページ
+    if (parentDepartment.includes('清掃事業部')) {
+      return '/staff/os/mypage';
+    }
+    // 経営管理本部 → 事務マイページ
+    if (parentDepartment.includes('経営管理本部')) {
+      return '/staff/office/mypage';
+    }
+    // 組織運営本部 → 開発マイページ
+    if (parentDepartment.includes('組織運営本部')) {
+      return '/staff/developer/mypage';
+    }
+
+    // parent_departmentがない場合はdepartmentで判定（後方互換性）
+    // 営業: 営業用マイページ
     if (role === 'sales' || role === 'concierge' || department.includes('営業') || department.includes('sales')) {
       return '/sales/mypage';
     }
-    // OS課: OS課用マイページ（SP用、クイックメニューあり）
-    if (department.includes('os') || department.includes('ｏｓ') || department.includes('os課') || department.includes('ｏｓ課')) {
+    // OS課: OS課用マイページ
+    if (department.includes('os') || department.includes('ｏｓ') || department.includes('os課') || department.includes('ｏｓ課') || department.includes('清掃')) {
       return '/staff/os/mypage';
     }
-    // 事務: 事務マイページ（PC向け、サイドバーのみ）
-    if (role === 'office' || department.includes('事務') || department.includes('office')) {
+    // 事務: 事務マイページ
+    if (role === 'office' || department.includes('事務') || department.includes('office') || department.includes('財務') || department.includes('経理')) {
       return '/staff/office/mypage';
     }
-    // 開発: 開発マイページ（PC向け、サイドバーのみ）
-    if (role === 'developer' || department.includes('開発') || department.includes('developer')) {
+    // 開発: 開発マイページ
+    if (role === 'developer' || department.includes('開発') || department.includes('developer') || department.includes('dx')) {
       return '/staff/developer/mypage';
     }
     // その他はロールベースで判定
     return ROLE_CONFIG.defaultPages[role] || ROLE_CONFIG.defaultPages.guest || '/';
   }
-  
+
   // ロール名（文字列）が渡された場合
   const role = typeof roleOrUser === 'string' ? roleOrUser.toLowerCase() : '';
   return ROLE_CONFIG.defaultPages[role] || ROLE_CONFIG.defaultPages.guest || '/';
