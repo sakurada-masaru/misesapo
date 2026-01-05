@@ -520,22 +520,22 @@
                 <span>${escapeHtml(user.phone || '-')}</span>
               </div>
               ${jobBadges ? `<div class="job-badges">${jobBadges}</div>` : ''}
-              <div class="user-card-footer" style="display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 10px; border-top: 1px solid #f3f4f6;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-size: 0.75rem; color: #6b7280; font-weight: 500;">アカウント</span>
+              <div class="user-card-footer" style="display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid #f3f4f6;">
+                <div style="display: flex; align-items: center;">
+                  <span style="font-size: 0.75rem; color: #9ca3af; width: 65px; flex-shrink: 0;">アカウント</span>
                   <div style="display: flex; gap: 4px; align-items: center;">
                     ${roleBadge}
                     <span class="status-badge status-${user.status || 'active'}">${user.status === 'inactive' ? '無効' : '有効'}</span>
                   </div>
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                   <span style="font-size: 0.75rem; color: #6b7280; font-weight: 500;"><i class="fas fa-clock" style="width: 14px;"></i> 出勤状況</span>
+                <div style="display: flex; align-items: center;">
+                   <span style="font-size: 0.75rem; color: #9ca3af; width: 65px; flex-shrink: 0;">出勤状況</span>
                    ${attendanceBadge}
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                   <span style="font-size: 0.75rem; color: #6b7280; font-weight: 500;"><i class="fas fa-file-alt" style="width: 14px;"></i> 日報提出</span>
+                <div style="display: flex; align-items: center;">
+                   <span style="font-size: 0.75rem; color: #9ca3af; width: 65px; flex-shrink: 0;">日報提出</span>
                    ${reportBadge}
                 </div>
               </div>
@@ -633,18 +633,18 @@
           <td>
             <div class="user-list-badges" style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
               <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
-                <span style="font-size: 0.7rem; color: #9ca3af; width: 40px;">登録:</span>
+                <span style="font-size: 0.7rem; color: #9ca3af; width: 48px; flex-shrink: 0;">アカウント</span>
                 <div style="display: flex; gap: 2px;">
                   ${roleBadge}
                   <span class="status-badge status-${user.status || 'active'}">${user.status === 'inactive' ? '無効' : '有効'}</span>
                 </div>
               </div>
               <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
-                <span style="font-size: 0.7rem; color: #9ca3af; width: 40px;">出勤:</span>
+                <span style="font-size: 0.7rem; color: #9ca3af; width: 48px; flex-shrink: 0;">出勤状況</span>
                 ${attendanceBadge}
               </div>
               <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
-                 <span style="font-size: 0.7rem; color: #9ca3af; width: 40px;">日報:</span>
+                 <span style="font-size: 0.7rem; color: #9ca3af; width: 48px; flex-shrink: 0;">日報提出</span>
                  ${reportBadge}
               </div>
             </div>
