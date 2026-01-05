@@ -82,8 +82,8 @@ def send_general_daily_report_summary():
         department = worker.get('department', '') or ''
         name = worker.get('name', '') or ''
         
-        # OS課を除外
-        if department == 'OS課' or department == '現場':
+        # 清掃事業部を除外
+        if department == '清掃事業部':
             continue
         
         # 正田・太田を除外
