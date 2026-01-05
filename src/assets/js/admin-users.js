@@ -1,12 +1,12 @@
-(function() {
+(function () {
   'use strict';
-  
+
   // ============================================
   // セクション1: 定数・設定
   // ============================================
   const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
   const perPage = 15;
-  
+
   // ============================================
   // セクション2: グローバル変数
   // ============================================
@@ -22,32 +22,32 @@
   const userDialog = document.getElementById('user-dialog');
   const deleteDialog = document.getElementById('delete-dialog');
   const userForm = document.getElementById('user-form');
-  
+
   // ============================================
   // セクション3: 初期化
   // ============================================
   document.addEventListener('DOMContentLoaded', async () => {
     console.log('[UserManagement] 初期化開始');
-    
+
     // 出退勤データの読み込み
     loadAttendanceRecords();
-    
+
     // ユーザー詳細画面から戻ってきた場合、リロードする
     const needsReload = sessionStorage.getItem('users_list_needs_reload');
     const updatedUserId = sessionStorage.getItem('users_list_updated_user_id');
-    
+
     if (needsReload === 'true') {
       // フラグをクリア
       sessionStorage.removeItem('users_list_needs_reload');
       sessionStorage.removeItem('users_list_updated_user_id');
-      
+
       // リロード前に少し待つ（DynamoDBの反映を待つ）
       await new Promise(resolve => setTimeout(resolve, 500));
     }
-    
+
     // 従業員リストの読み込み（最重要）
     await loadUsers();
-    
+
     // 更新されたユーザーが特定されている場合、そのユーザーを個別取得APIで最新データに更新
     if (updatedUserId) {
       try {
@@ -65,7 +65,7 @@
             if (latestWorker.role_code !== undefined) {
               role = getRoleFromCode(latestWorker.role_code);
             }
-            
+
             // ユーザー情報を更新
             allUsers[userIndex] = {
               ...allUsers[userIndex],
@@ -77,7 +77,7 @@
               status: latestWorker.status || 'active',
               updated_at: latestWorker.updated_at
             };
-            
+
             // フィルタリングとテーブルを再描画
             applyFilters();
             renderTable();
@@ -89,16 +89,16 @@
         console.warn(`Failed to update user ${updatedUserId} with latest data:`, error);
       }
     }
-    
+
     // イベントリスナーの設定
     setupEventListeners();
-    
+
     // 各セクションのレンダリング
     renderAllSections();
-    
+
     console.log('[UserManagement] 初期化完了');
   });
-  
+
   // ============================================
   // セクション4: 全セクションのレンダリング
   // ============================================
@@ -108,7 +108,7 @@
     // 出退勤管理セクションは非表示（組織構造レイアウトのみ表示）
     // renderAttendanceSections();
   }
-  
+
   // ============================================
   // セクション5: 従業員データの読み込み（最重要）
   // ============================================
@@ -118,21 +118,21 @@
     try {
       // キャッシュを無効化するためにタイムスタンプを追加
       const timestamp = new Date().getTime();
-      
+
       // 全ユーザー取得APIを使用（強整合性読み取りだが、更新直後は古いデータの可能性がある）
       const response = await fetch(`${API_BASE}/workers?t=${timestamp}&_=${Date.now()}`, {
         cache: 'no-store'
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const workers = await response.json();
-      
+
       // レスポンスが配列でない場合の処理
       let workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
-      
+
       // データの整合性を確保するため、各ユーザーを個別取得APIで最新データに更新
       // （全ユーザー取得APIが古いデータを返す可能性があるため）
       console.log('[UserManagement] 全ユーザー取得APIから取得:', workersArray.length, '名');
@@ -142,7 +142,7 @@
         if (!workerId || workerId === 'N/A' || workerId === '9999') {
           continue;
         }
-        
+
         try {
           // 個別取得APIで最新データを取得（強整合性読み取り）
           const individualResponse = await fetch(`${API_BASE}/workers/${workerId}?t=${timestamp}&_=${Date.now()}`, {
@@ -162,17 +162,17 @@
           updatedWorkers.push(worker);
         }
       }
-      
+
       workersArray = updatedWorkers;
       console.log('[UserManagement] 個別取得APIで更新後:', workersArray.length, '名');
-      
+
       // 新しいデータ構造に対応
       allUsers = workersArray
         .filter(w => {
           // お客様（customer）を除外（従業員のみを表示）
           const role = w.role || (w.role_code !== undefined ? getRoleFromCode(w.role_code) : 'staff');
           if (role === 'customer') return false;
-          
+
           // IDが存在する場合は表示（必須）
           const workerId = String(w.id || w.user_id || '').trim();
           if (workerId && workerId !== 'N/A' && workerId !== '') {
@@ -183,7 +183,7 @@
             }
             return true;
           }
-          
+
           return false;
         })
         .map(w => {
@@ -191,15 +191,15 @@
           let role = w.role;
           if (!role || role === '') {
             if (w.role_code !== undefined && w.role_code !== null) {
-            role = getRoleFromCode(w.role_code);
+              role = getRoleFromCode(w.role_code);
             } else {
               role = 'staff';
             }
           }
-          
+
           // IDを正規化（文字列として扱う）
           const workerId = String(w.id || w.user_id || '').trim();
-          
+
           return {
             id: workerId,
             name: (w.name || w.display_name || '').trim() || '名前未設定',
@@ -224,22 +224,22 @@
           // IDでソート（W001, W002...の順）
           const aId = a.id;
           const bId = b.id;
-          
+
           // Wで始まるIDの場合
           if (aId.startsWith('W') && bId.startsWith('W')) {
             const aNum = parseInt(aId.substring(1)) || 0;
             const bNum = parseInt(bId.substring(1)) || 0;
             return aNum - bNum;
           }
-          
+
           // 通常の文字列比較
           return aId.localeCompare(bId);
         });
-      
+
       console.log('Users loaded:', allUsers.length);
       console.log('Sample user:', allUsers[0]);
       console.log('All user IDs:', allUsers.map(u => u.id));
-      
+
       if (allUsers.length === 0) {
         console.warn('No users found. API response:', workers);
         const loadingEl = document.getElementById('loading-users');
@@ -251,9 +251,10 @@
         // renderAttendanceSections();
         return;
       }
-      
+
       updateStats();
       updateDepartmentFilter(); // 部署フィルターを更新
+      await loadTodayDailyReports(); // 日報データを読み込み
       filterAndRender();
       // 出退勤管理セクションは非表示（組織構造レイアウトのみ表示）
       // renderAttendanceSections();
@@ -317,15 +318,15 @@
   function updateStats() {
     // 総ユーザー数
     document.getElementById('stat-total').textContent = allUsers.length;
-    
+
     // 管理者数
     const adminCount = allUsers.filter(u => isAdminRole(u.role)).length;
     document.getElementById('stat-admin').textContent = adminCount;
-    
+
     // 平社員数（管理者以外）
     const staffCount = allUsers.length - adminCount;
     document.getElementById('stat-staff').textContent = staffCount;
-    
+
     // 部署数（ユニークな部署の数）
     const departments = new Set(allUsers.map(u => u.department).filter(d => d && d !== '-'));
     document.getElementById('stat-departments').textContent = departments.size;
@@ -338,11 +339,11 @@
     const statusFilter = document.getElementById('status-filter').value;
 
     filteredUsers = allUsers.filter(u => {
-      const matchSearch = !search || 
+      const matchSearch = !search ||
         (u.name && u.name.toLowerCase().includes(search)) ||
         (u.email && u.email.toLowerCase().includes(search)) ||
         (u.id && u.id.toLowerCase().includes(search));
-      
+
       // ロールフィルター（管理者 or なし）
       let matchRole = true;
       if (roleFilter) {
@@ -352,11 +353,11 @@
           matchRole = !isAdminRole(u.role);
         }
       }
-      
+
       // 部署フィルター（「現場」を「OS課」に変換して比較）
       const normalizedDept = normalizeDepartmentName(u.department);
       const matchDepartment = !departmentFilter || normalizedDept === departmentFilter;
-      
+
       const matchStatus = !statusFilter || u.status === statusFilter;
       return matchSearch && matchRole && matchDepartment && matchStatus;
     });
@@ -366,7 +367,7 @@
     // ページネーションは新しいレイアウトでは不要
     // renderPagination();
   }
-  
+
   // 部署名を正規化（「現場」を「OS課」に変換）
   function normalizeDepartmentName(dept) {
     if (!dept || dept === '-') return dept;
@@ -377,17 +378,17 @@
   function updateDepartmentFilter() {
     const departmentFilter = document.getElementById('department-filter');
     if (!departmentFilter) return;
-    
+
     // 既存のオプションをクリア（「すべての部署」以外）
     const allOption = departmentFilter.querySelector('option[value=""]');
     departmentFilter.innerHTML = '';
     if (allOption) {
       departmentFilter.appendChild(allOption);
     }
-    
+
     // ユニークな部署を取得（「現場」を「OS課」に変換し、「現場」は除外）
     const departments = [...new Set(allUsers.map(u => normalizeDepartmentName(u.department)).filter(d => d && d !== '-' && d !== '現場'))].sort();
-    
+
     // 部署オプションを追加
     departments.forEach(dept => {
       const option = document.createElement('option');
@@ -478,18 +479,27 @@
           mypageUrl = `/staff/mypage.html?id=${encodeURIComponent(user.id)}`;
         } else if (user.email && user.email !== '-') {
           mypageUrl = `/staff/mypage.html?email=${encodeURIComponent(user.email)}`;
-      }
+        }
 
         // 担当業務をバッジとして表示（「・」で区切られた複数の業務を複数のバッジとして表示）
         const jobBadges = getUserJobBadges(user);
-        
+
         // 管理者のみロールバッジを表示
         const roleBadge = isAdminRole(user.role) ? '<span class="role-badge role-admin">管理者</span>' : '';
-        
+
         // 出退勤ステータスバッジを取得
         const attendanceBadge = getAttendanceStatusBadge(user.id);
-      
-      return `
+
+        // 日報ステータスバッジ
+        const hasReport = userDailyReports[user.id];
+        let reportBadge = '';
+        if (hasReport) {
+          reportBadge = `<span class="status-badge report-submitted" onclick="event.preventDefault(); window.viewDailyReport('${user.id}')" title="クリックして詳細を表示" style="cursor:pointer; background-color:#dcfce7; color:#166534; border:1px solid #bbf7d0; margin-left: 4px;"><i class="fas fa-check-circle"></i> 日報あり</span>`;
+        } else {
+          reportBadge = `<span class="status-badge report-missing" style="background-color:#f3f4f6; color:#9ca3af; border:1px solid #e5e7eb; margin-left: 4px;"><i class="fas fa-minus-circle"></i> 未提出</span>`;
+        }
+
+        return `
           <div class="user-card" data-role="${user.role}">
             <div class="user-card-header">
               <div class="user-avatar-large">${(user.name || '?')[0]}</div>
@@ -510,10 +520,11 @@
                 <span>${escapeHtml(user.phone || '-')}</span>
               </div>
               ${jobBadges ? `<div class="job-badges">${jobBadges}</div>` : ''}
-              <div class="user-card-footer">
+              <div class="user-card-footer" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto;">
                 ${roleBadge}
                 <span class="status-badge status-${user.status || 'active'}">${user.status === 'inactive' ? '無効' : '有効'}</span>
                 ${attendanceBadge}
+                ${reportBadge}
               </div>
             </div>
             <div class="user-card-actions">
@@ -550,7 +561,7 @@
     if (!container) return;
 
     // すべての部署のユーザーを1つのテーブルにまとめる
-    const allUsersList = departments.flatMap(dept => 
+    const allUsersList = departments.flatMap(dept =>
       dept.users.map(user => ({ ...user, department: dept.name }))
     );
 
@@ -570,12 +581,21 @@
 
       // 担当業務をバッジとして表示
       const jobBadges = getUserJobBadges(user);
-      
+
       // 管理者のみロールバッジを表示
       const roleBadge = isAdminRole(user.role) ? '<span class="role-badge role-admin">管理者</span>' : '';
-      
+
       // 出退勤ステータスバッジを取得
       const attendanceBadge = getAttendanceStatusBadge(user.id);
+
+      // 日報ステータスバッジ
+      const hasReport = userDailyReports[user.id];
+      let reportBadge = '';
+      if (hasReport) {
+        reportBadge = `<span class="status-badge report-submitted" onclick="event.preventDefault(); window.viewDailyReport('${user.id}')" title="クリックして詳細を表示" style="cursor:pointer; background-color:#dcfce7; color:#166534; border:1px solid #bbf7d0; margin-left: 4px;"><i class="fas fa-check-circle"></i> 日報あり</span>`;
+      } else {
+        reportBadge = `<span class="status-badge report-missing" style="background-color:#f3f4f6; color:#9ca3af; border:1px solid #e5e7eb; margin-left: 4px;"><i class="fas fa-minus-circle"></i> 未提出</span>`;
+      }
 
       return `
         <tr>
@@ -602,6 +622,7 @@
               ${roleBadge}
               <span class="status-badge status-${user.status || 'active'}">${user.status === 'inactive' ? '無効' : '有効'}</span>
               ${attendanceBadge}
+              ${reportBadge}
             </div>
           </td>
           <td>
@@ -682,7 +703,7 @@
   function renderPagination() {
     const totalPages = Math.ceil(filteredUsers.length / perPage);
     const pagination = document.getElementById('pagination');
-    
+
     if (totalPages <= 1) {
       pagination.innerHTML = '';
       return;
@@ -700,7 +721,7 @@
     pagination.innerHTML = html;
   }
 
-  window.goToPage = function(page) {
+  window.goToPage = function (page) {
     currentPage = page;
     renderTable();
     renderPagination();
@@ -714,7 +735,7 @@
       departmentFilter.addEventListener('change', filterAndRender);
     }
     document.getElementById('status-filter').addEventListener('change', filterAndRender);
-    
+
     // ビュー切り替えボタン
     const cardBtn = document.getElementById('view-toggle-card');
     const listBtn = document.getElementById('view-toggle-list');
@@ -734,7 +755,7 @@
         renderAllSections();
       });
     }
-    
+
     document.getElementById('reset-filters').addEventListener('click', () => {
       document.getElementById('search-input').value = '';
       document.getElementById('role-filter').value = '';
@@ -762,7 +783,7 @@
       if (!email) {
         return { valid: false, message: 'メールアドレスは必須です。' };
       }
-      
+
       // 基本的なメールアドレス形式のチェック
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
@@ -771,7 +792,7 @@
           message: '有効なメールアドレスを入力してください。'
         };
       }
-      
+
       // 現状は個人メールアドレスも許可
       // 将来的には企業用メールアドレス（@misesapo.app）への移行を推奨
       return { valid: true };
@@ -780,19 +801,19 @@
     // フォーム送信
     userForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const id = document.getElementById('user-id').value;
       const isNew = !id;
-      
+
       const email = document.getElementById('user-email').value;
       const emailValidation = validateEmail(email);
-      
+
       if (!emailValidation.valid) {
         document.getElementById('form-status').textContent = emailValidation.message;
         document.getElementById('form-status').style.color = 'red';
         return;
       }
-      
+
       const data = {
         name: document.getElementById('user-name').value,
         email: email,
@@ -812,19 +833,19 @@
         // 新規作成時: IDはバックエンドで生成されるため、ここでは指定しない
         // data.id = 'W' + Date.now(); // 削除: バックエンドで生成
         data.created_at = new Date().toISOString();
-        
+
         // ロールコードを設定（管理者=1、それ以外=4）
         data.role_code = (data.role === 'admin') ? '1' : '4';
-        
+
         // 新規作成時はCognitoユーザーを作成する
         if (!password) {
           alert('新規ユーザー作成にはパスワードが必要です。');
           return;
         }
-        
+
         try {
           document.getElementById('form-status').textContent = 'AWS Cognitoユーザーを作成中...';
-          
+
           // AWS Cognitoにユーザーを作成（Lambda関数経由）
           const apiBaseUrl = API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
           const cognitoResponse = await fetch(`${apiBaseUrl}/admin/cognito/users`, {
@@ -841,15 +862,15 @@
               job: data.job  // 担当業務を追加
             })
           });
-          
+
           if (!cognitoResponse.ok) {
             const errorData = await cognitoResponse.json();
             throw new Error(errorData.error || 'Cognitoユーザーの作成に失敗しました');
           }
-          
+
           const cognitoResult = await cognitoResponse.json();
           data.cognito_sub = cognitoResult.sub;  // Cognito User Sub
-          
+
           document.getElementById('form-status').textContent = 'ユーザー情報を保存中...';
         } catch (cognitoError) {
           console.error('Cognito user creation error:', cognitoError);
@@ -872,13 +893,13 @@
         // originalIdがあればそれを使用、なければidを使用
         const updateId = allUsers.find(u => String(u.id) === String(id))?.originalId || id;
         data.id = updateId;
-        
+
         try {
           // 既存ユーザー情報を取得
           const existingUserResponse = await fetch(`${API_BASE}/workers/${encodeURIComponent(updateId)}`);
           if (existingUserResponse.ok) {
             const existingUser = await existingUserResponse.json();
-            
+
             // 既存の情報を保持（更新されないフィールド）
             if (existingUser.created_at) {
               data.created_at = existingUser.created_at;
@@ -899,7 +920,7 @@
             if (existingUser.scheduled_work_hours !== undefined) {
               data.scheduled_work_hours = existingUser.scheduled_work_hours;
             }
-            
+
             // ロールコードを設定（管理者=1、それ以外=4）
             data.role_code = (data.role === 'admin') ? '1' : '4';
           } else {
@@ -940,7 +961,7 @@
         if (!isNew) {
           document.getElementById('form-status').textContent = '保存中...';
         }
-        
+
         // workersテーブルに保存
         // 更新時はupdateIdを使用（既にdata.idに設定済み）
         const url = `${API_BASE}/workers${isNew ? '' : '/' + encodeURIComponent(data.id)}`;
@@ -954,7 +975,7 @@
           const responseData = await response.json().catch(() => ({}));
           document.getElementById('form-status').textContent = '保存しました';
           document.getElementById('form-status').className = 'form-status success';
-          
+
           // 少し待ってからダイアログを閉じてリストを更新（DynamoDBの反映を待つ）
           setTimeout(async () => {
             userDialog.close();
@@ -977,19 +998,19 @@
     // 削除確認
     document.getElementById('confirm-delete').addEventListener('click', async () => {
       if (!deleteTargetId) return;
-      
+
       const confirmBtn = document.getElementById('confirm-delete');
       const originalText = confirmBtn.textContent;
       confirmBtn.disabled = true;
       confirmBtn.textContent = '削除中...';
-      
+
       // IDを文字列として正規化
       const normalizedId = String(deleteTargetId);
-      
+
       console.log('Attempting to delete worker with ID:', normalizedId);
       console.log('ID type:', typeof normalizedId);
       console.log('All available user IDs:', allUsers.map(u => ({ id: u.id, originalId: u.originalId, type: typeof u.id })));
-      
+
       try {
         // まず、削除対象のユーザー情報を取得して確認
         const targetUser = allUsers.find(u => String(u.id) === normalizedId);
@@ -1002,35 +1023,35 @@
           await loadUsers(); // リストを更新
           return;
         }
-        
+
         // originalIdがあればそれを使用、なければidを使用
         const deleteId = targetUser.originalId || targetUser.id;
-        
+
         const response = await fetch(`${API_BASE}/workers/${encodeURIComponent(deleteId)}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'
           }
         });
-        
+
         if (response.ok) {
           const responseData = await response.json().catch(() => ({}));
           console.log('Delete successful:', responseData);
-          
+
           deleteDialog.close();
           deleteTargetId = null; // 削除対象IDをリセット
-          
+
           // 少し待ってからユーザー一覧を再読み込み（DynamoDBの反映を待つ）
           await new Promise(resolve => setTimeout(resolve, 500));
           await loadUsers();
-          
+
           // 削除が成功したか確認
           await new Promise(resolve => setTimeout(resolve, 500));
           const verifyResponse = await fetch(`${API_BASE}/workers`);
           const verifyData = await verifyResponse.json();
           const verifyWorkers = Array.isArray(verifyData) ? verifyData : (verifyData.items || verifyData.workers || []);
           const stillExists = verifyWorkers.some(u => String(u.id) === normalizedId);
-          
+
           if (stillExists) {
             alert('削除リクエストは送信されましたが、ユーザーがまだ存在している可能性があります。\n\nページを更新して確認してください。');
           } else {
@@ -1039,7 +1060,7 @@
         } else {
           const errorText = await response.text();
           let errorMessage = '削除に失敗しました';
-          
+
           // エラーレスポンスをパース
           let errorData = {};
           try {
@@ -1047,27 +1068,27 @@
           } catch (e) {
             // JSONパースに失敗した場合はそのまま使用
           }
-          
+
           // CORSエラーの場合
           if (response.status === 0 || errorText.includes('CORS') || errorText.includes('Access-Control')) {
             errorMessage = 'CORSエラー: API Gateway側でCORS設定が必要です。\n\n' +
-                          'AWS API Gatewayコンソールで、/workers/{id} リソースのDELETEメソッドにCORSを設定してください。\n\n' +
-                          '詳細: ブラウザのコンソールを確認してください。';
+              'AWS API Gatewayコンソールで、/workers/{id} リソースのDELETEメソッドにCORSを設定してください。\n\n' +
+              '詳細: ブラウザのコンソールを確認してください。';
           } else if (response.status === 404) {
             // 404の場合は、実際に存在するか確認
             const checkResponse = await fetch(`${API_BASE}/workers`);
             const checkData = await checkResponse.json();
             const checkWorkers = Array.isArray(checkData) ? checkData : (checkData.items || checkData.workers || []);
             const exists = checkWorkers.some(u => String(u.id) === normalizedId);
-            
+
             if (exists) {
               errorMessage = `削除に失敗しました（404エラー）。\n\n` +
-                           `ユーザーID: ${normalizedId}\n` +
-                           `ユーザー名: ${targetUser.name || 'N/A'}\n\n` +
-                           `APIがユーザーを見つけられない可能性があります。\n` +
-                           `AWS DynamoDBコンソールから直接削除するか、\n` +
-                           `ページを更新して再度お試しください。\n\n` +
-                           `エラー詳細: ${errorData.error || errorText}`;
+                `ユーザーID: ${normalizedId}\n` +
+                `ユーザー名: ${targetUser.name || 'N/A'}\n\n` +
+                `APIがユーザーを見つけられない可能性があります。\n` +
+                `AWS DynamoDBコンソールから直接削除するか、\n` +
+                `ページを更新して再度お試しください。\n\n` +
+                `エラー詳細: ${errorData.error || errorText}`;
             } else {
               errorMessage = 'ユーザーは既に削除されています。';
               // リストを更新
@@ -1077,31 +1098,31 @@
             errorMessage = '権限がありません';
           } else {
             errorMessage = `削除に失敗しました (ステータス: ${response.status})\n\n` +
-                         `エラー: ${errorData.error || errorData.message || errorText}`;
+              `エラー: ${errorData.error || errorData.message || errorText}`;
           }
-          
+
           console.error('Delete error:', response.status, errorText);
           alert(errorMessage);
         }
       } catch (error) {
         console.error('Delete error:', error);
         let errorMessage = '削除に失敗しました';
-        
+
         // CORSエラーの場合
         if (error.message.includes('CORS') || error.message.includes('Access-Control') || error.name === 'TypeError') {
           errorMessage = 'CORSエラーが発生しました。\n\n' +
-                        '原因: API Gateway側でDELETEメソッドのCORS設定が不足しています。\n\n' +
-                        '解決方法:\n' +
-                        '1. AWS API Gatewayコンソールにアクセス\n' +
-                        '2. /workers/{id} リソースのDELETEメソッドを選択\n' +
-                        '3. 「アクション」→「CORSを有効にする」をクリック\n' +
-                        '4. アクセス制御を許可するメソッドに「DELETE」を追加\n' +
-                        '5. デプロイを実行\n\n' +
-                        '詳細: ブラウザのコンソール（F12）を確認してください。';
+            '原因: API Gateway側でDELETEメソッドのCORS設定が不足しています。\n\n' +
+            '解決方法:\n' +
+            '1. AWS API Gatewayコンソールにアクセス\n' +
+            '2. /workers/{id} リソースのDELETEメソッドを選択\n' +
+            '3. 「アクション」→「CORSを有効にする」をクリック\n' +
+            '4. アクセス制御を許可するメソッドに「DELETE」を追加\n' +
+            '5. デプロイを実行\n\n' +
+            '詳細: ブラウザのコンソール（F12）を確認してください。';
         } else {
           errorMessage = `削除に失敗しました: ${error.message}`;
         }
-        
+
         alert(errorMessage);
       } finally {
         confirmBtn.disabled = false;
@@ -1112,13 +1133,13 @@
   }
 
   // 編集
-  window.editUser = async function(id) {
+  window.editUser = async function (id) {
     // IDを文字列として正規化
     const normalizedId = String(id);
-    
+
     // まずローカルのallUsersから検索
     let user = allUsers.find(u => String(u.id) === normalizedId);
-    
+
     // 見つからない場合、APIから直接取得
     if (!user) {
       try {
@@ -1138,7 +1159,7 @@
         return;
       }
     }
-    
+
     if (!user) {
       alert('ユーザーが見つかりませんでした。ページを更新してください。');
       return;
@@ -1163,13 +1184,90 @@
   };
 
   // 削除確認
-  window.confirmDelete = function(id) {
+  window.confirmDelete = function (id) {
     deleteTargetId = id;
     deleteDialog.showModal();
   };
 
 
-  // 出退勤記録の読み込み
+  // 日報データ（ユーザーID -> 日報オブジェクト）
+  let userDailyReports = {};
+
+  // 今日の日報データを読み込み
+  async function loadTodayDailyReports() {
+    try {
+      const today = getTodayDate(); // YYYY-MM-DD
+      console.log('[UserManagement] Loading daily reports for:', today);
+
+      // APIから日報を取得（日付フィルタがない場合は全件取得後にフィルタ）
+      // TODO: APIが日付フィルタをサポートしているか確認。今は全件取得してJSでフィルタ
+      const response = await fetch(`${API_BASE}/daily-reports?t=${Date.now()}`);
+      if (response.ok) {
+        const data = await response.json();
+        const items = Array.isArray(data) ? data : (data.items || []);
+
+        // 今日の日報のみを抽出してマッピング
+        userDailyReports = {};
+        items.forEach(report => {
+          // 日付フォーマットの確認が必要（YYYY-MM-DD想定）
+          const reportDate = report.date ? report.date.split('T')[0] : '';
+          if (reportDate === today && report.staff_id) {
+            userDailyReports[report.staff_id] = report;
+          }
+        });
+        console.log('[UserManagement] Daily reports loaded:', Object.keys(userDailyReports).length);
+      }
+    } catch (error) {
+      console.error('Failed to load daily reports:', error);
+    }
+  }
+
+  // 日報詳細を表示
+  window.viewDailyReport = function (staffId) {
+    const report = userDailyReports[staffId];
+    if (!report) return;
+
+    const dialog = document.getElementById('daily-report-dialog');
+    const title = document.getElementById('daily-report-title');
+    const content = document.getElementById('daily-report-details');
+
+    // ユーザー名を取得
+    const user = allUsers.find(u => u.id === staffId);
+    const userName = user ? user.name : (report.staff_name || staffId);
+
+    title.textContent = `日報詳細: ${userName} (${report.date})`;
+
+    // コンテンツを生成（改行を反映）
+    let html = '';
+
+    // 本日の作業内容
+    if (report.work_content || report.content) {
+      html += `<div class="report-section"><h4>業務内容</h4><div class="report-text">${escapeHtml(report.work_content || report.content).replace(/\n/g, '<br>')}</div></div>`;
+    }
+    // 成果
+    if (report.achievements) {
+      html += `<div class="report-section"><h4>本日の成果</h4><div class="report-text">${escapeHtml(report.achievements).replace(/\n/g, '<br>')}</div></div>`;
+    }
+    // 課題
+    if (report.issues) {
+      html += `<div class="report-section"><h4>課題・反省</h4><div class="report-text">${escapeHtml(report.issues).replace(/\n/g, '<br>')}</div></div>`;
+    }
+    // 明日の予定
+    if (report.tomorrow) {
+      html += `<div class="report-section"><h4>明日の予定</h4><div class="report-text">${escapeHtml(report.tomorrow).replace(/\n/g, '<br>')}</div></div>`;
+    }
+    // 備考
+    if (report.notes) {
+      html += `<div class="report-section"><h4>備考</h4><div class="report-text">${escapeHtml(report.notes).replace(/\n/g, '<br>')}</div></div>`;
+    }
+
+    // 清掃レポートへのリンクなどがあればここに追加
+
+    content.innerHTML = html || '<p>内容がありません</p>';
+
+    dialog.showModal();
+  };
+
   function loadAttendanceRecords() {
     try {
       const stored = localStorage.getItem('attendanceRecords');
@@ -1211,7 +1309,7 @@
   // 出退勤ステータスのバッジHTMLを生成
   function getAttendanceStatusBadge(userId) {
     const status = getUserAttendanceStatus(userId);
-    
+
     if (status.clockInTime && status.clockOutTime) {
       // 退勤済み
       const clockInTime = status.clockInTime ? new Date(status.clockInTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
@@ -1238,7 +1336,7 @@
     // 部署別にユーザーをグループ化
     const activeUsers = allUsers.filter(u => u.status === 'active');
     const usersByDepartment = {};
-    
+
     activeUsers.forEach(user => {
       const department = (user.department || user.team || '').trim() || '未設定';
       if (!usersByDepartment[department]) {
@@ -1246,29 +1344,29 @@
       }
       usersByDepartment[department].push(user);
     });
-    
+
     // 部署名でソート（未設定を最後に）
     const sortedDepartments = Object.keys(usersByDepartment).sort((a, b) => {
       if (a === '未設定') return 1;
       if (b === '未設定') return -1;
       return a.localeCompare(b, 'ja');
     });
-    
+
     // 出退勤セクションのコンテナを取得
     const attendanceSectionsContainer = document.querySelector('.attendance-sections');
     if (!attendanceSectionsContainer) return;
-    
+
     // 既存のセクションをクリア（ロールベースのセクションを削除）
     attendanceSectionsContainer.innerHTML = '';
-    
+
     // 各部署のセクションを動的に生成
     sortedDepartments.forEach(department => {
       const users = usersByDepartment[department];
       if (users.length === 0) return;
-      
+
       // 部署名をID用にエンコード（特殊文字を置換）
       const departmentId = department.replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, '_');
-      
+
       // セクションHTMLを生成
       const sectionHtml = `
         <div class="attendance-section" id="attendance-section-${departmentId}">
@@ -1284,9 +1382,9 @@
           </div>
         </div>
       `;
-      
+
       attendanceSectionsContainer.insertAdjacentHTML('beforeend', sectionHtml);
-      
+
       // セクションをレンダリング
       renderAttendanceSection(departmentId, department, users);
     });
@@ -1297,9 +1395,9 @@
     const container = document.getElementById(`attendance-grid-${departmentId}`);
     const countEl = document.getElementById(`${departmentId}-attendance-count`);
     const sectionEl = document.getElementById(`attendance-section-${departmentId}`);
-    
+
     if (!container) return;
-    
+
     if (users.length === 0) {
       // ユーザーがいない場合はセクションを非表示
       if (sectionEl) {
@@ -1308,7 +1406,7 @@
       if (countEl) countEl.textContent = '0名';
       return;
     }
-    
+
     // ユーザーがいる場合はセクションを表示
     if (sectionEl) {
       sectionEl.style.display = 'block';
@@ -1327,7 +1425,7 @@
       const isClockedIn = status.clockedIn;
       const clockInTime = status.clockInTime ? new Date(status.clockInTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : null;
       const clockOutTime = status.clockOutTime ? new Date(status.clockOutTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : null;
-      
+
       return `
         <div class="attendance-item ${isClockedIn ? 'clocked-in' : ''}">
           <span class="attendance-status-badge ${isClockedIn ? 'working' : 'off-duty'}">
@@ -1354,11 +1452,11 @@
   }
 
   // 出退勤のトグル
-  window.toggleAttendance = async function(userId, isClockedIn) {
+  window.toggleAttendance = async function (userId, isClockedIn) {
     const today = getTodayDate();
     const key = `${userId}_${today}`;
     const now = new Date().toISOString();
-    
+
     if (isClockedIn) {
       // 出勤
       attendanceRecords[key] = {
@@ -1366,7 +1464,7 @@
         clockInTime: now,
         clockOutTime: null
       };
-      
+
       // APIに送信（将来実装）
       try {
         await fetch(`${API_BASE}/attendance/clock-in`, {
@@ -1391,7 +1489,7 @@
         clockInTime: current?.clockInTime || null,
         clockOutTime: now
       };
-      
+
       // APIに送信（将来実装）
       try {
         await fetch(`${API_BASE}/attendance/clock-out`, {
@@ -1409,7 +1507,7 @@
         console.error('Failed to record clock-out:', error);
       }
     }
-    
+
     saveAttendanceRecords();
     // 出退勤管理セクションは非表示
     // renderAttendanceSections();
@@ -1421,7 +1519,7 @@
   let bulkRoleTarget = null;
   let bulkRoleUsers = [];
 
-  window.bulkAssignRole = function(role) {
+  window.bulkAssignRole = function (role) {
     // 現在そのロールに設定されているユーザーを取得
     const roleUsers = allUsers.filter(u => {
       if (role === 'admin') {
