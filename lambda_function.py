@@ -761,6 +761,8 @@ def sync_google_calendar_event_to_schedule(event_data):
 
 # Cognitoクライアントの初期化
 cognito_client = boto3.client('cognito-idp', region_name='ap-northeast-1')
+# SESクライアントの初期化
+ses_client = boto3.client('ses', region_name='ap-northeast-1')
 COGNITO_USER_POOL_ID = 'ap-northeast-1_EDKElIGoC'
 
 # S3クライアントの初期化
@@ -9380,6 +9382,30 @@ def create_or_update_daily_report(event, headers):
             }
         
         DAILY_REPORTS_TABLE.put_item(Item=item)
+        
+        # メール送信処理（info@misesapo.co.jpに通知）
+        try:
+            sender = "info@misesapo.co.jp"
+            recipient = "info@misesapo.co.jp"
+            mail_staff_name = staff_name or existing_item.get('staff_name', '') if existing_item else staff_name or '担当者不明'
+
+            mail_subject = f"【日報提出】{mail_staff_name} ({date})"
+            mail_body = f"日報が提出されました。\n\n" \
+                        f"■提出者\n{mail_staff_name} (ID: {staff_id})\n\n" \
+                        f"■日付\n{date}\n\n" \
+                        f"■内容\n{content}\n"
+            
+            ses_client.send_email(
+                Source=sender,
+                Destination={'ToAddresses': [recipient]},
+                Message={
+                    'Subject': {'Data': mail_subject},
+                    'Body': {'Text': {'Data': mail_body}}
+                }
+            )
+            print(f"Daily report notification email sent to {recipient}")
+        except Exception as e:
+            print(f"Failed to send daily report email: {str(e)}")
         
         return {
             'statusCode': 200,
