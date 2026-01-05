@@ -29,8 +29,8 @@ JST = timezone(timedelta(hours=9))  # JST = UTC+9
 SENDER_EMAIL = 'info@misesapo.co.jp'
 RECIPIENT_EMAIL = 'info@misesapo.co.jp'
 
-# 除外対象（OS課の清掃員は別途処理、CEOの正田・太田は除外）
-EXCLUDED_NAMES = ['正田', '太田']  # 名前に含まれていれば除外
+# 除外対象（OS課の清掃員は別途処理、CEOの正田・太田・高木は除外）
+EXCLUDED_NAMES = ['正田', '太田', '高木']  # 名前に含まれていれば除外
 
 
 def lambda_handler(event, context):
