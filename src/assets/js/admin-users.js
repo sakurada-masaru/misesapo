@@ -500,63 +500,172 @@
         }
 
         return `
-            <div class="user-card" data-role="${user.role}" style="display: flex; flex-direction: column; height: 100%;">
-              <div class="user-card-header" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                <div class="user-avatar-large" style="width: 48px; height: 48px; font-size: 1.25rem; flex-shrink: 0;">${(user.name || '?')[0]}</div>
-                <div class="user-card-info" style="min-width: 0; flex: 1;">
-                  <h4 class="user-name" style="margin: 0; font-size: 1.1rem; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <div class="user-card" data-role="${user.role}" style="
+              display: flex; 
+              flex-direction: column; 
+              height: 100%; 
+              padding: 0;
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+              background: #fff;
+            ">
+              <!-- ヘッダー: アバターと名前 -->
+              <div style="
+                display: flex; 
+                align-items: center; 
+                gap: 14px; 
+                padding: 16px 16px 12px 16px;
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                border-bottom: 1px solid #e2e8f0;
+              ">
+                <div style="
+                  width: 52px; 
+                  height: 52px; 
+                  border-radius: 50%; 
+                  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+                  color: #fff;
+                  display: flex; 
+                  align-items: center; 
+                  justify-content: center; 
+                  font-size: 1.4rem; 
+                  font-weight: 600;
+                  flex-shrink: 0;
+                  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+                ">${(user.name || '?')[0]}</div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="
+                    font-size: 1.1rem; 
+                    font-weight: 600; 
+                    color: #1e293b; 
+                    white-space: nowrap; 
+                    overflow: hidden; 
+                    text-overflow: ellipsis;
+                    margin-bottom: 2px;
+                  ">
                     <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" style="color: inherit; text-decoration: none;">${escapeHtml(user.name || '-')}</a>
-                  </h4>
-                  <div class="user-id" style="color: #6b7280; font-size: 0.85rem; font-family: monospace;">${escapeHtml(user.id)}</div>
+                  </div>
+                  <div style="font-size: 0.8rem; color: #64748b; font-family: 'SF Mono', Monaco, monospace;">${escapeHtml(user.id)}</div>
                 </div>
               </div>
 
-              <div class="user-card-body" style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-                <div class="user-detail" style="display: flex; align-items: center; gap: 8px; height: 24px;">
-                  <div style="width: 20px; color: #9ca3af; text-align: center; flex-shrink: 0;"><i class="fas fa-envelope"></i></div>
-                  <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;" title="${escapeHtml(user.email || '-')}">${escapeHtml(user.email || '-')}</span>
-                </div>
-                <div class="user-detail" style="display: flex; align-items: center; gap: 8px; height: 24px;">
-                  <div style="width: 20px; color: #9ca3af; text-align: center; flex-shrink: 0;"><i class="fas fa-phone"></i></div>
-                  <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;">${escapeHtml(user.phone || '-')}</span>
-                </div>
+              <!-- メインコンテンツ -->
+              <div style="flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 16px;">
                 
-                ${jobBadges ? `<div class="job-badges" style="margin: 8px 0; display: flex; flex-wrap: wrap; gap: 4px;">${jobBadges}</div>` : '<div style="height: 8px;"></div>'}
-                
-                <div class="user-card-footer" style="display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid #f3f4f6;">
-                  <div style="display: flex; align-items: center; height: 24px;">
-                    <span style="font-size: 0.75rem; color: #9ca3af; width: 65px; flex-shrink: 0;">アカウント</span>
-                    <div style="display: flex; gap: 4px; align-items: center;">
+                <!-- 連絡先セクション -->
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="font-size: 0.7rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">連絡先</div>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-envelope" style="width: 16px; color: #94a3b8; font-size: 0.85rem;"></i>
+                    <span style="font-size: 0.875rem; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(user.email || '-')}">${escapeHtml(user.email || '-')}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-phone" style="width: 16px; color: #94a3b8; font-size: 0.85rem;"></i>
+                    <span style="font-size: 0.875rem; color: #334155;">${escapeHtml(user.phone || '-')}</span>
+                  </div>
+                </div>
+
+                <!-- 担当業務バッジ -->
+                ${jobBadges ? `
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  ${jobBadges}
+                </div>
+                ` : ''}
+
+                <!-- ステータスセクション -->
+                <div style="
+                  display: flex; 
+                  flex-direction: column; 
+                  gap: 10px; 
+                  padding: 12px; 
+                  background: #f8fafc; 
+                  border-radius: 8px;
+                  margin-top: auto;
+                ">
+                  <div style="font-size: 0.7rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">ステータス</div>
+                  
+                  <!-- アカウント状態 -->
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <i class="fas fa-user-circle" style="width: 16px; color: #64748b; font-size: 0.9rem;"></i>
+                      <span style="font-size: 0.8rem; color: #64748b;">アカウント</span>
+                    </div>
+                    <div style="display: flex; gap: 4px;">
                       ${roleBadge}
-                      <span class="status-badge status-${user.status || 'active'}">${user.status === 'inactive' ? '無効' : '有効'}</span>
+                      <span style="
+                        font-size: 0.75rem; 
+                        padding: 2px 8px; 
+                        border-radius: 4px;
+                        font-weight: 500;
+                        ${user.status === 'inactive'
+            ? 'background: #fef2f2; color: #dc2626;'
+            : 'background: #f0fdf4; color: #16a34a;'}
+                      ">${user.status === 'inactive' ? '無効' : '有効'}</span>
                     </div>
                   </div>
                   
-                  <div style="display: flex; align-items: center; height: 24px;">
-                     <span style="font-size: 0.75rem; color: #9ca3af; width: 65px; flex-shrink: 0;">出勤状況</span>
-                     ${attendanceBadge}
+                  <!-- 出勤状況 -->
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <i class="fas fa-clock" style="width: 16px; color: #64748b; font-size: 0.9rem;"></i>
+                      <span style="font-size: 0.8rem; color: #64748b;">出勤状況</span>
+                    </div>
+                    ${attendanceBadge}
                   </div>
                   
-                  <div style="display: flex; align-items: center; height: 24px;">
-                     <span style="font-size: 0.75rem; color: #9ca3af; width: 65px; flex-shrink: 0;">日報提出</span>
-                     ${reportBadge}
+                  <!-- 日報提出 -->
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <i class="fas fa-file-alt" style="width: 16px; color: #64748b; font-size: 0.9rem;"></i>
+                      <span style="font-size: 0.8rem; color: #64748b;">日報提出</span>
+                    </div>
+                    ${reportBadge}
                   </div>
                 </div>
               </div>
 
-              <div class="user-card-actions" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e5e7eb;">
-                <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" class="btn-icon" title="詳細" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: #4b5563; transition: background 0.2s;">
-                  <i class="fas fa-eye"></i>
+              <!-- アクションボタン -->
+              <div style="
+                display: flex; 
+                justify-content: space-between;
+                padding: 12px 16px;
+                background: #f8fafc;
+                border-top: 1px solid #e2e8f0;
+              ">
+                <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" style="
+                  display: flex; align-items: center; gap: 4px;
+                  font-size: 0.8rem; color: #6366f1; text-decoration: none;
+                  padding: 6px 10px; border-radius: 6px;
+                  transition: background 0.2s;
+                " onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='transparent'">
+                  <i class="fas fa-eye"></i> 詳細
                 </a>
-                <a href="${mypageUrl}" class="btn-icon" title="マイページ" target="_blank" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: #4b5563; transition: background 0.2s;">
-                  <i class="fas fa-external-link-alt"></i>
-                </a>
-                <button class="btn-icon" title="編集" onclick="editUser('${user.id}')" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: #4b5563; border: none; background: transparent; cursor: pointer; transition: background 0.2s;">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-icon delete" title="削除" onclick="confirmDelete('${user.id}')" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: #dc2626; border: none; background: transparent; cursor: pointer; transition: background 0.2s;">
-                  <i class="fas fa-trash"></i>
-                </button>
+                <div style="display: flex; gap: 4px;">
+                  <a href="${mypageUrl}" target="_blank" style="
+                    width: 32px; height: 32px; 
+                    display: flex; align-items: center; justify-content: center;
+                    color: #64748b; border-radius: 6px;
+                    transition: all 0.2s;
+                  " title="マイページ" onmouseover="this.style.background='#e2e8f0';this.style.color='#334155'" onmouseout="this.style.background='transparent';this.style.color='#64748b'">
+                    <i class="fas fa-external-link-alt"></i>
+                  </a>
+                  <button onclick="editUser('${user.id}')" style="
+                    width: 32px; height: 32px; 
+                    display: flex; align-items: center; justify-content: center;
+                    color: #64748b; border: none; background: transparent; border-radius: 6px;
+                    cursor: pointer; transition: all 0.2s;
+                  " title="編集" onmouseover="this.style.background='#e2e8f0';this.style.color='#334155'" onmouseout="this.style.background='transparent';this.style.color='#64748b'">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="confirmDelete('${user.id}')" style="
+                    width: 32px; height: 32px; 
+                    display: flex; align-items: center; justify-content: center;
+                    color: #94a3b8; border: none; background: transparent; border-radius: 6px;
+                    cursor: pointer; transition: all 0.2s;
+                  " title="削除" onmouseover="this.style.background='#fef2f2';this.style.color='#dc2626'" onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
               </div>
             </div>
         `;
