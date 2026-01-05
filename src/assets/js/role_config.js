@@ -409,6 +409,11 @@ function getDefaultPageForRole(roleOrUser) {
     const department = (user.department || '').toLowerCase();
     const parentDepartment = (user.parent_department || '').toLowerCase();
 
+    // 本部・管理者・マスターは管理ダッシュボードへ最優先でリダイレクト（部署判定より優先）
+    if (role === 'headquarters' || role === 'admin' || role === 'master') {
+      return '/admin/dashboard';
+    }
+
     // parent_departmentベースでマイページを決定
     // 運営本部 → 営業マイページ
     if (parentDepartment.includes('運営本部')) {
