@@ -409,42 +409,239 @@
       loadingEl.style.display = 'none';
     }
 
-    // ユーザーを部署ごとにグループ化
-    const usersByDepartment = {};
+    // ユーザーを本部→部署の階層でグループ化
+    const organizationHierarchy = {};
+
     for (const user of filteredUsers) {
-      const dept = normalizeDepartmentName(user.department) || '未分類';
-      // 「現場」部署は除外（既に「OS課」に変換済み）
+      const parentDept = user.parent_department || '未分類';
+      const dept = user.department || '未分類';
+
+      // 「現場」部署は除外
       if (dept === '現場') {
         continue;
       }
-      if (!usersByDepartment[dept]) {
-        usersByDepartment[dept] = [];
+
+      if (!organizationHierarchy[parentDept]) {
+        organizationHierarchy[parentDept] = {
+          name: parentDept,
+          departments: {},
+          directMembers: []  // 本部直属のメンバー（部署名と本部名が同じ場合）
+        };
       }
-      usersByDepartment[dept].push(user);
+
+      // 部署名と本部名が同じ場合は直属メンバー
+      if (dept === parentDept) {
+        organizationHierarchy[parentDept].directMembers.push(user);
+      } else {
+        if (!organizationHierarchy[parentDept].departments[dept]) {
+          organizationHierarchy[parentDept].departments[dept] = [];
+        }
+        organizationHierarchy[parentDept].departments[dept].push(user);
+      }
     }
 
-    // 各部署内のユーザーを権限の大きい順にソート（管理者を先に）
-    for (const dept in usersByDepartment) {
-      usersByDepartment[dept].sort((a, b) => {
+    // 各グループ内のユーザーを権限の大きい順にソート
+    for (const parentDept in organizationHierarchy) {
+      // 直属メンバーをソート
+      organizationHierarchy[parentDept].directMembers.sort((a, b) => {
         const aIsAdmin = isAdminRole(a.role);
         const bIsAdmin = isAdminRole(b.role);
         if (aIsAdmin && !bIsAdmin) return -1;
         if (!aIsAdmin && bIsAdmin) return 1;
-        // 両方同じ権限の場合はID順
         return (a.id || '').localeCompare(b.id || '');
       });
+
+      // 各部署のメンバーをソート
+      for (const dept in organizationHierarchy[parentDept].departments) {
+        organizationHierarchy[parentDept].departments[dept].sort((a, b) => {
+          const aIsAdmin = isAdminRole(a.role);
+          const bIsAdmin = isAdminRole(b.role);
+          if (aIsAdmin && !bIsAdmin) return -1;
+          if (!aIsAdmin && bIsAdmin) return 1;
+          return (a.id || '').localeCompare(b.id || '');
+        });
+      }
     }
 
-    // 部署を配列に変換してソート（部署名順）
-    const departments = Object.keys(usersByDepartment)
+    // 本部を配列に変換してソート
+    const parentDepartments = Object.keys(organizationHierarchy)
       .sort()
-      .map(dept => ({
-        name: dept,
-        users: usersByDepartment[dept]
-      }));
+      .map(name => organizationHierarchy[name]);
 
-    // 部署ベースでレンダリング
-    renderDepartments(departments);
+    // 階層構造でレンダリング
+    renderHierarchicalDepartments(parentDepartments);
+  }
+
+  function renderHierarchicalDepartments(parentDepartments) {
+    const container = document.getElementById('departments-container');
+    const orgLayout = document.getElementById('organization-layout');
+    if (!container) return;
+
+    if (parentDepartments.length === 0) {
+      container.innerHTML = '<p class="no-departments">部署がありません</p>';
+      return;
+    }
+
+    // ビューに応じてクラスを追加/削除
+    if (currentView === 'list') {
+      if (orgLayout) orgLayout.classList.add('list-view');
+      // リスト表示は従来のフラット構造で表示
+      const flatDepartments = [];
+      for (const parent of parentDepartments) {
+        if (parent.directMembers.length > 0) {
+          flatDepartments.push({ name: parent.name, users: parent.directMembers });
+        }
+        for (const deptName in parent.departments) {
+          flatDepartments.push({ name: deptName, users: parent.departments[deptName] });
+        }
+      }
+      renderDepartmentsList(flatDepartments);
+    } else {
+      if (orgLayout) orgLayout.classList.remove('list-view');
+      renderHierarchicalCard(parentDepartments);
+    }
+  }
+
+  function renderHierarchicalCard(parentDepartments) {
+    const container = document.getElementById('departments-container');
+    if (!container) return;
+
+    // 本部ごとの色設定
+    const parentColors = {
+      '経営管理本部': { bg: '#fef3c7', border: '#f59e0b', header: '#92400e' },
+      '運営本部': { bg: '#dbeafe', border: '#3b82f6', header: '#1e40af' },
+      '組織運営本部': { bg: '#f3e8ff', border: '#a855f7', header: '#7e22ce' },
+      '清掃事業部': { bg: '#dcfce7', border: '#22c55e', header: '#166534' },
+      '未分類': { bg: '#f3f4f6', border: '#9ca3af', header: '#4b5563' }
+    };
+
+    container.innerHTML = parentDepartments.map(parent => {
+      const colors = parentColors[parent.name] || parentColors['未分類'];
+      const totalUsers = parent.directMembers.length +
+        Object.values(parent.departments).reduce((sum, users) => sum + users.length, 0);
+
+      // 部署カードを生成
+      const departmentCards = Object.entries(parent.departments).map(([deptName, users]) => {
+        return `
+          <div class="sub-department-section" style="
+            background: #fff;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+          ">
+            <h4 style="
+              font-size: 0.9rem;
+              font-weight: 600;
+              color: #374151;
+              margin: 0 0 12px 0;
+              padding-bottom: 8px;
+              border-bottom: 1px solid #e5e7eb;
+            ">${escapeHtml(deptName)} <span style="font-weight: normal; color: #9ca3af;">(${users.length}名)</span></h4>
+            <div class="user-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+              ${users.map(user => renderUserCard(user)).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 直属メンバーカードを生成
+      const directMemberCards = parent.directMembers.length > 0 ? `
+        <div class="direct-members" style="
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 12px;
+          margin-bottom: ${Object.keys(parent.departments).length > 0 ? '16px' : '0'};
+        ">
+          ${parent.directMembers.map(user => renderUserCard(user)).join('')}
+        </div>
+      ` : '';
+
+      return `
+        <div class="parent-department-section" style="
+          background: ${colors.bg};
+          border: 2px solid ${colors.border};
+          border-radius: 12px;
+          padding: 16px;
+          margin-bottom: 24px;
+        ">
+          <h3 style="
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: ${colors.header};
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          ">
+            <i class="fas fa-building" style="opacity: 0.7;"></i>
+            ${escapeHtml(parent.name)}
+            <span style="font-size: 0.85rem; font-weight: normal; color: ${colors.header}80;">(${totalUsers}名)</span>
+          </h3>
+          ${directMemberCards}
+          ${departmentCards}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderUserCard(user) {
+    const mypageUrl = getMypageUrl(user);
+    const roleBadge = getRoleBadge(user.role);
+    const attendanceBadge = getAttendanceStatusBadge(user.id);
+    const hasReport = userDailyReports[user.id];
+    const reportBadge = hasReport
+      ? `<span style="font-size: 0.7rem; padding: 2px 6px; background: #dcfce7; color: #166534; border-radius: 4px; cursor: pointer;" onclick="event.preventDefault(); window.viewDailyReport('${user.id}')" title="クリックして詳細を表示"><i class="fas fa-check-circle"></i> 提出済</span>`
+      : `<span style="font-size: 0.7rem; padding: 2px 6px; background: #f3f4f6; color: #9ca3af; border-radius: 4px;"><i class="fas fa-minus-circle"></i> 未提出</span>`;
+    const jobTitle = user.job ? `<span style="font-size: 0.75rem; padding: 2px 6px; background: #fef3c7; color: #92400e; border-radius: 4px;">${escapeHtml(user.job)}</span>` : '';
+
+    return `
+      <div class="user-card" data-role="${user.role}" style="
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border-radius: 10px;
+        padding: 14px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        border: 1px solid #e5e7eb;
+      ">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+          <div style="
+            width: 44px; height: 44px; border-radius: 50%;
+            background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: 600; flex-shrink: 0;
+          ">${(user.name || '?')[0]}</div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" style="color: inherit; text-decoration: none;">${escapeHtml(user.name || '-')}</a>
+            </div>
+            <div style="font-size: 0.75rem; color: #64748b; font-family: monospace;">${escapeHtml(user.id)}</div>
+          </div>
+          ${jobTitle}
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-size: 0.85rem; color: #475569;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-envelope" style="width: 14px; color: #94a3b8;"></i>
+            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(user.email || '-')}">${escapeHtml(user.email || '-')}</span>
+          </div>
+        </div>
+        
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 10px; border-top: 1px solid #f1f5f9;">
+          ${roleBadge}
+          <span style="font-size: 0.7rem; padding: 2px 6px; background: ${user.status === 'inactive' ? '#fef2f2' : '#f0fdf4'}; color: ${user.status === 'inactive' ? '#dc2626' : '#16a34a'}; border-radius: 4px;">${user.status === 'inactive' ? '無効' : '有効'}</span>
+          ${attendanceBadge}
+          ${reportBadge}
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; gap: 4px; margin-top: 10px;">
+          <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #64748b; border-radius: 4px;" title="詳細"><i class="fas fa-eye"></i></a>
+          <a href="${mypageUrl}" target="_blank" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #64748b; border-radius: 4px;" title="マイページ"><i class="fas fa-external-link-alt"></i></a>
+          <button onclick="editUser('${user.id}')" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #64748b; border: none; background: transparent; border-radius: 4px; cursor: pointer;" title="編集"><i class="fas fa-edit"></i></button>
+          <button onclick="confirmDelete('${user.id}')" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #94a3b8; border: none; background: transparent; border-radius: 4px; cursor: pointer;" title="削除"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    `;
   }
 
   function renderDepartments(departments) {
