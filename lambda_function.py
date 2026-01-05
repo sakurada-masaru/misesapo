@@ -3032,6 +3032,33 @@ def create_report(event, headers):
         # DynamoDBに保存
         REPORTS_TABLE.put_item(Item=report_item)
         
+        # メール送信処理（清掃レポート通知）
+        try:
+            sender = "info@misesapo.co.jp"
+            recipient = "info@misesapo.co.jp"
+            
+            clean_staff = body_json.get('staff_name', '') or user_info.get('uid', '不明')
+            clean_store = body_json.get('store_name', '店舗不明')
+            
+            mail_subject = f"【清掃完了】{clean_store} - {clean_staff}"
+            mail_body = f"清掃レポートが提出されました。\n\n" \
+                        f"■店舗\n{clean_store}\n\n" \
+                        f"■担当者\n{clean_staff}\n\n" \
+                        f"■作成日時\n{now} (UTC)\n\n" \
+                        f"■状態\n{body_json.get('status', '完了')}\n"
+            
+            ses_client.send_email(
+                Source=sender,
+                Destination={'ToAddresses': [recipient]},
+                Message={
+                    'Subject': {'Data': mail_subject},
+                    'Body': {'Text': {'Data': mail_body}}
+                }
+            )
+            print(f"Cleaning report notification email sent to {recipient}")
+        except Exception as e:
+            print(f"Failed to send cleaning report email: {str(e)}")
+        
         # スケジュール情報も更新（report_idを紐付け）
         schedule_id = body_json.get('schedule_id')
         if schedule_id:
