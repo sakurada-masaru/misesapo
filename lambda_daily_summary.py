@@ -20,7 +20,7 @@ dynamodb = boto3.resource('dynamodb', region_name='ap-northeast-1')
 ses_client = boto3.client('ses', region_name='ap-northeast-1')
 
 # テーブル
-WORKERS_TABLE = dynamodb.Table('misesapo-workers')
+WORKERS_TABLE = dynamodb.Table('workers')
 DAILY_REPORTS_TABLE = dynamodb.Table('misesapo-daily-reports')
 REPORTS_TABLE = dynamodb.Table('misesapo-reports')
 
