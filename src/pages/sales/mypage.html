@@ -372,6 +372,48 @@
               </div>
             </section>
 
+            <!-- 日報セクション -->
+            <section id="daily-reports">
+              <div class="container-section">
+                <div class="container-header">
+                  <h2 class="container-title drag-handle">
+                    <i class="fas fa-grip-vertical"></i>
+                    <i class="fas fa-file-alt"></i>
+                    日報
+                  </h2>
+                  <a href="/staff/daily-reports" class="btn btn-text btn-sm" title="日報詳細">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span>詳細</span>
+                  </a>
+                </div>
+                <div class="card daily-reports-card accordion-content">
+                  <!-- 今日の日報入力フォーム -->
+                  <div class="daily-report-form-section">
+                    <div class="daily-report-form-header">
+                      <span class="daily-report-date-label">本日の作業内容</span>
+                      <span class="daily-report-date" id="daily-report-today-date"></span>
+                    </div>
+                    <textarea id="daily-report-content" class="daily-report-textarea" placeholder="今日の作業内容を入力してください..."
+                      rows="6"></textarea>
+                    <div class="daily-report-actions">
+                      <button class="btn btn-outline btn-sm" id="daily-report-template-btn">
+                        <i class="fas fa-list"></i>
+                        <span>テンプレート挿入</span>
+                      </button>
+                      <button class="btn btn-primary btn-sm" id="daily-report-save-btn">
+                        <i class="fas fa-save"></i>
+                        <span>保存</span>
+                      </button>
+                      <button class="btn btn-text btn-sm" id="daily-report-clear-btn" style="display: none;">
+                        <i class="fas fa-times"></i>
+                        <span>クリア</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <!-- アクティビティ（最近の動き） -->
             <section id="recent-activity">
               <div class="container-section">
