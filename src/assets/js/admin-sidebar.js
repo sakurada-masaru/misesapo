@@ -357,9 +357,17 @@
       if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
         try {
           const cognitoUser = await window.CognitoAuth.getCurrentUser();
-          if (cognitoUser && cognitoUser.role) {
-            userRole = cognitoUser.role;
-            console.log('[AdminSidebar] User role from Cognito:', userRole);
+          if (cognitoUser) {
+            if (cognitoUser.role) {
+              userRole = cognitoUser.role;
+              console.log('[AdminSidebar] User role from Cognito:', userRole);
+            }
+
+            // 特例：櫻田さんは強制的に管理者として扱う（DB更新待ちなどのため）
+            if (cognitoUser.email === 'sakurada@misesapo.co.jp') {
+              console.log('[AdminSidebar] Sakurada detected, forcing admin role for sidebar');
+              userRole = 'admin';
+            }
           }
         } catch (e) {
           console.warn('[AdminSidebar] Error getting user from Cognito:', e);
@@ -376,6 +384,10 @@
               userRole = parsedUser.role;
               console.log('[AdminSidebar] User role from localStorage:', userRole);
             }
+            // 特例（ローカルストレージの場合も）
+            if (parsedUser.email === 'sakurada@misesapo.co.jp') {
+              userRole = 'admin';
+            }
           }
         } catch (e) {
           console.warn('[AdminSidebar] Error parsing stored cognito_user:', e);
@@ -383,8 +395,11 @@
       }
 
 
-      // 管理者ロールのみ管理ダッシュボードを表示
-      if (userRole === 'admin' || userRole === '管理者') {
+      // 管理者ロールおよび準管理者ロールに管理ダッシュボードを表示
+      // admin, master, developer, headquarters, office, designer
+      const allowedRoles = ['admin', '管理者', 'master', 'developer', 'headquarters', 'office', 'designer'];
+
+      if (allowedRoles.includes(userRole)) {
         adminDashboardLink.style.display = 'flex';
         if (navDivider) {
           navDivider.style.display = 'block';

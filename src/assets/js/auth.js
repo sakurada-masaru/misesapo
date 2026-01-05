@@ -5,24 +5,24 @@
  * 注意: role_config.jsが先に読み込まれている必要があります
  */
 
-(function() {
+(function () {
   'use strict';
-  
+
   // role_config.jsから関数と設定を取得（グローバルスコープから）
   function getRoleConfig() {
     return window.RoleConfig?.ROLE_CONFIG;
   }
-  
-  const checkPageAccess = window.RoleConfig?.checkPageAccess || function() { return false; };
-  const getRoleDisplayName = window.RoleConfig?.getRoleDisplayName || function(role) { return role; };
-  const getNavigationForRole = window.RoleConfig?.getNavigationForRole || function(role) { return []; };
-  const getMasterNavigation = window.RoleConfig?.getMasterNavigation || function() { return {}; };
-  const getDefaultPageForRole = window.RoleConfig?.getDefaultPageForRole || function(role) { return '/'; };
-  
+
+  const checkPageAccess = window.RoleConfig?.checkPageAccess || function () { return false; };
+  const getRoleDisplayName = window.RoleConfig?.getRoleDisplayName || function (role) { return role; };
+  const getNavigationForRole = window.RoleConfig?.getNavigationForRole || function (role) { return []; };
+  const getMasterNavigation = window.RoleConfig?.getMasterNavigation || function () { return {}; };
+  const getDefaultPageForRole = window.RoleConfig?.getDefaultPageForRole || function (role) { return '/'; };
+
   // 認証設定
   const AUTH_KEY = 'misesapo_auth';
   const USER_KEY = 'misesapo_user';
-  
+
   /**
    * ベースパスを取得（GitHub Pages対応）
    */
@@ -47,23 +47,23 @@
     }
     return '/';
   }
-  
+
   /**
    * APIエンドポイントのベースURLを取得
    */
   function getApiBaseUrl() {
     // 本番環境のAPIエンドポイント
     const PROD_API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-    
+
     // ローカル開発環境
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return PROD_API_BASE;  // ローカルでも本番APIを使用
     }
-    
+
     // 本番環境
     return PROD_API_BASE;
   }
-  
+
   /**
    * 認証情報を取得
    */
@@ -82,7 +82,7 @@
           };
         }
       }
-      
+
       // フォールバック: 古い形式の認証データ
       const authData = sessionStorage.getItem(AUTH_KEY);
       if (authData) {
@@ -100,14 +100,14 @@
           };
         }
       }
-      
+
       return null;
     } catch (e) {
       console.error('[Auth] Error getting auth data:', e);
       return null;
     }
   }
-  
+
   /**
    * 認証情報を保存
    */
@@ -122,12 +122,12 @@
         return;
       }
     }
-    
+
     // userオブジェクトを保存
     if (user) {
       sessionStorage.setItem(USER_KEY, JSON.stringify(user));
     }
-    
+
     // 認証データを保存（後方互換性のため）
     sessionStorage.setItem(AUTH_KEY, JSON.stringify({
       role: role,
@@ -136,7 +136,7 @@
       user: user || null
     }));
   }
-  
+
   /**
    * 認証情報を削除
    */
@@ -144,7 +144,7 @@
     sessionStorage.removeItem(AUTH_KEY);
     sessionStorage.removeItem(USER_KEY);
   }
-  
+
   /**
    * 現在のロールを取得
    */
@@ -153,26 +153,26 @@
     if (!authData) {
       return 'guest';
     }
-    
+
     // roleが文字列であることを確認
     if (typeof authData.role === 'string') {
       return authData.role;
     }
-    
+
     // roleがオブジェクトの場合、userオブジェクトから取得を試みる
     if (authData.user && typeof authData.user.role === 'string') {
       return authData.user.role;
     }
-    
+
     console.warn('[Auth] Invalid role format:', authData);
     return 'guest';
   }
-  
+
   /**
    * Firebaseエラーメッセージを日本語に変換
    */
   // Firebase関連の関数は削除済み（Cognitoに移行）
-  
+
   /**
    * ログイン（Cognito → API → クライアントサイド認証の順で試行）
    */
@@ -190,9 +190,9 @@
         // Cognitoエラーの場合は次の方法を試す
       }
     }
-    
+
     const apiBaseUrl = getApiBaseUrl();
-    
+
     // 2. APIサーバーが利用可能な場合はAPIを使用
     if (apiBaseUrl) {
       try {
@@ -206,7 +206,7 @@
             password: password
           })
         });
-        
+
         // Content-Typeを確認
         const contentType = response.headers.get('Content-Type') || '';
         if (!contentType.includes('application/json')) {
@@ -215,7 +215,7 @@
           // APIエラーの場合はクライアントサイド認証にフォールバック
         } else {
           const result = await response.json();
-          
+
           if (result.success && result.user) {
             // 認証情報を保存
             const role = result.user.role;
@@ -226,9 +226,9 @@
                 message: 'サーバーからの応答が正しくありません。'
               };
             }
-            
+
             setAuthData(role, result.user.email, result.user);
-            
+
             return {
               success: true,
               user: result.user,
@@ -246,7 +246,7 @@
         // APIエラーの場合はクライアントサイド認証にフォールバック
       }
     }
-    
+
     // APIが使えない場合（GitHub Pagesなど）はクライアントサイド認証を使用
     if (!window.Users || !window.Users.findUserByEmailAndPassword) {
       return {
@@ -254,17 +254,17 @@
         message: '認証システムが利用できません。users.jsが読み込まれているか確認してください。'
       };
     }
-    
+
     try {
       const user = await window.Users.findUserByEmailAndPassword(email, password);
-      
+
       if (!user) {
         return {
           success: false,
           message: 'メールアドレスまたはパスワードが正しくありません'
         };
       }
-      
+
       // ステータスチェック
       if (user.status !== 'active') {
         return {
@@ -272,7 +272,7 @@
           message: 'このアカウントは無効化されています'
         };
       }
-      
+
       // 認証情報を保存
       const role = user.role;
       if (typeof role !== 'string') {
@@ -282,9 +282,9 @@
           message: 'ユーザーデータが正しくありません。'
         };
       }
-      
+
       setAuthData(role, user.email, user);
-      
+
       return {
         success: true,
         user: user,
@@ -298,7 +298,7 @@
       };
     }
   }
-  
+
   /**
    * ログアウト
    */
@@ -312,9 +312,9 @@
         // エラーが発生しても続行
       }
     }
-    
+
     const apiBaseUrl = getApiBaseUrl();
-    
+
     // APIサーバーにログアウトリクエストを送信（オプション）
     if (apiBaseUrl) {
       try {
@@ -329,17 +329,17 @@
         // エラーが発生しても続行
       }
     }
-    
+
     // 認証情報を削除
     clearAuthData();
-    
+
     // ログインページにリダイレクト
     const basePath = getBasePath();
     window.location.href = basePath === '/' ? '/signin' : basePath + 'signin';
   }
-  
+
   // Firebase関連の関数は削除済み（Cognitoに移行）
-  
+
   /**
    * ユーザー登録（Cognito経由）
    * 注意: signup.htmlから呼び出される場合は、customerロールで登録されます
@@ -354,7 +354,7 @@
           message: 'ユーザー登録機能は現在利用できません。APIサーバーに接続できません。'
         };
       }
-      
+
       // Lambda関数経由でCognitoユーザーを作成
       const response = await fetch(`${apiBaseUrl}/admin/cognito/users`, {
         method: 'POST',
@@ -369,7 +369,7 @@
           department: role === 'customer' ? 'お客様' : ''
         })
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         return {
@@ -377,10 +377,10 @@
           message: errorData.error || errorData.message || 'ユーザー登録に失敗しました'
         };
       }
-      
+
       const result = await response.json();
       const cognitoSub = result.sub;
-      
+
       // DynamoDBのclientsテーブルに登録（お客様専用）
       if (role === 'customer') {
         try {
@@ -398,7 +398,7 @@
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           };
-          
+
           const clientResponse = await fetch(`${apiBaseUrl}/clients`, {
             method: 'POST',
             headers: {
@@ -406,7 +406,7 @@
             },
             body: JSON.stringify(clientData)
           });
-          
+
           if (clientResponse.ok) {
             const createdClient = await clientResponse.json();
             if (createdClient && createdClient.id) {
@@ -418,7 +418,7 @@
           // DynamoDBへの登録に失敗しても、Cognito登録は成功とする
         }
       }
-      
+
       // 認証情報を保存
       setAuthData(role, email, {
         id: cognitoSub,
@@ -428,7 +428,7 @@
         name: name || email.split('@')[0],
         emailVerified: false
       });
-      
+
       return {
         success: true,
         user: {
@@ -447,7 +447,7 @@
       };
     }
   }
-  
+
   /**
    * 認証チェック
    */
@@ -458,17 +458,17 @@
     if (basePath !== '/' && currentPath.startsWith(basePath)) {
       normalizedPath = currentPath.substring(basePath.length - 1);
     }
-    
+
     // 従業員関連ページ（管理、営業、清掃）では、Firebase認証（顧客用）のチェックをスキップ
     // これらのページはAWS Cognito認証のみを使用する
-    if (normalizedPath.startsWith('/admin/') || 
-        normalizedPath.startsWith('/sales/') || 
-        normalizedPath.startsWith('/staff/') ||
-        normalizedPath.startsWith('/wiki') ||
-        currentPath.includes('/admin/') || 
-        currentPath.includes('/sales/') || 
-        currentPath.includes('/staff/') ||
-        currentPath.includes('/wiki')) {
+    if (normalizedPath.startsWith('/admin/') ||
+      normalizedPath.startsWith('/sales/') ||
+      normalizedPath.startsWith('/staff/') ||
+      normalizedPath.startsWith('/wiki') ||
+      currentPath.includes('/admin/') ||
+      currentPath.includes('/sales/') ||
+      currentPath.includes('/staff/') ||
+      currentPath.includes('/wiki')) {
       // 従業員関連ページでは、AWS Cognito認証をチェック
       const cognitoUser = localStorage.getItem('cognito_user');
       if (cognitoUser) {
@@ -488,7 +488,7 @@
       }
       return false;
     }
-    
+
     // 顧客関連ページ（/mypage/*など）では、Cognito認証をチェック
     // Cognito認証の認証状態をチェック
     if (window.CognitoAuth && window.CognitoAuth.isAuthenticated) {
@@ -500,11 +500,11 @@
         return true;
       }
     }
-    
+
     // フォールバック: sessionStorageをチェック
     return getAuthData() !== null;
   }
-  
+
   /**
    * ページアクセス権限をチェック
    */
@@ -512,7 +512,7 @@
     const currentRole = getCurrentRole();
     return checkPageAccess(path, currentRole);
   }
-  
+
   /**
    * パスを解決（ベースパス付き）
    */
@@ -526,7 +526,7 @@
     }
     return basePath === '/' ? '/' + path : basePath + path;
   }
-  
+
   /**
    * 現在のページへのアクセス権限をチェック
    */
@@ -537,7 +537,7 @@
     if (basePath !== '/' && currentPath.startsWith(basePath)) {
       normalizedPath = currentPath.substring(basePath.length - 1); // 先頭の/を残す
     }
-    
+
     // パブリックページ（認証不要）のリスト
     const publicPages = [
       '/',
@@ -574,7 +574,7 @@
       '/signup/',            // /signup/2.html など
       '/new-page.html'
     ];
-    
+
     // パブリックページかどうかをチェック
     // .htmlを削除して比較（.htmlあり/なしの両方に対応）
     const normalizePathForCheck = (path) => {
@@ -584,7 +584,7 @@
       return path;
     };
     const normalizedPathWithoutHtml = normalizePathForCheck(normalizedPath);
-    
+
     const isPublicPage = publicPages.some(page => {
       if (page.endsWith('/')) {
         // ディレクトリパスの場合は前方一致
@@ -593,61 +593,61 @@
       // .htmlを削除して比較
       const pageWithoutHtml = normalizePathForCheck(page);
       // 完全一致（.htmlあり/なしの両方に対応）
-      return normalizedPath === page || 
-             normalizedPathWithoutHtml === pageWithoutHtml ||
-             currentPath.endsWith(page) ||
-             currentPath.endsWith(pageWithoutHtml);
+      return normalizedPath === page ||
+        normalizedPathWithoutHtml === pageWithoutHtml ||
+        currentPath.endsWith(page) ||
+        currentPath.endsWith(pageWithoutHtml);
     });
-    
+
     if (isPublicPage) {
       return true;
     }
-    
+
     // 従業員関連ページ（管理、営業、清掃）では、顧客認証（Firebase）のチェックをスキップ
     // これらのページはAWS Cognito認証のみを使用する
-    if (normalizedPath.startsWith('/admin/') || 
-        normalizedPath.startsWith('/sales/') || 
-        normalizedPath.startsWith('/staff/') ||
-        normalizedPath.startsWith('/wiki') ||
-        currentPath.includes('/admin/') || 
-        currentPath.includes('/sales/') || 
-        currentPath.includes('/staff/') ||
-        currentPath.includes('/wiki')) {
+    if (normalizedPath.startsWith('/admin/') ||
+      normalizedPath.startsWith('/sales/') ||
+      normalizedPath.startsWith('/staff/') ||
+      normalizedPath.startsWith('/wiki') ||
+      currentPath.includes('/admin/') ||
+      currentPath.includes('/sales/') ||
+      currentPath.includes('/staff/') ||
+      currentPath.includes('/wiki')) {
       return true;
     }
-    
+
     // 以下は顧客専用ページ（/mypage/*, /order/*, /cart/* など）のみFirebase認証をチェック
     const customerOnlyPaths = ['/mypage/', '/order/', '/cart/', '/order-history/'];
-    const isCustomerOnlyPage = customerOnlyPaths.some(path => 
+    const isCustomerOnlyPage = customerOnlyPaths.some(path =>
       normalizedPath.startsWith(path) || currentPath.includes(path)
     );
-    
+
     if (!isCustomerOnlyPage) {
       // 顧客専用ページでなければ認証不要
       return true;
     }
-    
+
     // 顧客専用ページの場合、認証をチェック
     const currentRole = getCurrentRole();
-    
-    // マスター、管理者、開発者はすべてのページにアクセス可能
-    if (currentRole === 'master' || currentRole === 'admin' || currentRole === 'developer') {
+
+    // マスター、管理者、開発者、本部はすべてのページにアクセス可能
+    if (currentRole === 'master' || currentRole === 'admin' || currentRole === 'developer' || currentRole === 'headquarters') {
       return true;
     }
-    
+
     // ページアクセス権限をチェック（顧客関連ページのみ）
     if (typeof checkPageAccess === 'function' && !checkPageAccess(normalizedPath, currentRole)) {
       // アクセス権限がない場合、ログインページにリダイレクト
       const redirectUrl = encodeURIComponent(window.location.href);
-      window.location.href = basePath === '/' 
-        ? `/signin.html?redirect=${redirectUrl}` 
+      window.location.href = basePath === '/'
+        ? `/signin.html?redirect=${redirectUrl}`
         : `${basePath}signin.html?redirect=${redirectUrl}`;
       return false;
     }
-    
+
     return true;
   }
-  
+
   /**
    * メール確認の再送信（Cognito対応）
    */
@@ -660,7 +660,7 @@
         message: 'メール確認の再送信機能は現在利用できません。'
       };
     }
-    
+
     const authData = getAuthData();
     if (!authData || !authData.user || !authData.user.email) {
       return {
@@ -668,7 +668,7 @@
         message: 'ログインしていません。'
       };
     }
-    
+
     try {
       // API経由でメール確認の再送信をリクエスト
       const response = await fetch(`${apiBaseUrl}/admin/cognito/resend-verification`, {
@@ -680,7 +680,7 @@
           email: authData.user.email
         })
       });
-      
+
       if (response.ok) {
         return {
           success: true,
@@ -701,7 +701,7 @@
       };
     }
   }
-  
+
   // グローバルに公開
   window.Auth = {
     login: login,
@@ -716,13 +716,13 @@
     setAuthData: setAuthData,
     resendEmailVerification: resendEmailVerification
   };
-  
+
   // getDefaultPageForRoleを直接使用可能にする（後方互換性のため）
   window.Auth.getDefaultPageForRole = getDefaultPageForRole;
-  
+
   // ページ読み込み時に実行
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       checkCurrentPageAccess();
     });
   } else {
