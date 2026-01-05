@@ -409,6 +409,11 @@ function getDefaultPageForRole(roleOrUser) {
     const department = (user.department || '').toLowerCase();
     const parentDepartment = (user.parent_department || '').toLowerCase();
 
+    // 特定の管理者ユーザー（DB更新待ちなど）に対する特例措置
+    if (user.email === 'sakurada@misesapo.co.jp') {
+      return '/admin/dashboard';
+    }
+
     // 本部・管理者・マスターは管理ダッシュボードへ最優先でリダイレクト（部署判定より優先）
     if (role === 'headquarters' || role === 'admin' || role === 'master') {
       return '/admin/dashboard';
