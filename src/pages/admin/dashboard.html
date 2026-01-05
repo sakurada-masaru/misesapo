@@ -1133,7 +1133,7 @@
     }
 
     // ページ読み込み時にアクセス制御を実行
-    (async function () {
+    async function initDashboard() {
       const hasAccess = await checkAdminAccess();
       if (!hasAccess) {
         return; // アクセスが拒否された場合は処理を中断
@@ -1142,12 +1142,21 @@
       // 日付表示
       const today = new Date();
       const dateStr = today.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-      document.getElementById('header-date').textContent = dateStr;
+      const headerDate = document.getElementById('header-date');
+      if (headerDate) {
+        headerDate.textContent = dateStr;
+      }
 
       // データ読み込み
       loadDashboard();
       loadAnnouncements();
-    })();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initDashboard);
+    } else {
+      initDashboard();
+    }
 
     // データ読み込み
     async function loadDashboard() {
