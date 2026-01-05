@@ -585,7 +585,14 @@
   }
 
   function renderUserCard(user) {
-    const mypageUrl = getMypageUrl(user);
+    // マイページURLを生成
+    let mypageUrl = '/staff/mypage.html';
+    if (user.id) {
+      mypageUrl = `/staff/mypage.html?id=${encodeURIComponent(user.id)}`;
+    } else if (user.email) {
+      mypageUrl = `/staff/mypage.html?email=${encodeURIComponent(user.email)}`;
+    }
+
     const roleBadge = getRoleBadge(user.role);
     const attendanceBadge = getAttendanceStatusBadge(user.id);
     const hasReport = userDailyReports[user.id];
