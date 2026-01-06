@@ -10117,141 +10117,72 @@ def handle_ai_process(event, headers):
         
         media = None
         if audio_data:
-            # Normalize mime_type (strip codecs=... part)
+            # Map browser MIME types to Gemini supported ones
+            # iOS: audio/mp4, Android/Chrome: audio/webm
             clean_mime = 'audio/wav'
             if mime_type:
-                clean_mime = mime_type.split(';')[0].strip()
+                target = mime_type.lower()
+                if 'webm' in target: clean_mime = 'audio/webm'
+                elif 'mp4' in target or 'mpeg' in target: clean_mime = 'audio/mp4'
+                elif 'aac' in target: clean_mime = 'audio/aac'
+                elif 'ogg' in target: clean_mime = 'audio/ogg'
             
-            print(f"DEBUG: Processing Audio. Original MIME: {mime_type}, Cleaned MIME: {clean_mime}")
+            print(f"DEBUG: Mic Processing. Type: {mime_type} -> Clean: {clean_mime}, Size: {len(audio_data)}")
             
             media = {
                 'mime_type': clean_mime,
                 'data': audio_data
             }
             if not input_text:
-                input_text = "音声データを解析してください。"
+                input_text = "音声の内容を解析して適切なアクションを提案してください。"
             
         if action == 'summarize_report':
-            system_instruction = "あなたはプロの清掃管理アドバイザーです。ユーザーの雑多な清掃メモ（テキストまたは録音）から、顧客に提出できる丁寧で構造化された清掃報告書（日本語）を作成してください。出力は純粋なテキストまたはMarkdownにしてください。"
-            prompt = f"以下の情報を元に報告書を作成してください:\n\n{input_text}"
-            result = call_gemini_api(prompt, system_instruction, media)
+            system_instruction = "あなたはプロの清掃管理アドバイザーです。ユーザーの清掃メモから、丁寧な清掃報告書（日本語）を作成してください。"
+            result = call_gemini_api(f"作成依頼:\n{input_text}", system_instruction, media)
             
-        elif action == 'extract_karte':
-            system_instruction = "打合せメモまたは録音から、重要な要望や注意点を抽出し、JSON形式で出力してください。項目例: 重点清掃箇所, 禁忌事項, 次回への申し送り, 顧客のこだわり。"
-            prompt = f"以下の情報から情報を抽出してください:\n\n{input_text}"
-            result = call_gemini_api(prompt, system_instruction, media)
-            
-        elif action == 'suggest_estimate':
-            system_instruction = """あなたはベテランの営業事務アシスタントです。
-営業担当者の雑多な打合せメモまたは録音から、見積依頼（営業依頼書）に必要な情報を抽出し、JSON形式で回答してください。
-
-期待するJSON形式:
-{
-  "company_name": "抽出された企業名/顧客名（不明な場合は空文字）",
-  "store_name": "抽出された店舗名（不明な場合は空文字）",
-  "services": [
-    {
-      "name": "抽出されたサービス名（例：換気扇清掃, 定期清掃など）",
-      "quantity": 1
-    }
-  ],
-  "notes": "見積もりに関する補足事項や、AIが見つけた特記事項"
-}"""
-            prompt = f"以下の情報から見積に必要な情報を抽出してください:\n\n{input_text}"
-            result = call_gemini_api(prompt, system_instruction, media)
-
         elif action == 'assistant_concierge':
             import datetime
-            jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d (%A) %H:%M')
-
+            jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
             system_instruction = f"""
-あなたは店舗メンテンナンス会社の「ミセサポ」で働くベテラン営業秘書です。
-ユーザー（営業マン）からの音声やテキストによる語りかけに対し、親しみやすく、かつプロフェッショナルに応答してください。
+あなたは店舗メンテンナンス会社「ミセサポ」のベテラン営業秘書です。
+ユーザー（営業マン）の音声やテキストに対し、JSON形式で意図を判別し、自然な日本語で返答してください。
+現在時刻: {jst_now}
 
-### コンテキスト
-- 現在時刻: {jst_now}
-
-### あなたの役割
-1.  **意図（Intent）の判別**: ユーザーが何をしたいのかを判別してください。
-    - `GREETING`: 挨拶（こんにちは、等）
-    - `CHAT`: 雑談、相談、愚痴
-    - `CREATE_REQUEST`: 依頼書（スケジュール）の作成、見積依頼
-    - `SEARCH_STORE`: 店舗情報の検索・調査
-    - `CHECK_SCHEDULE`: 予定の確認
-    - `OTHER`: その他
-
-2.  **応答（Reply）**: 
-    - ユーザーの言葉に対して自然な日本語で返答してください。
-    - `CREATE_REQUEST` の場合は、「承知しました。依頼書の作成ですね。詳細を伺います」のように答え、必要な情報（店名、日時、作業内容）が欠けていれば質問してください。
-    - 闇雲にデータを作成するのではなく、対話を通じて情報を補完してください。
-
-3.  **出力フォーマット**:
-    - 必ず以下のJSON形式で回答してください。
-    {{
-      "reply": "ユーザーへの返信メッセージ（必須）",
-      "intent": "GREETING|CHAT|CREATE_REQUEST|SEARCH_STORE|CHECK_SCHEDULE|OTHER",
-      "suggested_action": "次にユーザーがすべきアクションの提案（任意）",
-      "extracted_data": {{ ... 抽出された情報があれば入れる ... }}
-    }}
+必須JSONフォーマット:
+{{
+  "reply": "ユーザーへの返信メッセージ",
+  "intent": "GREETING|CHAT|CREATE_REQUEST|SEARCH_STORE|CHECK_SCHEDULE|OTHER",
+  "extracted_data": {{}}
+}}
 """
-            prompt = f"ユーザーの発言: {input_text}"
-            result = call_gemini_api(prompt, system_instruction, media)
-
+            result = call_gemini_api(f"ユーザー入力: {input_text}", system_instruction, media)
+            
         elif action == 'suggest_request_form':
-            import datetime
-            jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d (%A) %H:%M')
-
-            system_instruction = f"""
-You are a veteran Sales Support Assistant for a facility management company.
-Your task is to listen to the sales person's rough field report (or read their memo) and draft a formal "Cleaning Request Form" (Service Schedule) JSON.
-
-### Current Context
-- **Current Date/Time**: {jst_now}
-- **User Role**: Sales Representative (onsite or creating a report)
-
-### Your Capabilities & Rules
-1.  **Smart Date Resolution**: 
-    - Convert relative dates like "tomorrow", "next week Tuesday", "early next month" into distinct "YYYY-MM-DD" formats based on the Current Date.
-    - If no date is mentioned but the context implies urgency, suggest a date 1 week from now.
-
-2.  **Client & Store Inference**:
-    - Identify Client Name, Brand Name, and Store Name from the text.
-    - If ambiguous, try to extract the most likely proper noun.
-
-3.  **Work Type & Items**:
-    - Default to "periodic" (Regular Cleaning) if not specified.
-
-4.  **Assessment Analysis**:
-    - "Very dirty", "Terrible" -> "bad" (× 不良)
-    - "A bit messy" -> "warn" (△ 要注意)
-    - "Clean", "Good condition" -> "good" (◎ 良好)
-
-5.  **Output Format**:
-    - Return ONLY a valid JSON object.
-    - Fields: client_name, brand_name, store_name, work{{date, time, type, items}}, assessments, survey, logistics, notes.
-"""
-            prompt = f"以下の情報を元に報告書を作成してください:\n\n{input_text}"
-            result = call_gemini_api(prompt, system_instruction, media)
+            system_instruction = "営業報告から清掃依頼書（JSON）のドラフトを作成してください。"
+            result = call_gemini_api(f"解析対象:\n{input_text}", system_instruction, media)
             
         else:
             return {
                 'statusCode': 400,
                 'headers': headers,
-                'body': json.dumps({'error': f'Unsupported action: {action}', 'message': f'Unsupported action: {action}'}, ensure_ascii=False)
+                'body': json.dumps({'error': 'Invalid Action', 'message': f'Unsupported action: {action}'})
             }
             
         return {
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps({
-                'status': 'success',
-                'result': result
-            }, ensure_ascii=False)
+            'body': json.dumps({'status': 'success', 'result': result}, ensure_ascii=False)
         }
     except Exception as e:
-        print(f"Error in handle_ai_process: {str(e)}")
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"CRITICAL: {error_detail}")
         return {
             'statusCode': 400,
             'headers': headers,
-            'body': json.dumps({'error': str(e), 'message': str(e)}, ensure_ascii=False)
+            'body': json.dumps({
+                'error': 'AI_PROCESS_FAILED',
+                'message': str(e),
+                'debug': error_detail[:200]
+            }, ensure_ascii=False)
         }
