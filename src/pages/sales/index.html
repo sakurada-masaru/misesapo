@@ -66,19 +66,16 @@
         }
 
         /* Core Pulse (Water Drop Style) */
+        /* Core Pulse */
         .core-circle {
             width: 80px;
             height: 80px;
-            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8) 0%, rgba(59, 130, 246, 0.6) 20%, rgba(59, 130, 246, 0.9) 60%, rgba(37, 99, 235, 1) 100%);
+            background: var(--accent-color);
             border-radius: 50%;
-            box-shadow:
-                0 0 20px rgba(59, 130, 246, 0.4),
-                inset -10px -10px 20px rgba(0, 0, 0, 0.2),
-                inset 10px 10px 20px rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-glow);
             position: absolute;
             z-index: 10;
-            animation: water-wobble 6s ease-in-out infinite;
-            backdrop-filter: blur(5px);
+            animation: breathe 4s infinite ease-in-out;
         }
 
         /* Orbital Waves */
@@ -111,22 +108,18 @@
             animation: ripple 3s infinite 2s;
         }
 
-        @keyframes water-wobble {
+        @keyframes breathe {
 
             0%,
             100% {
-                border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
                 transform: scale(1);
+                opacity: 0.8;
             }
 
-            33% {
-                border-radius: 55% 45% 50% 50% / 50% 55% 45% 50%;
-                transform: scale(1.02);
-            }
-
-            66% {
-                border-radius: 45% 55% 45% 55% / 55% 45% 50% 50%;
-                transform: scale(0.98);
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+                box-shadow: 0 0 50px var(--accent-glow), 0 0 90px var(--accent-glow);
             }
         }
 
@@ -134,17 +127,15 @@
             0% {
                 width: 80px;
                 height: 80px;
-                opacity: 0.6;
-                border-color: rgba(59, 130, 246, 0.8);
-                border-width: 2px;
+                opacity: 0.8;
+                border-color: var(--accent-color);
             }
 
             100% {
-                width: 350px;
-                height: 350px;
+                width: 300px;
+                height: 300px;
                 opacity: 0;
                 border-color: transparent;
-                border-width: 0px;
             }
         }
 
@@ -282,17 +273,14 @@
         }
 
         /* Active State for Core (Pressing / Water Splash) */
+        /* Active State for Core (Pressing) */
         .core-circle.active {
-            transform: scale(0.95);
-            /* Slight compress like pressing water */
-            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 1) 0%, rgba(59, 130, 246, 0.8) 40%, rgba(37, 99, 235, 1) 100%);
-            box-shadow:
-                0 0 40px rgba(59, 130, 246, 0.8),
-                0 0 0 10px rgba(59, 130, 246, 0.1);
-            /* Initial ripple ring */
-            animation: none;
-            /* Stop wobble */
-            transition: all 0.1s;
+            transform: scale(1.3) !important;
+            filter: blur(2px);
+            background: #fff;
+            /* Turn white for high energy */
+            box-shadow: 0 0 100px var(--accent-color), 0 0 200px var(--accent-color);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         /* Rotating Circular Text */
@@ -360,7 +348,7 @@
             border: none;
             background: none;
             color: rgba(255, 255, 255, 0.5);
-            padding: 10px 24px;
+            padding: 10px 30px;
             border-radius: 35px;
             cursor: pointer;
             font-size: 0.85rem;
@@ -369,6 +357,7 @@
             align-items: center;
             gap: 8px;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
         }
 
         .mode-btn.active {
@@ -535,7 +524,7 @@
     <nav class="side-menu" id="side-menu">
         <a href="/sales/dashboard" class="menu-item"><i class="fas fa-chart-pie"></i> ダッシュボード</a>
         <a href="/sales/schedules" class="menu-item"><i class="fas fa-calendar-alt"></i> スケジュール</a>
-        <a href="/sales/assistant/" class="menu-item"><i class="fas fa-microphone"></i> AI秘書 (Full)</a>
+        <a href="/sales/assistant/" class="menu-item"><i class="fas fa-microphone"></i> M.I.S.O.G.I. (Full)</a>
         <a href="/sales/mypage" class="menu-item"><i class="fas fa-user"></i> マイページ</a>
         <div style="margin-top: 40px; padding: 0 30px; font-size: 0.8rem; color: rgba(255,255,255,0.3);">
             M.I.S.O.G.I. System<br>v1.0.0
@@ -839,7 +828,7 @@
                 let errorMsg = err.message;
                 showAIResponse(`<i class="fas fa-exclamation-triangle"></i> AI処理でエラーが発生しました。<br><br><small style="color:#ffa5a5;">${errorMsg}</small><br><br><b>原因の可能性:</b><br>・録音が短すぎる<br>・マイク使用の未許可<br>・電波状況の悪化<br><br>改善しない場合は画面を更新してください。`);
             } finally {
-                statusText.textContent = "TAP TO SPEAK";
+                statusText.textContent = "PRESS & HOLD";
             }
         }
 
@@ -849,12 +838,19 @@
         }
 
         // --- Interactivity ---
+        // --- Interactivity ---
         let isButtonPressed = false;
+        let startRecordingTimer = null;
+        const PRESS_DELAY_MS = 500; // 0.5s hold required
 
         const startAction = async (e) => {
             if (currentMode !== 'voice') return;
-            e.preventDefault();
+            if (e.cancelable) e.preventDefault();
             isButtonPressed = true;
+
+            // Visual Feedback for Pressing
+            core.style.transform = "scale(0.9)";
+            statusText.textContent = "HOLD...";
 
             if (!isMicReady) {
                 const success = await initAudio();
@@ -862,25 +858,61 @@
             }
 
             if (isRecording) return;
+
+            // Start Timer
+            startRecordingTimer = setTimeout(() => {
+                if (!isButtonPressed) return;
+                startRecording();
+            }, PRESS_DELAY_MS);
+        };
+
+        const startRecording = () => {
             isRecording = true;
             audioChunks = [];
+            core.style.transform = ""; // Reset manual scale so class takes over
 
             try {
                 mediaRecorder.start(100);
-                core.classList.add('active');
+                core.classList.add('active'); // Ripple effect
                 circleText.classList.add('active');
                 statusText.textContent = "LISTENING...";
                 statusText.style.color = "#fff";
                 responseOverlay.classList.remove('visible');
             } catch (err) {
+                console.error("Recording start failed", err);
                 isRecording = false;
+                statusText.textContent = "ERROR";
             }
         };
 
         const stopAction = (e) => {
             if (currentMode !== 'voice') return;
             isButtonPressed = false;
-            if (!isRecording) return;
+
+            // Clear timer if it hasn't fired yet
+            if (startRecordingTimer) {
+                clearTimeout(startRecordingTimer);
+                startRecordingTimer = null;
+            }
+
+            core.style.transform = ""; // Reset press effect
+
+            if (!isRecording) {
+                // User released too early
+                if (statusText.textContent === "HOLD...") {
+                    statusText.textContent = "HOLD TO SPEAK";
+                    statusText.style.color = "#88ccff";
+                    setTimeout(() => {
+                        if (!isRecording && statusText.textContent === "HOLD TO SPEAK") {
+                            statusText.textContent = "PRESS & HOLD";
+                            statusText.style.color = "";
+                        }
+                    }, 1500);
+                }
+                return;
+            }
+
+            // Normal Stop
             isRecording = false;
 
             if (mediaRecorder && mediaRecorder.state === 'recording') {
@@ -903,7 +935,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             ensureAuthOrRedirect();
-            statusText.textContent = "TAP TO SPEAK";
+            statusText.textContent = "PRESS & HOLD";
         });
     </script>
 </body>

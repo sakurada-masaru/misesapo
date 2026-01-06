@@ -4,21 +4,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI営業秘書 | Misesapo</title>
+    <title>M.I.S.O.G.I. System | Misesapo</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/sales-assistant.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts for modern look -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-</head>
+    <style>
+        /* Gemini Live Style Override */
+        :root {
+            --bg-dark: #1e1e1e;
+            --bubble-ai: #e7f1ff;
+            --bubble-user: #f0f0f0;
+            --input-bg: #f5f5f5;
+        }
+
+        body {
+            background-color: #fff;
+            /* Clean white/light base */
+        }
+
+        .assistant-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .menu-trigger {
+            font-size: 1.2rem;
+            color: #444;
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .misogi-icon {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .misogi-icon .drop {
+            color: #3b82f6;
+            /* Water Blue */
+            font-size: 24px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .misogi-icon .sparkle {
+            color: #ffffff;
+            font-size: 10px;
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-shadow: 0 0 2px rgba(59, 130, 246, 0.8);
+        }
+
+        /* Side Menu Styles */
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100%;
+            background: #111;
+            z-index: 200;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            padding-top: 60px;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .side-menu.open {
+            transform: translateX(0);
+        }
+
+        .menu-item {
+            display: block;
+            padding: 16px 25px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .menu-item i {
+            width: 24px;
+            margin-right: 10px;
+            text-align: center;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 150;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Chat Timeline */
+        .chat-timeline {
+            padding-top: 80px;
+            /* Space for header */
+            padding-bottom: 140px;
+            /* Space for input */
+            background: #fff;
+        }
+
+        .chat-message .bubble {
+            border-radius: 20px;
+            padding: 14px 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-width: 85%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-message.ai .bubble {
+            background: var(--bubble-ai);
+            color: #0c4a6e;
+            border-top-left-radius: 4px;
+        }
+
+        .chat-message.user .bubble {
+            background: var(--bubble-user);
+            /* Light graey */
+            color: #333;
+            border-top-right-radius: 4px;
+        }
+
+        /* Input Area - Floats at bottom */
+        .input-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 20px 40px 20px;
+            /* Extra bottom padding for iPhone home bar */
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .text-input-wrapper {
+            flex: 1;
+            background: var(--input-bg);
+            border-radius: 30px;
+            padding: 4px 6px 4px 20px;
+            display: flex;
+            align-items: center;
+            border: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .text-input-wrapper:focus-within {
+            border-color: #3b82f6;
+            background: #fff;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .chat-input {
+            border: none;
+            background: none;
+            flex: 1;
+            padding: 10px 0;
+            outline: none;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .send-btn {
+            background: #3b82f6;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-left: 8px;
+        }
+
+        .send-btn:active {
+            transform: scale(0.9);
+        }
+
+        .mic-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #111;
+            /* Dark contrast */
+            color: #fff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+        }
+
+        .mic-btn:active {
+            transform: scale(0.95);
+            background: #3b82f6;
+        }
+
+        /* Suggestions - Horizontal Scroll */
+        .suggestions {
+            position: fixed;
+            bottom: 100px;
+            /* Above input */
+            left: 0;
+            width: 100%;
+            display: flex;
+            gap: 10px;
+            padding: 10px 20px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            /* Hide scrollbar */
+        }
+
+        .suggestions::-webkit-scrollbar {
+            display: none;
+        }
+
+        .suggestion-chip {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #444;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .suggestion-chip:active {
+            background: #f1f5f9;
+            transform: scale(0.98);
+        }
+    </style>
 
 <body>
 
     <!-- Header -->
+    <!-- Header -->
     <header class="assistant-header">
+        <button class="btn-icon menu-trigger" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
         <div class="assistant-title">
-            <i class="fas fa-sparkles gemini-sparkle"></i>
-            <span>AI営業秘書</span>
+            <!-- MISOGI Icon: Drop with Sparkle -->
+            <div class="misogi-icon">
+                <i class="fas fa-tint drop"></i>
+                <i class="fas fa-gem sparkle"></i>
+            </div>
+            <span>M.I.S.O.G.I.</span>
         </div>
         <button class="btn-icon" onclick="location.href='/sales/dashboard'"
             style="background:none; border:none; color:#64748b; font-size:1.2rem;">
@@ -26,14 +310,26 @@
         </button>
     </header>
 
+    <!-- Side Menu -->
+    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+    <nav class="side-menu" id="side-menu">
+        <a href="/sales/dashboard" class="menu-item"><i class="fas fa-chart-pie"></i> ダッシュボード</a>
+        <a href="/sales/schedules" class="menu-item"><i class="fas fa-calendar-alt"></i> スケジュール</a>
+        <a href="/sales/assistant/" class="menu-item active"><i class="fas fa-microphone"></i> M.I.S.O.G.I. (Full)</a>
+        <a href="/sales/mypage" class="menu-item"><i class="fas fa-user"></i> マイページ</a>
+        <div style="margin-top: 40px; padding: 0 30px; font-size: 0.8rem; color: rgba(255,255,255,0.3);">
+            M.I.S.O.G.I. System<br>v1.0.0
+        </div>
+    </nav>
+
     <!-- Chat Timeline -->
     <div class="chat-timeline" id="chat-timeline">
         <!-- Intro Message -->
         <div class="chat-message ai">
             <div class="avatar ai"><i class="fas fa-robot"></i></div>
             <div class="bubble">
-                お疲れ様です。今日はどんなお手伝いをしましょうか？<br>
-                「A店の依頼書を作りたい」「日報を書きたい」など、話しかけてください。
+                お疲れ様です。M.I.S.O.G.I.（ミソギ）です。<br>
+                業務サポート、スケジュール調整、情報統合など、何かお手伝いできることはありますか？
             </div>
         </div>
     </div>
@@ -71,108 +367,120 @@
     </div>
 
     <script>
+        // Toggle Side Menu
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            const overlay = document.getElementById('overlay');
+            menu.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
         // Mockup Logic
         const chatTimeline = document.getElementById('chat-timeline');
         const chatInput = document.getElementById('chat-input');
         const sendBtn = document.getElementById('send-btn');
         const micBtn = document.getElementById('mic-btn');
         const visualizer = document.getElementById('voice-visualizer');
+        // ... (Existing logic can remain or be updated later) ...
+    </script>
 
-        function appendMessage(role, text) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `chat-message ${role}`;
+    function appendMessage(role, text) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-message ${role}`;
 
-            let content = '';
-            if (role === 'ai') {
-                content = `
-                    <div class="avatar ai"><i class="fas fa-robot"></i></div>
-                    <div class="bubble">${text}</div>
-                `;
-            } else {
-                content = `
-                    <div class="bubble">${text}</div>
-                `;
-            }
-            msgDiv.innerHTML = content;
-            chatTimeline.appendChild(msgDiv);
-            chatTimeline.scrollTop = chatTimeline.scrollHeight;
-        }
+    let content = '';
+    if (role === 'ai') {
+    content = `
+    <div class="avatar ai"><i class="fas fa-robot"></i></div>
+    <div class="bubble">${text}</div>
+    `;
+    } else {
+    content = `
+    <div class="bubble">${text}</div>
+    `;
+    }
+    msgDiv.innerHTML = content;
+    chatTimeline.appendChild(msgDiv);
+    chatTimeline.scrollTop = chatTimeline.scrollHeight;
+    }
 
-        function setInput(text) {
-            chatInput.value = text;
-            chatInput.focus();
-        }
+    function setInput(text) {
+    chatInput.value = text;
+    chatInput.focus();
+    }
 
-        // Send Message
-        sendBtn.addEventListener('click', () => {
-            const text = chatInput.value.trim();
-            if (!text) return;
+    // Send Message
+    sendBtn.addEventListener('click', () => {
+    const text = chatInput.value.trim();
+    if (!text) return;
 
-            // User Message
-            appendMessage('user', text);
-            chatInput.value = '';
+    // User Message
+    appendMessage('user', text);
+    chatInput.value = '';
 
-            // Update suggestions based on context (Mockup)
-            document.getElementById('suggestions').style.display = 'none';
+    // Update suggestions based on context (Mockup)
+    document.getElementById('suggestions').style.display = 'none';
 
-            // AI Processing (Mock)
-            setTimeout(() => {
-                const aiDiv = document.createElement('div');
-                aiDiv.className = 'chat-message ai';
-                aiDiv.innerHTML = `
-                    <div class="avatar ai"><i class="fas fa-robot"></i></div>
-                    <div class="bubble"><i class="fas fa-spinner fa-spin"></i> 考え中...</div>
-                `;
-                chatTimeline.appendChild(aiDiv);
-                chatTimeline.scrollTop = chatTimeline.scrollHeight;
+    // AI Processing (Mock)
+    setTimeout(() => {
+    const aiDiv = document.createElement('div');
+    aiDiv.className = 'chat-message ai';
+    aiDiv.innerHTML = `
+    <div class="avatar ai"><i class="fas fa-robot"></i></div>
+    <div class="bubble"><i class="fas fa-spinner fa-spin"></i> 考え中...</div>
+    `;
+    chatTimeline.appendChild(aiDiv);
+    chatTimeline.scrollTop = chatTimeline.scrollHeight;
 
-                setTimeout(() => {
-                    aiDiv.remove(); // Remove loading
+    setTimeout(() => {
+    aiDiv.remove(); // Remove loading
 
-                    // Simple Mock Response
-                    let response = "承知しました。詳細を確認しますね。";
-                    if (text.includes("依頼書")) {
-                        response = "A店の依頼書ですね。作業日時はいつにしますか？";
-                    } else if (text.includes("明日")) {
-                        response = "明日は10時からB店のアポが入っています。";
-                    }
+    // Simple Mock Response
+    let response = "承知しました。詳細を確認しますね。";
+    if (text.includes("依頼書")) {
+    response = "A店の依頼書ですね。作業日時はいつにしますか？";
+    } else if (text.includes("明日")) {
+    response = "明日は10時からB店のアポが入っています。";
+    }
 
-                    appendMessage('ai', response);
-                }, 1500);
-            }, 500);
-        });
+    appendMessage('ai', response);
+    }, 1500);
+    }, 500);
+    });
 
-        // Mic Interaction (Mock)
-        let isRecording = false;
-        micBtn.addEventListener('click', () => {
-            if (!isRecording) {
-                // Start
-                isRecording = true;
-                visualizer.classList.add('active');
-                micBtn.style.transform = "scale(1.1)";
-                micBtn.style.background = "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"; // Red
-            } else {
-                // Stop
-                isRecording = false;
-                visualizer.classList.remove('active');
-                micBtn.style.transform = "scale(1)";
-                micBtn.style.background = ""; // Reset to blue
+    // Mic Interaction (Mock)
+    let isRecording = false;
+    micBtn.addEventListener('click', () => {
+    if (!isRecording) {
+    // Start
+    isRecording = true;
+    visualizer.classList.add('active');
+    micBtn.style.transform = "scale(1.1)";
+    micBtn.style.background = "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"; // Red
+    } else {
+    // Stop
+    isRecording = false;
+    visualizer.classList.remove('active');
+    micBtn.style.transform = "scale(1)";
+    micBtn.style.background = ""; // Reset to blue
 
-                // Mock Transcription
-                setTimeout(() => {
-                    appendMessage('user', '（音声入力）A店の定期清掃、来週の火曜日でお願い。');
+    // Mock Transcription
+    setTimeout(() => {
+    appendMessage('user', '（音声入力）A店の定期清掃、来週の火曜日でお願い。');
 
-                    setTimeout(() => {
-                        appendMessage('ai', '承知しました。「A店」「来週火曜日」で定期清掃ですね。依頼書の下書きを作成しました。<br><br><div style="background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:0.85rem;"><strong>案件名:</strong> A店 定期清掃<br><strong>日時:</strong> 2026/01/13 13:00~<br><strong>作業:</strong> 床清掃、WAX</div>');
-                    }, 1000);
-                }, 500);
-            }
-        });
+    setTimeout(() => {
+    appendMessage('ai', '承知しました。「A店」「来週火曜日」で定期清掃ですね。依頼書の下書きを作成しました。<br><br>
+    <div style="background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:0.85rem;">
+        <strong>案件名:</strong> A店 定期清掃<br><strong>日時:</strong> 2026/01/13 13:00~<br><strong>作業:</strong> 床清掃、WAX</div>');
+    }, 1000);
+    }, 500);
+    }
+    });
 
-        // Enter key to send
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendBtn.click();
-        });
+    // Enter key to send
+    chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendBtn.click();
+    });
 
     </script>
 </body>
