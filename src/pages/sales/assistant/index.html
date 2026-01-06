@@ -49,31 +49,17 @@
         }
 
         .misogi-icon {
-            position: relative;
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             display: inline-block;
             margin-right: 8px;
         }
 
-        .misogi-icon .drop {
-            color: #3b82f6;
-            /* Water Blue */
-            font-size: 24px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .misogi-icon .sparkle {
-            color: #ffffff;
-            font-size: 10px;
-            position: absolute;
-            top: 40%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-shadow: 0 0 2px rgba(59, 130, 246, 0.8);
+        .misogi-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
         }
 
         /* Side Menu Styles */
@@ -205,9 +191,12 @@
 
         .chat-input {
             flex: 1;
+            min-width: 0;
+            /* Crucial for flex item shrinking */
             border: none;
             background: none;
-            padding: 0;
+            padding: 0 8px;
+            /* Add breathing room */
             outline: none;
             font-size: 1rem;
             color: #1f1f1f;
@@ -225,6 +214,8 @@
             cursor: pointer;
             color: #444746;
             transition: background 0.2s;
+            flex-shrink: 0;
+            /* Prevent buttons from squishing */
         }
 
         .action-btn:hover {
@@ -309,8 +300,7 @@
         <div class="assistant-title">
             <!-- MISOGI Icon: Drop with Sparkle -->
             <div class="misogi-icon">
-                <i class="fas fa-tint drop"></i>
-                <i class="fas fa-gem sparkle"></i>
+                <img src="/assets/images/misogi-logo.png" alt="Misogi Logo">
             </div>
             <span>M.I.S.O.G.I.</span>
         </div>
