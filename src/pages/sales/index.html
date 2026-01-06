@@ -429,6 +429,21 @@
             pointer-events: none;
         }
 
+        .chat-bubble.ai::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            right: 15px;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 183, 197, 0.4);
+            border-radius: 0 100% 0 100%;
+            transform: rotate(-15deg);
+            pointer-events: none;
+            box-shadow: -25px 10px 0 rgba(255, 183, 197, 0.3);
+            /* Petal 3 */
+        }
+
         .chat-bubble.ai::after {
             content: '';
             position: absolute;
@@ -440,6 +455,8 @@
             border-radius: 0 100% 0 100%;
             transform: rotate(45deg);
             pointer-events: none;
+            box-shadow: -15px -25px 0 rgba(255, 183, 197, 0.3);
+            /* Petal 4 */
         }
 
         .chat-bubble.user {
