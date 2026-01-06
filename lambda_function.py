@@ -10020,8 +10020,8 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
         raise Exception("GEMINI_API_KEY is not set.")
 
     # Model for 1.5 Flash
-    model_name = "gemini-1.5-flash"
-    api_version = "v1"
+    model_name = "gemini-1.5-flash-latest"
+    api_version = "v1beta"
     url = f"https://generativelanguage.googleapis.com/{api_version}/models/{model_name}:generateContent?key={api_key}"
     
     parts = []
@@ -10078,8 +10078,16 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
             return parts[0].get('text', '')
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8')
-        print(f"Gemini API Error: {error_body}")
-        raise Exception(f"Gemini API ({e.code}): {error_body}")
+        available_models = []
+        try:
+            list_url = f"https://generativelanguage.googleapis.com/{api_version}/models?key={api_key}"
+            with urllib.request.urlopen(list_url) as list_res:
+                models_data = json.loads(list_res.read().decode('utf-8'))
+                available_models = [m.get('name') for m in models_data.get('models', [])]
+        except:
+            pass
+        print(f"Gemini API Error: {error_body}") # Keep original print for logging
+        raise Exception(f"Gemini API ({e.code}): {error_body}. Available: {available_models}")
     except Exception as e:
         print(f"Gemini Call Failed: {str(e)}")
         raise e
