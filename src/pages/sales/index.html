@@ -483,6 +483,9 @@
 
             try {
                 statusText.textContent = "PROCESSING...";
+                // Clean MIME type (just the type, no codecs) for backend stability
+                const cleanMime = recordingMimeType.split(';')[0];
+
                 const response = await fetch(`${API_BASE}/ai/process`, {
                     method: 'POST',
                     headers: {
@@ -492,7 +495,7 @@
                     body: JSON.stringify({
                         action: 'assistant_concierge',
                         audio: base64Audio,
-                        mime_type: recordingMimeType
+                        mime_type: cleanMime
                     })
                 });
 
@@ -514,7 +517,11 @@
                 showAIResponse(aiResult.reply || aiResult);
             } catch (err) {
                 console.error('AI Processing failed:', err);
-                showAIResponse(`<i class="fas fa-exclamation-triangle"></i> すみません、エラーが発生しました。<br><small>${err.message}</small>`);
+                let errorMsg = err.message;
+                if (errorMsg.includes('400')) {
+                    errorMsg += " (Bad Request - 録音データが正しく送信されませんでした。)";
+                }
+                showAIResponse(`<i class="fas fa-exclamation-triangle"></i> エラーが発生しました。<br><small>${errorMsg}</small><br><br>改善しない場合は、画面を<b>「ハード再読み込み（更新）」</b>してみてください。`);
             } finally {
                 statusText.textContent = "TAP TO SPEAK";
             }

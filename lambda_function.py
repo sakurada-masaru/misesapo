@@ -10117,8 +10117,15 @@ def handle_ai_process(event, headers):
         
         media = None
         if audio_data:
+            # Normalize mime_type (strip codecs=... part)
+            clean_mime = 'audio/wav'
+            if mime_type:
+                clean_mime = mime_type.split(';')[0].strip()
+            
+            print(f"DEBUG: Processing Audio. Original MIME: {mime_type}, Cleaned MIME: {clean_mime}")
+            
             media = {
-                'mime_type': mime_type or 'audio/wav',
+                'mime_type': clean_mime,
                 'data': audio_data
             }
             if not input_text:
@@ -10154,7 +10161,6 @@ def handle_ai_process(event, headers):
             result = call_gemini_api(prompt, system_instruction, media)
 
         elif action == 'assistant_concierge':
-            # 営業コンシェルジュ用のプロンプト
             import datetime
             jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d (%A) %H:%M')
 
@@ -10185,14 +10191,13 @@ def handle_ai_process(event, headers):
       "reply": "ユーザーへの返信メッセージ（必須）",
       "intent": "GREETING|CHAT|CREATE_REQUEST|SEARCH_STORE|CHECK_SCHEDULE|OTHER",
       "suggested_action": "次にユーザーがすべきアクションの提案（任意）",
-      "extracted_data": {{ ... 推出された情報があれば入れる ... }}
+      "extracted_data": {{ ... 抽出された情報があれば入れる ... }}
     }}
 """
             prompt = f"ユーザーの発言: {input_text}"
             result = call_gemini_api(prompt, system_instruction, media)
 
         elif action == 'suggest_request_form':
-            # 現在時刻（JST）を取得して相対日付（「来週」など）を計算できるようにする
             import datetime
             jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d (%A) %H:%M')
 
@@ -10211,62 +10216,28 @@ Your task is to listen to the sales person's rough field report (or read their m
 
 2.  **Client & Store Inference**:
     - Identify Client Name, Brand Name, and Store Name from the text.
-    - If the user says "A Store" or "The usual place", stick to that string.
     - If ambiguous, try to extract the most likely proper noun.
 
 3.  **Work Type & Items**:
     - Default to "periodic" (Regular Cleaning) if not specified.
-    - Contextual Items:
-        - "Kitchen is dirty" -> Check "Floor Cleaning" and "Grease Trap".
-        - "Aircon smells" -> Check "Air Conditioner Filter".
-        - "Pest issues" -> Check "Pest Control" or write in notes.
 
-4.  **Assessment Analysis (Sentiment to Status)**:
-    - "Very dirty", "Terrible", "Greasy" -> Assessment Status: "bad" (× 不良)
-    - "A bit messy", "Needs attention" -> Assessment Status: "warn" (△ 要注意)
-    - "Clean", "Good condition", "No issues" -> Assessment Status: "good" (◎ 良好)
-    - Map these assessments to the correct area (Kitchen, Equipment, Toilet, Pests) based on context.
+4.  **Assessment Analysis**:
+    - "Very dirty", "Terrible" -> "bad" (× 不良)
+    - "A bit messy" -> "warn" (△ 要注意)
+    - "Clean", "Good condition" -> "good" (◎ 良好)
 
 5.  **Output Format**:
-    - Return ONLY a valid JSON object. No markdown formatting like ```json ... ``` is strictly necessary, but if you do, ensure it is parseable.
-    - Use the following schema:
-    {{
-      "client_name": "String or null",
-      "brand_name": "String or null",
-      "store_name": "String or null",
-      "work": {{
-        "date": "YYYY-MM-DD",
-        "time": "HH:MM - HH:MM (e.g. 09:00 - 12:00)",
-        "type": "periodic|spot|special",
-        "items": ["list", "of", "cleaning", "items", "inferred"]
-      }},
-      "assessments": {{
-        "area1": {{ "status": "good|warn|bad", "note": "Reason inferred from text" }},  // Kitchen
-        "area2": {{ "status": "good|warn|bad", "note": "Reason inferred from text" }},  // Equipment
-        "area3": {{ "status": "good|warn|bad", "note": "Reason inferred from text" }},  // Toilet
-        "area4": {{ "status": "good|warn|bad", "note": "Reason inferred from text" }}   // Pests
-      }},
-      "survey": {{
-        "environment": "String inferred (e.g. Roadside, Mall)",
-        "issue": "Current issues mentioned",
-        "notes": "Other survey notes"
-      }},
-      "logistics": {{
-        "parking": "Parking info if mentioned",
-        "key": "Key info if mentioned"
-      }},
-      "notes": "General remarks or TODOs"
-    }}
+    - Return ONLY a valid JSON object.
+    - Fields: client_name, brand_name, store_name, work{{date, time, type, items}}, assessments, survey, logistics, notes.
 """
             prompt = f"以下の情報を元に報告書を作成してください:\n\n{input_text}"
             result = call_gemini_api(prompt, system_instruction, media)
-
             
         else:
             return {
                 'statusCode': 400,
                 'headers': headers,
-                'body': json.dumps({'error': f'Unsupported action: {action}'}, ensure_ascii=False)
+                'body': json.dumps({'error': f'Unsupported action: {action}', 'message': f'Unsupported action: {action}'}, ensure_ascii=False)
             }
             
         return {
@@ -10280,7 +10251,7 @@ Your task is to listen to the sales person's rough field report (or read their m
     except Exception as e:
         print(f"Error in handle_ai_process: {str(e)}")
         return {
-            'statusCode': 500,
+            'statusCode': 400,
             'headers': headers,
-            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
+            'body': json.dumps({'error': str(e), 'message': str(e)}, ensure_ascii=False)
         }
