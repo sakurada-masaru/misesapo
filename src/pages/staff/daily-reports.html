@@ -638,7 +638,7 @@
   }
 
   function normalizeApiReports(data) {
-    const items = data?.items || data?.reports || (Array.isArray(data) ? data : []);
+    const items = data?.daily_reports || data?.items || data?.reports || (Array.isArray(data) ? data : []);
     return items.map(report => ({
       ...report,
       id: report.id || report.report_id || `report_${Date.now()}`,
@@ -678,10 +678,9 @@
       if (response.ok) {
         const data = await response.json();
         const apiReports = normalizeApiReports(data);
-        if (apiReports.length) {
-          reports = apiReports;
-          saveReports();
-        }
+        // APIのデータを正として常に上書き（削除反映のため、空でも上書きする）
+        reports = apiReports;
+        saveReports();
       }
     } catch (error) {
       console.error('Error loading reports from API:', error);
@@ -937,7 +936,18 @@
         body: JSON.stringify(payload)
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        const result = await response.json();
+        // バックエンドで生成されたID（日付_スタッフID）をローカルにも反映させる
+        if (result.report_id && result.report_id !== reportId) {
+          const index = reports.findIndex(r => r.id === reportId);
+          if (index !== -1) {
+            reports[index].id = result.report_id;
+            saveReports();
+            renderReports();
+          }
+        }
+      } else {
         console.warn('Failed to save daily report to API:', response.status);
       }
     } catch (error) {
