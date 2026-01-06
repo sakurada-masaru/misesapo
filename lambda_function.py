@@ -10019,7 +10019,14 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
     if not api_key:
         raise Exception("GEMINI_API_KEY is not set in environment variables.")
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    # モデルとAPIバージョンを使い分ける
+    # gemini-pro が v1/v1beta ともに見つからないため、全リクエストで gemini-1.5-flash を使用する
+    model_name = "gemini-1.5-flash"
+    api_version = "v1beta"
+    
+    # if media: ... 分岐は不要。常に 1.5-flash を使う
+    
+    url = f"https://generativelanguage.googleapis.com/{api_version}/models/{model_name}:generateContent?key={api_key}"
     
     contents = []
     parts = []
@@ -10041,15 +10048,20 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
         "parts": parts
     })
     
+    gen_config = {
+        "temperature": 0.2,
+        "topP": 0.8,
+        "topK": 40,
+        "maxOutputTokens": 2048
+    }
+
+    # v1beta (Gemini 1.5) のみ responseMimeType が使える
+    if api_version == "v1beta":
+        gen_config["responseMimeType"] = "application/json" if "json" in (prompt.lower() + (system_instruction or "").lower()) else "text/plain"
+
     data = {
         "contents": contents,
-        "generationConfig": {
-            "temperature": 0.2,
-            "topP": 0.8,
-            "topK": 40,
-            "maxOutputTokens": 2048,
-            "responseMimeType": "application/json" if "json" in (prompt.lower() + (system_instruction or "").lower()) else "text/plain"
-        }
+        "generationConfig": gen_config
     }
     
     req = urllib.request.Request(
@@ -10063,6 +10075,11 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
         with urllib.request.urlopen(req) as response:
             res_body = json.loads(response.read().decode('utf-8'))
             return res_body['candidates'][0]['content']['parts'][0]['text']
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8')
+        print(f"Gemini API HTTP Error: {e.code} {e.reason}")
+        print(f"Error Body: {error_body}")
+        raise Exception(f"Gemini API Error ({e.code}): {error_body}")
     except Exception as e:
         print(f"Error calling Gemini API: {str(e)}")
         raise e
@@ -10076,6 +10093,7 @@ def handle_ai_process(event, headers):
         action = body.get('action')
         input_text = body.get('text', '')
         audio_data = body.get('audio') # Base64 encoded
+        mime_type = body.get('mime_type')
         
         if not action:
             return {
@@ -10087,7 +10105,7 @@ def handle_ai_process(event, headers):
         media = None
         if audio_data:
             media = {
-                'mime_type': 'audio/wav', # Default to web recorder format
+                'mime_type': mime_type or 'audio/wav',
                 'data': audio_data
             }
             if not input_text:

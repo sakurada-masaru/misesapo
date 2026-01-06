@@ -140,19 +140,28 @@
     color: #64748b;
     border-radius: 999px;
     font-size: 0.85rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    border: 1px solid transparent;
+
+  /* Refactored Modal Styles */
+  .modal-dialog-refactored {
+    width: 95%;
+    max-width: 800px;
+    height: 90vh;
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    background: white;
   }
 
-  .filter-pill input:checked+span {
-    background: #fdf2f8;
-    /* Light Pink */
-    color: #db2777;
-    /* Deep Pink */
-    border-color: #fce7f3;
-    background: #FF679C;
-    color: white;
+  .modal-dialog-refactored::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .schedule-label.label-draft {
+    /* Gray */
+    border-color: #e5e7eb;
+    background: #f3f4f6;
+    color: #4b5563;
   }
 </style>
 
