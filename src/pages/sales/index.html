@@ -410,13 +410,19 @@
         let audioChunks = [];
         let isRecording = false;
         let recordingMimeType = '';
+        let isMicReady = false;
 
         function getSupportedMimeType() {
-            const types = ['audio/webm', 'audio/mp4', 'audio/aac', 'audio/ogg'];
+            const types = [
+                'audio/webm;codecs=opus',
+                'audio/webm',
+                'audio/mp4',
+                'audio/aac'
+            ];
             for (const t of types) {
                 if (MediaRecorder.isTypeSupported(t)) return t;
             }
-            return 'audio/wav'; // Fallback
+            return ''; // Let browser decide
         }
 
         // Initialize Audio
@@ -424,15 +430,25 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 recordingMimeType = getSupportedMimeType();
-                console.log('[Mic] Supported MimeType:', recordingMimeType);
+                console.log('[Mic] Preferred MimeType:', recordingMimeType);
 
-                mediaRecorder = new MediaRecorder(stream, { mimeType: recordingMimeType });
+                const options = recordingMimeType ? { mimeType: recordingMimeType } : {};
+                mediaRecorder = new MediaRecorder(stream, options);
+
+                // Actual mimeType might be different
+                if (!recordingMimeType) recordingMimeType = mediaRecorder.mimeType;
+                console.log('[Mic] Actual MimeType:', recordingMimeType);
 
                 mediaRecorder.ondataavailable = (event) => {
                     if (event.data.size > 0) audioChunks.push(event.data);
                 };
 
                 mediaRecorder.onstop = async () => {
+                    if (audioChunks.length === 0) {
+                        console.warn("No audio chunks captured.");
+                        statusText.textContent = "TAP TO SPEAK";
+                        return;
+                    }
                     const audioBlob = new Blob(audioChunks, { type: recordingMimeType });
                     const reader = new FileReader();
                     reader.readAsDataURL(audioBlob);
@@ -441,10 +457,17 @@
                         await sendToAI(base64Audio);
                     };
                 };
+
+                isMicReady = true;
+                return true;
             } catch (err) {
                 console.error('Mic init failed:', err);
-                statusText.textContent = "AUTH ERROR";
-                alert('マイクが使用できません。ブラウザの設定で許可されているか確認してください。');
+                statusText.textContent = "MIC ERROR";
+                const msg = err.name === 'NotAllowedError' ?
+                    'マイクの使用が許可されていません。設定で許可してください。' :
+                    'マイクを利用できません。HTTPS接続であることを確認してください。';
+                alert(msg);
+                return false;
             }
         }
 
@@ -473,7 +496,6 @@
                 const data = await response.json();
                 let aiResult = data.result;
 
-                // Parse JSON from Gemini if needed
                 if (typeof aiResult === 'string') {
                     try {
                         const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
@@ -496,15 +518,14 @@
         }
 
         // --- Interactivity ---
-        const startAction = (e) => {
+        const startAction = async (e) => {
             e.preventDefault();
             if (isRecording) return;
 
-            if (!mediaRecorder) {
-                initAudio().then(() => {
-                    if (mediaRecorder) startAction(e);
-                });
-                return;
+            // Ensure Mic is initialized
+            if (!isMicReady) {
+                const success = await initAudio();
+                if (!success) return;
             }
 
             isRecording = true;
