@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   deleteDialog = document.getElementById('delete-dialog');
   scheduleForm = document.getElementById('schedule-form');
   formStatus = document.getElementById('form-status');
-  
+
   // DataUtilsが利用可能になるまで待つ（最大5秒）
   let retries = 0;
   const maxRetries = 50; // 5秒間待機（100ms × 50）
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await new Promise(resolve => setTimeout(resolve, 100));
     retries++;
   }
-  
+
   if (typeof DataUtils === 'undefined') {
     console.error('DataUtils is not loaded after waiting');
     if (tbody) {
@@ -42,16 +42,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     return;
   }
-  
+
   await Promise.all([
-    loadStores(), 
-    loadWorkers(), 
-    loadClients(), 
-    loadBrands(), 
-    loadServices(), 
+    loadStores(),
+    loadWorkers(),
+    loadClients(),
+    loadBrands(),
+    loadServices(),
     loadSchedules()
   ]);
   // 初回描画は全データ読み込み完了後に実行（brands未ロードでブランド名が欠けるのを防ぐ）
+
+  // URLパラメータからフィルターを適用
+  const urlParams = new URLSearchParams(window.location.search);
+  const statusParam = urlParams.get('status');
+  const storeParam = urlParams.get('store_id');
+  const workerParam = urlParams.get('worker_id');
+  const dateRangeParam = urlParams.get('date_range');
+
+  if (statusParam) {
+    const statusFilter = document.getElementById('status-filter');
+    if (statusFilter) statusFilter.value = statusParam;
+  }
+  if (storeParam) {
+    const storeFilter = document.getElementById('store-filter');
+    if (storeFilter) storeFilter.value = storeParam;
+  }
+  if (workerParam) {
+    const workerFilter = document.getElementById('worker-filter');
+    if (workerFilter) workerFilter.value = workerParam;
+  }
+  if (dateRangeParam) {
+    const dateRangeFilter = document.getElementById('date-range-filter');
+    if (dateRangeFilter) dateRangeFilter.value = dateRangeParam;
+  }
   filterAndRender();
   setupEventListeners();
   setupStoreSearch();
@@ -82,7 +106,7 @@ function updateDraftAlert() {
   const draftCount = allSchedules.filter(s => s.status === 'draft').length;
   const alertEl = document.getElementById('draft-alert');
   const countEl = document.getElementById('draft-count');
-  
+
   if (alertEl && countEl) {
     if (draftCount > 0) {
       alertEl.classList.remove('hidden');
@@ -94,7 +118,7 @@ function updateDraftAlert() {
 }
 
 // 新規案件フィルター（グローバル関数）
-window.filterDraft = function() {
+window.filterDraft = function () {
   const statusFilter = document.getElementById('status-filter');
   if (statusFilter) {
     statusFilter.value = 'draft';
@@ -180,12 +204,12 @@ function populateSalesSelects() {
   };
 
   let sales = allWorkers.filter(isSalesPerson);
-  
+
   // 万が一 role 情報が無い / sales が一人もいない場合は、全件を使う
   if (sales.length === 0) {
     sales = allWorkers;
   }
-  
+
   const options = sales.map(w => `<option value="${w.id}">${escapeHtml(w.name || '')}</option>`).join('');
   const salesSelectEl = document.getElementById('schedule-sales');
   if (salesSelectEl) {
@@ -236,7 +260,7 @@ function setupStoreSearch() {
   const summaryClientEl = document.getElementById('schedule-store-summary-client');
   const summaryBrandEl = document.getElementById('schedule-store-summary-brand');
   const summaryAddressEl = document.getElementById('schedule-store-summary-address');
-  
+
   if (!searchInput || !resultsDiv || !hiddenInput) return;
 
   function updatePlaceholder() {
@@ -285,28 +309,28 @@ function setupStoreSearch() {
     if (emailEl) emailEl.value = email || '';
     if (contactEl) contactEl.value = contactPerson || '';
   }
-  
+
   function getClientName(clientId) {
     if (!clientId) return '';
     const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId));
     return client ? (client.name || client.company_name || '') : '';
   }
-  
+
   function getBrandName(brandId) {
     if (!brandId) return '';
     const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId));
     return brand ? brand.name : '';
   }
-  
+
   function updateStoreDropdown() {
     const query = searchInput.value.trim().toLowerCase();
     const category = categoryFilter ? categoryFilter.value : '';
-    
+
     if (query.length === 0) {
       resultsDiv.style.display = 'none';
       return;
     }
-    
+
     // 店舗名、ブランド名、法人名で部分一致検索
     let filtered = allStores.filter(store => {
       const storeName = (store.name || '').toLowerCase();
@@ -314,29 +338,29 @@ function setupStoreSearch() {
       const brandName = getBrandName(brandId).toLowerCase();
       const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null);
       const clientName = getClientName(clientId).toLowerCase();
-      
+
       // カテゴリで絞り込み
       if (category === 'store' && !storeName.includes(query)) return false;
       if (category === 'brand' && !brandName.includes(query)) return false;
       if (category === 'client' && !clientName.includes(query)) return false;
-      
+
       // キーワード検索
       return storeName.includes(query) || brandName.includes(query) || clientName.includes(query);
     });
-    
+
     if (filtered.length === 0) {
       resultsDiv.innerHTML = '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
       resultsDiv.style.display = 'block';
       return;
     }
-    
+
     resultsDiv.innerHTML = filtered.map(store => {
       const storeName = store.name || '';
       const brandId = store.brand_id;
       const brandName = getBrandName(brandId);
       const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null);
       const clientName = getClientName(clientId);
-      
+
       // 表示は常に「店舗名」を主にして、補足で法人/ブランドを出す（混同防止）
       const categoryLabel = category === 'client'
         ? '<span class="store-search-item-category">法人</span>'
@@ -353,16 +377,16 @@ function setupStoreSearch() {
         if (clientName) parts.push(clientName);
         sub = ` <small style="color:#6b7280;">(${escapeHtml(parts.join(' / '))})</small>`;
       }
-      
+
       return `<div class="store-search-item" data-id="${store.id}" data-name="${escapeHtml(storeName)}">${categoryLabel}${escapeHtml(storeName)}${sub}</div>`;
     }).join('');
-    
+
     resultsDiv.style.display = 'block';
-    
+
     // クリックイベント
     resultsDiv.querySelectorAll('.store-search-item').forEach(item => {
       if (item.classList.contains('no-results')) return;
-      item.addEventListener('click', function() {
+      item.addEventListener('click', function () {
         const id = this.dataset.id;
         const name = this.dataset.name;
         hiddenInput.value = id;
@@ -384,7 +408,7 @@ function setupStoreSearch() {
       });
     });
   }
-  
+
   searchInput.addEventListener('input', updateStoreDropdown);
   searchInput.addEventListener('focus', updateStoreDropdown);
   if (categoryFilter) {
@@ -394,7 +418,7 @@ function setupStoreSearch() {
       updateStoreDropdown();
     });
   }
-  
+
   // 外側をクリックしたら閉じる
   document.addEventListener('click', (e) => {
     if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target) && (!categoryFilter || !categoryFilter.contains(e.target))) {
@@ -414,54 +438,54 @@ function setupCleaningItemsSearch() {
   const resultsDiv = document.getElementById('cleaning-items-results');
   const selectedDiv = document.getElementById('cleaning-items-selected');
   const categoryFilter = document.getElementById('cleaning-category-filter');
-  
+
   if (!searchInput || !resultsDiv || !selectedDiv) return;
-  
+
   function updateCleaningItemsDropdown() {
     const query = searchInput.value.trim().toLowerCase();
     const category = categoryFilter ? categoryFilter.value : '';
-    
+
     // サービス名で部分一致検索（検索クエリが空の場合は全件表示）
     let filtered = allServices.filter(service => {
       const serviceName = (service.title || service.name || '').toLowerCase();
-      
+
       // 検索クエリが空の場合は全件表示
       if (query.length === 0) {
         return true;
       }
-      
+
       // カテゴリで絞り込み（現時点ではサービス名のみ）
       if (category === 'service' && !serviceName.includes(query)) return false;
-      
+
       // キーワード検索
       return serviceName.includes(query);
     });
-    
+
     if (filtered.length === 0) {
       resultsDiv.innerHTML = '<div class="cleaning-item-result no-results">該当する清掃内容が見つかりません</div>';
       resultsDiv.style.display = 'block';
       return;
     }
-    
+
     resultsDiv.innerHTML = filtered.map(service => {
       const serviceName = service.title || service.name || '';
       const serviceId = service.id || '';
       const categoryLabel = '<span class="store-search-item-category">サービス</span>';
       return `<div class="cleaning-item-result" data-id="${serviceId}" data-name="${escapeHtml(serviceName)}">${categoryLabel}${escapeHtml(serviceName)}</div>`;
     }).join('');
-    
+
     resultsDiv.style.display = 'block';
-    
+
     // クリックイベント
     resultsDiv.querySelectorAll('.cleaning-item-result').forEach(item => {
       if (item.classList.contains('no-results')) return;
-      item.addEventListener('click', function() {
+      item.addEventListener('click', function () {
         const id = this.dataset.id;
         const name = this.dataset.name;
-        
+
         // 既に選択されている場合は追加しない
         if (selectedCleaningItems.find(item => item.id === id)) return;
-        
+
         selectedCleaningItems.push({ id, name });
         updateCleaningItemsSelected();
         searchInput.value = '';
@@ -469,13 +493,13 @@ function setupCleaningItemsSearch() {
       });
     });
   }
-  
+
   function updateCleaningItemsSelected() {
     if (selectedCleaningItems.length === 0) {
       selectedDiv.innerHTML = '<div style="color: #9ca3af; font-size: 0.875rem; padding: 8px;">選択された清掃内容がありません</div>';
       return;
     }
-    
+
     selectedDiv.innerHTML = selectedCleaningItems.map((item, index) => {
       return `
         <div class="cleaning-item-tag">
@@ -485,28 +509,28 @@ function setupCleaningItemsSearch() {
       `;
     }).join('');
   }
-  
-  window.removeCleaningItem = function(index) {
+
+  window.removeCleaningItem = function (index) {
     selectedCleaningItems.splice(index, 1);
     updateCleaningItemsSelected();
   };
-  
+
   searchInput.addEventListener('input', updateCleaningItemsDropdown);
-  searchInput.addEventListener('focus', function() {
+  searchInput.addEventListener('focus', function () {
     // フォーカス時は検索クエリに関係なく全サービスを表示
     updateCleaningItemsDropdown();
   });
   if (categoryFilter) {
     categoryFilter.addEventListener('change', updateCleaningItemsDropdown);
   }
-  
+
   // 外側をクリックしたら閉じる
   document.addEventListener('click', (e) => {
     if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target) && (!categoryFilter || !categoryFilter.contains(e.target))) {
       resultsDiv.style.display = 'none';
     }
   });
-  
+
   // 初期表示
   updateCleaningItemsSelected();
 }
@@ -518,9 +542,9 @@ function filterAndRender() {
   const workerFilter = document.getElementById('worker-filter');
   const statusFilter = document.getElementById('status-filter');
   const dateRangeFilter = document.getElementById('date-range-filter');
-  
+
   if (!storeFilter || !workerFilter || !statusFilter) return;
-  
+
   const storeId = storeFilter.value;
   const salesId = salesFilter ? salesFilter.value : '';
   const workerId = workerFilter.value;
@@ -554,7 +578,7 @@ function filterAndRender() {
         : (String(scheduleWorkerId) === String(workerId))
     );
     const matchStatus = !status || s.status === status;
-    
+
     // 日付範囲フィルター
     let matchDateRange = true;
     if (dateRange === 'future' || dateRange === 'past') {
@@ -563,7 +587,7 @@ function filterAndRender() {
       if (scheduleDate) {
         const scheduleDateObj = new Date(scheduleDate);
         scheduleDateObj.setHours(0, 0, 0, 0);
-        
+
         if (dateRange === 'future') {
           // 今後のみ：今日以降のスケジュール
           matchDateRange = scheduleDateObj >= now;
@@ -576,7 +600,7 @@ function filterAndRender() {
         matchDateRange = dateRange === 'past';
       }
     }
-    
+
     return matchStore && matchSales && matchWorker && matchStatus && matchDateRange;
   });
 
@@ -587,12 +611,12 @@ function filterAndRender() {
     const normalizedB = DataUtils.normalizeSchedule(b);
     const dateA = normalizedA.date || a.date || a.scheduled_date || '';
     const dateB = normalizedB.date || b.date || b.scheduled_date || '';
-    
+
     // 日付で比較（同じ日付の場合は時間で比較）
     if (dateA !== dateB) {
       return dateA.localeCompare(dateB);
     }
-    
+
     // 同じ日付の場合は時間でソート
     const timeA = normalizedA.time || a.time_slot || a.scheduled_time || '00:00';
     const timeB = normalizedB.time || b.time_slot || b.scheduled_time || '00:00';
@@ -607,7 +631,7 @@ function filterAndRender() {
 // テーブル描画
 function renderTable() {
   if (!tbody) return;
-  
+
   const cardsEl = document.getElementById('schedule-cards');
   const start = (currentPage - 1) * perPage;
   const pageSchedules = filteredSchedules.slice(start, start + perPage);
@@ -626,7 +650,7 @@ function renderTable() {
     const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId));
     return client ? (client.name || client.company_name || '') : '';
   }
-  
+
   function getBrandName(brandId) {
     if (!brandId) return '';
     const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId));
@@ -752,9 +776,9 @@ function renderTable() {
     const salesId = schedule.sales_id || normalized.sales_id;
     const sales = salesId ? allWorkers.find(w => w.id === salesId) : null;
     const isDraft = schedule.status === 'draft';
-    
+
     const displayStoreName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
-    
+
     // 法人名・ブランド名を取得
     // - storeId から店舗が引ける場合: stores/brands/clients から導出
     // - 引けない場合（旧データ等）: schedule側に保存されている名称でフォールバック
@@ -775,7 +799,7 @@ function renderTable() {
         }
       }
     }
-    
+
     return `
       <tr data-id="${schedule.id}" class="${isDraft ? 'draft-row' : ''}">
         <td>
@@ -817,21 +841,21 @@ function renderTable() {
         </td>
         <td>
           ${(() => {
-            const cleaningItems = schedule.cleaning_items || normalized.cleaning_items || [];
-            if (!Array.isArray(cleaningItems) || cleaningItems.length === 0) {
-              return '<span style="color: #9ca3af;">-</span>';
-            }
-            const itemNames = cleaningItems.map(item => {
-              const name = item.name || item.title || '';
-              return escapeHtml(name);
-            }).filter(name => name);
-            if (itemNames.length === 0) return '<span style="color: #9ca3af;">-</span>';
-            return `
+        const cleaningItems = schedule.cleaning_items || normalized.cleaning_items || [];
+        if (!Array.isArray(cleaningItems) || cleaningItems.length === 0) {
+          return '<span style="color: #9ca3af;">-</span>';
+        }
+        const itemNames = cleaningItems.map(item => {
+          const name = item.name || item.title || '';
+          return escapeHtml(name);
+        }).filter(name => name);
+        if (itemNames.length === 0) return '<span style="color: #9ca3af;">-</span>';
+        return `
               <div class="cleaning-tags">
                 ${itemNames.map(n => `<span class="cleaning-tag">${n}</span>`).join('')}
               </div>
             `;
-          })()}
+      })()}
         </td>
         <td>
           <div class="action-btns">
@@ -857,7 +881,7 @@ function renderTable() {
 // ページネーション
 function renderPagination() {
   if (!pagination) return;
-  
+
   const totalPages = Math.ceil(filteredSchedules.length / perPage);
   if (totalPages <= 1) {
     pagination.innerHTML = '';
@@ -866,7 +890,7 @@ function renderPagination() {
 
   let html = '';
   html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">前</button>`;
-  
+
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
       html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
@@ -874,12 +898,12 @@ function renderPagination() {
       html += `<span style="padding:8px">...</span>`;
     }
   }
-  
+
   html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">次</button>`;
   pagination.innerHTML = html;
 }
 
-window.goToPage = function(page) {
+window.goToPage = function (page) {
   currentPage = page;
   renderTable();
   renderPagination();
@@ -894,7 +918,7 @@ function setupEventListeners() {
   const statusFilter = document.getElementById('status-filter');
   const dateRangeFilter = document.getElementById('date-range-filter');
   const resetFilters = document.getElementById('reset-filters');
-  
+
   if (storeFilter) {
     storeFilter.addEventListener('change', filterAndRender);
   }
@@ -927,7 +951,7 @@ function setupEventListeners() {
     viewToggle.addEventListener('click', () => {
       const listView = document.getElementById('list-view');
       const calendarView = document.getElementById('calendar-view');
-      
+
       if (currentView === 'list') {
         currentView = 'calendar';
         if (listView) listView.style.display = 'none';
@@ -948,7 +972,7 @@ function setupEventListeners() {
   // カレンダー月ナビゲーション
   const prevMonth = document.getElementById('prev-month');
   const nextMonth = document.getElementById('next-month');
-  
+
   if (prevMonth) {
     prevMonth.addEventListener('click', () => {
       currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
@@ -997,11 +1021,11 @@ function setupEventListeners() {
   if (scheduleForm) {
     scheduleForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const id = document.getElementById('schedule-id').value;
       const isNew = !id;
       const originalSchedule = isNew ? null : allSchedules.find(s => s.id === id);
-      
+
       const storeId = document.getElementById('schedule-store').value;
       if (!storeId) {
         alert('店舗を選択してください');
@@ -1018,13 +1042,13 @@ function setupEventListeners() {
       const derivedBrandName = brand ? (brand.name || '') : '';
       const derivedClientName = client ? (client.name || client.company_name || '') : '';
       const derivedAddress = (store.address || `${store.pref || ''}${store.city || ''}${store.street || ''}` || '').trim();
-      
+
       // 清掃内容を取得
       const cleaningItems = selectedCleaningItems.map(item => ({
         name: item.name,
         id: item.id
       }));
-      
+
       const data = {
         store_id: storeId,
         scheduled_date: document.getElementById('schedule-date').value,
@@ -1050,7 +1074,7 @@ function setupEventListeners() {
         const originalWorkerId = originalSchedule.worker_id || originalSchedule.assigned_to || '';
         const hadWorker = originalWorkerId && originalWorkerId !== '';
         const hasWorker = data.worker_id && data.worker_id !== '';
-        
+
         // IDの正規化処理を使用して比較
         let workerAssigned = false;
         if (DataUtils && DataUtils.IdUtils && DataUtils.IdUtils.isSame) {
@@ -1060,7 +1084,7 @@ function setupEventListeners() {
           // フォールバック: 文字列比較
           workerAssigned = !hadWorker && hasWorker;
         }
-        
+
         // 未確定状態で清掃員を新しく割り当てた場合、自動的に確定に変更
         if (wasDraft && workerAssigned) {
           data.status = 'scheduled';
@@ -1085,7 +1109,7 @@ function setupEventListeners() {
         if (formStatus) {
           formStatus.textContent = '保存中...';
         }
-        
+
         const response = await fetch(`${API_BASE}/schedules${isNew ? '' : '/' + id}`, {
           method: isNew ? 'POST' : 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -1097,29 +1121,29 @@ function setupEventListeners() {
             formStatus.textContent = '保存しました';
             formStatus.className = 'form-status success';
           }
-          
+
           // レスポンスから作成されたスケジュールデータを取得
           // バックエンドから返されたIDを使用（新規作成時はschedule_id、更新時は既存のid）
           const responseData = await response.json();
-          const savedSchedule = responseData.schedule || { 
-            ...data, 
-            id: responseData.schedule_id || responseData.id || id 
+          const savedSchedule = responseData.schedule || {
+            ...data,
+            id: responseData.schedule_id || responseData.id || id
           };
-          
+
           if (isNew) {
             allSchedules.unshift(savedSchedule);
           } else {
             const idx = allSchedules.findIndex(s => s.id === id);
             if (idx >= 0) allSchedules[idx] = { ...allSchedules[idx], ...savedSchedule };
           }
-          
+
           // データを再読み込みして最新の状態を取得
           await loadSchedules();
-          
+
           if (scheduleDialog) {
             setTimeout(() => scheduleDialog.close(), 500);
           }
-          
+
           // 新規作成の場合は、適切な時間後に画面をリフレッシュ
           if (isNew) {
             setTimeout(() => {
@@ -1149,12 +1173,12 @@ function setupEventListeners() {
   if (confirmDeleteBtn) {
     confirmDeleteBtn.addEventListener('click', async () => {
       if (!deleteTargetId) return;
-      
+
       try {
         const response = await fetch(`${API_BASE}/schedules/${deleteTargetId}`, {
           method: 'DELETE'
         });
-        
+
         if (response.ok) {
           allSchedules = allSchedules.filter(s => s.id !== deleteTargetId);
           filterAndRender();
@@ -1178,7 +1202,7 @@ function openAddDialog(dateStr) {
   const scheduleStore = document.getElementById('schedule-store');
   const scheduleStoreSearch = document.getElementById('schedule-store-search');
   const scheduleDate = document.getElementById('schedule-date');
-  
+
   if (dialogTitle) dialogTitle.textContent = '新規スケジュール作成';
   if (scheduleForm) scheduleForm.reset();
   if (scheduleId) scheduleId.value = '';
@@ -1194,7 +1218,7 @@ function openAddDialog(dateStr) {
   if (summaryBrandEl) summaryBrandEl.textContent = '-';
   if (summaryAddressEl) summaryAddressEl.textContent = '-';
   if (scheduleDate) scheduleDate.value = dateStr || new Date().toISOString().split('T')[0];
-  
+
   // 清掃内容をリセット
   selectedCleaningItems = [];
   const selectedDiv = document.getElementById('cleaning-items-selected');
@@ -1209,7 +1233,7 @@ function openAddDialog(dateStr) {
   if (cleaningCategoryFilter) {
     cleaningCategoryFilter.value = '';
   }
-  
+
   if (formStatus) formStatus.textContent = '';
   if (scheduleDialog) scheduleDialog.showModal();
 }
@@ -1222,7 +1246,7 @@ function openEditDialog(schedule) {
 window.openEditDialog = openEditDialog;
 
 // 編集
-window.editSchedule = function(id) {
+window.editSchedule = function (id) {
   const schedule = allSchedules.find(s => s.id === id);
   if (!schedule) return;
 
@@ -1247,7 +1271,7 @@ window.editSchedule = function(id) {
 
   if (dialogTitle) dialogTitle.textContent = 'スケジュール編集';
   if (scheduleIdEl) scheduleIdEl.value = schedule.id;
-  
+
   // 店舗検索フィールドの更新
   if (scheduleStoreEl && scheduleStoreSearchEl) {
     const store = DataUtils.findStore(allStores, storeId);
@@ -1256,7 +1280,7 @@ window.editSchedule = function(id) {
       scheduleStoreSearchEl.value = store.name || '';
     }
   }
-  
+
   // 店舗サマリーを更新
   try {
     const summaryStoreEl = document.getElementById('schedule-store-summary-store');
@@ -1280,12 +1304,12 @@ window.editSchedule = function(id) {
     // サマリー表示は補助なので失敗しても続行
     console.warn('Failed to update store summary:', e);
   }
-  
+
   if (scheduleDateEl) scheduleDateEl.value = date;
   if (scheduleTimeEl) scheduleTimeEl.value = time;
   if (scheduleDurationEl) scheduleDurationEl.value = schedule.duration_minutes || normalized.duration || 60;
   if (scheduleSalesEl) scheduleSalesEl.value = schedule.sales_id || schedule.created_by || '';
-  
+
   // 清掃員選択の更新（IDの正規化処理を追加）
   if (scheduleWorkerEl) {
     // 清掃員ドロップダウンが既に更新されていることを確認
@@ -1293,7 +1317,7 @@ window.editSchedule = function(id) {
     if (scheduleWorkerEl.options.length <= 1) {
       populateWorkerSelects();
     }
-    
+
     // workerIdが空の場合は空文字列を設定
     if (!workerId) {
       scheduleWorkerEl.value = '';
@@ -1319,7 +1343,7 @@ window.editSchedule = function(id) {
           }
         }
       }
-      
+
       if (matchedWorkerId) {
         scheduleWorkerEl.value = matchedWorkerId;
       } else {
@@ -1329,10 +1353,10 @@ window.editSchedule = function(id) {
       }
     }
   }
-  
+
   if (scheduleStatusEl) scheduleStatusEl.value = schedule.status || 'scheduled';
   if (scheduleNotesEl) scheduleNotesEl.value = schedule.notes || normalized.notes || '';
-  
+
   // 清掃内容を読み込む
   selectedCleaningItems = [];
   if (schedule.cleaning_items && Array.isArray(schedule.cleaning_items)) {
@@ -1363,13 +1387,13 @@ window.editSchedule = function(id) {
       }).join('');
     }
   }
-  
+
   if (formStatus) formStatus.textContent = '';
   if (scheduleDialog) scheduleDialog.showModal();
 };
 
 // クイックアサイン（清掃員を素早く割り当てる）
-window.quickAssignWorker = async function(scheduleId) {
+window.quickAssignWorker = async function (scheduleId) {
   const schedule = allSchedules.find(s => s.id === scheduleId);
   if (!schedule) {
     alert('スケジュールが見つかりません');
@@ -1409,7 +1433,7 @@ window.quickAssignWorker = async function(scheduleId) {
     );
     return `<option value="${w.id}" ${isSelected ? 'selected' : ''}>${escapeHtml(w.name || '')}</option>`;
   }).join('');
-  
+
   const selectHtml = allOptionHtml + cleanersHtml;
 
   // モーダルを作成
@@ -1462,7 +1486,7 @@ window.quickAssignWorker = async function(scheduleId) {
   modal.querySelector('#quick-assign-save').addEventListener('click', async () => {
     const selectEl = modal.querySelector('#quick-assign-worker-select');
     const selectedValue = selectEl.value;
-    
+
     // 「全員（オープン）」が選択された場合はworker_idをnullに
     const selectedWorkerId = (selectedValue === 'ALL' || selectedValue === '') ? null : selectedValue;
 
@@ -1470,14 +1494,14 @@ window.quickAssignWorker = async function(scheduleId) {
       // スケジュールを更新
       // 「全員（オープン）」の場合と個人を選択した場合で処理を分ける
       let updateData = {};
-      
+
       if (selectedValue === 'ALL' || selectedValue === '') {
         // 「全員（オープン）」の場合：worker_idを空文字列に設定（全員に割り当て = 全員が見られる）
         const wasDraft = schedule.status === 'draft';
-        const newStatus = wasDraft 
+        const newStatus = wasDraft
           ? 'scheduled' // draft状態からscheduledに自動更新
           : (schedule.status || 'scheduled'); // 既に確定済みの場合は維持
-        
+
         updateData = {
           worker_id: '', // 空文字列 = 全員に割り当て（デフォルト状態）
           status: newStatus // ステータスを確定に変更
@@ -1485,16 +1509,16 @@ window.quickAssignWorker = async function(scheduleId) {
       } else {
         // 個人を選択した場合
         const wasDraft = schedule.status === 'draft';
-        const newStatus = wasDraft 
+        const newStatus = wasDraft
           ? 'scheduled' // draft状態からscheduledに自動更新
           : (schedule.status || 'scheduled'); // 既に確定済みの場合は維持
-        
+
         updateData = {
           worker_id: selectedWorkerId,
           status: newStatus
         };
       }
-      
+
       console.log('[Quick Assign] Updating schedule:', {
         scheduleId,
         selectedValue,
@@ -1526,23 +1550,23 @@ window.quickAssignWorker = async function(scheduleId) {
       // レスポンスから更新されたスケジュールデータを取得
       const responseData = await response.json();
       const updatedSchedule = responseData.schedule || responseData || { ...schedule, ...updateData };
-      
+
       // レスポンスから取得したworker_idを優先（APIが返した値を使用）
       // 「全員（オープン）」の場合は空文字列またはnullになる
       let finalWorkerId = null;
       if (selectedValue === 'ALL' || selectedValue === '') {
         // 「全員（オープン）」の場合
         // APIが空文字列を返すか、nullを返すか、フィールドを削除するかはAPI次第
-        finalWorkerId = updatedSchedule.worker_id !== undefined 
-          ? (updatedSchedule.worker_id === '' ? null : (updatedSchedule.worker_id || null)) 
+        finalWorkerId = updatedSchedule.worker_id !== undefined
+          ? (updatedSchedule.worker_id === '' ? null : (updatedSchedule.worker_id || null))
           : null;
       } else {
         // 個人を選択した場合
-        finalWorkerId = updatedSchedule.worker_id !== undefined 
-          ? (updatedSchedule.worker_id || selectedWorkerId) 
+        finalWorkerId = updatedSchedule.worker_id !== undefined
+          ? (updatedSchedule.worker_id || selectedWorkerId)
           : selectedWorkerId;
       }
-      
+
       console.log('[Quick Assign] Final worker ID:', {
         selectedValue,
         selectedWorkerId,
@@ -1558,7 +1582,7 @@ window.quickAssignWorker = async function(scheduleId) {
           return String(s.id) === String(scheduleId);
         }
       });
-      
+
       if (idx >= 0) {
         // 既存のスケジュールを更新（レスポンスから取得したデータを優先）
         allSchedules[idx] = {
@@ -1571,8 +1595,8 @@ window.quickAssignWorker = async function(scheduleId) {
         console.log('[Quick Assign] Updated schedule in local data:', allSchedules[idx]);
       } else {
         // 見つからない場合は追加（念のため）
-        allSchedules.push({ 
-          ...schedule, 
+        allSchedules.push({
+          ...schedule,
           ...updatedSchedule,
           worker_id: finalWorkerId,
           assigned_to: finalWorkerId,
@@ -1582,11 +1606,11 @@ window.quickAssignWorker = async function(scheduleId) {
 
       // データを再読み込み（最新の状態を取得）
       await loadSchedules();
-      
+
       // 画面を更新
       filterAndRender();
       updateDraftAlert();
-      
+
       // カレンダー表示の場合は再描画
       if (currentView === 'calendar') {
         renderCalendar();
@@ -1609,7 +1633,7 @@ window.quickAssignWorker = async function(scheduleId) {
 };
 
 // 削除確認
-window.confirmDelete = function(id) {
+window.confirmDelete = function (id) {
   deleteTargetId = id;
   if (deleteDialog) {
     deleteDialog.showModal();
@@ -1677,49 +1701,49 @@ function getStatusLabel(status) {
 function renderCalendar() {
   const calendarMonth = document.getElementById('calendar-month');
   const calendarDays = document.getElementById('calendar-days');
-  
+
   if (!calendarMonth || !calendarDays) return;
-  
+
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
   calendarMonth.textContent = `${year}年${month + 1}月`;
-  
+
   calendarDays.innerHTML = '';
-  
+
   // 月の最初の日と最後の日
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const startDayOfWeek = firstDay.getDay();
   const daysInMonth = lastDay.getDate();
-  
+
   // 今日の日付
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
-  
+
   // 前月の空白セル
   for (let i = 0; i < startDayOfWeek; i++) {
     const emptyCell = document.createElement('div');
     emptyCell.className = 'calendar-day empty';
     calendarDays.appendChild(emptyCell);
   }
-  
+
   // 日付セル
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const dayOfWeek = new Date(year, month, day).getDay();
-    
+
     const dayCell = document.createElement('div');
     dayCell.className = 'calendar-day';
     if (dateStr === todayStr) dayCell.classList.add('today');
     if (dayOfWeek === 0) dayCell.classList.add('sun');
     if (dayOfWeek === 6) dayCell.classList.add('sat');
-    
+
     // 日付番号
     const dayNum = document.createElement('div');
     dayNum.className = 'day-number';
     dayNum.textContent = day;
     dayCell.appendChild(dayNum);
-    
+
     // その日のスケジュール（カレンダー表示と整合性を取る）
     const daySchedules = allSchedules.filter(s => {
       const normalized = DataUtils.normalizeSchedule(s);
@@ -1729,7 +1753,7 @@ function renderCalendar() {
     if (daySchedules.length > 0) {
       const eventsContainer = document.createElement('div');
       eventsContainer.className = 'day-events';
-      
+
       // 最大3件表示
       daySchedules.slice(0, 3).forEach(schedule => {
         const event = document.createElement('div');
@@ -1752,7 +1776,7 @@ function renderCalendar() {
         event.onclick = () => openEditDialog(schedule);
         eventsContainer.appendChild(event);
       });
-      
+
       // 3件以上ある場合
       if (daySchedules.length > 3) {
         const more = document.createElement('div');
@@ -1760,10 +1784,10 @@ function renderCalendar() {
         more.textContent = `+${daySchedules.length - 3}件`;
         eventsContainer.appendChild(more);
       }
-      
+
       dayCell.appendChild(eventsContainer);
     }
-    
+
     // 日付クリックで新規作成
     dayCell.addEventListener('click', (e) => {
       if (e.target.classList.contains('day-event') || e.target.classList.contains('day-event-more')) return;
@@ -1774,10 +1798,10 @@ function renderCalendar() {
         openAddDialog(dateStr);
       }
     });
-    
+
     calendarDays.appendChild(dayCell);
   }
-  
+
   // 次月の空白セル（6行になるように）
   const totalCells = startDayOfWeek + daysInMonth;
   const remainingCells = (7 - (totalCells % 7)) % 7;
