@@ -1778,12 +1778,16 @@ function setupAiRequestSuggestion() {
         };
 
         mediaRecorder.onstop = async () => {
-          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+          const mimeType = mediaRecorder.mimeType;
+          const audioBlob = new Blob(audioChunks, { type: mimeType });
           const reader = new FileReader();
           reader.readAsDataURL(audioBlob);
           reader.onloadend = async () => {
             const base64Audio = reader.result.split(',')[1];
-            await processAiRequest({ audio: base64Audio });
+            await processAiRequest({
+              audio: base64Audio,
+              mime_type: mimeType
+            });
           };
 
           // Stop all tracks
@@ -1862,7 +1866,12 @@ function setupAiRequestSuggestion() {
           console.error('AI API 400 Error:', errData);
           throw new Error('クラウド側のAI機能がまだ更新されていません。管理者に「Lambdaのデプロイ」を依頼してください。');
         }
-        throw new Error('AI処理に失敗しました');
+
+        // 詳細なエラー情報を取得してログ出力
+        const errText = await response.text();
+        console.error('AI API Error Details:', response.status, errText);
+
+        throw new Error('AI処理に失敗しました (Status: ' + response.status + ')。コンソールログを確認してください。');
       }
 
       const data = await response.json();
@@ -1949,7 +1958,10 @@ function setupAiRequestSuggestion() {
             if (radio) radio.checked = true;
           }
           const noteInput = document.getElementById(`assess-note-${key}`);
-          if (noteInput && info.note) noteInput.value = info.note;
+          if (noteInput && info.note) {
+            // Append note if exists
+            noteInput.value = noteInput.value ? noteInput.value + '\n' + info.note : info.note;
+          }
         }
       });
     }
@@ -1960,12 +1972,19 @@ function setupAiRequestSuggestion() {
       const fields = {
         'survey-issue': s.issue,
         'survey-environment': s.environment,
-        'survey-area-sqm': s.area_sqm,
+        'survey-area-sqm': s.area_sqm, // This typically should be replaced, not appended, but let's stick to simple logic
         'survey-notes': s.notes
       };
       for (const [id, val] of Object.entries(fields)) {
         const el = document.getElementById(id);
-        if (el && val) el.value = val;
+        if (el && val) {
+          // Append for textareas/inputs, except maybe sqm which is number-like
+          if (id === 'survey-area-sqm') {
+            el.value = val;
+          } else {
+            el.value = el.value ? el.value + '\n' + val : val;
+          }
+        }
       }
       if (s.equipment && Array.isArray(s.equipment)) {
         s.equipment.forEach(item => {
@@ -1980,11 +1999,11 @@ function setupAiRequestSuggestion() {
       const w = result.work;
       if (w.date) {
         const dateInput = document.getElementById('schedule-date');
-        if (dateInput) dateInput.value = w.date;
+        if (dateInput) dateInput.value = w.date; // Date is usually replaced
       }
       if (w.time) {
         const timeInput = document.getElementById('schedule-time');
-        if (timeInput) timeInput.value = w.time;
+        if (timeInput) timeInput.value = w.time; // Time is usually replaced
       }
       if (w.type) {
         const typeSelect = document.getElementById('schedule-work-type');
@@ -2007,18 +2026,18 @@ function setupAiRequestSuggestion() {
     if (result.logistics) {
       if (result.logistics.parking) {
         const pInput = document.getElementById('schedule-parking');
-        if (pInput) pInput.value = result.logistics.parking;
+        if (pInput) pInput.value = pInput.value ? pInput.value + '\n' + result.logistics.parking : result.logistics.parking;
       }
       if (result.logistics.key) {
         const kInput = document.getElementById('schedule-key-info');
-        if (kInput) kInput.value = result.logistics.key;
+        if (kInput) kInput.value = kInput.value ? kInput.value + '\n' + result.logistics.key : result.logistics.key;
       }
     }
     if (result.notes) {
       const nInput = document.getElementById('schedule-notes');
-      if (nInput) nInput.value = result.notes;
+      if (nInput) nInput.value = nInput.value ? nInput.value + '\n' + result.notes : result.notes;
     }
 
-    alert('AIが内容を抽出して入力しました。内容を確認してください。');
+    alert('AIが内容を抽出して入力（追記）しました。内容を確認してください。');
   }
 }
