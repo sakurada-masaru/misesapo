@@ -406,19 +406,31 @@
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
+        let recordingMimeType = '';
+
+        function getSupportedMimeType() {
+            const types = ['audio/webm', 'audio/mp4', 'audio/aac', 'audio/ogg'];
+            for (const t of types) {
+                if (MediaRecorder.isTypeSupported(t)) return t;
+            }
+            return 'audio/wav'; // Fallback
+        }
 
         // Initialize Audio
         async function initAudio() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
+                recordingMimeType = getSupportedMimeType();
+                console.log('[Mic] Supported MimeType:', recordingMimeType);
+
+                mediaRecorder = new MediaRecorder(stream, { mimeType: recordingMimeType });
 
                 mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
+                    if (event.data.size > 0) audioChunks.push(event.data);
                 };
 
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioBlob = new Blob(audioChunks, { type: recordingMimeType });
                     const reader = new FileReader();
                     reader.readAsDataURL(audioBlob);
                     reader.onloadend = async () => {
@@ -428,8 +440,8 @@
                 };
             } catch (err) {
                 console.error('Mic init failed:', err);
-                statusText.textContent = "MIC ERROR";
-                alert('マイクの使用を許可してください。');
+                statusText.textContent = "AUTH ERROR";
+                alert('マイクが使用できません。ブラウザの設定で許可されているか確認してください。');
             }
         }
 
@@ -449,7 +461,7 @@
                     body: JSON.stringify({
                         action: 'assistant_concierge',
                         audio: base64Audio,
-                        mime_type: 'audio/webm'
+                        mime_type: recordingMimeType
                     })
                 });
 
