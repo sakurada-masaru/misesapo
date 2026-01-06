@@ -317,7 +317,15 @@
         if (userDepartment === 'OS課') {
           setupOSSectionSidebar();
         }
+        // 人事部の場合は専用サイドバーを設定
+        if (userDepartment === '人事部') {
+          setupHumanResourcesSidebar();
+        }
       } else if (userRole) {
+        // 人事ロールの場合も設定
+        if (userRole === 'human_resources') {
+          setupHumanResourcesSidebar();
+        }
         const roleLabels = {
           'admin': '管理者',
           '管理者': '管理者',
@@ -590,6 +598,51 @@
     }
 
     console.log('[AdminSidebar] OS section sidebar configured');
+  }
+
+  /**
+   * 人事部専用サイドバーを設定
+   */
+  function setupHumanResourcesSidebar() {
+    const sidebarNav = document.querySelector('#admin-sidebar .sidebar-nav');
+    if (!sidebarNav) return;
+
+    // ユーザー管理リンクが存在しない場合は追加
+    let usersLink = sidebarNav.querySelector('a[data-page="admin-users"]');
+
+    if (!usersLink) {
+      // マイページリンクの直後に追加
+      const mypageLink = sidebarNav.querySelector('a[data-page="mypage"]');
+      if (mypageLink) {
+        usersLink = document.createElement('a');
+        usersLink.href = '/admin/users';
+        usersLink.className = 'nav-item';
+        usersLink.setAttribute('data-page', 'admin-users');
+        usersLink.innerHTML = '<i class="fas fa-users"></i><span class="nav-label">ユーザー管理</span>';
+        mypageLink.insertAdjacentElement('afterend', usersLink);
+      } else {
+        // マイページリンクが見つからない場合は先頭に追加（ダッシュボードがある場合はその次）
+        const dashboardLink = sidebarNav.querySelector('a[data-page="dashboard"]');
+        if (dashboardLink) {
+          usersLink = document.createElement('a');
+          usersLink.href = '/admin/users';
+          usersLink.className = 'nav-item';
+          usersLink.setAttribute('data-page', 'admin-users');
+          usersLink.innerHTML = '<i class="fas fa-users"></i><span class="nav-label">ユーザー管理</span>';
+          dashboardLink.insertAdjacentElement('afterend', usersLink);
+        } else {
+          // ダッシュボードもない場合は一番上
+          usersLink = document.createElement('a');
+          usersLink.href = '/admin/users';
+          usersLink.className = 'nav-item';
+          usersLink.setAttribute('data-page', 'admin-users');
+          usersLink.innerHTML = '<i class="fas fa-users"></i><span class="nav-label">ユーザー管理</span>';
+          sidebarNav.prepend(usersLink);
+        }
+      }
+    }
+
+    console.log('[AdminSidebar] HR section sidebar configured');
   }
 
   /**
