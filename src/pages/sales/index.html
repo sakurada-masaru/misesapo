@@ -284,24 +284,27 @@
             align-items: center;
             pointer-events: none;
             z-index: 5;
-            animation: rotate-circle 20s linear infinite;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            --base-scale: 0.45;
+            transform: scale(var(--base-scale));
+            animation: rotate-circle 30s linear infinite;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             opacity: 0.6;
         }
 
         .circle-text-container.active {
-            transform: scale(1.25);
+            --base-scale: 1.1;
+            transform: scale(var(--base-scale));
             animation-play-state: paused;
             opacity: 1;
         }
 
         @keyframes rotate-circle {
             from {
-                transform: rotate(0deg);
+                transform: scale(var(--base-scale, 0.45)) rotate(0deg);
             }
 
             to {
-                transform: rotate(360deg);
+                transform: scale(var(--base-scale, 0.45)) rotate(360deg);
             }
         }
 
