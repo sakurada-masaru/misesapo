@@ -10021,7 +10021,7 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
 
     # Model for 1.5 Flash
     model_name = "gemini-1.5-flash"
-    api_version = "v1beta"
+    api_version = "v1"
     url = f"https://generativelanguage.googleapis.com/{api_version}/models/{model_name}:generateContent?key={api_key}"
     
     parts = []
