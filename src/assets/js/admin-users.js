@@ -1714,7 +1714,7 @@
         console.log('[UserManagement] Attendance records loaded:', items.length);
 
         items.forEach(item => {
-          const uid = item.staff_id || item.user_id;
+          const uid = String(item.staff_id || item.user_id);
           if (uid) {
             attendanceRecords[today][uid] = item;
           }
