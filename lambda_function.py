@@ -10117,48 +10117,38 @@ def handle_ai_process(event, headers):
         
         media = None
         if audio_data:
-            # Map browser MIME types to Gemini supported ones
-            # iOS: audio/mp4, Android/Chrome: audio/webm
+            # Gemini documentation lists: wav, mp3, aiff, aac, ogg, flac
+            # Safari (iOS) usually sends audio/mp4 which is AAC.
+            # We map it to audio/aac to satisfy Gemini's strict MIME check.
             clean_mime = 'audio/wav'
             if mime_type:
                 target = mime_type.lower()
                 if 'webm' in target: clean_mime = 'audio/webm'
-                elif 'mp4' in target or 'mpeg' in target: clean_mime = 'audio/mp4'
-                elif 'aac' in target: clean_mime = 'audio/aac'
+                elif 'mp4' in target or 'mpeg' in target or 'aac' in target: clean_mime = 'audio/aac'
                 elif 'ogg' in target: clean_mime = 'audio/ogg'
             
-            print(f"DEBUG: Mic Processing. Type: {mime_type} -> Clean: {clean_mime}, Size: {len(audio_data)}")
+            print(f"DEBUG: Mic processing start. Action: {action}, MIME: {mime_type} -> {clean_mime}, Data Length: {len(audio_data)}")
             
             media = {
                 'mime_type': clean_mime,
                 'data': audio_data
             }
             if not input_text:
-                input_text = "音声の内容を解析して適切なアクションを提案してください。"
+                input_text = "音声の内容を解析してください。"
             
         if action == 'summarize_report':
-            system_instruction = "あなたはプロの清掃管理アドバイザーです。ユーザーの清掃メモから、丁寧な清掃報告書（日本語）を作成してください。"
+            system_instruction = "あなたはプロの清掃管理アドバイザーです。ユーザーの清掃メモから、丁寧な清掃報告書を作成してください。"
             result = call_gemini_api(f"作成依頼:\n{input_text}", system_instruction, media)
             
         elif action == 'assistant_concierge':
             import datetime
             jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
-            system_instruction = f"""
-あなたは店舗メンテンナンス会社「ミセサポ」のベテラン営業秘書です。
-ユーザー（営業マン）の音声やテキストに対し、JSON形式で意図を判別し、自然な日本語で返答してください。
-現在時刻: {jst_now}
-
-必須JSONフォーマット:
-{{
-  "reply": "ユーザーへの返信メッセージ",
-  "intent": "GREETING|CHAT|CREATE_REQUEST|SEARCH_STORE|CHECK_SCHEDULE|OTHER",
-  "extracted_data": {{}}
-}}
-"""
-            result = call_gemini_api(f"ユーザー入力: {input_text}", system_instruction, media)
+            system_instruction = f"""あなたは店メン秘書です。語りかけに対し自然な日本語で返答し、JSON形式で返してください。現在時刻: {jst_now}
+フォーマット: {{"reply": "...", "intent": "...", "extracted_data": {{}}}}"""
+            result = call_gemini_api(f"ユーザー: {input_text}", system_instruction, media)
             
         elif action == 'suggest_request_form':
-            system_instruction = "営業報告から清掃依頼書（JSON）のドラフトを作成してください。"
+            system_instruction = "営業報告から清掃依頼書（JSON）を作成してください。"
             result = call_gemini_api(f"解析対象:\n{input_text}", system_instruction, media)
             
         else:
@@ -10176,13 +10166,15 @@ def handle_ai_process(event, headers):
     except Exception as e:
         import traceback
         error_detail = traceback.format_exc()
-        print(f"CRITICAL: {error_detail}")
+        print(f"ERROR in handle_ai_process: {str(e)}\n{error_detail}")
+        
+        # We return a 400 with the error message so the frontend can display it.
         return {
             'statusCode': 400,
             'headers': headers,
             'body': json.dumps({
                 'error': 'AI_PROCESS_FAILED',
                 'message': str(e),
-                'debug': error_detail[:200]
+                'debug': error_detail[:150]
             }, ensure_ascii=False)
         }

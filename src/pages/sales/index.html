@@ -518,10 +518,7 @@
             } catch (err) {
                 console.error('AI Processing failed:', err);
                 let errorMsg = err.message;
-                if (errorMsg.includes('400')) {
-                    errorMsg += " (Bad Request - 録音データが正しく送信されませんでした。)";
-                }
-                showAIResponse(`<i class="fas fa-exclamation-triangle"></i> エラーが発生しました。<br><small>${errorMsg}</small><br><br>改善しない場合は、画面を<b>「ハード再読み込み（更新）」</b>してみてください。`);
+                showAIResponse(`<i class="fas fa-exclamation-triangle"></i> AI処理でエラーが発生しました。<br><br><small style="color:#ffa5a5;">${errorMsg}</small><br><br><b>原因の可能性:</b><br>・録音が短すぎる<br>・マイク使用の未許可<br>・電波状況の悪化<br><br>改善しない場合は画面を更新してください。`);
             } finally {
                 statusText.textContent = "TAP TO SPEAK";
             }
