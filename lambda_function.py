@@ -10013,54 +10013,48 @@ def delete_reimbursement(reimbursement_id, headers):
 
 def call_gemini_api(prompt, system_instruction=None, media=None):
     """
-    Gemini API (1.5 Flash/Pro) を呼び出す
+    Gemini API (1.5 Flash) を呼び出す
     """
     api_key = os.environ.get('GEMINI_API_KEY')
     if not api_key:
-        raise Exception("GEMINI_API_KEY is not set in environment variables.")
+        raise Exception("GEMINI_API_KEY is not set.")
 
-    # モデルとAPIバージョンを使い分ける
-    # gemini-2.0-flash は Quota:0 で使えなかったため、リストにあった gemini-flash-latest (1.5系) を試す
-    model_name = "gemini-flash-latest"
+    # Model for 1.5 Flash
+    model_name = "gemini-1.5-flash-latest"
     api_version = "v1beta"
-    
-    # URL生成
     url = f"https://generativelanguage.googleapis.com/{api_version}/models/{model_name}:generateContent?key={api_key}"
     
-    contents = []
     parts = []
+    # User prompt
+    parts.append({"text": prompt})
     
-    if system_instruction:
-        parts.append({"text": f"{system_instruction}\n\nUser Input Prompt: {prompt}"})
-    else:
-        parts.append({"text": prompt})
-    
+    # Media (Audio)
     if media:
         parts.append({
             "inline_data": {
-                "mime_type": media.get('mime_type', 'audio/mpeg'),
-                "data": media.get('data') # Base64 encoded
+                "mime_type": media.get('mime_type', 'audio/wav'),
+                "data": media.get('data')
             }
         })
         
-    contents.append({
-        "parts": parts
-    })
-    
-    gen_config = {
-        "temperature": 0.2,
-        "topP": 0.8,
-        "topK": 40,
-        "maxOutputTokens": 2048
-    }
-
-    # v1beta (Gemini 2.0) なので responseMimeType を使用して安定させる
-    gen_config["responseMimeType"] = "application/json" if "json" in (prompt.lower() + (system_instruction or "").lower()) else "text/plain"
-
     data = {
-        "contents": contents,
-        "generationConfig": gen_config
+        "contents": [{"parts": parts}],
+        "generationConfig": {
+            "temperature": 0.2,
+            "topP": 0.8,
+            "maxOutputTokens": 1024
+        }
     }
+
+    # Correct placement for System Instruction in 1.5 API
+    if system_instruction:
+        data["system_instruction"] = {
+            "parts": [{"text": system_instruction}]
+        }
+
+    # Set response format to JSON if the word JSON is in prompt
+    if "json" in prompt.lower() or (system_instruction and "json" in system_instruction.lower()):
+        data["generationConfig"]["responseMimeType"] = "application/json"
     
     req = urllib.request.Request(
         url,
@@ -10072,29 +10066,22 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
     try:
         with urllib.request.urlopen(req) as response:
             res_body = json.loads(response.read().decode('utf-8'))
-            return res_body['candidates'][0]['content']['parts'][0]['text']
+            candidates = res_body.get('candidates', [])
+            if not candidates:
+                raise Exception(f"Gemini returned no candidates: {json.dumps(res_body)}")
+            
+            content = candidates[0].get('content', {})
+            parts = content.get('parts', [])
+            if not parts:
+                raise Exception(f"Gemini returned no parts: {json.dumps(res_body)}")
+                
+            return parts[0].get('text', '')
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8')
-        print(f"Gemini API HTTP Error: {e.code} {e.reason}")
-        print(f"Error Body: {error_body}")
-        
-        # 診断: どんなエラーであれ、404が出たら意地でもモデル一覧を取得してエラーメッセージに含める
-        available_models_info = "Could not list models."
-        if e.code == 404 or e.code == 400:
-            try:
-                list_models_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
-                with urllib.request.urlopen(list_models_url) as list_res:
-                    models_data = json.loads(list_res.read().decode('utf-8'))
-                    # 名前だけのリストを作る
-                    model_names = [m.get('name') for m in models_data.get('models', [])]
-                    available_models_info = f"AVAILABLE MODELS: {json.dumps(model_names)}"
-            except Exception as list_err:
-                available_models_info = f"List Models Failed: {str(list_err)}"
-
-        # エラーメッセージに診断情報を付与してスローする（これでブラウザで見えるはず）
-        raise Exception(f"Gemini API Error ({e.code}): {error_body} \n\n[DIAGNOSIS] {available_models_info}")
+        print(f"Gemini API Error: {error_body}")
+        raise Exception(f"Gemini API ({e.code}): {error_body}")
     except Exception as e:
-        print(f"Error calling Gemini API: {str(e)}")
+        print(f"Gemini Call Failed: {str(e)}")
         raise e
 
 def handle_ai_process(event, headers):
