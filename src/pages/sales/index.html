@@ -410,6 +410,36 @@
             color: #333;
             border-bottom-left-radius: 4px;
             border: 1px solid #ffd1dc;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        /* Sakura Petals */
+        .chat-bubble.ai::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            right: 15px;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 183, 197, 0.4);
+            border-radius: 0 100% 0 100%;
+            transform: rotate(-15deg);
+            pointer-events: none;
+        }
+
+        .chat-bubble.ai::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            right: 5px;
+            width: 16px;
+            height: 16px;
+            background: rgba(255, 183, 197, 0.5);
+            border-radius: 0 100% 0 100%;
+            transform: rotate(45deg);
+            pointer-events: none;
         }
 
         .chat-bubble.user {
