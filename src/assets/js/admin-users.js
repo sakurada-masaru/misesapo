@@ -1419,8 +1419,7 @@
             loadTodayDailyReports()
           ]);
 
-          applyFilters();
-          renderTable();
+          filterAndRender();
           updateStats();
         } catch (error) {
           console.error('Refresh failed:', error);
