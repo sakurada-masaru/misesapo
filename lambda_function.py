@@ -4,6 +4,8 @@ import base64
 import os
 import uuid
 import hashlib
+import urllib.request
+import urllib.parse
 from decimal import Decimal
 from datetime import datetime, timedelta, timezone
 from boto3.dynamodb.conditions import Key, Attr
@@ -890,6 +892,10 @@ def lambda_handler(event, context):
         if normalized_path == '/upload':
             # 画像アップロード
             return handle_image_upload(event, headers)
+        elif normalized_path == '/ai/process':
+            # AIによるデータ処理（要約・生成・分析）
+            if method == 'POST':
+                return handle_ai_process(event, headers)
         elif normalized_path == '/cleaning-manual':
             # 清掃マニュアルデータの読み書き
             if method == 'GET':
@@ -10003,4 +10009,97 @@ def delete_reimbursement(reimbursement_id, headers):
             'statusCode': 500,
             'headers': headers,
             'body': json.dumps({'error': '削除に失敗しました', 'message': str(e)}, ensure_ascii=False)
+        }
+
+def call_gemini_api(prompt, system_instruction=None):
+    """
+    Gemini API (1.5 Flash) を呼び出す
+    """
+    api_key = os.environ.get('GEMINI_API_KEY')
+    if not api_key:
+        raise Exception("GEMINI_API_KEY is not set in environment variables.")
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    
+    contents = []
+    if system_instruction:
+        prompt = f"{system_instruction}\n\nUser Input: {prompt}"
+        
+    contents.append({
+        "parts": [{"text": prompt}]
+    })
+    
+    data = {
+        "contents": contents,
+        "generationConfig": {
+            "temperature": 0.2,
+            "topP": 0.8,
+            "topK": 40,
+            "maxOutputTokens": 2048,
+            "responseMimeType": "application/json" if "json" in (prompt.lower() + (system_instruction or "").lower()) else "text/plain"
+        }
+    }
+    
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(data).encode('utf-8'),
+        headers={'Content-Type': 'application/json'},
+        method='POST'
+    )
+    
+    try:
+        with urllib.request.urlopen(req) as response:
+            res_body = json.loads(response.read().decode('utf-8'))
+            return res_body['candidates'][0]['content']['parts'][0]['text']
+    except Exception as e:
+        print(f"Error calling Gemini API: {str(e)}")
+        raise e
+
+def handle_ai_process(event, headers):
+    """
+    AI処理のエンドポイント
+    """
+    try:
+        body = json.loads(event.get('body') or '{}')
+        action = body.get('action')
+        input_text = body.get('text')
+        
+        if not action or not input_text:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'action and text are required'}, ensure_ascii=False)
+            }
+            
+        if action == 'summarize_report':
+            system_instruction = "あなたはプロの清掃管理アドバイザーです。ユーザーの雑多な清掃メモから、顧客に提出できる丁寧で構造化された清掃報告書（日本語）を作成してください。出力は純粋なテキストまたはMarkdownにしてください。"
+            prompt = f"以下のメモを元に報告書を作成してください:\n\n{input_text}"
+            result = call_gemini_api(prompt, system_instruction)
+            
+        elif action == 'extract_karte':
+            system_instruction = "顧客との会話メモから、重要な要望や注意点を抽出し、JSON形式で出力してください。項目例: 重点清掃箇所, 禁忌事項, 次回への申し送り, 顧客のこだわり。"
+            prompt = f"以下のメモから情報を抽出してください:\n\n{input_text}"
+            result = call_gemini_api(prompt, system_instruction)
+            
+        else:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': f'Unsupported action: {action}'}, ensure_ascii=False)
+            }
+            
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'result': result
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error in handle_ai_process: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
         }
