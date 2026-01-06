@@ -529,8 +529,45 @@
       const theme = parentColors[parent.name] || parentColors['未分類'];
 
       // 総人数計算
-      const totalUsers = parent.directMembers.length +
+      // 総人数計算
+      const totalUsers = (parent.directMembers ? parent.directMembers.length : 0) +
         Object.values(parent.departments).reduce((sum, users) => sum + users.length, 0);
+
+      // 本部直属メンバーの生成
+      let directMembersHtml = '';
+      if (parent.directMembers && parent.directMembers.length > 0) {
+        directMembersHtml = `
+          <div class="sub-department-section" style="
+            background: #fff;
+            border: 1px solid ${theme.border};
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+          ">
+            <h4 style="
+              font-size: 1rem;
+              font-weight: 700;
+              color: ${theme.headerText};
+              margin: -8px 0 16px 0;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              padding-bottom: 12px;
+              border-bottom: 1px dashed ${theme.border};
+            ">
+              <span style="display:inline-block; width:6px; height:20px; background:${theme.accent}; border-radius:3px;"></span>
+              本部・直属
+              <span style="font-size: 0.8rem; font-weight: normal; color: #6b7280; background: ${theme.bg}; padding: 2px 10px; border-radius: 99px;">${parent.directMembers.length}名</span>
+            </h4>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+              ${parent.directMembers.map(user => renderUserCard(user)).join('')}
+            </div>
+          </div>
+        `;
+      }
 
       // 部署（子コンテナ）の生成
       const departmentCards = Object.entries(parent.departments).map(([deptName, users]) => {
@@ -574,9 +611,9 @@
         `;
       }).join('');
 
-      // 「未分類」の場合は本部枠を表示せず、部署カードのみを表示
+      // 「未分類」の場合は本部枠を表示せず、部署カードのみを表示（直属メンバーも含める）
       if (parent.name === '未分類') {
-        return departmentCards;
+        return directMembersHtml + departmentCards;
       }
 
       return `
@@ -608,6 +645,7 @@
               <div style="font-size: 0.9rem; color: #6b7280; margin-left: 36px;">構成人数: ${totalUsers}名</div>
             </div>
             
+            ${directMembersHtml}
             ${departmentCards}
           </div>
         </div>
