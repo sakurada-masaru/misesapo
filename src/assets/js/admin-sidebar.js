@@ -321,10 +321,17 @@
         if (userDepartment === '人事部') {
           setupHumanResourcesSidebar();
         }
+        // 財務経理部の場合は専用サイドバーを設定
+        if (userDepartment === '財務経理部') {
+          setupFinanceAccountingSidebar();
+        }
       } else if (userRole) {
-        // 人事ロールの場合も設定
+        // ロールベースでも設定
         if (userRole === 'human_resources') {
           setupHumanResourcesSidebar();
+        }
+        if (userRole === 'accounting') {
+          setupFinanceAccountingSidebar();
         }
         const roleLabels = {
           'admin': '管理者',
@@ -686,6 +693,27 @@
     }
 
     console.log('[AdminSidebar] HR section sidebar configured');
+  }
+
+  /**
+   * 財務経理部専用サイドバーを設定
+   */
+  function setupFinanceAccountingSidebar() {
+    const sidebarNav = document.querySelector('#admin-sidebar .sidebar-nav');
+    if (!sidebarNav) return;
+
+    // 不要なリンクを非表示にする（清掃マニュアル、作業履歴）
+    const cleaningManualLink = sidebarNav.querySelector('a[data-page="cleaning-manual"]');
+    const workHistoryLink = sidebarNav.querySelector('a[data-page="work-history"]');
+
+    if (cleaningManualLink) {
+      cleaningManualLink.style.display = 'none';
+    }
+    if (workHistoryLink) {
+      workHistoryLink.style.display = 'none';
+    }
+
+    console.log('[AdminSidebar] Finance and Accounting section sidebar configured');
   }
 
   /**
