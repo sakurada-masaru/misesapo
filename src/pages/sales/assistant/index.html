@@ -426,12 +426,32 @@
     </div>
 
     <script>
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod/staff';
+
         // Toggle Side Menu
         function toggleMenu() {
             const menu = document.getElementById('side-menu');
             const overlay = document.getElementById('overlay');
             menu.classList.toggle('open');
             overlay.classList.toggle('active');
+        }
+
+        // Auth Logic
+        function isTokenExpired(token) {
+            if (!token) return true;
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return (payload.exp || 0) <= Math.floor(Date.now() / 1000) + 30;
+            } catch (e) { return true; }
+        }
+
+        function ensureAuthOrRedirect() {
+            const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
+            if (!token || isTokenExpired(token)) {
+                window.location.href = `/staff/signin.html?redirect=${encodeURIComponent(window.location.pathname)}`;
+                return null;
+            }
+            return token;
         }
 
         // Mockup Logic
@@ -498,18 +518,51 @@
             previewContainer.style.display = 'none';
         }
 
-        // Send Message
-        sendBtn.addEventListener('click', () => {
+        // Helper to convert File to Base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        // Send Logic (Text & Image)
+        sendBtn.addEventListener('click', async () => {
             const text = chatInput.value.trim();
             const hasFile = fileInput.files.length > 0;
 
             if (!text && !hasFile) return;
 
-            // Handle Preview Image for Message
+            const token = ensureAuthOrRedirect();
+            if (!token) return;
+
+            // Handle UI updates
             let mediaHtml = '';
+            let imageBase64 = null;
+            let imageMime = null;
+
             if (hasFile) {
-                // Get the preview source directly from current DOM
+                const file = fileInput.files[0];
                 const previewMedia = previewContainer.querySelector('img, video');
+
+                try {
+                    imageBase64 = await fileToBase64(file);
+                    imageMime = file.type;
+                } catch (e) {
+                    console.error("File read error", e);
+                }
+
                 if (previewMedia) {
                     const tag = previewMedia.tagName.toLowerCase();
                     const src = previewMedia.src;
@@ -517,18 +570,61 @@
                         <${tag} src="${src}" style="width:100%; display:block;" controls></${tag}>
                     </div>`;
                 }
-                clearPreview(); // Reset input
+                clearPreview();
             }
 
-            // User Message
+            // Show User Message
             appendMessage('user', text + mediaHtml);
             chatInput.value = '';
-
-            // Update suggestions based on context (Mockup)
             document.getElementById('suggestions').style.display = 'none';
 
-            // AI Processing (Mock)
-            setTimeout(() => {
+            // Show Loading
+            const loadingDiv = toggleLoading(true);
+
+            // Send to Backend
+            try {
+                const body = {
+                    action: 'assistant_concierge',
+                    text: text
+                };
+                if (imageBase64) {
+                    body.image = imageBase64;
+                    body.image_mime = imageMime;
+                }
+
+                const response = await fetch(`${API_BASE}/ai/process`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) throw new Error('API Error');
+                const data = await response.json();
+
+                // Parse Result
+                let aiResult = data.result;
+                if (typeof aiResult === 'string') {
+                    try {
+                        const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
+                    } catch (e) { }
+                }
+
+                toggleLoading(false, loadingDiv);
+                appendMessage('ai', aiResult.reply || aiResult);
+
+            } catch (err) {
+                console.error(err);
+                toggleLoading(false, loadingDiv);
+                appendMessage('ai', '申し訳ありません。エラーが発生しました。');
+            }
+        });
+
+        function toggleLoading(show, element) {
+            if (show) {
                 const aiDiv = document.createElement('div');
                 aiDiv.className = 'chat-message ai';
                 aiDiv.innerHTML = `
@@ -537,49 +633,90 @@
                 `;
                 chatTimeline.appendChild(aiDiv);
                 chatTimeline.scrollTop = chatTimeline.scrollHeight;
-
-                setTimeout(() => {
-                    aiDiv.remove(); // Remove loading
-
-                    // Simple Mock Response
-                    let response = "承知しました。詳細を確認しますね。";
-                    if (text.includes("依頼書")) {
-                        response = "A店の依頼書ですね。作業日時はいつにしますか？";
-                    } else if (text.includes("明日")) {
-                        response = "明日は10時からB店のアポが入っています。";
-                    } else if (hasFile) {
-                        response = "画像（または動画）を確認しました。こちらについてどのようなサポートが必要ですか？現在、画像解析機能も準備中です。";
-                    }
-
-                    appendMessage('ai', response);
-                }, 1500);
-            }, 500);
-        });
-
-        // Mic Interaction (Mock)
-        let isRecording = false;
-        micBtn.addEventListener('click', () => {
-            if (!isRecording) {
-                // Start
-                isRecording = true;
-                visualizer.classList.add('active');
-                micBtn.style.transform = "scale(1.1)";
-                micBtn.style.background = "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"; // Red
+                return aiDiv;
             } else {
-                // Stop
+                if (element) element.remove();
+            }
+        }
+
+        // Mic Interaction (Real)
+        let isRecording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+
+        micBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                // Start Recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data.size > 0) audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); // Chrome default
+                        // Send logic
+                        const token = ensureAuthOrRedirect();
+                        if (!token) return;
+
+                        // Show User Message (Voice placeholder)
+                        appendMessage('user', '（音声データ送信中...）');
+                        const loadingDiv = toggleLoading(true);
+
+                        try {
+                            const base64Audio = await blobToBase64(audioBlob);
+                            const response = await fetch(`${API_BASE}/ai/process`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    action: 'assistant_concierge',
+                                    audio: base64Audio,
+                                    mime_type: 'audio/webm' // Adjust if needed
+                                })
+                            });
+
+                            if (!response.ok) throw new Error('API Error');
+                            const data = await response.json();
+
+                            // Parse
+                            let aiResult = data.result;
+                            if (typeof aiResult === 'string') {
+                                try {
+                                    const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
+                                    if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
+                                } catch (e) { }
+                            }
+
+                            toggleLoading(false, loadingDiv);
+                            appendMessage('ai', aiResult.reply || aiResult);
+
+                        } catch (e) {
+                            console.error(e);
+                            toggleLoading(false, loadingDiv);
+                            appendMessage('ai', '音声認識に失敗しました。');
+                        }
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    visualizer.classList.add('active');
+                    micBtn.classList.add('active'); // active class handles red/pulse
+                } catch (e) {
+                    console.error("Mic Access Error", e);
+                    alert("マイクへのアクセスが許可されていません。");
+                }
+            } else {
+                // Stop Recording
                 isRecording = false;
                 visualizer.classList.remove('active');
-                micBtn.style.transform = "scale(1)";
-                micBtn.style.background = ""; // Reset to blue
-
-                // Mock Transcription
-                setTimeout(() => {
-                    appendMessage('user', '（音声入力）A店の定期清掃、来週の火曜日でお願い。');
-
-                    setTimeout(() => {
-                        appendMessage('ai', '承知しました。「A店」「来週火曜日」で定期清掃ですね。依頼書の下書きを作成しました。<br><br><div style="background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:0.85rem;"><strong>案件名:</strong> A店 定期清掃<br><strong>日時:</strong> 2026/01/13 13:00~<br><strong>作業:</strong> 床清掃、WAX</div>');
-                    }, 1000);
-                }, 500);
+                micBtn.classList.remove('active');
+                if (mediaRecorder) mediaRecorder.stop();
             }
         });
 
