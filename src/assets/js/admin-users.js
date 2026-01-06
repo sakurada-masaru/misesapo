@@ -1167,7 +1167,7 @@
 
         try {
           // 既存ユーザー情報を取得
-          const existingUserResponse = await fetch(`${API_BASE} /workers/${encodeURIComponent(updateId)} `);
+          const existingUserResponse = await fetch(`${API_BASE}/workers/${encodeURIComponent(updateId)}`);
           if (existingUserResponse.ok) {
             const existingUser = await existingUserResponse.json();
 
@@ -1235,7 +1235,7 @@
 
         // workersテーブルに保存
         // 更新時はupdateIdを使用（既にdata.idに設定済み）
-        const url = `${API_BASE} /workers${isNew ? '' : '/' + encodeURIComponent(data.id)}`;
+        const url = `${API_BASE}/workers${isNew ? '' : '/' + encodeURIComponent(data.id)}`;
         const response = await fetch(url, {
           method: isNew ? 'POST' : 'PUT',
           headers: { 'Content-Type': 'application/json' },
