@@ -274,6 +274,50 @@
   min-width: 140px;
 }
 
+/* クイックフィルタータグ */
+.filter-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+
+.filter-tag {
+  padding: 6px 14px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.filter-tag:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.filter-tag.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.filter-tag-separator {
+  width: 1px;
+  height: 16px;
+  background: #e2e8f0;
+  margin: 0 4px;
+}
+
 /* 組織構造レイアウト */
 .organization-layout {
   display: flex;

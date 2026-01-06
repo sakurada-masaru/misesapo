@@ -49,24 +49,24 @@
         </div>
       </div>
       <div class="stat-mini">
-        <div class="stat-mini-icon purple"><i class="fas fa-user-shield"></i></div>
+        <div class="stat-mini-icon green"><i class="fas fa-sign-in-alt"></i></div>
         <div class="stat-mini-body">
-          <div class="stat-mini-value" id="stat-admin">-</div>
-          <div class="stat-mini-label">管理者</div>
+          <div class="stat-mini-value" id="stat-clocked-in">-</div>
+          <div class="stat-mini-label">出勤中</div>
         </div>
       </div>
       <div class="stat-mini">
-        <div class="stat-mini-icon gray"><i class="fas fa-user"></i></div>
+        <div class="stat-mini-icon orange"><i class="fas fa-sign-out-alt"></i></div>
         <div class="stat-mini-body">
-          <div class="stat-mini-value" id="stat-staff">-</div>
-          <div class="stat-mini-label">一般</div>
+          <div class="stat-mini-value" id="stat-clocked-out">-</div>
+          <div class="stat-mini-label">本日退勤済</div>
         </div>
       </div>
       <div class="stat-mini">
-        <div class="stat-mini-icon green"><i class="fas fa-building"></i></div>
+        <div class="stat-mini-icon purple"><i class="fas fa-file-alt"></i></div>
         <div class="stat-mini-body">
-          <div class="stat-mini-value" id="stat-departments">-</div>
-          <div class="stat-mini-label">部署数</div>
+          <div class="stat-mini-value" id="stat-reports">-</div>
+          <div class="stat-mini-label">日報提出済</div>
         </div>
       </div>
     </div>
@@ -96,6 +96,22 @@
           <i class="fas fa-undo"></i>
         </button>
       </div>
+    </div>
+
+    <div class="filter-tags-row" id="filter-tags-row">
+      <div class="filter-tag active" data-type="all">全て</div>
+      <div class="filter-tag-separator"></div>
+      <div class="filter-tag" data-type="dept" data-value="本部">本部</div>
+      <div class="filter-tag" data-type="dept" data-value="営業部">営業部</div>
+      <div class="filter-tag" data-type="dept" data-value="財務経理部">財務経理部</div>
+      <div class="filter-tag" data-type="dept" data-value="開発">開発</div>
+      <div class="filter-tag" data-type="dept" data-value="人事部">人事</div>
+      <div class="filter-tag-separator"></div>
+      <div class="filter-tag" data-type="attendance" data-value="working">出勤</div>
+      <div class="filter-tag" data-type="attendance" data-value="off">退勤</div>
+      <div class="filter-tag-separator"></div>
+      <div class="filter-tag" data-type="report" data-value="submitted">提出</div>
+      <div class="filter-tag" data-type="report" data-value="missing">未提出</div>
     </div>
 
     <!-- 組織構造レイアウト（部署ベース） -->

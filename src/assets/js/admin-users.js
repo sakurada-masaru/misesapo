@@ -16,6 +16,7 @@
   let deleteTargetId = null;
   let attendanceRecords = {};  // 出退勤データ
   let currentView = 'card';    // 'card' または 'list'
+  let activeTagFilter = { type: 'all', value: null }; // クイックフィルタータグの状態
 
   // DOM要素の参照
   const tbody = document.getElementById('users-tbody');
@@ -320,17 +321,29 @@
     // 総ユーザー数
     document.getElementById('stat-total').textContent = allUsers.length;
 
-    // 管理者数
-    const adminCount = allUsers.filter(u => isAdminRole(u.role)).length;
-    document.getElementById('stat-admin').textContent = adminCount;
+    const today = getTodayDate();
+    const todayRecords = attendanceRecords[today] || {};
 
-    // 平社員数（管理者以外）
-    const staffCount = allUsers.length - adminCount;
-    document.getElementById('stat-staff').textContent = staffCount;
+    // 出勤中（出勤打刻があり、退勤打刻がない）
+    const clockedInCount = allUsers.filter(u => {
+      const record = todayRecords[u.id];
+      return record && record.clock_in && !record.clock_out;
+    }).length;
+    const statClockedIn = document.getElementById('stat-clocked-in');
+    if (statClockedIn) statClockedIn.textContent = clockedInCount;
 
-    // 部署数（ユニークな部署の数）
-    const departments = new Set(allUsers.map(u => u.department).filter(d => d && d !== '-'));
-    document.getElementById('stat-departments').textContent = departments.size;
+    // 本日退勤済
+    const clockedOutCount = allUsers.filter(u => {
+      const record = todayRecords[u.id];
+      return record && record.clock_in && record.clock_out;
+    }).length;
+    const statClockedOut = document.getElementById('stat-clocked-out');
+    if (statClockedOut) statClockedOut.textContent = clockedOutCount;
+
+    // 日報提出済
+    const reportedCount = Object.keys(userDailyReports).length;
+    const statReports = document.getElementById('stat-reports');
+    if (statReports) statReports.textContent = reportedCount;
   }
 
   function filterAndRender() {
@@ -360,7 +373,32 @@
       const matchDepartment = !departmentFilter || normalizedDept === departmentFilter;
 
       const matchStatus = !statusFilter || u.status === statusFilter;
-      return matchSearch && matchRole && matchDepartment && matchStatus;
+
+      // タグフィルターの適用
+      let matchTag = true;
+      if (activeTagFilter.type === 'dept') {
+        const tagVal = activeTagFilter.value;
+        if (tagVal === '本部') {
+          // 本部タグ：名称に「本部」が含まれる全ての部署を表示
+          matchTag = normalizedDept.includes('本部');
+        } else {
+          // その他：名称にキーワードが含まれるかチェック（開発→開発部など）
+          matchTag = normalizedDept.includes(tagVal);
+        }
+      } else if (activeTagFilter.type === 'attendance') {
+        const today = getTodayDate();
+        const record = (attendanceRecords[today] || {})[u.id];
+        if (activeTagFilter.value === 'working') {
+          matchTag = record && record.clock_in && !record.clock_out;
+        } else if (activeTagFilter.value === 'off') {
+          matchTag = record && record.clock_in && record.clock_out;
+        }
+      } else if (activeTagFilter.type === 'report') {
+        const hasReport = !!userDailyReports[u.id];
+        matchTag = (activeTagFilter.value === 'submitted') ? hasReport : !hasReport;
+      }
+
+      return matchSearch && matchRole && matchDepartment && matchStatus && matchTag;
     });
 
     currentPage = 1;
@@ -1036,8 +1074,43 @@
         departmentFilter.value = '';
       }
       document.getElementById('status-filter').value = '';
+
+      // タグフィルターもリセット
+      activeTagFilter = { type: 'all', value: null };
+      updateTagUI();
+
       filterAndRender();
     });
+
+    // タグフィルターのイベント委譲
+    const tagsRow = document.getElementById('filter-tags-row');
+    if (tagsRow) {
+      tagsRow.addEventListener('click', (e) => {
+        const tag = e.target.closest('.filter-tag');
+        if (!tag) return;
+
+        const type = tag.dataset.type;
+        const value = tag.dataset.value;
+
+        activeTagFilter = { type, value };
+        updateTagUI();
+        filterAndRender();
+      });
+    }
+
+    function updateTagUI() {
+      const tags = document.querySelectorAll('.filter-tag');
+      tags.forEach(t => {
+        const isMatch = t.dataset.type === activeTagFilter.type && t.dataset.value === activeTagFilter.value;
+        const isAll = t.dataset.type === 'all' && activeTagFilter.type === 'all';
+
+        if (isMatch || isAll) {
+          t.classList.add('active');
+        } else {
+          t.classList.remove('active');
+        }
+      });
+    }
 
     // 新規追加
     document.getElementById('add-user-btn').addEventListener('click', () => {
