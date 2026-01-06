@@ -607,8 +607,20 @@
     const sidebarNav = document.querySelector('#admin-sidebar .sidebar-nav');
     if (!sidebarNav) return;
 
-    // ユーザー管理リンクが存在しない場合は追加
-    let usersLink = sidebarNav.querySelector('a[data-page="admin-users"]');
+    // 1. 不要なリンクを非表示にする（清掃マニュアル、作業履歴）
+    const cleaningManualLink = sidebarNav.querySelector('a[data-page="cleaning-manual"]');
+    const workHistoryLink = sidebarNav.querySelector('a[data-page="work-history"]');
+
+    if (cleaningManualLink) cleaningManualLink.style.display = 'none';
+    if (workHistoryLink) workHistoryLink.style.display = 'none';
+
+    // 2. ユーザー管理リンク
+    // 既存のリンクがあるか確認（admin-sidebar.htmlにはある）
+    let usersLink = sidebarNav.querySelector('a[data-page="users"]');
+
+    // 以前のバージョンで追加した可能性のあるリンクを削除
+    const oldUsersLink = sidebarNav.querySelector('a[data-page="admin-users"]');
+    if (oldUsersLink) oldUsersLink.remove();
 
     if (!usersLink) {
       // マイページリンクの直後に追加
@@ -617,7 +629,7 @@
         usersLink = document.createElement('a');
         usersLink.href = '/admin/users';
         usersLink.className = 'nav-item';
-        usersLink.setAttribute('data-page', 'admin-users');
+        usersLink.setAttribute('data-page', 'users'); // data-pageを統一
         usersLink.innerHTML = '<i class="fas fa-users"></i><span class="nav-label">ユーザー管理</span>';
         mypageLink.insertAdjacentElement('afterend', usersLink);
       } else {
@@ -627,7 +639,7 @@
           usersLink = document.createElement('a');
           usersLink.href = '/admin/users';
           usersLink.className = 'nav-item';
-          usersLink.setAttribute('data-page', 'admin-users');
+          usersLink.setAttribute('data-page', 'users');
           usersLink.innerHTML = '<i class="fas fa-users"></i><span class="nav-label">ユーザー管理</span>';
           dashboardLink.insertAdjacentElement('afterend', usersLink);
         } else {
@@ -635,11 +647,42 @@
           usersLink = document.createElement('a');
           usersLink.href = '/admin/users';
           usersLink.className = 'nav-item';
-          usersLink.setAttribute('data-page', 'admin-users');
+          usersLink.setAttribute('data-page', 'users');
           usersLink.innerHTML = '<i class="fas fa-users"></i><span class="nav-label">ユーザー管理</span>';
           sidebarNav.prepend(usersLink);
         }
       }
+    } else {
+      // 既にある場合は表示する
+      usersLink.style.display = 'flex';
+    }
+
+    // 3. 勤怠管理リンク
+    let attendanceLink = sidebarNav.querySelector('a[data-page="attendance-errors"]');
+
+    // 以前のバージョンで追加した可能性のあるリンクを削除
+    const oldAttendanceLink = sidebarNav.querySelector('a[data-page="admin-attendance"]');
+    if (oldAttendanceLink) oldAttendanceLink.remove();
+
+    if (!attendanceLink) {
+      // ユーザー管理の下に追加（usersLinkはDOM内にあるはず）
+      const targetLink = sidebarNav.querySelector('a[data-page="users"]') ||
+        sidebarNav.querySelector('a[data-page="mypage"]');
+
+      attendanceLink = document.createElement('a');
+      attendanceLink.href = '/admin/attendance/errors';
+      attendanceLink.className = 'nav-item';
+      attendanceLink.setAttribute('data-page', 'attendance-errors'); // data-pageを統一
+      attendanceLink.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span class="nav-label">勤怠管理</span>';
+
+      if (targetLink) {
+        targetLink.insertAdjacentElement('afterend', attendanceLink);
+      } else {
+        sidebarNav.appendChild(attendanceLink);
+      }
+    } else {
+      // 既にある場合は表示する
+      attendanceLink.style.display = 'flex';
     }
 
     console.log('[AdminSidebar] HR section sidebar configured');

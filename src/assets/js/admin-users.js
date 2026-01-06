@@ -574,6 +574,11 @@
         `;
       }).join('');
 
+      // 「未分類」の場合は本部枠を表示せず、部署カードのみを表示
+      if (parent.name === '未分類') {
+        return departmentCards;
+      }
+
       return `
         <div class="department-group-hierarchy" style="
           background: ${theme.bg}; /* 少し濃い背景色に */
