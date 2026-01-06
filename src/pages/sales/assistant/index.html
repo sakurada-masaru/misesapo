@@ -289,6 +289,53 @@
             background: #f1f5f9;
             transform: scale(0.98);
         }
+
+        /* Preview Container */
+        .preview-container {
+            position: fixed;
+            bottom: 80px;
+            /* Above input bar */
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 90;
+            display: none;
+            /* Hidden by default */
+        }
+
+        .preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-item img,
+        .preview-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-close {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+        }
     </style>
 
 <body>
@@ -354,11 +401,19 @@
     </div>
 
     <!-- Input Area -->
+    <!-- Image/Video Preview -->
+    <div class="preview-container" id="preview-container">
+        <!-- Previews will be injected here -->
+    </div>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="file-input" accept="image/*,video/*" style="display: none;">
+
     <!-- Gemini Live Style Input Area -->
     <div class="input-area">
         <div class="text-input-wrapper">
-            <button class="action-btn" style="color: #444746;">
-                <i class="fas fa-plus"></i> <!-- Attachment placeholder -->
+            <button class="action-btn" id="attach-btn" style="color: #444746;">
+                <i class="fas fa-plus"></i>
             </button>
             <input type="text" class="chat-input" id="chat-input" placeholder="Misogiに話しかける..." autocomplete="off">
             <button class="action-btn send-btn" id="send-btn">
@@ -384,6 +439,9 @@
         const chatInput = document.getElementById('chat-input');
         const sendBtn = document.getElementById('send-btn');
         const micBtn = document.getElementById('mic-btn');
+        const attachBtn = document.getElementById('attach-btn');
+        const fileInput = document.getElementById('file-input');
+        const previewContainer = document.getElementById('preview-container');
         const visualizer = document.getElementById('voice-visualizer');
 
         function appendMessage(role, text) {
@@ -411,13 +469,59 @@
             chatInput.focus();
         }
 
+        // File Attachment Logic
+        attachBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewContainer.style.display = 'flex';
+                const isVideo = file.type.startsWith('video');
+
+                const previewHtml = `
+                    <div class="preview-item">
+                        ${isVideo ? `<video src="${e.target.result}"></video>` : `<img src="${e.target.result}">`}
+                        <button class="preview-close" onclick="clearPreview()">✕</button>
+                    </div>
+                `;
+                previewContainer.innerHTML = previewHtml;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        window.clearPreview = function () {
+            fileInput.value = '';
+            previewContainer.innerHTML = '';
+            previewContainer.style.display = 'none';
+        }
+
         // Send Message
         sendBtn.addEventListener('click', () => {
             const text = chatInput.value.trim();
-            if (!text) return;
+            const hasFile = fileInput.files.length > 0;
+
+            if (!text && !hasFile) return;
+
+            // Handle Preview Image for Message
+            let mediaHtml = '';
+            if (hasFile) {
+                // Get the preview source directly from current DOM
+                const previewMedia = previewContainer.querySelector('img, video');
+                if (previewMedia) {
+                    const tag = previewMedia.tagName.toLowerCase();
+                    const src = previewMedia.src;
+                    mediaHtml = `<br><div style="margin-top:8px; border-radius:12px; overflow:hidden; max-width:200px;">
+                        <${tag} src="${src}" style="width:100%; display:block;" controls></${tag}>
+                    </div>`;
+                }
+                clearPreview(); // Reset input
+            }
 
             // User Message
-            appendMessage('user', text);
+            appendMessage('user', text + mediaHtml);
             chatInput.value = '';
 
             // Update suggestions based on context (Mockup)
@@ -443,6 +547,8 @@
                         response = "A店の依頼書ですね。作業日時はいつにしますか？";
                     } else if (text.includes("明日")) {
                         response = "明日は10時からB店のアポが入っています。";
+                    } else if (hasFile) {
+                        response = "画像（または動画）を確認しました。こちらについてどのようなサポートが必要ですか？現在、画像解析機能も準備中です。";
                     }
 
                     appendMessage('ai', response);
