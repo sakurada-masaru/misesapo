@@ -441,14 +441,20 @@
                 if (!recordingMimeType) recordingMimeType = mediaRecorder.mimeType;
 
                 mediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) audioChunks.push(event.data);
+                    if (event.data && event.data.size > 0) audioChunks.push(event.data);
                 };
 
                 mediaRecorder.onstop = async () => {
-                    if (audioChunks.length === 0) {
-                        statusText.textContent = "TAP TO SPEAK";
+                    const totalSize = audioChunks.reduce((acc, chunk) => acc + chunk.size, 0);
+                    console.log(`[Mic] Stopped. Size: ${totalSize} bytes`);
+
+                    if (totalSize < 500) {
+                        statusText.textContent = "TOO SHORT - TRY AGAIN";
+                        statusText.style.color = "#ff4d4d";
+                        setTimeout(() => { if (!isRecording) { statusText.textContent = "TAP TO SPEAK"; statusText.style.color = ""; } }, 2000);
                         return;
                     }
+
                     const audioBlob = new Blob(audioChunks, { type: recordingMimeType });
                     const reader = new FileReader();
                     reader.readAsDataURL(audioBlob);
@@ -490,7 +496,10 @@
                     })
                 });
 
-                if (!response.ok) throw new Error('API Error');
+                if (!response.ok) {
+                    const errorJson = await response.json().catch(() => ({}));
+                    throw new Error(errorJson.message || `API HTTP ${response.status}`);
+                }
 
                 const data = await response.json();
                 let aiResult = data.result;
@@ -499,13 +508,13 @@
                     try {
                         const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
                         if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
-                    } catch (e) { console.warn('JSON Parse failed', e); }
+                    } catch (e) { }
                 }
 
                 showAIResponse(aiResult.reply || aiResult);
             } catch (err) {
                 console.error('AI Processing failed:', err);
-                showAIResponse("すみません、聞き取れませんでした。もう一度お願いします。");
+                showAIResponse(`<i class="fas fa-exclamation-triangle"></i> すみません、エラーが発生しました。<br><small>${err.message}</small>`);
             } finally {
                 statusText.textContent = "TAP TO SPEAK";
             }
@@ -533,7 +542,7 @@
             audioChunks = [];
 
             try {
-                mediaRecorder.start();
+                mediaRecorder.start(100);
                 core.classList.add('active');
                 circleText.classList.add('active');
                 statusText.textContent = "LISTENING...";
