@@ -349,7 +349,7 @@
         <div class="assistant-title">
             <!-- MISOGI Icon: Drop with Sparkle -->
             <div class="misogi-icon">
-                <img src="/assets/images/MISOGILOGO.svg" alt="Misogi Logo">
+                <img src="/assets/images/misogi-logo-icon.svg" alt="Misogi Logo">
             </div>
             <span>M.I.S.O.G.I.</span>
         </div>
@@ -375,7 +375,7 @@
     <div class="chat-timeline" id="chat-timeline">
         <!-- Intro Message -->
         <div class="chat-message ai">
-            <div class="avatar ai"><img src="/assets/images/MISOGILOGO.svg" alt="Misogi Avatar"></div>
+            <div class="avatar ai"><img src="/assets/images/misogi-logo-icon.svg" alt="Misogi Avatar"></div>
             <div class="bubble">
                 お疲れ様です。M.I.S.O.G.I.（ミソギ）です。<br>
                 業務サポート、スケジュール調整、情報統合など、何かお手伝いできることはありますか？
@@ -471,7 +471,7 @@
             let content = '';
             if (role === 'ai') {
                 content = `
-                    <div class="avatar ai"><img src="/assets/images/MISOGILOGO.svg" alt="Misogi Avatar"></div>
+                    <div class="avatar ai"><img src="/assets/images/misogi-logo-icon.svg" alt="Misogi Avatar"></div>
                     <div class="bubble">${text}</div>
                 `;
             } else {
@@ -628,7 +628,7 @@
                 const aiDiv = document.createElement('div');
                 aiDiv.className = 'chat-message ai';
                 aiDiv.innerHTML = `
-                    <div class="avatar ai"><img src="/assets/images/MISOGILOGO.svg" alt="Misogi Avatar"></div>
+                    <div class="avatar ai"><img src="/assets/images/misogi-logo-icon.svg" alt="Misogi Avatar"></div>
                     <div class="bubble"><i class="fas fa-spinner fa-spin"></i> 考え中...</div>
                 `;
                 chatTimeline.appendChild(aiDiv);
