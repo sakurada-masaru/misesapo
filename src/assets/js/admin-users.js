@@ -1710,11 +1710,12 @@
 
       if (response.ok) {
         const data = await response.json();
-        const items = data.items || (Array.isArray(data) ? data : []);
+        // APIレスポンスの形式に対応（attendance, items, data, または配列直出し）
+        const items = data.attendance || data.items || data.data || (Array.isArray(data) ? data : []);
         console.log('[UserManagement] Attendance records loaded:', items.length);
 
         items.forEach(item => {
-          const uid = String(item.staff_id || item.user_id);
+          const uid = String(item.staff_id || item.user_id || '').trim();
           if (uid) {
             attendanceRecords[today][uid] = item;
           }

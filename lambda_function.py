@@ -5638,6 +5638,12 @@ def get_attendance(event, headers):
                 expression_attribute_names["#staff_id"] = "staff_id"
                 expression_attribute_values[":staff_id"] = staff_id
             
+            if date:
+                filter_expressions.append("#date = :date")
+                if "#date" not in expression_attribute_names:
+                    expression_attribute_names["#date"] = "date"
+                expression_attribute_values[":date"] = date
+            
             if date_from:
                 filter_expressions.append("#date >= :date_from")
                 expression_attribute_names["#date"] = "date"
