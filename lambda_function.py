@@ -823,18 +823,32 @@ SERVICES_KEY = 'services/service_items.json'
 WIKI_KEY = 'wiki/wiki_entries.json'
 
 def resolve_cors_origin(event_headers: dict) -> str:
-    if "*" in ALLOWED_ORIGINS:
-        return "*"
     origin = event_headers.get("origin") or event_headers.get("Origin") or ""
-    if origin in ALLOWED_ORIGINS:
+    if not origin:
+        return ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "*"
+    
+    # * が許可されている、あるいは特定のオリジンが許可リストにある場合はそのオリジンを返す
+    if "*" in ALLOWED_ORIGINS or origin in ALLOWED_ORIGINS:
         return origin
+    
     return ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "*"
-
 
 def lambda_handler(event, context):
     """
     S3に画像をアップロード、または清掃マニュアルデータの読み書きを行うLambda関数
     """
+    # パスとメソッドを取得（複数の可能性を試す）
+    # API Gatewayのプロキシ統合の場合
+    path = event.get('path', '') or event.get('resourcePath', '') or event.get('resource', '')
+    method = event.get('httpMethod', '') or event.get('method', '')
+    
+    # リクエストパスを取得（リクエストパラメータから）
+    if not path:
+        request_context = event.get('requestContext', {})
+        path = request_context.get('path', '') or request_context.get('resourcePath', '')
+        if not method:
+            method = request_context.get('http', {}).get('method', '')
+    
     # CORSヘッダー
     event_headers = event.get("headers") or {}
     headers = {
@@ -846,22 +860,12 @@ def lambda_handler(event, context):
     }
     
     # OPTIONSリクエスト（プリフライト）の処理
-    if event.get('httpMethod') == 'OPTIONS':
+    if method == 'OPTIONS':
         return {
             'statusCode': 200,
             'headers': headers,
             'body': json.dumps({'message': 'OK'})
         }
-    
-    # パスとメソッドを取得（複数の可能性を試す）
-    # API Gatewayのプロキシ統合の場合
-    path = event.get('path', '') or event.get('resourcePath', '') or event.get('resource', '')
-    method = event.get('httpMethod', '') or event.get('method', '')
-    
-    # リクエストパスを取得（リクエストパラメータから）
-    if not path:
-        request_context = event.get('requestContext', {})
-        path = request_context.get('path', '') or request_context.get('resourcePath', '')
     
     # デバッグ: パスとメソッドをログに出力（必ず実行される）
     print(f"DEBUG: path={path}, method={method}")

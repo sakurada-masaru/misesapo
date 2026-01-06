@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${window.CognitoAuth.getIdToken()}`
                 },
-                body: json.stringify({
+                body: JSON.stringify({
                     status: status,
                     review_comments: comment,
                     reviewer_id: user.id || 'admin'

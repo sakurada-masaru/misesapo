@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${window.CognitoAuth.getIdToken()}`
                 },
-                body: json.stringify(data)
+                body: JSON.stringify(data)
             });
 
             if (!response.ok) throw new Error('申請に失敗しました。');
