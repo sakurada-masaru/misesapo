@@ -4,7 +4,8 @@
 <link rel="stylesheet" href="/css/admin-sidebar.css">
 <!-- AWS SDKの読み込み -->
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
 <script src="/js/cognito_config.js"></script>
 <script src="/js/cognito_auth.js"></script>
 <script src="/js/client_auth.js"></script>
@@ -282,6 +283,40 @@
       <i class="fas fa-check-circle"></i>
       設定を保存しました
     </div>
+
+    <!-- パスワード変更モーダル -->
+    <dialog id="password-dialog" class="settings-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>パスワード変更</h3>
+          <button type="button" class="close-btn" id="close-password-dialog">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="password-form">
+          <div class="form-group">
+            <label for="current-password">現在のパスワード</label>
+            <input type="password" id="current-password" name="currentPassword" required
+              autocomplete="current-password">
+          </div>
+          <div class="form-group">
+            <label for="new-password">新しいパスワード (8文字以上)</label>
+            <input type="password" id="new-password" name="newPassword" required minlength="8"
+              autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label for="confirm-password">新しいパスワード（確認）</label>
+            <input type="password" id="confirm-password" name="confirmPassword" required minlength="8"
+              autocomplete="new-password">
+          </div>
+          <div id="password-error" class="error-message" style="display: none; margin-bottom: 16px;"></div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" id="cancel-password-btn">キャンセル</button>
+            <button type="submit" class="btn btn-primary" id="save-password-btn">変更する</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
   </div>
 </main>
 
@@ -312,7 +347,8 @@
     transition: background-color 0.3s;
   }
 
-  .loading-state, .error-state {
+  .loading-state,
+  .error-state {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -332,7 +368,9 @@
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   /* ページヘッダー */
@@ -364,7 +402,7 @@
     background: var(--bg-secondary);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
   .section-header {
@@ -475,7 +513,7 @@
   .avatar-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -523,11 +561,11 @@
     transition: 0.3s;
   }
 
-  input:checked + .toggle-slider {
+  input:checked+.toggle-slider {
     background-color: var(--primary);
   }
 
-  input:checked + .toggle-slider:before {
+  input:checked+.toggle-slider:before {
     transform: translateX(24px);
   }
 
@@ -559,7 +597,7 @@
     align-items: center;
     gap: 8px;
     font-size: 0.875rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transform: translateY(100px);
     opacity: 0;
     transition: all 0.3s;
@@ -599,6 +637,81 @@
       flex-direction: column;
       align-items: flex-start;
     }
+  }
+
+  /* ダイアログ */
+  .settings-dialog {
+    border: none;
+    border-radius: 12px;
+    padding: 0;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .settings-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .dialog-content {
+    padding: 24px;
+    background: var(--bg-secondary);
+  }
+
+  .dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .dialog-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.25rem;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-sizing: border-box;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 4px;
   }
 </style>
 
@@ -687,7 +800,7 @@
   function applyTheme() {
     const theme = settings.theme;
     document.documentElement.setAttribute('data-theme', theme);
-    
+
     // マイページにもテーマを適用（別タブで開いている場合）
     window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme } }));
 
@@ -790,8 +903,56 @@
     });
 
     // パスワード変更
+    const passwordDialog = document.getElementById('password-dialog');
+    const passwordForm = document.getElementById('password-form');
+    const passwordError = document.getElementById('password-error');
+
     document.getElementById('change-password-btn').addEventListener('click', () => {
-      alert('パスワード変更機能は準備中です');
+      passwordForm.reset();
+      passwordError.style.display = 'none';
+      passwordError.textContent = '';
+      if (typeof passwordDialog.showModal === 'function') {
+        passwordDialog.showModal();
+      } else {
+        alert('このブラウザはダイアログ機能をサポートしていません');
+      }
+    });
+
+    document.getElementById('close-password-dialog').addEventListener('click', () => {
+      passwordDialog.close();
+    });
+
+    document.getElementById('cancel-password-btn').addEventListener('click', () => {
+      passwordDialog.close();
+    });
+
+    passwordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const currentPassword = document.getElementById('current-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+
+      if (newPassword !== confirmPassword) {
+        passwordError.textContent = '新しいパスワードが一致しません';
+        passwordError.style.display = 'block';
+        return;
+      }
+
+      const saveBtn = document.getElementById('save-password-btn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = '変更中...';
+
+      try {
+        await window.CognitoAuth.changePassword(currentPassword, newPassword);
+        passwordDialog.close();
+        alert('パスワードを変更しました');
+      } catch (error) {
+        passwordError.textContent = error.message || 'パスワードの変更に失敗しました';
+        passwordError.style.display = 'block';
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '変更する';
+      }
     });
 
     // ログイン履歴
@@ -854,4 +1015,3 @@
     link.click();
   }
 </script>
-
