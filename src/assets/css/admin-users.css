@@ -311,11 +311,19 @@
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
 }
 
+.filter-tag-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-right: 4px;
+  user-select: none;
+}
+
 .filter-tag-separator {
   width: 1px;
   height: 16px;
   background: #e2e8f0;
-  margin: 0 4px;
+  margin: 0 12px;
 }
 
 /* 組織構造レイアウト */
