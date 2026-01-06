@@ -141,28 +141,75 @@
     border-radius: 999px;
     font-size: 0.85rem;
 
-  /* Refactored Modal Styles */
-  .modal-dialog-refactored {
-    width: 95%;
-    max-width: 800px;
-    height: 90vh;
-    border: none;
-    border-radius: 8px;
-    padding: 0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    background: white;
-  }
+    /* Refactored Modal Styles */
+    .modal-dialog-refactored {
+      width: 95%;
+      max-width: 800px;
+      height: 90vh;
+      border: none;
+      border-radius: 8px;
+      padding: 0;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      background: white;
+    }
 
-  .modal-dialog-refactored::backdrop {
-    background: rgba(0, 0, 0, 0.5);
-  }
+    .modal-dialog-refactored::backdrop {
+      background: rgba(0, 0, 0, 0.5);
+    }
 
-  .schedule-label.label-draft {
-    /* Gray */
-    border-color: #e5e7eb;
-    background: #f3f4f6;
-    color: #4b5563;
-  }
+    .schedule-label.label-draft {
+      /* Gray */
+      border-color: #e5e7eb;
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+
+    /* --- Mobile Optimization --- */
+    @media (max-width: 600px) {
+
+      /* Make modal fullscreen on mobile */
+      .schedule-dialog .dialog-content,
+      .modal-dialog-refactored {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+        margin: 0;
+      }
+
+      /* Stack AI Buttons & Make them bigger */
+      .ai-assistant-section .d-flex.gap-2 {
+        flex-direction: column;
+      }
+
+      .ai-assistant-section button {
+        width: 100%;
+        padding: 12px !important;
+        font-size: 1rem !important;
+        /* Easy to tap */
+        margin-bottom: 8px;
+      }
+
+      /* Improve Form Inputs for Touch */
+      input[type="text"],
+      input[type="date"],
+      input[type="number"],
+      select,
+      textarea {
+        font-size: 16px !important;
+        /* Prevent iOS Zoom */
+        padding: 10px !important;
+      }
+
+      /* Adjust Modal Header/Body Padding */
+      .modal-header,
+      .modal-body-scroll {
+        padding: 12px !important;
+      }
+
+      /* Hide less critical columns in tables if needed (not applicable here directly but good practice) */
+    }
 </style>
 
 <main id="main" class="container sales-schedules" style="padding-bottom: 80px; margin-bottom: 80px;">
