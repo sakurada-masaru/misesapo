@@ -235,12 +235,7 @@ body[class*="sales-"] #main {
   padding: 24px;
 }
 
-.container .draggable-container {
-  width: 80% !important;
-}
-
 .container-section {
-  max-width: 800px;
   margin-bottom: 0;
   border-radius: 12px;
   overflow: hidden;
@@ -261,7 +256,7 @@ body[class*="sales-"] #main {
 
 .mypage-main-grid {
   display: grid !important;
-  grid-template-columns: 2.5fr 4.5fr 0.5fr 2.5fr !important;
+  grid-template-columns: 2.5fr 4.5fr 3fr !important;
   gap: 12px;
   width: 100%;
   align-items: stretch;
@@ -285,7 +280,7 @@ body[class*="sales-"] #main {
 }
 
 .mypage-column-right {
-  grid-column: 4;
+  grid-column: 3;
 }
 
 /* User Request: Make Daily Report, Todo, and Announcements fill the column height */
@@ -358,12 +353,21 @@ body[class*="sales-"] #main {
 .todo-card {
   display: flex;
   flex-direction: column;
+  padding-left: 8px !important;
 }
 
 .todo-list {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+}
+
+.todo-item {
+  padding-left: 0 !important;
+}
+
+.todo-input-wrapper {
+  padding-left: 4px;
 }
 
 @media (max-width: 1200px) {
