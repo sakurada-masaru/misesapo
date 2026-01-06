@@ -692,7 +692,24 @@
     const statusColor = isInactive ? '#ef4444' : '#16a34a';
 
     // 出勤状況バッジ
-    const attendanceBadgeHTML = `<span style="font-size: 0.75rem; padding: 2px 8px; background: #f3f4f6; color: #6b7280; border-radius: 9999px;">● 未出勤</span>`;
+    const today = getTodayDate();
+    const todayRecords = attendanceRecords && attendanceRecords[today] ? attendanceRecords[today] : {};
+    const attendance = todayRecords[user.id];
+
+    let attendanceBadgeHTML = `<span style="font-size: 0.75rem; padding: 2px 8px; background: #f3f4f6; color: #6b7280; border-radius: 9999px;">● 未出勤</span>`;
+
+    if (attendance) {
+      if (attendance.clock_in && !attendance.clock_out) {
+        // 休憩中かチェック
+        if (attendance.break_start && !attendance.break_end) {
+          attendanceBadgeHTML = `<span style="font-size: 0.75rem; padding: 2px 8px; background: #ffedd5; color: #c2410c; border-radius: 9999px;">● 休憩中</span>`;
+        } else {
+          attendanceBadgeHTML = `<span style="font-size: 0.75rem; padding: 2px 8px; background: #dbeafe; color: #2563eb; border-radius: 9999px;">● 出勤中</span>`;
+        }
+      } else if (attendance.clock_in && attendance.clock_out) {
+        attendanceBadgeHTML = `<span style="font-size: 0.75rem; padding: 2px 8px; background: #dcfce7; color: #166534; border-radius: 9999px;">● 退勤済</span>`;
+      }
+    }
 
     // 日報提出バッジ
     const hasReport = userDailyReports[user.id];
