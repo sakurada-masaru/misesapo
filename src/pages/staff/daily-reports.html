@@ -138,6 +138,23 @@
         </button>
       </div>
       <div class="card-body">
+        <!-- AIアシストセクション -->
+        <div class="ai-assist-container">
+          <div class="ai-assist-header">
+            <i class="fas fa-magic"></i>
+            <span>AI日報アシスタント</span>
+          </div>
+          <p style="font-size: 0.75rem; color: #166534; margin: 0;">備考欄に書いた短いメモから、AIが丁寧な日報を自動生成します。</p>
+          <button type="button" class="btn-ai" id="ai-generate-btn">
+            <i class="fas fa-sparkles"></i>
+            AIで内容を整える
+          </button>
+          <div id="ai-status" style="display: none;" class="ai-loading">
+            <i class="fas fa-spinner"></i>
+            <span>AIが考えています...</span>
+          </div>
+        </div>
+
         <div class="form-group">
           <label for="report-date">日付</label>
           <input type="date" id="report-date" class="form-control">
@@ -564,6 +581,73 @@
       flex: 1;
     }
   }
+
+  /* AI Assist Button Styles */
+  .ai-assist-container {
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px dashed #22c55e;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ai-assist-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #166534;
+  }
+
+  .ai-assist-header i {
+    color: #22c55e;
+  }
+
+  .btn-ai {
+    background: #22c55e;
+    color: #fff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2);
+  }
+
+  .btn-ai:hover {
+    background: #16a34a;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3);
+  }
+
+  .btn-ai:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .ai-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: #166534;
+  }
+
+  .ai-loading i {
+    animation: spin 1s linear infinite;
+  }
 </style>
 
 <script>
@@ -578,7 +662,69 @@
   document.addEventListener('DOMContentLoaded', async () => {
     await loadCurrentUser();
     setupEventListeners();
+    setupAiAssist();
   });
+
+  // AIアシスト機能のセットアップ
+  function setupAiAssist() {
+    const aiBtn = document.getElementById('ai-generate-btn');
+    const aiStatus = document.getElementById('ai-status');
+    const notesField = document.getElementById('report-notes');
+
+    if (!aiBtn) return;
+
+    aiBtn.addEventListener('click', async () => {
+      const notes = notesField.value.trim();
+      if (!notes) {
+        alert('まずは「備考・メモ」欄に簡単な内容（例：今日はキッチンの換気扇を重点的に掃除した、など）を記入してください。');
+        notesField.focus();
+        return;
+      }
+
+      try {
+        aiBtn.disabled = true;
+        aiStatus.style.display = 'flex';
+
+        const response = await fetch(`${API_BASE}/ai/process`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${window.CognitoAuth.getIdToken()}`
+          },
+          body: JSON.stringify({
+            action: 'summarize_report',
+            text: notes
+          })
+        });
+
+        if (!response.ok) throw new Error('AI処理に失敗しました');
+
+        const data = await response.json();
+        if (data.status === 'success' && data.result) {
+          // AIの回答をパース（Markdownやプレーンテキストを想定）
+          // 今回は簡易的に「成果・進捗」にAIの結果を流し込み、他を補完する
+          const result = data.result;
+
+          // AIがJSONで返してくるようにプロンプトを調整することも可能だが、
+          // まずは人間が書いたようなテキストとして受け取り、主要項目を埋める
+          document.getElementById('report-achievements').value = result;
+
+          // 業務内容にも反映（メモの内容を少し整えて入れる）
+          if (!document.getElementById('report-work-content').value) {
+            document.getElementById('report-work-content').value = notes;
+          }
+
+          alert('AIが報告書を作成しました。内容を確認して、必要に応じて修正してください。');
+        }
+      } catch (error) {
+        console.error('AI Error:', error);
+        alert('AIとの通信でエラーが発生しました。環境変数の設定を確認してください。');
+      } finally {
+        aiBtn.disabled = false;
+        aiStatus.style.display = 'none';
+      }
+    });
+  }
 
   // ユーザー情報を読み込み
   async function loadCurrentUser() {

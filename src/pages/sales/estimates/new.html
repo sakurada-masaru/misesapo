@@ -15,6 +15,29 @@
   </div>
 
   <form id="estimate-form" class="estimate-form">
+    <!-- AI Suggestion -->
+    <div class="form-section ai-suggestion-section"
+      style="border: 2px solid #ebf4ff; background: #f0f7ff; margin-bottom: 24px;">
+      <h2 class="section-title" style="color: #2563eb;">
+        <i class="fas fa-magic"></i>
+        AIの見積提案（打合せメモから自動入力）
+      </h2>
+      <div class="form-group">
+        <label class="form-label">打合せメモ / ヒアリング内容</label>
+        <textarea class="form-textarea" id="ai-estimate-memo" rows="3"
+          placeholder="例：サクラカフェの田中さんと商談。キッチンの換気扇と床の定期清掃を月1回で希望されている。予算は3万円以内。"></textarea>
+      </div>
+      <button type="button" class="btn btn-primary" id="ai-estimate-suggest-btn"
+        style="background: #2563eb; border: none;">
+        <i class="fas fa-robot"></i> AIでフォームを自動入力する
+      </button>
+      <div id="ai-suggest-status" class="ai-status"
+        style="display: none; margin-top: 10px; font-size: 0.875rem; color: #1e40af; align-items: center; gap: 8px;">
+        <i class="fas fa-spinner fa-spin"></i>
+        AIが情報を抽出しています...
+      </div>
+    </div>
+
     <!-- Client Selection -->
     <div class="form-section">
       <h2 class="section-title">
@@ -107,7 +130,8 @@
 
     <!-- Actions -->
     <div class="form-actions">
-      <button type="button" class="btn btn-outline btn-block" onclick="window.location.href='/sales/estimates'">キャンセル</button>
+      <button type="button" class="btn btn-outline btn-block"
+        onclick="window.location.href='/sales/estimates'">キャンセル</button>
       <button type="button" class="btn btn-outline btn-block" id="save-draft">下書き保存</button>
       <button type="submit" class="btn btn-primary btn-block" id="submit-estimate">見積もり送付</button>
     </div>
@@ -121,6 +145,7 @@
       background: #f9fafb;
       padding-bottom: 120px;
     }
+
     .page-header {
       display: flex;
       align-items: center;
@@ -129,6 +154,7 @@
       padding-bottom: 16px;
       border-bottom: 2px solid #e5e7eb;
     }
+
     .back-btn {
       display: flex;
       align-items: center;
@@ -142,28 +168,33 @@
       text-decoration: none;
       transition: all 0.2s;
     }
+
     .back-btn:hover {
       background: #f9fafb;
       border-color: var(--primary);
       color: var(--primary);
     }
+
     .page-title {
       font-size: 1.5rem;
       font-weight: 700;
       color: #111827;
       margin: 0;
     }
+
     .estimate-form {
       display: flex;
       flex-direction: column;
       gap: 24px;
     }
+
     .form-section {
       background: #ffffff;
       border-radius: 12px;
       padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
+
     .section-title {
       font-size: 1.125rem;
       font-weight: 600;
@@ -173,15 +204,19 @@
       align-items: center;
       gap: 8px;
     }
+
     .section-title i {
       color: var(--primary);
     }
+
     .form-group {
       margin-bottom: 16px;
     }
+
     .form-group:last-child {
       margin-bottom: 0;
     }
+
     .form-label {
       display: block;
       font-weight: 600;
@@ -189,10 +224,12 @@
       font-size: 0.875rem;
       margin-bottom: 8px;
     }
+
     .form-label.required::after {
       content: " *";
       color: #ef4444;
     }
+
     .form-select,
     .form-input {
       width: 100%;
@@ -204,17 +241,20 @@
       background: #ffffff;
       transition: all 0.2s;
     }
+
     .form-select:focus,
     .form-input:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
     }
+
     .form-select:disabled {
       background: #f9fafb;
       color: #9ca3af;
       cursor: not-allowed;
     }
+
     .client-info {
       margin-top: 16px;
       padding-top: 16px;
@@ -223,25 +263,30 @@
       flex-direction: column;
       gap: 8px;
     }
+
     .info-item {
       display: flex;
       align-items: center;
       gap: 8px;
     }
+
     .info-label {
       font-size: 0.875rem;
       color: #6b7280;
       font-weight: 500;
     }
+
     .info-value {
       font-size: 0.875rem;
       color: #111827;
     }
+
     .services-list {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 12px;
     }
+
     .service-item {
       padding: 16px;
       background: #f9fafb;
@@ -250,46 +295,55 @@
       transition: all 0.2s;
       cursor: pointer;
     }
+
     .service-item:hover {
       background: #ffffff;
       border-color: var(--primary);
     }
+
     .service-item.selected {
       background: #fff5f9;
       border-color: var(--primary);
     }
+
     .service-info {
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
+
     .service-info input[type="checkbox"] {
       width: 20px;
       height: 20px;
       cursor: pointer;
       margin-bottom: 8px;
     }
+
     .service-name {
       font-weight: 600;
       color: #111827;
       font-size: 0.95rem;
       margin-bottom: 4px;
     }
+
     .service-price {
       font-weight: 600;
       color: var(--primary);
       font-size: 0.875rem;
     }
+
     .service-description {
       font-size: 0.75rem;
       color: #6b7280;
       margin-top: 4px;
     }
+
     .selected-services-list {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
+
     .selected-service-item {
       display: flex;
       align-items: center;
@@ -299,25 +353,30 @@
       border: 1px solid #e5e7eb;
       border-radius: 8px;
     }
+
     .selected-service-info {
       flex: 1;
       min-width: 0;
     }
+
     .selected-service-name {
       font-weight: 600;
       color: #111827;
       font-size: 0.95rem;
       margin-bottom: 4px;
     }
+
     .selected-service-price {
       font-size: 0.875rem;
       color: #6b7280;
     }
+
     .quantity-control {
       display: flex;
       align-items: center;
       gap: 8px;
     }
+
     .quantity-btn {
       width: 32px;
       height: 32px;
@@ -332,11 +391,13 @@
       transition: all 0.2s;
       font-size: 1rem;
     }
+
     .quantity-btn:hover {
       background: #f9fafb;
       border-color: var(--primary);
       color: var(--primary);
     }
+
     .quantity-input {
       width: 60px;
       text-align: center;
@@ -346,6 +407,7 @@
       font-size: 0.875rem;
       font-weight: 600;
     }
+
     .service-subtotal {
       font-weight: 700;
       color: var(--primary);
@@ -353,6 +415,7 @@
       min-width: 80px;
       text-align: right;
     }
+
     .remove-service-btn {
       width: 32px;
       height: 32px;
@@ -366,10 +429,12 @@
       cursor: pointer;
       transition: all 0.2s;
     }
+
     .remove-service-btn:hover {
       background: #ef4444;
       color: #ffffff;
     }
+
     .form-textarea {
       width: 100%;
       padding: 12px;
@@ -380,56 +445,68 @@
       resize: vertical;
       min-height: 100px;
     }
+
     .form-textarea:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
     }
+
     .total-section {
       background: var(--primary);
       color: #ffffff;
     }
+
     .total-breakdown {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
+
     .total-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
+
     .total-row-final {
       padding-top: 12px;
       border-top: 2px solid rgba(255, 255, 255, 0.3);
       margin-top: 4px;
     }
+
     .total-label {
       font-size: 0.95rem;
       font-weight: 500;
     }
+
     .total-value {
       font-size: 1rem;
       font-weight: 600;
     }
+
     .total-amount {
       font-size: 1.75rem;
       font-weight: 700;
     }
+
     .empty-state {
       text-align: center;
       padding: 40px 20px;
       color: #9ca3af;
     }
+
     .empty-state i {
       font-size: 2.5rem;
       margin-bottom: 12px;
       opacity: 0.5;
     }
+
     .empty-state p {
       font-size: 0.95rem;
       margin: 0;
     }
+
     .form-actions {
       position: fixed;
       bottom: 0;
@@ -440,27 +517,33 @@
       padding: 16px;
       display: flex;
       gap: 12px;
-      box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
       z-index: 100;
     }
+
     .form-actions .btn {
       flex: 1;
     }
+
     @media (max-width: 768px) {
       .sales-estimate-new {
         padding: 12px;
         padding-bottom: 120px;
       }
+
       .form-section {
         padding: 16px;
       }
+
       .services-list {
         grid-template-columns: 1fr;
       }
+
       .form-actions {
         flex-direction: column;
         padding: 12px;
       }
+
       .form-actions .btn {
         width: 100%;
       }
@@ -475,50 +558,177 @@
   </script>
 
   <script>
-    (function() {
+    (function () {
       // Load data
       const clientsData = JSON.parse(document.getElementById('clients-data').textContent);
       const serviceItemsData = JSON.parse(document.getElementById('service-items-data').textContent);
-      
+
       const clients = clientsData.clients || [];
       const services = serviceItemsData || [];
-      
+
       // Current sales rep (mock)
       const currentSalesRep = '正田和輝';
-      
+
       // Filter clients by sales rep
       const myClients = clients.filter(c => c.sales_rep === currentSalesRep);
-      
+
       // State
       let selectedClient = null;
       let selectedStores = [];
       let selectedServices = new Map(); // service_id -> {service, quantity}
-      
+
       // Initialize
       init();
-      
+
       function init() {
         // Populate client select
         populateClientSelect();
-        
+
         // Populate services
         populateServices();
-        
+
         // Set default expiry date (30 days from now)
         const defaultDate = new Date();
         defaultDate.setDate(defaultDate.getDate() + 30);
         document.getElementById('expiry-date').value = defaultDate.toISOString().split('T')[0];
-        
+
         // Event listeners
         document.getElementById('client-select').addEventListener('change', handleClientChange);
         document.getElementById('estimate-form').addEventListener('submit', handleSubmit);
         document.getElementById('save-draft').addEventListener('click', handleSaveDraft);
+
+        // AI Suggestion setup
+        setupAiEstimateSuggestion();
       }
-      
+
+      function setupAiEstimateSuggestion() {
+        const suggestBtn = document.getElementById('ai-estimate-suggest-btn');
+        const memoField = document.getElementById('ai-estimate-memo');
+        const statusEl = document.getElementById('ai-suggest-status');
+
+        if (!suggestBtn) return;
+
+        suggestBtn.addEventListener('click', async () => {
+          const memoText = memoField.value.trim();
+          if (!memoText) {
+            alert('打合せメモを入力してください。');
+            memoField.focus();
+            return;
+          }
+
+          try {
+            suggestBtn.disabled = true;
+            statusEl.style.display = 'flex';
+
+            const response = await fetch(`${API_BASE}/ai/process`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                action: 'suggest_estimate',
+                text: memoText
+              })
+            });
+
+            if (!response.ok) throw new Error('AI処理に失敗しました');
+
+            const data = await response.json();
+            if (data.status === 'success' && data.result) {
+              let result = data.result;
+
+              // Parse JSON if returned as string
+              if (typeof result === 'string') {
+                try {
+                  const jsonMatch = result.match(/```json\n([\s\S]*?)\n```/) || result.match(/{[\s\S]*}/);
+                  if (jsonMatch) {
+                    result = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+                  }
+                } catch (e) {
+                  console.warn('AI result was not valid JSON');
+                }
+              }
+
+              if (typeof result === 'object') {
+                // 1. Client/Store Selection
+                if (result.company_name) {
+                  const clientSelect = document.getElementById('client-select');
+                  for (let i = 0; i < clientSelect.options.length; i++) {
+                    if (clientSelect.options[i].value.includes(result.company_name)) {
+                      clientSelect.selectedIndex = i;
+                      clientSelect.dispatchEvent(new Event('change'));
+
+                      // Wait a bit for store select to populate
+                      setTimeout(() => {
+                        const storeSelect = document.getElementById('store-select');
+                        if (result.store_name) {
+                          for (let j = 0; j < storeSelect.options.length; j++) {
+                            if (storeSelect.options[j].textContent.includes(result.store_name)) {
+                              storeSelect.selectedIndex = j;
+                              storeSelect.dispatchEvent(new Event('change'));
+                              break;
+                            }
+                          }
+                        } else if (storeSelect.options.length > 1) {
+                          storeSelect.selectedIndex = 1; // Default to first store
+                          storeSelect.dispatchEvent(new Event('change'));
+                        }
+                      }, 100);
+                      break;
+                    }
+                  }
+                }
+
+                // 2. Services Selection
+                if (result.services && Array.isArray(result.services)) {
+                  result.services.forEach(aiService => {
+                    services.forEach(service => {
+                      if (service.title.includes(aiService.name) || aiService.name.includes(service.title)) {
+                        const checkbox = document.getElementById(`service-${service.id}`);
+                        if (checkbox && !checkbox.checked) {
+                          checkbox.checked = true;
+                          checkbox.dispatchEvent(new Event('change'));
+
+                          // Set quantity if specified
+                          if (aiService.quantity > 1) {
+                            setTimeout(() => {
+                              const serviceData = selectedServices.get(service.id);
+                              if (serviceData) {
+                                serviceData.quantity = aiService.quantity;
+                                updateSelectedServices();
+                                updateTotal();
+                              }
+                            }, 200);
+                          }
+                        }
+                      }
+                    });
+                  });
+                }
+
+                // 3. Notes
+                if (result.notes) {
+                  const notesField = document.getElementById('notes');
+                  notesField.value = result.notes;
+                }
+
+                alert('AIが情報を抽出してフォームに入力しました。内容を確認してください。');
+              }
+            }
+          } catch (error) {
+            console.error('AI Suggestion Error:', error);
+            alert('AIとの通信でエラーが発生しました。');
+          } finally {
+            suggestBtn.disabled = false;
+            statusEl.style.display = 'none';
+          }
+        });
+      }
+
       function populateClientSelect() {
         const select = document.getElementById('client-select');
         select.innerHTML = '<option value="">選択してください</option>';
-        
+
         // Group clients by company
         const companyMap = new Map();
         myClients.forEach(client => {
@@ -527,7 +737,7 @@
           }
           companyMap.get(client.company_name).push(client);
         });
-        
+
         companyMap.forEach((stores, companyName) => {
           const option = document.createElement('option');
           option.value = companyName;
@@ -536,12 +746,12 @@
           select.appendChild(option);
         });
       }
-      
+
       function handleClientChange(e) {
         const companyName = e.target.value;
         const storeSelect = document.getElementById('store-select');
         const clientInfo = document.getElementById('client-info');
-        
+
         if (!companyName) {
           storeSelect.innerHTML = '<option value="">まず顧客を選択してください</option>';
           storeSelect.disabled = true;
@@ -549,11 +759,11 @@
           selectedClient = null;
           return;
         }
-        
+
         const option = e.target.options[e.target.selectedIndex];
         const stores = JSON.parse(option.dataset.stores);
         selectedStores = stores;
-        
+
         // Populate store select
         storeSelect.innerHTML = '<option value="">選択してください</option>';
         stores.forEach(store => {
@@ -563,9 +773,9 @@
           option.dataset.client = JSON.stringify(store);
           storeSelect.appendChild(option);
         });
-        
+
         storeSelect.disabled = false;
-        
+
         // Update client info
         if (stores.length > 0) {
           const firstStore = stores[0];
@@ -573,9 +783,9 @@
           document.getElementById('client-email').textContent = firstStore.email || '-';
           clientInfo.style.display = 'block';
         }
-        
+
         // Update selected client when store is selected
-        storeSelect.addEventListener('change', function() {
+        storeSelect.addEventListener('change', function () {
           const storeId = this.value;
           if (storeId) {
             const storeOption = this.options[this.selectedIndex];
@@ -587,25 +797,25 @@
           }
         });
       }
-      
+
       function populateServices() {
         const servicesList = document.getElementById('services-list');
         servicesList.innerHTML = '';
-        
+
         if (services.length === 0) {
           document.getElementById('services-empty').style.display = 'block';
           return;
         }
-        
+
         services.forEach(service => {
           const serviceItem = document.createElement('div');
           serviceItem.className = 'service-item';
           serviceItem.dataset.serviceId = service.id;
-          
+
           // Extract price number from "¥ 21,000〜"
           const priceMatch = service.price.match(/¥\s*([\d,]+)/);
           const price = priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : 0;
-          
+
           serviceItem.innerHTML = `
             <div class="service-info">
               <input type="checkbox" id="service-${service.id}" value="${service.id}" data-price="${price}" />
@@ -616,9 +826,9 @@
               </label>
             </div>
           `;
-          
+
           const checkbox = serviceItem.querySelector('input[type="checkbox"]');
-          checkbox.addEventListener('change', function() {
+          checkbox.addEventListener('change', function () {
             if (this.checked) {
               serviceItem.classList.add('selected');
               selectedServices.set(service.id, {
@@ -633,29 +843,29 @@
             updateSelectedServices();
             updateTotal();
           });
-          
+
           servicesList.appendChild(serviceItem);
         });
       }
-      
+
       function updateSelectedServices() {
         const section = document.getElementById('selected-services-section');
         const list = document.getElementById('selected-services-list');
-        
+
         if (selectedServices.size === 0) {
           section.style.display = 'none';
           return;
         }
-        
+
         section.style.display = 'block';
         list.innerHTML = '';
-        
+
         selectedServices.forEach((data, serviceId) => {
           const service = data.service;
           const quantity = data.quantity;
           const price = data.price;
           const subtotal = price * quantity;
-          
+
           const item = document.createElement('div');
           item.className = 'selected-service-item';
           item.innerHTML = `
@@ -673,13 +883,13 @@
               <i class="fas fa-times"></i>
             </button>
           `;
-          
+
           // Quantity controls
           const decreaseBtn = item.querySelector('[data-action="decrease"]');
           const increaseBtn = item.querySelector('[data-action="increase"]');
           const quantityInput = item.querySelector('.quantity-input');
           const removeBtn = item.querySelector('.remove-service-btn');
-          
+
           decreaseBtn.addEventListener('click', () => {
             if (quantity > 1) {
               data.quantity = quantity - 1;
@@ -687,14 +897,14 @@
               updateTotal();
             }
           });
-          
+
           increaseBtn.addEventListener('click', () => {
             data.quantity = quantity + 1;
             updateSelectedServices();
             updateTotal();
           });
-          
-          quantityInput.addEventListener('change', function() {
+
+          quantityInput.addEventListener('change', function () {
             const newQuantity = parseInt(this.value) || 1;
             if (newQuantity < 1) {
               this.value = 1;
@@ -705,7 +915,7 @@
             updateSelectedServices();
             updateTotal();
           });
-          
+
           removeBtn.addEventListener('click', () => {
             selectedServices.delete(serviceId);
             const serviceItem = document.querySelector(`[data-service-id="${serviceId}"]`);
@@ -717,48 +927,48 @@
             updateSelectedServices();
             updateTotal();
           });
-          
+
           list.appendChild(item);
         });
       }
-      
+
       function updateTotal() {
         let subtotal = 0;
         selectedServices.forEach(data => {
           subtotal += data.price * data.quantity;
         });
-        
+
         const tax = Math.floor(subtotal * 0.1);
         const total = subtotal + tax;
-        
+
         document.getElementById('subtotal').textContent = `¥${subtotal.toLocaleString()}`;
         document.getElementById('tax').textContent = `¥${tax.toLocaleString()}`;
         document.getElementById('total-amount').textContent = `¥${total.toLocaleString()}`;
       }
-      
+
       function handleSubmit(e) {
         e.preventDefault();
-        
+
         if (!selectedClient) {
           alert('顧客と店舗を選択してください');
           return;
         }
-        
+
         if (selectedServices.size === 0) {
           alert('サービスを選択してください');
           return;
         }
-        
+
         const expiryDate = document.getElementById('expiry-date').value;
         if (!expiryDate) {
           alert('有効期限を入力してください');
           return;
         }
-        
+
         // Format date
         const expiry = new Date(expiryDate);
         const expiryFormatted = `${expiry.getFullYear()}年${expiry.getMonth() + 1}月${expiry.getDate()}日`;
-        
+
         // Calculate totals
         let subtotal = 0;
         const services = [];
@@ -773,10 +983,10 @@
             subtotal: serviceSubtotal
           });
         });
-        
+
         const tax = Math.floor(subtotal * 0.1);
         const total = subtotal + tax;
-        
+
         // Create estimate object
         const estimate = {
           id: DataUtils.IdUtils.generateEstimate(),
@@ -797,35 +1007,35 @@
           services: services,
           notes: document.getElementById('notes').value
         };
-        
+
         // In real app, save to API
         console.log('Estimate created:', estimate);
-        
+
         alert('見積もりを送付しました。');
         window.location.href = '/sales/estimates.html';
       }
-      
+
       function handleSaveDraft() {
         if (!selectedClient) {
           alert('顧客と店舗を選択してください');
           return;
         }
-        
+
         if (selectedServices.size === 0) {
           alert('サービスを選択してください');
           return;
         }
-        
+
         const expiryDate = document.getElementById('expiry-date').value;
         if (!expiryDate) {
           alert('有効期限を入力してください');
           return;
         }
-        
+
         // Format date
         const expiry = new Date(expiryDate);
         const expiryFormatted = `${expiry.getFullYear()}年${expiry.getMonth() + 1}月${expiry.getDate()}日`;
-        
+
         // Calculate totals
         let subtotal = 0;
         const services = [];
@@ -840,10 +1050,10 @@
             subtotal: serviceSubtotal
           });
         });
-        
+
         const tax = Math.floor(subtotal * 0.1);
         const total = subtotal + tax;
-        
+
         // Create estimate object
         const estimate = {
           id: DataUtils.IdUtils.generateEstimate(),
@@ -864,14 +1074,14 @@
           services: services,
           notes: document.getElementById('notes').value
         };
-        
+
         // In real app, save to API
         console.log('Estimate draft saved:', estimate);
-        
+
         alert('下書きを保存しました。');
         window.location.href = '/sales/estimates.html';
       }
-      
+
       function formatDate(date) {
         const year = date.getFullYear();
         const month = date.getMonth() + 1;

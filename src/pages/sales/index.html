@@ -319,6 +319,153 @@
             text-transform: uppercase;
             letter-spacing: 3.5px;
         }
+
+        .mode-switch-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .mode-btn {
+            border: none;
+            background: none;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 10px 24px;
+            border-radius: 35px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .mode-btn.active {
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent-color), #2563eb);
+            box-shadow: 0 5px 15px var(--accent-glow);
+        }
+
+        #chat-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 80px 20px 110px 20px;
+            box-sizing: border-box;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 500;
+        }
+
+        #chat-container.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-history::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .chat-bubble {
+            max-width: 85%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .chat-bubble.ai {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-bubble.user {
+            align-self: flex-end;
+            background: var(--accent-color);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 5px 15px var(--accent-glow);
+        }
+
+        .chat-input-wrapper {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #text-input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #fff;
+            padding: 8px 15px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .send-btn:active {
+            transform: scale(0.9);
+        }
+
+        .voice-mode-content {
+            transition: all 0.5s ease;
+        }
+
+        .voice-mode-content.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
     </style>
 </head>
 
@@ -341,35 +488,62 @@
         </div>
     </nav>
 
-    <!-- Central Visualizer -->
-    <div class="visualizer-container">
-        <!-- Rotating Text -->
-        <div class="circle-text-container" id="circle-text">
-            <svg viewBox="0 0 200 200" class="circle-svg" width="320" height="320">
-                <path id="circlePath" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" />
-                <text>
-                    <textPath href="#circlePath">
-                        Misesapo AI Experience v1.0.0 &bull; Misesapo AI Experience v1.0.0 &bull;
-                    </textPath>
-                </text>
-            </svg>
+    <!-- Central Visualizer / Voice Mode -->
+    <div class="voice-mode-content" id="voice-content">
+        <div class="visualizer-container">
+            <!-- Rotating Text -->
+            <div class="circle-text-container" id="circle-text">
+                <svg viewBox="0 0 200 200" class="circle-svg" width="320" height="320">
+                    <path id="circlePath" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" />
+                    <text>
+                        <textPath href="#circlePath">
+                            Misesapo AI Experience v1.0.0 &bull; Misesapo AI Experience v1.0.0 &bull;
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="core-circle"></div>
         </div>
 
-        <div class="wave"></div>
-        <div class="wave"></div>
-        <div class="wave"></div>
-        <div class="core-circle"></div>
+        <div class="status-text" id="status-text">LISTENING...</div>
+
+        <div class="hint-text">Tap to Speak</div>
+
+        <!-- AI Response Overlay (Voice mode only) -->
+        <div class="ai-response-overlay" id="ai-response">
+            <div class="ai-response-icon"><i class="fas fa-sparkles"></i> AI Secretary</div>
+            <div id="ai-message-text"></div>
+        </div>
     </div>
 
-    <!-- Minimal Status -->
-    <div class="status-text" id="status-text">LISTENING...</div>
+    <!-- Chat Mode UI -->
+    <div id="chat-container">
+        <div class="chat-history" id="chat-history">
+            <div class="chat-bubble ai">
+                お疲れ様です。ご用件をメッセージで入力してください。<br>
+                「明日の予定は？」「A店の依頼書作成」などお手伝いします。
+            </div>
+        </div>
+        <div class="chat-input-wrapper">
+            <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
+            <button class="send-btn" onclick="sendTextMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
 
-    <div class="hint-text">Tap to Speak</div>
-
-    <!-- AI Response Overlay -->
-    <div class="ai-response-overlay" id="ai-response">
-        <div class="ai-response-icon"><i class="fas fa-sparkles"></i> AI Secretary</div>
-        <div id="ai-message-text"></div>
+    <!-- Bottom Mode Switcher -->
+    <div class="mode-switch-container">
+        <button class="mode-btn active" id="btn-voice-mode" onclick="switchMode('voice')">
+            <i class="fas fa-microphone"></i> 音声
+        </button>
+        <button class="mode-btn" id="btn-chat-mode" onclick="switchMode('chat')">
+            <i class="fas fa-comment-dots"></i> チャット
+        </button>
     </div>
 
     <!-- Auth & Base Logic -->
@@ -405,6 +579,96 @@
         const statusText = document.getElementById('status-text');
         const responseOverlay = document.getElementById('ai-response');
         const messageText = document.getElementById('ai-message-text');
+        const voiceContent = document.getElementById('voice-content');
+        const chatContainer = document.getElementById('chat-container');
+        const chatHistory = document.getElementById('chat-history');
+        const textInput = document.getElementById('text-input');
+        const btnVoice = document.getElementById('btn-voice-mode');
+        const btnChat = document.getElementById('btn-chat-mode');
+
+        let currentMode = 'voice';
+
+        function switchMode(mode) {
+            if (currentMode === mode) return;
+            currentMode = mode;
+
+            if (mode === 'voice') {
+                btnVoice.classList.add('active');
+                btnChat.classList.remove('active');
+                chatContainer.classList.remove('active');
+                voiceContent.classList.remove('hidden');
+            } else {
+                btnChat.classList.add('active');
+                btnVoice.classList.remove('active');
+                voiceContent.classList.add('hidden');
+                chatContainer.classList.add('active');
+                textInput.focus();
+            }
+        }
+
+        function appendChatMessage(role, text) {
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${role}`;
+            bubble.innerHTML = text.replace(/\n/g, '<br>');
+            chatHistory.appendChild(bubble);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        async function sendTextMessage() {
+            const text = textInput.value.trim();
+            if (!text) return;
+
+            appendChatMessage('user', text);
+            textInput.value = '';
+
+            const token = ensureAuthOrRedirect();
+            if (!token) return;
+
+            const loadingBubble = document.createElement('div');
+            loadingBubble.className = 'chat-bubble ai';
+            loadingBubble.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 解析中...';
+            chatHistory.appendChild(loadingBubble);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            try {
+                const response = await fetch(`${API_BASE}/ai/process`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'assistant_concierge',
+                        text: text
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorJson = await response.json().catch(() => ({}));
+                    throw new Error(errorJson.message || `API HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (loadingBubble.parentNode) loadingBubble.remove();
+
+                let aiResult = data.result;
+                if (typeof aiResult === 'string') {
+                    try {
+                        const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
+                    } catch (e) { }
+                }
+
+                appendChatMessage('ai', aiResult.reply || aiResult);
+            } catch (err) {
+                if (loadingBubble.parentNode) loadingBubble.remove();
+                appendChatMessage('ai', `<i class="fas fa-exclamation-triangle"></i> エラー: ${err.message}`);
+            }
+        }
+
+        textInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendTextMessage();
+        });
 
         let mediaRecorder;
         let audioChunks = [];
@@ -533,6 +797,7 @@
         let isButtonPressed = false;
 
         const startAction = async (e) => {
+            if (currentMode !== 'voice') return;
             e.preventDefault();
             isButtonPressed = true;
 
@@ -558,6 +823,7 @@
         };
 
         const stopAction = (e) => {
+            if (currentMode !== 'voice') return;
             isButtonPressed = false;
             if (!isRecording) return;
             isRecording = false;
@@ -577,7 +843,7 @@
 
         // First click anywhere prepares the mic
         document.body.addEventListener('click', () => {
-            initAudio();
+            if (currentMode === 'voice') initAudio();
         }, { once: true });
 
         document.addEventListener('DOMContentLoaded', () => {
