@@ -167,6 +167,8 @@
             align-items: center;
             justify-content: center;
             z-index: 100;
+            box-sizing: border-box;
+            /* Prevent padding from exceeding 100% width */
         }
 
         .text-input-wrapper {
@@ -326,7 +328,7 @@
     <div class="chat-timeline" id="chat-timeline">
         <!-- Intro Message -->
         <div class="chat-message ai">
-            <div class="avatar ai"><i class="fas fa-robot"></i></div>
+            <div class="avatar ai"><img src="/assets/images-admin/MISOGILOGO.svg" alt="Misogi Avatar"></div>
             <div class="bubble">
                 お疲れ様です。M.I.S.O.G.I.（ミソギ）です。<br>
                 業務サポート、スケジュール調整、情報統合など、何かお手伝いできることはありますか？
@@ -359,11 +361,11 @@
                 <i class="fas fa-plus"></i> <!-- Attachment placeholder -->
             </button>
             <input type="text" class="chat-input" id="chat-input" placeholder="Misogiに話しかける..." autocomplete="off">
-            <button class="action-btn mic-btn" id="mic-btn">
-                <i class="fas fa-microphone"></i>
-            </button>
             <button class="action-btn send-btn" id="send-btn">
                 <i class="fas fa-paper-plane"></i>
+            </button>
+            <button class="action-btn mic-btn" id="mic-btn">
+                <i class="fas fa-microphone"></i>
             </button>
         </div>
     </div>
@@ -391,7 +393,7 @@
             let content = '';
             if (role === 'ai') {
                 content = `
-                    <div class="avatar ai"><i class="fas fa-robot"></i></div>
+                    <div class="avatar ai"><img src="/assets/images-admin/MISOGILOGO.svg" alt="Misogi Avatar"></div>
                     <div class="bubble">${text}</div>
                 `;
             } else {
@@ -426,7 +428,7 @@
                 const aiDiv = document.createElement('div');
                 aiDiv.className = 'chat-message ai';
                 aiDiv.innerHTML = `
-                    <div class="avatar ai"><i class="fas fa-robot"></i></div>
+                    <div class="avatar ai"><img src="/assets/images-admin/MISOGILOGO.svg" alt="Misogi Avatar"></div>
                     <div class="bubble"><i class="fas fa-spinner fa-spin"></i> 考え中...</div>
                 `;
                 chatTimeline.appendChild(aiDiv);
