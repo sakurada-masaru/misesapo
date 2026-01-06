@@ -226,6 +226,51 @@
             color: rgba(255, 255, 255, 0.3);
             font-size: 0.8rem;
         }
+
+        /* AI Response Overlay (Toast Style) */
+        .ai-response-overlay {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            width: 85%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 16px;
+            color: #fff;
+            font-size: 1rem;
+            line-height: 1.6;
+            text-align: left;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 120;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .ai-response-overlay.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+
+        .ai-response-icon {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--accent-color);
+        }
+
+        /* Active State for Core (Pressing) */
+        .core-circle.active {
+            transform: scale(1.5) !important;
+            filter: blur(4px);
+            box-shadow: 0 0 80px var(--accent-glow), 0 0 120px var(--accent-glow);
+            transition: all 0.2s ease-out;
+        }
     </style>
 </head>
 
@@ -261,28 +306,67 @@
 
     <div class="hint-text">Tap to Speak</div>
 
+    <!-- AI Response Overlay -->
+    <div class="ai-response-overlay" id="ai-response">
+        <div class="ai-response-icon"><i class="fas fa-sparkles"></i> AI Secretary</div>
+        <div id="ai-message-text"></div>
+    </div>
+
     <script>
         function toggleMenu() {
             document.getElementById('side-menu').classList.toggle('open');
             document.getElementById('overlay').classList.toggle('active');
         }
 
-        function activateAI() {
-            // Animation for activation
-            const core = document.querySelector('.core-circle');
-            const status = document.getElementById('status-text');
+        const visualizer = document.querySelector('.visualizer-container');
+        const core = document.querySelector('.core-circle');
+        const statusText = document.getElementById('status-text');
+        const responseOverlay = document.getElementById('ai-response');
+        const messageText = document.getElementById('ai-message-text');
 
-            // Visual feedback
-            core.style.transform = "scale(1.2)";
-            core.style.boxShadow = "0 0 60px #3b82f6, 0 0 100px #3b82f6";
-            status.textContent = "PROCESSING...";
-            status.style.color = "#fff";
+        let isRecording = false;
 
-            // Navigate to AI Assistant (or activate overlay in future)
+        // Press / Touch Start
+        const startRecording = (e) => {
+            e.preventDefault(); // Prevent ghost clicks
+            isRecording = true;
+
+            // Visuals
+            core.classList.add('active');
+            statusText.textContent = "LISTENING...";
+            statusText.style.color = "#fff";
+
+            // Hide previous response
+            responseOverlay.classList.remove('visible');
+        };
+
+        // Release / Touch End
+        const stopRecording = (e) => {
+            if (!isRecording) return;
+            isRecording = false;
+
+            // Visuals
+            core.classList.remove('active');
+            statusText.textContent = "PROCESSING...";
+
+            // Mock AI Processing & Response
             setTimeout(() => {
-                window.location.href = '/sales/assistant/';
-            }, 600);
-        }
+                statusText.textContent = "TAP TO SPEAK";
+                statusText.style.color = "rgba(255,255,255,0.6)";
+
+                // Show Mock Response
+                messageText.innerHTML = "承知しました。<br>「A店」の定期清掃の依頼書を作成しますね。<br>（来週火曜日 13:00〜）で仮予約しました。";
+                responseOverlay.classList.add('visible');
+            }, 1200);
+        };
+
+        // Event Listeners
+        visualizer.addEventListener('touchstart', startRecording);
+        visualizer.addEventListener('touchend', stopRecording);
+
+        visualizer.addEventListener('mousedown', startRecording);
+        visualizer.addEventListener('mouseup', stopRecording);
+        visualizer.addEventListener('mouseleave', stopRecording); // Handle drag out
     </script>
 </body>
 
