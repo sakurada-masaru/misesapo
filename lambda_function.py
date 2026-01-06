@@ -10094,7 +10094,11 @@ def handle_ai_process(event, headers):
         input_text = body.get('text', '')
         audio_data = body.get('audio') # Base64 encoded
         mime_type = body.get('mime_type')
-        
+
+        # Multimodal Image check
+        image_data = body.get('image') # Base64 encoded
+        image_mime = body.get('image_mime')
+
         if not action:
             return {
                 'statusCode': 400,
@@ -10103,6 +10107,8 @@ def handle_ai_process(event, headers):
             }
         
         media = None
+        
+        # Priority 1: Audio Input
         if audio_data:
             # Gemini documentation lists: wav, mp3, aiff, aac, ogg, flac
             # Safari (iOS) usually sends audio/mp4 which is AAC.
@@ -10122,6 +10128,25 @@ def handle_ai_process(event, headers):
             }
             if not input_text:
                 input_text = "音声の内容を解析してください。"
+
+        # Priority 2: Image Input (if no audio)
+        elif image_data:
+            clean_mime = 'image/jpeg'
+            if image_mime:
+                target = image_mime.lower()
+                if 'png' in target: clean_mime = 'image/png'
+                elif 'webp' in target: clean_mime = 'image/webp'
+                elif 'heic' in target: clean_mime = 'image/heic'
+                elif 'heif' in target: clean_mime = 'image/heif'
+            
+            print(f"DEBUG: Image processing start. Action: {action}, MIME: {image_mime} -> {clean_mime}, Data Length: {len(image_data)}")
+            
+            media = {
+                'mime_type': clean_mime,
+                'data': image_data
+            }
+            if not input_text:
+                input_text = "この画像を解析してください。"
             
         if action == 'summarize_report':
             system_instruction = "あなたはプロの清掃管理アドバイザーです。ユーザーの清掃メモから、丁寧な清掃報告書を作成してください。"
