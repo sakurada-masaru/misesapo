@@ -411,6 +411,7 @@
         let isRecording = false;
         let recordingMimeType = '';
         let isMicReady = false;
+        let isInitializing = false;
 
         function getSupportedMimeType() {
             const types = [
@@ -425,19 +426,19 @@
             return ''; // Let browser decide
         }
 
-        // Initialize Audio
+        // Initialize Audio (Triggered by user gesture)
         async function initAudio() {
+            if (isMicReady || isInitializing) return;
+            isInitializing = true;
+            statusText.textContent = "INITIALIZING...";
+
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 recordingMimeType = getSupportedMimeType();
-                console.log('[Mic] Preferred MimeType:', recordingMimeType);
-
                 const options = recordingMimeType ? { mimeType: recordingMimeType } : {};
                 mediaRecorder = new MediaRecorder(stream, options);
 
-                // Actual mimeType might be different
                 if (!recordingMimeType) recordingMimeType = mediaRecorder.mimeType;
-                console.log('[Mic] Actual MimeType:', recordingMimeType);
 
                 mediaRecorder.ondataavailable = (event) => {
                     if (event.data.size > 0) audioChunks.push(event.data);
@@ -445,7 +446,6 @@
 
                 mediaRecorder.onstop = async () => {
                     if (audioChunks.length === 0) {
-                        console.warn("No audio chunks captured.");
                         statusText.textContent = "TAP TO SPEAK";
                         return;
                     }
@@ -459,15 +459,14 @@
                 };
 
                 isMicReady = true;
+                statusText.textContent = "READY - HOLD TO SPEAK";
                 return true;
             } catch (err) {
                 console.error('Mic init failed:', err);
                 statusText.textContent = "MIC ERROR";
-                const msg = err.name === 'NotAllowedError' ?
-                    'マイクの使用が許可されていません。設定で許可してください。' :
-                    'マイクを利用できません。HTTPS接続であることを確認してください。';
-                alert(msg);
                 return false;
+            } finally {
+                isInitializing = false;
             }
         }
 
@@ -518,28 +517,35 @@
         }
 
         // --- Interactivity ---
+        let isButtonPressed = false;
+
         const startAction = async (e) => {
             e.preventDefault();
-            if (isRecording) return;
+            isButtonPressed = true;
 
-            // Ensure Mic is initialized
             if (!isMicReady) {
                 const success = await initAudio();
-                if (!success) return;
+                if (!success || !isButtonPressed) return;
             }
 
+            if (isRecording) return;
             isRecording = true;
             audioChunks = [];
-            mediaRecorder.start();
 
-            core.classList.add('active');
-            circleText.classList.add('active');
-            statusText.textContent = "LISTENING...";
-            statusText.style.color = "#fff";
-            responseOverlay.classList.remove('visible');
+            try {
+                mediaRecorder.start();
+                core.classList.add('active');
+                circleText.classList.add('active');
+                statusText.textContent = "LISTENING...";
+                statusText.style.color = "#fff";
+                responseOverlay.classList.remove('visible');
+            } catch (err) {
+                isRecording = false;
+            }
         };
 
         const stopAction = (e) => {
+            isButtonPressed = false;
             if (!isRecording) return;
             isRecording = false;
 
@@ -556,7 +562,11 @@
         visualizer.addEventListener('mouseup', stopAction);
         visualizer.addEventListener('mouseleave', stopAction);
 
-        // Pre-init auth & setup
+        // First click anywhere prepares the mic
+        document.body.addEventListener('click', () => {
+            initAudio();
+        }, { once: true });
+
         document.addEventListener('DOMContentLoaded', () => {
             ensureAuthOrRedirect();
             statusText.textContent = "TAP TO SPEAK";
