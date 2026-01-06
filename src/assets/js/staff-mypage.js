@@ -63,7 +63,7 @@ function staffLogout() {
 
 // 日付が変わったときに今日の出退勤データを初期化
 function initializeAttendanceForToday() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayDate();
   const lastCheckDate = localStorage.getItem('lastAttendanceCheckDate');
 
   // 日付が変わった場合
@@ -840,7 +840,7 @@ async function loadAttendanceRecords() {
 
   try {
     // APIから勤怠記録を取得（今日の記録）
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayDate();
     const idToken = await getCognitoIdToken();
     const headers = {
       'Content-Type': 'application/json'
