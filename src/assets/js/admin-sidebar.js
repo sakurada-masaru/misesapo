@@ -746,9 +746,12 @@
     });
 
     // 不要になったスケジュール管理リンクを追加後に削除（もし存在する場合）
-    const scheduleManagementLink = sidebarNav.querySelector('a[data-page="schedules"]');
-    if (scheduleManagementLink) {
-      scheduleManagementLink.style.display = 'none';
+    // ※ただし、管理ダッシュボード等の管理画面では表示したままにする（櫻田さんの指摘による修正）
+    if (window.location.pathname.includes('/staff/office/mypage')) {
+      const scheduleManagementLink = sidebarNav.querySelector('a[data-page="schedules"]');
+      if (scheduleManagementLink) {
+        scheduleManagementLink.style.display = 'none';
+      }
     }
 
     console.log('[AdminSidebar] Finance and Accounting section sidebar configured with reimbursement and admin links');

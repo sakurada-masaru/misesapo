@@ -4,7 +4,8 @@
 <link rel="stylesheet" href="/css/admin-sidebar.css">
 <!-- AWS SDKの読み込み -->
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
 <script src="/js/cognito_config.js"></script>
 <script src="/js/cognito_auth.js"></script>
 <script src="/js/client_auth.js"></script>
@@ -12,9 +13,9 @@
 
 <!-- モバイルメニューボタン -->
 <div class="mobile-menu-area">
-<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
-  <i class="fas fa-bars"></i>
-</button>
+  <button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+    <i class="fas fa-bars"></i>
+  </button>
 </div>
 
 <!-- サイドバーオーバーレイ -->
@@ -35,7 +36,8 @@
   </div>
 
   <nav class="sidebar-nav">
-    <a href="/admin/dashboard" class="nav-item nav-item-admin" data-page="dashboard" data-role-required="admin,operation,general_affairs" style="display: none;">
+    <a href="/admin/dashboard" class="nav-item nav-item-admin" data-page="dashboard"
+      data-role-required="admin,operation,general_affairs" style="display: none;">
       <i class="fas fa-tachometer-alt"></i>
       <span class="nav-label">管理ダッシュボード</span>
     </a>
@@ -89,7 +91,7 @@
       <i class="fas fa-sign-out-alt"></i>
       <span class="nav-label">ログアウト</span>
     </button>
-    
+
     <!-- マイページ編集用ボタン -->
     <div class="nav-divider"></div>
     <div class="sidebar-mypage-actions">
@@ -148,7 +150,8 @@
 
         <div class="form-group">
           <label for="report-achievements">成果・進捗</label>
-          <textarea id="report-achievements" class="form-control" rows="3" placeholder="達成したこと、進捗状況を記入してください"></textarea>
+          <textarea id="report-achievements" class="form-control" rows="3"
+            placeholder="達成したこと、進捗状況を記入してください"></textarea>
         </div>
 
         <div class="form-group">
@@ -216,7 +219,8 @@
     box-sizing: border-box;
   }
 
-  .loading-state, .error-state {
+  .loading-state,
+  .error-state {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -236,7 +240,9 @@
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   /* ページヘッダー */
@@ -378,14 +384,14 @@
   .report-card {
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     margin-bottom: 16px;
     overflow: hidden;
     transition: all 0.2s;
   }
 
   .report-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
   .report-card-header {
@@ -808,7 +814,7 @@
 
   // 月表示を更新
   function updateMonthDisplay() {
-    document.getElementById('current-month').textContent = 
+    document.getElementById('current-month').textContent =
       `${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月`;
   }
 
@@ -952,8 +958,21 @@
   }
 
   // 日報を削除
-  function deleteReport(id) {
+  async function deleteReport(id) {
     if (!confirm('この日報を削除しますか？')) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/daily-reports/${id}`, {
+        method: 'DELETE',
+        headers: buildAuthHeaders()
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to delete daily report from API:', response.status);
+      }
+    } catch (error) {
+      console.error('Error deleting daily report from API:', error);
+    }
 
     reports = reports.filter(r => r.id !== id);
     saveReports();
