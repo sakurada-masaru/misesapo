@@ -477,17 +477,24 @@
 
   <!-- クイックアクションドック -->
   <nav class="quick-actions-dock" aria-label="クイックアクション">
-    <a href="/sales/mypage" class="dock-item">
-      <i class="fas fa-chart-line"></i>
-      <span>アクティビティ</span>
-    </a>
     <a href="/sales/dashboard" class="dock-item is-active">
-      <i class="fas fa-user-plus"></i>
+      <i class="fas fa-users"></i>
       <span>顧客</span>
     </a>
+    <a href="/sales/assistant/" class="dock-item dock-item-ai" style="color: #2563eb; font-weight: bold;">
+      <div
+        style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; margin-bottom: 2px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3); transform: translateY(-10px);">
+        <i class="fas fa-microphone"></i>
+      </div>
+      <span style="font-size: 0.75rem;">AI秘書</span>
+    </a>
     <a href="/sales/schedules" class="dock-item">
-      <i class="fas fa-calendar"></i>
-      <span>スケジュール</span>
+      <i class="fas fa-file-invoice"></i>
+      <span>依頼書</span>
+    </a>
+    <a href="/sales/mypage" class="dock-item">
+      <i class="fas fa-user-circle"></i>
+      <span>マイページ</span>
     </a>
   </nav>
 </main>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI営業秘書 | Misesapo</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/sales-assistant.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="assistant-header">
+        <div class="assistant-title">
+            <i class="fas fa-sparkles gemini-sparkle"></i>
+            <span>AI営業秘書</span>
+        </div>
+        <button class="btn-icon" onclick="location.href='/sales/dashboard'"
+            style="background:none; border:none; color:#64748b; font-size:1.2rem;">
+            <i class="fas fa-times"></i>
+        </button>
+    </header>
+
+    <!-- Chat Timeline -->
+    <div class="chat-timeline" id="chat-timeline">
+        <!-- Intro Message -->
+        <div class="chat-message ai">
+            <div class="avatar ai"><i class="fas fa-robot"></i></div>
+            <div class="bubble">
+                お疲れ様です。今日はどんなお手伝いをしましょうか？<br>
+                「A店の依頼書を作りたい」「日報を書きたい」など、話しかけてください。
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Visualization Overlay (Hidden initially) -->
+    <div class="voice-visualizer" id="voice-visualizer">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <span style="font-size:0.8rem; color:#666; margin-left:8px;">聞いています...</span>
+    </div>
+
+    <!-- Suggestions -->
+    <div class="suggestions" id="suggestions">
+        <div class="suggestion-chip" onclick="setInput('A店の定期清掃の依頼書を作って')">A店の依頼書作成</div>
+        <div class="suggestion-chip" onclick="setInput('明日のスケジュールを教えて')">明日の予定</div>
+        <div class="suggestion-chip" onclick="setInput('日報の作成を手伝って')">日報作成</div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+        <div class="text-input-wrapper">
+            <input type="text" class="chat-input" id="chat-input" placeholder="メッセージを入力..." autocomplete="off">
+            <button class="send-btn" id="send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        <div class="mic-wrapper">
+            <button class="mic-btn" id="mic-btn">
+                <i class="fas fa-microphone"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Mockup Logic
+        const chatTimeline = document.getElementById('chat-timeline');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const micBtn = document.getElementById('mic-btn');
+        const visualizer = document.getElementById('voice-visualizer');
+
+        function appendMessage(role, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-message ${role}`;
+
+            let content = '';
+            if (role === 'ai') {
+                content = `
+                    <div class="avatar ai"><i class="fas fa-robot"></i></div>
+                    <div class="bubble">${text}</div>
+                `;
+            } else {
+                content = `
+                    <div class="bubble">${text}</div>
+                `;
+            }
+            msgDiv.innerHTML = content;
+            chatTimeline.appendChild(msgDiv);
+            chatTimeline.scrollTop = chatTimeline.scrollHeight;
+        }
+
+        function setInput(text) {
+            chatInput.value = text;
+            chatInput.focus();
+        }
+
+        // Send Message
+        sendBtn.addEventListener('click', () => {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            // User Message
+            appendMessage('user', text);
+            chatInput.value = '';
+
+            // Update suggestions based on context (Mockup)
+            document.getElementById('suggestions').style.display = 'none';
+
+            // AI Processing (Mock)
+            setTimeout(() => {
+                const aiDiv = document.createElement('div');
+                aiDiv.className = 'chat-message ai';
+                aiDiv.innerHTML = `
+                    <div class="avatar ai"><i class="fas fa-robot"></i></div>
+                    <div class="bubble"><i class="fas fa-spinner fa-spin"></i> 考え中...</div>
+                `;
+                chatTimeline.appendChild(aiDiv);
+                chatTimeline.scrollTop = chatTimeline.scrollHeight;
+
+                setTimeout(() => {
+                    aiDiv.remove(); // Remove loading
+
+                    // Simple Mock Response
+                    let response = "承知しました。詳細を確認しますね。";
+                    if (text.includes("依頼書")) {
+                        response = "A店の依頼書ですね。作業日時はいつにしますか？";
+                    } else if (text.includes("明日")) {
+                        response = "明日は10時からB店のアポが入っています。";
+                    }
+
+                    appendMessage('ai', response);
+                }, 1500);
+            }, 500);
+        });
+
+        // Mic Interaction (Mock)
+        let isRecording = false;
+        micBtn.addEventListener('click', () => {
+            if (!isRecording) {
+                // Start
+                isRecording = true;
+                visualizer.classList.add('active');
+                micBtn.style.transform = "scale(1.1)";
+                micBtn.style.background = "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"; // Red
+            } else {
+                // Stop
+                isRecording = false;
+                visualizer.classList.remove('active');
+                micBtn.style.transform = "scale(1)";
+                micBtn.style.background = ""; // Reset to blue
+
+                // Mock Transcription
+                setTimeout(() => {
+                    appendMessage('user', '（音声入力）A店の定期清掃、来週の火曜日でお願い。');
+
+                    setTimeout(() => {
+                        appendMessage('ai', '承知しました。「A店」「来週火曜日」で定期清掃ですね。依頼書の下書きを作成しました。<br><br><div style="background:#fff; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:0.85rem;"><strong>案件名:</strong> A店 定期清掃<br><strong>日時:</strong> 2026/01/13 13:00~<br><strong>作業:</strong> 床清掃、WAX</div>');
+                    }, 1000);
+                }, 500);
+            }
+        });
+
+        // Enter key to send
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendBtn.click();
+        });
+
+    </script>
+</body>
+
+</html>
