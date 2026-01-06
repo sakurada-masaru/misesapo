@@ -31,7 +31,7 @@
   <script src="/js/staff-mypage.js"></script>
   <script>
     (function () {
-      const isOsUser = () => {
+      const getUserInfo = () => {
         const candidates = ['cognito_user', 'misesapo_auth'];
         for (const key of candidates) {
           const raw = localStorage.getItem(key);
@@ -40,18 +40,30 @@
             const parsed = JSON.parse(raw);
             const user = parsed.user || parsed;
             const department = String(user.department || '').toLowerCase();
-            if (department.includes('os')) {
-              return true;
-            }
+            const role = String(user.role || '').toLowerCase();
+            return { department, role };
           } catch (error) {
             console.warn('[Mypage] Failed to parse user:', error);
           }
         }
-        return false;
+        return null;
       };
 
-      if (isOsUser()) {
-        window.location.replace('/staff/os/mypage');
+      const userInfo = getUserInfo();
+      if (userInfo) {
+        const { department, role } = userInfo;
+
+        // OS課ユーザー
+        if (department.includes('os') || department.includes('ｏｓ') || department.includes('os課') || department.includes('ｏｓ課')) {
+          window.location.replace('/staff/os/mypage');
+          return;
+        }
+
+        // 事務・経理ユーザー
+        if (role === 'office' || department.includes('事務') || department.includes('経理') || department.includes('office') || department.includes('finance')) {
+          window.location.replace('/staff/office/mypage');
+          return;
+        }
       }
     })();
   </script>
