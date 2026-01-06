@@ -4,6 +4,15 @@ let currentUser = null;
 let attendanceRecords = {};
 let currentCalendarDate = new Date();
 
+// YYYY-MM-DD形式の日付取得（ローカル時間基準）
+function getTodayDate() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 async function buildAuthHeaders(includeContentType = false) {
   const headers = {};
   if (includeContentType) {
@@ -1330,7 +1339,7 @@ function setupAttendanceToggleButton() {
     const originalText = newToggleBtn.innerHTML;
     newToggleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 処理中...';
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayDate();
     const now = new Date().toISOString();
 
     if (!attendanceRecords[today]) {
