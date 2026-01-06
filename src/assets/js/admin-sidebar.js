@@ -713,7 +713,38 @@
       workHistoryLink.style.display = 'none';
     }
 
-    console.log('[AdminSidebar] Finance and Accounting section sidebar configured');
+    // 追加する項目の定義
+    const itemsToAdd = [
+      { page: 'zaiko', href: '/admin/zaiko', icon: 'fa-boxes', label: '在庫管理' },
+      { page: 'customers', href: '/admin/customers', icon: 'fa-users', label: '顧客管理' },
+      { page: 'schedules', href: '/admin/schedules', icon: 'fa-calendar-alt', label: 'スケジュール管理' }
+    ];
+
+    const mypageLink = sidebarNav.querySelector('a[data-page="mypage"]');
+    let lastInserted = mypageLink;
+
+    itemsToAdd.forEach(item => {
+      let navItem = sidebarNav.querySelector(`a[data-page="${item.page}"]`);
+      if (!navItem) {
+        navItem = document.createElement('a');
+        navItem.href = item.href;
+        navItem.className = 'nav-item';
+        navItem.setAttribute('data-page', item.page);
+        navItem.innerHTML = `<i class="fas ${item.icon}"></i><span class="nav-label">${item.label}</span>`;
+        if (lastInserted) {
+          lastInserted.insertAdjacentElement('afterend', navItem);
+          lastInserted = navItem;
+        } else {
+          sidebarNav.prepend(navItem);
+          lastInserted = navItem;
+        }
+      } else {
+        navItem.style.display = 'flex';
+        lastInserted = navItem;
+      }
+    });
+
+    console.log('[AdminSidebar] Finance and Accounting section sidebar configured with extra admin links');
   }
 
   /**
