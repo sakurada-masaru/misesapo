@@ -1203,6 +1203,7 @@
           // ロールコードのみ設定
           const roleCodeMap = {
             'admin': '1',
+            'headquarters': '8',
             'sales': '2',
             'office': '3',
             'cleaning': '4',
@@ -1472,6 +1473,7 @@
       if (data.role) {
         const roleCodeMap = {
           'admin': '1',
+          'headquarters': '8',
           'sales': '2',
           'office': '3',
           'cleaning': '4',
@@ -2018,6 +2020,7 @@
     try {
       const roleCodeMap = {
         admin: '1',
+        headquarters: '8',
         sales: '2',
         office: '3',
         cleaning: '4',
