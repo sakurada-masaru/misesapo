@@ -1,6 +1,8 @@
 /**
  * 立て替え精算申請ロジック
  */
+const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
 document.addEventListener('DOMContentLoaded', async () => {
     // 認証チェック
     if (!window.CognitoAuth || !window.CognitoAuth.isAuthenticated()) {
@@ -133,7 +135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 status: 'pending'
             };
 
-            const response = await fetch('/api/reimbursements', {
+            const response = await fetch(`${API_BASE}/reimbursements`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -162,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         historyList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
 
         try {
-            const response = await fetch(`/api/reimbursements?staff_id=${staffId}&limit=10`, {
+            const response = await fetch(`${API_BASE}/reimbursements?staff_id=${staffId}&limit=10`, {
                 headers: {
                     'Authorization': `Bearer ${window.CognitoAuth.getIdToken()}`
                 }

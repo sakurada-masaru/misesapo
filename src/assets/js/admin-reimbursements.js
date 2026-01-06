@@ -1,6 +1,8 @@
 /**
  * 立て替え精算管理ロジック (Admin)
  */
+const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
 document.addEventListener('DOMContentLoaded', async () => {
     // 認証チェック
     if (!window.CognitoAuth || !window.CognitoAuth.isAuthenticated()) {
@@ -42,7 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const status = statusFilter.value;
         const staffName = staffSearch.value;
 
-        let url = `/api/reimbursements?limit=100`;
+        let url = `${API_BASE}/reimbursements?limit=100`;
         if (status !== 'all') url += `&status=${status}`;
 
         try {
@@ -137,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const comment = document.getElementById('review-comment').value;
 
         try {
-            const response = await fetch(`/api/reimbursements/${selectedId}`, {
+            const response = await fetch(`${API_BASE}/reimbursements/${selectedId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
