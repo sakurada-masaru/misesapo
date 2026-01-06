@@ -312,7 +312,28 @@
         <div id="ai-message-text"></div>
     </div>
 
+    <!-- Auth & Base Logic -->
     <script>
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+        function isTokenExpired(token) {
+            if (!token || token === 'mock-token' || token === 'dev-token') return true;
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return (payload.exp || 0) <= Math.floor(Date.now() / 1000) + 30;
+            } catch (e) { return true; }
+        }
+
+        function ensureAuthOrRedirect() {
+            const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
+            if (!token || isTokenExpired(token)) {
+                window.location.href = `/staff/signin.html?redirect=${encodeURIComponent(window.location.pathname)}`;
+                return null;
+            }
+            return token;
+        }
+
+        // --- UI Logic ---
         function toggleMenu() {
             document.getElementById('side-menu').classList.toggle('open');
             document.getElementById('overlay').classList.toggle('active');
@@ -324,49 +345,126 @@
         const responseOverlay = document.getElementById('ai-response');
         const messageText = document.getElementById('ai-message-text');
 
+        let mediaRecorder;
+        let audioChunks = [];
         let isRecording = false;
 
-        // Press / Touch Start
-        const startRecording = (e) => {
-            e.preventDefault(); // Prevent ghost clicks
-            isRecording = true;
+        // Initialize Audio
+        async function initAudio() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
 
-            // Visuals
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = async () => {
+                        const base64Audio = reader.result.split(',')[1];
+                        await sendToAI(base64Audio);
+                    };
+                };
+            } catch (err) {
+                console.error('Mic init failed:', err);
+                statusText.textContent = "MIC ERROR";
+                alert('マイクの使用を許可してください。');
+            }
+        }
+
+        // Send to Backend
+        async function sendToAI(base64Audio) {
+            const token = ensureAuthOrRedirect();
+            if (!token) return;
+
+            try {
+                statusText.textContent = "PROCESSING...";
+                const response = await fetch(`${API_BASE}/ai/process`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'assistant_concierge',
+                        audio: base64Audio,
+                        mime_type: 'audio/webm'
+                    })
+                });
+
+                if (!response.ok) throw new Error('API Error');
+
+                const data = await response.json();
+                let aiResult = data.result;
+
+                // Parse JSON from Gemini if needed
+                if (typeof aiResult === 'string') {
+                    try {
+                        const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
+                    } catch (e) { console.warn('JSON Parse failed', e); }
+                }
+
+                showAIResponse(aiResult.reply || aiResult);
+            } catch (err) {
+                console.error('AI Processing failed:', err);
+                showAIResponse("すみません、聞き取れませんでした。もう一度お願いします。");
+            } finally {
+                statusText.textContent = "TAP TO SPEAK";
+            }
+        }
+
+        function showAIResponse(text) {
+            messageText.innerHTML = (text || "わかりました。").replace(/\n/g, '<br>');
+            responseOverlay.classList.add('visible');
+        }
+
+        // --- Interactivity ---
+        const startAction = (e) => {
+            e.preventDefault();
+            if (isRecording) return;
+
+            if (!mediaRecorder) {
+                initAudio().then(() => {
+                    if (mediaRecorder) startAction(e);
+                });
+                return;
+            }
+
+            isRecording = true;
+            audioChunks = [];
+            mediaRecorder.start();
+
             core.classList.add('active');
             statusText.textContent = "LISTENING...";
             statusText.style.color = "#fff";
-
-            // Hide previous response
             responseOverlay.classList.remove('visible');
         };
 
-        // Release / Touch End
-        const stopRecording = (e) => {
+        const stopAction = (e) => {
             if (!isRecording) return;
             isRecording = false;
 
-            // Visuals
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
             core.classList.remove('active');
-            statusText.textContent = "PROCESSING...";
-
-            // Mock AI Processing & Response
-            setTimeout(() => {
-                statusText.textContent = "TAP TO SPEAK";
-                statusText.style.color = "rgba(255,255,255,0.6)";
-
-                // Show Mock Response
-                messageText.innerHTML = "承知しました。<br>「A店」の定期清掃の依頼書を作成しますね。<br>（来週火曜日 13:00〜）で仮予約しました。";
-                responseOverlay.classList.add('visible');
-            }, 1200);
         };
 
-        // Event Listeners
-        visualizer.addEventListener('touchstart', startRecording);
-        visualizer.addEventListener('touchend', stopRecording);
+        visualizer.addEventListener('touchstart', startAction);
+        visualizer.addEventListener('touchend', stopAction);
+        visualizer.addEventListener('mousedown', startAction);
+        visualizer.addEventListener('mouseup', stopAction);
+        visualizer.addEventListener('mouseleave', stopAction);
 
-        visualizer.addEventListener('mousedown', startRecording);
-        visualizer.addEventListener('mouseup', stopRecording);
-        visualizer.addEventListener('mouseleave', stopRecording); // Handle drag out
+        // Pre-init auth & setup
+        document.addEventListener('DOMContentLoaded', () => {
+            ensureAuthOrRedirect();
+            statusText.textContent = "TAP TO SPEAK";
+        });
     </script>
 </body>
 

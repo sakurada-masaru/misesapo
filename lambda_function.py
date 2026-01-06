@@ -10020,12 +10020,11 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
         raise Exception("GEMINI_API_KEY is not set in environment variables.")
 
     # モデルとAPIバージョンを使い分ける
-    # gemini-pro が v1/v1beta ともに見つからないため、全リクエストで gemini-1.5-flash を使用する
-    model_name = "gemini-1.5-flash"
+    # gemini-2.0-flash は Quota:0 で使えなかったため、リストにあった gemini-flash-latest (1.5系) を試す
+    model_name = "gemini-flash-latest"
     api_version = "v1beta"
     
-    # if media: ... 分岐は不要。常に 1.5-flash を使う
-    
+    # URL生成
     url = f"https://generativelanguage.googleapis.com/{api_version}/models/{model_name}:generateContent?key={api_key}"
     
     contents = []
@@ -10055,9 +10054,8 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
         "maxOutputTokens": 2048
     }
 
-    # v1beta (Gemini 1.5) のみ responseMimeType が使える
-    if api_version == "v1beta":
-        gen_config["responseMimeType"] = "application/json" if "json" in (prompt.lower() + (system_instruction or "").lower()) else "text/plain"
+    # v1beta (Gemini 2.0) なので responseMimeType を使用して安定させる
+    gen_config["responseMimeType"] = "application/json" if "json" in (prompt.lower() + (system_instruction or "").lower()) else "text/plain"
 
     data = {
         "contents": contents,
@@ -10079,7 +10077,22 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
         error_body = e.read().decode('utf-8')
         print(f"Gemini API HTTP Error: {e.code} {e.reason}")
         print(f"Error Body: {error_body}")
-        raise Exception(f"Gemini API Error ({e.code}): {error_body}")
+        
+        # 診断: どんなエラーであれ、404が出たら意地でもモデル一覧を取得してエラーメッセージに含める
+        available_models_info = "Could not list models."
+        if e.code == 404 or e.code == 400:
+            try:
+                list_models_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+                with urllib.request.urlopen(list_models_url) as list_res:
+                    models_data = json.loads(list_res.read().decode('utf-8'))
+                    # 名前だけのリストを作る
+                    model_names = [m.get('name') for m in models_data.get('models', [])]
+                    available_models_info = f"AVAILABLE MODELS: {json.dumps(model_names)}"
+            except Exception as list_err:
+                available_models_info = f"List Models Failed: {str(list_err)}"
+
+        # エラーメッセージに診断情報を付与してスローする（これでブラウザで見えるはず）
+        raise Exception(f"Gemini API Error ({e.code}): {error_body} \n\n[DIAGNOSIS] {available_models_info}")
     except Exception as e:
         print(f"Error calling Gemini API: {str(e)}")
         raise e
@@ -10140,41 +10153,112 @@ def handle_ai_process(event, headers):
             prompt = f"以下の情報から見積に必要な情報を抽出してください:\n\n{input_text}"
             result = call_gemini_api(prompt, system_instruction, media)
 
-        elif action == 'suggest_request_form':
-            system_instruction = """あなたはベテランの営業事務アシスタントです。
-営業担当者の雑多な打合せメモ、ヒアリングシート、または録音から、現場への「作業依頼書（スケジュール・問診・アセスメント）」に必要な情報を抽出し、詳細なJSON形式で回答してください。
+        elif action == 'assistant_concierge':
+            # 営業コンシェルジュ用のプロンプト
+            import datetime
+            jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d (%A) %H:%M')
 
-期待するJSON形式:
-{
-  "client_name": "抽出された法人名（不明なら空）",
-  "brand_name": "抽出されたブランド名（不明なら空）",
-  "store_name": "抽出された店舗名（不明なら空）",
-  "assessments": {
-    "area1": {"status": "good/warn/bad", "note": "厨房エリアの状態"},
-    "area2": {"status": "good/warn/bad", "note": "機器設備の状態"},
-    "area3": {"status": "good/warn/bad", "note": "トイレ・手洗いの状態"},
-    "area4": {"status": "good/warn/bad", "note": "防虫防鼠の状態"}
-  },
-  "survey": {
-    "issue": "清掃の悩み",
-    "environment": "店内環境・レイアウト",
-    "area_sqm": "平米数（数字のみ）",
-    "notes": "重点箇所や備考",
-    "equipment": ["ダクト", "グリストラップ", "エアコン", "フライヤー"]
-  },
-  "work": {
-    "date": "YYYY-MM-DD",
-    "time": "HH:MM - HH:MM",
-    "type": "periodic/spot/special/other",
-    "items": ["グリストラップ清掃", "レンジフード洗浄", "床清掃", "エアコン分解洗浄" など]
-  },
-  "logistics": {
-    "parking": "駐車位置関係のメモ",
-    "key": "鍵の受け渡し関係のメモ"
-  },
-  "notes": "全体的な申し送り事項"
-}"""
-            prompt = f"以下の情報から作業依頼書に必要な情報を抽出してください:\n\n{input_text}"
+            system_instruction = f"""
+あなたは店舗メンテンナンス会社の「ミセサポ」で働くベテラン営業秘書です。
+ユーザー（営業マン）からの音声やテキストによる語りかけに対し、親しみやすく、かつプロフェッショナルに応答してください。
+
+### コンテキスト
+- 現在時刻: {jst_now}
+
+### あなたの役割
+1.  **意図（Intent）の判別**: ユーザーが何をしたいのかを判別してください。
+    - `GREETING`: 挨拶（こんにちは、等）
+    - `CHAT`: 雑談、相談、愚痴
+    - `CREATE_REQUEST`: 依頼書（スケジュール）の作成、見積依頼
+    - `SEARCH_STORE`: 店舗情報の検索・調査
+    - `CHECK_SCHEDULE`: 予定の確認
+    - `OTHER`: その他
+
+2.  **応答（Reply）**: 
+    - ユーザーの言葉に対して自然な日本語で返答してください。
+    - `CREATE_REQUEST` の場合は、「承知しました。依頼書の作成ですね。詳細を伺います」のように答え、必要な情報（店名、日時、作業内容）が欠けていれば質問してください。
+    - 闇雲にデータを作成するのではなく、対話を通じて情報を補完してください。
+
+3.  **出力フォーマット**:
+    - 必ず以下のJSON形式で回答してください。
+    {{
+      "reply": "ユーザーへの返信メッセージ（必須）",
+      "intent": "GREETING|CHAT|CREATE_REQUEST|SEARCH_STORE|CHECK_SCHEDULE|OTHER",
+      "suggested_action": "次にユーザーがすべきアクションの提案（任意）",
+      "extracted_data": {{ ... 推出された情報があれば入れる ... }}
+    }}
+"""
+            prompt = f"ユーザーの発言: {input_text}"
+            result = call_gemini_api(prompt, system_instruction, media)
+
+        elif action == 'suggest_request_form':
+            # 現在時刻（JST）を取得して相対日付（「来週」など）を計算できるようにする
+            import datetime
+            jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d (%A) %H:%M')
+
+            system_instruction = f"""
+You are a veteran Sales Support Assistant for a facility management company.
+Your task is to listen to the sales person's rough field report (or read their memo) and draft a formal "Cleaning Request Form" (Service Schedule) JSON.
+
+### Current Context
+- **Current Date/Time**: {jst_now}
+- **User Role**: Sales Representative (onsite or creating a report)
+
+### Your Capabilities & Rules
+1.  **Smart Date Resolution**: 
+    - Convert relative dates like "tomorrow", "next week Tuesday", "early next month" into distinct "YYYY-MM-DD" formats based on the Current Date.
+    - If no date is mentioned but the context implies urgency, suggest a date 1 week from now.
+
+2.  **Client & Store Inference**:
+    - Identify Client Name, Brand Name, and Store Name from the text.
+    - If the user says "A Store" or "The usual place", stick to that string.
+    - If ambiguous, try to extract the most likely proper noun.
+
+3.  **Work Type & Items**:
+    - Default to "periodic" (Regular Cleaning) if not specified.
+    - Contextual Items:
+        - "Kitchen is dirty" -> Check "Floor Cleaning" and "Grease Trap".
+        - "Aircon smells" -> Check "Air Conditioner Filter".
+        - "Pest issues" -> Check "Pest Control" or write in notes.
+
+4.  **Assessment Analysis (Sentiment to Status)**:
+    - "Very dirty", "Terrible", "Greasy" -> Assessment Status: "bad" (× 不良)
+    - "A bit messy", "Needs attention" -> Assessment Status: "warn" (△ 要注意)
+    - "Clean", "Good condition", "No issues" -> Assessment Status: "good" (◎ 良好)
+    - Map these assessments to the correct area (Kitchen, Equipment, Toilet, Pests) based on context.
+
+5.  **Output Format**:
+    - Return ONLY a valid JSON object. No markdown formatting like ```json ... ``` is strictly necessary, but if you do, ensure it is parseable.
+    - Use the following schema:
+    {{
+      "client_name": "String or null",
+      "brand_name": "String or null",
+      "store_name": "String or null",
+      "work": {{
+        "date": "YYYY-MM-DD",
+        "time": "HH:MM - HH:MM (e.g. 09:00 - 12:00)",
+        "type": "periodic|spot|special",
+        "items": ["list", "of", "cleaning", "items", "inferred"]
+      }},
+      "assessments": {{
+        "area1": {{ "status": "good|warn|bad", "note": "Reason inferred from text" }},  // Kitchen
+        "area2": {{ "status": "good|warn|bad", "note": "Reason inferred from text" }},  // Equipment
+        "area3": {{ "status": "good|warn|bad", "note": "Reason inferred from text" }},  // Toilet
+        "area4": {{ "status": "good|warn|bad", "note": "Reason inferred from text" }}   // Pests
+      }},
+      "survey": {{
+        "environment": "String inferred (e.g. Roadside, Mall)",
+        "issue": "Current issues mentioned",
+        "notes": "Other survey notes"
+      }},
+      "logistics": {{
+        "parking": "Parking info if mentioned",
+        "key": "Key info if mentioned"
+      }},
+      "notes": "General remarks or TODOs"
+    }}
+"""
+            prompt = f"以下の情報を元に報告書を作成してください:\n\n{input_text}"
             result = call_gemini_api(prompt, system_instruction, media)
 
             
