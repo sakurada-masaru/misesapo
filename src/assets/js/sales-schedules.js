@@ -131,7 +131,7 @@ async function loadSchedules() {
     const response = await fetch(`${API_BASE}/schedules`);
     if (!response.ok) throw new Error('Failed to load schedules');
     const data = await response.json();
-    allSchedules = Array.isArray(data) ? data : (data.items || data.schedules || []);
+    allSchedules = Array.isArray(data) ? data : (data.items || data.schedules || data.data || []);
     updateNewProjectAlert();
     filterAndRender();
   } catch (error) {
@@ -144,7 +144,7 @@ async function loadStores() {
   try {
     const res = await fetch(`${API_BASE}/stores`);
     const data = await res.json();
-    allStores = Array.isArray(data) ? data : (data.items || []);
+    allStores = Array.isArray(data) ? data : (data.items || data.stores || data.data || []);
     populateStoreSelects();
   } catch (e) { console.error(e); }
 }
@@ -153,7 +153,7 @@ async function loadWorkers() {
   try {
     const res = await fetch(`${API_BASE}/workers`);
     const data = await res.json();
-    allWorkers = Array.isArray(data) ? data : (data.items || []);
+    allWorkers = Array.isArray(data) ? data : (data.items || data.workers || data.staff || data.data || []);
     populateWorkerSelects();
     populateSalesSelects();
   } catch (e) { console.error(e); }
@@ -163,21 +163,21 @@ async function loadClients() {
   try {
     const res = await fetch(`${API_BASE}/clients`);
     const data = await res.json();
-    allClients = Array.isArray(data) ? data : (data.items || []);
+    allClients = Array.isArray(data) ? data : (data.items || data.clients || data.data || []);
   } catch (e) { console.error(e); }
 }
 async function loadBrands() {
   try {
     const res = await fetch(`${API_BASE}/brands`);
     const data = await res.json();
-    allBrands = Array.isArray(data) ? data : (data.items || []);
+    allBrands = Array.isArray(data) ? data : (data.items || data.brands || data.data || []);
   } catch (e) { console.error(e); }
 }
 async function loadServices() {
   try {
     const res = await fetch(`${API_BASE}/services`);
     const data = await res.json();
-    allServices = Array.isArray(data) ? data : (data.items || []);
+    allServices = Array.isArray(data) ? data : (data.items || data.services || data.data || []);
   } catch (e) { console.error(e); }
 }
 
@@ -339,13 +339,17 @@ function populateSalesSelects() {
   if (el) el.innerHTML = '<option value="">未設定</option>' + options;
 }
 
+function isOSStaff(w) {
+  const role = (w.role || '').toLowerCase();
+  const dept = (w.department || '').toLowerCase();
+  // OS課、現場、Operationsなどの名称をカバー
+  const isOS = dept.includes('os') || dept.includes('operation') || dept.includes('現場') || dept.includes('清掃');
+  return role === 'staff' && isOS;
+}
+
 function populateWorkerSelects() {
   // Filter for 'staff' role AND 'OS' department
-  let cleaners = allWorkers.filter(w => {
-    const role = (w.role || '').toLowerCase();
-    const dept = (w.department || '').toLowerCase();
-    return role === 'staff' && (dept.includes('os') || dept.includes('operations'));
-  });
+  let cleaners = allWorkers.filter(isOSStaff);
 
   // Fallback if no OS staff found
   if (cleaners.length === 0 && allWorkers.some(w => (w.role || '').toLowerCase() === 'staff')) {
@@ -616,8 +620,7 @@ function setupWorkerSearch() {
 
   const showResults = (query = '') => {
     const q = query.toLowerCase();
-    // Filter for OS Department only
-    const osWorkers = allWorkers.filter(w => w.department === 'OS' || w.department === 'OS課');
+    const osWorkers = allWorkers.filter(isOSStaff);
     const filtered = q ? osWorkers.filter(w => (w.name || '').toLowerCase().includes(q)) : osWorkers;
 
     if (filtered.length === 0) {
