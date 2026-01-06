@@ -119,11 +119,20 @@ function updateDraftAlert() {
 
 // 新規案件フィルター（グローバル関数）
 window.filterDraft = function () {
+  const storeFilter = document.getElementById('store-filter');
+  const salesFilter = document.getElementById('sales-filter');
+  const workerFilter = document.getElementById('worker-filter');
   const statusFilter = document.getElementById('status-filter');
-  if (statusFilter) {
-    statusFilter.value = 'draft';
-    filterAndRender();
-  }
+  const dateRangeFilter = document.getElementById('date-range-filter');
+
+  // 全ての条件をリセットした上で「未確定」かつ「全ての日程」を表示
+  if (storeFilter) storeFilter.value = '';
+  if (salesFilter) salesFilter.value = '';
+  if (workerFilter) workerFilter.value = '';
+  if (statusFilter) statusFilter.value = 'draft';
+  if (dateRangeFilter) dateRangeFilter.value = 'all';
+
+  filterAndRender();
 };
 
 async function loadStores() {
