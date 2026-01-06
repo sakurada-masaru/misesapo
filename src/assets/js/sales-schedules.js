@@ -113,11 +113,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   setupEventListeners();
-  setupEventListeners();
   setupHierarchicalSelection(); // Replaced items
   setupCleaningItemsSearch();
-  setupCleaningItemsSearch();
   setupWorkerSearch();
+  setupAiRequestSuggestion();
 
   // Initial Render (Calendar)
   renderCalendar();
@@ -352,9 +351,10 @@ function populateWorkerSelects() {
   let cleaners = allWorkers.filter(isOSStaff);
 
   // Fallback if no OS staff found
-  if (cleaners.length === 0 && allWorkers.some(w => (w.role || '').toLowerCase() === 'staff')) {
+  // Fallback if no OS staff found
+  if (cleaners.length === 0) {
     console.warn('No "OS" staff found. Using all staff as fallback.');
-    cleaners = allWorkers.filter(w => (w.role || '').toLowerCase() === 'staff');
+    cleaners = allWorkers;
   }
 
   // Filter Dropdown (Main Page Filter)
@@ -523,7 +523,12 @@ function setupHierarchicalSelection() {
   });
 
   // Initial Population (Wait a bit for data load)
-  setTimeout(populateClients, 500);
+  if (allClients && allClients.length > 0) {
+    populateClients();
+  } else {
+    setTimeout(populateClients, 500);
+    setTimeout(populateClients, 2000); // Fallback retry
+  }
 }
 
 // (Old setupStoreSearch removed)
@@ -1003,14 +1008,23 @@ function openAddDialog(dateStr) {
 
   // Mode: Create (Editable)
   setScheduleFormReadOnly(false);
-  document.getElementById('dialog-title').textContent = '依頼書作成';
-  document.getElementById('schedule-id').value = '';
+  const dialogTitle = document.getElementById('dialog-title');
+  if (dialogTitle) dialogTitle.textContent = '依頼書作成';
 
-  document.getElementById('edit-btn').style.display = 'none';
-  document.getElementById('save-btn').style.display = 'inline-block';
+  const scheduleId = document.getElementById('schedule-id');
+  if (scheduleId) scheduleId.value = '';
+
+  const editBtn = document.getElementById('edit-btn');
+  if (editBtn) editBtn.style.display = 'none';
+
+  const saveBtn = document.getElementById('save-btn');
+  if (saveBtn) saveBtn.style.display = 'inline-block';
 
   // Set Date
-  if (dateStr) document.getElementById('schedule-date').value = dateStr;
+  if (dateStr) {
+    const dateInput = document.getElementById('schedule-date');
+    if (dateInput) dateInput.value = dateStr;
+  }
 
   // Clear Store Selection (Hierarchical)
   const hiddenStore = document.getElementById('schedule-store');
@@ -1729,4 +1743,282 @@ function formatAssessStatus(st) {
   if (st === 'warn') return '△ 要注意';
   if (st === 'bad') return '× 不良';
   return '-';
+}
+
+/**
+ * AI Request Form Suggestion
+ */
+function setupAiRequestSuggestion() {
+  const suggestBtn = document.getElementById('ai-request-suggest-btn');
+  const voiceRecordBtn = document.getElementById('ai-voice-record-btn');
+  const voiceStopBtn = document.getElementById('ai-voice-stop-btn');
+  const memoField = document.getElementById('ai-request-memo');
+  const statusEl = document.getElementById('ai-request-status');
+  const statusText = document.getElementById('ai-status-text');
+  const voiceStatusEl = document.getElementById('ai-voice-status');
+  const voiceTimerEl = document.getElementById('ai-voice-timer');
+
+  if (!suggestBtn) return;
+
+  let mediaRecorder;
+  let audioChunks = [];
+  let timerInterval;
+  let startTime;
+
+  // --- Voice Recording Logic ---
+  if (voiceRecordBtn) {
+    voiceRecordBtn.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+          const reader = new FileReader();
+          reader.readAsDataURL(audioBlob);
+          reader.onloadend = async () => {
+            const base64Audio = reader.result.split(',')[1];
+            await processAiRequest({ audio: base64Audio });
+          };
+
+          // Stop all tracks
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+
+        // UI Updates
+        voiceRecordBtn.style.display = 'none';
+        voiceStopBtn.style.display = 'inline-block';
+        voiceStatusEl.style.display = 'flex';
+        suggestBtn.disabled = true;
+
+        // Timer
+        startTime = Date.now();
+        timerInterval = setInterval(() => {
+          const seconds = Math.floor((Date.now() - startTime) / 1000);
+          const min = String(Math.floor(seconds / 60)).padStart(2, '0');
+          const sec = String(seconds % 60).padStart(2, '0');
+          voiceTimerEl.textContent = `${min}:${sec}`;
+        }, 1000);
+
+      } catch (err) {
+        console.error('Microphone error:', err);
+        alert('マイクの使用が許可されていないか、対応していません。');
+      }
+    });
+
+    voiceStopBtn.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        clearInterval(timerInterval);
+
+        // UI Reset
+        voiceStopBtn.style.display = 'none';
+        voiceRecordBtn.style.display = 'inline-block';
+        voiceStatusEl.style.display = 'none';
+      }
+    });
+  }
+
+  // --- Text Suggestion Logic ---
+  suggestBtn.addEventListener('click', async () => {
+    const memoText = memoField.value.trim();
+    if (!memoText) {
+      alert('打合せメモやヒアリング内容を入力してください。');
+      memoField.focus();
+      return;
+    }
+    await processAiRequest({ text: memoText });
+  });
+
+  // --- Main AI Processing Function ---
+  async function processAiRequest(params) {
+    try {
+      suggestBtn.disabled = true;
+      voiceRecordBtn.disabled = true;
+      statusEl.style.display = 'flex';
+      if (statusText) statusText.textContent = params.audio ? '音声を解析中...' : 'メモを解析中...';
+
+      const response = await fetch(`${API_BASE}/ai/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'suggest_request_form',
+          ...params
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 400) {
+          const errData = await response.json();
+          console.error('AI API 400 Error:', errData);
+          throw new Error('クラウド側のAI機能がまだ更新されていません。管理者に「Lambdaのデプロイ」を依頼してください。');
+        }
+        throw new Error('AI処理に失敗しました');
+      }
+
+      const data = await response.json();
+      if (data.status === 'success' && data.result) {
+        applyAiSuggestion(data.result);
+      }
+    } catch (error) {
+      console.error('AI Request Suggestion Error:', error);
+      alert('AIとの通信でエラーが発生しました。');
+    } finally {
+      suggestBtn.disabled = false;
+      voiceRecordBtn.disabled = false;
+      statusEl.style.display = 'none';
+    }
+  }
+
+  // --- UI Update Logic ---
+  function applyAiSuggestion(result) {
+    // Parse JSON if returned as string
+    if (typeof result === 'string') {
+      try {
+        const jsonMatch = result.match(/```json\n([\s\S]*?)\n```/) || result.match(/{[\s\S]*}/);
+        if (jsonMatch) {
+          result = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+        }
+      } catch (e) {
+        console.warn('AI result was not valid JSON');
+      }
+    }
+
+    if (typeof result !== 'object') return;
+
+    console.log('AI Suggestion Result:', result);
+
+    // 1. Client/Brand/Store Selection
+    if (result.client_name) {
+      const clientSelect = document.getElementById('modal-select-client');
+      for (let i = 0; i < clientSelect.options.length; i++) {
+        const optText = clientSelect.options[i].textContent;
+        if (optText.includes(result.client_name) || result.client_name.includes(optText)) {
+          clientSelect.selectedIndex = i;
+          clientSelect.dispatchEvent(new Event('change'));
+
+          // Wait for Brand/Store selects
+          setTimeout(() => {
+            if (result.brand_name) {
+              const brandSelect = document.getElementById('modal-select-brand');
+              for (let j = 0; j < brandSelect.options.length; j++) {
+                const bText = brandSelect.options[j].textContent;
+                if (bText.includes(result.brand_name) || result.brand_name.includes(bText)) {
+                  brandSelect.selectedIndex = j;
+                  brandSelect.dispatchEvent(new Event('change'));
+
+                  setTimeout(() => {
+                    if (result.store_name) {
+                      const storeSelect = document.getElementById('modal-select-store');
+                      for (let k = 0; k < storeSelect.options.length; k++) {
+                        const sText = storeSelect.options[k].textContent;
+                        if (sText.includes(result.store_name) || result.store_name.includes(sText)) {
+                          storeSelect.selectedIndex = k;
+                          storeSelect.dispatchEvent(new Event('change'));
+                          break;
+                        }
+                      }
+                    }
+                  }, 300);
+                  break;
+                }
+              }
+            }
+          }, 300);
+          break;
+        }
+      }
+    }
+
+    // 2. Assessments
+    if (result.assessments) {
+      ['area1', 'area2', 'area3', 'area4'].forEach(key => {
+        const info = result.assessments[key];
+        if (info) {
+          if (info.status) {
+            const radio = document.querySelector(`input[name="assess_${key}"][value="${info.status}"]`);
+            if (radio) radio.checked = true;
+          }
+          const noteInput = document.getElementById(`assess-note-${key}`);
+          if (noteInput && info.note) noteInput.value = info.note;
+        }
+      });
+    }
+
+    // 3. Survey
+    if (result.survey) {
+      const s = result.survey;
+      const fields = {
+        'survey-issue': s.issue,
+        'survey-environment': s.environment,
+        'survey-area-sqm': s.area_sqm,
+        'survey-notes': s.notes
+      };
+      for (const [id, val] of Object.entries(fields)) {
+        const el = document.getElementById(id);
+        if (el && val) el.value = val;
+      }
+      if (s.equipment && Array.isArray(s.equipment)) {
+        s.equipment.forEach(item => {
+          const cb = document.querySelector(`#survey-equipment input[value="${item}"]`);
+          if (cb) cb.checked = true;
+        });
+      }
+    }
+
+    // 4. Work (Schedule)
+    if (result.work) {
+      const w = result.work;
+      if (w.date) {
+        const dateInput = document.getElementById('schedule-date');
+        if (dateInput) dateInput.value = w.date;
+      }
+      if (w.time) {
+        const timeInput = document.getElementById('schedule-time');
+        if (timeInput) timeInput.value = w.time;
+      }
+      if (w.type) {
+        const typeSelect = document.getElementById('schedule-work-type');
+        if (typeSelect) typeSelect.value = w.type;
+      }
+
+      if (w.items && Array.isArray(w.items)) {
+        w.items.forEach(item => {
+          const checkboxes = document.querySelectorAll('input[name="work_items_check[]"]');
+          checkboxes.forEach(cb => {
+            if (cb.value.includes(item) || item.includes(cb.value)) {
+              cb.checked = true;
+            }
+          });
+        });
+      }
+    }
+
+    // 5. Logistics & Notes
+    if (result.logistics) {
+      if (result.logistics.parking) {
+        const pInput = document.getElementById('schedule-parking');
+        if (pInput) pInput.value = result.logistics.parking;
+      }
+      if (result.logistics.key) {
+        const kInput = document.getElementById('schedule-key-info');
+        if (kInput) kInput.value = result.logistics.key;
+      }
+    }
+    if (result.notes) {
+      const nInput = document.getElementById('schedule-notes');
+      if (nInput) nInput.value = result.notes;
+    }
+
+    alert('AIが内容を抽出して入力しました。内容を確認してください。');
+  }
 }

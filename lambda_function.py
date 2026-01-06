@@ -10011,9 +10011,9 @@ def delete_reimbursement(reimbursement_id, headers):
             'body': json.dumps({'error': '削除に失敗しました', 'message': str(e)}, ensure_ascii=False)
         }
 
-def call_gemini_api(prompt, system_instruction=None):
+def call_gemini_api(prompt, system_instruction=None, media=None):
     """
-    Gemini API (1.5 Flash) を呼び出す
+    Gemini API (1.5 Flash/Pro) を呼び出す
     """
     api_key = os.environ.get('GEMINI_API_KEY')
     if not api_key:
@@ -10022,11 +10022,23 @@ def call_gemini_api(prompt, system_instruction=None):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
     
     contents = []
+    parts = []
+    
     if system_instruction:
-        prompt = f"{system_instruction}\n\nUser Input: {prompt}"
+        parts.append({"text": f"{system_instruction}\n\nUser Input Prompt: {prompt}"})
+    else:
+        parts.append({"text": prompt})
+    
+    if media:
+        parts.append({
+            "inline_data": {
+                "mime_type": media.get('mime_type', 'audio/mpeg'),
+                "data": media.get('data') # Base64 encoded
+            }
+        })
         
     contents.append({
-        "parts": [{"text": prompt}]
+        "parts": parts
     })
     
     data = {
@@ -10062,24 +10074,91 @@ def handle_ai_process(event, headers):
     try:
         body = json.loads(event.get('body') or '{}')
         action = body.get('action')
-        input_text = body.get('text')
+        input_text = body.get('text', '')
+        audio_data = body.get('audio') # Base64 encoded
         
-        if not action or not input_text:
+        if not action:
             return {
                 'statusCode': 400,
                 'headers': headers,
-                'body': json.dumps({'error': 'action and text are required'}, ensure_ascii=False)
+                'body': json.dumps({'error': 'action is required'}, ensure_ascii=False)
             }
+        
+        media = None
+        if audio_data:
+            media = {
+                'mime_type': 'audio/wav', # Default to web recorder format
+                'data': audio_data
+            }
+            if not input_text:
+                input_text = "音声データを解析してください。"
             
         if action == 'summarize_report':
-            system_instruction = "あなたはプロの清掃管理アドバイザーです。ユーザーの雑多な清掃メモから、顧客に提出できる丁寧で構造化された清掃報告書（日本語）を作成してください。出力は純粋なテキストまたはMarkdownにしてください。"
-            prompt = f"以下のメモを元に報告書を作成してください:\n\n{input_text}"
-            result = call_gemini_api(prompt, system_instruction)
+            system_instruction = "あなたはプロの清掃管理アドバイザーです。ユーザーの雑多な清掃メモ（テキストまたは録音）から、顧客に提出できる丁寧で構造化された清掃報告書（日本語）を作成してください。出力は純粋なテキストまたはMarkdownにしてください。"
+            prompt = f"以下の情報を元に報告書を作成してください:\n\n{input_text}"
+            result = call_gemini_api(prompt, system_instruction, media)
             
         elif action == 'extract_karte':
-            system_instruction = "顧客との会話メモから、重要な要望や注意点を抽出し、JSON形式で出力してください。項目例: 重点清掃箇所, 禁忌事項, 次回への申し送り, 顧客のこだわり。"
-            prompt = f"以下のメモから情報を抽出してください:\n\n{input_text}"
-            result = call_gemini_api(prompt, system_instruction)
+            system_instruction = "打合せメモまたは録音から、重要な要望や注意点を抽出し、JSON形式で出力してください。項目例: 重点清掃箇所, 禁忌事項, 次回への申し送り, 顧客のこだわり。"
+            prompt = f"以下の情報から情報を抽出してください:\n\n{input_text}"
+            result = call_gemini_api(prompt, system_instruction, media)
+            
+        elif action == 'suggest_estimate':
+            system_instruction = """あなたはベテランの営業事務アシスタントです。
+営業担当者の雑多な打合せメモまたは録音から、見積依頼（営業依頼書）に必要な情報を抽出し、JSON形式で回答してください。
+
+期待するJSON形式:
+{
+  "company_name": "抽出された企業名/顧客名（不明な場合は空文字）",
+  "store_name": "抽出された店舗名（不明な場合は空文字）",
+  "services": [
+    {
+      "name": "抽出されたサービス名（例：換気扇清掃, 定期清掃など）",
+      "quantity": 1
+    }
+  ],
+  "notes": "見積もりに関する補足事項や、AIが見つけた特記事項"
+}"""
+            prompt = f"以下の情報から見積に必要な情報を抽出してください:\n\n{input_text}"
+            result = call_gemini_api(prompt, system_instruction, media)
+
+        elif action == 'suggest_request_form':
+            system_instruction = """あなたはベテランの営業事務アシスタントです。
+営業担当者の雑多な打合せメモ、ヒアリングシート、または録音から、現場への「作業依頼書（スケジュール・問診・アセスメント）」に必要な情報を抽出し、詳細なJSON形式で回答してください。
+
+期待するJSON形式:
+{
+  "client_name": "抽出された法人名（不明なら空）",
+  "brand_name": "抽出されたブランド名（不明なら空）",
+  "store_name": "抽出された店舗名（不明なら空）",
+  "assessments": {
+    "area1": {"status": "good/warn/bad", "note": "厨房エリアの状態"},
+    "area2": {"status": "good/warn/bad", "note": "機器設備の状態"},
+    "area3": {"status": "good/warn/bad", "note": "トイレ・手洗いの状態"},
+    "area4": {"status": "good/warn/bad", "note": "防虫防鼠の状態"}
+  },
+  "survey": {
+    "issue": "清掃の悩み",
+    "environment": "店内環境・レイアウト",
+    "area_sqm": "平米数（数字のみ）",
+    "notes": "重点箇所や備考",
+    "equipment": ["ダクト", "グリストラップ", "エアコン", "フライヤー"]
+  },
+  "work": {
+    "date": "YYYY-MM-DD",
+    "time": "HH:MM - HH:MM",
+    "type": "periodic/spot/special/other",
+    "items": ["グリストラップ清掃", "レンジフード洗浄", "床清掃", "エアコン分解洗浄" など]
+  },
+  "logistics": {
+    "parking": "駐車位置関係のメモ",
+    "key": "鍵の受け渡し関係のメモ"
+  },
+  "notes": "全体的な申し送り事項"
+}"""
+            prompt = f"以下の情報から作業依頼書に必要な情報を抽出してください:\n\n{input_text}"
+            result = call_gemini_api(prompt, system_instruction, media)
+
             
         else:
             return {
