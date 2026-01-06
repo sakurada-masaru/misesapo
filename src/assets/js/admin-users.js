@@ -1384,7 +1384,18 @@
     document.getElementById('user-email').value = user.email || '';
     document.getElementById('user-phone').value = user.phone || '';
     document.getElementById('user-role').value = user.role || 'staff';
-    document.getElementById('user-department').value = user.department || '';
+    const deptSelect = document.getElementById('user-department');
+    const userDept = user.department || '';
+    deptSelect.value = userDept;
+
+    // 既存の部署が選択肢にない場合、動的に追加して選択状態にする
+    if (userDept && deptSelect.value !== userDept) {
+      const option = document.createElement('option');
+      option.value = userDept;
+      option.textContent = userDept + ' (旧)';
+      deptSelect.appendChild(option);
+      deptSelect.value = userDept;
+    }
     document.getElementById('user-status').value = user.status || 'active';
     document.getElementById('user-password').value = '';
     document.getElementById('password-required').style.display = 'none';
