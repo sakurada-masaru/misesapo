@@ -1401,6 +1401,134 @@
         deleteTargetId = null; // エラー時もリセット
       }
     });
+
+    // 更新ボタンのイベントリスナー
+    const refreshBtn = document.getElementById('refresh-btn');
+    if (refreshBtn) {
+      refreshBtn.onclick = async (e) => {
+        e.preventDefault();
+        const originalText = refreshBtn.innerHTML;
+        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 更新中...';
+        refreshBtn.disabled = true;
+
+        try {
+          // 出勤データと日報データを再読み込み（ユーザーリストも更新）
+          await Promise.all([
+            loadAttendanceRecords(),
+            loadUsers(),
+            loadTodayDailyReports()
+          ]);
+
+          applyFilters();
+          renderTable();
+          updateStats();
+        } catch (error) {
+          console.error('Refresh failed:', error);
+        } finally {
+          refreshBtn.innerHTML = originalText;
+          refreshBtn.disabled = false;
+        }
+      };
+    }
+
+    // ユーザー編集フォームの保存
+    userForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const confirmBtn = document.getElementById('submit-btn');
+      const originalText = confirmBtn.textContent;
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = '保存中...';
+
+      const formData = new FormData(userForm);
+      const data = Object.fromEntries(formData.entries());
+
+      // IDを文字列として正規化
+      if (data.id) {
+        data.id = String(data.id);
+      }
+
+      const isNew = !data.id;
+
+      // 新規作成の場合、IDを生成（W + タイムスタンプの下4桁 + ランダム2桁）
+      if (isNew) {
+        const timestamp = Date.now().toString().slice(-4);
+        const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+        data.id = `W${timestamp}${random}`;
+        data.created_at = new Date().toISOString();
+        data.cognito_sub = ''; // 新規作成時は空
+        data.status = data.status || 'active';
+      }
+
+      // 必須チェック（ロール）
+      if (!data.role) {
+        document.getElementById('form-status').textContent = 'ロールを選択してください';
+        document.getElementById('form-status').className = 'form-status error';
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = originalText;
+        return;
+      }
+
+      // ユーザー情報の整理
+      // ロールコードの設定
+      if (data.role) {
+        const roleCodeMap = {
+          'admin': '1',
+          'sales': '2',
+          'office': '3',
+          'cleaning': '4',
+          'public_relations': '5',
+          'designer': '6',
+          'general_affairs': '7',
+          'director': '8',
+          'contractor': '9',
+          'accounting': '10',
+          'human_resources': '11',
+          'special_advisor': '12',
+          'field_sales': '13',
+          'inside_sales': '14',
+          'mechanic': '15',
+          'engineer': '16',
+          'part_time': '17',
+          'staff': '4',
+          'developer': '5',
+          'operation': '8'
+        };
+        data.role_code = roleCodeMap[data.role] || '4';
+      }
+
+      data.updated_at = new Date().toISOString();
+
+      try {
+        // workersテーブルに保存
+        const url = `${API_BASE}/workers${isNew ? '' : '/' + encodeURIComponent(data.id)}`;
+        const response = await fetch(url, {
+          method: isNew ? 'POST' : 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          document.getElementById('form-status').textContent = '保存しました';
+          document.getElementById('form-status').className = 'form-status success';
+
+          setTimeout(async () => {
+            userDialog.close();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            await loadUsers();
+          }, 500);
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || errorData.message || `保存に失敗しました (ステータス: ${response.status})`);
+        }
+      } catch (error) {
+        console.error('Update error:', error);
+        document.getElementById('form-status').textContent = error.message || '保存に失敗しました';
+        document.getElementById('form-status').className = 'form-status error';
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = originalText;
+      }
+    });
   }
 
   // 編集
@@ -1574,7 +1702,7 @@
         return;
       }
 
-      const response = await fetch(`${API_BASE}/attendance?date=${today}`, {
+      const response = await fetch(`${API_BASE}/attendance?date=${today}&t=${Date.now()}`, {
         headers: { 'Authorization': `Bearer ${idToken}` },
         cache: 'no-store'
       });
