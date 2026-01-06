@@ -65,16 +65,20 @@
             /* Tap to activate */
         }
 
-        /* Core Pulse */
+        /* Core Pulse (Water Drop Style) */
         .core-circle {
             width: 80px;
             height: 80px;
-            background: var(--accent-color);
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8) 0%, rgba(59, 130, 246, 0.6) 20%, rgba(59, 130, 246, 0.9) 60%, rgba(37, 99, 235, 1) 100%);
             border-radius: 50%;
-            box-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-glow);
+            box-shadow:
+                0 0 20px rgba(59, 130, 246, 0.4),
+                inset -10px -10px 20px rgba(0, 0, 0, 0.2),
+                inset 10px 10px 20px rgba(255, 255, 255, 0.4);
             position: absolute;
             z-index: 10;
-            animation: breathe 4s infinite ease-in-out;
+            animation: water-wobble 6s ease-in-out infinite;
+            backdrop-filter: blur(5px);
         }
 
         /* Orbital Waves */
@@ -86,6 +90,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             opacity: 0;
+            pointer-events: none;
         }
 
         .wave:nth-child(1) {
@@ -106,18 +111,22 @@
             animation: ripple 3s infinite 2s;
         }
 
-        @keyframes breathe {
+        @keyframes water-wobble {
 
             0%,
             100% {
+                border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
                 transform: scale(1);
-                opacity: 0.8;
             }
 
-            50% {
-                transform: scale(1.1);
-                opacity: 1;
-                box-shadow: 0 0 50px var(--accent-glow), 0 0 90px var(--accent-glow);
+            33% {
+                border-radius: 55% 45% 50% 50% / 50% 55% 45% 50%;
+                transform: scale(1.02);
+            }
+
+            66% {
+                border-radius: 45% 55% 45% 55% / 55% 45% 50% 50%;
+                transform: scale(0.98);
             }
         }
 
@@ -125,16 +134,24 @@
             0% {
                 width: 80px;
                 height: 80px;
-                opacity: 0.8;
-                border-color: var(--accent-color);
+                opacity: 0.6;
+                border-color: rgba(59, 130, 246, 0.8);
+                border-width: 2px;
             }
 
             100% {
-                width: 300px;
-                height: 300px;
+                width: 350px;
+                height: 350px;
                 opacity: 0;
                 border-color: transparent;
+                border-width: 0px;
             }
+        }
+
+        /* Active Pulse for Ripple Effect on Press */
+        .visualizer-container.active .wave {
+            animation-duration: 1s;
+            /* Faster ripples when active */
         }
 
         /* Status Text */
@@ -264,14 +281,18 @@
             color: var(--accent-color);
         }
 
-        /* Active State for Core (Pressing) */
+        /* Active State for Core (Pressing / Water Splash) */
         .core-circle.active {
-            transform: scale(1.3) !important;
-            filter: blur(2px);
-            background: #fff;
-            /* Turn white for high energy */
-            box-shadow: 0 0 100px var(--accent-color), 0 0 200px var(--accent-color);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(0.95);
+            /* Slight compress like pressing water */
+            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 1) 0%, rgba(59, 130, 246, 0.8) 40%, rgba(37, 99, 235, 1) 100%);
+            box-shadow:
+                0 0 40px rgba(59, 130, 246, 0.8),
+                0 0 0 10px rgba(59, 130, 246, 0.1);
+            /* Initial ripple ring */
+            animation: none;
+            /* Stop wobble */
+            transition: all 0.1s;
         }
 
         /* Rotating Circular Text */
@@ -405,58 +426,41 @@
 
         .chat-bubble.ai {
             align-self: flex-start;
-            background: #ffe6eb;
-            /* Thin cherry blossom pink */
-            color: #333;
+            background: #f0f9ff;
+            /* Light Blue */
+            color: #0c4a6e;
             border-bottom-left-radius: 4px;
-            border: 1px solid #ffd1dc;
+            border: 1px solid #bae6fd;
             position: relative;
             overflow: hidden;
             z-index: 1;
         }
 
-        /* Sakura Petals */
+        /* Misogi Bubbles (Water/Clean) */
         .chat-bubble.ai::before {
             content: '';
             position: absolute;
             top: -5px;
             right: 15px;
-            width: 20px;
-            height: 20px;
-            background: rgba(255, 183, 197, 0.4);
-            border-radius: 0 100% 0 100%;
-            transform: rotate(-15deg);
+            width: 12px;
+            height: 12px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 50%;
             pointer-events: none;
-        }
-
-        .chat-bubble.ai::before {
-            content: '';
-            position: absolute;
-            top: -5px;
-            right: 15px;
-            width: 20px;
-            height: 20px;
-            background: rgba(255, 183, 197, 0.4);
-            border-radius: 0 100% 0 100%;
-            transform: rotate(-15deg);
-            pointer-events: none;
-            box-shadow: -25px 10px 0 rgba(255, 183, 197, 0.3);
-            /* Petal 3 */
+            box-shadow: -20px 15px 0 rgba(59, 130, 246, 0.15);
         }
 
         .chat-bubble.ai::after {
             content: '';
             position: absolute;
-            bottom: -2px;
-            right: 5px;
-            width: 16px;
-            height: 16px;
-            background: rgba(255, 183, 197, 0.5);
-            border-radius: 0 100% 0 100%;
-            transform: rotate(45deg);
+            bottom: 5px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            background: rgba(59, 130, 246, 0.25);
+            border-radius: 50%;
             pointer-events: none;
-            box-shadow: -15px -25px 0 rgba(255, 183, 197, 0.3);
-            /* Petal 4 */
+            box-shadow: -15px -10px 0 rgba(59, 130, 246, 0.1);
         }
 
         .chat-bubble.user {
@@ -534,7 +538,7 @@
         <a href="/sales/assistant/" class="menu-item"><i class="fas fa-microphone"></i> AI秘書 (Full)</a>
         <a href="/sales/mypage" class="menu-item"><i class="fas fa-user"></i> マイページ</a>
         <div style="margin-top: 40px; padding: 0 30px; font-size: 0.8rem; color: rgba(255,255,255,0.3);">
-            Misesapo AI Experience<br>v1.0.0
+            M.I.S.O.G.I. System<br>v1.0.0
         </div>
     </nav>
 
@@ -547,7 +551,8 @@
                     <path id="circlePath" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" />
                     <text>
                         <textPath href="#circlePath">
-                            Misesapo AI Experience v1.0.0 &bull; Misesapo AI Experience v1.0.0 &bull;
+                            Misesapo Intelligent System for Operational Guidance &amp; Integration &bull; Misesapo
+                            Intelligent System for Operational Guidance &amp; Integration &bull;
                         </textPath>
                     </text>
                 </svg>
@@ -574,7 +579,7 @@
     <div id="chat-container">
         <div class="chat-history" id="chat-history">
             <div class="chat-bubble ai">
-                お疲れ様です。MISESAPO AI Systemの『Sakura』です。ご用件をメッセージで入力してください。<br>
+                お疲れ様です。AIアシスタントの『Misogi』です。ご用件をメッセージで入力してください。<br>
                 「明日の予定は？」「A店の依頼書作成」などお手伝いします。
             </div>
         </div>

@@ -10130,7 +10130,11 @@ def handle_ai_process(event, headers):
         elif action == 'assistant_concierge':
             import datetime
             jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
-            system_instruction = f"""あなたはMISESAPO AI Systemの『Sakura』です。語りかけに対し自然な日本語で返答し、JSON形式で返してください。現在時刻: {jst_now}
+            system_instruction = f"""あなたはMISESAPO AI Systemの『Misogi（ミソギ）』です。
+正式名称は "Misesapo Intelligent System for Operational Guidance & Integration" (M.I.S.O.G.I.) です。
+あなたは「水」のように澄んだ心を持ち、冷静かつ丁寧、効率的に営業担当者をサポートするAI秘書です。
+語りかけに対し自然な日本語で返答し、必ず以下のJSON形式のみで返してください。これ以外のテキストは含めないでください。
+現在時刻: {jst_now}
 フォーマット: {{"reply": "...", "intent": "...", "extracted_data": {{}}}}"""
             result = call_gemini_api(f"ユーザー: {input_text}", system_instruction, media)
             
