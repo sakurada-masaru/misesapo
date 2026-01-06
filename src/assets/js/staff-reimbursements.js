@@ -3,13 +3,17 @@
  */
 document.addEventListener('DOMContentLoaded', async () => {
     // 認証チェック
-    const auth = await window.Auth.check();
-    if (!auth) {
+    if (!window.CognitoAuth || !window.CognitoAuth.isAuthenticated()) {
         window.location.replace('/staff/signin.html');
         return;
     }
 
-    const user = auth.user || auth;
+    const user = await window.CognitoAuth.getCurrentUser();
+    if (!user) {
+        window.location.replace('/staff/signin.html');
+        return;
+    }
+
     const staffId = user.id || user.uid || user.username;
     const staffName = user.display_name || user.name || 'スタッフ';
 
@@ -133,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${await window.Auth.getToken()}`
+                    'Authorization': `Bearer ${window.CognitoAuth.getIdToken()}`
                 },
                 body: json.stringify(data)
             });
@@ -160,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const response = await fetch(`/api/reimbursements?staff_id=${staffId}&limit=10`, {
                 headers: {
-                    'Authorization': `Bearer ${await window.Auth.getToken()}`
+                    'Authorization': `Bearer ${window.CognitoAuth.getIdToken()}`
                 }
             });
 

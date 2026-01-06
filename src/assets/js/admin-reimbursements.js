@@ -3,13 +3,16 @@
  */
 document.addEventListener('DOMContentLoaded', async () => {
     // 認証チェック
-    const auth = await window.Auth.check();
-    if (!auth) {
+    if (!window.CognitoAuth || !window.CognitoAuth.isAuthenticated()) {
         window.location.replace('/staff/signin.html');
         return;
     }
 
-    const user = auth.user || auth;
+    const user = await window.CognitoAuth.getCurrentUser();
+    if (!user) {
+        window.location.replace('/staff/signin.html');
+        return;
+    }
     // 管理者/経理権限チェック（本来はバックエンドでも行われる）
 
     // DOM要素
@@ -44,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             const response = await fetch(url, {
-                headers: { 'Authorization': `Bearer ${await window.Auth.getToken()}` }
+                headers: { 'Authorization': `Bearer ${window.CognitoAuth.getIdToken()}` }
             });
             if (!response.ok) throw new Error('取得失敗');
 
@@ -138,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${await window.Auth.getToken()}`
+                    'Authorization': `Bearer ${window.CognitoAuth.getIdToken()}`
                 },
                 body: json.stringify({
                     status: status,
