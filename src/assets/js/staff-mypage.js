@@ -2034,6 +2034,7 @@ let alarmTime = null;
 let alarmEnabled = false;
 
 function setupDigitalClock() {
+  let lastClockDate = new Date().toLocaleDateString('ja-JP');
   const clockDisplay = document.getElementById('digital-clock-display');
   const formatToggle = document.getElementById('clock-format-toggle');
   const alarmSetBtn = document.getElementById('alarm-set-btn');
@@ -2071,6 +2072,28 @@ function setupDigitalClock() {
   // 時計の更新
   function updateClock() {
     const now = new Date();
+
+    // 日付変更チェック
+    const currentDate = now.toLocaleDateString('ja-JP');
+    if (typeof lastClockDate !== 'undefined' && currentDate !== lastClockDate) {
+      console.log('[Mypage] 日付変更を検知:', lastClockDate, '->', currentDate);
+      lastClockDate = currentDate;
+
+      // 出退勤ステータスをリフレッシュ
+      if (typeof initializeAttendanceForToday === 'function') {
+        initializeAttendanceForToday();
+      }
+      if (typeof renderAttendanceStatus === 'function') {
+        renderAttendanceStatus();
+      }
+
+      // 日報の日付なども更新
+      const todayElement = document.getElementById('daily-report-today-date');
+      if (todayElement) {
+        todayElement.textContent = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+      }
+    }
+
     let hours = now.getHours();
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
