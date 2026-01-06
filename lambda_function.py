@@ -789,6 +789,7 @@ INVENTORY_ITEMS_TABLE = dynamodb.Table('inventory-items')
 INVENTORY_TRANSACTIONS_TABLE = dynamodb.Table('inventory-transactions')
 DAILY_REPORTS_TABLE = dynamodb.Table('daily-reports')
 TODOS_TABLE = dynamodb.Table('todos')
+REIMBURSEMENTS_TABLE = dynamodb.Table('misesapo-reimbursements')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -1205,6 +1206,21 @@ def lambda_handler(event, context):
                 return update_todo(todo_id, event, headers)
             elif method == 'DELETE':
                 return delete_todo(todo_id, headers)
+        elif normalized_path == '/reimbursements':
+            # 立て替え精算の取得・作成
+            if method == 'GET':
+                return get_reimbursements(event, headers)
+            elif method == 'POST':
+                return create_reimbursement(event, headers)
+        elif normalized_path.startswith('/reimbursements/'):
+            # 立て替え精算の詳細・更新・削除
+            reimbursement_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_reimbursement_detail(reimbursement_id, headers)
+            elif method == 'PUT':
+                return update_reimbursement(reimbursement_id, event, headers)
+            elif method == 'DELETE':
+                return delete_reimbursement(reimbursement_id, headers)
         elif normalized_path.startswith('/google-calendar/events/'):
             # Google Calendar連携は廃止（今後はシステム内スケジュールのみ）
             return {
@@ -9797,4 +9813,190 @@ def delete_todo(todo_id, headers):
                 'error': 'TODOの削除に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
+        }
+
+def get_reimbursements(event, headers):
+    """
+    立て替え精算申請一覧を取得
+    """
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        staff_id = query_params.get('staff_id')
+        status = query_params.get('status')
+        limit = int(query_params.get('limit', 50))
+
+        if staff_id:
+            # スタッフIDでフィルタリング
+            # ※GSI (staff_id-date-index) がある想定
+            try:
+                response = REIMBURSEMENTS_TABLE.query(
+                    IndexName='staff_id-date-index',
+                    KeyConditionExpression=Key('staff_id').eq(staff_id),
+                    ScanIndexForward=False,
+                    Limit=limit
+                )
+            except Exception:
+                # インデックスがない場合はスキャンで対応（フォールバック）
+                response = REIMBURSEMENTS_TABLE.scan(
+                    FilterExpression=Attr('staff_id').eq(staff_id),
+                    Limit=limit
+                )
+        else:
+            # 全員分（管理者/経理用）
+            response = REIMBURSEMENTS_TABLE.scan(Limit=limit)
+        
+        items = response.get('Items', [])
+        
+        # ステータスフィルタ
+        if status:
+            items = [item for item in items if item.get('status') == status]
+            
+        # ID順（作成日順に近い）にソート
+        items.sort(key=lambda x: x.get('date', ''), reverse=True)
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'reimbursements': items}, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting reimbursements: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'データ取得に失敗しました', 'message': str(e)}, ensure_ascii=False)
+        }
+
+def create_reimbursement(event, headers):
+    """
+    立て替え精算申請を作成
+    """
+    try:
+        if event.get('isBase64Encoded'):
+            body_str = base64.b64decode(event['body']).decode('utf-8')
+        else:
+            body_str = event.get('body', '{}')
+        body = json.loads(body_str)
+        
+        reimbursement_id = f"REIMB_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M')}_{uuid.uuid4().hex[:6]}"
+        now = datetime.now(timezone.utc).isoformat() + 'Z'
+        
+        # Decimal変換（金額用）
+        amount = Decimal(str(body.get('amount', 0)))
+        
+        data = {
+            'id': reimbursement_id,
+            'staff_id': body.get('staff_id'),
+            'staff_name': body.get('staff_name'),
+            'date': body.get('date'),
+            'category': body.get('category'),
+            'title': body.get('title'),
+            'amount': amount,
+            'description': body.get('description', ''),
+            'receipt_url': body.get('receipt_url', ''),
+            'status': 'pending', # pending, approved, rejected, paid
+            'created_at': now,
+            'updated_at': now
+        }
+        
+        REIMBURSEMENTS_TABLE.put_item(Item=data)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'status': 'success', 'id': reimbursement_id}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error creating reimbursement: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': '申請の作成に失敗しました', 'message': str(e)}, ensure_ascii=False)
+        }
+
+def get_reimbursement_detail(reimbursement_id, headers):
+    """
+    立て替え精算申請詳細を取得
+    """
+    try:
+        response = REIMBURSEMENTS_TABLE.get_item(Key={'id': reimbursement_id})
+        if 'Item' in response:
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
+            }
+        return {
+            'statusCode': 404,
+            'headers': headers,
+            'body': json.dumps({'error': '申請が見つかりません'}, ensure_ascii=False)
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': '詳細取得に失敗しました', 'message': str(e)}, ensure_ascii=False)
+        }
+
+def update_reimbursement(reimbursement_id, event, headers):
+    """
+    立て替え精算申請を更新（承認・却下・精算処理用）
+    """
+    try:
+        if event.get('isBase64Encoded'):
+            body_str = base64.b64decode(event['body']).decode('utf-8')
+        else:
+            body_str = event.get('body', '{}')
+        body = json.loads(body_str)
+        
+        now = datetime.now(timezone.utc).isoformat() + 'Z'
+        
+        update_expression = "SET #status = :s, updated_at = :u"
+        expression_names = {"#status": "status"}
+        expression_values = {":s": body.get('status'), ":u": now}
+        
+        if 'review_comments' in body:
+            update_expression += ", review_comments = :c"
+            expression_values[":c"] = body.get('review_comments')
+        
+        if 'reviewer_id' in body:
+            update_expression += ", reviewer_id = :r"
+            expression_values[":r"] = body.get('reviewer_id')
+            
+        REIMBURSEMENTS_TABLE.update_item(
+            Key={'id': reimbursement_id},
+            UpdateExpression=update_expression,
+            ExpressionAttributeNames=expression_names,
+            ExpressionAttributeValues=expression_values
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'status': 'success', 'message': '申請を更新しました'}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error updating reimbursement {reimbursement_id}: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': '更新に失敗しました', 'message': str(e)}, ensure_ascii=False)
+        }
+
+def delete_reimbursement(reimbursement_id, headers):
+    """
+    立て替え精算申請を削除
+    """
+    try:
+        REIMBURSEMENTS_TABLE.delete_item(Key={'id': reimbursement_id})
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'status': 'success', 'message': '申請を削除しました'}, ensure_ascii=False)
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': '削除に失敗しました', 'message': str(e)}, ensure_ascii=False)
         }

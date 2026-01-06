@@ -717,7 +717,8 @@
     const itemsToAdd = [
       { page: 'zaiko', href: '/admin/zaiko', icon: 'fa-boxes', label: '在庫管理' },
       { page: 'customers', href: '/admin/customers', icon: 'fa-users', label: '顧客管理' },
-      { page: 'schedules', href: '/admin/schedules', icon: 'fa-calendar-alt', label: 'スケジュール管理' }
+      { page: 'reimbursements', href: '/staff/reimbursements', icon: 'fa-file-invoice-dollar', label: '立て替え精算' },
+      { page: 'admin-reimbursements', href: '/admin/reimbursements', icon: 'fa-user-check', label: '経費精算承認' }
     ];
 
     const mypageLink = sidebarNav.querySelector('a[data-page="mypage"]');
@@ -744,7 +745,13 @@
       }
     });
 
-    console.log('[AdminSidebar] Finance and Accounting section sidebar configured with extra admin links');
+    // 不要になったスケジュール管理リンクを追加後に削除（もし存在する場合）
+    const scheduleManagementLink = sidebarNav.querySelector('a[data-page="schedules"]');
+    if (scheduleManagementLink) {
+      scheduleManagementLink.style.display = 'none';
+    }
+
+    console.log('[AdminSidebar] Finance and Accounting section sidebar configured with reimbursement and admin links');
   }
 
   /**
