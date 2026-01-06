@@ -71,8 +71,8 @@
           return;
         }
 
-        // 事務ユーザー以外は通常マイページへ
-        if (!(role === 'office' || department.includes('事務') || department.includes('office'))) {
+        // 事務・経理ユーザー以外は通常マイページへ
+        if (!(role === 'office' || department.includes('事務') || department.includes('経理') || department.includes('office') || department.includes('finance'))) {
           window.location.replace('/staff/mypage.html');
           return;
         }
