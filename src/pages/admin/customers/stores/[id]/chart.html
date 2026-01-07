@@ -10,20 +10,48 @@
 </style>
 
 <link rel="stylesheet" href="/css/admin-store-chart.css" />
+<style>
+  .btn-ai-extract {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+    transition: all 0.2s;
+  }
+
+  .btn-ai-extract:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-ai-extract:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+  }
+</style>
 <script src="/js/aws-s3-upload.js"></script>
 <script src="/js/data_utils.js"></script>
 <script>
   // 404.htmlのルーティングが実行されない場合のフォールバック
   // URLから直接店舗IDを取得して、[id]を置き換える
-  (function() {
+  (function () {
     const path = window.location.pathname;
     const chartMatch = path.match(/\/admin\/customers\/stores\/([^\/]+)\/chart\.html/);
-    
+
     if (chartMatch && chartMatch[1] !== '[id]') {
       // 既に店舗IDが正しく設定されている場合は何もしない
       return;
     }
-    
+
     // [id]が含まれている場合、または店舗IDが取得できない場合
     // 404.htmlのルーティングを待つか、手動で処理
     if (chartMatch && chartMatch[1] === '[id]') {
@@ -48,507 +76,536 @@
   @include('partials.admin-sidebar')
   <div class="main-content">
     <div class="container admin-store-chart">
-  <div class="page-header">
-    <a href="/admin/customers/" class="back-btn">
-      <i class="fas fa-chevron-left"></i>
-    </a>
-    <h1 class="page-title">清掃カルテ（完全版）</h1>
-    <div class="header-actions">
-      <button type="button" class="btn btn-secondary btn-sm" id="upgrade-chart-btn" style="display: none;">
-        <i class="fas fa-arrow-up"></i> 完全版に変換
-      </button>
-      <button type="button" class="btn btn-primary btn-sm" id="save-chart-btn">
-        <i class="fas fa-save"></i> 保存
-      </button>
-    </div>
-  </div>
-  
-  <!-- カルテ履歴セレクター（複数カルテがある場合） -->
-  <div class="chart-history-selector" id="chart-history-selector" style="display: none;">
-    <label for="chart-select">カルテ履歴:</label>
-    <select id="chart-select">
-      <option value="">アクティブなカルテを選択</option>
-    </select>
-  </div>
+      <div class="page-header">
+        <a href="/admin/customers/" class="back-btn">
+          <i class="fas fa-chevron-left"></i>
+        </a>
+        <h1 class="page-title">清掃カルテ（完全版）</h1>
+        <div class="header-actions">
+          <button type="button" class="btn btn-secondary btn-sm" id="upgrade-chart-btn" style="display: none;">
+            <i class="fas fa-arrow-up"></i> 完全版に変換
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" id="save-chart-btn">
+            <i class="fas fa-save"></i> 保存
+          </button>
+        </div>
+      </div>
 
-  <!-- 基本情報セクション -->
-  <section class="chart-section chart-section-no-header" id="basic-info-section">
-    <div class="basic-info-container">
-      <!-- タイトルセクション（左上） -->
-      <div class="basic-info-title">
-        <h2>基本情報</h2>
+      <!-- カルテ履歴セレクター（複数カルテがある場合） -->
+      <div class="chart-history-selector" id="chart-history-selector" style="display: none;">
+        <label for="chart-select">カルテ履歴:</label>
+        <select id="chart-select">
+          <option value="">アクティブなカルテを選択</option>
+        </select>
       </div>
-      
-      <!-- ヘッダー情報（右上） -->
-      <div class="basic-info-header">
-        <div class="header-id-row">
-          <span class="header-id-label">顧客ID</span>
-          <span class="header-id-value" id="header-client-id">-</span>
-        </div>
-        <div class="header-id-row">
-          <span class="header-id-label">ブランドID</span>
-          <span class="header-id-value" id="header-brand-id">-</span>
-        </div>
-        <div class="header-id-row">
-          <span class="header-id-label">店舗ID</span>
-          <span class="header-id-value" id="header-store-id">-</span>
-        </div>
-        <div class="header-id-row">
-          <span class="header-id-label">カルテID</span>
-          <span class="header-id-value" id="header-chart-id">-</span>
-        </div>
-      </div>
-      
-      <!-- メインコンテンツ -->
-      <div class="basic-info-content">
-        <!-- 行1: ブランド名、店舗名、担当者 -->
-        <div class="info-content-row">
-          <div class="info-field">
-            <span class="info-label">ブランド名</span>
-            <span class="info-value" id="brand-name">-</span>
+
+      <!-- 基本情報セクション -->
+      <section class="chart-section chart-section-no-header" id="basic-info-section">
+        <div class="basic-info-container">
+          <!-- タイトルセクション（左上） -->
+          <div class="basic-info-title">
+            <h2>基本情報</h2>
           </div>
-          <div class="info-field">
-            <span class="info-label">店舗名</span>
-            <span class="info-value" id="store-name">-</span>
+
+          <!-- ヘッダー情報（右上） -->
+          <div class="basic-info-header">
+            <div class="header-id-row">
+              <span class="header-id-label">顧客ID</span>
+              <span class="header-id-value" id="header-client-id">-</span>
+            </div>
+            <div class="header-id-row">
+              <span class="header-id-label">ブランドID</span>
+              <span class="header-id-value" id="header-brand-id">-</span>
+            </div>
+            <div class="header-id-row">
+              <span class="header-id-label">店舗ID</span>
+              <span class="header-id-value" id="header-store-id">-</span>
+            </div>
+            <div class="header-id-row">
+              <span class="header-id-label">カルテID</span>
+              <span class="header-id-value" id="header-chart-id">-</span>
+            </div>
           </div>
-          <div class="info-field">
-            <span class="info-label">担当者</span>
-            <span class="info-value" id="contact-person">-</span>
-          </div>
-        </div>
-        
-        <!-- 行2: 住所、電話、メール -->
-        <div class="info-content-row">
-          <div class="info-field">
-            <span class="info-label">住所</span>
-            <span class="info-value" id="store-address">-</span>
-          </div>
-          <div class="info-field">
-            <span class="info-label">電話</span>
-            <span class="info-value" id="store-phone">-</span>
-          </div>
-          <div class="info-field">
-            <span class="info-label">メール</span>
-            <span class="info-value" id="store-email">-</span>
-          </div>
-        </div>
-        
-        <!-- 行3: プラン -->
-        <div class="info-content-row">
-          <div class="info-field info-field-plan">
-            <span class="info-label">プラン</span>
-            <div class="plan-options">
-              <span class="plan-label">定期:</span>
-              <label class="plan-option">
-                <input type="radio" name="plan-frequency" value="monthly" id="plan-monthly">
-                <span>毎月</span>
-              </label>
-              <label class="plan-option">
-                <input type="radio" name="plan-frequency" value="bimonthly" id="plan-bimonthly">
-                <span>隔月</span>
-              </label>
-              <label class="plan-option">
-                <input type="radio" name="plan-frequency" value="quarterly" id="plan-quarterly">
-                <span>3ヶ月</span>
-              </label>
-              <label class="plan-option">
-                <input type="radio" name="plan-frequency" value="semiannual" id="plan-semiannual" checked>
-                <span>6ヶ月</span>
-              </label>
-              <label class="plan-option">
-                <input type="radio" name="plan-frequency" value="yearly" id="plan-yearly">
-                <span>年1</span>
-              </label>
-              <span class="plan-separator">/</span>
-              <label class="plan-option">
-                <input type="radio" name="plan-frequency" value="spot" id="plan-spot">
-                <span>スポット</span>
-              </label>
+
+          <!-- メインコンテンツ -->
+          <div class="basic-info-content">
+            <!-- 行1: ブランド名、店舗名、担当者 -->
+            <div class="info-content-row">
+              <div class="info-field">
+                <span class="info-label">ブランド名</span>
+                <span class="info-value" id="brand-name">-</span>
+              </div>
+              <div class="info-field">
+                <span class="info-label">店舗名</span>
+                <span class="info-value" id="store-name">-</span>
+              </div>
+              <div class="info-field">
+                <span class="info-label">担当者</span>
+                <span class="info-value" id="contact-person">-</span>
+              </div>
+            </div>
+
+            <!-- 行2: 住所、電話、メール -->
+            <div class="info-content-row">
+              <div class="info-field">
+                <span class="info-label">住所</span>
+                <span class="info-value" id="store-address">-</span>
+              </div>
+              <div class="info-field">
+                <span class="info-label">電話</span>
+                <span class="info-value" id="store-phone">-</span>
+              </div>
+              <div class="info-field">
+                <span class="info-label">メール</span>
+                <span class="info-value" id="store-email">-</span>
+              </div>
+            </div>
+
+            <!-- 行3: プラン -->
+            <div class="info-content-row">
+              <div class="info-field info-field-plan">
+                <span class="info-label">プラン</span>
+                <div class="plan-options">
+                  <span class="plan-label">定期:</span>
+                  <label class="plan-option">
+                    <input type="radio" name="plan-frequency" value="monthly" id="plan-monthly">
+                    <span>毎月</span>
+                  </label>
+                  <label class="plan-option">
+                    <input type="radio" name="plan-frequency" value="bimonthly" id="plan-bimonthly">
+                    <span>隔月</span>
+                  </label>
+                  <label class="plan-option">
+                    <input type="radio" name="plan-frequency" value="quarterly" id="plan-quarterly">
+                    <span>3ヶ月</span>
+                  </label>
+                  <label class="plan-option">
+                    <input type="radio" name="plan-frequency" value="semiannual" id="plan-semiannual" checked>
+                    <span>6ヶ月</span>
+                  </label>
+                  <label class="plan-option">
+                    <input type="radio" name="plan-frequency" value="yearly" id="plan-yearly">
+                    <span>年1</span>
+                  </label>
+                  <span class="plan-separator">/</span>
+                  <label class="plan-option">
+                    <input type="radio" name="plan-frequency" value="spot" id="plan-spot">
+                    <span>スポット</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 行4: セキュリティボックス -->
+            <div class="info-content-row">
+              <div class="info-field">
+                <span class="info-label">セキュリティボックス</span>
+                <div class="security-box-input">
+                  <span class="security-box-prefix">-No.</span>
+                  <input type="text" id="security-box-number" class="security-box-number-input" placeholder="？？？？"
+                    maxlength="10">
+                </div>
+              </div>
+            </div>
+
+            <div class="info-content-row info-content-row-tags">
+              <div class="info-field info-field-tags">
+                <span class="info-label">設備・客席（問診票）</span>
+                <div class="tag-list" id="intake-summary-tags">
+                  <span class="tag-chip tag-muted">未入力</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        
-        <!-- 行4: セキュリティボックス -->
-        <div class="info-content-row">
-          <div class="info-field">
-            <span class="info-label">セキュリティボックス</span>
-            <div class="security-box-input">
-              <span class="security-box-prefix">-No.</span>
-              <input type="text" id="security-box-number" class="security-box-number-input" placeholder="？？？？" maxlength="10">
+      </section>
+
+      <!-- AI打合せメモ・自動抽出 -->
+      <section class="chart-section" id="ai-memo-section">
+        <div class="section-header" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+          <h2 class="section-title" style="color: #1e40af;">
+            <i class="fas fa-magic"></i>
+            AI打合せメモ抽出
+          </h2>
+        </div>
+        <div class="section-content">
+          <div class="form-group">
+            <label for="ai-meeting-notes" style="color: #1e40af; font-weight: 700;">打合せメモ・ヒアリング内容</label>
+            <textarea id="ai-meeting-notes" rows="6"
+              placeholder="顧客との打合せ内容や、現場で気づいたことを自由に入力してください。下のボタンを押すとAIが問診票を自動で埋めます。"></textarea>
+          </div>
+          <div style="display: flex; justify-content: center; margin-top: 16px;">
+            <button type="button" class="btn-ai-extract" id="ai-extract-btn">
+              <i class="fas fa-sparkles"></i>
+              AIで問診票に反映する
+            </button>
+          </div>
+          <div id="ai-extract-status"
+            style="display: none; justify-content: center; align-items: center; gap: 8px; margin-top: 12px; color: #1e40af; font-size: 0.875rem;">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>AIがメモを解析中...</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 初回ヒアリング（営業問診票） -->
+      <section class="chart-section" id="intake-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-clipboard-list"></i>
+            初回ヒアリング（営業問診票）
+          </h2>
+          <button type="button" class="section-toggle" aria-label="セクションを開閉">
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+        <div class="section-content">
+          <div class="intake-category">
+            <div class="intake-category-title">
+              <i class="fas fa-clipboard-check"></i>
+              基本ヒアリング
+            </div>
+            <div class="survey-grid two-col">
+              <div class="form-group">
+                <label for="intake-issue">清掃の悩み</label>
+                <textarea id="intake-issue" rows="3" placeholder="例：厨房の油汚れが落ちない"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="intake-environment">店内環境</label>
+                <textarea id="intake-environment" rows="3" placeholder="例：油煙が強い、湿気が多い"></textarea>
+              </div>
+            </div>
+            <div class="survey-grid four-col">
+              <div class="form-group">
+                <label for="intake-staff-normal">稼働人数（最小）</label>
+                <select id="intake-staff-normal">
+                  <option value="">選択してください</option>
+                  <option value="1名">1名</option>
+                  <option value="2〜5名">2〜5名</option>
+                  <option value="6〜10名">6〜10名</option>
+                  <option value="11名以上">11名以上</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="intake-staff-peak">稼働人数（最大）</label>
+                <select id="intake-staff-peak">
+                  <option value="">選択してください</option>
+                  <option value="1名">1名</option>
+                  <option value="2〜5名">2〜5名</option>
+                  <option value="6〜10名">6〜10名</option>
+                  <option value="11名以上">11名以上</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="intake-hours">稼働時間</label>
+                <input id="intake-hours" type="text" placeholder="例：11:00〜23:30">
+              </div>
+              <div class="form-group">
+                <label for="intake-cleaning-frequency">通常清掃の頻度</label>
+                <input id="intake-cleaning-frequency" type="text" placeholder="例：毎日（閉店後30分）">
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="info-content-row info-content-row-tags">
-          <div class="info-field info-field-tags">
-            <span class="info-label">設備・客席（問診票）</span>
-            <div class="tag-list" id="intake-summary-tags">
-              <span class="tag-chip tag-muted">未入力</span>
+          <div class="intake-category">
+            <div class="intake-category-title">
+              <i class="fas fa-store"></i>
+              店舗仕様
+            </div>
+            <div class="survey-grid six-col">
+              <div class="form-group">
+                <label for="intake-area-sqm">平米数</label>
+                <div class="input-with-unit">
+                  <input id="intake-area-sqm" type="text" placeholder="例：120">
+                  <span class="unit-suffix">㎡</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="intake-area-tatami">畳数</label>
+                <div class="input-with-unit">
+                  <input id="intake-area-tatami" type="text" placeholder="例：72">
+                  <span class="unit-suffix">畳</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="intake-ceiling-height">天井高さ</label>
+                <div class="input-with-unit">
+                  <input id="intake-ceiling-height" type="text" placeholder="例：2.6">
+                  <span class="unit-suffix">m</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="intake-electrical-amps">アンペア数</label>
+                <div class="input-with-unit">
+                  <input id="intake-electrical-amps" type="text" placeholder="例：60">
+                  <span class="unit-suffix">A</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="intake-toilet-count">トイレ数</label>
+                <div class="input-with-unit">
+                  <input id="intake-toilet-count" type="text" placeholder="例：2">
+                  <span class="unit-suffix">基</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="intake-aircon-count">空調の数</label>
+                <input id="intake-aircon-count" type="text" placeholder="例：3台">
+              </div>
+            </div>
+            <div class="survey-grid two-col">
+              <div class="form-group">
+                <label for="intake-wall-material">壁の材質</label>
+                <input id="intake-wall-material" type="text" placeholder="例：タイル">
+              </div>
+              <div class="form-group">
+                <label for="intake-floor-material">床の材質</label>
+                <input id="intake-floor-material" type="text" placeholder="例：塩ビ">
+              </div>
+            </div>
+            <div class="survey-grid four-col">
+              <div class="form-group">
+                <label for="intake-breaker-location">ブレーカーの位置</label>
+                <input id="intake-breaker-location" type="text" placeholder="例：厨房奥">
+              </div>
+              <div class="form-group">
+                <label for="intake-key-location">鍵の位置</label>
+                <input id="intake-key-location" type="text" placeholder="例：受付右棚">
+              </div>
+              <div class="form-group">
+                <label for="intake-entrances">出入口</label>
+                <input id="intake-entrances" type="text" placeholder="例：正面1/裏口1">
+              </div>
+              <div class="form-group">
+                <label for="intake-staff-room">スタッフルーム</label>
+                <select id="intake-staff-room">
+                  <option value="">選択してください</option>
+                  <option value="有">有</option>
+                  <option value="無">無</option>
+                </select>
+              </div>
+            </div>
+            <div class="survey-photo-row">
+              <div class="form-group">
+                <label>ブレーカー位置の写真</label>
+                <label class="btn-upload-stock btn-upload-intake">
+                  <input type="file" id="intake-breaker-photo" accept="image/*" style="display:none;">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <span>画像を追加</span>
+                </label>
+                <input id="intake-breaker-photo-url" type="text" placeholder="URL">
+                <div class="survey-photo-preview" id="intake-breaker-photo-preview"></div>
+              </div>
+              <div class="form-group">
+                <label>鍵の置き場の写真</label>
+                <label class="btn-upload-stock btn-upload-intake">
+                  <input type="file" id="intake-key-photo" accept="image/*" style="display:none;">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <span>画像を追加</span>
+                </label>
+                <input id="intake-key-photo-url" type="text" placeholder="URL">
+                <div class="survey-photo-preview" id="intake-key-photo-preview"></div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- 初回ヒアリング（営業問診票） -->
-  <section class="chart-section" id="intake-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-clipboard-list"></i>
-        初回ヒアリング（営業問診票）
-      </h2>
-      <button type="button" class="section-toggle" aria-label="セクションを開閉">
-        <i class="fas fa-chevron-down"></i>
-      </button>
-    </div>
-    <div class="section-content">
-      <div class="intake-category">
-        <div class="intake-category-title">
-          <i class="fas fa-clipboard-check"></i>
-          基本ヒアリング
-        </div>
-        <div class="survey-grid two-col">
-          <div class="form-group">
-            <label for="intake-issue">清掃の悩み</label>
-            <textarea id="intake-issue" rows="3" placeholder="例：厨房の油汚れが落ちない"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="intake-environment">店内環境</label>
-            <textarea id="intake-environment" rows="3" placeholder="例：油煙が強い、湿気が多い"></textarea>
-          </div>
-        </div>
-        <div class="survey-grid four-col">
-          <div class="form-group">
-            <label for="intake-staff-normal">稼働人数（最小）</label>
-            <select id="intake-staff-normal">
-              <option value="">選択してください</option>
-              <option value="1名">1名</option>
-              <option value="2〜5名">2〜5名</option>
-              <option value="6〜10名">6〜10名</option>
-              <option value="11名以上">11名以上</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="intake-staff-peak">稼働人数（最大）</label>
-            <select id="intake-staff-peak">
-              <option value="">選択してください</option>
-              <option value="1名">1名</option>
-              <option value="2〜5名">2〜5名</option>
-              <option value="6〜10名">6〜10名</option>
-              <option value="11名以上">11名以上</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="intake-hours">稼働時間</label>
-            <input id="intake-hours" type="text" placeholder="例：11:00〜23:30">
-          </div>
-          <div class="form-group">
-            <label for="intake-cleaning-frequency">通常清掃の頻度</label>
-            <input id="intake-cleaning-frequency" type="text" placeholder="例：毎日（閉店後30分）">
-          </div>
-        </div>
-      </div>
+          <div class="intake-category">
+            <div class="intake-category-title">
+              <i class="fas fa-cogs"></i>
+              設備・客席
+            </div>
+            <div class="survey-grid">
+            </div>
 
-      <div class="intake-category">
-        <div class="intake-category-title">
-          <i class="fas fa-store"></i>
-          店舗仕様
-        </div>
-        <div class="survey-grid six-col">
-          <div class="form-group">
-            <label for="intake-area-sqm">平米数</label>
-            <div class="input-with-unit">
-              <input id="intake-area-sqm" type="text" placeholder="例：120">
-              <span class="unit-suffix">㎡</span>
+            <div class="survey-subsection">
+              <h3 class="survey-subtitle">客席（設備補足）</h3>
+              <div class="checkbox-group">
+                <label class="checkbox-item">
+                  <input type="checkbox" id="intake-seat-counter">
+                  <span class="checkbox-label">カウンター席</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" id="intake-seat-box">
+                  <span class="checkbox-label">ボックス席</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" id="intake-seat-zashiki">
+                  <span class="checkbox-label">座敷</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="survey-subsection">
+              <h3 class="survey-subtitle">設備情報（問診票）</h3>
+              <div class="checkbox-group" id="intake-equipment">
+                <label class="checkbox-item">
+                  <input type="checkbox" value="aircon">
+                  <span class="checkbox-label">空調</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" value="duct">
+                  <span class="checkbox-label">ダクト</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" value="hood">
+                  <span class="checkbox-label">レンジフード</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" value="grease_trap">
+                  <span class="checkbox-label">グリストラップ</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" value="floor">
+                  <span class="checkbox-label">床</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" value="drain">
+                  <span class="checkbox-label">排水溝</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" value="toilet">
+                  <span class="checkbox-label">トイレ</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" value="window">
+                  <span class="checkbox-label">窓・ガラス</span>
+                </label>
+              </div>
             </div>
           </div>
-          <div class="form-group">
-            <label for="intake-area-tatami">畳数</label>
-            <div class="input-with-unit">
-              <input id="intake-area-tatami" type="text" placeholder="例：72">
-              <span class="unit-suffix">畳</span>
+
+          <div class="intake-category">
+            <div class="intake-category-title">
+              <i class="fas fa-exclamation-circle"></i>
+              注意事項・計画
+            </div>
+            <div class="survey-grid">
+              <div class="form-group">
+                <label for="intake-aircon">空調設備の状態</label>
+                <textarea id="intake-aircon" rows="2" placeholder="例：台数3、1台異音"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="intake-kitchen">厨房設備の状態</label>
+                <textarea id="intake-kitchen" rows="2" placeholder="例：レンジフード油固着"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="intake-hotspots">特に気になる場所</label>
+                <textarea id="intake-hotspots" rows="2" placeholder="例：ダクト、床排水溝"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="intake-notes">注意事項</label>
+                <textarea id="intake-notes" rows="2" placeholder="例：薬剤の臭いNG"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="intake-last-clean">最終清掃日</label>
+                <input id="intake-last-clean" type="date">
+              </div>
+              <div class="form-group">
+                <label for="intake-plan">依頼プラン</label>
+                <select id="intake-plan">
+                  <option value="">選択してください</option>
+                  <option value="regular">定期</option>
+                  <option value="spot">スポット</option>
+                  <option value="undecided">未定</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="intake-self-rating">衛生状態自己評価</label>
+                <select id="intake-self-rating">
+                  <option value="">選択してください</option>
+                  <option value="1">1（不衛生）</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5（普通）</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10（非常に良い）</option>
+                </select>
+              </div>
             </div>
           </div>
-          <div class="form-group">
-            <label for="intake-ceiling-height">天井高さ</label>
-            <div class="input-with-unit">
-              <input id="intake-ceiling-height" type="text" placeholder="例：2.6">
-              <span class="unit-suffix">m</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="intake-electrical-amps">アンペア数</label>
-            <div class="input-with-unit">
-              <input id="intake-electrical-amps" type="text" placeholder="例：60">
-              <span class="unit-suffix">A</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="intake-toilet-count">トイレ数</label>
-            <div class="input-with-unit">
-              <input id="intake-toilet-count" type="text" placeholder="例：2">
-              <span class="unit-suffix">基</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="intake-aircon-count">空調の数</label>
-            <input id="intake-aircon-count" type="text" placeholder="例：3台">
-          </div>
-        </div>
-        <div class="survey-grid two-col">
-          <div class="form-group">
-            <label for="intake-wall-material">壁の材質</label>
-            <input id="intake-wall-material" type="text" placeholder="例：タイル">
-          </div>
-          <div class="form-group">
-            <label for="intake-floor-material">床の材質</label>
-            <input id="intake-floor-material" type="text" placeholder="例：塩ビ">
-          </div>
-        </div>
-        <div class="survey-grid four-col">
-          <div class="form-group">
-            <label for="intake-breaker-location">ブレーカーの位置</label>
-            <input id="intake-breaker-location" type="text" placeholder="例：厨房奥">
-          </div>
-          <div class="form-group">
-            <label for="intake-key-location">鍵の位置</label>
-            <input id="intake-key-location" type="text" placeholder="例：受付右棚">
-          </div>
-          <div class="form-group">
-            <label for="intake-entrances">出入口</label>
-            <input id="intake-entrances" type="text" placeholder="例：正面1/裏口1">
-          </div>
-          <div class="form-group">
-            <label for="intake-staff-room">スタッフルーム</label>
-            <select id="intake-staff-room">
-              <option value="">選択してください</option>
-              <option value="有">有</option>
-              <option value="無">無</option>
-            </select>
-          </div>
-        </div>
-        <div class="survey-photo-row">
-          <div class="form-group">
-            <label>ブレーカー位置の写真</label>
-            <label class="btn-upload-stock btn-upload-intake">
-              <input type="file" id="intake-breaker-photo" accept="image/*" style="display:none;">
-              <i class="fas fa-cloud-upload-alt"></i>
-              <span>画像を追加</span>
-            </label>
-            <input id="intake-breaker-photo-url" type="text" placeholder="URL">
-            <div class="survey-photo-preview" id="intake-breaker-photo-preview"></div>
-          </div>
-          <div class="form-group">
-            <label>鍵の置き場の写真</label>
-            <label class="btn-upload-stock btn-upload-intake">
-              <input type="file" id="intake-key-photo" accept="image/*" style="display:none;">
-              <i class="fas fa-cloud-upload-alt"></i>
-              <span>画像を追加</span>
-            </label>
-            <input id="intake-key-photo-url" type="text" placeholder="URL">
-            <div class="survey-photo-preview" id="intake-key-photo-preview"></div>
-          </div>
-        </div>
-      </div>
 
-      <div class="intake-category">
-        <div class="intake-category-title">
-          <i class="fas fa-cogs"></i>
-          設備・客席
         </div>
-        <div class="survey-grid">
-        </div>
+      </section>
 
-        <div class="survey-subsection">
-          <h3 class="survey-subtitle">客席（設備補足）</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-item">
-              <input type="checkbox" id="intake-seat-counter">
-              <span class="checkbox-label">カウンター席</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" id="intake-seat-box">
-              <span class="checkbox-label">ボックス席</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" id="intake-seat-zashiki">
-              <span class="checkbox-label">座敷</span>
-            </label>
+      <!-- サービス内容セクション -->
+      <section class="chart-section" id="services-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-list-check"></i>
+            サービス内容
+          </h2>
+          <button type="button" class="section-toggle" aria-label="セクションを開閉">
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+        <div class="section-content">
+          <div class="services-list" id="services-list">
+            <div class="loading">読み込み中...</div>
           </div>
         </div>
+      </section>
 
-        <div class="survey-subsection">
-          <h3 class="survey-subtitle">設備情報（問診票）</h3>
-          <div class="checkbox-group" id="intake-equipment">
-            <label class="checkbox-item">
-              <input type="checkbox" value="aircon">
-              <span class="checkbox-label">空調</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="duct">
-              <span class="checkbox-label">ダクト</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="hood">
-              <span class="checkbox-label">レンジフード</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="grease_trap">
-              <span class="checkbox-label">グリストラップ</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="floor">
-              <span class="checkbox-label">床</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="drain">
-              <span class="checkbox-label">排水溝</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="toilet">
-              <span class="checkbox-label">トイレ</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="window">
-              <span class="checkbox-label">窓・ガラス</span>
-            </label>
-          </div>
+      <!-- 消耗品セクション（完全版で表示） -->
+      <section class="chart-section" id="consumables-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-box"></i>
+            使用消耗品
+          </h2>
+          <button type="button" class="section-toggle" aria-label="セクションを開閉">
+            <i class="fas fa-chevron-down"></i>
+          </button>
         </div>
-      </div>
-
-      <div class="intake-category">
-        <div class="intake-category-title">
-          <i class="fas fa-exclamation-circle"></i>
-          注意事項・計画
+        <div class="section-content">
+          <div class="consumables-list" id="consumables-list">
+            <div class="empty-state">消耗品が登録されていません</div>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="add-consumable-btn">
+            <i class="fas fa-plus"></i> 消耗品を追加
+          </button>
         </div>
-        <div class="survey-grid">
-          <div class="form-group">
-            <label for="intake-aircon">空調設備の状態</label>
-            <textarea id="intake-aircon" rows="2" placeholder="例：台数3、1台異音"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="intake-kitchen">厨房設備の状態</label>
-            <textarea id="intake-kitchen" rows="2" placeholder="例：レンジフード油固着"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="intake-hotspots">特に気になる場所</label>
-            <textarea id="intake-hotspots" rows="2" placeholder="例：ダクト、床排水溝"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="intake-notes">注意事項</label>
-            <textarea id="intake-notes" rows="2" placeholder="例：薬剤の臭いNG"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="intake-last-clean">最終清掃日</label>
-            <input id="intake-last-clean" type="date">
-          </div>
-          <div class="form-group">
-            <label for="intake-plan">依頼プラン</label>
-            <select id="intake-plan">
-              <option value="">選択してください</option>
-              <option value="regular">定期</option>
-              <option value="spot">スポット</option>
-              <option value="undecided">未定</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="intake-self-rating">衛生状態自己評価</label>
-            <select id="intake-self-rating">
-              <option value="">選択してください</option>
-              <option value="1">1（不衛生）</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5（普通）</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-              <option value="9">9</option>
-              <option value="10">10（非常に良い）</option>
-            </select>
-          </div>
+      </section>
+
+      <!-- 清掃担当者履歴セクション（完全版で表示） -->
+      <section class="chart-section" id="staff-history-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-users"></i>
+            清掃担当者履歴
+          </h2>
+          <button type="button" class="section-toggle" aria-label="セクションを開閉">
+            <i class="fas fa-chevron-down"></i>
+          </button>
         </div>
-      </div>
+        <div class="section-content">
+          <div class="staff-history-list" id="staff-history-list">
+            <div class="empty-state">担当者履歴がありません</div>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="add-staff-btn">
+            <i class="fas fa-plus"></i> 担当者を追加
+          </button>
+        </div>
+      </section>
 
-    </div>
-  </section>
-
-  <!-- サービス内容セクション -->
-  <section class="chart-section" id="services-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-list-check"></i>
-        サービス内容
-      </h2>
-      <button type="button" class="section-toggle" aria-label="セクションを開閉">
-        <i class="fas fa-chevron-down"></i>
-      </button>
-    </div>
-    <div class="section-content">
-      <div class="services-list" id="services-list">
-        <div class="loading">読み込み中...</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 消耗品セクション（完全版で表示） -->
-  <section class="chart-section" id="consumables-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-box"></i>
-        使用消耗品
-      </h2>
-      <button type="button" class="section-toggle" aria-label="セクションを開閉">
-        <i class="fas fa-chevron-down"></i>
-      </button>
-    </div>
-    <div class="section-content">
-      <div class="consumables-list" id="consumables-list">
-        <div class="empty-state">消耗品が登録されていません</div>
-      </div>
-      <button type="button" class="btn btn-outline btn-sm" id="add-consumable-btn">
-        <i class="fas fa-plus"></i> 消耗品を追加
-      </button>
-    </div>
-  </section>
-
-  <!-- 清掃担当者履歴セクション（完全版で表示） -->
-  <section class="chart-section" id="staff-history-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-users"></i>
-        清掃担当者履歴
-      </h2>
-      <button type="button" class="section-toggle" aria-label="セクションを開閉">
-        <i class="fas fa-chevron-down"></i>
-      </button>
-    </div>
-    <div class="section-content">
-      <div class="staff-history-list" id="staff-history-list">
-        <div class="empty-state">担当者履歴がありません</div>
-      </div>
-      <button type="button" class="btn btn-outline btn-sm" id="add-staff-btn">
-        <i class="fas fa-plus"></i> 担当者を追加
-      </button>
-    </div>
-  </section>
-
-  <!-- メモセクション -->
-  <section class="chart-section" id="notes-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-sticky-note"></i>
-        メモ・特記事項
-      </h2>
-      <button type="button" class="section-toggle" aria-label="セクションを開閉">
-        <i class="fas fa-chevron-down"></i>
-      </button>
-    </div>
-    <div class="section-content">
-      <textarea id="chart-notes" rows="6" placeholder="特記事項や注意点を入力してください"></textarea>
-    </div>
-  </section>
+      <!-- メモセクション -->
+      <section class="chart-section" id="notes-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-sticky-note"></i>
+            メモ・特記事項
+          </h2>
+          <button type="button" class="section-toggle" aria-label="セクションを開閉">
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+        <div class="section-content">
+          <textarea id="chart-notes" rows="6" placeholder="特記事項や注意点を入力してください"></textarea>
+        </div>
+      </section>
     </div>
   </div>
 </main>
@@ -577,7 +634,8 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" onclick="document.getElementById('consumable-modal').close()">キャンセル</button>
+      <button type="button" class="btn btn-secondary"
+        onclick="document.getElementById('consumable-modal').close()">キャンセル</button>
       <button type="button" class="btn btn-primary" id="save-consumable-btn">追加</button>
     </div>
   </div>
@@ -614,7 +672,8 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" onclick="document.getElementById('staff-modal').close()">キャンセル</button>
+      <button type="button" class="btn btn-secondary"
+        onclick="document.getElementById('staff-modal').close()">キャンセル</button>
       <button type="button" class="btn btn-primary" id="save-staff-btn">追加</button>
     </div>
   </div>
@@ -622,7 +681,7 @@
 
 <script>
   // 404.htmlが実行されない場合のフォールバック: URLから直接店舗IDを取得
-  (function() {
+  (function () {
     const path = window.location.pathname;
     const chartMatch = path.match(/\/admin\/customers\/stores\/([^\/]+)\/chart\.html/);
     if (chartMatch && chartMatch[1] !== '[id]') {
