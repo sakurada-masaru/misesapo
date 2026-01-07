@@ -10,7 +10,7 @@ export class SubmitManager {
     }
 
     async handleSubmit() {
-        if (!confirm('レポートを提出しますか？')) return;
+        if (!confirm('作業内容を報告し、完了として提出しますか？\n（提出された内容は保存され、報告書として発行可能になります）')) return;
 
         const submitBtn = document.getElementById('report-submit-btn');
         if (submitBtn) {
@@ -44,7 +44,7 @@ export class SubmitManager {
             // Check if OS user
             const isOsUser = window.location.pathname.includes('/staff/os/');
             if (isOsUser) {
-                alert('レポートの提出を確認しました。\nマイページへ戻ります。');
+                alert('作業完了報告を受け付けました。\n報告書データが保存されました。\nマイページへ戻ります。');
                 window.location.href = '/staff/os/mypage';
             } else {
                 alert('レポートを送信しました。');
