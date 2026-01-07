@@ -4,7 +4,8 @@
 
 <!-- AWS SDKの読み込み -->
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
 <script src="/js/cognito_config.js"></script>
 <script src="/js/cognito_auth.js"></script>
 <!-- role_config.jsはbase.htmlレイアウトで読み込まれるため、ここでは読み込まない -->
@@ -18,43 +19,51 @@
     padding: 24px;
     background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%);
   }
+
   .signin-container {
     width: 100%;
     max-width: 500px;
   }
+
   @media (min-width: 768px) {
     .signin-container {
       max-width: 550px;
     }
   }
+
   .signin-card {
     background: #fff;
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
     padding: 40px 32px;
   }
+
   .signin-logo {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 24px;
   }
+
   .signin-logo img {
     width: 80px;
     height: 80px;
     margin-bottom: 16px;
   }
+
   .signin-logo h2 {
     font-size: 1.5rem;
     font-weight: 700;
     color: #111827;
     margin: 0;
   }
+
   .signin-divider {
     height: 1px;
     background: #e5e7eb;
     margin: 24px 0;
   }
+
   .signin-description {
     text-align: center;
     font-size: 0.875rem;
@@ -63,18 +72,22 @@
     line-height: 1.8;
     min-height: 60px;
   }
+
   @media (min-width: 768px) {
     .signin-description {
       white-space: nowrap;
     }
   }
+
   .signin-description strong {
     color: #111827;
     font-weight: 600;
   }
+
   .signin-form .form-group {
     margin-bottom: 20px;
   }
+
   .signin-form .label {
     display: flex;
     align-items: center;
@@ -83,6 +96,7 @@
     color: #374151;
     margin-bottom: 8px;
   }
+
   .signin-form .input {
     width: 100%;
     padding: 12px 16px;
@@ -92,14 +106,17 @@
     transition: all 0.2s;
     box-sizing: border-box;
   }
+
   .signin-form .input:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
   }
+
   .signin-form .field {
     position: relative;
   }
+
   .signin-form .toggle-visibility {
     position: absolute;
     right: 12px;
@@ -111,9 +128,11 @@
     cursor: pointer;
     padding: 4px;
   }
+
   .signin-form .toggle-visibility:hover {
     color: #6b7280;
   }
+
   .signin-form .btn-signin {
     width: 100%;
     padding: 14px 24px;
@@ -126,16 +145,19 @@
     cursor: pointer;
     transition: all 0.2s;
   }
+
   .signin-form .btn-signin:hover {
     background: var(--primary-600);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
   }
+
   .signin-form .btn-signin:disabled {
     opacity: 0.7;
     cursor: not-allowed;
     transform: none;
   }
+
   .signin-error {
     padding: 12px 16px;
     background: #fee2e2;
@@ -147,21 +169,26 @@
     line-height: 1.6;
     transition: all 0.3s ease;
   }
+
   .signin-error strong {
     display: block;
     margin-bottom: 4px;
     font-weight: 600;
   }
+
   .signin-error button {
     transition: all 0.2s ease;
   }
+
   .signin-error button:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
+
   .signin-error button:active {
     transform: translateY(0);
   }
+
   @media (max-width: 480px) {
     .signin-card {
       padding: 32px 24px;
@@ -175,7 +202,7 @@
       <div class="signin-logo">
         <img src="/images/logo_144x144.png" alt="ミセサポ" />
         <h2>従業員ログイン</h2>
-  </div>
+      </div>
 
       <div class="signin-divider"></div>
 
@@ -183,29 +210,30 @@
         お疲れ様です。<br />
         ユーザー情報を入力しログインしてください。<br />
         <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
-    </p>
+      </p>
 
       <form id="staff-signin-form" action="#" method="post" class="signin-form">
         <div class="form-group">
-        <label for="email" class="label">
-          メールアドレス
-          <span class="pill pill-required" style="margin-left: 8px;">必須</span>
-        </label>
-        <input type="email" id="email" name="email" class="input" placeholder="name@example.com" required />
-      </div>
+          <label for="email" class="label">
+            メールアドレス
+            <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+          </label>
+          <input type="email" id="email" name="email" class="input" placeholder="name@example.com" required />
+        </div>
 
         <div class="form-group">
-        <label for="password" class="label">
-          パスワード
-          <span class="pill pill-required" style="margin-left: 8px;">必須</span>
-        </label>
-        <div class="field">
-          <input type="password" id="password" name="password" class="input" required />
-          <button type="button" class="toggle-visibility" aria-label="パスワードを表示" onclick="togglePasswordVisibility('password')">
-            <i class="fas fa-eye"></i>
-          </button>
+          <label for="password" class="label">
+            パスワード
+            <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+          </label>
+          <div class="field">
+            <input type="password" id="password" name="password" class="input" required />
+            <button type="button" class="toggle-visibility" aria-label="パスワードを表示"
+              onclick="togglePasswordVisibility('password')">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
         </div>
-      </div>
 
         <div id="signin-error" class="signin-error" style="display: none;"></div>
 
@@ -213,7 +241,7 @@
       </form>
     </div>
   </div>
-      </div>
+</div>
 
 <script>
   function togglePasswordVisibility(id) {
@@ -232,7 +260,7 @@
   }
 
   // ページ読み込み時に既存の認証情報をチェック
-  (async function() {
+  (async function () {
     // CognitoAuthが読み込まれるまで待つ
     if (typeof window.CognitoAuth === 'undefined') {
       // CognitoAuthが読み込まれるまで待機
@@ -253,7 +281,7 @@
     async function checkExistingAuth() {
       try {
         const descriptionEl = document.getElementById('signin-description');
-        
+
         // 既存の認証情報をチェック
         if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
           const existingUser = await window.CognitoAuth.getCurrentUser();
@@ -267,7 +295,7 @@
                 <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
               `;
             }
-            
+
             // 既にログインしている場合、警告を表示
             const errorDiv = document.getElementById('signin-error');
             if (errorDiv) {
@@ -304,7 +332,7 @@
               // クリアボタンのイベントリスナー
               const clearBtn = document.getElementById('clear-auth-btn');
               if (clearBtn) {
-                clearBtn.addEventListener('click', async function() {
+                clearBtn.addEventListener('click', async function () {
                   // 認証情報をクリア
                   if (window.CognitoAuth && window.CognitoAuth.clearAuthData) {
                     window.CognitoAuth.clearAuthData();
@@ -316,13 +344,13 @@
                     localStorage.removeItem('cognito_user');
                     localStorage.removeItem('misesapo_auth');
                     sessionStorage.clear();
-                    
+
                     // Cognitoセッションもクリア
                     if (window.CognitoAuth && window.CognitoAuth.logout) {
                       window.CognitoAuth.logout();
                     }
                   }
-                  
+
                   // 説明文を更新（認証情報がない場合）
                   const descriptionElAfter = document.getElementById('signin-description');
                   if (descriptionElAfter) {
@@ -332,7 +360,7 @@
                       <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
                     `;
                   }
-                  
+
                   // メッセージを更新
                   errorDiv.innerHTML = `
                     <div style="margin-bottom: 8px;">
@@ -345,7 +373,7 @@
                   errorDiv.style.background = '#d1fae5';
                   errorDiv.style.borderColor = '#10b981';
                   errorDiv.style.color = '#065f46';
-                  
+
                   // 3秒後にメッセージを非表示
                   setTimeout(() => {
                     errorDiv.style.display = 'none';
@@ -389,12 +417,12 @@
   })();
 
   // ログインフォーム処理
-  (function() {
+  (function () {
     const signinForm = document.getElementById('staff-signin-form');
     const errorDiv = document.getElementById('signin-error');
 
     if (signinForm) {
-      signinForm.addEventListener('submit', async function(e) {
+      signinForm.addEventListener('submit', async function (e) {
         e.preventDefault();
 
         const email = document.getElementById('email').value.trim();
@@ -440,7 +468,7 @@
             // ベースパスを取得（GitHub Pages対応）
             const base = document.querySelector('base');
             const basePath = base ? (base.getAttribute('href') || '/') : '/';
-            
+
             const getDefaultPath = (user) => {
               const role = (user?.role || '').toLowerCase();
               const department = (user?.department || '').toLowerCase();
@@ -448,8 +476,8 @@
               if (role === 'sales' || role === 'concierge' || department.includes('営業') || department.includes('sales')) {
                 return '/sales/mypage';
               }
-              // OS課: OS課用マイページ（SP用、クイックメニューあり）
-              if (department.includes('os') || department.includes('ｏｓ') || department.includes('os課') || department.includes('ｏｓ課')) {
+              // OS課 & 清掃事業部: OS課用マイページ（SP用、クイックメニューあり）
+              if (department.includes('os') || department.includes('ｏｓ') || department.includes('os課') || department.includes('ｏｓ課') || department.includes('清掃') || department.includes('clean') || role === 'cleaning' || role === 'clean') {
                 return '/staff/os/mypage';
               }
               // 事務: 事務マイページ（PC向け、サイドバーのみ）
@@ -466,37 +494,37 @@
 
             // 部署に応じたデフォルトリダイレクト
             let defaultPath = getDefaultPath(result.user);
-            
+
             // ユーザーIDをパラメータに追加
             if (result.user.id) {
               defaultPath += `?id=${encodeURIComponent(result.user.id)}`;
             }
-            
+
             // URLパラメータからリダイレクト先とNFCタグIDを取得
             const urlParams = new URLSearchParams(window.location.search);
             const redirectPath = urlParams.get('redirect');
             const nfcTagId = urlParams.get('nfc_tag_id');
-            
+
             let redirectUrl;
             if (redirectPath) {
               // リダイレクト先が指定されている場合
-              redirectUrl = basePath === '/' 
-                ? redirectPath 
+              redirectUrl = basePath === '/'
+                ? redirectPath
                 : basePath.replace(/\/$/, '') + redirectPath;
-              
+
               // NFCタグIDがある場合は追加
               if (nfcTagId) {
                 redirectUrl += (redirectUrl.includes('?') ? '&' : '?') + `nfc_tag_id=${nfcTagId}`;
               }
             } else {
               // デフォルトのマイページにリダイレクト
-              redirectUrl = basePath === '/' 
-                ? defaultPath 
+              redirectUrl = basePath === '/'
+                ? defaultPath
                 : basePath.replace(/\/$/, '') + defaultPath;
             }
-            
+
             console.log('[Signin] Redirecting to:', redirectUrl);
-            
+
             // 確実にリダイレクト（即座に実行）
             window.location.replace(redirectUrl);
           } else {
@@ -525,7 +553,7 @@
           }
         } catch (error) {
           console.error('Login error:', error);
-          
+
           // エラーオブジェクトからメッセージを取得
           let errorMessage = 'ログインに失敗しました';
           if (error.message) {
@@ -533,7 +561,7 @@
           } else if (typeof error === 'string') {
             errorMessage = error;
           }
-          
+
           // 認証競合の場合は特別な処理
           if (error.code === 'AUTH_CONFLICT' && error.requiresRetry) {
             errorDiv.innerHTML = `
