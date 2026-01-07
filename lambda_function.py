@@ -10082,8 +10082,8 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
     if not api_key:
         raise Exception("GEMINI_API_KEY is not set.")
 
-    # Model for 1.5 Flash - Using stable v1
-    model_name = "gemini-1.5-flash"
+    # Model for 1.5 Pro - Using Pro to avoid Flash quota exhaustion
+    model_name = "gemini-1.5-pro"
     api_version = "v1"
     url = f"https://generativelanguage.googleapis.com/{api_version}/models/{model_name}:generateContent?key={api_key}"
     
