@@ -10082,20 +10082,20 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
     if not api_key:
         raise Exception("GEMINI_API_KEY is not set.")
 
-    # Model for 1.5 Flash
+    # Model for 1.5 Flash - Using stable v1
     model_name = "gemini-1.5-flash"
-    api_version = "v1beta"
+    api_version = "v1"
     url = f"https://generativelanguage.googleapis.com/{api_version}/models/{model_name}:generateContent?key={api_key}"
     
     parts = []
     # User prompt
     parts.append({"text": prompt})
     
-    # Media (Audio)
+    # Media (Audio/Image)
     if media:
         parts.append({
             "inline_data": {
-                "mime_type": media.get('mime_type', 'audio/wav'),
+                "mime_type": media.get('mime_type', 'image/jpeg'),
                 "data": media.get('data')
             }
         })
@@ -10105,17 +10105,17 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
         "generationConfig": {
             "temperature": 0.2,
             "topP": 0.8,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 2048
         }
     }
 
-    # Correct placement for System Instruction in 1.5 API
+    # Correct placement for System Instruction
     if system_instruction:
         data["system_instruction"] = {
             "parts": [{"text": system_instruction}]
         }
 
-    # Set response format to JSON if the word JSON is in prompt
+    # Set response format to JSON if requested
     if "json" in prompt.lower() or (system_instruction and "json" in system_instruction.lower()):
         data["generationConfig"]["response_mime_type"] = "application/json"
     
@@ -10127,7 +10127,8 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
     )
     
     try:
-        with urllib.request.urlopen(req) as response:
+        # タイムアウトを30秒に設定
+        with urllib.request.urlopen(req, timeout=30) as response:
             res_body = json.loads(response.read().decode('utf-8'))
             candidates = res_body.get('candidates', [])
             if not candidates:
@@ -10141,8 +10142,15 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
             return parts[0].get('text', '')
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8')
-        print(f"Gemini API Error: {error_body}")
-        raise Exception(f"Gemini API ({e.code}): {error_body}")
+        print(f"Gemini API Error ({e.code}): {error_body}")
+        # プロンプトが上限に達しているなどの情報を分かりやすく返す
+        try:
+            err_json = json.loads(error_body)
+            msg = err_json.get('error', {}).get('message', error_body)
+            status = err_json.get('error', {}).get('status', 'ERROR')
+            raise Exception(f"Gemini API {status} ({e.code}): {msg}")
+        except:
+            raise Exception(f"Gemini API ({e.code}): {error_body}")
     except Exception as e:
         print(f"Gemini Call Failed: {str(e)}")
         raise e
@@ -10173,9 +10181,6 @@ def handle_ai_process(event, headers):
         
         # Priority 1: Audio Input
         if audio_data:
-            # Gemini documentation lists: wav, mp3, aiff, aac, ogg, flac
-            # Safari (iOS) usually sends audio/mp4 which is AAC.
-            # We map it to audio/aac to satisfy Gemini's strict MIME check.
             clean_mime = 'audio/wav'
             if mime_type:
                 target = mime_type.lower()
@@ -10183,14 +10188,8 @@ def handle_ai_process(event, headers):
                 elif 'mp4' in target or 'mpeg' in target or 'aac' in target: clean_mime = 'audio/aac'
                 elif 'ogg' in target: clean_mime = 'audio/ogg'
             
-            print(f"DEBUG: Mic processing start. Action: {action}, MIME: {mime_type} -> {clean_mime}, Data Length: {len(audio_data)}")
-            
-            media = {
-                'mime_type': clean_mime,
-                'data': audio_data
-            }
-            if not input_text:
-                input_text = "音声の内容を解析してください。"
+            media = {'mime_type': clean_mime, 'data': audio_data}
+            if not input_text: input_text = "音声の内容を解析してください。"
 
         # Priority 2: Image Input (if no audio)
         elif image_data:
@@ -10202,14 +10201,8 @@ def handle_ai_process(event, headers):
                 elif 'heic' in target: clean_mime = 'image/heic'
                 elif 'heif' in target: clean_mime = 'image/heif'
             
-            print(f"DEBUG: Image processing start. Action: {action}, MIME: {image_mime} -> {clean_mime}, Data Length: {len(image_data)}")
-            
-            media = {
-                'mime_type': clean_mime,
-                'data': image_data
-            }
-            if not input_text:
-                input_text = "この画像を解析してください。"
+            media = {'mime_type': clean_mime, 'data': image_data}
+            if not input_text: input_text = "この画像を解析してください。"
             
         if action == 'summarize_report':
             system_instruction = "あなたはプロの清掃管理アドバイザーです。ユーザーの清掃メモから、丁寧な清掃報告書を作成してください。"
@@ -10227,31 +10220,20 @@ def handle_ai_process(event, headers):
             result = call_gemini_api(f"ユーザー: {input_text}", system_instruction, media)
 
         elif action == 'report_assistant':
-            # Dedicated action for Report Creation Page
             system_instruction = """あなたは清掃レポート作成支援AIです。
 ユーザーの入力（テキスト/音声/画像）を解析し、レポートに追加すべきセクションを提案します。
-以下のJSONスキーマに従って出力してください。Markdownコードブロックは不要です。
-
+以下のJSONスキーマに従って出力してください。
 {
-  "reply": "ユーザーへの短い応答 (例: '床清掃の項目を追加しました')",
+  "reply": "ユーザーへの短い応答",
   "actions": [
     {
       "type": "addSection",
       "sectionType": "cleaning" | "image_before_after" | "image_completed",
-      "data": {
-        "item_name": "項目名 (cleaningの場合)",
-        "comments": ["コメント1", "コメント2"],
-        "haccp_info": {} // 任意
-      }
+      "data": { "item_name": "項目名", "comments": ["コメント"] }
     }
   ]
 }
-
-- "cleaning": 一般的な清掃項目（床、トイレ、エアコンなど）。commentsに状況を含める。
-- "image_before_after": 作業前後の写真用セクション。
-- "image_completed": 仕上がり写真用セクション。
 """
-            # Use 'input_text' which acts as the prompt
             result = call_gemini_api(f"入力: {input_text}", system_instruction, media)
             
         elif action == 'suggest_request_form':
@@ -10261,41 +10243,18 @@ def handle_ai_process(event, headers):
         elif action == 'admin_concierge':
             import datetime
             jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
-            
             nav_map = """
-- ダッシュボード/アクティビティ: /admin/dashboard
+- ダッシュボード: /admin/dashboard
 - スケジュール: /admin/schedules/
 - 顧客管理: /admin/customers/
 - レポート管理: /admin/reports/
-- 見積もり: /admin/estimates/
-- 発注管理: /admin/orders
-- パートナー企業: /admin/partners
-- ユーザー管理: /admin/users/
-- 勤怠エラー: /admin/attendance/errors
-- サービス管理: /admin/services/
-- 分析: /admin/analytics/
-- 画像/メディア: /admin/images/
-- 在庫管理: /admin/zaiko
 - 業務連絡: /admin/announcements
-- WIKI/マニュアル: /wiki
-- サイトマップ: /admin/sitemap
-            """
-
+"""
             system_instruction = f"""あなたはMISESAPO管理システムのAI『Misogi（ミソギ）』です。
-管理者の業務（経営判断、スケジュール調整、データ管理）をサポートします。
+以下のJSON形式のみで応答してください。
+{{ "reply": "...", "intent": "navigate" | "chat", "target_url": "/path" }}
 現在時刻: {jst_now}
-
-以下のJSON形式のみで応答してください。Markdownや余計なテキストは禁止です。
-{{
-  "reply": "ユーザーへの回答",
-  "intent": "navigate" | "chat",
-  "target_url": "/path/to/page" (navigateの場合のみ)
-}}
-
-ユーザーが特定のページへの移動や、その機能などを求めた場合は `intent: "navigate"` と適切な `target_url` を返してください。
-それ以外の一般的な会話や質問には `intent: "chat"` で返してください。
-サイドバーの機能マップ:
-{nav_map}
+ナビゲーションマップ: {nav_map}
 """
             result = call_gemini_api(f"管理者: {input_text}", system_instruction, media)
             
@@ -10314,15 +10273,15 @@ def handle_ai_process(event, headers):
     except Exception as e:
         import traceback
         error_detail = traceback.format_exc()
-        print(f"ERROR in handle_ai_process: {str(e)}\n{error_detail}")
+        print(f"ERROR in handle_ai_process: {str(e)}")
         
-        # We return a 400 with the error message so the frontend can display it.
+        # エラーメッセージを最前面のmessageフィールドに配置し、ブラウザで見やすくする
         return {
             'statusCode': 400,
             'headers': headers,
             'body': json.dumps({
                 'error': 'AI_PROCESS_FAILED',
                 'message': str(e),
-                'debug': error_detail[:150]
+                'debug': error_detail[:300]
             }, ensure_ascii=False)
         }
