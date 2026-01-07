@@ -10117,7 +10117,7 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
 
     # Set response format to JSON if the word JSON is in prompt
     if "json" in prompt.lower() or (system_instruction and "json" in system_instruction.lower()):
-        data["generationConfig"]["responseMimeType"] = "application/json"
+        data["generationConfig"]["response_mime_type"] = "application/json"
     
     req = urllib.request.Request(
         url,
