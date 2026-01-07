@@ -10082,9 +10082,9 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
     if not api_key:
         raise Exception("GEMINI_API_KEY is not set.")
 
-    # Model for 1.5 Pro - Using Pro to avoid Flash quota exhaustion
-    model_name = "gemini-1.5-pro"
-    api_version = "v1"
+    # Using gemini-flash-latest which is available for this API Key
+    model_name = "gemini-flash-latest"
+    api_version = "v1beta"
     url = f"https://generativelanguage.googleapis.com/{api_version}/models/{model_name}:generateContent?key={api_key}"
     
     parts = []
@@ -10127,7 +10127,6 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
     )
     
     try:
-        # タイムアウトを30秒に設定
         with urllib.request.urlopen(req, timeout=30) as response:
             res_body = json.loads(response.read().decode('utf-8'))
             candidates = res_body.get('candidates', [])
@@ -10143,12 +10142,10 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8')
         print(f"Gemini API Error ({e.code}): {error_body}")
-        # プロンプトが上限に達しているなどの情報を分かりやすく返す
         try:
             err_json = json.loads(error_body)
             msg = err_json.get('error', {}).get('message', error_body)
-            status = err_json.get('error', {}).get('status', 'ERROR')
-            raise Exception(f"Gemini API {status} ({e.code}): {msg}")
+            raise Exception(f"Gemini API ({e.code}): {msg}")
         except:
             raise Exception(f"Gemini API ({e.code}): {error_body}")
     except Exception as e:
