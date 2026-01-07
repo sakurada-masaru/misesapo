@@ -706,9 +706,10 @@ function renderUser(user) {
     loadScheduleList(user);
   }
 
-  // OS課の場合は専用サイドバーに置き換え
-  if (user.department === 'OS課') {
-    loadOSSectionSidebar();
+  // OS課または清掃事業部の場合は専用サイドバーに置き換え
+  const dept = (user.department || '').toLowerCase();
+  if (dept.includes('os') || dept.includes('清掃') || dept.includes('clean')) {
+    loadOSSectionSidebar(user);
   } else {
     // サイドバーのロールバッジを更新
     const roleBadge = document.getElementById('sidebar-role-badge');
@@ -720,7 +721,7 @@ function renderUser(user) {
 }
 
 // OS課専用サイドバーを設定
-function loadOSSectionSidebar() {
+function loadOSSectionSidebar(user) {
   const sidebarNav = document.querySelector('#admin-sidebar .sidebar-nav');
   if (!sidebarNav) {
     console.warn('Sidebar nav not found');
@@ -730,7 +731,7 @@ function loadOSSectionSidebar() {
   // ロールバッジを更新
   const roleBadge = document.getElementById('sidebar-role-badge');
   if (roleBadge) {
-    roleBadge.textContent = 'OS課';
+    roleBadge.textContent = user.department || '清掃/OS';
   }
 
   // 日報と出勤履歴を非表示にする
