@@ -544,7 +544,6 @@
         textInput.value = '';
 
         const token = ensureAuthOrRedirect();
-        // If mocked/dev, maybe no token needed or handle gracefully
 
         const loadingBubble = document.createElement('div');
         loadingBubble.className = 'chat-bubble ai';
@@ -556,29 +555,95 @@
             const headers = { 'Content-Type': 'application/json' };
             if (token) headers['Authorization'] = `Bearer ${token}`;
 
+            // Try the new admin action first
             const response = await fetch(`${API_BASE}/ai/process`, {
                 method: 'POST',
                 headers: headers,
-                body: JSON.stringify({ action: 'assistant_concierge', text: text })
+                body: JSON.stringify({ action: 'admin_concierge', text: text })
             });
 
-            if (!response.ok) throw new Error('API Error');
-            const data = await response.json();
-            if (loadingBubble.parentNode) loadingBubble.remove();
-
-            let aiResult = data.result;
-            if (typeof aiResult === 'string') {
-                try {
-                    const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
-                } catch (e) { }
+            if (!response.ok) {
+                // Return to old action if new one fails (e.g. backend not deployed)
+                console.warn("admin_concierge failed, trying assistant_concierge");
+                const fallbackResponse = await fetch(`${API_BASE}/ai/process`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ action: 'assistant_concierge', text: text })
+                });
+                if (!fallbackResponse.ok) throw new Error('API Error');
+                const data = await fallbackResponse.json();
+                await handleAiResponse(data, loadingBubble, text);
+                return;
             }
-            const reply = aiResult.reply || aiResult.text || JSON.stringify(aiResult);
-            appendChatMessage('ai', reply);
+
+            const data = await response.json();
+            await handleAiResponse(data, loadingBubble, text);
+
         } catch (err) {
             console.error(err);
             if (loadingBubble.parentNode) loadingBubble.remove();
             appendChatMessage('ai', 'エラーが発生しました。');
+        }
+    }
+
+    async function handleAiResponse(data, loadingBubble, userText) {
+        if (loadingBubble.parentNode) loadingBubble.remove();
+
+        let aiResult = data.result;
+        if (typeof aiResult === 'string') {
+            try {
+                const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
+                if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
+            } catch (e) { }
+        }
+
+        let reply = aiResult.reply || aiResult.text || JSON.stringify(aiResult);
+        let intent = aiResult.intent;
+        let targetUrl = aiResult.target_url;
+
+        // --- Local Fallback Logic (Mock Navigation) ---
+        // If the backend didn't return an intent (e.g. backend code not yet deployed), 
+        // we simulate the navigation intent based on keywords.
+        if (!intent || intent === 'chat') {
+            const map = {
+                '/admin/dashboard': ['ダッシュボード', 'アクティビティ'],
+                '/admin/schedules/': ['スケジュール', 'カレンダー', '予定'],
+                '/admin/customers/': ['顧客', 'お客様'],
+                '/admin/reports/': ['レポート', '報告'],
+                '/admin/estimates/': ['見積', '請求'],
+                '/admin/orders': ['発注', '仕入'],
+                '/admin/partners': ['パートナー', '協力会社'],
+                '/admin/users/': ['ユーザー', '従業員', 'スタッフ'],
+                '/admin/attendance/errors': ['勤怠', '打刻'],
+                '/admin/services/': ['サービス', 'メニュー'],
+                '/admin/analytics/': ['分析', '売上', '統計'],
+                '/admin/images/': ['画像', '写真', 'メディア'],
+                '/admin/zaiko': ['在庫', '棚卸'],
+                '/admin/announcements': ['業務連絡', 'お知らせ', '通知'],
+                '/wiki': ['WIKI', 'マニュアル'],
+                '/admin/sitemap': ['サイトマップ']
+            };
+
+            for (const [url, keywords] of Object.entries(map)) {
+                // Check if user input contains keyword OR if AI mention it and says "move/go"
+                if (keywords.some(k => userText.includes(k))) {
+                    // Force navigate intent
+                    intent = 'navigate';
+                    targetUrl = url;
+                    if (!reply.includes('移動します')) {
+                        reply += `<br><br><i class="fas fa-external-link-alt"></i> ${keywords[0]}へ移動します...`;
+                    }
+                    break;
+                }
+            }
+        }
+
+        appendChatMessage('ai', reply);
+
+        if (intent === 'navigate' && targetUrl) {
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 1200);
         }
     }
 

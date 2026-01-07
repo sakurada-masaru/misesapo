@@ -10194,6 +10194,47 @@ def handle_ai_process(event, headers):
         elif action == 'suggest_request_form':
             system_instruction = "営業報告から清掃依頼書（JSON）を作成してください。"
             result = call_gemini_api(f"解析対象:\n{input_text}", system_instruction, media)
+
+        elif action == 'admin_concierge':
+            import datetime
+            jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
+            
+            nav_map = """
+- ダッシュボード/アクティビティ: /admin/dashboard
+- スケジュール: /admin/schedules/
+- 顧客管理: /admin/customers/
+- レポート管理: /admin/reports/
+- 見積もり: /admin/estimates/
+- 発注管理: /admin/orders
+- パートナー企業: /admin/partners
+- ユーザー管理: /admin/users/
+- 勤怠エラー: /admin/attendance/errors
+- サービス管理: /admin/services/
+- 分析: /admin/analytics/
+- 画像/メディア: /admin/images/
+- 在庫管理: /admin/zaiko
+- 業務連絡: /admin/announcements
+- WIKI/マニュアル: /wiki
+- サイトマップ: /admin/sitemap
+            """
+
+            system_instruction = f"""あなたはMISESAPO管理システムのAI『Misogi（ミソギ）』です。
+管理者の業務（経営判断、スケジュール調整、データ管理）をサポートします。
+現在時刻: {jst_now}
+
+以下のJSON形式のみで応答してください。Markdownや余計なテキストは禁止です。
+{{
+  "reply": "ユーザーへの回答",
+  "intent": "navigate" | "chat",
+  "target_url": "/path/to/page" (navigateの場合のみ)
+}}
+
+ユーザーが特定のページへの移動や、その機能などを求めた場合は `intent: "navigate"` と適切な `target_url` を返してください。
+それ以外の一般的な会話や質問には `intent: "chat"` で返してください。
+サイドバーの機能マップ:
+{nav_map}
+"""
+            result = call_gemini_api(f"管理者: {input_text}", system_instruction, media)
             
         else:
             return {
