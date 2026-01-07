@@ -8979,6 +8979,12 @@ def create_announcement(event, headers):
         has_deadline = body_json.get('has_deadline', False)
         deadline = body_json.get('deadline', '')  # ISO 8601形式
         
+        # 通知設定の取得
+        notify_email = body_json.get('notify_email', False)
+        notify_line = body_json.get('notify_line', False)
+        notify_push = body_json.get('notify_push', False)
+        notify_sound = body_json.get('notify_sound', False)
+
         if not title or not content:
             return {
                 'statusCode': 400,
@@ -9016,10 +9022,67 @@ def create_announcement(event, headers):
             'updated_at': now,
             'created_by': user_info.get('uid'),
             'created_by_name': user_info.get('name', user_info.get('email', 'Unknown')),
-            'target_type': target_type  # GSI用
+            'target_type': target_type,  # GSI用
+            
+            # 通知設定を保存
+            'notify_email': notify_email,
+            'notify_line': notify_line,
+            'notify_push': notify_push,
+            'notify_sound': notify_sound
         }
         
         ANNOUNCEMENTS_TABLE.put_item(Item=announcement_item)
+
+        # メール通知処理
+        if notify_email:
+            try:
+                recipients = []
+                if target_type == 'all':
+                    # 全従業員のメールアドレスを取得
+                    response = WORKERS_TABLE.scan(
+                        FilterExpression=Attr('status').eq('active'),
+                        ProjectionExpression='email'
+                    )
+                    recipients = [item['email'] for item in response.get('Items', []) if item.get('email')]
+                elif target_type == 'individual' and target_staff_ids:
+                    # 個別従業員のメールアドレスを取得
+                    # 注意: batch_get_itemはキーが必要だが、ここではscanで代用（件数が少ない想定）
+                    response = WORKERS_TABLE.scan(ProjectionExpression='id, email')
+                    all_workers = response.get('Items', [])
+                    recipients = [w['email'] for w in all_workers if w['id'] in target_staff_ids and w.get('email')]
+
+                if recipients:
+                    mail_subject = f"【業務連絡】{title}"
+                    mail_body = f"新規の業務連絡があります。\n\n" \
+                                f"■タイトル\n{title}\n\n" \
+                                f"■内容\n{content}\n\n" \
+                                f"■確認・詳細\nhttps://misesapo.app/staff/announcements/{announcement_id}\n" \
+                                f"(ログインが必要です)\n\n" \
+                                f"--------------------------------\n" \
+                                f"MISESAPO 管理システム"
+
+                    # 50件ずつ分割してBCC送信（SESの制限回避）
+                    chunk_size = 40
+                    for i in range(0, len(recipients), chunk_size):
+                        chunk = recipients[i:i + chunk_size]
+                        try:
+                            ses_client.send_email(
+                                Source="info@misesapo.co.jp",
+                                Destination={
+                                    'ToAddresses': ["info@misesapo.co.jp"],  # ダミー宛先
+                                    'BccAddresses': chunk
+                                },
+                                Message={
+                                    'Subject': {'Data': mail_subject},
+                                    'Body': {'Text': {'Data': mail_body}}
+                                }
+                            )
+                            print(f"[INFO] Announcement email sent to {len(chunk)} recipients (chunk {i//chunk_size + 1})")
+                        except Exception as e:
+                            print(f"[ERROR] Failed to send announcement email chunk: {e}")
+            except Exception as e:
+                print(f"[ERROR] Failed to process announcement email notifications: {e}")
+
         
         return {
             'statusCode': 201,
