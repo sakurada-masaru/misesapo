@@ -551,6 +551,10 @@
         chatHistory.appendChild(loadingBubble);
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
+        // Force Persona (Temporary fix for outdated backend)
+        const systemPrompt = "(System: あなたは管理AI『Misogi』です。Sakuraと名乗らないでください。常に『Misogi』として振る舞ってください。)\n";
+        const textToSend = systemPrompt + text;
+
         try {
             const headers = { 'Content-Type': 'application/json' };
             if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -559,16 +563,16 @@
             const response = await fetch(`${API_BASE}/ai/process`, {
                 method: 'POST',
                 headers: headers,
-                body: JSON.stringify({ action: 'admin_concierge', text: text })
+                body: JSON.stringify({ action: 'admin_concierge', text: textToSend })
             });
 
             if (!response.ok) {
                 // Return to old action if new one fails (e.g. backend not deployed)
-                console.warn("admin_concierge failed, trying assistant_concierge");
+                console.warn("admin_concierge failed, trying assistant_concierge with forced persona");
                 const fallbackResponse = await fetch(`${API_BASE}/ai/process`, {
                     method: 'POST',
                     headers: headers,
-                    body: JSON.stringify({ action: 'assistant_concierge', text: text })
+                    body: JSON.stringify({ action: 'assistant_concierge', text: textToSend })
                 });
                 if (!fallbackResponse.ok) throw new Error('API Error');
                 const data = await fallbackResponse.json();
