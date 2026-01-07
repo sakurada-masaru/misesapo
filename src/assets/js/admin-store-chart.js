@@ -278,7 +278,6 @@ async function initializeChart() {
 
   // イベントリスナー設定
   setupEventListeners();
-  setupAiExtraction();
 
   // セクションのアコーディオン機能
   setupAccordions();
@@ -1318,103 +1317,4 @@ function formatDate(dateStr) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}/${month}/${day}`;
-}
-
-// AI抽出機能のセットアップ
-function setupAiExtraction() {
-  const extractBtn = document.getElementById('ai-extract-btn');
-  const statusEl = document.getElementById('ai-extract-status');
-  const memoField = document.getElementById('ai-meeting-notes');
-
-  if (!extractBtn) return;
-
-  extractBtn.addEventListener('click', async () => {
-    const memoText = memoField.value.trim();
-    if (!memoText) {
-      alert('打合せメモを入力してください。');
-      memoField.focus();
-      return;
-    }
-
-    try {
-      extractBtn.disabled = true;
-      statusEl.style.display = 'flex';
-
-      const response = await fetch(`${API_BASE}/ai/process`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`
-        },
-        body: JSON.stringify({
-          action: 'extract_karte',
-          text: memoText
-        })
-      });
-
-      if (!response.ok) throw new Error('AI抽出に失敗しました');
-
-      const data = await response.json();
-      if (data.status === 'success' && data.result) {
-        let result = data.result;
-
-        // JSON文字列として返ってきた場合はパースを試みる
-        if (typeof result === 'string') {
-          try {
-            // Markdownのコードブロックを剥がす
-            const jsonMatch = result.match(/```json\n([\s\S]*?)\n```/) || result.match(/{[\s\S]*}/);
-            if (jsonMatch) {
-              result = JSON.parse(jsonMatch[1] || jsonMatch[0]);
-            }
-          } catch (e) {
-            console.warn('AI result was not valid JSON, using as raw text');
-          }
-        }
-
-        if (typeof result === 'object') {
-          // マッピング例 (キー名はプロンプトの指示に合わせる)
-          if (result['重点清掃箇所'] || result['hotspots']) {
-            setInputValue('intake-hotspots', result['重点清掃箇所'] || result['hotspots']);
-          }
-          if (result['清掃の悩み'] || result['issue']) {
-            setInputValue('intake-issue', result['清掃の悩み'] || result['issue']);
-          }
-          if (result['店内環境'] || result['environment']) {
-            setInputValue('intake-environment', result['店内環境'] || result['environment']);
-          }
-          if (result['注意事項'] || result['notes']) {
-            setInputValue('intake-notes', result['注意事項'] || result['notes']);
-          }
-          if (result['厨房'] || result['kitchen']) {
-            setInputValue('intake-kitchen', result['厨房'] || result['kitchen']);
-          }
-
-          alert('AIがメモから情報を抽出しました。問診票の各項目を確認してください。');
-        } else {
-          // テキストとして返ってきた場合は「注意事項」にとりあえず入れる
-          setInputValue('intake-notes', result);
-          alert('AIがメモを整理しました。注意事項欄を確認してください。');
-        }
-      }
-    } catch (error) {
-      console.error('AI Extraction Error:', error);
-      alert('AI抽出中にエラーが発生しました。環境変数 GEMINI_API_KEY が正しく設定されているか確認してください。');
-    } finally {
-      extractBtn.disabled = false;
-      statusEl.style.display = 'none';
-    }
-  });
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>"']/g, function (m) {
-    return {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    }[m];
-  });
 }
