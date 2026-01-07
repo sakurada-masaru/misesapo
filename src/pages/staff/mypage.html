@@ -53,9 +53,9 @@
       if (userInfo) {
         const { department, role } = userInfo;
 
-        // OS課ユーザー
-        if (department.includes('os') || department.includes('ｏｓ') || department.includes('os課') || department.includes('ｏｓ課')) {
-          window.location.replace('/staff/os/mypage');
+        // OS課 & 清掃事業部
+        if (department.includes('os') || department.includes('ｏｓ') || department.includes('os課') || department.includes('ｏｓ課') || department.includes('清掃') || department.includes('clean') || role === 'cleaning' || role === 'clean') {
+          window.location.replace('/staff/os/mypage.html');
           return;
         }
 

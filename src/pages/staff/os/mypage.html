@@ -40,7 +40,7 @@
             const parsed = JSON.parse(raw);
             const user = parsed.user || parsed;
             const department = String(user.department || '').toLowerCase();
-            if (department.includes('os')) {
+            if (department.includes('os') || department.includes('ｏｓ') || department.includes('清掃') || department.includes('clean') || role === 'cleaning' || role === 'clean') {
               return true;
             }
           } catch (error) {
@@ -56,7 +56,6 @@
     })();
   </script>
   <style>
-    #main {}
   </style>
   <style>
     .content-menu-bar {

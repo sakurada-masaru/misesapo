@@ -474,19 +474,19 @@
               const department = (user?.department || '').toLowerCase();
               // 営業: 営業用マイページ（SP用、クイックメニューあり）
               if (role === 'sales' || role === 'concierge' || department.includes('営業') || department.includes('sales')) {
-                return '/sales/mypage';
+                return '/sales/mypage.html';
               }
               // OS課 & 清掃事業部: OS課用マイページ（SP用、クイックメニューあり）
               if (department.includes('os') || department.includes('ｏｓ') || department.includes('os課') || department.includes('ｏｓ課') || department.includes('清掃') || department.includes('clean') || role === 'cleaning' || role === 'clean') {
-                return '/staff/os/mypage';
+                return '/staff/os/mypage.html';
               }
               // 事務: 事務マイページ（PC向け、サイドバーのみ）
               if (role === 'office' || department.includes('事務') || department.includes('office')) {
-                return '/staff/office/mypage';
+                return '/staff/office/mypage.html';
               }
               // 開発: 開発マイページ（PC向け、サイドバーのみ）
               if (role === 'developer' || department.includes('開発') || department.includes('developer')) {
-                return '/staff/developer/mypage';
+                return '/staff/developer/mypage.html';
               }
               // その他（バックオフィス）: 通常マイページ（PC向け、サイドバーのみ）
               return '/staff/mypage.html';
