@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Misesapo Admin AI</title>
+    <link rel="icon" href="/images/misogi-logo-icon.svg" type="image/svg+xml">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #000000;
+            --accent-color: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            --text-color: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Back Button */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            padding: 10px 16px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Center Visualizer */
+        .visualizer-container {
+            width: 300px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        /* Core Pulse */
+        .core-circle {
+            width: 80px;
+            height: 80px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            box-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-glow);
+            position: absolute;
+            z-index: 10;
+            animation: breathe 4s infinite ease-in-out;
+        }
+
+        /* Orbital Waves */
+        .wave {
+            position: absolute;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .wave:nth-child(1) {
+            width: 100px;
+            height: 100px;
+            animation: ripple 3s infinite 0s;
+        }
+
+        .wave:nth-child(2) {
+            width: 100px;
+            height: 100px;
+            animation: ripple 3s infinite 1s;
+        }
+
+        .wave:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            animation: ripple 3s infinite 2s;
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+                box-shadow: 0 0 50px var(--accent-glow), 0 0 90px var(--accent-glow);
+            }
+        }
+
+        @keyframes ripple {
+            0% {
+                width: 80px;
+                height: 80px;
+                opacity: 0.8;
+                border-color: var(--accent-color);
+            }
+
+            100% {
+                width: 300px;
+                height: 300px;
+                opacity: 0;
+                border-color: transparent;
+            }
+        }
+
+        .visualizer-container.active .wave {
+            animation-duration: 1s;
+        }
+
+        /* Status Text */
+        .status-text {
+            margin-top: 40px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            animation: text-fade 3s infinite alternate;
+        }
+
+        @keyframes text-fade {
+            0% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 0.8;
+            }
+        }
+
+        /* AI Response Overlay */
+        .ai-response-overlay {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            width: 85%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 16px;
+            color: #fff;
+            font-size: 1rem;
+            line-height: 1.6;
+            text-align: left;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 120;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .ai-response-overlay.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+
+        .ai-response-icon {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--accent-color);
+        }
+
+        /* Core Active */
+        .core-circle.active {
+            transform: scale(1.3) !important;
+            filter: blur(2px);
+            background: #fff;
+            box-shadow: 0 0 100px var(--accent-color), 0 0 200px var(--accent-color);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Rotating Circular Text */
+        .circle-text-container {
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            z-index: 5;
+            --base-scale: 0.45;
+            transform: scale(var(--base-scale));
+            animation: rotate-circle 30s linear infinite;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0.6;
+        }
+
+        .circle-text-container.active {
+            --base-scale: 1.1;
+            transform: scale(var(--base-scale));
+            animation-play-state: paused;
+            opacity: 1;
+        }
+
+        @keyframes rotate-circle {
+            from {
+                transform: scale(var(--base-scale, 0.45)) rotate(0deg);
+            }
+
+            to {
+                transform: scale(var(--base-scale, 0.45)) rotate(360deg);
+            }
+        }
+
+        #circlePath {
+            fill: none;
+        }
+
+        .circle-svg text {
+            fill: rgba(255, 255, 255, 0.5);
+            font-size: 8.5px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 3.5px;
+        }
+
+        /* Mode Switcher */
+        .mode-switch-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .mode-btn {
+            border: none;
+            background: none;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 10px 30px;
+            border-radius: 35px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
+        }
+
+        .mode-btn.active {
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent-color), #2563eb);
+            box-shadow: 0 5px 15px var(--accent-glow);
+        }
+
+        /* Chat UI */
+        #chat-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 80px 20px 110px 20px;
+            box-sizing: border-box;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 500;
+        }
+
+        #chat-container.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-history::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .chat-bubble {
+            max-width: 85%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .chat-bubble.ai {
+            align-self: flex-start;
+            background: #f0f9ff;
+            color: #0c4a6e;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #bae6fd;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .chat-bubble.ai::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            right: 15px;
+            width: 12px;
+            height: 12px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: -20px 15px 0 rgba(59, 130, 246, 0.15);
+        }
+
+        .chat-bubble.ai::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            background: rgba(59, 130, 246, 0.25);
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: -15px -10px 0 rgba(59, 130, 246, 0.1);
+        }
+
+        .chat-bubble.user {
+            align-self: flex-end;
+            background: #000000;
+            color: #fff;
+            border-bottom-right-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .chat-input-wrapper {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #text-input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #fff;
+            padding: 8px 15px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .send-btn:active {
+            transform: scale(0.9);
+        }
+
+        .voice-mode-content {
+            transition: all 0.5s ease;
+        }
+
+        .voice-mode-content.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Back to Admin & Side Menu removed for full immersion, just a back button -->
+    <a href="/admin/dashboard" class="back-btn">
+        <i class="fas fa-arrow-left"></i> ダッシュボードへ戻る
+    </a>
+
+    <!-- Central Visualizer -->
+    <div class="voice-mode-content" id="voice-content">
+        <div class="visualizer-container">
+            <!-- Rotating Text -->
+            <div class="circle-text-container" id="circle-text">
+                <svg viewBox="0 0 200 200" class="circle-svg" width="320" height="320">
+                    <path id="circlePath" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" />
+                    <text>
+                        <textPath href="#circlePath">
+                            Misesapo Intelligent System for Operational Guidance &amp; Integration &bull; Misesapo
+                            Intelligent System for Operational Guidance &amp; Integration &bull;
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="core-circle"></div>
+        </div>
+        <div class="status-text" id="status-text">LISTENING...</div>
+        <!-- AI Response Overlay -->
+        <div class="ai-response-overlay" id="ai-response">
+            <div class="ai-response-icon"><i class="fas fa-sparkles"></i> MISOGI</div>
+            <div id="ai-message-text"></div>
+        </div>
+    </div>
+
+    <!-- Chat Mode -->
+    <div id="chat-container">
+        <div class="chat-history" id="chat-history">
+            <div class="chat-bubble ai">
+                お疲れ様です。管理AIアシスタントの『Misogi』です。<br>
+                経営状況の確認、スケジュールの調整、業務連絡の作成などをお手伝いします。
+            </div>
+        </div>
+        <div class="chat-input-wrapper">
+            <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
+            <button class="send-btn" onclick="sendTextMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mode Switcher -->
+    <div class="mode-switch-container">
+        <button class="mode-btn active" id="btn-voice-mode" onclick="switchMode('voice')">
+            <i class="fas fa-microphone"></i> 音声
+        </button>
+        <button class="mode-btn" id="btn-chat-mode" onclick="switchMode('chat')">
+            <i class="fas fa-comment-dots"></i> チャット
+        </button>
+    </div>
+
+    <script>
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+        function ensureAuthOrRedirect() {
+            // Admin authentication check
+            const token = localStorage.getItem('cognito_id_token');
+            if (!token) {
+                // If not authenticated as admin, maybe redirect to admin login
+                // For now, simple alert or redirect
+                alert("認証セッションが切れました。ログインしてください。");
+                window.location.href = '/admin/login';
+                return null;
+            }
+            return token;
+        }
+
+        // --- UI Logic ---
+        const visualizer = document.querySelector('.visualizer-container');
+        const core = document.querySelector('.core-circle');
+        const circleText = document.getElementById('circle-text');
+        const statusText = document.getElementById('status-text');
+        const responseOverlay = document.getElementById('ai-response');
+        const messageText = document.getElementById('ai-message-text');
+        const voiceContent = document.getElementById('voice-content');
+        const chatContainer = document.getElementById('chat-container');
+        const chatHistory = document.getElementById('chat-history');
+        const textInput = document.getElementById('text-input');
+        const btnVoice = document.getElementById('btn-voice-mode');
+        const btnChat = document.getElementById('btn-chat-mode');
+
+        let currentMode = 'voice';
+
+        function switchMode(mode) {
+            if (currentMode === mode) return;
+            currentMode = mode;
+            if (mode === 'voice') {
+                btnVoice.classList.add('active');
+                btnChat.classList.remove('active');
+                chatContainer.classList.remove('active');
+                voiceContent.classList.remove('hidden');
+            } else {
+                btnChat.classList.add('active');
+                btnVoice.classList.remove('active');
+                voiceContent.classList.add('hidden');
+                chatContainer.classList.add('active');
+                textInput.focus();
+            }
+        }
+
+        function appendChatMessage(role, text) {
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${role}`;
+            bubble.innerHTML = text.replace(/\n/g, '<br>');
+            chatHistory.appendChild(bubble);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        async function sendTextMessage() {
+            const text = textInput.value.trim();
+            if (!text) return;
+            appendChatMessage('user', text);
+            textInput.value = '';
+
+            const token = ensureAuthOrRedirect();
+            if (!token) return;
+
+            const loadingBubble = document.createElement('div');
+            loadingBubble.className = 'chat-bubble ai';
+            loadingBubble.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 解析中...';
+            chatHistory.appendChild(loadingBubble);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            try {
+                const response = await fetch(`${API_BASE}/ai/process`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'assistant_concierge', text: text })
+                });
+
+                if (!response.ok) throw new Error('API Error');
+                const data = await response.json();
+                if (loadingBubble.parentNode) loadingBubble.remove();
+
+                let aiResult = data.result;
+                if (typeof aiResult === 'string') {
+                    try {
+                        const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
+                    } catch (e) { }
+                }
+                const reply = aiResult.reply || aiResult.text || JSON.stringify(aiResult);
+                appendChatMessage('ai', reply);
+            } catch (err) {
+                console.error(err);
+                if (loadingBubble.parentNode) loadingBubble.remove();
+                appendChatMessage('ai', 'エラーが発生しました。');
+            }
+        }
+
+        if (textInput) {
+            textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendTextMessage(); });
+        }
+
+        // --- Audio Logic (Simplified for Visuals, requires HTTPS/Localhost for mic) ---
+        let isRecording = false;
+
+        if (visualizer) {
+            // Just visual feedback for now unless we implement full mic logic like sales page
+            // To keep it clean, we implement basic visual toggle
+            visualizer.addEventListener('click', () => {
+                if (!isRecording) {
+                    isRecording = true;
+                    statusText.textContent = "LISTENING... (Simulation)";
+                    core.classList.add('active');
+                    circleText.classList.add('active');
+                } else {
+                    isRecording = false;
+                    statusText.textContent = "PROCESSING...";
+                    core.classList.remove('active');
+                    circleText.classList.remove('active');
+                    setTimeout(() => {
+                        statusText.textContent = "READY TO ASSIST";
+                    }, 1500);
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
