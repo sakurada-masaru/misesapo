@@ -7,6 +7,7 @@ import { ImageManager } from './ui/image-manager.js';
 import { HaccpManager } from './ui/haccp-manager.js';
 import { SubmitManager } from './ui/submit-manager.js';
 import { AutoSaveManager } from './ui/auto-save-manager.js';
+import { ReportAssistant } from './assistant.js';
 
 console.log('[Report Module] Initializing...');
 
@@ -28,6 +29,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const tabManager = new TabManager(stateManager);
     const sectionManager = new SectionManager(stateManager); // SectionRenderer is inside here
+
+    // Initialize Assistant
+    const reportAssistant = new ReportAssistant(stateManager);
+    reportAssistant.init();
 
     // URL Parameter Handling
     const urlParams = new URLSearchParams(window.location.search);

@@ -10162,6 +10162,34 @@ def handle_ai_process(event, headers):
 現在時刻: {jst_now}
 フォーマット: {{"reply": "...", "intent": "...", "extracted_data": {{}}}}"""
             result = call_gemini_api(f"ユーザー: {input_text}", system_instruction, media)
+
+        elif action == 'report_assistant':
+            # Dedicated action for Report Creation Page
+            system_instruction = """あなたは清掃レポート作成支援AIです。
+ユーザーの入力（テキスト/音声/画像）を解析し、レポートに追加すべきセクションを提案します。
+以下のJSONスキーマに従って出力してください。Markdownコードブロックは不要です。
+
+{
+  "reply": "ユーザーへの短い応答 (例: '床清掃の項目を追加しました')",
+  "actions": [
+    {
+      "type": "addSection",
+      "sectionType": "cleaning" | "image_before_after" | "image_completed",
+      "data": {
+        "item_name": "項目名 (cleaningの場合)",
+        "comments": ["コメント1", "コメント2"],
+        "haccp_info": {} // 任意
+      }
+    }
+  ]
+}
+
+- "cleaning": 一般的な清掃項目（床、トイレ、エアコンなど）。commentsに状況を含める。
+- "image_before_after": 作業前後の写真用セクション。
+- "image_completed": 仕上がり写真用セクション。
+"""
+            # Use 'input_text' which acts as the prompt
+            result = call_gemini_api(f"入力: {input_text}", system_instruction, media)
             
         elif action == 'suggest_request_form':
             system_instruction = "営業報告から清掃依頼書（JSON）を作成してください。"
