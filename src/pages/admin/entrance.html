@@ -318,7 +318,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        padding: 60px 10% 120px 10%;
+        padding: 60px 10% 40px 10%;
         box-sizing: border-box;
         background: radial-gradient(circle at center, rgba(17, 17, 17, 0.8) 0%, #000 100%);
         display: flex;
@@ -686,6 +686,20 @@
             transform: translateY(0);
         }
     }
+
+    /* Action Buttons Container Style */
+    .action-buttons-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+        margin-top: auto;
+        /* Push to bottom near input */
+        z-index: 20;
+    }
 </style>
 
 <main id="main" class="admin-dashboard">
@@ -741,6 +755,9 @@
 
             <!-- New: Latest Message Display (Centered) -->
             <div id="latest-message-container" class="latest-message-container"></div>
+
+            <!-- New: Action Buttons Container (Centered) -->
+            <div id="action-buttons-container" class="action-buttons-container"></div>
 
             <!-- Login Bubble -->
             <div class="login-bubble-container" id="login-form">
@@ -1107,16 +1124,19 @@
                     loginForm.style.display = 'flex';
                     break;
                 case 'show_attendance':
-                    const container = document.createElement('div');
-                    container.className = 'action-bubble-container';
-                    container.style.display = 'block';
-                    container.innerHTML = `
-                        <button class="attendance-btn" id="active-attendance-btn" onclick="performClockIn()">
-                            <i class="fas fa-sign-in-alt"></i> 出勤する
-                        </button>
-                    `;
-                    chatHistory.appendChild(container);
-                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                    const actionContainer = document.getElementById('action-buttons-container');
+                    if (actionContainer) {
+                        actionContainer.innerHTML = ''; // Clear previous actions
+                        const btnDiv = document.createElement('div');
+                        btnDiv.className = 'action-bubble-container';
+                        btnDiv.style.display = 'block';
+                        btnDiv.innerHTML = `
+                            <button class="attendance-btn" id="active-attendance-btn" onclick="performClockIn()">
+                                <i class="fas fa-sign-in-alt"></i> 出勤する
+                            </button>
+                        `;
+                        actionContainer.appendChild(btnDiv);
+                    }
                     break;
                 case 'show_sidebar':
                     if (sidebar) {
