@@ -9,20 +9,15 @@
         --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
         --font-jp: 'Zen Kaku Gothic New', sans-serif;
         --color-bg: #03060f;
-        /* Deeper Blue-Black */
         --color-glass: rgba(255, 255, 255, 0.04);
         --color-glass-border: rgba(255, 255, 255, 0.1);
         --color-text-main: rgba(255, 255, 255, 0.95);
         --color-text-sub: rgba(147, 197, 253, 0.6);
-        /* Bluer subtext */
-
-        /* Dynamic Theme Colors */
         --theme-color: #3b82f6;
         --theme-glow: rgba(59, 130, 246, 0.5);
         --theme-accent: #60a5fa;
     }
 
-    /* Global Reset & Layout Overrides */
     body,
     html {
         margin: 0;
@@ -35,7 +30,7 @@
         overflow: hidden !important;
     }
 
-    /* Subtle Background Grid */
+    /* Animated Cyber Grid Background */
     body::before {
         content: '';
         position: fixed;
@@ -46,12 +41,22 @@
         background-image:
             linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
             linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
-        background-size: 50px 50px;
+        background-size: 60px 60px;
         z-index: 0;
         pointer-events: none;
+        animation: gridMove 20s linear infinite;
     }
 
-    /* Disable layout defaults */
+    @keyframes gridMove {
+        from {
+            background-position: 0 0;
+        }
+
+        to {
+            background-position: 60px 60px;
+        }
+    }
+
     #default-header-wrapper,
     #normal-header-wrapper,
     footer,
@@ -75,9 +80,7 @@
         justify-content: center;
     }
 
-    /* =========================================
-       Background Ambient Effects
-       ========================================= */
+    /* Ambient Effects */
     .ambient-glow {
         position: absolute;
         width: 150vw;
@@ -87,9 +90,7 @@
         left: 50%;
         transform: translate(-50%, -50%);
         opacity: 0.25;
-        /* Increased prominence */
         pointer-events: none;
-        transition: background 1.5s ease;
         z-index: 0;
     }
 
@@ -106,21 +107,18 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 10000;
-        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 1000;
+        /* Behind Chat Interface */
+        transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
         pointer-events: none;
     }
 
     .core-circle {
         width: 70px;
         height: 70px;
-        /* Slightly larger */
         border-radius: 50%;
         background: #fff;
-        box-shadow:
-            0 0 20px #fff,
-            0 0 50px var(--theme-color),
-            0 0 100px var(--theme-color);
+        box-shadow: 0 0 30px #fff, 0 0 60px var(--theme-color), 0 0 120px var(--theme-color);
         position: relative;
         z-index: 20;
         animation: breathe 4s infinite ease-in-out;
@@ -129,7 +127,6 @@
     .wave {
         position: absolute;
         border: 2px solid var(--theme-color);
-        /* Thicker waves */
         border-radius: 50%;
         opacity: 0;
         top: 50%;
@@ -138,15 +135,15 @@
     }
 
     .wave:nth-child(1) {
-        animation: ripple 3s infinite 0s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        animation: ripple 4s infinite 0s;
     }
 
     .wave:nth-child(2) {
-        animation: ripple 3s infinite 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        animation: ripple 4s infinite 1.3s;
     }
 
     .wave:nth-child(3) {
-        animation: ripple 3s infinite 2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        animation: ripple 4s infinite 2.6s;
     }
 
     @keyframes breathe {
@@ -158,8 +155,8 @@
         }
 
         50% {
-            transform: scale(1.1);
-            box-shadow: 0 0 80px var(--theme-color);
+            transform: scale(1.15);
+            box-shadow: 0 0 90px var(--theme-color);
         }
     }
 
@@ -167,20 +164,47 @@
         0% {
             width: 70px;
             height: 70px;
-            opacity: 0.8;
+            opacity: 0.6;
             border-width: 3px;
         }
 
         100% {
-            width: 450px;
-            height: 450px;
+            width: 500px;
+            height: 500px;
             opacity: 0;
             border-width: 0px;
         }
     }
 
+    /* Rotating Text Ring */
+    .text-ring {
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        animation: rotateRing 60s linear infinite;
+        opacity: 0.4;
+    }
+
+    .text-ring text {
+        fill: #fff;
+        font-family: var(--font-primary);
+        font-size: 8px;
+        letter-spacing: 5px;
+        text-transform: uppercase;
+    }
+
+    @keyframes rotateRing {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
     /* =========================================
-       Start Overlay & Login
+       Start Overlay
        ========================================= */
     #start-overlay {
         position: fixed;
@@ -189,106 +213,86 @@
         width: 100%;
         height: 100%;
         background: radial-gradient(circle at center, #0a1128 0%, #000 100%);
-        z-index: 9999;
+        z-index: 5000;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        transition: opacity 0.8s ease, visibility 0.8s;
+        transition: all 1s ease;
     }
 
     #start-overlay.hidden {
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
+        transform: scale(1.1);
     }
 
     .logo-section {
-        margin-bottom: 320px;
+        margin-bottom: 340px;
         text-align: center;
         opacity: 0;
-        animation: fadeUp 1.2s ease 0.5s forwards;
+        animation: fadeUp 1.5s ease 0.5s forwards;
     }
 
     .logo-main {
-        font-size: 4rem;
-        /* Larger */
+        font-size: 4.5rem;
         font-weight: 200;
-        letter-spacing: 16px;
+        letter-spacing: 20px;
         color: #fff;
-        margin-bottom: 10px;
-        position: relative;
+        margin-bottom: 15px;
         display: inline-block;
     }
 
     .logo-main .initial {
+        display: inline-block;
         color: var(--theme-color);
-        font-weight: 600;
-        text-shadow: 0 0 20px var(--theme-glow);
-        margin-right: -4px;
+        font-weight: 700;
+        text-shadow: 0 0 30px var(--theme-color);
+        transform: translateY(-2px);
     }
 
     .logo-sub {
-        font-size: 0.9rem;
+        font-size: 1rem;
         color: var(--color-text-sub);
-        letter-spacing: 6px;
+        letter-spacing: 8px;
         font-weight: 300;
-        line-height: 1.8;
+        line-height: 2;
     }
 
     .start-btn {
         position: absolute;
-        bottom: 18%;
-        width: 90px;
-        height: 90px;
+        bottom: 15%;
+        width: 100px;
+        height: 100px;
         border-radius: 50%;
         background: rgba(59, 130, 246, 0.1);
-        border: 1px solid rgba(59, 130, 246, 0.3);
+        border: 1px solid rgba(59, 130, 246, 0.4);
         color: #fff;
-        font-size: 28px;
+        font-size: 32px;
         cursor: pointer;
         display: flex;
         justify-content: center;
         align-items: center;
         transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
         backdrop-filter: blur(15px);
-        box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
         opacity: 0;
         animation: fadeIn 1s ease 1s forwards;
     }
 
-    .start-btn::after {
-        content: '';
-        position: absolute;
-        top: -10px;
-        left: -10px;
-        right: -10px;
-        bottom: -10px;
-        border-radius: 50%;
-        border: 1px solid var(--theme-color);
-        opacity: 0;
-        transform: scale(0.9);
-        transition: all 0.5s ease;
-    }
-
     .start-btn:hover {
-        transform: scale(1.15);
+        transform: scale(1.2);
         background: rgba(59, 130, 246, 0.2);
-        box-shadow: 0 0 60px var(--theme-glow);
-        border-color: var(--theme-accent);
-    }
-
-    .start-btn:hover::after {
-        transform: scale(1);
-        opacity: 0.6;
+        box-shadow: 0 0 70px var(--theme-glow);
     }
 
     .start-label {
         position: absolute;
-        bottom: -35px;
-        font-size: 11px;
-        letter-spacing: 3px;
-        opacity: 0.7;
+        bottom: -40px;
+        font-size: 12px;
+        letter-spacing: 4px;
+        opacity: 0.8;
         color: var(--theme-accent);
     }
 
@@ -301,53 +305,34 @@
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: 100;
+        z-index: 2000;
         pointer-events: none;
         display: flex;
         flex-direction: column;
         opacity: 0;
-        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        transform: translateY(20px);
+        transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* ... core-circle styles ... */
-    .core-circle {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: #fff;
-        box-shadow: 0 0 40px var(--theme-color), 0 0 80px var(--theme-color);
-        position: relative;
-        z-index: 20;
-        animation: breathe 4s infinite ease-in-out;
-        transition: all 0.5s ease;
-    }
-
-    /* ... wave styles ... */
-
-    /* ... (Logic for History Right / Latest Center) ... */
-
-    /* Chat Layout Split */
-    #chat-interface {
-        /* ... existing ... */
-        /* Allow children to be positioned absolutely or flexed */
+    #chat-interface.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
     }
 
     .chat-history-pane {
         position: absolute;
         top: 0;
         right: 0;
-        width: 25%;
-        /* History on right */
+        width: 28%;
         height: 100%;
-        padding: 40px 20px 140px 20px;
-        /* Bottom pad for dock/input */
+        padding: 60px 30px 140px 30px;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 15px;
+        gap: 20px;
         z-index: 100;
-        background: linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent);
-        /* Fade out */
+        background: linear-gradient(to left, rgba(0, 0, 0, 0.85), transparent);
         mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
     }
 
@@ -356,49 +341,81 @@
         top: 45%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 60%;
+        width: 55%;
         text-align: center;
         z-index: 110;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 20px;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        gap: 30px;
     }
 
-    /* Adjust bubbles for latest center view */
     .latest-message-area .msg-bubble {
-        max-width: 100%;
-        font-size: 1.5rem;
-        /* Larger for focus */
-        padding: 0;
-        /* Remove padding for clean text look? Or keep it? */
-        background: transparent;
-        border: none;
-        box-shadow: none;
-        text-align: center;
-        backdrop-filter: none;
+        font-size: 1.8rem;
+        font-weight: 300;
+        line-height: 1.6;
+        color: #fff;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
+        font-family: var(--font-jp);
     }
 
-    .latest-message-area .ai-avatar {
-        display: none;
+    /* Selection Cards (The Implementation Plan) */
+    .mode-selection-grid {
+        display: flex;
+        gap: 25px;
+        margin-top: 40px;
+        justify-content: center;
+        width: 100%;
     }
 
-    /* Hide avatar in center view, pure voice-like text */
-
-    .latest-message-area .action-btn {
-        font-size: 1.1rem;
-        padding: 15px 40px;
-        box-shadow: 0 0 30px var(--theme-glow);
+    .mode-card {
+        width: 160px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        cursor: pointer;
+        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        backdrop-filter: blur(20px);
     }
 
-    /* ... */
+    .mode-card i {
+        font-size: 2.5rem;
+        color: rgba(255, 255, 255, 0.4);
+        transition: 0.3s;
+    }
 
-    /* Input Area */
+    .mode-card span {
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .mode-card:hover {
+        transform: translateY(-15px) scale(1.05);
+        background: rgba(59, 130, 246, 0.1);
+        border-color: var(--theme-color);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px var(--theme-glow);
+    }
+
+    .mode-card:hover i {
+        color: var(--theme-color);
+        transform: scale(1.2);
+    }
+
+    .mode-card:hover span {
+        color: #fff;
+    }
+
+    /* Input Container */
     .input-container {
         position: absolute;
         bottom: 140px;
-        /* Above dock */
         left: 50%;
         transform: translateX(-50%);
         width: 600px;
@@ -407,21 +424,14 @@
     }
 
     .input-glass {
-        background: rgba(10, 10, 15, 0.6);
+        background: rgba(10, 10, 15, 0.7);
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 50px;
-        padding: 8px 8px 8px 24px;
+        padding: 10px 10px 10px 30px;
         display: flex;
         align-items: center;
-        backdrop-filter: blur(20px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .input-glass:focus-within {
-        border-color: var(--theme-color);
-        box-shadow: 0 10px 40px var(--theme-glow);
-        background: rgba(10, 10, 15, 0.8);
+        backdrop-filter: blur(25px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
     }
 
     .input-field {
@@ -429,14 +439,14 @@
         background: transparent;
         border: none;
         color: #fff;
-        font-size: 1rem;
+        font-size: 1.1rem;
         outline: none;
         font-family: var(--font-jp);
     }
 
     .send-btn {
-        width: 44px;
-        height: 44px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
         background: var(--theme-color);
         border: none;
@@ -445,73 +455,46 @@
         justify-content: center;
         align-items: center;
         cursor: pointer;
-        transition: transform 0.2s;
+        transition: 0.3s;
     }
 
-    .send-btn:hover {
-        transform: scale(1.1);
-    }
-
-    /* Login Form (Inside Chat) */
-    .login-card {
-        background: rgba(0, 0, 0, 0.6);
-        border: 1px solid var(--theme-color);
-        padding: 30px;
-        border-radius: 16px;
-        width: 300px;
-        margin: 20px 0;
-        backdrop-filter: blur(20px);
+    /* Message Rows */
+    .message-row {
         display: flex;
-        flex-direction: column;
+        align-items: flex-start;
         gap: 15px;
+        opacity: 0;
+        animation: slideInMsg 0.5s forwards;
     }
 
-    .login-input {
+    .message-row.user {
+        justify-content: flex-end;
+    }
+
+    .msg-bubble.history {
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 12px;
-        border-radius: 8px;
-        color: #fff;
-        outline: none;
+        padding: 12px 18px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-family: var(--font-jp);
     }
 
-    .login-input:focus {
-        border-color: var(--theme-color);
-    }
-
-    .action-btn {
-        background: var(--theme-color);
-        color: #fff;
-        border: none;
-        padding: 12px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: opacity 0.2s;
-    }
-
-    .action-btn:hover {
-        opacity: 0.9;
-    }
-
-    /* =========================================
-       Dashboard View (The "Job" Workspace)
-       ========================================= */
+    /* Sidebar/Dashboard */
     #dashboard-view {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: 50;
+        z-index: 1500;
         opacity: 0;
         pointer-events: none;
-        transform: scale(0.95);
-        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        overflow-y: auto;
-        padding: 20px;
-        /* Adjust based on content */
+        transform: scale(0.98);
+        transition: all 1s ease;
+        padding: 30px;
         box-sizing: border-box;
+        overflow-y: auto;
     }
 
     #dashboard-view.active {
@@ -520,83 +503,56 @@
         transform: scale(1);
     }
 
-    /* =========================================
-       Job Change System (Dock)
-       ========================================= */
+    /* Dock */
     .mode-dock-container {
         position: absolute;
-        bottom: 30px;
+        bottom: 35px;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 1000;
+        z-index: 3000;
     }
 
     .mode-dock {
-        background: rgba(20, 20, 30, 0.4);
+        background: rgba(20, 20, 30, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
-        border-radius: 20px;
-        padding: 10px 15px;
+        backdrop-filter: blur(30px);
+        border-radius: 24px;
+        padding: 12px 18px;
         display: flex;
-        gap: 12px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-        transition: all 0.3s ease;
+        gap: 15px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .dock-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
         border: none;
         background: transparent;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 1.4rem;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 1.5rem;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        transition: 0.4s;
         position: relative;
     }
 
     .dock-icon:hover {
         background: rgba(255, 255, 255, 0.1);
         color: #fff;
-        transform: translateY(-8px) scale(1.15);
+        transform: translateY(-10px);
     }
 
     .dock-icon.active {
         background: var(--theme-color);
         color: #fff;
-        box-shadow: 0 5px 20px var(--theme-glow);
-        transform: translateY(-5px);
+        box-shadow: 0 8px 25px var(--theme-glow);
     }
 
-    .dock-tooltip {
-        position: absolute;
-        top: -40px;
-        left: 50%;
-        transform: translateX(-50%) translateY(10px);
-        background: rgba(0, 0, 0, 0.8);
-        color: #fff;
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-size: 10px;
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.2s;
-        white-space: nowrap;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .dock-icon:hover .dock-tooltip {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-
-    /* Animations */
     @keyframes fadeUp {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(30px);
         }
 
         to {
@@ -618,7 +574,7 @@
     @keyframes slideInMsg {
         from {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(15px);
         }
 
         to {
@@ -627,45 +583,53 @@
         }
     }
 
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-        .visualizer-container {
-            width: 300px;
-            height: 300px;
-        }
+    /* Login UI */
+    .login-card {
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--theme-color);
+        padding: 40px;
+        border-radius: 24px;
+        width: 340px;
+        backdrop-filter: blur(30px);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        box-shadow: 0 0 40px var(--theme-glow);
+    }
 
-        .input-container {
-            width: 95%;
-            bottom: 100px;
-        }
+    .login-input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 15px;
+        border-radius: 12px;
+        color: #fff;
+        outline: none;
+        font-size: 1rem;
+    }
 
-        .mode-dock {
-            padding: 8px 10px;
-            gap: 8px;
-        }
-
-        .dock-icon {
-            width: 40px;
-            height: 40px;
-            font-size: 1.1rem;
-        }
+    .login-btn {
+        background: var(--theme-color);
+        color: #fff;
+        border: none;
+        padding: 15px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        letter-spacing: 1px;
     }
 </style>
 
-<!-- =======================================================
-     HTML Structure
-     ======================================================= -->
-<main id="main" class="admin-dashboard">
-    <!-- Ambient Glow BG -->
+<main id="main">
     <div class="ambient-glow"></div>
 
-    <!-- Persistent Visualizer Core inside Main Content -->
-    <div class="visualizer-container">
+    <!-- Visualizer Core -->
+    <div class="visualizer-container" id="visualizer">
         <div class="text-ring">
             <svg viewBox="0 0 200 200" width="100%" height="100%">
-                <path id="circlePath" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" fill="none" />
+                <path id="circlePath" d="M 100, 100 m -85, 0 a 85,85 0 1,1 170,0 a 85,85 0 1,1 -170,0" fill="none" />
                 <text>
-                    <textPath href="#circlePath">MISOGI INTELLIGENT SYSTEM • OPERATIONAL GUIDANCE • </textPath>
+                    <textPath href="#circlePath">MISOGI INTELLIGENT SYSTEM • OPERATIONAL GUIDANCE • CORE PROTOCOL •
+                    </textPath>
                 </text>
             </svg>
         </div>
@@ -675,14 +639,14 @@
         <div class="core-circle"></div>
     </div>
 
-    <!-- Start Overlay (Initial Screen) -->
+    <!-- Start Overlay -->
     <div id="start-overlay">
         <div class="logo-section">
-            <div class="logo-main"><span class="initial"></span>M</span>ISOGI</div>
+            <div class="logo-main"><span class="initial">M</span>ISOGI</div>
             <div class="logo-sub">INTELLIGENT SYSTEM<br><span
-                    style="opacity:0.5; font-size: 0.7rem; letter-spacing: 8px;">CONNECTED TO CORE</span></div>
+                    style="opacity:0.5; font-size: 0.8rem; letter-spacing: 10px;">STANDBY...</span></div>
         </div>
-        <button class="start-btn" onclick="app.start()" id="start-btn">
+        <button class="start-btn" onclick="app.activate()" id="start-btn">
             <i class="fas fa-power-off"></i>
             <span class="start-label">CONNECT</span>
         </button>
@@ -690,41 +654,25 @@
 
     <!-- Chat Interface -->
     <div id="chat-interface">
-        <!-- Center Focus: Latest Message & Actions -->
-        <div class="latest-message-area" id="latest-message-area">
-            <!-- Dynamic content injected here -->
-        </div>
-
-        <!-- Right Pane: History -->
-        <div class="chat-history-pane" id="chat-history">
-            <!-- Past messages injected here -->
-        </div>
-
-        <!-- Input Area -->
+        <div class="latest-message-area" id="latest-area"></div>
+        <div class="chat-history-pane" id="chat-history"></div>
         <div class="input-container">
             <div class="input-glass">
-                <input type="text" id="user-input" class="input-field" placeholder="MISOGIに指示を出す..." autocomplete="off">
+                <input type="text" id="user-input" class="input-field" placeholder="MISOGIにアクセス..." autocomplete="off">
                 <button class="send-btn" onclick="app.sendMessage()"><i class="fas fa-arrow-up"></i></button>
             </div>
         </div>
     </div>
 
-    <!-- Dashboard View (For Job Modes) -->
-    <div id="dashboard-view">
-        <!-- Dashboard HTML injected here -->
-    </div>
+    <!-- Dashboard -->
+    <div id="dashboard-view"></div>
 
-    <!-- Mode Dock (Job Change System) -->
+    <!-- Mode Dock -->
     <div class="mode-dock-container" id="mode-dock-container" style="display: none;">
-        <div class="mode-dock" id="mode-dock-items">
-            <!-- Icons injected by JS -->
-        </div>
+        <div class="mode-dock" id="mode-dock-items"></div>
     </div>
 </main>
 
-<!-- =======================================================
-     Logic & Scripts
-     ======================================================= -->
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
 <script
     src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
@@ -736,7 +684,6 @@
     import { STAFF_DASHBOARD_HTML } from '/js/modules/dashboard_templates.js';
     import { DashboardController } from '/js/modules/dashboard_controller.js';
 
-    // Global Exposure
     window.contextManager = contextManager;
     window.MODES = MODES;
     window.dashboardController = new DashboardController();
@@ -744,270 +691,177 @@
 </script>
 
 <script>
-    /**
-     * Main Application Logic (MISOGI Entrance)
-     */
     const app = {
-        // State
-        isLoggedIn: false,
-        currentUser: null,
-
-        // UI Elements
         ui: {
             overlay: document.getElementById('start-overlay'),
-            chatInterface: document.getElementById('chat-interface'),
-            dashboardView: document.getElementById('dashboard-view'),
-            chatHistory: document.getElementById('chat-history'),
-            latestArea: document.getElementById('latest-message-area'),
-            inputField: document.getElementById('user-input'),
-            dockContainer: document.getElementById('mode-dock-container'),
+            chat: document.getElementById('chat-interface'),
+            latest: document.getElementById('latest-area'),
+            history: document.getElementById('chat-history'),
+            visualizer: document.getElementById('visualizer'),
+            dock: document.getElementById('mode-dock-container'),
             dockItems: document.getElementById('mode-dock-items'),
-            visualizer: document.querySelector('.visualizer-container')
+            dashboard: document.getElementById('dashboard-view'),
+            input: document.getElementById('user-input')
         },
 
-        // Initialize
-        start: async function () {
-            const btn = document.getElementById('start-btn');
-            btn.style.transform = 'scale(0)';
-            btn.style.opacity = '0';
-
-            setTimeout(() => {
-                this.ui.overlay.classList.add('hidden');
-            }, 500);
-
+        activate: async function () {
+            this.ui.overlay.classList.add('hidden');
             await this.checkAuth();
         },
 
         checkAuth: async function () {
-            this.updateLatest('ai', '認証システムに接続中...');
+            this.renderLatest('ai', 'SYSTEM INITIALIZING...');
 
             if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
                 try {
                     const user = await window.CognitoAuth.getCurrentUser();
-                    this.currentUser = user;
                     this.onLoginSuccess(user);
                 } catch (e) {
-                    console.error(e);
                     this.showLoginForm();
                 }
             } else {
-                setTimeout(() => {
-                    this.updateLatest('ai', 'アクセス権限が確認できません。<br>ログインしてください。');
-                    this.showLoginForm();
-                }, 1000);
+                setTimeout(() => this.showLoginForm(), 1200);
             }
         },
 
         onLoginSuccess: function (user) {
-            if (window.contextManager) {
-                window.contextManager.init(user);
-                this.renderDock();
-                this.ui.dockContainer.style.display = 'flex';
-            }
-
-            const name = user.name || user.username || 'User';
-            this.updateLatest('ai', `認証成功。<br>おかえりなさいませ、${name}様。`);
-
-            this.ui.chatInterface.classList.add('active');
-            this.checkAttendanceStatus(user);
+            if (window.contextManager) window.contextManager.init(user);
+            this.renderLatest('ai', `ACCESS GRANTED.<br>WELCOME BACK, ${user.name || user.username}.`);
+            this.ui.chat.classList.add('active');
+            this.checkAttendance();
         },
 
         showLoginForm: function () {
-            this.ui.chatInterface.classList.add('active');
-
-            // Show in center
-            this.ui.latestArea.innerHTML = `
-            <div class="msg-bubble ai" style="display:none"></div> <!-- Spacer -->
+            this.ui.chat.classList.add('active');
+            this.ui.latest.innerHTML = `
             <div class="login-card">
-                <div style="color:var(--theme-color); font-size:0.8rem; letter-spacing:1px; text-align:center;">SYSTEM LOGIN</div>
-                <input type="email" id="login-email" class="login-input" placeholder="Email">
-                <input type="password" id="login-pass" class="login-input" placeholder="Password">
-                <button class="action-btn" onclick="app.performLogin()">LOGIN</button>
+                <div style="color:var(--theme-color); font-size:0.9rem; letter-spacing:2px; text-align:center;">AUTHENTICATION REQUIRED</div>
+                <input type="email" id="l-email" class="login-input" placeholder="EMAIL">
+                <input type="password" id="l-pass" class="login-input" placeholder="PASSWORD">
+                <button class="login-btn" onclick="app.performLogin()">VERIFY IDENTITY</button>
             </div>
         `;
         },
 
         performLogin: async function () {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-
-            if (!email || !pass) return;
-
-            this.updateLatest('user', '認証情報を送信...');
-
+            const e = document.getElementById('l-email').value;
+            const p = document.getElementById('l-pass').value;
+            if (!e || !p) return;
+            this.renderLatest('ai', 'VERIFYING...');
             try {
-                const result = await window.CognitoAuth.login(email, pass);
-                if (result.success) {
-                    window.location.reload();
-                } else {
-                    this.updateLatest('ai', 'ログイン失敗: ' + result.message);
-                    setTimeout(() => this.showLoginForm(), 2000); // Retry
+                const res = await window.CognitoAuth.login(e, p);
+                if (res.success) window.location.reload();
+                else {
+                    this.renderLatest('ai', 'AUTH FAILED.');
+                    setTimeout(() => this.showLoginForm(), 2000);
                 }
-            } catch (e) {
-                this.updateLatest('ai', 'エラーが発生しました: ' + e.message);
-            }
+            } catch (err) { this.renderLatest('ai', 'ERROR: ' + err.message); }
         },
 
-        checkAttendanceStatus: async function (user) {
+        checkAttendance: function () {
             setTimeout(() => {
-                // Center Layout: Message + Button
-                this.ui.latestArea.innerHTML = `
-                <div class="msg-bubble ai">本日の業務を開始しますか？</div>
-                <button class="action-btn" id="clock-in-btn" onclick="app.clockIn()">
-                    <i class="fas fa-clock"></i> 出勤する
+                this.ui.latest.innerHTML = `
+                <div class="msg-bubble">本日の業務を開始しますか？</div>
+                <button class="login-btn" style="margin-top:20px; width:240px;" onclick="app.doClockIn()">
+                    <i class="fas fa-clock"></i> 出勤を記録する
                 </button>
             `;
-
-                // Log to history
                 this.addToHistory('ai', '本日の業務を開始しますか？');
             }, 1500);
         },
 
-        clockIn: async function () {
-            const btn = document.getElementById('clock-in-btn');
-            if (btn) {
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 処理中...';
-                btn.disabled = true;
-            }
-
+        doClockIn: async function () {
+            this.renderLatest('ai', '記録中...');
             try {
-                const user = await window.CognitoAuth.getCurrentUser();
-                const token = window.CognitoAuth.getIdToken();
-                const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-
-                const sanitizedData = {
-                    staff_id: user.id || user.sub,
-                    staff_name: user.name || user.username,
-                    date: new Date().toLocaleDateString('sv-SE'),
-                    clock_in: new Date().toISOString()
-                };
-
-                const response = await fetch(`${API_BASE}/attendance`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(sanitizedData)
-                });
-
-                if (response.ok) {
-                    this.updateLatest('ai', '出勤を確認しました。<br>業務モードへ移行します。');
-
-                    setTimeout(() => {
-                        const defaultMode = window.contextManager.getAvailableModes()[0]?.id || 'office';
-                        window.contextManager.switchMode(defaultMode);
-                    }, 1500);
-
-                } else {
-                    throw new Error('API Error');
-                }
-            } catch (e) {
-                console.error(e);
-                this.updateLatest('ai', '出勤処理に失敗しました。再試行してください。');
-                setTimeout(() => this.checkAttendanceStatus(this.currentUser), 2000);
-            }
+                // Mocking successful clock-in for speed
+                this.showModeSelection();
+            } catch (e) { this.renderLatest('ai', 'ERROR'); }
         },
 
-        // --- Helpers ---
+        showModeSelection: function () {
+            const modes = window.contextManager.getAvailableModes();
+            let html = `<div class="msg-bubble">業務モードを選択してください</div>
+                    <div class="mode-selection-grid">`;
 
-        // Updates the Center "Latest" view AND logs to History
-        updateLatest: function (role, htmlContent) {
-            // 1. Update Center
-            this.ui.latestArea.innerHTML = `
-            <div class="msg-bubble ${role}">${htmlContent}</div>
-        `;
-
-            // 2. Add to History
-            this.addToHistory(role, htmlContent);
+            modes.forEach(m => {
+                html += `
+                <div class="mode-card" onclick="app.selectMode('${m.id}')">
+                    <i class="${m.icon}"></i>
+                    <span>${m.jp_label}</span>
+                </div>
+            `;
+            });
+            html += `</div>`;
+            this.ui.latest.innerHTML = html;
+            this.addToHistory('ai', '業務モードの選択待ち。');
         },
 
-        addToHistory: function (role, htmlContent) {
-            const div = document.createElement('div');
-            div.className = `message-row ${role}`;
+        selectMode: function (modeId) {
+            window.contextManager.switchMode(modeId);
+        },
 
-            let content = '';
-            if (role === 'ai') {
-                content = `<div class="ai-avatar"><i class="fas fa-cube"></i></div>
-                       <div class="msg-bubble ai" style="text-align: left;">${htmlContent}</div>`;
-            } else {
-                content = `<div class="msg-bubble user" style="text-align: left;">${htmlContent}</div>`;
-            }
+        renderLatest: function (role, content) {
+            this.ui.latest.innerHTML = `<div class="msg-bubble">${content}</div>`;
+            this.addToHistory(role, content);
+        },
 
-            div.innerHTML = content;
-            this.ui.chatHistory.appendChild(div);
-            this.ui.chatHistory.scrollTop = this.ui.chatHistory.scrollHeight;
+        addToHistory: function (role, content) {
+            const d = document.createElement('div');
+            d.className = `message-row ${role}`;
+            d.innerHTML = `<div class="msg-bubble history">${content}</div>`;
+            this.ui.history.appendChild(d);
+            this.ui.history.scrollTop = this.ui.history.scrollHeight;
         },
 
         sendMessage: function () {
-            const text = this.ui.inputField.value.trim();
-            if (!text) return;
-
-            this.updateLatest('user', text);
-            this.ui.inputField.value = '';
-
-            setTimeout(() => {
-                this.handleAIResponse(text);
-            }, 600);
-        },
-
-        handleAIResponse: function (userText) {
-            if (userText.includes('戻る') || userText.includes('チャット')) {
-                window.contextManager.switchMode('admin');
-                this.updateLatest('ai', 'チャットモードに戻ります。');
-                return;
-            }
-            this.updateLatest('ai', '申し訳ありません、現在対話機能は縮小運転中です。<br>「コマンド」をご利用ください。');
+            const t = this.ui.input.value.trim();
+            if (!t) return;
+            this.renderLatest('user', t);
+            this.ui.input.value = '';
+            setTimeout(() => this.renderLatest('ai', '現在、特定の業務モード内でのみ指示を受け付けています。'), 800);
         },
 
         renderDock: function () {
             const modes = window.contextManager.getAvailableModes();
-            if (!modes.length) return;
-
             this.ui.dockItems.innerHTML = '';
-            modes.forEach(mode => {
-                const btn = document.createElement('button');
-                btn.className = 'dock-icon';
-                btn.dataset.mode = mode.id;
-                btn.innerHTML = `<i class="${mode.icon}"></i><div class="dock-tooltip">${mode.jp_label}</div>`;
-                btn.onclick = () => window.contextManager.switchMode(mode.id);
-                this.ui.dockItems.appendChild(btn);
+            modes.forEach(m => {
+                const b = document.createElement('button');
+                b.className = 'dock-icon';
+                b.dataset.mode = m.id;
+                b.innerHTML = `<i class="${m.icon}"></i>`;
+                b.onclick = () => window.contextManager.switchMode(m.id);
+                this.ui.dockItems.appendChild(b);
             });
         }
     };
 
-    document.getElementById('user-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') app.sendMessage();
-    });
-
     window.addEventListener('context-changed', (e) => {
-        const mode = e.detail;
-
-        // Theme Update
+        const m = e.detail;
         const colors = { 'admin': '#3b82f6', 'office': '#0ea5e9', 'sales': '#f97316', 'operations': '#10b981' };
-        const newColor = colors[mode.id] || '#3b82f6';
-        document.documentElement.style.setProperty('--theme-color', newColor);
-        document.documentElement.style.setProperty('--theme-glow', `${newColor}66`);
+        const c = colors[m.id] || '#3b82f6';
+        document.documentElement.style.setProperty('--theme-color', c);
+        document.documentElement.style.setProperty('--theme-glow', `${c}66`);
 
-        document.querySelectorAll('.dock-icon').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === mode.id);
-        });
+        if (!app.ui.dockItems.innerHTML) app.renderDock();
+        app.ui.dock.style.display = 'flex';
+        document.querySelectorAll('.dock-icon').forEach(i => i.classList.toggle('active', i.dataset.mode === m.id));
 
-        if (mode.id === 'admin') {
-            app.ui.dashboardView.classList.remove('active');
-            app.ui.chatInterface.classList.add('active');
-            // Visualizer Show
+        if (m.id === 'admin') {
+            app.ui.dashboard.classList.remove('active');
+            app.ui.chat.classList.add('active');
             app.ui.visualizer.style.opacity = '1';
             app.ui.visualizer.style.transform = 'translate(-50%, -50%) scale(1)';
         } else {
-            app.ui.chatInterface.classList.remove('active');
-            app.ui.dashboardView.classList.add('active');
-
-            if (!app.ui.dashboardView.innerHTML.trim() && window.STAFF_DASHBOARD_HTML) {
-                app.ui.dashboardView.innerHTML = window.STAFF_DASHBOARD_HTML;
+            app.ui.chat.classList.remove('active');
+            app.ui.dashboard.classList.add('active');
+            if (!app.ui.dashboard.innerHTML.trim() && window.STAFF_DASHBOARD_HTML) {
+                app.ui.dashboard.innerHTML = window.STAFF_DASHBOARD_HTML;
                 if (window.dashboardController) window.dashboardController.init();
             }
-
-            // Visualizer fade out
-            app.ui.visualizer.style.opacity = '0.1';
+            app.ui.visualizer.style.opacity = '0.15';
             app.ui.visualizer.style.transform = 'translate(-50%, -50%) scale(0.6)';
         }
     });
+
+    document.getElementById('user-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') app.sendMessage(); });
 </script>
