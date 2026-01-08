@@ -2427,15 +2427,23 @@ def upload_report_image(event, headers):
     """
     try:
         # リクエストボディを安全に取得（Base64エンコード対策）
-        if event.get('isBase64Encoded'):
-            body_raw = base64.b64decode(event['body'])
-        else:
-            body_raw = event.get('body', '{}')
+        body_raw = event.get('body')
+        print(f"DEBUG: body_raw type={type(body_raw)}")
+        
+        if event.get('isBase64Encoded') and isinstance(body_raw, str):
+            body_raw = base64.b64decode(body_raw)
             
         if isinstance(body_raw, bytes):
             body_raw = body_raw.decode('utf-8')
             
-        body = json.loads(body_raw)
+        if isinstance(body_raw, str):
+            body = json.loads(body_raw)
+        elif isinstance(body_raw, dict):
+            body = body_raw
+        else:
+            body = {}
+            
+        print(f"DEBUG: body keys={list(body.keys())}")
         
         image_data = body.get('image') or body.get('image_data')
         category = body.get('category') or 'extra'
@@ -2446,10 +2454,11 @@ def upload_report_image(event, headers):
         
         # バリデーション
         if not image_data:
+            print(f"ERROR: No image data in body. Body snippet: {str(body)[:200]}")
             return {
                 'statusCode': 400,
                 'headers': headers,
-                'body': json.dumps({'error': '画像データが必要です'}, ensure_ascii=False)
+                'body': json.dumps({'error': '画像データが必要です', 'debug_keys': list(body.keys())}, ensure_ascii=False)
             }
         
         if category not in ['before', 'after', 'stock', 'extra']:
