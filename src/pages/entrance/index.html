@@ -1615,6 +1615,19 @@
         if (chatContainer) chatContainer.classList.add('sidebar-active');
     }
 
+    function requestJobChange() {
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        appendChatMessage('ai', `${user.name || 'ユーザー'}様、お仕事内容の変更ですね？どの業務を行いますか？`);
+        showJobSelection();
+
+        // Hide sidebar temporarily
+        if (sidebar) {
+            sidebar.style.opacity = '0';
+            setTimeout(() => sidebar.style.display = 'none', 300);
+        }
+        if (chatContainer) chatContainer.classList.remove('sidebar-active');
+    }
+
     // Toggle Visualizer Simulation
     let isRecording = false;
     if (visualizer) {
