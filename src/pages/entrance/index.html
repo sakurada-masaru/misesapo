@@ -2289,14 +2289,51 @@
     }
 
     function finishRequestWizard() {
-        appendChatMessage('ai', '依頼書を作成しました！事務に送信されます。');
-        console.log('Request Data:', requestWizardState.data);
+        // Create Request Object
+        const requestId = 'REQ-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+        const timestamp = new Date().toLocaleString('ja-JP');
 
-        // TODO: Save to API
+        const requestData = {
+            id: requestId,
+            status: 'submitted', // submitted to admin
+            created_at: timestamp,
+            sales_rep: JSON.parse(localStorage.getItem('cognito_user') || '{}').name || '営業担当',
+            ...requestWizardState.data
+        };
+
+        // Save to LocalStorage (Simulate Backend)
+        const requests = JSON.parse(localStorage.getItem('sales_requests') || '[]');
+        requests.push(requestData);
+        localStorage.setItem('sales_requests', JSON.stringify(requests));
+
+        console.log('Request Saved:', requestData);
+
+        // Show Success Message with Summary Card
+        const summaryHtml = `
+            <div style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; margin-top: 8px; border: 1px solid rgba(255,255,255,0.2);">
+                <div style="font-weight: 700; color: #fff; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">
+                    <i class="fas fa-file-alt"></i> 清掃依頼書 (ID: ${requestId})
+                </div>
+                <div style="font-size: 0.9rem; color: #e0e0e0; display: grid; gap: 4px;">
+                    <div><span style="opacity: 0.7;">顧客:</span> ${requestData.customer_name}</div>
+                    <div><span style="opacity: 0.7;">店舗:</span> ${requestData.store_name}</div>
+                    <div><span style="opacity: 0.7;">設備:</span> ${Array.isArray(requestData.equipment) ? requestData.equipment.join(', ') : '-'}</div>
+                    <div><span style="opacity: 0.7;">プラン:</span> ${requestData.plan}</div>
+                </div>
+                <div style="margin-top: 12px; font-size: 0.85rem; color: var(--accent-color); text-align: right;">
+                    <i class="fas fa-check-circle"></i> 事務へ送信済み
+                </div>
+            </div>
+        `;
+
+        appendChatMessage('ai', '依頼書を作成し、事務へ送信しました。お疲れ様でした！' + summaryHtml);
 
         // Reset wizard
         requestWizardState = { active: false, step: 0, data: {} };
-        if (chatHistory) chatHistory.style.display = 'block';
+        if (chatHistory) {
+            chatHistory.style.display = 'block';
+            chatHistory.innerHTML = '';
+        }
 
         // Clear action buttons
         const actionContainer = document.getElementById('action-buttons-container');
