@@ -1023,8 +1023,10 @@
     }
 
     // Toggle Visualizer Simulation
+    // Toggle Visualizer Simulation
     let isRecording = false;
-    const visualizerEl = document.getElementById('visualizer-container');
+    // Target the visualizer inside the start-overlay as it is the first one the user sees
+    const visualizerEl = document.querySelector('#start-overlay .visualizer-container') || document.querySelector('.visualizer-container');
     const statusTextEl = document.querySelector('.status-text');
     const coreEl = document.querySelector('.core-circle');
     const circleTextEl = document.querySelector('.circle-text-container');
@@ -1034,12 +1036,13 @@
             if (!isRecording) {
                 isRecording = true;
                 if (statusTextEl) statusTextEl.textContent = "LISTENING... (Simulation)";
-                if (coreEl) coreEl.classList.add('active');
+                // Animate both visualizers to be sure
+                document.querySelectorAll('.core-circle').forEach(el => el.classList.add('active'));
                 if (circleTextEl) circleTextEl.classList.add('active');
             } else {
                 isRecording = false;
                 if (statusTextEl) statusTextEl.textContent = "PROCESSING...";
-                if (coreEl) coreEl.classList.remove('active');
+                document.querySelectorAll('.core-circle').forEach(el => el.classList.remove('active'));
                 if (circleTextEl) circleTextEl.classList.remove('active');
 
                 // Trigger Actual Workflow
