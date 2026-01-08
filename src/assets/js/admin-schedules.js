@@ -1121,7 +1121,9 @@ function setupEventListeners() {
 
         const isRegular = isNew && document.getElementById('type-regular').checked;
         const interval = parseInt(document.getElementById('recurrence-interval').value) || 1;
-        const count = parseInt(document.getElementById('recurrence-count').value) || 1;
+        // ユーザー入力の回数指定を廃止し、デフォルト12回（1年分等）を作成
+        const count = isRegular ? 12 : 1;
+        const recurMode = document.querySelector('input[name="recurrence_mode"]:checked')?.value || 'date';
 
         if (isRegular && count > 1) {
           // 定期登録処理（複数作成）
@@ -1132,11 +1134,24 @@ function setupEventListeners() {
 
           for (let i = 0; i < count; i++) {
             const currentData = { ...data };
-            const nextDate = new Date(baseDate);
-            nextDate.setMonth(baseDate.getMonth() + (i * interval));
+            let targetDate;
+
+            if (recurMode === 'date') {
+              // 日付指定モード
+              targetDate = new Date(baseDate);
+              targetDate.setMonth(baseDate.getMonth() + (i * interval));
+            } else {
+              // 曜日指定モード (Xth Y-day)
+              const weekNum = document.getElementById('recur-week').value; // "1", "2", "3", "4", "last"
+              const dayNum = parseInt(document.getElementById('recur-day').value); // 0-6
+
+              const tempDate = new Date(baseDate);
+              tempDate.setMonth(baseDate.getMonth() + (i * interval));
+              targetDate = calculateNthDayOfMonth(tempDate.getFullYear(), tempDate.getMonth(), weekNum, dayNum);
+            }
 
             // YYYY-MM-DD 形式に変換
-            currentData.scheduled_date = nextDate.toISOString().split('T')[0];
+            currentData.scheduled_date = targetDate.toISOString().split('T')[0];
             currentData.created_at = new Date().toISOString();
             currentData.updated_at = new Date().toISOString();
 
@@ -1274,9 +1289,12 @@ function openAddDialog(dateStr) {
   // 清掃区分をリセット
   const typeSpot = document.getElementById('type-spot');
   const typeSelectionRow = document.getElementById('type-selection-row');
+  const recurDate = document.getElementById('recur-date');
   if (typeSpot) typeSpot.checked = true;
   if (typeSelectionRow) typeSelectionRow.style.display = 'block';
+  if (recurDate) recurDate.checked = true;
   toggleRecurrenceFields();
+  toggleRecurrenceModeFields();
 
   // 清掃内容をリセット
   selectedCleaningItems = [];
@@ -1466,6 +1484,47 @@ window.toggleRecurrenceFields = function () {
     recurrenceSettings.style.display = isRegular ? 'block' : 'none';
   }
 };
+
+// 定期清掃の基準（日付/曜日）の表示切替
+window.toggleRecurrenceModeFields = function () {
+  const isDowMode = document.getElementById('recur-dow')?.checked;
+  const dowFields = document.getElementById('recurrence-dow-fields');
+  if (dowFields) {
+    dowFields.style.display = isDowMode ? 'block' : 'none';
+  }
+};
+
+/**
+ * 指定された年月の「第n曜日」または「最終曜日」を計算する
+ * @param {number} year 
+ * @param {number} month 0-11
+ * @param {string} week "1", "2", "3", "4", "last"
+ * @param {number} day 0 (日) - 6 (土)
+ * @returns {Date}
+ */
+function calculateNthDayOfMonth(year, month, week, day) {
+  if (week === 'last') {
+    // 最終曜日を計算：翌月の1日から戻る
+    const nextMonthFirst = new Date(year, month + 1, 1);
+    let target = new Date(nextMonthFirst);
+    target.setDate(0); // 月末日
+    while (target.getDay() !== day) {
+      target.setDate(target.getDate() - 1);
+    }
+    return target;
+  } else {
+    // 第n曜日を計算
+    const n = parseInt(week);
+    let target = new Date(year, month, 1);
+    // 最初の指定曜日に移動
+    while (target.getDay() !== day) {
+      target.setDate(target.getDate() + 1);
+    }
+    // (n-1)週間分進める
+    target.setDate(target.getDate() + (n - 1) * 7);
+    return target;
+  }
+}
 
 // クイックアサイン（清掃員を素早く割り当てる）
 window.quickAssignWorker = async function (scheduleId) {

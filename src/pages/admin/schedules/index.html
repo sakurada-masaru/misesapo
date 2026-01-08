@@ -443,6 +443,7 @@
             style="font-size: 0.8rem; font-weight: bold; color: #6b7280; margin-bottom: 10px; display: flex; align-items: center; gap: 5px;">
             <i class="fas fa-sync-alt"></i> 定期清掃の設定
           </div>
+
           <div class="form-row">
             <div class="form-field half">
               <label for="recurrence-interval">間隔</label>
@@ -455,10 +456,51 @@
               </select>
             </div>
             <div class="form-field half">
-              <label for="recurrence-count">作成回数</label>
-              <input type="number" id="recurrence-count" name="recurrence_count" value="4" min="2" max="24">
-              <div style="font-size: 0.75rem; color: #6b7280; margin-top: 4px;">※今回を含めて指定回数分作成します</div>
+              <label>繰り返しの基準</label>
+              <div class="radio-toggle-group">
+                <input type="radio" id="recur-date" name="recurrence_mode" value="date" checked
+                  onchange="toggleRecurrenceModeFields()">
+                <label for="recur-date">日付指定</label>
+                <input type="radio" id="recur-dow" name="recurrence_mode" value="dow"
+                  onchange="toggleRecurrenceModeFields()">
+                <label for="recur-dow">曜日指定</label>
+              </div>
             </div>
+          </div>
+
+          <!-- 曜日指定用フィールド（初期状態では非表示） -->
+          <div id="recurrence-dow-fields"
+            style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.05);">
+            <div class="form-row">
+              <div class="form-field half">
+                <label for="recur-week">週</label>
+                <select id="recur-week" name="recur_week">
+                  <option value="1">第1</option>
+                  <option value="2">第2</option>
+                  <option value="3">第3</option>
+                  <option value="4">第4</option>
+                  <option value="last">最終</option>
+                </select>
+              </div>
+              <div class="form-field half">
+                <label for="recur-day">曜日</label>
+                <select id="recur-day" name="recur_day">
+                  <option value="1">月曜日</option>
+                  <option value="2">火曜日</option>
+                  <option value="3">水曜日</option>
+                  <option value="4">木曜日</option>
+                  <option value="5">金曜日</option>
+                  <option value="6">土曜日</option>
+                  <option value="0">日曜日</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div
+            style="font-size: 0.75rem; color: #6b7280; margin-top: 10px; background: #fff; padding: 8px; border-radius: 4px; border: 1px solid #eee;">
+            <i class="fas fa-info-circle"></i> 定期清掃は日付や曜日に基づき、自動的に1年分（12回分等）のスケジュールが作成されます。
+            <input type="hidden" id="recurrence-count" value="12">
           </div>
         </div>
 
