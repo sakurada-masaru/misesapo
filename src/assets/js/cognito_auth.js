@@ -246,258 +246,81 @@
   }
 
   /**
-   * ログアウト
+   * 認証ガード（セッションチェック）
+   * @param {string} redirectUrl - 認証切れ時のリダイレクト先
+   * @param {string[]} excludePaths - チェックを除外するパス（無限ループ防止）
    */
-  function logout() {
+  async function guard(redirectUrl = '/entrance.html', excludePaths = ['/entrance.html', '/staff/signin.html', '/signup.html']) {
+    const currentPath = window.location.pathname;
+
+    // 除外パスなら何もしない
+    if (excludePaths.some(path => currentPath.includes(path))) {
+      return true;
+    }
+
+    const isAuth = isAuthenticated();
+    if (!isAuth) {
+      console.warn('[CognitoAuth] Guard: Unauthorized access to', currentPath);
+      // セッション切れなので、クリーンアップしてリダイレクト
+      await logout(redirectUrl);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * ログアウト（完全クリーンアップ）
+   * @param {string} redirectUrl - ログアウト後のリダイレクト先
+   */
+  async function logout(redirectUrl = '/entrance.html') {
+    console.log('[CognitoAuth] Logging out...');
+
     const cognitoUser = userPool.getCurrentUser();
     if (cognitoUser) {
-      cognitoUser.signOut();
+      try {
+        cognitoUser.signOut();
+      } catch (e) {
+        console.warn('SignOut error:', e);
+      }
     }
 
-    // トークンを削除
-    localStorage.removeItem('cognito_id_token');
-    localStorage.removeItem('cognito_access_token');
-    localStorage.removeItem('cognito_refresh_token');
-    localStorage.removeItem('cognito_user');
-  }
+    // 既知の認証系キーを全て削除（ゾンビデータ対策）
+    const keysToRemove = [
+      'cognito_id_token',
+      'cognito_access_token',
+      'cognito_refresh_token',
+      'cognito_user',
+      'misesapo_auth',
+      'lastAttendanceCheckDate',
+      'misesapo_context', // コンテキスト用
+      'current_mode'      // モード用
+    ];
 
-  /**
-   * 現在のユーザーを取得
-   */
-  function getCurrentUser() {
-    return new Promise((resolve, reject) => {
-      const cognitoUser = userPool.getCurrentUser();
-      if (!cognitoUser) {
-        resolve(null);
-        return;
-      }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    sessionStorage.clear();
 
-      cognitoUser.getSession(async function (err, session) {
-        if (err || !session.isValid()) {
-          resolve(null);
-          return;
-        }
-
-        const idToken = session.getIdToken();
-        const payload = idToken.payload;
-        const cognitoSub = payload.sub;
-        const userEmail = payload.email;
-
-        // ユーザー情報を取得（DynamoDBから確実に取得）
-        let userInfo = null;
-        const apiBaseUrl = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-
-        try {
-          // キャッシュを無効化するためにタイムスタンプを追加
-          const timestamp = new Date().getTime();
-
-          // まずメールアドレスで検索（キャッシュ無効化）
-          if (userEmail) {
-            const emailResponse = await fetch(`${apiBaseUrl}/workers?email=${encodeURIComponent(userEmail)}&t=${timestamp}&_=${Date.now()}`, {
-              cache: 'no-store'
-            });
-            if (emailResponse.ok) {
-              const workers = await emailResponse.json();
-              const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
-              if (workersArray.length > 0) {
-                // クライアント側でフィルタリング
-                const matchingUser = workersArray.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
-                if (matchingUser && matchingUser.id) {
-                  userInfo = matchingUser;
-                  console.log('[CognitoAuth] Found user by email from DynamoDB:', userInfo.name, 'ID:', userInfo.id);
-                }
-              }
-            }
-          }
-
-          // メールアドレスで見つからない場合、Cognito Subで検索
-          if (!userInfo && cognitoSub) {
-            const subResponse = await fetch(`${apiBaseUrl}/workers?cognito_sub=${encodeURIComponent(cognitoSub)}&t=${timestamp}&_=${Date.now()}`, {
-              cache: 'no-store'
-            });
-            if (subResponse.ok) {
-              const workers = await subResponse.json();
-              const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
-              if (workersArray.length > 0) {
-                // クライアント側でフィルタリング
-                const matchingUser = workersArray.find(u => u.cognito_sub === cognitoSub);
-                if (matchingUser && matchingUser.id) {
-                  userInfo = matchingUser;
-                  console.log('[CognitoAuth] Found user by cognito_sub from DynamoDB:', userInfo.name, 'ID:', userInfo.id);
-                }
-              }
-            }
-          }
-
-          // まだ見つからない場合、ローカルストレージから取得（フォールバック）
-          if (!userInfo) {
-            try {
-              const storedCognitoUser = localStorage.getItem('cognito_user');
-              if (storedCognitoUser) {
-                const parsedUser = JSON.parse(storedCognitoUser);
-                if (parsedUser.id && parsedUser.id !== cognitoSub) {
-                  // ローカルストレージのIDがcognitoSubでない場合、そのIDで再検索
-                  const idResponse = await fetch(`${apiBaseUrl}/workers/${parsedUser.id}?t=${timestamp}&_=${Date.now()}`, {
-                    cache: 'no-store'
-                  });
-                  if (idResponse.ok) {
-                    userInfo = await idResponse.json();
-                    console.log('[CognitoAuth] Found user by stored ID from DynamoDB:', userInfo.name, 'ID:', userInfo.id);
-                  }
-                }
-              }
-            } catch (localError) {
-              console.warn('[CognitoAuth] Could not use stored user info:', localError);
-            }
-          }
-        } catch (error) {
-          console.error('[CognitoAuth] Error fetching user info from DynamoDB:', error);
-        }
-
-        // ユーザー情報が取得できない場合は警告（ログイン時ではないため、エラーにはしない）
-        if (!userInfo || !userInfo.id) {
-          console.warn('[CognitoAuth] User not found in DynamoDB. Email:', userEmail, 'CognitoSub:', cognitoSub);
-          // ローカルストレージから取得を試みる（最後のフォールバック）
-          try {
-            const storedCognitoUser = localStorage.getItem('cognito_user');
-            if (storedCognitoUser) {
-              const parsedUser = JSON.parse(storedCognitoUser);
-              if (parsedUser.id) {
-                resolve(parsedUser);
-                return;
-              }
-            }
-          } catch (e) {
-            console.warn('[CognitoAuth] Could not parse stored user:', e);
-          }
-          // それでも見つからない場合はnullを返す
-          resolve(null);
-          return;
-        }
-
-        // DynamoDBから取得したIDを使用（重要！）
-        const user = {
-          id: userInfo.id,  // DynamoDBのID（必須）
-          cognito_sub: cognitoSub,  // Cognito Sub
-          email: userInfo.email || userEmail,
-          name: userInfo.name || userEmail.split('@')[0],
-          role: userInfo.role || (payload['custom:role'] || 'staff'),
-          department: userInfo.department || (payload['custom:department'] || '')
-        };
-
-        // ユーザー情報をlocalStorageに保存（確実にIDを保存）
-        localStorage.setItem('cognito_user', JSON.stringify(user));
-
-        resolve(user);
-      });
-    });
-  }
-
-  /**
-   * ID Tokenを取得
-   */
-  function getIdToken() {
-    return localStorage.getItem('cognito_id_token');
-  }
-
-  /**
-   * 認証状態をチェック
-   */
-  function isAuthenticated() {
-    // まず、localStorageにトークンがあるかチェック
-    const idToken = getIdToken();
-    if (!idToken) {
-      console.log('[CognitoAuth] No ID token found in localStorage');
-      return false;
-    }
-
-    // トークンの有効期限をチェック
-    try {
-      const payload = JSON.parse(atob(idToken.split('.')[1]));
-      const exp = payload.exp * 1000; // ミリ秒に変換
-      const isValid = Date.now() < exp;
-      if (!isValid) {
-        console.log('[CognitoAuth] ID token expired');
-        // 期限切れのトークンを削除
-        localStorage.removeItem('cognito_id_token');
-        localStorage.removeItem('cognito_access_token');
-        localStorage.removeItem('cognito_refresh_token');
-        return false;
-      }
-
-      // トークンが有効な場合、Cognitoのセッションも確認
-      const cognitoUser = userPool.getCurrentUser();
-      if (!cognitoUser) {
-        console.log('[CognitoAuth] No Cognito user found, but token exists');
-        // トークンはあるがCognitoユーザーがない場合は、トークンが無効とみなす
-        return false;
-      }
-
-      return true;
-    } catch (e) {
-      console.warn('[CognitoAuth] Error parsing token:', e);
-      return false;
+    // リダイレクト（現在地がリダイレクト先でない場合のみ）
+    if (redirectUrl && window.location.pathname !== redirectUrl) {
+      window.location.href = redirectUrl;
     }
   }
 
   /**
-   * Cognitoエラーメッセージを日本語に変換
+   * ユーザー情報を解析してロールを取得（ヘルパー）
    */
-  function getCognitoErrorMessage(error) {
-    const errorCode = error.code || error.name || error.__type;
-    const errorMessages = {
-      'NotAuthorizedException': 'メールアドレスまたはパスワードが正しくありません',
-      'UserNotFoundException': 'ユーザーが見つかりません',
-      'UserNotConfirmedException': 'メールアドレスが確認されていません',
-      'PasswordResetRequiredException': 'パスワードのリセットが必要です',
-      'TooManyRequestsException': 'リクエストが多すぎます。しばらく待ってから再度お試しください',
-      'LimitExceededException': '試行回数の上限に達しました。しばらく待ってから再度お試しください',
-      'InvalidParameterException': error.message || 'パラメータが無効です',
-      'InvalidPasswordException': 'パスワードが正しくありません'
-    };
+  function getUserRole(user) {
+    if (!user) return 'guest';
+    // role プロパティ > department からの推論
+    if (user.role) return user.role.toLowerCase();
 
-    return errorMessages[errorCode] || error.message || 'ログインに失敗しました';
-  }
-
-  /**
-   * パスワード変更
-   */
-  async function changePassword(oldPassword, newPassword) {
-    return new Promise((resolve, reject) => {
-      const cognitoUser = userPool.getCurrentUser();
-      if (!cognitoUser) {
-        reject({
-          success: false,
-          message: 'ユーザーがログインしていません'
-        });
-        return;
-      }
-
-      cognitoUser.getSession((err, session) => {
-        if (err || !session.isValid()) {
-          reject({
-            success: false,
-            message: 'セッションが無効です。再ログインしてください。'
-          });
-          return;
-        }
-
-        cognitoUser.changePassword(oldPassword, newPassword, (err, result) => {
-          if (err) {
-            console.error('[CognitoAuth] Change password error:', err);
-            reject({
-              success: false,
-              message: getCognitoErrorMessage(err)
-            });
-            return;
-          }
-          resolve({
-            success: true,
-            message: 'パスワードを変更しました'
-          });
-        });
-      });
-    });
+    if (user.department) {
+      const dept = user.department.toLowerCase();
+      if (dept.includes('開発') || dept.includes('developer')) return 'developer';
+      if (dept.includes('事務') || dept.includes('office') || dept.includes('経理')) return 'office';
+      if (dept.includes('営業') || dept.includes('sales')) return 'sales';
+      if (dept.includes('清掃') || dept.includes('clean') || dept.includes('os')) return 'cleaner';
+    }
+    return 'staff'; // デフォルト
   }
 
   // グローバルに公開
@@ -507,7 +330,9 @@
     getCurrentUser: getCurrentUser,
     getIdToken: getIdToken,
     isAuthenticated: isAuthenticated,
-    changePassword: changePassword
+    changePassword: changePassword,
+    guard: guard,
+    getUserRole: getUserRole
   };
 
 })();
