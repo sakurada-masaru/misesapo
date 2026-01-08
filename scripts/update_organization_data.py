@@ -222,9 +222,9 @@ def update_user_in_dynamodb(user_id, user_data):
         'updated_at': {'S': now}
     }
     
-    # 既存のフィールドを保持（phone, cognito_sub, firebase_uidなど）
+    # 既存のフィールドを保持（phone, cognito_sub など）
     if existing:
-        for field in ['phone', 'cognito_sub', 'firebase_uid', 'scheduled_start_time', 
+        for field in ['phone', 'cognito_sub', 'scheduled_start_time', 
                      'scheduled_end_time', 'scheduled_work_hours', 'work_pattern']:
             if field in existing:
                 if isinstance(existing[field], str):

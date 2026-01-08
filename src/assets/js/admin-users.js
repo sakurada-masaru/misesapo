@@ -216,7 +216,6 @@
             updated_at: w.updated_at,
             // マイページリンク用の情報を保持
             cognito_sub: w.cognito_sub,
-            firebase_uid: w.firebase_uid,
             // 元のIDを保持（編集・削除時に使用）
             originalId: workerId || null
           };
@@ -1251,9 +1250,6 @@
             }
             if (existingUser.cognito_sub) {
               data.cognito_sub = existingUser.cognito_sub;
-            }
-            if (existingUser.firebase_uid) {
-              data.firebase_uid = existingUser.firebase_uid;
             }
             // スケジュール関連の情報も保持
             if (existingUser.scheduled_start_time) {
