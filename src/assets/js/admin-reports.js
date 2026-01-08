@@ -1,358 +1,358 @@
-(function() {
-    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-    const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
-    let allReports = [];
-    let allStores = [];
-    let allBrands = [];
-    let allClients = [];
-    let allWorkers = [];
-    let allServiceItems = [];
-    let filteredReports = [];
-    let currentPage = 1;
-    const perPage = 20;
-    let currentReportId = null;
+(function () {
+  const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+  const REPORT_API = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+  let allReports = [];
+  let allStores = [];
+  let allBrands = [];
+  let allClients = [];
+  let allWorkers = [];
+  let allServiceItems = [];
+  let filteredReports = [];
+  let currentPage = 1;
+  const perPage = 20;
+  let currentReportId = null;
 
-    // HTMLエスケープ関数
-    function escapeHtml(text) {
-      if (text == null) return '';
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
+  // HTMLエスケープ関数
+  function escapeHtml(text) {
+    if (text == null) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 
-    // 初期化
-    document.addEventListener('DOMContentLoaded', async () => {
-      await Promise.all([loadReports(), loadStores(), loadBrands(), loadClients(), loadWorkers(), loadServiceItems()]);
-      // すべてのデータが読み込まれた後にレンダリング
-      updateStats();
-      filterAndRender();
-      setupEventListeners();
-        
+  // 初期化
+  document.addEventListener('DOMContentLoaded', async () => {
+    await Promise.all([loadReports(), loadStores(), loadBrands(), loadClients(), loadWorkers(), loadServiceItems()]);
+    // すべてのデータが読み込まれた後にレンダリング
+    updateStats();
+    filterAndRender();
+    setupEventListeners();
+
   });
 
-    // サービス項目をロード
-    async function loadServiceItems() {
-      try {
-        const res = await fetch('/data/service_items.json');
-        if (res.ok) {
-          allServiceItems = await res.json();
+  // サービス項目をロード
+  async function loadServiceItems() {
+    try {
+      const res = await fetch('/data/service_items.json');
+      if (res.ok) {
+        allServiceItems = await res.json();
+      }
+    } catch (err) {
+      console.warn('Failed to load service items:', err);
+      allServiceItems = [];
+    }
+  }
+
+  async function loadReports() {
+    try {
+      // 認証トークンを取得
+      const idToken = await getFirebaseIdToken();
+
+      // 新レポートAPI（あなたが作ったシステム）からデータ取得
+      const res = await fetch(`${REPORT_API}/staff/reports`, {
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
         }
-      } catch (err) {
-        console.warn('Failed to load service items:', err);
-        allServiceItems = [];
-      }
-    }
+      });
 
-    async function loadReports() {
-      try {
-        // 認証トークンを取得
-        const idToken = await getFirebaseIdToken();
-        
-        // 新レポートAPI（あなたが作ったシステム）からデータ取得
-        const res = await fetch(`${REPORT_API}/staff/reports`, {
-          headers: { 
-            'Authorization': `Bearer ${idToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (!res.ok) {
-          if (res.status === 401) {
-            console.error('認証エラー: ログインが必要です');
-            document.getElementById('reports-tbody').innerHTML = '<tr><td colspan="8" class="loading-cell">認証エラー: ログインしてください</td></tr>';
-            return;
-          }
-          throw new Error(`HTTP error! status: ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 401) {
+          console.error('認証エラー: ログインが必要です');
+          document.getElementById('reports-tbody').innerHTML = '<tr><td colspan="8" class="loading-cell">認証エラー: ログインしてください</td></tr>';
+          return;
         }
-        
-        const data = await res.json();
-        allReports = data.items || [];
-        
-        // データ形式を統一
-        allReports = allReports.map(r => ({
-          ...r,
-          id: r.report_id || r.id,
-          store_id: r.store_id,
-          worker_id: r.staff_id,
-          work_date: r.cleaning_date,
-          start_time: r.cleaning_start_time,
-          end_time: r.cleaning_end_time,
-          content: r.work_items?.map(w => w.name).join(', ') || '',
-          notes: r.work_memo,
-          status: r.status === 'published' ? 'approved' : r.status,
-          resubmitted: r.resubmitted || false  // 再提出フラグを保持
-        }));
-        
-        // filterAndRender()は初期化時に呼ばれるため、ここでは呼ばない
-      } catch (e) {
-        console.error('Failed to load reports:', e);
-        const errorMessage = e.message || '読み込みに失敗しました';
-        document.getElementById('reports-tbody').innerHTML = `<tr><td colspan="8" class="loading-cell">${escapeHtml(errorMessage)}</td></tr>`;
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
-    }
 
-    async function loadStores() {
-      try {
-        const res = await fetch(`${API_BASE}/stores`);
-        const storesData = await res.json();
-        // レスポンスが配列でない場合の処理（itemsやstoresプロパティから取得）
-        allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
-        populateStoreFilters();
-      } catch (e) {
-        console.error('Failed to load stores:', e);
-        allStores = []; // エラー時は空配列を設定
-      }
-    }
+      const data = await res.json();
+      allReports = data.items || [];
 
-    async function loadBrands() {
-      try {
-        const res = await fetch(`${API_BASE}/brands`);
-        const brandsData = await res.json();
-        allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
-        console.log('[loadBrands] Loaded brands:', allBrands.length, allBrands);
-      } catch (e) {
-        console.error('Failed to load brands:', e);
-        allBrands = [];
-      }
-    }
+      // データ形式を統一
+      allReports = allReports.map(r => ({
+        ...r,
+        id: r.report_id || r.id,
+        store_id: r.store_id,
+        worker_id: r.staff_id,
+        work_date: r.cleaning_date,
+        start_time: r.cleaning_start_time,
+        end_time: r.cleaning_end_time,
+        content: r.work_items?.map(w => w.name).join(', ') || '',
+        notes: r.work_memo,
+        status: r.status === 'published' ? 'approved' : r.status,
+        resubmitted: r.resubmitted || false  // 再提出フラグを保持
+      }));
 
-    async function loadClients() {
-      try {
-        const res = await fetch(`${API_BASE}/clients`);
-        const clientsData = await res.json();
-        allClients = Array.isArray(clientsData) ? clientsData : (clientsData.items || clientsData.clients || []);
-      } catch (e) {
-        console.error('Failed to load clients:', e);
-        allClients = [];
-      }
+      // filterAndRender()は初期化時に呼ばれるため、ここでは呼ばない
+    } catch (e) {
+      console.error('Failed to load reports:', e);
+      const errorMessage = e.message || '読み込みに失敗しました';
+      document.getElementById('reports-tbody').innerHTML = `<tr><td colspan="8" class="loading-cell">${escapeHtml(errorMessage)}</td></tr>`;
     }
+  }
 
-    async function loadWorkers() {
-      try {
-        const res = await fetch(`${API_BASE}/workers`);
-        const workersData = await res.json();
-        // レスポンスが配列でない場合の処理（itemsやworkersプロパティから取得）
-        allWorkers = Array.isArray(workersData) ? workersData : (workersData.items || workersData.workers || []);
-        populateWorkerSelect();
-      } catch (e) {
-        console.error('Failed to load workers:', e);
-        allWorkers = []; // エラー時は空配列を設定
-      }
+  async function loadStores() {
+    try {
+      const res = await fetch(`${API_BASE}/stores`);
+      const storesData = await res.json();
+      // レスポンスが配列でない場合の処理（itemsやstoresプロパティから取得）
+      allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+      populateStoreFilters();
+    } catch (e) {
+      console.error('Failed to load stores:', e);
+      allStores = []; // エラー時は空配列を設定
     }
+  }
 
-    function populateStoreFilters() {
-      const filterSelect = document.getElementById('filter-store');
-      const formSelect = document.getElementById('report-store');
-      const formSelectModal = document.getElementById('report-store-select-modal');
-      const options = allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
-      if (filterSelect) {
+  async function loadBrands() {
+    try {
+      const res = await fetch(`${API_BASE}/brands`);
+      const brandsData = await res.json();
+      allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
+      console.log('[loadBrands] Loaded brands:', allBrands.length, allBrands);
+    } catch (e) {
+      console.error('Failed to load brands:', e);
+      allBrands = [];
+    }
+  }
+
+  async function loadClients() {
+    try {
+      const res = await fetch(`${API_BASE}/clients`);
+      const clientsData = await res.json();
+      allClients = Array.isArray(clientsData) ? clientsData : (clientsData.items || clientsData.clients || []);
+    } catch (e) {
+      console.error('Failed to load clients:', e);
+      allClients = [];
+    }
+  }
+
+  async function loadWorkers() {
+    try {
+      const res = await fetch(`${API_BASE}/workers`);
+      const workersData = await res.json();
+      // レスポンスが配列でない場合の処理（itemsやworkersプロパティから取得）
+      allWorkers = Array.isArray(workersData) ? workersData : (workersData.items || workersData.workers || []);
+      populateWorkerSelect();
+    } catch (e) {
+      console.error('Failed to load workers:', e);
+      allWorkers = []; // エラー時は空配列を設定
+    }
+  }
+
+  function populateStoreFilters() {
+    const filterSelect = document.getElementById('filter-store');
+    const formSelect = document.getElementById('report-store');
+    const formSelectModal = document.getElementById('report-store-select-modal');
+    const options = allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+    if (filterSelect) {
       filterSelect.innerHTML = '<option value="">すべての店舗</option>' + options;
-      }
-      if (formSelect) {
+    }
+    if (formSelect) {
       formSelect.innerHTML = '<option value="">選択してください</option>' + options;
-      }
-      if (formSelectModal) {
-        formSelectModal.innerHTML = '<option value="">選択してください</option>' + options;
-      }
     }
-
-    function populateWorkerSelect() {
-      const select = document.getElementById('report-worker');
-      if (!select) return; // 新しいモーダルには存在しないので、nullチェック
-      
-      // 担当業務に「清掃」が含まれる人を抽出
-      const cleaningWorkers = allWorkers.filter(w => {
-        const job = w.job || '';
-        
-        // jobが文字列の場合
-        if (typeof job === 'string') {
-          return job.includes('清掃') || job.toLowerCase().includes('cleaning');
-        }
-        
-        // jobが配列の場合
-        if (Array.isArray(job)) {
-          return job.some(j => 
-            (typeof j === 'string' && (j.includes('清掃') || j.toLowerCase().includes('cleaning')))
-          );
-        }
-        
-        return false;
-      });
-      
-      // 万が一 清掃担当者が一人もいない場合は、従来どおり全件を使う（フォールバック）
-      const workersToShow = cleaningWorkers.length > 0 ? cleaningWorkers : allWorkers;
-      
-      select.innerHTML = '<option value="">担当者を選択</option>' + 
-        workersToShow.map(w => `<option value="${w.id}">${escapeHtml(w.name || '')}</option>`).join('');
+    if (formSelectModal) {
+      formSelectModal.innerHTML = '<option value="">選択してください</option>' + options;
     }
+  }
 
-    function updateStats() {
-      document.getElementById('stat-total').textContent = allReports.length;
-      document.getElementById('stat-pending').textContent = allReports.filter(r => !r.send_at && r.status !== 'approved').length;
-      document.getElementById('stat-approved').textContent = allReports.filter(r => r.send_at || r.status === 'approved').length;
-      
-      const thisMonth = new Date().toISOString().slice(0, 7);
-      document.getElementById('stat-thismonth').textContent = allReports.filter(r => 
-        (r.work_date || r.created_at || '').startsWith(thisMonth)
-      ).length;
-    }
+  function populateWorkerSelect() {
+    const select = document.getElementById('report-worker');
+    if (!select) return; // 新しいモーダルには存在しないので、nullチェック
 
-    function filterAndRender() {
-      const search = document.getElementById('search-input').value.toLowerCase();
-      const status = document.getElementById('filter-status').value;
-      const storeId = document.getElementById('filter-store').value;
-      const dateFrom = document.getElementById('filter-date-from').value;
-      const dateTo = document.getElementById('filter-date-to').value;
+    // 担当業務に「清掃」が含まれる人を抽出
+    const cleaningWorkers = allWorkers.filter(w => {
+      const job = w.job || '';
 
-      filteredReports = allReports.filter(r => {
-        const store = allStores.find(s => s.id === r.store_id) || {};
-        const worker = allWorkers.find(w => w.id === r.worker_id) || {};
-        
-        // 検索
-        if (search) {
-          const searchStr = `${store.name || ''} ${worker.name || ''}`.toLowerCase();
-          if (!searchStr.includes(search)) return false;
-        }
-        
-        // ステータス
-        if (status) {
-          const reportStatus = r.send_at || r.status === 'approved' ? 'approved' : (r.status === 'rejected' ? 'rejected' : 'pending');
-          if (reportStatus !== status) return false;
-        }
-        
-        // 店舗
-        if (storeId && String(r.store_id) !== storeId) return false;
-        
-        // 日付範囲
-        const workDate = r.work_date || r.created_at?.split('T')[0] || '';
-        if (dateFrom && workDate < dateFrom) return false;
-        if (dateTo && workDate > dateTo) return false;
-        
-        return true;
-      });
-
-      // 日付でソート（新しい順）
-      filteredReports.sort((a, b) => {
-        const dateA = a.work_date || a.created_at || '';
-        const dateB = b.work_date || b.created_at || '';
-        return dateB.localeCompare(dateA);
-      });
-
-      currentPage = 1;
-      renderTable();
-      renderPagination();
-    }
-
-    function renderTable() {
-      const tbody = document.getElementById('reports-tbody');
-      const start = (currentPage - 1) * perPage;
-      const pageReports = filteredReports.slice(start, start + perPage);
-
-      if (pageReports.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">レポートがありません</td></tr>';
-        return;
+      // jobが文字列の場合
+      if (typeof job === 'string') {
+        return job.includes('清掃') || job.toLowerCase().includes('cleaning');
       }
 
-      tbody.innerHTML = pageReports.map(r => {
-        // DataUtilsで正規化（フォールバック付き）
-        const normalized = (window.DataUtils && window.DataUtils.normalizeReport) 
-          ? window.DataUtils.normalizeReport(r)
-          : {
-              id: r.report_id || r.id,
-              worker_id: r.staff_id || r.worker_id,
-              date: r.cleaning_date || r.work_date || r.created_at?.split('T')[0],
-              start_time: r.cleaning_start_time || r.start_time,
-              end_time: r.cleaning_end_time || r.end_time,
-              status: r.status,
-              store_name: r.store_name
-            };
-        // レポートのstore_idを確認
-        const reportStoreId = r.store_id || r.storeId || r.store;
-        console.log('[renderTable] Report store_id:', reportStoreId, 'r.store_id:', r.store_id, 'r.storeId:', r.storeId, 'r.store:', r.store);
-        console.log('[renderTable] allStores length:', allStores.length);
-        if (allStores.length > 0) {
-          console.log('[renderTable] First store sample:', allStores[0]);
-        }
-        
-        const store = (window.DataUtils && window.DataUtils.findStore && reportStoreId) 
-          ? window.DataUtils.findStore(allStores, reportStoreId) || {}
-          : (reportStoreId ? allStores.find(s => {
-              const match = String(s.id) === String(reportStoreId);
-              if (!match && allStores.indexOf(s) < 3) {
-                console.log('[renderTable] Comparing store_id:', reportStoreId, 'with store.id:', s.id, 'match:', match);
-              }
-              return match;
-            }) || {} : {});
-        
-        console.log('[renderTable] Found store:', store, 'store.id:', store.id, 'store.name:', store.name);
-        
-        // ブランド名を取得
-        // storeオブジェクトの構造を確認（brand_id, brandId, brandなど様々な可能性）
-        const brandId = store.brand_id || store.brandId || store.brand || r.brand_id || r.brandId || r.brand;
-        if (!brandId) {
-          console.warn('[renderTable] No brandId found for report:', r.id || r.report_id);
-          console.warn('[renderTable] store object:', store);
-          console.warn('[renderTable] store.brand_id:', store.brand_id);
-          console.warn('[renderTable] store.brandId:', store.brandId);
-          console.warn('[renderTable] store.brand:', store.brand);
-          console.warn('[renderTable] r.brand_id:', r.brand_id);
-          console.warn('[renderTable] r.brandId:', r.brandId);
-          console.warn('[renderTable] r.brand:', r.brand);
-        }
-        const brand = (window.DataUtils && window.DataUtils.findBrand && brandId)
-          ? window.DataUtils.findBrand(allBrands, brandId) || {}
-          : (brandId ? allBrands.find(b => {
-              const match = String(b.id) === String(brandId);
-              if (!match && brandId) {
-                // デバッグ: 最初の数件のブランドIDを確認
-                if (allBrands.length > 0 && allBrands.indexOf(b) < 3) {
-                  console.log('[renderTable] Comparing brandId:', brandId, 'with brand.id:', b.id, 'match:', match);
-                }
-              }
-              return match;
-            }) || {} : {});
-        if (!brand.name && brandId) {
-          console.warn('[renderTable] Brand not found for brandId:', brandId, 'store:', store, 'report:', r.id || r.report_id);
-        }
-        const displayBrandName = (window.DataUtils && window.DataUtils.escapeHtml) 
-          ? window.DataUtils.escapeHtml(brand.name || r.brand_name || '-') 
-          : escapeHtml(brand.name || r.brand_name || '-');
-        
-        // 法人名を取得（ブランド経由または店舗経由）
-        let clientId = null;
-        if (brand.client_id) {
-          clientId = brand.client_id;
-        } else if (store.client_id) {
-          clientId = store.client_id;
-        } else if (r.client_id) {
-          clientId = r.client_id;
-        }
-        const client = (window.DataUtils && window.DataUtils.findClient && clientId)
-          ? window.DataUtils.findClient(allClients, clientId) || {}
-          : (clientId ? allClients.find(c => c.id === clientId) || {} : {});
-        const displayClientName = client.name || '-';
-        
-        const worker = allWorkers.find(w => w.id === normalized.worker_id) || {};
-        const status = normalized.status === 'approved' ? 'approved' : (normalized.status === 'rejected' ? 'rejected' : 'pending');
-        const statusLabel = (window.DataUtils && window.DataUtils.getStatusLabel)
-          ? window.DataUtils.getStatusLabel(status)
-          : (status === 'approved' ? '承認済み' : status === 'rejected' ? '却下' : '承認待ち');
-        const displayStoreName = (window.DataUtils && window.DataUtils.getStoreName)
-          ? window.DataUtils.getStoreName(allStores, r.store_id, normalized.store_name)
-          : (store.name || normalized.store_name || r.store_name || '-');
-        
-        // 再提出通知バッジ
-        const resubmittedBadge = (r.resubmitted || normalized.resubmitted) 
-          ? '<span class="resubmitted-badge" title="清掃員から再提出されました"><i class="fas fa-bell"></i> 再提出</span>' 
-          : '';
-        
-        // 次回提案バッジ
-        const isProposal = r.proposal_type === 'proposal' || r.type === 'proposal' || normalized.proposal_type === 'proposal';
-        const proposalBadge = isProposal 
-          ? '<span class="proposal-badge" title="次回提案"><i class="fas fa-lightbulb"></i> 次回提案</span>' 
-          : '';
+      // jobが配列の場合
+      if (Array.isArray(job)) {
+        return job.some(j =>
+          (typeof j === 'string' && (j.includes('清掃') || j.toLowerCase().includes('cleaning')))
+        );
+      }
 
-        return `
+      return false;
+    });
+
+    // 万が一 清掃担当者が一人もいない場合は、従来どおり全件を使う（フォールバック）
+    const workersToShow = cleaningWorkers.length > 0 ? cleaningWorkers : allWorkers;
+
+    select.innerHTML = '<option value="">担当者を選択</option>' +
+      workersToShow.map(w => `<option value="${w.id}">${escapeHtml(w.name || '')}</option>`).join('');
+  }
+
+  function updateStats() {
+    document.getElementById('stat-total').textContent = allReports.length;
+    document.getElementById('stat-pending').textContent = allReports.filter(r => !r.send_at && r.status !== 'approved').length;
+    document.getElementById('stat-approved').textContent = allReports.filter(r => r.send_at || r.status === 'approved').length;
+
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    document.getElementById('stat-thismonth').textContent = allReports.filter(r =>
+      (r.work_date || r.created_at || '').startsWith(thisMonth)
+    ).length;
+  }
+
+  function filterAndRender() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const status = document.getElementById('filter-status').value;
+    const storeId = document.getElementById('filter-store').value;
+    const dateFrom = document.getElementById('filter-date-from').value;
+    const dateTo = document.getElementById('filter-date-to').value;
+
+    filteredReports = allReports.filter(r => {
+      const store = allStores.find(s => s.id === r.store_id) || {};
+      const worker = allWorkers.find(w => w.id === r.worker_id) || {};
+
+      // 検索
+      if (search) {
+        const searchStr = `${store.name || ''} ${worker.name || ''}`.toLowerCase();
+        if (!searchStr.includes(search)) return false;
+      }
+
+      // ステータス
+      if (status) {
+        const reportStatus = r.send_at || r.status === 'approved' ? 'approved' : (r.status === 'rejected' ? 'rejected' : 'pending');
+        if (reportStatus !== status) return false;
+      }
+
+      // 店舗
+      if (storeId && String(r.store_id) !== storeId) return false;
+
+      // 日付範囲
+      const workDate = r.work_date || r.created_at?.split('T')[0] || '';
+      if (dateFrom && workDate < dateFrom) return false;
+      if (dateTo && workDate > dateTo) return false;
+
+      return true;
+    });
+
+    // 日付でソート（新しい順）
+    filteredReports.sort((a, b) => {
+      const dateA = a.work_date || a.created_at || '';
+      const dateB = b.work_date || b.created_at || '';
+      return dateB.localeCompare(dateA);
+    });
+
+    currentPage = 1;
+    renderTable();
+    renderPagination();
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('reports-tbody');
+    const start = (currentPage - 1) * perPage;
+    const pageReports = filteredReports.slice(start, start + perPage);
+
+    if (pageReports.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">レポートがありません</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = pageReports.map(r => {
+      // DataUtilsで正規化（フォールバック付き）
+      const normalized = (window.DataUtils && window.DataUtils.normalizeReport)
+        ? window.DataUtils.normalizeReport(r)
+        : {
+          id: r.report_id || r.id,
+          worker_id: r.staff_id || r.worker_id,
+          date: r.cleaning_date || r.work_date || r.created_at?.split('T')[0],
+          start_time: r.cleaning_start_time || r.start_time,
+          end_time: r.cleaning_end_time || r.end_time,
+          status: r.status,
+          store_name: r.store_name
+        };
+      // レポートのstore_idを確認
+      const reportStoreId = r.store_id || r.storeId || r.store;
+      console.log('[renderTable] Report store_id:', reportStoreId, 'r.store_id:', r.store_id, 'r.storeId:', r.storeId, 'r.store:', r.store);
+      console.log('[renderTable] allStores length:', allStores.length);
+      if (allStores.length > 0) {
+        console.log('[renderTable] First store sample:', allStores[0]);
+      }
+
+      const store = (window.DataUtils && window.DataUtils.findStore && reportStoreId)
+        ? window.DataUtils.findStore(allStores, reportStoreId) || {}
+        : (reportStoreId ? allStores.find(s => {
+          const match = String(s.id) === String(reportStoreId);
+          if (!match && allStores.indexOf(s) < 3) {
+            console.log('[renderTable] Comparing store_id:', reportStoreId, 'with store.id:', s.id, 'match:', match);
+          }
+          return match;
+        }) || {} : {});
+
+      console.log('[renderTable] Found store:', store, 'store.id:', store.id, 'store.name:', store.name);
+
+      // ブランド名を取得
+      // storeオブジェクトの構造を確認（brand_id, brandId, brandなど様々な可能性）
+      const brandId = store.brand_id || store.brandId || store.brand || r.brand_id || r.brandId || r.brand;
+      if (!brandId) {
+        console.warn('[renderTable] No brandId found for report:', r.id || r.report_id);
+        console.warn('[renderTable] store object:', store);
+        console.warn('[renderTable] store.brand_id:', store.brand_id);
+        console.warn('[renderTable] store.brandId:', store.brandId);
+        console.warn('[renderTable] store.brand:', store.brand);
+        console.warn('[renderTable] r.brand_id:', r.brand_id);
+        console.warn('[renderTable] r.brandId:', r.brandId);
+        console.warn('[renderTable] r.brand:', r.brand);
+      }
+      const brand = (window.DataUtils && window.DataUtils.findBrand && brandId)
+        ? window.DataUtils.findBrand(allBrands, brandId) || {}
+        : (brandId ? allBrands.find(b => {
+          const match = String(b.id) === String(brandId);
+          if (!match && brandId) {
+            // デバッグ: 最初の数件のブランドIDを確認
+            if (allBrands.length > 0 && allBrands.indexOf(b) < 3) {
+              console.log('[renderTable] Comparing brandId:', brandId, 'with brand.id:', b.id, 'match:', match);
+            }
+          }
+          return match;
+        }) || {} : {});
+      if (!brand.name && brandId) {
+        console.warn('[renderTable] Brand not found for brandId:', brandId, 'store:', store, 'report:', r.id || r.report_id);
+      }
+      const displayBrandName = (window.DataUtils && window.DataUtils.escapeHtml)
+        ? window.DataUtils.escapeHtml(brand.name || r.brand_name || '-')
+        : escapeHtml(brand.name || r.brand_name || '-');
+
+      // 法人名を取得（ブランド経由または店舗経由）
+      let clientId = null;
+      if (brand.client_id) {
+        clientId = brand.client_id;
+      } else if (store.client_id) {
+        clientId = store.client_id;
+      } else if (r.client_id) {
+        clientId = r.client_id;
+      }
+      const client = (window.DataUtils && window.DataUtils.findClient && clientId)
+        ? window.DataUtils.findClient(allClients, clientId) || {}
+        : (clientId ? allClients.find(c => c.id === clientId) || {} : {});
+      const displayClientName = client.name || '-';
+
+      const worker = allWorkers.find(w => w.id === normalized.worker_id) || {};
+      const status = normalized.status === 'approved' ? 'approved' : (normalized.status === 'rejected' ? 'rejected' : 'pending');
+      const statusLabel = (window.DataUtils && window.DataUtils.getStatusLabel)
+        ? window.DataUtils.getStatusLabel(status)
+        : (status === 'approved' ? '承認済み' : status === 'rejected' ? '却下' : '承認待ち');
+      const displayStoreName = (window.DataUtils && window.DataUtils.getStoreName)
+        ? window.DataUtils.getStoreName(allStores, r.store_id, normalized.store_name)
+        : (store.name || normalized.store_name || r.store_name || '-');
+
+      // 再提出通知バッジ
+      const resubmittedBadge = (r.resubmitted || normalized.resubmitted)
+        ? '<span class="resubmitted-badge" title="清掃員から再提出されました"><i class="fas fa-bell"></i> 再提出</span>'
+        : '';
+
+      // 次回提案バッジ
+      const isProposal = r.proposal_type === 'proposal' || r.type === 'proposal' || normalized.proposal_type === 'proposal';
+      const proposalBadge = isProposal
+        ? '<span class="proposal-badge" title="次回提案"><i class="fas fa-lightbulb"></i> 次回提案</span>'
+        : '';
+
+      return `
           <tr ${(r.resubmitted || normalized.resubmitted) ? 'class="resubmitted-row"' : ''} ${isProposal ? 'class="proposal-row"' : ''}>
             <td>${(window.DataUtils && window.DataUtils.formatDate) ? window.DataUtils.formatDate(normalized.date) : formatDate(normalized.date)}</td>
             <td>${(window.DataUtils && window.DataUtils.escapeHtml) ? window.DataUtils.escapeHtml(displayClientName) : escapeHtml(displayClientName)}</td>
@@ -379,74 +379,74 @@
             </td>
           </tr>
         `;
-      }).join('');
+    }).join('');
+  }
+
+  function renderPagination() {
+    const totalPages = Math.ceil(filteredReports.length / perPage);
+    const pagination = document.getElementById('pagination');
+
+    if (totalPages <= 1) {
+      pagination.innerHTML = '';
+      return;
     }
 
-    function renderPagination() {
-      const totalPages = Math.ceil(filteredReports.length / perPage);
-      const pagination = document.getElementById('pagination');
-      
-      if (totalPages <= 1) {
-        pagination.innerHTML = '';
-        return;
-      }
-
-      let html = '';
-      if (currentPage > 1) {
-        html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
-      }
-      
-      for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-          html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-        } else if (i === currentPage - 3 || i === currentPage + 3) {
-          html += '<span style="padding:8px">...</span>';
-        }
-      }
-      
-      if (currentPage < totalPages) {
-        html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
-      }
-      
-      pagination.innerHTML = html;
+    let html = '';
+    if (currentPage > 1) {
+      html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
     }
 
-    window.goToPage = function(page) {
-      currentPage = page;
-      renderTable();
-      renderPagination();
-    };
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+      } else if (i === currentPage - 3 || i === currentPage + 3) {
+        html += '<span style="padding:8px">...</span>';
+      }
+    }
 
-    // フィードバック表示
-    window.viewFeedback = async function(id) {
-        const dialog = document.getElementById('feedback-dialog');
-        const content = document.getElementById('feedback-content');
-        
-        content.innerHTML = '<p class="loading">読み込み中...</p>';
-        dialog.showModal();
-        
-        try {
-            const idToken = await getFirebaseIdToken();
-            const response = await fetch(`https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod/staff/reports/${id}/feedback`, {
-                headers: { 'Authorization': `Bearer ${idToken}` }
-            });
-            
-            if (!response.ok) throw new Error('取得に失敗しました');
-            
-            const data = await response.json();
-            const feedback = data.feedback || {};
-            
-            if (!feedback.rating && !feedback.comment) {
-                content.innerHTML = `
+    if (currentPage < totalPages) {
+      html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    }
+
+    pagination.innerHTML = html;
+  }
+
+  window.goToPage = function (page) {
+    currentPage = page;
+    renderTable();
+    renderPagination();
+  };
+
+  // フィードバック表示
+  window.viewFeedback = async function (id) {
+    const dialog = document.getElementById('feedback-dialog');
+    const content = document.getElementById('feedback-content');
+
+    content.innerHTML = '<p class="loading">読み込み中...</p>';
+    dialog.showModal();
+
+    try {
+      const idToken = await getFirebaseIdToken();
+      const response = await fetch(`${REPORT_API}/staff/reports/${id}/feedback`, {
+        headers: { 'Authorization': `Bearer ${idToken}` }
+      });
+
+      if (!response.ok) throw new Error('取得に失敗しました');
+
+      const data = await response.json();
+      const feedback = data.feedback || {};
+
+      if (!feedback.rating && !feedback.comment) {
+        content.innerHTML = `
                     <div style="text-align: center; padding: 20px; color: #666;">
                         <i class="fas fa-comment-slash" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i>
                         <p>まだコメントがありません</p>
                     </div>
                 `;
-            } else {
-                const stars = '★'.repeat(feedback.rating || 0) + '☆'.repeat(5 - (feedback.rating || 0));
-                const date = feedback.submitted_at ? new Date(feedback.submitted_at).toLocaleString('ja-JP') : '-';
-                content.innerHTML = `
+      } else {
+        const stars = '★'.repeat(feedback.rating || 0) + '☆'.repeat(5 - (feedback.rating || 0));
+        const date = feedback.submitted_at ? new Date(feedback.submitted_at).toLocaleString('ja-JP') : '-';
+        content.innerHTML = `
                     <div class="feedback-detail">
                         <div style="margin-bottom: 15px;">
                             <label style="font-weight: 600; display: block; margin-bottom: 5px;">評価</label>
@@ -461,59 +461,59 @@
                         </div>
                     </div>
                 `;
-            }
-        } catch (error) {
-            console.error('Error fetching feedback:', error);
-            content.innerHTML = `<p style="color: #dc3545; text-align: center;">コメントの取得に失敗しました</p>`;
-        }
-    };
-
-    // 詳細表示 - モーダルで表示
-    window.viewReport = function(id) {
-      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
-      if (!report) {
-        alert('レポートが見つかりませんでした');
-        return;
       }
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+      content.innerHTML = `<p style="color: #dc3545; text-align: center;">コメントの取得に失敗しました</p>`;
+    }
+  };
 
-      // デバッグログ
-      console.log('[viewReport] Report ID:', id);
-      console.log('[viewReport] Report data:', report);
-      console.log('[viewReport] Work items:', report.work_items);
-      console.log('[viewReport] Sections:', report.sections);
+  // 詳細表示 - モーダルで表示
+  window.viewReport = function (id) {
+    const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
+    if (!report) {
+      alert('レポートが見つかりませんでした');
+      return;
+    }
 
-      currentReportId = id;
-      const store = allStores.find(s => s.id === report.store_id) || {};
-      const worker = allWorkers.find(w => w.id === report.worker_id || w.id === report.staff_id) || {};
-      const status = report.send_at || report.status === 'approved' ? 'approved' : (report.status === 'rejected' ? 'rejected' : 'pending');
+    // デバッグログ
+    console.log('[viewReport] Report ID:', id);
+    console.log('[viewReport] Report data:', report);
+    console.log('[viewReport] Work items:', report.work_items);
+    console.log('[viewReport] Sections:', report.sections);
 
-      // 新しい形式のレポート（work_items配列）かどうかを判定
-      const hasWorkItems = report.work_items && Array.isArray(report.work_items) && report.work_items.length > 0;
+    currentReportId = id;
+    const store = allStores.find(s => s.id === report.store_id) || {};
+    const worker = allWorkers.find(w => w.id === report.worker_id || w.id === report.staff_id) || {};
+    const status = report.send_at || report.status === 'approved' ? 'approved' : (report.status === 'rejected' ? 'rejected' : 'pending');
 
-      let reportHtml = '';
+    // 新しい形式のレポート（work_items配列）かどうかを判定
+    const hasWorkItems = report.work_items && Array.isArray(report.work_items) && report.work_items.length > 0;
 
-      if (hasWorkItems) {
-        // 新しい形式: レポート表示ページと同じレイアウト
-        const dateStr = formatDate(report.cleaning_date || report.work_date || report.created_at?.split('T')[0]);
-        const timeStr = (report.cleaning_start_time || report.start_time || '') && (report.cleaning_end_time || report.end_time || '')
-          ? `${report.cleaning_start_time || report.start_time} - ${report.cleaning_end_time || report.end_time}`
-          : '';
+    let reportHtml = '';
 
-        // 実施清掃項目リスト
-        const itemNames = report.work_items.map(item => item.item_name || item.name || item.item_id).filter(Boolean);
-        const itemsListHtml = itemNames.length > 0
-          ? itemNames.map(name => `<span class="items-list-item-modal">${escapeHtml(name)}</span>`).join('')
-          : '<span class="items-list-empty-modal">項目なし</span>';
+    if (hasWorkItems) {
+      // 新しい形式: レポート表示ページと同じレイアウト
+      const dateStr = formatDate(report.cleaning_date || report.work_date || report.created_at?.split('T')[0]);
+      const timeStr = (report.cleaning_start_time || report.start_time || '') && (report.cleaning_end_time || report.end_time || '')
+        ? `${report.cleaning_start_time || report.start_time} - ${report.cleaning_end_time || report.end_time}`
+        : '';
 
-        // 清掃項目の詳細（画像は別のsectionsで管理されるため、ここでは表示しない）
-        const workItemsHtml = report.work_items.map(item => {
-          const details = item.details || {};
-          const tags = [];
-          if (details.type) tags.push(details.type);
-          if (details.count) tags.push(`${details.count}個`);
-          const tagsHtml = tags.map(tag => `<span class="detail-tag-input-modal" style="display:inline-block;margin-right:8px;">${escapeHtml(tag)}</span>`).join('');
+      // 実施清掃項目リスト
+      const itemNames = report.work_items.map(item => item.item_name || item.name || item.item_id).filter(Boolean);
+      const itemsListHtml = itemNames.length > 0
+        ? itemNames.map(name => `<span class="items-list-item-modal">${escapeHtml(name)}</span>`).join('')
+        : '<span class="items-list-empty-modal">項目なし</span>';
 
-          return `
+      // 清掃項目の詳細（画像は別のsectionsで管理されるため、ここでは表示しない）
+      const workItemsHtml = report.work_items.map(item => {
+        const details = item.details || {};
+        const tags = [];
+        if (details.type) tags.push(details.type);
+        if (details.count) tags.push(`${details.count}個`);
+        const tagsHtml = tags.map(tag => `<span class="detail-tag-input-modal" style="display:inline-block;margin-right:8px;">${escapeHtml(tag)}</span>`).join('');
+
+        return `
             <section class="cleaning-section-modal">
               <div class="item-header-modal">
                 <h3 class="item-title-input-modal" style="border:none;background:transparent;padding:0;font-size:1.6rem;font-weight:600;color:#222;">${escapeHtml(item.item_name || item.name || item.item_id)}</h3>
@@ -521,9 +521,9 @@
               </div>
             </section>
           `;
-        }).join('');
+      }).join('');
 
-        reportHtml = `
+      reportHtml = `
           <div class="report-container-modal">
             <header class="report-header-modal">
               <div class="report-header-content-modal">
@@ -550,21 +550,21 @@
             <div class="report-main-modal">
               ${workItemsHtml}
               ${report.sections && Array.isArray(report.sections) && report.sections.length > 0 ? report.sections.map(section => {
-                if (section.section_type === 'image') {
-                  // 画像セクション
-                  const beforePhotos = section.photos?.before || [];
-                  const afterPhotos = section.photos?.after || [];
-                  const imageType = section.image_type || 'work';
-                  
-                  // デバッグログ
-                  console.log(`[viewReport] Image section:`, section);
-                  console.log(`[viewReport] Image section - Before photos:`, beforePhotos);
-                  console.log(`[viewReport] Image section - After photos:`, afterPhotos);
-                  const beforeLabel = imageType === 'work' ? '作業前（Before）' : '設置前（Before）';
-                  const afterLabel = imageType === 'work' ? '作業後（After）' : '設置後（After）';
-                  
-                  const beforePhotosHtml = beforePhotos.length > 0
-                    ? `<div class="image-list-modal">
+        if (section.section_type === 'image') {
+          // 画像セクション
+          const beforePhotos = section.photos?.before || [];
+          const afterPhotos = section.photos?.after || [];
+          const imageType = section.image_type || 'work';
+
+          // デバッグログ
+          console.log(`[viewReport] Image section:`, section);
+          console.log(`[viewReport] Image section - Before photos:`, beforePhotos);
+          console.log(`[viewReport] Image section - After photos:`, afterPhotos);
+          const beforeLabel = imageType === 'work' ? '作業前（Before）' : '設置前（Before）';
+          const afterLabel = imageType === 'work' ? '作業後（After）' : '設置後（After）';
+
+          const beforePhotosHtml = beforePhotos.length > 0
+            ? `<div class="image-list-modal">
                          ${beforePhotos.map(url => `
                            <div class="image-item-modal">
                              <img src="${url}" alt="${beforeLabel}" loading="lazy" 
@@ -572,10 +572,10 @@
             </div>
                          `).join('')}
                        </div>`
-                    : '<p style="color: #999; font-style: italic; padding: 20px; text-align: center;">写真なし</p>';
+            : '<p style="color: #999; font-style: italic; padding: 20px; text-align: center;">写真なし</p>';
 
-                  const afterPhotosHtml = afterPhotos.length > 0
-                    ? `<div class="image-list-modal">
+          const afterPhotosHtml = afterPhotos.length > 0
+            ? `<div class="image-list-modal">
                          ${afterPhotos.map(url => `
                            <div class="image-item-modal">
                              <img src="${url}" alt="${afterLabel}" loading="lazy" 
@@ -583,9 +583,9 @@
                            </div>
                          `).join('')}
                        </div>`
-                    : '<p style="color: #999; font-style: italic; padding: 20px; text-align: center;">写真なし</p>';
+            : '<p style="color: #999; font-style: italic; padding: 20px; text-align: center;">写真なし</p>';
 
-                  return `
+          return `
                     <section class="image-section-modal">
                       <div class="section-header-modal">
                         <h4 class="section-title-modal">
@@ -604,9 +604,9 @@
                       </div>
                     </section>
                   `;
-                } else if (section.section_type === 'comment') {
-                  // コメントセクション
-                  return `
+        } else if (section.section_type === 'comment') {
+          // コメントセクション
+          return `
                     <section class="comment-section-modal">
                       <div class="section-header-modal">
                         <h4 class="section-title-modal">
@@ -618,9 +618,9 @@
                       </div>
                     </section>
                   `;
-                } else if (section.section_type === 'work_content') {
-                  // 作業内容セクション
-                  return `
+        } else if (section.section_type === 'work_content') {
+          // 作業内容セクション
+          return `
                     <section class="work-content-section-modal">
                       <div class="section-header-modal">
                         <h4 class="section-title-modal">
@@ -632,14 +632,14 @@
                       </div>
                     </section>
                   `;
-                }
-                return '';
-              }).filter(Boolean).join('') : ''}
+        }
+        return '';
+      }).filter(Boolean).join('') : ''}
             </div>
           </div>
         `;
-      } else {
-        // 古い形式: 従来の表示
+    } else {
+      // 古い形式: 従来の表示
       const photosHtml = report.photos ? `
         <div class="detail-item" style="grid-column: 1/-1;">
           <div class="detail-label">写真</div>
@@ -660,7 +660,7 @@
         </div>
       ` : '';
 
-        reportHtml = `
+      reportHtml = `
         <div class="detail-grid">
           <div class="detail-item">
             <div class="detail-label">店舗</div>
@@ -689,76 +689,76 @@
             <div class="detail-value">${escapeHtml(report.notes || '-')}</div>
         </div>
       `;
-      }
+    }
 
-      document.getElementById('detail-body').innerHTML = reportHtml;
+    document.getElementById('detail-body').innerHTML = reportHtml;
 
-      // 承認済みなら承認/却下ボタンを非表示
-      document.getElementById('btn-approve').style.display = status === 'approved' ? 'none' : '';
-      document.getElementById('btn-reject').style.display = status === 'approved' ? 'none' : '';
+    // 承認済みなら承認/却下ボタンを非表示
+    document.getElementById('btn-approve').style.display = status === 'approved' ? 'none' : '';
+    document.getElementById('btn-reject').style.display = status === 'approved' ? 'none' : '';
 
-      document.getElementById('detail-dialog').showModal();
-      
-      // 再提出フラグをクリア（モーダルを開いた時）
-      if (report.resubmitted) {
-        clearResubmittedFlag(currentReportId);
-      }
-    };
+    document.getElementById('detail-dialog').showModal();
 
-    // 編集
-    window.editReport = async function(id, forceIsProposal = false) {
-      try {
-        // 新規ウィンドウで編集画面を開く
-        const editUrl = `/admin/reports/new-pc.html?edit=${id}${forceIsProposal ? '&proposal=true' : ''}`;
-        const editWindow = window.open(editUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
-        
-        if (!editWindow) {
-          alert('ポップアップがブロックされています。ブラウザの設定でポップアップを許可してください。');
-          return;
-        }
-        
-        // ウィンドウが閉じられたときにレポート一覧を更新
-        const checkClosed = setInterval(() => {
-          if (editWindow.closed) {
-            clearInterval(checkClosed);
-            loadReports();
-          }
-        }, 500);
-        
+    // 再提出フラグをクリア（モーダルを開いた時）
+    if (report.resubmitted) {
+      clearResubmittedFlag(currentReportId);
+    }
+  };
+
+  // 編集
+  window.editReport = async function (id, forceIsProposal = false) {
+    try {
+      // 新規ウィンドウで編集画面を開く
+      const editUrl = `/admin/reports/new.html?edit=${id}${forceIsProposal ? '&proposal=true' : ''}`;
+      const editWindow = window.open(editUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+
+      if (!editWindow) {
+        alert('ポップアップがブロックされています。ブラウザの設定でポップアップを許可してください。');
         return;
-        
-        // 以下はモーダル用のコード（将来の互換性のため残す）
-        // APIからレポート詳細を取得
-        const idToken = await getFirebaseIdToken();
-        const response = await fetch(`${REPORT_API}/staff/reports/${id}`, {
-          headers: { 'Authorization': `Bearer ${idToken}` }
-        });
+      }
 
-        if (!response.ok) {
-          throw new Error('レポートの取得に失敗しました');
+      // ウィンドウが閉じられたときにレポート一覧を更新
+      const checkClosed = setInterval(() => {
+        if (editWindow.closed) {
+          clearInterval(checkClosed);
+          loadReports();
         }
+      }, 500);
 
-        const data = await response.json();
-        const report = data.report || data;
+      return;
 
-        // 次回提案かどうかを判定（forceIsProposalがtrueの場合は強制的にtrue）
-        const isProposal = forceIsProposal || report.proposal_type === 'proposal' || report.type === 'proposal';
-        
-        // タイトルを設定
-        const formTitle = document.getElementById('form-title');
-        if (formTitle) {
-          formTitle.textContent = isProposal ? '次回提案を編集' : 'レポートを編集';
-        }
-        
-        const reportId = document.getElementById('report-id');
-        if (reportId) reportId.value = report.report_id || report.id;
-      
+      // 以下はモーダル用のコード（将来の互換性のため残す）
+      // APIからレポート詳細を取得
+      const idToken = await getFirebaseIdToken();
+      const response = await fetch(`${REPORT_API}/staff/reports/${id}`, {
+        headers: { 'Authorization': `Bearer ${idToken}` }
+      });
+
+      if (!response.ok) {
+        throw new Error('レポートの取得に失敗しました');
+      }
+
+      const data = await response.json();
+      const report = data.report || data;
+
+      // 次回提案かどうかを判定（forceIsProposalがtrueの場合は強制的にtrue）
+      const isProposal = forceIsProposal || report.proposal_type === 'proposal' || report.type === 'proposal';
+
+      // タイトルを設定
+      const formTitle = document.getElementById('form-title');
+      if (formTitle) {
+        formTitle.textContent = isProposal ? '次回提案を編集' : 'レポートを編集';
+      }
+
+      const reportId = document.getElementById('report-id');
+      if (reportId) reportId.value = report.report_id || report.id;
+
       // 基本情報を設定（モーダル用のIDを使用）
       const storeSelect = document.getElementById('report-store-select-modal');
       const storeNameInput = document.getElementById('report-store-name-modal');
       const storeIdInput = document.getElementById('report-store-modal');
       const storeSearchInput = document.getElementById('report-store-search-modal');
-      
+
       if (storeSelect) {
         storeSelect.value = report.store_id || '';
         const selectedOption = storeSelect.options[storeSelect.selectedIndex];
@@ -769,15 +769,15 @@
           if (storeSearchInput) storeSearchInput.value = storeName;
         }
       }
-      
+
       const reportDate = document.getElementById('report-date-modal');
       const reportStart = document.getElementById('report-start-modal');
       const reportEnd = document.getElementById('report-end-modal');
-      
+
       if (reportDate) reportDate.value = report.cleaning_date || report.work_date || '';
       if (reportStart) reportStart.value = report.cleaning_start_time || report.start_time || '';
       if (reportEnd) reportEnd.value = report.cleaning_end_time || report.end_time || '';
-      
+
       // 担当者情報を設定
       const workerSelect = document.getElementById('report-worker');
       if (workerSelect) {
@@ -822,7 +822,7 @@
             // 画像セクションを追加（既存のsection_idを使用）
             const imageType = section.image_type || 'work';
             window.addImageSectionModal(imageType, section.section_id);
-            
+
             // 追加されたセクションを取得
             const addedSection = document.querySelector(`[data-section-id="${section.section_id}"].image-section-modal`);
             if (addedSection) {
@@ -849,7 +849,7 @@
                   });
                 }
               }
-              
+
               // 作業後の写真を追加
               if (section.photos && section.photos.after && Array.isArray(section.photos.after)) {
                 const photoGrid = addedSection.querySelector('.image-list-modal[data-category="after"]');
@@ -877,7 +877,7 @@
           } else if (section.section_type === 'comment') {
             // コメントセクションを追加（既存のsection_idを使用）
             window.addCommentSectionModal(section.section_id);
-            
+
             // 追加されたセクションを取得
             const addedSection = document.querySelector(`[data-section-id="${section.section_id}"].comment-section-modal`);
             if (addedSection && section.content) {
@@ -889,7 +889,7 @@
           } else if (section.section_type === 'work_content') {
             // 作業内容セクションを追加（既存のsection_idを使用）
             window.addWorkContentSectionModal(section.section_id);
-            
+
             // 追加されたセクションを取得
             const addedSection = document.querySelector(`[data-section-id="${section.section_id}"].work-content-section-modal`);
             if (addedSection && section.content) {
@@ -923,749 +923,749 @@
       }
 
       document.getElementById('new-dialog').showModal();
-      
+
       // モーダルが開かれた後にセクション追加ボタンのイベントリスナーを設定
       setTimeout(() => {
         setupModalSectionAddButton();
       }, 100);
-      } catch (error) {
-        console.error('Error loading report for editing:', error);
-        alert('レポートの読み込みに失敗しました: ' + error.message);
-      }
-    };
+    } catch (error) {
+      console.error('Error loading report for editing:', error);
+      alert('レポートの読み込みに失敗しました: ' + error.message);
+    }
+  };
 
-    // URL発行
-    window.shareReport = function(id) {
-      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
-      if (!report) {
-        alert('レポートが見つかりませんでした');
-        return;
-      }
+  // URL発行
+  window.shareReport = function (id) {
+    const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
+    if (!report) {
+      alert('レポートが見つかりませんでした');
+      return;
+    }
 
-      // 共有URLを生成（直接レポート表示ページ）
-      const reportId = report.report_id || report.id;
-      const baseUrl = window.location.origin;
-      const shareUrl = `${baseUrl}/reports/shared/${reportId}/view`;
+    // 共有URLを生成（直接レポート表示ページ）
+    const reportId = report.report_id || report.id;
+    const baseUrl = window.location.origin;
+    const shareUrl = `${baseUrl}/reports/shared/${reportId}/view`;
 
-      // URLを表示
-      document.getElementById('share-url-input').value = shareUrl;
-      
-      // コピー成功メッセージを非表示
-      document.getElementById('copy-success').style.display = 'none';
-      
-      // モーダルを表示
-      document.getElementById('share-dialog').showModal();
-    };
+    // URLを表示
+    document.getElementById('share-url-input').value = shareUrl;
 
-    // URLコピー機能
-    document.addEventListener('DOMContentLoaded', function() {
-      const copyBtn = document.getElementById('btn-copy-url');
-      const urlInput = document.getElementById('share-url-input');
-      const copySuccess = document.getElementById('copy-success');
-      
-      if (copyBtn && urlInput) {
-        copyBtn.addEventListener('click', async function() {
-          try {
-            await navigator.clipboard.writeText(urlInput.value);
-            copySuccess.style.display = 'flex';
-            setTimeout(() => {
-              copySuccess.style.display = 'none';
-            }, 3000);
-          } catch (err) {
-            // フォールバック: テキストエリアを使用
-            urlInput.select();
-            document.execCommand('copy');
-            copySuccess.style.display = 'flex';
-            setTimeout(() => {
-              copySuccess.style.display = 'none';
-            }, 3000);
-          }
-        });
-      }
-    });
+    // コピー成功メッセージを非表示
+    document.getElementById('copy-success').style.display = 'none';
 
-    // 削除
-    window.deleteReport = async function(id) {
-      if (!confirm('このレポートを削除しますか？')) return;
-      
-      try {
-        // 新レポートAPIから削除を試みる
+    // モーダルを表示
+    document.getElementById('share-dialog').showModal();
+  };
+
+  // URLコピー機能
+  document.addEventListener('DOMContentLoaded', function () {
+    const copyBtn = document.getElementById('btn-copy-url');
+    const urlInput = document.getElementById('share-url-input');
+    const copySuccess = document.getElementById('copy-success');
+
+    if (copyBtn && urlInput) {
+      copyBtn.addEventListener('click', async function () {
         try {
-          const idToken = await getFirebaseIdToken();
-          await fetch(`${REPORT_API}/staff/reports/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${idToken}` }
-          });
-        } catch (e) {
-          // 旧APIから削除を試みる
-        await fetch(`${API_BASE}/reports/${id}`, { method: 'DELETE' });
+          await navigator.clipboard.writeText(urlInput.value);
+          copySuccess.style.display = 'flex';
+          setTimeout(() => {
+            copySuccess.style.display = 'none';
+          }, 3000);
+        } catch (err) {
+          // フォールバック: テキストエリアを使用
+          urlInput.select();
+          document.execCommand('copy');
+          copySuccess.style.display = 'flex';
+          setTimeout(() => {
+            copySuccess.style.display = 'none';
+          }, 3000);
         }
-        allReports = allReports.filter(r => String(r.id) !== String(id));
-        updateStats();
-        filterAndRender();
-      } catch (e) {
-        alert('削除に失敗しました');
-      }
-    };
+      });
+    }
+  });
 
-    // レポートプレビュー機能
-    window.previewReport = async function(id) {
-      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
-      if (!report) {
-        alert('レポートが見つかりませんでした');
-        return;
-      }
+  // 削除
+  window.deleteReport = async function (id) {
+    if (!confirm('このレポートを削除しますか？')) return;
 
-      // 直接Viewページに遷移
-      const reportId = report.report_id || report.id;
-      const baseUrl = window.location.origin;
-      const viewUrl = `${baseUrl}/reports/shared/${reportId}/view`;
-      window.open(viewUrl, '_blank');
-      
-      // 以下はモーダル表示用のコード（使用しないが、念のため残しておく）
-      /*
-      const previewDialog = document.getElementById('preview-dialog-modal');
-      const previewContent = document.getElementById('preview-report-content-modal');
-      
-      if (!previewDialog || !previewContent) {
-        alert('プレビューモーダルが見つかりませんでした');
-        return;
-      }
-
+    try {
+      // 新レポートAPIから削除を試みる
       try {
-        // レポート詳細を取得
         const idToken = await getFirebaseIdToken();
-        const response = await fetch(`${REPORT_API}/staff/reports/${id}`, {
+        await fetch(`${REPORT_API}/staff/reports/${id}`, {
+          method: 'DELETE',
           headers: { 'Authorization': `Bearer ${idToken}` }
         });
+      } catch (e) {
+        // 旧APIから削除を試みる
+        await fetch(`${API_BASE}/reports/${id}`, { method: 'DELETE' });
+      }
+      allReports = allReports.filter(r => String(r.id) !== String(id));
+      updateStats();
+      filterAndRender();
+    } catch (e) {
+      alert('削除に失敗しました');
+    }
+  };
 
-        if (!response.ok) {
-          throw new Error('レポートの取得に失敗しました');
-        }
+  // レポートプレビュー機能
+  window.previewReport = async function (id) {
+    const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
+    if (!report) {
+      alert('レポートが見つかりませんでした');
+      return;
+    }
 
-        const data = await response.json();
-        const reportData = data.report || data;
+    // 直接Viewページに遷移
+    const reportId = report.report_id || report.id;
+    const baseUrl = window.location.origin;
+    const viewUrl = `${baseUrl}/reports/shared/${reportId}/view`;
+    window.open(viewUrl, '_blank');
 
-        // report-shared-view.jsのrenderReport関数を使用して表示
-        // Viewページと同じ表示にするため、一時的に要素IDを変更してrenderReportを直接呼び出す
-        if (window.renderReport && typeof window.renderReport === 'function') {
-          // プレビュー用の要素IDを一時的にViewページと同じIDに変更
-          const previewHeader = previewContent.querySelector('#preview-report-header-modal');
-          const previewBrandEl = previewContent.querySelector('#preview-report-brand-modal');
-          const previewDateEl = previewContent.querySelector('#preview-report-date-modal');
-          const previewStoreEl = previewContent.querySelector('#preview-report-store-modal');
-          const previewStaffEl = previewContent.querySelector('#preview-report-staff-modal');
-          const previewItemsEl = previewContent.querySelector('#preview-cleaning-items-modal');
-          const previewMainEl = previewContent.querySelector('#preview-report-main-modal');
+    // 以下はモーダル表示用のコード（使用しないが、念のため残しておく）
+    /*
+    const previewDialog = document.getElementById('preview-dialog-modal');
+    const previewContent = document.getElementById('preview-report-content-modal');
+    
+    if (!previewDialog || !previewContent) {
+      alert('プレビューモーダルが見つかりませんでした');
+      return;
+    }
+
+    try {
+      // レポート詳細を取得
+      const idToken = await getFirebaseIdToken();
+      const response = await fetch(`${REPORT_API}/staff/reports/${id}`, {
+        headers: { 'Authorization': `Bearer ${idToken}` }
+      });
+
+      if (!response.ok) {
+        throw new Error('レポートの取得に失敗しました');
+      }
+
+      const data = await response.json();
+      const reportData = data.report || data;
+
+      // report-shared-view.jsのrenderReport関数を使用して表示
+      // Viewページと同じ表示にするため、一時的に要素IDを変更してrenderReportを直接呼び出す
+      if (window.renderReport && typeof window.renderReport === 'function') {
+        // プレビュー用の要素IDを一時的にViewページと同じIDに変更
+        const previewHeader = previewContent.querySelector('#preview-report-header-modal');
+        const previewBrandEl = previewContent.querySelector('#preview-report-brand-modal');
+        const previewDateEl = previewContent.querySelector('#preview-report-date-modal');
+        const previewStoreEl = previewContent.querySelector('#preview-report-store-modal');
+        const previewStaffEl = previewContent.querySelector('#preview-report-staff-modal');
+        const previewItemsEl = previewContent.querySelector('#preview-cleaning-items-modal');
+        const previewMainEl = previewContent.querySelector('#preview-report-main-modal');
+        
+        // 一時的にIDを変更
+        if (previewHeader) previewHeader.id = 'report-header';
+        if (previewBrandEl) previewBrandEl.id = 'report-brand';
+        if (previewDateEl) previewDateEl.id = 'report-date';
+        if (previewStoreEl) previewStoreEl.id = 'report-store';
+        if (previewStaffEl) previewStaffEl.id = 'report-staff';
+        if (previewItemsEl) previewItemsEl.id = 'cleaning-items';
+        if (previewMainEl) previewMainEl.id = 'report-main';
+        
+        // renderReportを直接呼び出す（Viewページと同じ方法）
+        window.renderReport(reportData);
+        
+        // IDを元に戻す
+        if (previewHeader) previewHeader.id = 'preview-report-header-modal';
+        if (previewBrandEl) previewBrandEl.id = 'preview-report-brand-modal';
+        if (previewDateEl) previewDateEl.id = 'preview-report-date-modal';
+        if (previewStoreEl) previewStoreEl.id = 'preview-report-store-modal';
+        if (previewStaffEl) previewStaffEl.id = 'preview-report-staff-modal';
+        if (previewItemsEl) previewItemsEl.id = 'preview-cleaning-items-modal';
+        if (previewMainEl) previewMainEl.id = 'preview-report-main-modal';
+        
+        // 次回ご提案も読み込む（Viewページと同じ）
+        const reportId = reportData.report_id || reportData.id;
+        if (reportId) {
+          // プレビュー用の次回ご提案要素IDを一時的にViewページと同じIDに変更
+          const proposalLoadingEl = previewContent.querySelector('#preview-proposal-loading-modal');
+          const proposalEmptyEl = previewContent.querySelector('#preview-proposal-empty-modal');
+          const proposalItemsBarEl = previewContent.querySelector('#preview-proposal-items-bar-modal');
+          const proposalMainEl = previewContent.querySelector('#preview-proposal-report-main-modal');
+          const proposalItemsEl = previewContent.querySelector('#preview-proposal-cleaning-items-modal');
           
-          // 一時的にIDを変更
-          if (previewHeader) previewHeader.id = 'report-header';
-          if (previewBrandEl) previewBrandEl.id = 'report-brand';
-          if (previewDateEl) previewDateEl.id = 'report-date';
-          if (previewStoreEl) previewStoreEl.id = 'report-store';
-          if (previewStaffEl) previewStaffEl.id = 'report-staff';
-          if (previewItemsEl) previewItemsEl.id = 'cleaning-items';
-          if (previewMainEl) previewMainEl.id = 'report-main';
+          // 一時的にIDを変更（loadProposalReportが使用するIDに合わせる）
+          const originalIds = {};
+          if (proposalLoadingEl) {
+            originalIds.loading = proposalLoadingEl.id;
+            proposalLoadingEl.id = 'proposal-loading';
+          }
+          if (proposalEmptyEl) {
+            originalIds.empty = proposalEmptyEl.id;
+            proposalEmptyEl.id = 'proposal-empty';
+          }
+          if (proposalItemsBarEl) {
+            originalIds.itemsBar = proposalItemsBarEl.id;
+            proposalItemsBarEl.id = 'proposal-items-bar';
+          }
+          if (proposalMainEl) {
+            originalIds.main = proposalMainEl.id;
+            proposalMainEl.id = 'proposal-report-main';
+          }
+          if (proposalItemsEl) {
+            originalIds.items = proposalItemsEl.id;
+            proposalItemsEl.id = 'proposal-cleaning-items';
+          }
           
-          // renderReportを直接呼び出す（Viewページと同じ方法）
-          window.renderReport(reportData);
+          // プレビューでは次回ご提案は表示しない（「プレビューでは次回ご提案は表示されません」を表示）
+          if (proposalEmptyEl) {
+            proposalEmptyEl.style.display = 'block';
+          }
+          if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
+          if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'none';
+          if (proposalMainEl) proposalMainEl.style.display = 'none';
           
           // IDを元に戻す
-          if (previewHeader) previewHeader.id = 'preview-report-header-modal';
-          if (previewBrandEl) previewBrandEl.id = 'preview-report-brand-modal';
-          if (previewDateEl) previewDateEl.id = 'preview-report-date-modal';
-          if (previewStoreEl) previewStoreEl.id = 'preview-report-store-modal';
-          if (previewStaffEl) previewStaffEl.id = 'preview-report-staff-modal';
-          if (previewItemsEl) previewItemsEl.id = 'preview-cleaning-items-modal';
-          if (previewMainEl) previewMainEl.id = 'preview-report-main-modal';
-          
-          // 次回ご提案も読み込む（Viewページと同じ）
-          const reportId = reportData.report_id || reportData.id;
-          if (reportId) {
-            // プレビュー用の次回ご提案要素IDを一時的にViewページと同じIDに変更
-            const proposalLoadingEl = previewContent.querySelector('#preview-proposal-loading-modal');
-            const proposalEmptyEl = previewContent.querySelector('#preview-proposal-empty-modal');
-            const proposalItemsBarEl = previewContent.querySelector('#preview-proposal-items-bar-modal');
-            const proposalMainEl = previewContent.querySelector('#preview-proposal-report-main-modal');
-            const proposalItemsEl = previewContent.querySelector('#preview-proposal-cleaning-items-modal');
-            
-            // 一時的にIDを変更（loadProposalReportが使用するIDに合わせる）
-            const originalIds = {};
-            if (proposalLoadingEl) {
-              originalIds.loading = proposalLoadingEl.id;
-              proposalLoadingEl.id = 'proposal-loading';
-            }
-            if (proposalEmptyEl) {
-              originalIds.empty = proposalEmptyEl.id;
-              proposalEmptyEl.id = 'proposal-empty';
-            }
-            if (proposalItemsBarEl) {
-              originalIds.itemsBar = proposalItemsBarEl.id;
-              proposalItemsBarEl.id = 'proposal-items-bar';
-            }
-            if (proposalMainEl) {
-              originalIds.main = proposalMainEl.id;
-              proposalMainEl.id = 'proposal-report-main';
-            }
-            if (proposalItemsEl) {
-              originalIds.items = proposalItemsEl.id;
-              proposalItemsEl.id = 'proposal-cleaning-items';
-            }
-            
-            // プレビューでは次回ご提案は表示しない（「プレビューでは次回ご提案は表示されません」を表示）
-            if (proposalEmptyEl) {
-              proposalEmptyEl.style.display = 'block';
-            }
-            if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
-            if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'none';
-            if (proposalMainEl) proposalMainEl.style.display = 'none';
-            
-            // IDを元に戻す
-            if (proposalLoadingEl && originalIds.loading) proposalLoadingEl.id = originalIds.loading;
-            if (proposalEmptyEl && originalIds.empty) proposalEmptyEl.id = originalIds.empty;
-            if (proposalItemsBarEl && originalIds.itemsBar) proposalItemsBarEl.id = originalIds.itemsBar;
-            if (proposalMainEl && originalIds.main) proposalMainEl.id = originalIds.main;
-            if (proposalItemsEl && originalIds.items) proposalItemsEl.id = originalIds.items;
-          }
-          
-          // プレビュー用のタブ機能を設定
-          setupPreviewTabsAdmin();
-        } else {
-          // フォールバック: シンプルな表示
-          previewContent.innerHTML = `
-            <div style="padding: 20px;">
-              <h2>${escapeHtml(reportData.store_name || '店舗名不明')}</h2>
-              <p>日付: ${escapeHtml(reportData.cleaning_date || '-')}</p>
-              <p>時間: ${escapeHtml(reportData.cleaning_start_time || '-')} 〜 ${escapeHtml(reportData.cleaning_end_time || '-')}</p>
-              <div style="margin-top: 20px;">
-                ${reportData.sections ? reportData.sections.map(section => {
-                  if (section.section_type === 'cleaning') {
-                    return `<div style="margin-bottom: 20px;">
-                      <h3>${escapeHtml(section.item_name || '清掃項目')}</h3>
-                      <p>${escapeHtml(section.work_content || '')}</p>
-                    </div>`;
-                  } else if (section.section_type === 'image') {
-                    return `<div style="margin-bottom: 20px;">
-                      <h3>画像</h3>
-                      <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                        ${(section.photos?.before || []).map(photo => 
-                          `<img src="${escapeHtml(photo.url || photo)}" style="max-width: 200px; height: auto;" />`
-                        ).join('')}
-                        ${(section.photos?.after || []).map(photo => 
-                          `<img src="${escapeHtml(photo.url || photo)}" style="max-width: 200px; height: auto;" />`
-                        ).join('')}
-                      </div>
-                    </div>`;
-                  } else if (section.section_type === 'comment') {
-                    return `<div style="margin-bottom: 20px;">
-                      <h3>コメント</h3>
-                      <p>${escapeHtml(section.content || '')}</p>
-                    </div>`;
-                  } else if (section.section_type === 'work_content') {
-                    return `<div style="margin-bottom: 20px;">
-                      <h3>作業内容</h3>
-                      <p>${escapeHtml(section.content || '')}</p>
-                    </div>`;
-                  }
-                  return '';
-                }).join('') : ''}
-              </div>
-            </div>
-          `;
-        }
-
-        // モーダルを表示
-        previewDialog.style.display = 'flex';
-        previewDialog.classList.add('show');
-      } catch (error) {
-        console.error('Error loading report preview:', error);
-        alert('プレビューの読み込みに失敗しました: ' + error.message);
-      }
-      */
-    };
-
-    // プレビュー用のタブ機能を設定（管理画面）
-    function setupPreviewTabsAdmin() {
-      const previewContent = document.getElementById('preview-report-content-modal');
-      if (!previewContent) return;
-      
-      const tabBtns = previewContent.querySelectorAll('.tab-btn');
-      const tabContents = previewContent.querySelectorAll('.tab-content');
-      
-      // 既存のイベントリスナーを削除してから追加（重複を防ぐ）
-      tabBtns.forEach(btn => {
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        
-        newBtn.addEventListener('click', function() {
-          const targetTab = this.dataset.tab;
-          
-          // すべてのタブボタンとコンテンツからactiveクラスを削除
-          const allTabBtns = previewContent.querySelectorAll('.tab-btn');
-          const allTabContents = previewContent.querySelectorAll('.tab-content');
-          
-          allTabBtns.forEach(b => b.classList.remove('active'));
-          allTabContents.forEach(c => {
-            c.classList.remove('active');
-            c.style.display = 'none';
-          });
-          
-          // クリックされたタブをアクティブにする
-          this.classList.add('active');
-          const targetContent = previewContent.querySelector(`#preview-tab-content-${targetTab}-modal`);
-          if (targetContent) {
-            targetContent.classList.add('active');
-            targetContent.style.display = 'block';
-          }
-        });
-      });
-    }
-
-    // プレビューモーダルを閉じる
-    window.closePreviewModalAdmin = function() {
-      const previewDialog = document.getElementById('preview-dialog-modal');
-      if (previewDialog) {
-        previewDialog.style.display = 'none';
-        previewDialog.classList.remove('show');
-      }
-    };
-
-    // 次回提案を作成
-    window.createProposal = async function(id) {
-      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
-      if (!report) {
-        alert('レポートが見つかりませんでした');
-        return;
-      }
-
-      // レポート詳細を取得して、次回提案として編集モーダルを開く
-      try {
-        const idToken = await getFirebaseIdToken();
-        const response = await fetch(`${REPORT_API}/staff/reports/${id}`, {
-          headers: { 'Authorization': `Bearer ${idToken}` }
-        });
-
-        if (!response.ok) {
-          throw new Error('レポートの取得に失敗しました');
-        }
-
-        const data = await response.json();
-        const reportData = data.report || data;
-
-        // 次回提案として編集モーダルを開く（proposal_typeを設定）
-        document.getElementById('form-title').textContent = '次回提案を作成';
-        document.getElementById('report-form-modal').reset();
-        document.getElementById('report-id').value = '';
-        
-        // レポートデータをモーダルに読み込む（forceIsProposal=trueで次回提案として扱う）
-        await window.editReport(id, true);
-
-        document.getElementById('new-dialog').showModal();
-      } catch (error) {
-        console.error('Error creating proposal:', error);
-        alert('次回提案の作成に失敗しました: ' + error.message);
-      }
-    };
-
-
-    // IDトークンを取得（Cognito/localStorageから取得）
-    async function getFirebaseIdToken() {
-      try {
-        // 1. Cognito ID Token（最優先）
-        const cognitoIdToken = localStorage.getItem('cognito_id_token');
-        if (cognitoIdToken) {
-          return cognitoIdToken;
+          if (proposalLoadingEl && originalIds.loading) proposalLoadingEl.id = originalIds.loading;
+          if (proposalEmptyEl && originalIds.empty) proposalEmptyEl.id = originalIds.empty;
+          if (proposalItemsBarEl && originalIds.itemsBar) proposalItemsBarEl.id = originalIds.itemsBar;
+          if (proposalMainEl && originalIds.main) proposalMainEl.id = originalIds.main;
+          if (proposalItemsEl && originalIds.items) proposalItemsEl.id = originalIds.items;
         }
         
-        // 2. Cognito認証のユーザーオブジェクトからトークンを取得
-        const cognitoUser = localStorage.getItem('cognito_user');
-        if (cognitoUser) {
-          try {
-            const parsed = JSON.parse(cognitoUser);
-            if (parsed.tokens && parsed.tokens.idToken) {
-              return parsed.tokens.idToken;
-            }
-            if (parsed.idToken) {
-              return parsed.idToken;
-            }
-          } catch (e) {
-            console.warn('Error parsing cognito user:', e);
-          }
-        }
-        
-        // 3. CognitoAuthから取得
-        if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
-          try {
-            const cognitoUser = await window.CognitoAuth.getCurrentUser();
-            if (cognitoUser && cognitoUser.tokens && cognitoUser.tokens.idToken) {
-              return cognitoUser.tokens.idToken;
-            }
-          } catch (e) {
-            console.warn('Error getting token from CognitoAuth:', e);
-          }
-        }
-        
-        // 4. misesapo_auth から取得（フォールバック）
-        const authData = localStorage.getItem('misesapo_auth');
-        if (authData) {
-          try {
-            const parsed = JSON.parse(authData);
-            if (parsed.token) {
-              return parsed.token;
-            }
-          } catch (e) {
-            console.warn('Error parsing auth data:', e);
-          }
-        }
-        
-        // 5. トークンが見つからない場合は警告を出してmock-tokenを返す
-        console.warn('No authentication token found, using mock-token');
-        return 'mock-token';
-      } catch (error) {
-        console.error('Error getting ID token:', error);
-        return 'mock-token';
-      }
-    }
-
-    // 再提出フラグをクリア
-    async function clearResubmittedFlag(reportId) {
-      try {
-        const idToken = await getFirebaseIdToken();
-        const report = allReports.find(r => String(r.id) === String(reportId) || String(r.report_id) === String(reportId));
-        if (!report || !report.resubmitted) {
-          return; // フラグがない場合は何もしない
-        }
-        
-        // フラグをクリア（バックエンドで更新）
-        await fetch(`${REPORT_API}/staff/reports/${reportId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
-          },
-          body: JSON.stringify({
-            resubmitted: false
-          })
-        });
-        
-        // フロントエンドのデータも更新
-        if (report) {
-          report.resubmitted = false;
-        }
-        
-        // テーブルを再レンダリング
-        filterAndRender();
-      } catch (error) {
-        console.error('Error clearing resubmitted flag:', error);
-        // エラーが発生しても処理を続行
-      }
-    }
-
-    // 承認
-    document.getElementById('btn-approve').addEventListener('click', async () => {
-      if (!currentReportId) return;
-      
-      try {
-        const idToken = await getFirebaseIdToken();
-        const response = await fetch(`${REPORT_API}/staff/reports/${currentReportId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
-          },
-          body: JSON.stringify({ 
-            status: 'approved',
-            resubmitted: false  // 再提出フラグをクリア
-          })
-        });
-        
-        if (!response.ok) {
-          throw new Error('承認に失敗しました');
-        }
-        
-        const report = allReports.find(r => String(r.id) === String(currentReportId) || String(r.report_id) === String(currentReportId));
-        if (report) {
-          report.status = 'approved';
-          report.resubmitted = false;
-        }
-        
-        document.getElementById('detail-dialog').close();
-        updateStats();
-        filterAndRender();
-      } catch (e) {
-        alert('承認に失敗しました: ' + e.message);
-      }
-    });
-
-    // 却下
-    document.getElementById('btn-reject').addEventListener('click', async () => {
-      if (!currentReportId) return;
-      
-      try {
-        const idToken = await getFirebaseIdToken();
-        const response = await fetch(`${REPORT_API}/staff/reports/${currentReportId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
-          },
-          body: JSON.stringify({ 
-            status: 'rejected',
-            resubmitted: false  // 再提出フラグをクリア
-          })
-        });
-        
-        if (!response.ok) {
-          throw new Error('却下に失敗しました');
-        }
-        
-        const report = allReports.find(r => String(r.id) === String(currentReportId) || String(r.report_id) === String(currentReportId));
-        if (report) {
-          report.status = 'rejected';
-          report.resubmitted = false;
-        }
-        
-        document.getElementById('detail-dialog').close();
-        updateStats();
-        filterAndRender();
-      } catch (e) {
-        alert('却下に失敗しました: ' + e.message);
-      }
-    });
-
-    // 要修正として返す
-    document.getElementById('btn-request-revision').addEventListener('click', () => {
-      if (!currentReportId) return;
-      document.getElementById('revision-comment').value = '';
-      document.getElementById('revision-dialog').showModal();
-    });
-
-    // 要修正として返す（確認）
-    document.getElementById('btn-confirm-revision').addEventListener('click', async () => {
-      if (!currentReportId) return;
-      
-      const comment = document.getElementById('revision-comment').value.trim();
-      if (!comment) {
-        alert('修正コメントを入力してください');
-        return;
-      }
-      
-      try {
-        const idToken = await getFirebaseIdToken();
-        const response = await fetch(`${REPORT_API}/staff/reports/${currentReportId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
-          },
-          body: JSON.stringify({
-            status: 'revision_requested',
-            revision_comment: comment
-          })
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || '要修正として返すのに失敗しました');
-        }
-        
-        const report = allReports.find(r => String(r.id) === String(currentReportId) || String(r.report_id) === String(currentReportId));
-        if (report) {
-          report.status = 'revision_requested';
-          report.revision_comment = comment;
-        }
-        
-        document.getElementById('revision-dialog').close();
-        document.getElementById('detail-dialog').close();
-        updateStats();
-        filterAndRender();
-        alert('レポートを要修正として返しました');
-      } catch (e) {
-        console.error('Error requesting revision:', e);
-        alert('要修正として返すのに失敗しました: ' + e.message);
-      }
-    });
-
-    // イベントリスナー
-    function setupEventListeners() {
-      const searchInput = document.getElementById('search-input');
-      if (searchInput) {
-        searchInput.addEventListener('input', debounce(filterAndRender, 300));
-      }
-      
-      const filterStatus = document.getElementById('filter-status');
-      if (filterStatus) {
-        filterStatus.addEventListener('change', filterAndRender);
-      }
-      
-      const filterStore = document.getElementById('filter-store');
-      if (filterStore) {
-        filterStore.addEventListener('change', filterAndRender);
-      }
-      
-      const filterDateFrom = document.getElementById('filter-date-from');
-      if (filterDateFrom) {
-        filterDateFrom.addEventListener('change', filterAndRender);
-      }
-      
-      const filterDateTo = document.getElementById('filter-date-to');
-      if (filterDateTo) {
-        filterDateTo.addEventListener('change', filterAndRender);
-      }
-      
-      const btnResetFilters = document.getElementById('btn-reset-filters');
-      if (btnResetFilters) {
-        btnResetFilters.addEventListener('click', () => {
-          if (searchInput) searchInput.value = '';
-          if (filterStatus) filterStatus.value = '';
-          if (filterStore) filterStore.value = '';
-          if (filterDateFrom) filterDateFrom.value = '';
-          if (filterDateTo) filterDateTo.value = '';
-        filterAndRender();
-      });
-      }
-
-      // モーダル内のセクション追加ボタンのイベントリスナーを設定
-      function setupModalSectionAddButton() {
-        const sectionAddToggleBtn = document.getElementById('section-add-toggle-btn-modal');
-        if (sectionAddToggleBtn) {
-          // 既存のイベントリスナーを削除
-          const newBtn = sectionAddToggleBtn.cloneNode(true);
-          sectionAddToggleBtn.parentNode.replaceChild(newBtn, sectionAddToggleBtn);
-          
-          newBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // +ボタンを押したら直接清掃項目セクションを追加
-            if (window.addCleaningItemSectionModal) {
-              window.addCleaningItemSectionModal();
-            } else if (window.addCleaningItemSection) {
-              // フォールバック: 通常の関数を使用（モーダル用に調整が必要）
-              window.addCleaningItemSection('modal');
-            } else {
-              console.warn('[AdminReports] addCleaningItemSection function not found');
-            }
-          });
-        }
-      }
-
-      // 新規作成
-      const btnNewReport = document.getElementById('btn-new-report');
-      if (btnNewReport) {
-        btnNewReport.addEventListener('click', () => {
-        // PC版レポート作成画面を新規ウィンドウで開く
-        window.open('/admin/reports/new-pc.html', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
-      });
+        // プレビュー用のタブ機能を設定
+        setupPreviewTabsAdmin();
       } else {
-        console.warn('[AdminReports] btn-new-report button not found');
+        // フォールバック: シンプルな表示
+        previewContent.innerHTML = `
+          <div style="padding: 20px;">
+            <h2>${escapeHtml(reportData.store_name || '店舗名不明')}</h2>
+            <p>日付: ${escapeHtml(reportData.cleaning_date || '-')}</p>
+            <p>時間: ${escapeHtml(reportData.cleaning_start_time || '-')} 〜 ${escapeHtml(reportData.cleaning_end_time || '-')}</p>
+            <div style="margin-top: 20px;">
+              ${reportData.sections ? reportData.sections.map(section => {
+                if (section.section_type === 'cleaning') {
+                  return `<div style="margin-bottom: 20px;">
+                    <h3>${escapeHtml(section.item_name || '清掃項目')}</h3>
+                    <p>${escapeHtml(section.work_content || '')}</p>
+                  </div>`;
+                } else if (section.section_type === 'image') {
+                  return `<div style="margin-bottom: 20px;">
+                    <h3>画像</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                      ${(section.photos?.before || []).map(photo => 
+                        `<img src="${escapeHtml(photo.url || photo)}" style="max-width: 200px; height: auto;" />`
+                      ).join('')}
+                      ${(section.photos?.after || []).map(photo => 
+                        `<img src="${escapeHtml(photo.url || photo)}" style="max-width: 200px; height: auto;" />`
+                      ).join('')}
+                    </div>
+                  </div>`;
+                } else if (section.section_type === 'comment') {
+                  return `<div style="margin-bottom: 20px;">
+                    <h3>コメント</h3>
+                    <p>${escapeHtml(section.content || '')}</p>
+                  </div>`;
+                } else if (section.section_type === 'work_content') {
+                  return `<div style="margin-bottom: 20px;">
+                    <h3>作業内容</h3>
+                    <p>${escapeHtml(section.content || '')}</p>
+                  </div>`;
+                }
+                return '';
+              }).join('') : ''}
+            </div>
+          </div>
+        `;
       }
 
-      // モーダル用の変数と関数
-      let modalWorkItemCounter = 0;
+      // モーダルを表示
+      previewDialog.style.display = 'flex';
+      previewDialog.classList.add('show');
+    } catch (error) {
+      console.error('Error loading report preview:', error);
+      alert('プレビューの読み込みに失敗しました: ' + error.message);
+    }
+    */
+  };
 
-      // モーダル用: 画像の最適化
-      function optimizeImageModal(file, maxWidth = 800, quality = 0.8) {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-              const canvas = document.createElement('canvas');
-              let width = img.width;
-              let height = img.height;
-              
-              if (width > maxWidth) {
-                height = (height * maxWidth) / width;
-                width = maxWidth;
-              }
-              
-              canvas.width = width;
-              canvas.height = height;
-              
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(img, 0, 0, width, height);
-              
-              canvas.toBlob(resolve, 'image/jpeg', quality);
-            };
-            img.src = e.target.result;
-          };
-          reader.readAsDataURL(file);
+  // プレビュー用のタブ機能を設定（管理画面）
+  function setupPreviewTabsAdmin() {
+    const previewContent = document.getElementById('preview-report-content-modal');
+    if (!previewContent) return;
+
+    const tabBtns = previewContent.querySelectorAll('.tab-btn');
+    const tabContents = previewContent.querySelectorAll('.tab-content');
+
+    // 既存のイベントリスナーを削除してから追加（重複を防ぐ）
+    tabBtns.forEach(btn => {
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+
+      newBtn.addEventListener('click', function () {
+        const targetTab = this.dataset.tab;
+
+        // すべてのタブボタンとコンテンツからactiveクラスを削除
+        const allTabBtns = previewContent.querySelectorAll('.tab-btn');
+        const allTabContents = previewContent.querySelectorAll('.tab-content');
+
+        allTabBtns.forEach(b => b.classList.remove('active'));
+        allTabContents.forEach(c => {
+          c.classList.remove('active');
+          c.style.display = 'none';
         });
+
+        // クリックされたタブをアクティブにする
+        this.classList.add('active');
+        const targetContent = previewContent.querySelector(`#preview-tab-content-${targetTab}-modal`);
+        if (targetContent) {
+          targetContent.classList.add('active');
+          targetContent.style.display = 'block';
+        }
+      });
+    });
+  }
+
+  // プレビューモーダルを閉じる
+  window.closePreviewModalAdmin = function () {
+    const previewDialog = document.getElementById('preview-dialog-modal');
+    if (previewDialog) {
+      previewDialog.style.display = 'none';
+      previewDialog.classList.remove('show');
+    }
+  };
+
+  // 次回提案を作成
+  window.createProposal = async function (id) {
+    const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
+    if (!report) {
+      alert('レポートが見つかりませんでした');
+      return;
+    }
+
+    // レポート詳細を取得して、次回提案として編集モーダルを開く
+    try {
+      const idToken = await getFirebaseIdToken();
+      const response = await fetch(`${REPORT_API}/staff/reports/${id}`, {
+        headers: { 'Authorization': `Bearer ${idToken}` }
+      });
+
+      if (!response.ok) {
+        throw new Error('レポートの取得に失敗しました');
       }
 
-      // モーダル用: Base64に変換
-      function blobToBase64Modal(blob) {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.readAsDataURL(blob);
-        });
+      const data = await response.json();
+      const reportData = data.report || data;
+
+      // 次回提案として編集モーダルを開く（proposal_typeを設定）
+      document.getElementById('form-title').textContent = '次回提案を作成';
+      document.getElementById('report-form-modal').reset();
+      document.getElementById('report-id').value = '';
+
+      // レポートデータをモーダルに読み込む（forceIsProposal=trueで次回提案として扱う）
+      await window.editReport(id, true);
+
+      document.getElementById('new-dialog').showModal();
+    } catch (error) {
+      console.error('Error creating proposal:', error);
+      alert('次回提案の作成に失敗しました: ' + error.message);
+    }
+  };
+
+
+  // IDトークンを取得（Cognito/localStorageから取得）
+  async function getFirebaseIdToken() {
+    try {
+      // 1. Cognito ID Token（最優先）
+      const cognitoIdToken = localStorage.getItem('cognito_id_token');
+      if (cognitoIdToken) {
+        return cognitoIdToken;
       }
 
-      // モーダル用: 清掃項目リストを更新
-      window.updateCleaningItemsListModal = function() {
-        const container = document.getElementById('cleaning-items-list-modal');
-        // 要素が存在しない場合は何もしない（清掃員側と同じUIではこの要素は不要）
-        if (!container) {
-          return;
-        }
-        
-        const items = document.querySelectorAll('.cleaning-section-modal');
-        
-        if (items.length === 0) {
-          container.innerHTML = '<span class="items-list-empty-modal">項目を追加してください</span>';
-          return;
-        }
-        
-        const itemNames = Array.from(items).map(section => {
-          const select = section.querySelector('.item-title-select-modal');
-          const input = section.querySelector('.item-title-input-modal');
-          if (select && select.value === '__custom__' && input) {
-            return (input.value || '').trim() || '';
-          } else if (select && select.value && select.value !== '__custom__') {
-            return select.value;
-          } else if (input && input.value) {
-            return (input.value || '').trim();
+      // 2. Cognito認証のユーザーオブジェクトからトークンを取得
+      const cognitoUser = localStorage.getItem('cognito_user');
+      if (cognitoUser) {
+        try {
+          const parsed = JSON.parse(cognitoUser);
+          if (parsed.tokens && parsed.tokens.idToken) {
+            return parsed.tokens.idToken;
           }
-          return '';
-        }).filter(name => name !== '');
-        
-        if (itemNames.length === 0) {
-          container.innerHTML = '<span class="items-list-empty-modal">項目を追加してください</span>';
-          return;
+          if (parsed.idToken) {
+            return parsed.idToken;
+          }
+        } catch (e) {
+          console.warn('Error parsing cognito user:', e);
         }
-        
-        container.innerHTML = itemNames.map(name => 
-          `<span class="items-list-item-modal">${escapeHtml(name)}</span>`
-        ).join('');
-      };
+      }
 
-      // モーダル用: 清掃項目を追加
-      window.addWorkItemModal = function(itemData = null) {
-        modalWorkItemCounter++;
-        // モーダル内のreport-contentに追加
-        const container = document.getElementById('report-content-modal');
-        if (!container) {
-          console.error('[AdminReports] report-content-modal not found');
-          return;
+      // 3. CognitoAuthから取得
+      if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
+        try {
+          const cognitoUser = await window.CognitoAuth.getCurrentUser();
+          if (cognitoUser && cognitoUser.tokens && cognitoUser.tokens.idToken) {
+            return cognitoUser.tokens.idToken;
+          }
+        } catch (e) {
+          console.warn('Error getting token from CognitoAuth:', e);
         }
-        const itemIdValue = itemData?.item_id || `work-item-modal-${modalWorkItemCounter}`;
-        const itemNameValue = itemData?.item_name || '';
-        const details = itemData?.details || {};
-        
-        const workItemSection = document.createElement('section');
-        workItemSection.className = 'cleaning-section-modal';
-        workItemSection.dataset.itemId = itemIdValue;
-        
-        // サービス項目のドロップリストオプションを生成
-        const isCustomItem = itemNameValue && !allServiceItems.find(item => item.title === itemNameValue);
-        const serviceOptions = allServiceItems.map(item => {
-          const selected = item.title === itemNameValue ? 'selected' : '';
-          return `<option value="${escapeHtml(item.title)}" ${selected}>${escapeHtml(item.title)}</option>`;
-        }).join('');
-        
-        workItemSection.innerHTML = `
+      }
+
+      // 4. misesapo_auth から取得（フォールバック）
+      const authData = localStorage.getItem('misesapo_auth');
+      if (authData) {
+        try {
+          const parsed = JSON.parse(authData);
+          if (parsed.token) {
+            return parsed.token;
+          }
+        } catch (e) {
+          console.warn('Error parsing auth data:', e);
+        }
+      }
+
+      // 5. トークンが見つからない場合は警告を出してmock-tokenを返す
+      console.warn('No authentication token found, using mock-token');
+      return 'mock-token';
+    } catch (error) {
+      console.error('Error getting ID token:', error);
+      return 'mock-token';
+    }
+  }
+
+  // 再提出フラグをクリア
+  async function clearResubmittedFlag(reportId) {
+    try {
+      const idToken = await getFirebaseIdToken();
+      const report = allReports.find(r => String(r.id) === String(reportId) || String(r.report_id) === String(reportId));
+      if (!report || !report.resubmitted) {
+        return; // フラグがない場合は何もしない
+      }
+
+      // フラグをクリア（バックエンドで更新）
+      await fetch(`${REPORT_API}/staff/reports/${reportId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          resubmitted: false
+        })
+      });
+
+      // フロントエンドのデータも更新
+      if (report) {
+        report.resubmitted = false;
+      }
+
+      // テーブルを再レンダリング
+      filterAndRender();
+    } catch (error) {
+      console.error('Error clearing resubmitted flag:', error);
+      // エラーが発生しても処理を続行
+    }
+  }
+
+  // 承認
+  document.getElementById('btn-approve').addEventListener('click', async () => {
+    if (!currentReportId) return;
+
+    try {
+      const idToken = await getFirebaseIdToken();
+      const response = await fetch(`${REPORT_API}/staff/reports/${currentReportId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          status: 'approved',
+          resubmitted: false  // 再提出フラグをクリア
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('承認に失敗しました');
+      }
+
+      const report = allReports.find(r => String(r.id) === String(currentReportId) || String(r.report_id) === String(currentReportId));
+      if (report) {
+        report.status = 'approved';
+        report.resubmitted = false;
+      }
+
+      document.getElementById('detail-dialog').close();
+      updateStats();
+      filterAndRender();
+    } catch (e) {
+      alert('承認に失敗しました: ' + e.message);
+    }
+  });
+
+  // 却下
+  document.getElementById('btn-reject').addEventListener('click', async () => {
+    if (!currentReportId) return;
+
+    try {
+      const idToken = await getFirebaseIdToken();
+      const response = await fetch(`${REPORT_API}/staff/reports/${currentReportId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          status: 'rejected',
+          resubmitted: false  // 再提出フラグをクリア
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('却下に失敗しました');
+      }
+
+      const report = allReports.find(r => String(r.id) === String(currentReportId) || String(r.report_id) === String(currentReportId));
+      if (report) {
+        report.status = 'rejected';
+        report.resubmitted = false;
+      }
+
+      document.getElementById('detail-dialog').close();
+      updateStats();
+      filterAndRender();
+    } catch (e) {
+      alert('却下に失敗しました: ' + e.message);
+    }
+  });
+
+  // 要修正として返す
+  document.getElementById('btn-request-revision').addEventListener('click', () => {
+    if (!currentReportId) return;
+    document.getElementById('revision-comment').value = '';
+    document.getElementById('revision-dialog').showModal();
+  });
+
+  // 要修正として返す（確認）
+  document.getElementById('btn-confirm-revision').addEventListener('click', async () => {
+    if (!currentReportId) return;
+
+    const comment = document.getElementById('revision-comment').value.trim();
+    if (!comment) {
+      alert('修正コメントを入力してください');
+      return;
+    }
+
+    try {
+      const idToken = await getFirebaseIdToken();
+      const response = await fetch(`${REPORT_API}/staff/reports/${currentReportId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          status: 'revision_requested',
+          revision_comment: comment
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || '要修正として返すのに失敗しました');
+      }
+
+      const report = allReports.find(r => String(r.id) === String(currentReportId) || String(r.report_id) === String(currentReportId));
+      if (report) {
+        report.status = 'revision_requested';
+        report.revision_comment = comment;
+      }
+
+      document.getElementById('revision-dialog').close();
+      document.getElementById('detail-dialog').close();
+      updateStats();
+      filterAndRender();
+      alert('レポートを要修正として返しました');
+    } catch (e) {
+      console.error('Error requesting revision:', e);
+      alert('要修正として返すのに失敗しました: ' + e.message);
+    }
+  });
+
+  // イベントリスナー
+  function setupEventListeners() {
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', debounce(filterAndRender, 300));
+    }
+
+    const filterStatus = document.getElementById('filter-status');
+    if (filterStatus) {
+      filterStatus.addEventListener('change', filterAndRender);
+    }
+
+    const filterStore = document.getElementById('filter-store');
+    if (filterStore) {
+      filterStore.addEventListener('change', filterAndRender);
+    }
+
+    const filterDateFrom = document.getElementById('filter-date-from');
+    if (filterDateFrom) {
+      filterDateFrom.addEventListener('change', filterAndRender);
+    }
+
+    const filterDateTo = document.getElementById('filter-date-to');
+    if (filterDateTo) {
+      filterDateTo.addEventListener('change', filterAndRender);
+    }
+
+    const btnResetFilters = document.getElementById('btn-reset-filters');
+    if (btnResetFilters) {
+      btnResetFilters.addEventListener('click', () => {
+        if (searchInput) searchInput.value = '';
+        if (filterStatus) filterStatus.value = '';
+        if (filterStore) filterStore.value = '';
+        if (filterDateFrom) filterDateFrom.value = '';
+        if (filterDateTo) filterDateTo.value = '';
+        filterAndRender();
+      });
+    }
+
+    // モーダル内のセクション追加ボタンのイベントリスナーを設定
+    function setupModalSectionAddButton() {
+      const sectionAddToggleBtn = document.getElementById('section-add-toggle-btn-modal');
+      if (sectionAddToggleBtn) {
+        // 既存のイベントリスナーを削除
+        const newBtn = sectionAddToggleBtn.cloneNode(true);
+        sectionAddToggleBtn.parentNode.replaceChild(newBtn, sectionAddToggleBtn);
+
+        newBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          // +ボタンを押したら直接清掃項目セクションを追加
+          if (window.addCleaningItemSectionModal) {
+            window.addCleaningItemSectionModal();
+          } else if (window.addCleaningItemSection) {
+            // フォールバック: 通常の関数を使用（モーダル用に調整が必要）
+            window.addCleaningItemSection('modal');
+          } else {
+            console.warn('[AdminReports] addCleaningItemSection function not found');
+          }
+        });
+      }
+    }
+
+    // 新規作成
+    const btnNewReport = document.getElementById('btn-new-report');
+    if (btnNewReport) {
+      btnNewReport.addEventListener('click', () => {
+        // PC版レポート作成画面を新規ウィンドウで開く
+        window.open('/admin/reports/new.html', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+      });
+    } else {
+      console.warn('[AdminReports] btn-new-report button not found');
+    }
+
+    // モーダル用の変数と関数
+    let modalWorkItemCounter = 0;
+
+    // モーダル用: 画像の最適化
+    function optimizeImageModal(file, maxWidth = 800, quality = 0.8) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob(resolve, 'image/jpeg', quality);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // モーダル用: Base64に変換
+    function blobToBase64Modal(blob) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    // モーダル用: 清掃項目リストを更新
+    window.updateCleaningItemsListModal = function () {
+      const container = document.getElementById('cleaning-items-list-modal');
+      // 要素が存在しない場合は何もしない（清掃員側と同じUIではこの要素は不要）
+      if (!container) {
+        return;
+      }
+
+      const items = document.querySelectorAll('.cleaning-section-modal');
+
+      if (items.length === 0) {
+        container.innerHTML = '<span class="items-list-empty-modal">項目を追加してください</span>';
+        return;
+      }
+
+      const itemNames = Array.from(items).map(section => {
+        const select = section.querySelector('.item-title-select-modal');
+        const input = section.querySelector('.item-title-input-modal');
+        if (select && select.value === '__custom__' && input) {
+          return (input.value || '').trim() || '';
+        } else if (select && select.value && select.value !== '__custom__') {
+          return select.value;
+        } else if (input && input.value) {
+          return (input.value || '').trim();
+        }
+        return '';
+      }).filter(name => name !== '');
+
+      if (itemNames.length === 0) {
+        container.innerHTML = '<span class="items-list-empty-modal">項目を追加してください</span>';
+        return;
+      }
+
+      container.innerHTML = itemNames.map(name =>
+        `<span class="items-list-item-modal">${escapeHtml(name)}</span>`
+      ).join('');
+    };
+
+    // モーダル用: 清掃項目を追加
+    window.addWorkItemModal = function (itemData = null) {
+      modalWorkItemCounter++;
+      // モーダル内のreport-contentに追加
+      const container = document.getElementById('report-content-modal');
+      if (!container) {
+        console.error('[AdminReports] report-content-modal not found');
+        return;
+      }
+      const itemIdValue = itemData?.item_id || `work-item-modal-${modalWorkItemCounter}`;
+      const itemNameValue = itemData?.item_name || '';
+      const details = itemData?.details || {};
+
+      const workItemSection = document.createElement('section');
+      workItemSection.className = 'cleaning-section-modal';
+      workItemSection.dataset.itemId = itemIdValue;
+
+      // サービス項目のドロップリストオプションを生成
+      const isCustomItem = itemNameValue && !allServiceItems.find(item => item.title === itemNameValue);
+      const serviceOptions = allServiceItems.map(item => {
+        const selected = item.title === itemNameValue ? 'selected' : '';
+        return `<option value="${escapeHtml(item.title)}" ${selected}>${escapeHtml(item.title)}</option>`;
+      }).join('');
+
+      workItemSection.innerHTML = `
           <div class="item-header-modal">
             <div class="item-title-group-modal">
               <select class="item-title-select-modal" data-item-id="${itemIdValue}">
@@ -1685,65 +1685,65 @@
             </button>
           </div>
         `;
-        
-        container.appendChild(workItemSection);
-        
-        // タイトル選択のイベントリスナー（リスト更新用 + フリーワード入力の表示/非表示）
-        const titleSelect = workItemSection.querySelector('.item-title-select-modal');
-        const titleInput = workItemSection.querySelector('.item-title-input-modal');
-        if (titleSelect) {
-          titleSelect.addEventListener('change', function() {
-            const value = this.value;
-            if (value === '__custom__') {
-              titleInput.style.display = 'block';
-              titleInput.focus();
-            } else {
-              titleInput.style.display = 'none';
-              titleInput.value = '';
-            }
-            window.updateCleaningItemsListModal();
-          });
-        }
-        if (titleInput) {
-          titleInput.addEventListener('input', function() {
-            window.updateCleaningItemsListModal();
-          });
-        }
-        
-        window.updateCleaningItemsListModal();
-      };
 
-      // モーダル用: 清掃項目を削除
-      window.removeWorkItemModal = function(itemId) {
-        const section = document.querySelector(`[data-item-id="${itemId}"].cleaning-section-modal`);
-        if (section && confirm('この清掃項目を削除しますか？')) {
-          section.remove();
+      container.appendChild(workItemSection);
+
+      // タイトル選択のイベントリスナー（リスト更新用 + フリーワード入力の表示/非表示）
+      const titleSelect = workItemSection.querySelector('.item-title-select-modal');
+      const titleInput = workItemSection.querySelector('.item-title-input-modal');
+      if (titleSelect) {
+        titleSelect.addEventListener('change', function () {
+          const value = this.value;
+          if (value === '__custom__') {
+            titleInput.style.display = 'block';
+            titleInput.focus();
+          } else {
+            titleInput.style.display = 'none';
+            titleInput.value = '';
+          }
           window.updateCleaningItemsListModal();
-        }
-      };
+        });
+      }
+      if (titleInput) {
+        titleInput.addEventListener('input', function () {
+          window.updateCleaningItemsListModal();
+        });
+      }
 
-      // モーダル用: 画像セクションを追加
-      window.addImageSectionModal = function(type = 'work', existingSectionId = null) {
-        modalWorkItemCounter++;
-        const container = document.getElementById('report-content-modal');
-        if (!container) {
-          console.error('[AdminReports] report-content-modal not found');
-          return;
-        }
-        const sectionId = existingSectionId || `image-section-modal-${modalWorkItemCounter}`;
-        
-        const beforeLabel = type === 'work' ? '作業前（Before）' : '設置前（Before）';
-        const afterLabel = type === 'work' ? '作業後（After）' : '設置後（After）';
-        const beforeIcon = type === 'work' ? 'fa-clock' : 'fa-box';
-        const afterIcon = type === 'work' ? 'fa-check-circle' : 'fa-check';
-        
-        const imageSection = document.createElement('section');
-        imageSection.className = 'image-section-modal';
-        imageSection.dataset.sectionId = sectionId;
-        imageSection.dataset.sectionType = 'image';
-        imageSection.dataset.imageType = type;
-        
-        imageSection.innerHTML = `
+      window.updateCleaningItemsListModal();
+    };
+
+    // モーダル用: 清掃項目を削除
+    window.removeWorkItemModal = function (itemId) {
+      const section = document.querySelector(`[data-item-id="${itemId}"].cleaning-section-modal`);
+      if (section && confirm('この清掃項目を削除しますか？')) {
+        section.remove();
+        window.updateCleaningItemsListModal();
+      }
+    };
+
+    // モーダル用: 画像セクションを追加
+    window.addImageSectionModal = function (type = 'work', existingSectionId = null) {
+      modalWorkItemCounter++;
+      const container = document.getElementById('report-content-modal');
+      if (!container) {
+        console.error('[AdminReports] report-content-modal not found');
+        return;
+      }
+      const sectionId = existingSectionId || `image-section-modal-${modalWorkItemCounter}`;
+
+      const beforeLabel = type === 'work' ? '作業前（Before）' : '設置前（Before）';
+      const afterLabel = type === 'work' ? '作業後（After）' : '設置後（After）';
+      const beforeIcon = type === 'work' ? 'fa-clock' : 'fa-box';
+      const afterIcon = type === 'work' ? 'fa-check-circle' : 'fa-check';
+
+      const imageSection = document.createElement('section');
+      imageSection.className = 'image-section-modal';
+      imageSection.dataset.sectionId = sectionId;
+      imageSection.dataset.sectionType = 'image';
+      imageSection.dataset.imageType = type;
+
+      imageSection.innerHTML = `
           <div class="section-header-modal">
             <h4 class="section-title-modal">
               <i class="fas fa-image"></i> 画像セクション（${type === 'work' ? '作業前・作業後' : '設置前・設置後'}）
@@ -1795,51 +1795,51 @@
             </div>
           </div>
         `;
-        
-        container.appendChild(imageSection);
-        
-        // 写真アップロードのイベントリスナー
-        imageSection.querySelectorAll('input[type="file"]').forEach(input => {
-          input.addEventListener('change', function(e) {
-            handlePhotoUploadModal(e);
-          });
-        });
-        
-        // メディア選択ボタンのイベントリスナー
-        imageSection.querySelectorAll('.image-media-btn-modal').forEach(btn => {
-          btn.addEventListener('click', function() {
-            const category = this.dataset.category;
-            const sectionId = this.dataset.sectionId;
-            openMediaSelectorForSection(category, sectionId);
-          });
-        });
-        
-        // 画像倉庫ボタンのイベントリスナー
-        imageSection.querySelectorAll('.image-warehouse-btn-modal').forEach(btn => {
-          btn.addEventListener('click', function() {
-            const category = this.dataset.category;
-            const sectionId = this.dataset.sectionId;
-            openImageWarehouseForSection(category, sectionId);
-          });
-        });
-      };
 
-      // モーダル用: コメントセクションを追加
-      window.addCommentSectionModal = function(existingSectionId = null) {
-        modalWorkItemCounter++;
-        const container = document.getElementById('report-content-modal');
-        if (!container) {
-          console.error('[AdminReports] report-content-modal not found');
-          return;
-        }
-        const sectionId = existingSectionId || `comment-section-modal-${modalWorkItemCounter}`;
-        
-        const commentSection = document.createElement('section');
-        commentSection.className = 'comment-section-modal';
-        commentSection.dataset.sectionId = sectionId;
-        commentSection.dataset.sectionType = 'comment';
-        
-        commentSection.innerHTML = `
+      container.appendChild(imageSection);
+
+      // 写真アップロードのイベントリスナー
+      imageSection.querySelectorAll('input[type="file"]').forEach(input => {
+        input.addEventListener('change', function (e) {
+          handlePhotoUploadModal(e);
+        });
+      });
+
+      // メディア選択ボタンのイベントリスナー
+      imageSection.querySelectorAll('.image-media-btn-modal').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const category = this.dataset.category;
+          const sectionId = this.dataset.sectionId;
+          openMediaSelectorForSection(category, sectionId);
+        });
+      });
+
+      // 画像倉庫ボタンのイベントリスナー
+      imageSection.querySelectorAll('.image-warehouse-btn-modal').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const category = this.dataset.category;
+          const sectionId = this.dataset.sectionId;
+          openImageWarehouseForSection(category, sectionId);
+        });
+      });
+    };
+
+    // モーダル用: コメントセクションを追加
+    window.addCommentSectionModal = function (existingSectionId = null) {
+      modalWorkItemCounter++;
+      const container = document.getElementById('report-content-modal');
+      if (!container) {
+        console.error('[AdminReports] report-content-modal not found');
+        return;
+      }
+      const sectionId = existingSectionId || `comment-section-modal-${modalWorkItemCounter}`;
+
+      const commentSection = document.createElement('section');
+      commentSection.className = 'comment-section-modal';
+      commentSection.dataset.sectionId = sectionId;
+      commentSection.dataset.sectionType = 'comment';
+
+      commentSection.innerHTML = `
           <div class="section-header-modal">
             <h4 class="section-title-modal">
               <i class="fas fa-comment"></i> コメント
@@ -1852,26 +1852,26 @@
             <textarea class="comment-textarea-modal" placeholder="コメントを入力してください"></textarea>
           </div>
         `;
-        
-        container.appendChild(commentSection);
-      };
 
-      // モーダル用: 作業内容セクションを追加
-      window.addWorkContentSectionModal = function(existingSectionId = null) {
-        modalWorkItemCounter++;
-        const container = document.getElementById('report-content-modal');
-        if (!container) {
-          console.error('[AdminReports] report-content-modal not found');
-          return;
-        }
-        const sectionId = existingSectionId || `work-content-section-modal-${modalWorkItemCounter}`;
-        
-        const workContentSection = document.createElement('section');
-        workContentSection.className = 'work-content-section-modal';
-        workContentSection.dataset.sectionId = sectionId;
-        workContentSection.dataset.sectionType = 'work-content';
-        
-        workContentSection.innerHTML = `
+      container.appendChild(commentSection);
+    };
+
+    // モーダル用: 作業内容セクションを追加
+    window.addWorkContentSectionModal = function (existingSectionId = null) {
+      modalWorkItemCounter++;
+      const container = document.getElementById('report-content-modal');
+      if (!container) {
+        console.error('[AdminReports] report-content-modal not found');
+        return;
+      }
+      const sectionId = existingSectionId || `work-content-section-modal-${modalWorkItemCounter}`;
+
+      const workContentSection = document.createElement('section');
+      workContentSection.className = 'work-content-section-modal';
+      workContentSection.dataset.sectionId = sectionId;
+      workContentSection.dataset.sectionType = 'work-content';
+
+      workContentSection.innerHTML = `
           <div class="section-header-modal">
             <h4 class="section-title-modal">
               <i class="fas fa-tasks"></i> 作業内容
@@ -1884,345 +1884,345 @@
             <textarea class="work-content-textarea-modal" placeholder="作業内容を入力してください"></textarea>
           </div>
         `;
-        
-        container.appendChild(workContentSection);
-      };
 
-      // モーダル用: セクションを削除
-      window.removeSectionModal = function(sectionId) {
-        const section = document.querySelector(`[data-section-id="${sectionId}"]`);
-        if (section && confirm('このセクションを削除しますか？')) {
-          section.remove();
-        }
-      };
+      container.appendChild(workContentSection);
+    };
 
-      // モーダル用: 写真アップロード処理
-      async function handlePhotoUploadModal(e) {
-        const input = e.target;
-        const files = Array.from(input.files || []);
-        if (files.length === 0) {
-          return;
+    // モーダル用: セクションを削除
+    window.removeSectionModal = function (sectionId) {
+      const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+      if (section && confirm('このセクションを削除しますか？')) {
+        section.remove();
+      }
+    };
+
+    // モーダル用: 写真アップロード処理
+    async function handlePhotoUploadModal(e) {
+      const input = e.target;
+      const files = Array.from(input.files || []);
+      if (files.length === 0) {
+        return;
+      }
+
+      const photoGrid = input.closest('.image-list-modal');
+      if (!photoGrid) {
+        return;
+      }
+      const category = photoGrid.dataset.category;
+      const itemId = photoGrid.dataset.itemId;
+      const sectionId = photoGrid.dataset.sectionId;
+
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) {
+          continue;
         }
-        
-        const photoGrid = input.closest('.image-list-modal');
-        if (!photoGrid) {
-          return;
-        }
-        const category = photoGrid.dataset.category;
-        const itemId = photoGrid.dataset.itemId;
-        const sectionId = photoGrid.dataset.sectionId;
-        
-        for (const file of files) {
-          if (!file.type.startsWith('image/')) {
-            continue;
-          }
-          
-          try {
-            const optimizedBlob = await optimizeImageModal(file, 800, 0.8);
-            const base64 = await blobToBase64Modal(optimizedBlob);
-            
-            const photoItem = document.createElement('div');
-            photoItem.className = 'image-item-modal';
-            photoItem.dataset.base64 = base64;
-            if (itemId) photoItem.dataset.itemId = itemId;
-            if (sectionId) photoItem.dataset.sectionId = sectionId;
-            photoItem.innerHTML = `
+
+        try {
+          const optimizedBlob = await optimizeImageModal(file, 800, 0.8);
+          const base64 = await blobToBase64Modal(optimizedBlob);
+
+          const photoItem = document.createElement('div');
+          photoItem.className = 'image-item-modal';
+          photoItem.dataset.base64 = base64;
+          if (itemId) photoItem.dataset.itemId = itemId;
+          if (sectionId) photoItem.dataset.sectionId = sectionId;
+          photoItem.innerHTML = `
               <img src="${base64}" alt="Uploaded photo">
               <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
                 <i class="fas fa-times"></i>
               </button>
             `;
-            
-            const uploadBtn = input.closest('.image-item-modal');
-            if (!uploadBtn) {
-              continue;
-            }
-            uploadBtn.parentNode.insertBefore(photoItem, uploadBtn);
-            
-            photoItem.dataset.base64 = base64;
-          } catch (error) {
-            console.error('[Modal] Error uploading photo:', error);
-            alert(`写真「${file.name}」のアップロードに失敗しました: ${error.message}`);
+
+          const uploadBtn = input.closest('.image-item-modal');
+          if (!uploadBtn) {
+            continue;
           }
+          uploadBtn.parentNode.insertBefore(photoItem, uploadBtn);
+
+          photoItem.dataset.base64 = base64;
+        } catch (error) {
+          console.error('[Modal] Error uploading photo:', error);
+          alert(`写真「${file.name}」のアップロードに失敗しました: ${error.message}`);
         }
-        
-        // ファイル入力をリセット（同じファイルを再度選択できるように）
-        input.value = '';
       }
 
-      // モーダル用: 写真を削除
-      window.removePhotoModal = function(button) {
-        const photoItem = button.closest('.image-item-modal');
-        photoItem.remove();
-      };
+      // ファイル入力をリセット（同じファイルを再度選択できるように）
+      input.value = '';
+    }
 
-      // メディア選択用の変数
-      let currentMediaCategory = null;
-      let currentMediaItemId = null;
-      let currentMediaSectionId = null;
+    // モーダル用: 写真を削除
+    window.removePhotoModal = function (button) {
+      const photoItem = button.closest('.image-item-modal');
+      photoItem.remove();
+    };
 
-      // メディア選択モーダルを開く
-      function openMediaSelector(category, itemId) {
-        currentMediaCategory = category;
-        currentMediaItemId = itemId;
-        currentMediaSectionId = null;
-        
-        const dialog = document.getElementById('media-dialog');
-        const iframe = document.getElementById('media-iframe');
-        iframe.src = '/admin/images?selectMode=true';
-        dialog.showModal();
+    // メディア選択用の変数
+    let currentMediaCategory = null;
+    let currentMediaItemId = null;
+    let currentMediaSectionId = null;
+
+    // メディア選択モーダルを開く
+    function openMediaSelector(category, itemId) {
+      currentMediaCategory = category;
+      currentMediaItemId = itemId;
+      currentMediaSectionId = null;
+
+      const dialog = document.getElementById('media-dialog');
+      const iframe = document.getElementById('media-iframe');
+      iframe.src = '/admin/images?selectMode=true';
+      dialog.showModal();
+    }
+
+    // セクション用のメディア選択モーダルを開く
+    function openMediaSelectorForSection(category, sectionId) {
+      currentMediaCategory = category;
+      currentMediaItemId = null;
+      currentMediaSectionId = sectionId;
+
+      const dialog = document.getElementById('media-dialog');
+      const iframe = document.getElementById('media-iframe');
+      iframe.src = '/admin/images?selectMode=true';
+      dialog.showModal();
+    }
+
+    // メディアからの画像選択メッセージを受け取る
+    window.addEventListener('message', function (e) {
+      if (e.data && e.data.type === 'image-selected') {
+        const path = e.data.path;
+        if (currentMediaSectionId) {
+          addMediaImageToReportSection(path, currentMediaCategory, currentMediaSectionId);
+        } else {
+          addMediaImageToReport(path, currentMediaCategory, currentMediaItemId);
+        }
+        document.getElementById('media-dialog').close();
+      }
+    });
+
+    // メディアから選択した画像をレポートに追加（清掃項目用）
+    function addMediaImageToReport(imagePath, category, itemId) {
+      const photoGrid = document.querySelector(`.image-list-modal[data-category="${category}"][data-item-id="${itemId}"]`);
+      if (!photoGrid) {
+        console.error('Could not find photo grid for', category, itemId);
+        return;
       }
 
-      // セクション用のメディア選択モーダルを開く
-      function openMediaSelectorForSection(category, sectionId) {
-        currentMediaCategory = category;
-        currentMediaItemId = null;
-        currentMediaSectionId = sectionId;
-        
-        const dialog = document.getElementById('media-dialog');
-        const iframe = document.getElementById('media-iframe');
-        iframe.src = '/admin/images?selectMode=true';
-        dialog.showModal();
+      // 画像URLを解決
+      const basePath = getBasePath();
+      let resolvedPath = imagePath;
+      if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://') && !imagePath.startsWith('//')) {
+        if (imagePath.startsWith('/')) {
+          resolvedPath = basePath === '/' ? imagePath : basePath.slice(0, -1) + imagePath;
+        } else {
+          resolvedPath = basePath === '/' ? '/' + imagePath : basePath + imagePath;
+        }
       }
 
-      // メディアからの画像選択メッセージを受け取る
-      window.addEventListener('message', function(e) {
-        if (e.data && e.data.type === 'image-selected') {
-          const path = e.data.path;
-          if (currentMediaSectionId) {
-            addMediaImageToReportSection(path, currentMediaCategory, currentMediaSectionId);
-          } else {
-            addMediaImageToReport(path, currentMediaCategory, currentMediaItemId);
-          }
-          document.getElementById('media-dialog').close();
-        }
-      });
-
-      // メディアから選択した画像をレポートに追加（清掃項目用）
-      function addMediaImageToReport(imagePath, category, itemId) {
-        const photoGrid = document.querySelector(`.image-list-modal[data-category="${category}"][data-item-id="${itemId}"]`);
-        if (!photoGrid) {
-          console.error('Could not find photo grid for', category, itemId);
-          return;
-        }
-        
-        // 画像URLを解決
-        const basePath = getBasePath();
-        let resolvedPath = imagePath;
-        if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://') && !imagePath.startsWith('//')) {
-          if (imagePath.startsWith('/')) {
-            resolvedPath = basePath === '/' ? imagePath : basePath.slice(0, -1) + imagePath;
-          } else {
-            resolvedPath = basePath === '/' ? '/' + imagePath : basePath + imagePath;
-          }
-        }
-        
-        const photoItem = document.createElement('div');
-        photoItem.className = 'image-item-modal';
-        photoItem.dataset.url = resolvedPath;
-        photoItem.dataset.itemId = itemId;
-        photoItem.innerHTML = `
+      const photoItem = document.createElement('div');
+      photoItem.className = 'image-item-modal';
+      photoItem.dataset.url = resolvedPath;
+      photoItem.dataset.itemId = itemId;
+      photoItem.innerHTML = `
           <img src="${resolvedPath}" alt="Selected from media">
           <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
             <i class="fas fa-times"></i>
           </button>
         `;
-        
-        // アップロードボタンの前に挿入
-        const addBtns = photoGrid.querySelector('.image-add-btns-modal');
-        if (addBtns) {
-          photoGrid.insertBefore(photoItem, addBtns);
+
+      // アップロードボタンの前に挿入
+      const addBtns = photoGrid.querySelector('.image-add-btns-modal');
+      if (addBtns) {
+        photoGrid.insertBefore(photoItem, addBtns);
+      } else {
+        photoGrid.appendChild(photoItem);
+      }
+    }
+
+    // メディアから選択した画像をレポートに追加（セクション用）
+    function addMediaImageToReportSection(imagePath, category, sectionId) {
+      const photoGrid = document.querySelector(`.image-list-modal[data-category="${category}"][data-section-id="${sectionId}"]`);
+      if (!photoGrid) {
+        console.error('Could not find photo grid for section', category, sectionId);
+        return;
+      }
+
+      // 画像URLを解決
+      const basePath = getBasePath();
+      let resolvedPath = imagePath;
+      if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://') && !imagePath.startsWith('//')) {
+        if (imagePath.startsWith('/')) {
+          resolvedPath = basePath === '/' ? imagePath : basePath.slice(0, -1) + imagePath;
         } else {
-          photoGrid.appendChild(photoItem);
+          resolvedPath = basePath === '/' ? '/' + imagePath : basePath + imagePath;
         }
       }
 
-      // メディアから選択した画像をレポートに追加（セクション用）
-      function addMediaImageToReportSection(imagePath, category, sectionId) {
-        const photoGrid = document.querySelector(`.image-list-modal[data-category="${category}"][data-section-id="${sectionId}"]`);
-        if (!photoGrid) {
-          console.error('Could not find photo grid for section', category, sectionId);
-          return;
-        }
-        
-        // 画像URLを解決
-        const basePath = getBasePath();
-        let resolvedPath = imagePath;
-        if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://') && !imagePath.startsWith('//')) {
-          if (imagePath.startsWith('/')) {
-            resolvedPath = basePath === '/' ? imagePath : basePath.slice(0, -1) + imagePath;
-          } else {
-            resolvedPath = basePath === '/' ? '/' + imagePath : basePath + imagePath;
-          }
-        }
-        
-        const photoItem = document.createElement('div');
-        photoItem.className = 'image-item-modal';
-        photoItem.dataset.url = resolvedPath;
-        photoItem.dataset.sectionId = sectionId;
-        photoItem.innerHTML = `
+      const photoItem = document.createElement('div');
+      photoItem.className = 'image-item-modal';
+      photoItem.dataset.url = resolvedPath;
+      photoItem.dataset.sectionId = sectionId;
+      photoItem.innerHTML = `
           <img src="${resolvedPath}" alt="Selected from media">
           <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
             <i class="fas fa-times"></i>
           </button>
         `;
-        
-        // アップロードボタンの前に挿入
-        const addBtns = photoGrid.querySelector('.image-add-btns-modal');
-        if (addBtns) {
-          photoGrid.insertBefore(photoItem, addBtns);
-        } else {
-          photoGrid.appendChild(photoItem);
-        }
+
+      // アップロードボタンの前に挿入
+      const addBtns = photoGrid.querySelector('.image-add-btns-modal');
+      if (addBtns) {
+        photoGrid.insertBefore(photoItem, addBtns);
+      } else {
+        photoGrid.appendChild(photoItem);
+      }
+    }
+
+    // 画像倉庫用の変数
+    let currentWarehouseCategory = null;
+    let currentWarehouseItemId = null;
+    let currentWarehouseSectionId = null;
+    // Map<imageUrl, category> で選択した画像とカテゴリを保持
+    let selectedWarehouseImages = new Map();
+    // 保存ボタンで閉じたかどうかを追跡
+    let warehouseSaved = false;
+
+    // 画像倉庫を開く（清掃項目用）
+    window.openImageWarehouse = function (category, itemId) {
+      console.log('[Warehouse] Opening warehouse:', { category, itemId, type: typeof itemId });
+
+      // itemIdを文字列として保存（比較のため）
+      currentWarehouseCategory = category;
+      currentWarehouseItemId = String(itemId);
+      currentWarehouseSectionId = null;
+      selectedWarehouseImages.clear();
+      warehouseSaved = false; // フラグをリセット
+
+      console.log('[Warehouse] Set currentWarehouseItemId to:', currentWarehouseItemId);
+
+      openImageWarehouseDialog(category);
+    };
+
+    // 画像倉庫を開く（セクション用）
+    window.openImageWarehouseForSection = function (category, sectionId) {
+      console.log('[Warehouse] Opening warehouse for section:', { category, sectionId });
+
+      currentWarehouseCategory = category;
+      currentWarehouseItemId = null;
+      currentWarehouseSectionId = sectionId;
+      selectedWarehouseImages.clear();
+      warehouseSaved = false;
+
+      openImageWarehouseDialog(category);
+    };
+
+    // 画像倉庫ダイアログを開く（共通処理）
+    function openImageWarehouseDialog(category) {
+
+      // レポートの日付を取得（デフォルト値として使用）
+      const reportDate = document.getElementById('report-date').value || new Date().toISOString().split('T')[0];
+      const dateFilter = document.getElementById('warehouse-date-filter');
+      if (dateFilter) {
+        dateFilter.value = reportDate;
       }
 
-      // 画像倉庫用の変数
-      let currentWarehouseCategory = null;
-      let currentWarehouseItemId = null;
-      let currentWarehouseSectionId = null;
-      // Map<imageUrl, category> で選択した画像とカテゴリを保持
-      let selectedWarehouseImages = new Map();
-      // 保存ボタンで閉じたかどうかを追跡
-      let warehouseSaved = false;
+      // カテゴリフィルターを設定（表示用、検索には使わない）
+      const categoryFilter = document.getElementById('warehouse-category-filter');
+      if (categoryFilter) {
+        categoryFilter.value = category || '';
+        console.log('[Warehouse] Category filter set to:', categoryFilter.value);
+      }
 
-      // 画像倉庫を開く（清掃項目用）
-      window.openImageWarehouse = function(category, itemId) {
-        console.log('[Warehouse] Opening warehouse:', { category, itemId, type: typeof itemId });
-        
-        // itemIdを文字列として保存（比較のため）
-        currentWarehouseCategory = category;
-        currentWarehouseItemId = String(itemId);
-        currentWarehouseSectionId = null;
-        selectedWarehouseImages.clear();
-        warehouseSaved = false; // フラグをリセット
-        
-        console.log('[Warehouse] Set currentWarehouseItemId to:', currentWarehouseItemId);
-        
-        openImageWarehouseDialog(category);
-      };
+      // 作業前/作業後のセクションを表示/非表示
+      const beforeSection = document.getElementById('warehouse-category-section-before');
+      const afterSection = document.getElementById('warehouse-category-section-after');
+      if (category === 'before') {
+        if (beforeSection) beforeSection.style.display = 'block';
+        if (afterSection) afterSection.style.display = 'none';
+      } else if (category === 'after') {
+        if (beforeSection) beforeSection.style.display = 'none';
+        if (afterSection) afterSection.style.display = 'block';
+      } else {
+        // カテゴリが指定されていない場合は両方表示
+        if (beforeSection) beforeSection.style.display = 'block';
+        if (afterSection) afterSection.style.display = 'block';
+      }
 
-      // 画像倉庫を開く（セクション用）
-      window.openImageWarehouseForSection = function(category, sectionId) {
-        console.log('[Warehouse] Opening warehouse for section:', { category, sectionId });
-        
-        currentWarehouseCategory = category;
-        currentWarehouseItemId = null;
-        currentWarehouseSectionId = sectionId;
-        selectedWarehouseImages.clear();
-        warehouseSaved = false;
-        
-        openImageWarehouseDialog(category);
-      };
+      // モーダルを開く
+      const warehouseDialog = document.getElementById('warehouse-dialog');
+      if (warehouseDialog) {
+        warehouseDialog.showModal();
 
-      // 画像倉庫ダイアログを開く（共通処理）
-      function openImageWarehouseDialog(category) {
-        
-        // レポートの日付を取得（デフォルト値として使用）
-        const reportDate = document.getElementById('report-date').value || new Date().toISOString().split('T')[0];
-        const dateFilter = document.getElementById('warehouse-date-filter');
-        if (dateFilter) {
-          dateFilter.value = reportDate;
-        }
-        
-        // カテゴリフィルターを設定（表示用、検索には使わない）
-        const categoryFilter = document.getElementById('warehouse-category-filter');
-        if (categoryFilter) {
-          categoryFilter.value = category || '';
-          console.log('[Warehouse] Category filter set to:', categoryFilter.value);
-        }
-        
-        // 作業前/作業後のセクションを表示/非表示
-        const beforeSection = document.getElementById('warehouse-category-section-before');
-        const afterSection = document.getElementById('warehouse-category-section-after');
-        if (category === 'before') {
-          if (beforeSection) beforeSection.style.display = 'block';
-          if (afterSection) afterSection.style.display = 'none';
-        } else if (category === 'after') {
-          if (beforeSection) beforeSection.style.display = 'none';
-          if (afterSection) afterSection.style.display = 'block';
-        } else {
-          // カテゴリが指定されていない場合は両方表示
-          if (beforeSection) beforeSection.style.display = 'block';
-          if (afterSection) afterSection.style.display = 'block';
-        }
-        
-        // モーダルを開く
-        const warehouseDialog = document.getElementById('warehouse-dialog');
-        if (warehouseDialog) {
-          warehouseDialog.showModal();
-          
-          // モーダルが開かれた後に画像を読み込み（少し遅延させてDOMが準備されるのを待つ）
-          setTimeout(() => {
-            // 画像を読み込み（選択されたカテゴリのみ）
-            loadWarehouseImages(reportDate, category && category.trim() !== '' ? category : undefined);
-          }, 100);
-        }
-      };
+        // モーダルが開かれた後に画像を読み込み（少し遅延させてDOMが準備されるのを待つ）
+        setTimeout(() => {
+          // 画像を読み込み（選択されたカテゴリのみ）
+          loadWarehouseImages(reportDate, category && category.trim() !== '' ? category : undefined);
+        }, 100);
+      }
+    };
 
-      // 画像倉庫の画像を読み込み
-      async function loadWarehouseImages(date, category) {
-        const beforeContainer = document.getElementById('warehouse-images-before');
-        const afterContainer = document.getElementById('warehouse-images-after');
-        
-        if (!beforeContainer || !afterContainer) {
-          console.error('[Warehouse] Containers not found');
-          return;
-        }
-        
-        // カテゴリが指定されている場合はそのカテゴリのみ表示
-        if (category === 'before') {
-          beforeContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
-        } else if (category === 'after') {
-          afterContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
-        } else {
-          beforeContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
-          afterContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
-        }
-        
-        try {
-          const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
-          
-          // カテゴリが指定されている場合はそのカテゴリのみ、指定されていない場合は両方を取得
-          const categoriesToLoad = category && category.trim() !== '' ? [category] : ['before', 'after'];
-          
-          // 各カテゴリの画像を取得
-          const allImages = { before: [], after: [] };
-          
-          for (const cat of categoriesToLoad) {
-            const params = new URLSearchParams({ date, category: cat });
-            const url = `${REPORT_API}/staff/report-images?${params}`;
-            console.log('[Warehouse] Loading images:', { date, category: cat, url });
-            
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-              const errorText = await response.text();
-              console.error('[Warehouse] Error response:', errorText);
-              continue; // エラーが発生しても他のカテゴリを続行
-            }
-            
-            const data = await response.json();
-            console.log('[Warehouse] Received data:', { date: data.date, category: data.category, count: data.count });
-            
-            const images = data.images || [];
-            if (cat === 'before') {
-              allImages.before = images;
-            } else if (cat === 'after') {
-              allImages.after = images;
-            }
+    // 画像倉庫の画像を読み込み
+    async function loadWarehouseImages(date, category) {
+      const beforeContainer = document.getElementById('warehouse-images-before');
+      const afterContainer = document.getElementById('warehouse-images-after');
+
+      if (!beforeContainer || !afterContainer) {
+        console.error('[Warehouse] Containers not found');
+        return;
+      }
+
+      // カテゴリが指定されている場合はそのカテゴリのみ表示
+      if (category === 'before') {
+        beforeContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
+      } else if (category === 'after') {
+        afterContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
+      } else {
+        beforeContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
+        afterContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
+      }
+
+      try {
+        const WAREHOUSE_API = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+        // カテゴリが指定されている場合はそのカテゴリのみ、指定されていない場合は両方を取得
+        const categoriesToLoad = category && category.trim() !== '' ? [category] : ['before', 'after'];
+
+        // 各カテゴリの画像を取得
+        const allImages = { before: [], after: [] };
+
+        for (const cat of categoriesToLoad) {
+          const params = new URLSearchParams({ date, category: cat });
+          const url = `${WAREHOUSE_API}/staff/report-images?${params}`;
+          console.log('[Warehouse] Loading images:', { date, category: cat, url });
+
+          const response = await fetch(url);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('[Warehouse] Error response:', errorText);
+            continue; // エラーが発生しても他のカテゴリを続行
           }
-          
-          // 作業前の画像を表示（カテゴリが指定されている場合のみ、または両方表示する場合）
-          if (category === 'before' || !category) {
-            if (allImages.before.length === 0) {
-              // 画像がなくてもメッセージを表示しない（セクション自体が非表示になる）
-              beforeContainer.innerHTML = '';
-            } else {
-              beforeContainer.innerHTML = allImages.before.map(img => {
-                const imageUrl = img.url || img.s3_key;
-                const isSelected = selectedWarehouseImages.has(imageUrl);
-                const escapedUrl = escapeHtml(imageUrl);
-                return `
+
+          const data = await response.json();
+          console.log('[Warehouse] Received data:', { date: data.date, category: data.category, count: data.count });
+
+          const images = data.images || [];
+          if (cat === 'before') {
+            allImages.before = images;
+          } else if (cat === 'after') {
+            allImages.after = images;
+          }
+        }
+
+        // 作業前の画像を表示（カテゴリが指定されている場合のみ、または両方表示する場合）
+        if (category === 'before' || !category) {
+          if (allImages.before.length === 0) {
+            // 画像がなくてもメッセージを表示しない（セクション自体が非表示になる）
+            beforeContainer.innerHTML = '';
+          } else {
+            beforeContainer.innerHTML = allImages.before.map(img => {
+              const imageUrl = img.url || img.s3_key;
+              const isSelected = selectedWarehouseImages.has(imageUrl);
+              const escapedUrl = escapeHtml(imageUrl);
+              return `
                   <div class="warehouse-image-item ${isSelected ? 'selected' : ''}" 
                        data-image-url="${escapedUrl}"
                        data-category="before">
@@ -2230,32 +2230,32 @@
                     ${isSelected ? '<div class="image-check"><i class="fas fa-check"></i></div>' : ''}
                   </div>
                 `;
-              }).join('');
-              
-              // イベントリスナーを追加
-              beforeContainer.querySelectorAll('.warehouse-image-item').forEach(item => {
-                item.addEventListener('click', function() {
-                  const imageUrl = this.dataset.imageUrl;
-                  const category = this.dataset.category;
-                  if (imageUrl && category) {
-                    toggleWarehouseImage(imageUrl, category);
-                  }
-                });
+            }).join('');
+
+            // イベントリスナーを追加
+            beforeContainer.querySelectorAll('.warehouse-image-item').forEach(item => {
+              item.addEventListener('click', function () {
+                const imageUrl = this.dataset.imageUrl;
+                const category = this.dataset.category;
+                if (imageUrl && category) {
+                  toggleWarehouseImage(imageUrl, category);
+                }
               });
-            }
+            });
           }
-          
-          // 作業後の画像を表示（カテゴリが指定されている場合のみ、または両方表示する場合）
-          if (category === 'after' || !category) {
-            if (allImages.after.length === 0) {
-              // 画像がなくてもメッセージを表示しない（セクション自体が非表示になる）
-              afterContainer.innerHTML = '';
-            } else {
-              afterContainer.innerHTML = allImages.after.map(img => {
-                const imageUrl = img.url || img.s3_key;
-                const isSelected = selectedWarehouseImages.has(imageUrl);
-                const escapedUrl = escapeHtml(imageUrl);
-                return `
+        }
+
+        // 作業後の画像を表示（カテゴリが指定されている場合のみ、または両方表示する場合）
+        if (category === 'after' || !category) {
+          if (allImages.after.length === 0) {
+            // 画像がなくてもメッセージを表示しない（セクション自体が非表示になる）
+            afterContainer.innerHTML = '';
+          } else {
+            afterContainer.innerHTML = allImages.after.map(img => {
+              const imageUrl = img.url || img.s3_key;
+              const isSelected = selectedWarehouseImages.has(imageUrl);
+              const escapedUrl = escapeHtml(imageUrl);
+              return `
                   <div class="warehouse-image-item ${isSelected ? 'selected' : ''}" 
                        data-image-url="${escapedUrl}"
                        data-category="after">
@@ -2263,399 +2263,399 @@
                     ${isSelected ? '<div class="image-check"><i class="fas fa-check"></i></div>' : ''}
                   </div>
                 `;
-              }).join('');
-              
-              // イベントリスナーを追加
-              afterContainer.querySelectorAll('.warehouse-image-item').forEach(item => {
-                item.addEventListener('click', function() {
-                  const imageUrl = this.dataset.imageUrl;
-                  const category = this.dataset.category;
-                  if (imageUrl && category) {
-                    toggleWarehouseImage(imageUrl, category);
-                  }
-                });
+            }).join('');
+
+            // イベントリスナーを追加
+            afterContainer.querySelectorAll('.warehouse-image-item').forEach(item => {
+              item.addEventListener('click', function () {
+                const imageUrl = this.dataset.imageUrl;
+                const category = this.dataset.category;
+                if (imageUrl && category) {
+                  toggleWarehouseImage(imageUrl, category);
+                }
               });
+            });
+          }
+        }
+
+      } catch (error) {
+        console.error('[Warehouse] Error loading warehouse images:', error);
+        if (category === 'before' || !category) {
+          beforeContainer.innerHTML = '<div class="loading">エラー: ' + error.message + '</div>';
+        }
+        if (category === 'after' || !category) {
+          afterContainer.innerHTML = '<div class="loading">エラー: ' + error.message + '</div>';
+        }
+      }
+    }
+
+    // 画像倉庫の画像を選択/解除
+    window.toggleWarehouseImage = function (imageUrl, category) {
+      console.log('[Warehouse] Toggling image:', { imageUrl, category });
+      const escapedUrl = escapeHtml(imageUrl);
+      const item = document.querySelector(`.warehouse-image-item[data-image-url="${escapedUrl}"]`);
+      if (!item) {
+        console.error('[Warehouse] Image item not found:', escapedUrl);
+        return;
+      }
+
+      if (selectedWarehouseImages.has(imageUrl)) {
+        // 選択解除
+        selectedWarehouseImages.delete(imageUrl);
+        item.classList.remove('selected');
+        const checkMark = item.querySelector('.image-check');
+        if (checkMark) {
+          checkMark.remove();
+        }
+        console.log('[Warehouse] Image deselected:', imageUrl);
+      } else {
+        // 選択（カテゴリ情報も保存）
+        selectedWarehouseImages.set(imageUrl, category);
+        item.classList.add('selected');
+        // チェックマークがなければ追加
+        if (!item.querySelector('.image-check')) {
+          const checkMark = document.createElement('div');
+          checkMark.className = 'image-check';
+          checkMark.innerHTML = '<i class="fas fa-check"></i>';
+          item.appendChild(checkMark);
+        }
+        console.log('[Warehouse] Image selected:', { imageUrl, category, total: selectedWarehouseImages.size });
+      }
+    };
+
+    // 画像倉庫の検索関数
+    function performWarehouseSearch() {
+      const date = document.getElementById('warehouse-date-filter').value;
+      const categorySelect = document.getElementById('warehouse-category-filter');
+      const category = categorySelect ? categorySelect.value : '';
+
+      console.log('[Warehouse] Performing search:', { date, category });
+
+      if (date) {
+        // カテゴリが空文字列の場合は undefined を渡す（すべてのカテゴリを取得）
+        loadWarehouseImages(date, category && category.trim() !== '' ? category : undefined);
+      } else {
+        alert('日付を選択してください');
+      }
+    }
+
+    // 画像倉庫の検索ボタンとEnterキー
+    document.addEventListener('DOMContentLoaded', function () {
+      const searchBtn = document.getElementById('warehouse-search-btn');
+      if (searchBtn) {
+        searchBtn.addEventListener('click', performWarehouseSearch);
+      }
+
+      // 日付フィルターでEnterキーを押した時に検索
+      const dateFilter = document.getElementById('warehouse-date-filter');
+      if (dateFilter) {
+        dateFilter.addEventListener('keypress', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            performWarehouseSearch();
+          }
+        });
+      }
+
+      // カテゴリフィルターが変更された時に自動検索（日付が設定されている場合）
+      const categoryFilter = document.getElementById('warehouse-category-filter');
+      if (categoryFilter) {
+        categoryFilter.addEventListener('change', function () {
+          const date = document.getElementById('warehouse-date-filter').value;
+          if (date) {
+            performWarehouseSearch();
+          }
+        });
+      }
+
+      // 保存ボタンの処理（DOMContentLoaded内のイベントリスナーは削除し、onclickで直接呼び出す）
+
+      // 画像倉庫モーダルが閉じられた時（キャンセルボタンや×ボタンで閉じた場合）
+      const warehouseDialog = document.getElementById('warehouse-dialog');
+      if (warehouseDialog) {
+        warehouseDialog.addEventListener('close', function () {
+          // 保存ボタンで閉じた場合は既に処理済みなので、何もしない
+          if (!warehouseSaved) {
+            // キャンセルボタンや×ボタンで閉じた場合は選択をクリア
+            if (selectedWarehouseImages.size > 0) {
+              console.log('[Warehouse] Modal closed without saving, clearing selections');
+              selectedWarehouseImages.clear();
             }
           }
-          
+          warehouseSaved = false; // フラグをリセット
+        });
+      }
+    });
+
+    // 画像倉庫の保存ボタン処理
+    window.saveWarehouseImages = function () {
+      console.log('[Warehouse] Save button clicked');
+      console.log('[Warehouse] Selected images count:', selectedWarehouseImages.size);
+      console.log('[Warehouse] Current itemId:', currentWarehouseItemId);
+      console.log('[Warehouse] Current sectionId:', currentWarehouseSectionId);
+      console.log('[Warehouse] Selected images:', Array.from(selectedWarehouseImages.entries()));
+
+      // 画像が選択されているか、itemIdまたはsectionIdが設定されているかチェック
+      if (selectedWarehouseImages.size === 0) {
+        alert('画像を選択してください');
+        return;
+      }
+
+      if (!currentWarehouseItemId && !currentWarehouseSectionId) {
+        alert('エラー: 追加先が特定できませんでした');
+        return;
+      }
+
+      warehouseSaved = true;
+
+      // 選択した画像をカテゴリごとに追加
+      // MapのforEachは (value, key) の順序なので、selectedWarehouseImages.set(imageUrl, category) の場合
+      // forEach((category, imageUrl) => ...) が正しい
+      let addedCount = 0;
+      selectedWarehouseImages.forEach((category, imageUrl) => {
+        console.log('[Warehouse] Processing image:', { imageUrl, category, itemId: currentWarehouseItemId, sectionId: currentWarehouseSectionId });
+        try {
+          let result = false;
+          if (currentWarehouseSectionId) {
+            result = window.addWarehouseImageToReportSection(imageUrl, category, currentWarehouseSectionId);
+          } else if (currentWarehouseItemId) {
+            result = window.addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
+          }
+          console.log('[Warehouse] addWarehouseImageToReport returned:', result);
+          if (result) {
+            addedCount++;
+          }
         } catch (error) {
-          console.error('[Warehouse] Error loading warehouse images:', error);
-          if (category === 'before' || !category) {
-            beforeContainer.innerHTML = '<div class="loading">エラー: ' + error.message + '</div>';
-          }
-          if (category === 'after' || !category) {
-            afterContainer.innerHTML = '<div class="loading">エラー: ' + error.message + '</div>';
-          }
-        }
-      }
-
-      // 画像倉庫の画像を選択/解除
-      window.toggleWarehouseImage = function(imageUrl, category) {
-        console.log('[Warehouse] Toggling image:', { imageUrl, category });
-        const escapedUrl = escapeHtml(imageUrl);
-        const item = document.querySelector(`.warehouse-image-item[data-image-url="${escapedUrl}"]`);
-        if (!item) {
-          console.error('[Warehouse] Image item not found:', escapedUrl);
-          return;
-        }
-        
-        if (selectedWarehouseImages.has(imageUrl)) {
-          // 選択解除
-          selectedWarehouseImages.delete(imageUrl);
-          item.classList.remove('selected');
-          const checkMark = item.querySelector('.image-check');
-          if (checkMark) {
-            checkMark.remove();
-          }
-          console.log('[Warehouse] Image deselected:', imageUrl);
-        } else {
-          // 選択（カテゴリ情報も保存）
-          selectedWarehouseImages.set(imageUrl, category);
-          item.classList.add('selected');
-          // チェックマークがなければ追加
-          if (!item.querySelector('.image-check')) {
-            const checkMark = document.createElement('div');
-            checkMark.className = 'image-check';
-            checkMark.innerHTML = '<i class="fas fa-check"></i>';
-            item.appendChild(checkMark);
-          }
-          console.log('[Warehouse] Image selected:', { imageUrl, category, total: selectedWarehouseImages.size });
-        }
-      };
-
-      // 画像倉庫の検索関数
-      function performWarehouseSearch() {
-        const date = document.getElementById('warehouse-date-filter').value;
-        const categorySelect = document.getElementById('warehouse-category-filter');
-        const category = categorySelect ? categorySelect.value : '';
-        
-        console.log('[Warehouse] Performing search:', { date, category });
-        
-        if (date) {
-          // カテゴリが空文字列の場合は undefined を渡す（すべてのカテゴリを取得）
-          loadWarehouseImages(date, category && category.trim() !== '' ? category : undefined);
-        } else {
-          alert('日付を選択してください');
-        }
-      }
-
-      // 画像倉庫の検索ボタンとEnterキー
-      document.addEventListener('DOMContentLoaded', function() {
-        const searchBtn = document.getElementById('warehouse-search-btn');
-        if (searchBtn) {
-          searchBtn.addEventListener('click', performWarehouseSearch);
-        }
-        
-        // 日付フィルターでEnterキーを押した時に検索
-        const dateFilter = document.getElementById('warehouse-date-filter');
-        if (dateFilter) {
-          dateFilter.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              performWarehouseSearch();
-            }
-          });
-        }
-        
-        // カテゴリフィルターが変更された時に自動検索（日付が設定されている場合）
-        const categoryFilter = document.getElementById('warehouse-category-filter');
-        if (categoryFilter) {
-          categoryFilter.addEventListener('change', function() {
-            const date = document.getElementById('warehouse-date-filter').value;
-            if (date) {
-              performWarehouseSearch();
-            }
-          });
-        }
-        
-        // 保存ボタンの処理（DOMContentLoaded内のイベントリスナーは削除し、onclickで直接呼び出す）
-        
-        // 画像倉庫モーダルが閉じられた時（キャンセルボタンや×ボタンで閉じた場合）
-        const warehouseDialog = document.getElementById('warehouse-dialog');
-        if (warehouseDialog) {
-          warehouseDialog.addEventListener('close', function() {
-            // 保存ボタンで閉じた場合は既に処理済みなので、何もしない
-            if (!warehouseSaved) {
-              // キャンセルボタンや×ボタンで閉じた場合は選択をクリア
-              if (selectedWarehouseImages.size > 0) {
-                console.log('[Warehouse] Modal closed without saving, clearing selections');
-                selectedWarehouseImages.clear();
-              }
-            }
-            warehouseSaved = false; // フラグをリセット
-          });
+          console.error('[Warehouse] Error adding image:', error);
         }
       });
 
-      // 画像倉庫の保存ボタン処理
-      window.saveWarehouseImages = function() {
-        console.log('[Warehouse] Save button clicked');
-        console.log('[Warehouse] Selected images count:', selectedWarehouseImages.size);
-        console.log('[Warehouse] Current itemId:', currentWarehouseItemId);
-        console.log('[Warehouse] Current sectionId:', currentWarehouseSectionId);
-        console.log('[Warehouse] Selected images:', Array.from(selectedWarehouseImages.entries()));
-        
-        // 画像が選択されているか、itemIdまたはsectionIdが設定されているかチェック
-        if (selectedWarehouseImages.size === 0) {
-          alert('画像を選択してください');
-          return;
-        }
-        
-        if (!currentWarehouseItemId && !currentWarehouseSectionId) {
-          alert('エラー: 追加先が特定できませんでした');
-          return;
-        }
-        
-          warehouseSaved = true;
-          
-          // 選択した画像をカテゴリごとに追加
-          // MapのforEachは (value, key) の順序なので、selectedWarehouseImages.set(imageUrl, category) の場合
-          // forEach((category, imageUrl) => ...) が正しい
-          let addedCount = 0;
-          selectedWarehouseImages.forEach((category, imageUrl) => {
-            console.log('[Warehouse] Processing image:', { imageUrl, category, itemId: currentWarehouseItemId, sectionId: currentWarehouseSectionId });
-            try {
-              let result = false;
-              if (currentWarehouseSectionId) {
-                result = window.addWarehouseImageToReportSection(imageUrl, category, currentWarehouseSectionId);
-            } else if (currentWarehouseItemId) {
-                result = window.addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
-              }
-              console.log('[Warehouse] addWarehouseImageToReport returned:', result);
-              if (result) {
-                addedCount++;
-              }
-            } catch (error) {
-              console.error('[Warehouse] Error adding image:', error);
-            }
-          });
-          
-          console.log('[Warehouse] Added', addedCount, 'images out of', selectedWarehouseImages.size);
-          selectedWarehouseImages.clear();
-          
-          // モーダルを閉じる
-          document.getElementById('warehouse-dialog').close();
-      };
+      console.log('[Warehouse] Added', addedCount, 'images out of', selectedWarehouseImages.size);
+      selectedWarehouseImages.clear();
 
-      // 画像倉庫から選択した画像をレポートに追加
-      window.addWarehouseImageToReport = function(imageUrl, category, itemId) {
-        console.log('[Warehouse] ===== Adding image to report =====');
-        console.log('[Warehouse] Parameters:', { imageUrl, category, itemId, itemIdType: typeof itemId });
-        
-        // itemIdを文字列に変換（比較のため）
-        const itemIdStr = String(itemId);
-        console.log('[Warehouse] itemIdStr:', itemIdStr);
-        
-        // まず、すべてのphotoGridを確認
-        const allPhotoGrids = document.querySelectorAll('.image-list-modal');
-        console.log('[Warehouse] All available photo grids:', Array.from(allPhotoGrids).map(el => ({
-          category: el.dataset.category,
-          itemId: el.dataset.itemId,
-          itemIdType: typeof el.dataset.itemId,
-          matchesCategory: el.dataset.category === category,
-          matchesItemId: el.dataset.itemId === itemIdStr || el.dataset.itemId === itemId || String(el.dataset.itemId) === itemIdStr
-        })));
-        
-        // セレクターを構築
-        const selector = `.image-list-modal[data-category="${category}"][data-item-id="${itemIdStr}"]`;
-        console.log('[Warehouse] Looking for photo grid with selector:', selector);
-        
-        let photoGrid = document.querySelector(selector);
-        if (!photoGrid) {
-          console.warn('[Warehouse] Direct selector failed, trying fallback search');
-          
-          // より柔軟な検索を試す
-          const fallbackGrid = Array.from(allPhotoGrids).find(el => {
-            const categoryMatch = el.dataset.category === category;
-            const itemIdMatch = el.dataset.itemId === itemIdStr || 
-                               el.dataset.itemId === itemId || 
-                               String(el.dataset.itemId) === itemIdStr ||
-                               String(el.dataset.itemId) === String(itemId);
-            console.log('[Warehouse] Checking grid:', {
-              category: el.dataset.category,
-              itemId: el.dataset.itemId,
-              categoryMatch,
-              itemIdMatch,
-              willMatch: categoryMatch && itemIdMatch
-            });
-            return categoryMatch && itemIdMatch;
+      // モーダルを閉じる
+      document.getElementById('warehouse-dialog').close();
+    };
+
+    // 画像倉庫から選択した画像をレポートに追加
+    window.addWarehouseImageToReport = function (imageUrl, category, itemId) {
+      console.log('[Warehouse] ===== Adding image to report =====');
+      console.log('[Warehouse] Parameters:', { imageUrl, category, itemId, itemIdType: typeof itemId });
+
+      // itemIdを文字列に変換（比較のため）
+      const itemIdStr = String(itemId);
+      console.log('[Warehouse] itemIdStr:', itemIdStr);
+
+      // まず、すべてのphotoGridを確認
+      const allPhotoGrids = document.querySelectorAll('.image-list-modal');
+      console.log('[Warehouse] All available photo grids:', Array.from(allPhotoGrids).map(el => ({
+        category: el.dataset.category,
+        itemId: el.dataset.itemId,
+        itemIdType: typeof el.dataset.itemId,
+        matchesCategory: el.dataset.category === category,
+        matchesItemId: el.dataset.itemId === itemIdStr || el.dataset.itemId === itemId || String(el.dataset.itemId) === itemIdStr
+      })));
+
+      // セレクターを構築
+      const selector = `.image-list-modal[data-category="${category}"][data-item-id="${itemIdStr}"]`;
+      console.log('[Warehouse] Looking for photo grid with selector:', selector);
+
+      let photoGrid = document.querySelector(selector);
+      if (!photoGrid) {
+        console.warn('[Warehouse] Direct selector failed, trying fallback search');
+
+        // より柔軟な検索を試す
+        const fallbackGrid = Array.from(allPhotoGrids).find(el => {
+          const categoryMatch = el.dataset.category === category;
+          const itemIdMatch = el.dataset.itemId === itemIdStr ||
+            el.dataset.itemId === itemId ||
+            String(el.dataset.itemId) === itemIdStr ||
+            String(el.dataset.itemId) === String(itemId);
+          console.log('[Warehouse] Checking grid:', {
+            category: el.dataset.category,
+            itemId: el.dataset.itemId,
+            categoryMatch,
+            itemIdMatch,
+            willMatch: categoryMatch && itemIdMatch
           });
-          
-          if (fallbackGrid) {
-            console.log('[Warehouse] Found photo grid using fallback search:', fallbackGrid);
-            photoGrid = fallbackGrid;
-          } else {
-            console.error('[Warehouse] Could not find photo grid even with fallback search');
-            console.error('[Warehouse] Searched for:', { category, itemId: itemIdStr, originalItemId: itemId });
-            alert(`画像を追加できませんでした。\nカテゴリ: ${category}\n項目ID: ${itemIdStr}\n\nコンソールを確認してください。`);
-            return false;
-          }
+          return categoryMatch && itemIdMatch;
+        });
+
+        if (fallbackGrid) {
+          console.log('[Warehouse] Found photo grid using fallback search:', fallbackGrid);
+          photoGrid = fallbackGrid;
         } else {
-          console.log('[Warehouse] Found photo grid using direct selector');
+          console.error('[Warehouse] Could not find photo grid even with fallback search');
+          console.error('[Warehouse] Searched for:', { category, itemId: itemIdStr, originalItemId: itemId });
+          alert(`画像を追加できませんでした。\nカテゴリ: ${category}\n項目ID: ${itemIdStr}\n\nコンソールを確認してください。`);
+          return false;
         }
-        
-        console.log('[Warehouse] Found photo grid:', photoGrid);
-        
-        // 既に同じ画像が追加されていないか確認
-        const escapedUrl = escapeHtml(imageUrl);
-        const existingImages = photoGrid.querySelectorAll(`.image-item-modal[data-url="${escapedUrl}"]`);
-        if (existingImages.length > 0) {
-          console.log('[Warehouse] Image already exists, skipping:', imageUrl);
-          return false; // 既に追加されている
-        }
-        
-        const photoItem = document.createElement('div');
-        photoItem.className = 'image-item-modal';
-        photoItem.dataset.url = imageUrl;
-        photoItem.innerHTML = `
+      } else {
+        console.log('[Warehouse] Found photo grid using direct selector');
+      }
+
+      console.log('[Warehouse] Found photo grid:', photoGrid);
+
+      // 既に同じ画像が追加されていないか確認
+      const escapedUrl = escapeHtml(imageUrl);
+      const existingImages = photoGrid.querySelectorAll(`.image-item-modal[data-url="${escapedUrl}"]`);
+      if (existingImages.length > 0) {
+        console.log('[Warehouse] Image already exists, skipping:', imageUrl);
+        return false; // 既に追加されている
+      }
+
+      const photoItem = document.createElement('div');
+      photoItem.className = 'image-item-modal';
+      photoItem.dataset.url = imageUrl;
+      photoItem.innerHTML = `
           <img src="${escapedUrl}" alt="Selected from warehouse" loading="lazy">
           <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
             <i class="fas fa-times"></i>
           </button>
         `;
-        
-        // アップロードボタンの前に挿入
-        const addBtns = photoGrid.querySelector('.image-add-btns-modal');
-        console.log('[Warehouse] addBtns found:', !!addBtns);
-        
-        if (addBtns) {
-          photoGrid.insertBefore(photoItem, addBtns);
-          console.log('[Warehouse] Image inserted before add buttons');
-        } else {
-          photoGrid.appendChild(photoItem);
-          console.log('[Warehouse] Image appended to grid (no add buttons found)');
-        }
-        
-        // 追加されたことを確認
-        const addedImage = photoGrid.querySelector(`.image-item-modal[data-url="${escapedUrl}"]`);
-        if (addedImage) {
-          console.log('[Warehouse] ✓ Image successfully added to DOM:', imageUrl);
-          console.log('[Warehouse] Photo grid now has', photoGrid.children.length, 'children');
-          return true; // 成功
-        } else {
-          console.error('[Warehouse] ✗ Image was not added to DOM:', imageUrl);
-          return false;
-        }
-      };
 
-      // 画像倉庫から選択した画像をレポートに追加（セクション用）
-      window.addWarehouseImageToReportSection = function(imageUrl, category, sectionId) {
-        console.log('[Warehouse] ===== Adding image to report section =====');
-        console.log('[Warehouse] Parameters:', { imageUrl, category, sectionId });
-        
-        const selector = `.image-list-modal[data-category="${category}"][data-section-id="${sectionId}"]`;
-        console.log('[Warehouse] Looking for photo grid with selector:', selector);
-        
-        let photoGrid = document.querySelector(selector);
-        if (!photoGrid) {
-          console.error('[Warehouse] Could not find photo grid for section:', { category, sectionId });
-          alert(`画像を追加できませんでした。\nカテゴリ: ${category}\nセクションID: ${sectionId}`);
-          return false;
-        }
-        
-        console.log('[Warehouse] Found photo grid:', photoGrid);
-        
-        // 既に同じ画像が追加されていないか確認
-        const escapedUrl = escapeHtml(imageUrl);
-        const existingImages = photoGrid.querySelectorAll(`.image-item-modal[data-url="${escapedUrl}"]`);
-        if (existingImages.length > 0) {
-          console.log('[Warehouse] Image already exists, skipping:', imageUrl);
-          return false;
-        }
-        
-        const photoItem = document.createElement('div');
-        photoItem.className = 'image-item-modal';
-        photoItem.dataset.url = imageUrl;
-        photoItem.dataset.sectionId = sectionId;
-        photoItem.innerHTML = `
+      // アップロードボタンの前に挿入
+      const addBtns = photoGrid.querySelector('.image-add-btns-modal');
+      console.log('[Warehouse] addBtns found:', !!addBtns);
+
+      if (addBtns) {
+        photoGrid.insertBefore(photoItem, addBtns);
+        console.log('[Warehouse] Image inserted before add buttons');
+      } else {
+        photoGrid.appendChild(photoItem);
+        console.log('[Warehouse] Image appended to grid (no add buttons found)');
+      }
+
+      // 追加されたことを確認
+      const addedImage = photoGrid.querySelector(`.image-item-modal[data-url="${escapedUrl}"]`);
+      if (addedImage) {
+        console.log('[Warehouse] ✓ Image successfully added to DOM:', imageUrl);
+        console.log('[Warehouse] Photo grid now has', photoGrid.children.length, 'children');
+        return true; // 成功
+      } else {
+        console.error('[Warehouse] ✗ Image was not added to DOM:', imageUrl);
+        return false;
+      }
+    };
+
+    // 画像倉庫から選択した画像をレポートに追加（セクション用）
+    window.addWarehouseImageToReportSection = function (imageUrl, category, sectionId) {
+      console.log('[Warehouse] ===== Adding image to report section =====');
+      console.log('[Warehouse] Parameters:', { imageUrl, category, sectionId });
+
+      const selector = `.image-list-modal[data-category="${category}"][data-section-id="${sectionId}"]`;
+      console.log('[Warehouse] Looking for photo grid with selector:', selector);
+
+      let photoGrid = document.querySelector(selector);
+      if (!photoGrid) {
+        console.error('[Warehouse] Could not find photo grid for section:', { category, sectionId });
+        alert(`画像を追加できませんでした。\nカテゴリ: ${category}\nセクションID: ${sectionId}`);
+        return false;
+      }
+
+      console.log('[Warehouse] Found photo grid:', photoGrid);
+
+      // 既に同じ画像が追加されていないか確認
+      const escapedUrl = escapeHtml(imageUrl);
+      const existingImages = photoGrid.querySelectorAll(`.image-item-modal[data-url="${escapedUrl}"]`);
+      if (existingImages.length > 0) {
+        console.log('[Warehouse] Image already exists, skipping:', imageUrl);
+        return false;
+      }
+
+      const photoItem = document.createElement('div');
+      photoItem.className = 'image-item-modal';
+      photoItem.dataset.url = imageUrl;
+      photoItem.dataset.sectionId = sectionId;
+      photoItem.innerHTML = `
           <img src="${escapedUrl}" alt="Selected from warehouse" loading="lazy">
           <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
             <i class="fas fa-times"></i>
           </button>
         `;
-        
-        // アップロードボタンの前に挿入
-        const addBtns = photoGrid.querySelector('.image-add-btns-modal');
-        if (addBtns) {
-          photoGrid.insertBefore(photoItem, addBtns);
-        } else {
-          photoGrid.appendChild(photoItem);
-        }
-        
-        return true;
-      };
 
-      // ベースパスを取得（GitHub Pages対応）
-      function getBasePath() {
-        const base = document.querySelector('base');
-        if (base && base.href) {
-          try {
-            const url = new URL(base.href);
-            return url.pathname;
-          } catch (e) {
-            return base.getAttribute('href') || '/';
-          }
+      // アップロードボタンの前に挿入
+      const addBtns = photoGrid.querySelector('.image-add-btns-modal');
+      if (addBtns) {
+        photoGrid.insertBefore(photoItem, addBtns);
+      } else {
+        photoGrid.appendChild(photoItem);
+      }
+
+      return true;
+    };
+
+    // ベースパスを取得（GitHub Pages対応）
+    function getBasePath() {
+      const base = document.querySelector('base');
+      if (base && base.href) {
+        try {
+          const url = new URL(base.href);
+          return url.pathname;
+        } catch (e) {
+          return base.getAttribute('href') || '/';
         }
-        const hostname = window.location.hostname;
-        if (hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp') {
-          return '/';
-        }
-        const path = window.location.pathname;
-        if (path.includes('/misesapo/')) {
-          return '/misesapo/';
-        }
+      }
+      const hostname = window.location.hostname;
+      if (hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp') {
         return '/';
       }
+      const path = window.location.pathname;
+      if (path.includes('/misesapo/')) {
+        return '/misesapo/';
+      }
+      return '/';
+    }
 
-      // モーダル用: 4つの追加ボタン
-      // 1. 清掃項目を追加
-      document.getElementById('add-work-item-modal')?.addEventListener('click', function() {
-        window.addWorkItemModal();
-      });
-      
-      // 2. 画像を追加（作業前・作業後のセクションを直接追加）
-      document.getElementById('add-image-modal')?.addEventListener('click', function() {
-        window.addImageSectionModal('work');
-      });
-      
-      // 3. コメントを追加（コメントセクションを追加）
-      document.getElementById('add-comment-modal')?.addEventListener('click', function() {
-        window.addCommentSectionModal();
-      });
-      
-      // 4. 作業内容を追加（作業内容セクションを追加）
-      document.getElementById('add-work-content-modal')?.addEventListener('click', function() {
-        window.addWorkContentSectionModal();
-      });
+    // モーダル用: 4つの追加ボタン
+    // 1. 清掃項目を追加
+    document.getElementById('add-work-item-modal')?.addEventListener('click', function () {
+      window.addWorkItemModal();
+    });
 
-      // ヘルプボタン
-      document.getElementById('btn-help-report')?.addEventListener('click', function() {
-        document.getElementById('help-dialog').showModal();
-      });
+    // 2. 画像を追加（作業前・作業後のセクションを直接追加）
+    document.getElementById('add-image-modal')?.addEventListener('click', function () {
+      window.addImageSectionModal('work');
+    });
 
-      // モーダル用: 店舗選択の変更
-      document.getElementById('report-store')?.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        document.getElementById('report-store-name').value = selectedOption.text;
-      });
-      
-      // モーダル用: 担当者選択の変更
-      document.getElementById('report-worker')?.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        document.getElementById('report-worker-name').value = selectedOption.text;
-      });
+    // 3. コメントを追加（コメントセクションを追加）
+    document.getElementById('add-comment-modal')?.addEventListener('click', function () {
+      window.addCommentSectionModal();
+    });
 
-      // フォーム送信（モーダル用）
-      const reportFormModal = document.getElementById('report-form-modal');
-      if (reportFormModal) {
-        reportFormModal.addEventListener('submit', async (e) => {
+    // 4. 作業内容を追加（作業内容セクションを追加）
+    document.getElementById('add-work-content-modal')?.addEventListener('click', function () {
+      window.addWorkContentSectionModal();
+    });
+
+    // ヘルプボタン
+    document.getElementById('btn-help-report')?.addEventListener('click', function () {
+      document.getElementById('help-dialog').showModal();
+    });
+
+    // モーダル用: 店舗選択の変更
+    document.getElementById('report-store')?.addEventListener('change', function () {
+      const selectedOption = this.options[this.selectedIndex];
+      document.getElementById('report-store-name').value = selectedOption.text;
+    });
+
+    // モーダル用: 担当者選択の変更
+    document.getElementById('report-worker')?.addEventListener('change', function () {
+      const selectedOption = this.options[this.selectedIndex];
+      document.getElementById('report-worker-name').value = selectedOption.text;
+    });
+
+    // フォーム送信（モーダル用）
+    const reportFormModal = document.getElementById('report-form-modal');
+    if (reportFormModal) {
+      reportFormModal.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         try {
           // 提案タイプを取得
           const proposalTypeInput = document.getElementById('proposal-type-modal');
           const proposalType = proposalTypeInput ? proposalTypeInput.value : '';
-          
+
           const formData = {
             store_id: document.getElementById('report-store-modal').value,
             store_name: document.getElementById('report-store-name-modal').value,
@@ -2666,18 +2666,18 @@
             staff_name: document.getElementById('report-worker-name').value || '',
             work_items: []
           };
-          
+
           // 提案タイプが設定されている場合は追加
           if (proposalType) {
             formData.proposal_type = proposalType;
           }
-          
+
           // 清掃項目を収集
           document.querySelectorAll('.cleaning-section-modal').forEach(section => {
             const itemId = section.dataset.itemId;
             const titleSelect = section.querySelector('.item-title-select-modal');
             const titleInput = section.querySelector('.item-title-input-modal');
-            
+
             // 清掃項目名を取得（フリーワード入力対応）
             let itemName = '';
             if (titleSelect && titleSelect.value === '__custom__' && titleInput) {
@@ -2687,16 +2687,16 @@
             } else if (titleInput && titleInput.value) {
               itemName = (titleInput.value || '').trim();
             }
-            
+
             // 未入力の清掃項目はスキップ
             if (!itemName) {
               return;
             }
-            
+
             const detailInputs = section.querySelectorAll('.detail-tag-input-modal');
             const type = detailInputs[0]?.value?.trim() || '';
             const count = detailInputs[1]?.value?.trim() || '';
-            
+
             const workItem = {
               item_id: itemId,
               item_name: itemName,
@@ -2705,18 +2705,18 @@
                 count: count
               }
             };
-            
+
             formData.work_items.push(workItem);
           });
-          
+
           // 画像セクション、コメントセクション、作業内容セクションを収集
           formData.sections = [];
-          
+
           // 画像セクションを収集
           document.querySelectorAll('.image-section-modal').forEach(section => {
             const sectionId = section.dataset.sectionId;
             const imageType = section.dataset.imageType || 'work';
-            
+
             const sectionData = {
               section_id: sectionId,
               section_type: 'image',
@@ -2726,108 +2726,108 @@
                 after: []
               }
             };
-            
+
             // 作業前の写真
             const beforeContainer = section.querySelector('.image-list-modal[data-category="before"]');
             if (beforeContainer) {
               const beforeItems = beforeContainer.querySelectorAll('.image-item-modal:not(.image-add-btns-modal)');
               console.log(`[Submit] Image section ${sectionId} - Before items found:`, beforeItems.length);
-            beforeItems.forEach(photoItem => {
-              if (photoItem.dataset.base64) {
+              beforeItems.forEach(photoItem => {
+                if (photoItem.dataset.base64) {
                   sectionData.photos.before.push(photoItem.dataset.base64);
-              } else if (photoItem.dataset.url) {
+                } else if (photoItem.dataset.url) {
                   sectionData.photos.before.push(photoItem.dataset.url);
-              } else {
-                const img = photoItem.querySelector('img');
-                if (img && img.src) {
+                } else {
+                  const img = photoItem.querySelector('img');
+                  if (img && img.src) {
                     sectionData.photos.before.push(img.src);
+                  }
                 }
-              }
-            });
+              });
             }
-            
+
             // 作業後の写真
             const afterContainer = section.querySelector('.image-list-modal[data-category="after"]');
             if (afterContainer) {
               const afterItems = afterContainer.querySelectorAll('.image-item-modal:not(.image-add-btns-modal)');
               console.log(`[Submit] Image section ${sectionId} - After items found:`, afterItems.length);
-            afterItems.forEach(photoItem => {
-              if (photoItem.dataset.base64) {
+              afterItems.forEach(photoItem => {
+                if (photoItem.dataset.base64) {
                   sectionData.photos.after.push(photoItem.dataset.base64);
-              } else if (photoItem.dataset.url) {
+                } else if (photoItem.dataset.url) {
                   sectionData.photos.after.push(photoItem.dataset.url);
-              } else {
-                const img = photoItem.querySelector('img');
-                if (img && img.src) {
+                } else {
+                  const img = photoItem.querySelector('img');
+                  if (img && img.src) {
                     sectionData.photos.after.push(img.src);
+                  }
                 }
-              }
-            });
+              });
             }
-            
+
             // 空の画像セクション（写真が1枚もない）はスキップ
             if (sectionData.photos.before.length === 0 && sectionData.photos.after.length === 0) {
               console.log(`[Submit] Image section ${sectionId} - Skipped (no photos)`);
               return;
             }
-            
+
             console.log(`[Submit] Image section ${sectionId} - Photos:`, sectionData.photos);
             formData.sections.push(sectionData);
           });
-          
+
           // コメントセクションを収集
           document.querySelectorAll('.comment-section-modal').forEach(section => {
             const sectionId = section.dataset.sectionId;
             const textarea = section.querySelector('.comment-textarea-modal');
             const comment = textarea ? textarea.value.trim() : '';
-            
+
             // 空のコメントセクションはスキップ
             if (!comment) {
               return;
             }
-            
+
             formData.sections.push({
               section_id: sectionId,
               section_type: 'comment',
               content: comment
             });
           });
-          
+
           // 作業内容セクションを収集
           document.querySelectorAll('.work-content-section-modal').forEach(section => {
             const sectionId = section.dataset.sectionId;
             const textarea = section.querySelector('.work-content-textarea-modal');
             const content = textarea ? textarea.value.trim() : '';
-            
+
             // 空の作業内容セクションはスキップ
             if (!content) {
               return;
             }
-            
+
             formData.sections.push({
               section_id: sectionId,
               section_type: 'work_content',
               content: content
             });
           });
-          
+
           // バリデーション
           if (!formData.store_id) {
             alert('店舗を選択してください');
             return;
           }
-          
+
           if (!formData.cleaning_date) {
             alert('清掃日を入力してください');
             return;
           }
-          
+
           // 少なくとも1つのセクション（清掃項目、画像、コメント、作業内容のいずれか）が必要
           if (formData.work_items.length === 0 && formData.sections.length === 0) {
             alert('少なくとも1つの項目（清掃項目、画像、コメント、作業内容のいずれか）を追加してください');
             return;
           }
-          
+
           // デバッグログ
           console.log('[Submit] Final formData:', JSON.stringify(formData, null, 2));
           console.log('[Submit] Sections count:', formData.sections.length);
@@ -2838,18 +2838,18 @@
               console.log(`[Submit] Section ${idx} - After photos:`, section.photos?.after);
             }
           });
-          
+
           // 編集モードかどうかを判定
           const reportId = document.getElementById('report-id').value;
           const isEditMode = reportId && reportId.trim() !== '';
-          
+
           // APIに送信
           const idToken = await getFirebaseIdToken();
-          const url = isEditMode 
+          const url = isEditMode
             ? `${REPORT_API}/staff/reports/${reportId}`
             : `${REPORT_API}/staff/reports`;
           const method = isEditMode ? 'PUT' : 'POST';
-          
+
           const response = await fetch(url, {
             method: method,
             headers: {
@@ -2857,17 +2857,17 @@
               'Content-Type': 'application/json'
             },
             body: JSON.stringify(formData)
-            });
-          
+          });
+
           if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || (isEditMode ? 'レポートの更新に失敗しました' : 'レポートの作成に失敗しました'));
           }
-          
+
           const result = await response.json();
           alert(isEditMode ? 'レポートを更新しました' : 'レポートを作成しました');
           document.getElementById('new-dialog').close();
-          
+
           // フォームをリセット
           document.getElementById('report-form-modal').reset();
           document.getElementById('report-id').value = '';
@@ -2878,451 +2878,451 @@
           document.getElementById('cleaning-items-list-modal').innerHTML = '<span class="items-list-empty-modal">項目を追加してください</span>';
           modalWorkItemCounter = 0;
           document.getElementById('form-title').textContent = '新規レポート作成';
-          
+
           await loadReports();
         } catch (error) {
           console.error('Error submitting report:', error);
           alert(`エラー: ${error.message}`);
         }
       });
-      }
     }
+  }
 
-    function formatDate(dateStr) {
-      if (!dateStr) return '-';
-      const d = new Date(dateStr);
-      return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' });
-    }
+  function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
+  function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
 
-    function debounce(fn, delay) {
-      let timer;
-      return function(...args) {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn.apply(this, args), delay);
-      };
-    }
-
-    // 管理側モーダル内で清掃員レポート作成ページと同じ機能を初期化
-    window.initAdminReportModal = async function() {
-      // モーダル内の要素IDに-modalサフィックスを付けた要素に対して
-      // 清掃員レポート作成ページと同じ機能を実装
-      
-      // データが読み込まれていない場合は読み込む
-      if (!window.stores || window.stores.length === 0) {
-        await loadStoresForModal();
-      }
-      if (!window.brands || window.brands.length === 0) {
-        await loadBrandsForModal();
-      }
-      if (!window.serviceItems || window.serviceItems.length === 0) {
-        await loadServiceItemsForModal();
-      }
-      
-      // モーダル内のブランド選択を初期化
-      initBrandSelectModal();
-      
-      // モーダル内の店舗選択を初期化
-      initStoreSelectModal();
-      
-      // モーダル内のイベントリスナーを設定
-      setupModalEventListeners();
-      
-      // モーダル内の画像ストックを初期化
-      initImageStockModal();
-      
-      console.log('Admin report modal initialized');
+  function debounce(fn, delay) {
+    let timer;
+    return function (...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn.apply(this, args), delay);
     };
+  }
 
-    // モーダル用のデータ読み込み
-    async function loadStoresForModal() {
-      try {
-        const res = await fetch(`${API_BASE}/stores`);
-        const data = await res.json();
-        window.stores = Array.isArray(data) ? data : (data.items || []);
-      } catch (e) {
-        console.error('Failed to load stores for modal:', e);
-        window.stores = [];
-      }
+  // 管理側モーダル内で清掃員レポート作成ページと同じ機能を初期化
+  window.initAdminReportModal = async function () {
+    // モーダル内の要素IDに-modalサフィックスを付けた要素に対して
+    // 清掃員レポート作成ページと同じ機能を実装
+
+    // データが読み込まれていない場合は読み込む
+    if (!window.stores || window.stores.length === 0) {
+      await loadStoresForModal();
     }
-
-    async function loadBrandsForModal() {
-      try {
-        const res = await fetch(`${API_BASE}/brands`);
-        const data = await res.json();
-        window.brands = Array.isArray(data) ? data : (data.items || []);
-      } catch (e) {
-        console.error('Failed to load brands for modal:', e);
-        window.brands = [];
-      }
+    if (!window.brands || window.brands.length === 0) {
+      await loadBrandsForModal();
     }
-
-    async function loadServiceItemsForModal() {
-      try {
-        const res = await fetch(`${API_BASE}/service-items`);
-        const data = await res.json();
-        window.serviceItems = Array.isArray(data) ? data : (data.items || []);
-      } catch (e) {
-        console.error('Failed to load service items for modal:', e);
-        window.serviceItems = [];
-      }
+    if (!window.serviceItems || window.serviceItems.length === 0) {
+      await loadServiceItemsForModal();
     }
 
     // モーダル内のブランド選択を初期化
-    function initBrandSelectModal() {
-      const brandSelect = document.getElementById('report-brand-select-modal');
-      const brandSearchInput = document.getElementById('report-brand-search-modal');
-      const brandDropdownBtn = document.getElementById('brand-dropdown-btn-modal');
-      if (!brandSelect || !brandSearchInput || !brandDropdownBtn) return;
-      
-      // ブランドオプションを追加
-      if (typeof window.brands !== 'undefined' && window.brands) {
-        brandSelect.innerHTML = '<option value="">①ブランド名 *</option>';
-        window.brands.forEach(brand => {
-          const option = document.createElement('option');
-          option.value = brand.id;
-          option.textContent = brand.name;
-          brandSelect.appendChild(option);
-        });
-      }
-      
-      // モーダルを開く関数
-      function openBrandModalAdmin() {
-        if (typeof window.openBrandModal === 'function') {
-          // 管理側用のモーダルIDを使用
-          const modal = document.getElementById('brand-select-modal-admin');
-          const modalSearch = document.getElementById('brand-modal-search-admin');
-          const modalResults = document.getElementById('brand-modal-results-admin');
-          
-          if (modal) {
-            modal.style.display = 'flex';
-            updateBrandModalAdmin();
-            setTimeout(() => {
-              if (modalSearch) modalSearch.focus();
-            }, 100);
-          }
-        }
-      }
-      
-      // ブランドモーダル内の検索結果を更新
-      function updateBrandModalAdmin() {
-        const modalSearch = document.getElementById('brand-modal-search-admin');
-        const modalResults = document.getElementById('brand-modal-results-admin');
-        
-        if (!modalSearch || !modalResults || typeof window.brands === 'undefined') return;
-        
-        const query = modalSearch.value.trim();
-        const filtered = query.length === 0 
-          ? window.brands 
-          : window.brands.filter(brand => {
-              const name = (brand.name || '').toLowerCase();
-              return name.includes(query.toLowerCase());
-            });
-        
-        let html = '<div class="store-search-item free-input-option" data-free-input="true"><i class="fas fa-edit"></i> 自由入力</div>';
-        
-        if (filtered.length === 0) {
-          html += '<div class="store-search-item no-results">該当するブランドが見つかりません</div>';
-        } else {
-          html += filtered.map(brand => {
-            const name = brand.name;
-            const id = brand.id;
-            return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`;
-          }).join('');
-        }
-        
-        modalResults.innerHTML = html;
-        
-        // クリックイベント
-        modalResults.querySelectorAll('.store-search-item:not(.no-results)').forEach(item => {
-          item.addEventListener('click', function() {
-            const id = this.dataset.id;
-            const name = this.dataset.name;
-            
-            if (this.classList.contains('free-input-option')) {
-              brandSearchInput.removeAttribute('readonly');
-              document.getElementById('report-brand-modal').value = '';
-              document.getElementById('report-brand-name-modal').value = '';
-              brandSearchInput.value = '';
-              closeBrandModalAdmin();
-              // モーダルを閉じた後にフォーカスを設定（少し遅延させる）
-              setTimeout(() => {
-                brandSearchInput.focus();
-              }, 100);
-            } else {
-              document.getElementById('report-brand-modal').value = id;
-              document.getElementById('report-brand-name-modal').value = name;
-              brandSearchInput.value = name;
-              brandSearchInput.setAttribute('readonly', 'readonly');
-            }
-            
-            closeBrandModalAdmin();
-          });
-        });
-      }
-      
-      // ブランドモーダルを閉じる
-      window.closeBrandModalAdmin = function() {
-        const modal = document.getElementById('brand-select-modal-admin');
-        if (modal) {
-          modal.style.display = 'none';
-          const modalSearch = document.getElementById('brand-modal-search-admin');
-          if (modalSearch) modalSearch.value = '';
-        }
-      };
-      
-      // モーダル内の検索フィールドのイベント
-      const brandModalSearch = document.getElementById('brand-modal-search-admin');
-      if (brandModalSearch) {
-        brandModalSearch.addEventListener('input', updateBrandModalAdmin);
-      }
-      
-      // イベントリスナー
-      brandDropdownBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        openBrandModalAdmin();
-      });
-      
-      brandSearchInput.addEventListener('click', function(e) {
-        if (this.hasAttribute('readonly')) {
-          e.preventDefault();
-          openBrandModalAdmin();
-        }
-      });
-      
-      brandSearchInput.addEventListener('input', function() {
-        if (!this.hasAttribute('readonly')) {
-          const inputValue = this.value;
-          const brandNameEl = document.getElementById('report-brand-name-modal');
-          const brandIdEl = document.getElementById('report-brand-modal');
-          if (brandNameEl) {
-            brandNameEl.value = inputValue;
-          }
-          if (brandIdEl) {
-            brandIdEl.value = '';
-          }
-        }
-      });
-      
-      brandSearchInput.setAttribute('readonly', 'readonly');
-    }
+    initBrandSelectModal();
 
     // モーダル内の店舗選択を初期化
-    function initStoreSelectModal() {
-      const storeSelect = document.getElementById('report-store-select-modal');
-      const storeSearchInput = document.getElementById('report-store-search-modal');
-      const storeDropdownBtn = document.getElementById('store-dropdown-btn-modal');
-      if (!storeSelect || !storeSearchInput || !storeDropdownBtn) return;
-      
-      // モーダルを開く関数
-      function openStoreModalAdmin() {
-        const selectedBrandId = document.getElementById('report-brand-modal')?.value;
-        const brandNameInput = document.getElementById('report-brand-search-modal')?.value.trim() || '';
-        const brandNameHidden = document.getElementById('report-brand-name-modal')?.value || '';
-        const hasBrandName = brandNameInput || brandNameHidden;
-        
-        if (!selectedBrandId && !hasBrandName) {
-          alert('まずブランド名を選択または入力してください');
-          return;
-        }
-        
-        const modal = document.getElementById('store-select-modal-admin');
-        const modalSearch = document.getElementById('store-modal-search-admin');
-        const modalResults = document.getElementById('store-modal-results-admin');
-        
+    initStoreSelectModal();
+
+    // モーダル内のイベントリスナーを設定
+    setupModalEventListeners();
+
+    // モーダル内の画像ストックを初期化
+    initImageStockModal();
+
+    console.log('Admin report modal initialized');
+  };
+
+  // モーダル用のデータ読み込み
+  async function loadStoresForModal() {
+    try {
+      const res = await fetch(`${API_BASE}/stores`);
+      const data = await res.json();
+      window.stores = Array.isArray(data) ? data : (data.items || []);
+    } catch (e) {
+      console.error('Failed to load stores for modal:', e);
+      window.stores = [];
+    }
+  }
+
+  async function loadBrandsForModal() {
+    try {
+      const res = await fetch(`${API_BASE}/brands`);
+      const data = await res.json();
+      window.brands = Array.isArray(data) ? data : (data.items || []);
+    } catch (e) {
+      console.error('Failed to load brands for modal:', e);
+      window.brands = [];
+    }
+  }
+
+  async function loadServiceItemsForModal() {
+    try {
+      const res = await fetch(`${API_BASE}/service-items`);
+      const data = await res.json();
+      window.serviceItems = Array.isArray(data) ? data : (data.items || []);
+    } catch (e) {
+      console.error('Failed to load service items for modal:', e);
+      window.serviceItems = [];
+    }
+  }
+
+  // モーダル内のブランド選択を初期化
+  function initBrandSelectModal() {
+    const brandSelect = document.getElementById('report-brand-select-modal');
+    const brandSearchInput = document.getElementById('report-brand-search-modal');
+    const brandDropdownBtn = document.getElementById('brand-dropdown-btn-modal');
+    if (!brandSelect || !brandSearchInput || !brandDropdownBtn) return;
+
+    // ブランドオプションを追加
+    if (typeof window.brands !== 'undefined' && window.brands) {
+      brandSelect.innerHTML = '<option value="">①ブランド名 *</option>';
+      window.brands.forEach(brand => {
+        const option = document.createElement('option');
+        option.value = brand.id;
+        option.textContent = brand.name;
+        brandSelect.appendChild(option);
+      });
+    }
+
+    // モーダルを開く関数
+    function openBrandModalAdmin() {
+      if (typeof window.openBrandModal === 'function') {
+        // 管理側用のモーダルIDを使用
+        const modal = document.getElementById('brand-select-modal-admin');
+        const modalSearch = document.getElementById('brand-modal-search-admin');
+        const modalResults = document.getElementById('brand-modal-results-admin');
+
         if (modal) {
           modal.style.display = 'flex';
-          updateStoreModalAdmin();
+          updateBrandModalAdmin();
           setTimeout(() => {
             if (modalSearch) modalSearch.focus();
           }, 100);
         }
       }
-      
-      // 店舗モーダル内の検索結果を更新
-      function updateStoreModalAdmin() {
-        const modalSearch = document.getElementById('store-modal-search-admin');
-        const modalResults = document.getElementById('store-modal-results-admin');
-        
-        if (!modalSearch || !modalResults || typeof window.stores === 'undefined') return;
-        
-        const query = modalSearch.value.trim();
-        const selectedBrandId = document.getElementById('report-brand-modal')?.value;
-        const brandNameInput = document.getElementById('report-brand-search-modal')?.value.trim() || '';
-        const brandNameHidden = document.getElementById('report-brand-name-modal')?.value || '';
-        const hasBrandName = brandNameInput || brandNameHidden;
-        
-        let filtered = query.length === 0 
-          ? window.stores 
-          : window.stores.filter(store => {
-              const name = (store.store_name || store.name || '').toLowerCase();
-              return name.includes(query.toLowerCase());
-            });
-        
-        if (selectedBrandId) {
-          filtered = filtered.filter(store => {
-            const storeBrandId = store.brand_id || store.brandId;
-            return storeBrandId === selectedBrandId || String(storeBrandId) === String(selectedBrandId);
-          });
-        } else if (!hasBrandName) {
-          filtered = [];
-        }
-        
-        let html = '<div class="store-search-item free-input-option" data-free-input="true"><i class="fas fa-edit"></i> 自由入力</div>';
-        
-        if (filtered.length === 0) {
-          html += '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
-        } else {
-          html += filtered.map(store => {
-            const name = store.store_name || store.name;
-            const id = store.store_id || store.id;
-            const brandId = store.brand_id || store.brandId;
-            return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}" data-brand-id="${brandId || ''}">${escapeHtml(name)}</div>`;
-          }).join('');
-        }
-        
-        modalResults.innerHTML = html;
-        
-        // クリックイベント
-        modalResults.querySelectorAll('.store-search-item:not(.no-results)').forEach(item => {
-          item.addEventListener('click', function() {
-            const id = this.dataset.id;
-            const name = this.dataset.name;
-            
-            if (this.classList.contains('free-input-option')) {
-              storeSearchInput.removeAttribute('readonly');
-              document.getElementById('report-store-modal').value = '';
-              document.getElementById('report-store-name-modal').value = '';
-              storeSearchInput.value = '';
-              closeStoreModalAdmin();
-              // モーダルを閉じた後にフォーカスを設定（少し遅延させる）
-              setTimeout(() => {
-                storeSearchInput.focus();
-              }, 100);
-            } else {
-              document.getElementById('report-store-modal').value = id || '';
-              document.getElementById('report-store-name-modal').value = name || '';
-              storeSearchInput.value = name || '';
-              storeSearchInput.setAttribute('readonly', 'readonly');
-            }
-            
-            closeStoreModalAdmin();
-          });
+    }
+
+    // ブランドモーダル内の検索結果を更新
+    function updateBrandModalAdmin() {
+      const modalSearch = document.getElementById('brand-modal-search-admin');
+      const modalResults = document.getElementById('brand-modal-results-admin');
+
+      if (!modalSearch || !modalResults || typeof window.brands === 'undefined') return;
+
+      const query = modalSearch.value.trim();
+      const filtered = query.length === 0
+        ? window.brands
+        : window.brands.filter(brand => {
+          const name = (brand.name || '').toLowerCase();
+          return name.includes(query.toLowerCase());
         });
+
+      let html = '<div class="store-search-item free-input-option" data-free-input="true"><i class="fas fa-edit"></i> 自由入力</div>';
+
+      if (filtered.length === 0) {
+        html += '<div class="store-search-item no-results">該当するブランドが見つかりません</div>';
+      } else {
+        html += filtered.map(brand => {
+          const name = brand.name;
+          const id = brand.id;
+          return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`;
+        }).join('');
       }
-      
-      // 店舗モーダルを閉じる
-      window.closeStoreModalAdmin = function() {
-        const modal = document.getElementById('store-select-modal-admin');
-        if (modal) {
-          modal.style.display = 'none';
-          const modalSearch = document.getElementById('store-modal-search-admin');
-          if (modalSearch) modalSearch.value = '';
+
+      modalResults.innerHTML = html;
+
+      // クリックイベント
+      modalResults.querySelectorAll('.store-search-item:not(.no-results)').forEach(item => {
+        item.addEventListener('click', function () {
+          const id = this.dataset.id;
+          const name = this.dataset.name;
+
+          if (this.classList.contains('free-input-option')) {
+            brandSearchInput.removeAttribute('readonly');
+            document.getElementById('report-brand-modal').value = '';
+            document.getElementById('report-brand-name-modal').value = '';
+            brandSearchInput.value = '';
+            closeBrandModalAdmin();
+            // モーダルを閉じた後にフォーカスを設定（少し遅延させる）
+            setTimeout(() => {
+              brandSearchInput.focus();
+            }, 100);
+          } else {
+            document.getElementById('report-brand-modal').value = id;
+            document.getElementById('report-brand-name-modal').value = name;
+            brandSearchInput.value = name;
+            brandSearchInput.setAttribute('readonly', 'readonly');
+          }
+
+          closeBrandModalAdmin();
+        });
+      });
+    }
+
+    // ブランドモーダルを閉じる
+    window.closeBrandModalAdmin = function () {
+      const modal = document.getElementById('brand-select-modal-admin');
+      if (modal) {
+        modal.style.display = 'none';
+        const modalSearch = document.getElementById('brand-modal-search-admin');
+        if (modalSearch) modalSearch.value = '';
+      }
+    };
+
+    // モーダル内の検索フィールドのイベント
+    const brandModalSearch = document.getElementById('brand-modal-search-admin');
+    if (brandModalSearch) {
+      brandModalSearch.addEventListener('input', updateBrandModalAdmin);
+    }
+
+    // イベントリスナー
+    brandDropdownBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      openBrandModalAdmin();
+    });
+
+    brandSearchInput.addEventListener('click', function (e) {
+      if (this.hasAttribute('readonly')) {
+        e.preventDefault();
+        openBrandModalAdmin();
+      }
+    });
+
+    brandSearchInput.addEventListener('input', function () {
+      if (!this.hasAttribute('readonly')) {
+        const inputValue = this.value;
+        const brandNameEl = document.getElementById('report-brand-name-modal');
+        const brandIdEl = document.getElementById('report-brand-modal');
+        if (brandNameEl) {
+          brandNameEl.value = inputValue;
         }
-      };
-      
-      // モーダル内の検索フィールドのイベント
-      const storeModalSearch = document.getElementById('store-modal-search-admin');
-      if (storeModalSearch) {
-        storeModalSearch.addEventListener('input', updateStoreModalAdmin);
+        if (brandIdEl) {
+          brandIdEl.value = '';
+        }
       }
-      
-      // イベントリスナー
-      storeDropdownBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
+    });
+
+    brandSearchInput.setAttribute('readonly', 'readonly');
+  }
+
+  // モーダル内の店舗選択を初期化
+  function initStoreSelectModal() {
+    const storeSelect = document.getElementById('report-store-select-modal');
+    const storeSearchInput = document.getElementById('report-store-search-modal');
+    const storeDropdownBtn = document.getElementById('store-dropdown-btn-modal');
+    if (!storeSelect || !storeSearchInput || !storeDropdownBtn) return;
+
+    // モーダルを開く関数
+    function openStoreModalAdmin() {
+      const selectedBrandId = document.getElementById('report-brand-modal')?.value;
+      const brandNameInput = document.getElementById('report-brand-search-modal')?.value.trim() || '';
+      const brandNameHidden = document.getElementById('report-brand-name-modal')?.value || '';
+      const hasBrandName = brandNameInput || brandNameHidden;
+
+      if (!selectedBrandId && !hasBrandName) {
+        alert('まずブランド名を選択または入力してください');
+        return;
+      }
+
+      const modal = document.getElementById('store-select-modal-admin');
+      const modalSearch = document.getElementById('store-modal-search-admin');
+      const modalResults = document.getElementById('store-modal-results-admin');
+
+      if (modal) {
+        modal.style.display = 'flex';
+        updateStoreModalAdmin();
+        setTimeout(() => {
+          if (modalSearch) modalSearch.focus();
+        }, 100);
+      }
+    }
+
+    // 店舗モーダル内の検索結果を更新
+    function updateStoreModalAdmin() {
+      const modalSearch = document.getElementById('store-modal-search-admin');
+      const modalResults = document.getElementById('store-modal-results-admin');
+
+      if (!modalSearch || !modalResults || typeof window.stores === 'undefined') return;
+
+      const query = modalSearch.value.trim();
+      const selectedBrandId = document.getElementById('report-brand-modal')?.value;
+      const brandNameInput = document.getElementById('report-brand-search-modal')?.value.trim() || '';
+      const brandNameHidden = document.getElementById('report-brand-name-modal')?.value || '';
+      const hasBrandName = brandNameInput || brandNameHidden;
+
+      let filtered = query.length === 0
+        ? window.stores
+        : window.stores.filter(store => {
+          const name = (store.store_name || store.name || '').toLowerCase();
+          return name.includes(query.toLowerCase());
+        });
+
+      if (selectedBrandId) {
+        filtered = filtered.filter(store => {
+          const storeBrandId = store.brand_id || store.brandId;
+          return storeBrandId === selectedBrandId || String(storeBrandId) === String(selectedBrandId);
+        });
+      } else if (!hasBrandName) {
+        filtered = [];
+      }
+
+      let html = '<div class="store-search-item free-input-option" data-free-input="true"><i class="fas fa-edit"></i> 自由入力</div>';
+
+      if (filtered.length === 0) {
+        html += '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
+      } else {
+        html += filtered.map(store => {
+          const name = store.store_name || store.name;
+          const id = store.store_id || store.id;
+          const brandId = store.brand_id || store.brandId;
+          return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}" data-brand-id="${brandId || ''}">${escapeHtml(name)}</div>`;
+        }).join('');
+      }
+
+      modalResults.innerHTML = html;
+
+      // クリックイベント
+      modalResults.querySelectorAll('.store-search-item:not(.no-results)').forEach(item => {
+        item.addEventListener('click', function () {
+          const id = this.dataset.id;
+          const name = this.dataset.name;
+
+          if (this.classList.contains('free-input-option')) {
+            storeSearchInput.removeAttribute('readonly');
+            document.getElementById('report-store-modal').value = '';
+            document.getElementById('report-store-name-modal').value = '';
+            storeSearchInput.value = '';
+            closeStoreModalAdmin();
+            // モーダルを閉じた後にフォーカスを設定（少し遅延させる）
+            setTimeout(() => {
+              storeSearchInput.focus();
+            }, 100);
+          } else {
+            document.getElementById('report-store-modal').value = id || '';
+            document.getElementById('report-store-name-modal').value = name || '';
+            storeSearchInput.value = name || '';
+            storeSearchInput.setAttribute('readonly', 'readonly');
+          }
+
+          closeStoreModalAdmin();
+        });
+      });
+    }
+
+    // 店舗モーダルを閉じる
+    window.closeStoreModalAdmin = function () {
+      const modal = document.getElementById('store-select-modal-admin');
+      if (modal) {
+        modal.style.display = 'none';
+        const modalSearch = document.getElementById('store-modal-search-admin');
+        if (modalSearch) modalSearch.value = '';
+      }
+    };
+
+    // モーダル内の検索フィールドのイベント
+    const storeModalSearch = document.getElementById('store-modal-search-admin');
+    if (storeModalSearch) {
+      storeModalSearch.addEventListener('input', updateStoreModalAdmin);
+    }
+
+    // イベントリスナー
+    storeDropdownBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      openStoreModalAdmin();
+    });
+
+    storeSearchInput.addEventListener('click', function (e) {
+      if (this.hasAttribute('readonly')) {
         e.preventDefault();
         openStoreModalAdmin();
-      });
-      
-      storeSearchInput.addEventListener('click', function(e) {
-        if (this.hasAttribute('readonly')) {
-          e.preventDefault();
-          openStoreModalAdmin();
+      }
+    });
+
+    storeSearchInput.addEventListener('input', function () {
+      if (!this.hasAttribute('readonly')) {
+        const inputValue = this.value;
+        const storeNameEl = document.getElementById('report-store-name-modal');
+        const storeIdEl = document.getElementById('report-store-modal');
+        if (storeNameEl) {
+          storeNameEl.value = inputValue;
         }
-      });
-      
-      storeSearchInput.addEventListener('input', function() {
-        if (!this.hasAttribute('readonly')) {
-          const inputValue = this.value;
-          const storeNameEl = document.getElementById('report-store-name-modal');
-          const storeIdEl = document.getElementById('report-store-modal');
-          if (storeNameEl) {
-            storeNameEl.value = inputValue;
-          }
-          if (storeIdEl) {
-            storeIdEl.value = '';
-          }
+        if (storeIdEl) {
+          storeIdEl.value = '';
         }
+      }
+    });
+
+    storeSearchInput.setAttribute('readonly', 'readonly');
+  }
+
+  // モーダル内のセクション管理用変数
+  let modalSectionCounter = 0;
+  let modalSections = {};
+
+  // モーダル内のイベントリスナーを設定
+  function setupModalEventListeners() {
+    // 追加ボタン
+    const addCleaningItem = document.getElementById('add-cleaning-item-modal');
+    const addImage = document.getElementById('add-image-modal');
+    const addComment = document.getElementById('add-comment-modal');
+    const addWorkContent = document.getElementById('add-work-content-modal');
+
+    if (addCleaningItem) {
+      addCleaningItem.addEventListener('click', () => {
+        addCleaningItemSectionModal();
       });
-      
-      storeSearchInput.setAttribute('readonly', 'readonly');
     }
 
-    // モーダル内のセクション管理用変数
-    let modalSectionCounter = 0;
-    let modalSections = {};
-
-    // モーダル内のイベントリスナーを設定
-    function setupModalEventListeners() {
-      // 追加ボタン
-      const addCleaningItem = document.getElementById('add-cleaning-item-modal');
-      const addImage = document.getElementById('add-image-modal');
-      const addComment = document.getElementById('add-comment-modal');
-      const addWorkContent = document.getElementById('add-work-content-modal');
-      
-      if (addCleaningItem) {
-        addCleaningItem.addEventListener('click', () => {
-          addCleaningItemSectionModal();
-        });
-      }
-      
-      if (addImage) {
-        addImage.addEventListener('click', () => {
-          openImageSectionTypeModalAdmin();
-        });
-      }
-      
-      if (addComment) {
-        addComment.addEventListener('click', () => {
-          addCommentSectionModal();
-        });
-      }
-      
-      if (addWorkContent) {
-        addWorkContent.addEventListener('click', () => {
-          addWorkContentSectionModal();
-        });
-      }
-      
-      // フォーム送信
-      const form = document.getElementById('report-form-modal');
-      if (form) {
-        form.addEventListener('submit', (e) => {
-          e.preventDefault();
-          handleModalFormSubmit();
-        });
-      }
+    if (addImage) {
+      addImage.addEventListener('click', () => {
+        openImageSectionTypeModalAdmin();
+      });
     }
 
-    // モーダル内の清掃項目セクション追加
-    function addCleaningItemSectionModal() {
-      modalSectionCounter++;
-      const sectionId = `modal-section-${modalSectionCounter}`;
-      modalSections[sectionId] = { type: 'cleaning', item_name: '' };
+    if (addComment) {
+      addComment.addEventListener('click', () => {
+        addCommentSectionModal();
+      });
+    }
 
-      const serviceItems = window.serviceItems || [];
-      const options = serviceItems.map(item => 
-        `<option value="${escapeHtml(item.title)}">${escapeHtml(item.title)}</option>`
-      ).join('');
+    if (addWorkContent) {
+      addWorkContent.addEventListener('click', () => {
+        addWorkContentSectionModal();
+      });
+    }
 
-      const html = `
+    // フォーム送信
+    const form = document.getElementById('report-form-modal');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleModalFormSubmit();
+      });
+    }
+  }
+
+  // モーダル内の清掃項目セクション追加
+  function addCleaningItemSectionModal() {
+    modalSectionCounter++;
+    const sectionId = `modal-section-${modalSectionCounter}`;
+    modalSections[sectionId] = { type: 'cleaning', item_name: '' };
+
+    const serviceItems = window.serviceItems || [];
+    const options = serviceItems.map(item =>
+      `<option value="${escapeHtml(item.title)}">${escapeHtml(item.title)}</option>`
+    ).join('');
+
+    const html = `
         <div class="section-card" data-section-id="${sectionId}">
           <div class="section-header">
             <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
@@ -3341,20 +3341,20 @@
         </div>
       `;
 
-      const reportContent = document.getElementById('report-content-modal');
-      if (reportContent) {
-        reportContent.insertAdjacentHTML('beforeend', html);
-        updateCleaningItemsListModal();
-      }
+    const reportContent = document.getElementById('report-content-modal');
+    if (reportContent) {
+      reportContent.insertAdjacentHTML('beforeend', html);
+      updateCleaningItemsListModal();
     }
+  }
 
-    // モーダル内のコメントセクション追加
-    function addCommentSectionModal() {
-      modalSectionCounter++;
-      const sectionId = `modal-section-${modalSectionCounter}`;
-      modalSections[sectionId] = { type: 'comment', content: '' };
+  // モーダル内のコメントセクション追加
+  function addCommentSectionModal() {
+    modalSectionCounter++;
+    const sectionId = `modal-section-${modalSectionCounter}`;
+    modalSections[sectionId] = { type: 'comment', content: '' };
 
-      const html = `
+    const html = `
         <div class="section-card" data-section-id="${sectionId}">
           <div class="section-header">
             <span class="section-title"><i class="fas fa-comment"></i> コメント</span>
@@ -3368,19 +3368,19 @@
         </div>
       `;
 
-      const reportContent = document.getElementById('report-content-modal');
-      if (reportContent) {
-        reportContent.insertAdjacentHTML('beforeend', html);
-      }
+    const reportContent = document.getElementById('report-content-modal');
+    if (reportContent) {
+      reportContent.insertAdjacentHTML('beforeend', html);
     }
+  }
 
-    // モーダル内の作業内容セクション追加
-    function addWorkContentSectionModal() {
-      modalSectionCounter++;
-      const sectionId = `modal-section-${modalSectionCounter}`;
-      modalSections[sectionId] = { type: 'work_content', content: '' };
+  // モーダル内の作業内容セクション追加
+  function addWorkContentSectionModal() {
+    modalSectionCounter++;
+    const sectionId = `modal-section-${modalSectionCounter}`;
+    modalSections[sectionId] = { type: 'work_content', content: '' };
 
-      const html = `
+    const html = `
         <div class="section-card" data-section-id="${sectionId}">
           <div class="section-header">
             <span class="section-title"><i class="fas fa-tasks"></i> 作業内容</span>
@@ -3394,174 +3394,174 @@
         </div>
       `;
 
-      const reportContent = document.getElementById('report-content-modal');
-      if (reportContent) {
-        reportContent.insertAdjacentHTML('beforeend', html);
+    const reportContent = document.getElementById('report-content-modal');
+    if (reportContent) {
+      reportContent.insertAdjacentHTML('beforeend', html);
+    }
+  }
+
+  // モーダル内のセクション削除
+  window.deleteSectionModal = function (sectionId) {
+    delete modalSections[sectionId];
+    const card = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (card) card.remove();
+    updateCleaningItemsListModal();
+  };
+
+  // モーダル内の清掃項目更新
+  window.updateCleaningItemModal = function (sectionId, value) {
+    const card = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (!card) return;
+
+    const customInput = card.querySelector('.cleaning-item-custom');
+
+    if (value === '__other__') {
+      if (customInput) {
+        customInput.style.display = 'block';
+        customInput.focus();
       }
+      modalSections[sectionId].item_name = '';
+    } else {
+      if (customInput) customInput.style.display = 'none';
+      modalSections[sectionId].item_name = value;
     }
 
-    // モーダル内のセクション削除
-    window.deleteSectionModal = function(sectionId) {
-      delete modalSections[sectionId];
-      const card = document.querySelector(`[data-section-id="${sectionId}"]`);
-      if (card) card.remove();
-      updateCleaningItemsListModal();
-    };
+    updateCleaningItemsListModal();
+  };
 
-    // モーダル内の清掃項目更新
-    window.updateCleaningItemModal = function(sectionId, value) {
-      const card = document.querySelector(`[data-section-id="${sectionId}"]`);
-      if (!card) return;
-      
-      const customInput = card.querySelector('.cleaning-item-custom');
-      
-      if (value === '__other__') {
-        if (customInput) {
-          customInput.style.display = 'block';
-          customInput.focus();
-        }
-        modalSections[sectionId].item_name = '';
-      } else {
-        if (customInput) customInput.style.display = 'none';
-        modalSections[sectionId].item_name = value;
-      }
-      
-      updateCleaningItemsListModal();
-    };
-
-    // モーダル内のセクション内容更新
-    window.updateSectionContentModal = function(sectionId, value) {
-      if (modalSections[sectionId]) {
-        modalSections[sectionId].content = value;
-      }
-    };
-
-    // モーダル内の実施清掃項目リストを更新
-    function updateCleaningItemsListModal() {
-      const cleaningItemsList = document.getElementById('cleaning-items-list-modal');
-      if (!cleaningItemsList) return;
-
-      const cleaningSections = Object.values(modalSections).filter(s => s.type === 'cleaning' && s.item_name);
-      
-      if (cleaningSections.length === 0) {
-        cleaningItemsList.innerHTML = '<span class="items-list-empty">項目を追加してください</span>';
-      } else {
-        cleaningItemsList.innerHTML = cleaningSections.map(s => {
-          return `<span class="items-list-item">${escapeHtml(s.item_name)}</span>`;
-        }).join('');
-      }
+  // モーダル内のセクション内容更新
+  window.updateSectionContentModal = function (sectionId, value) {
+    if (modalSections[sectionId]) {
+      modalSections[sectionId].content = value;
     }
+  };
 
-    // モーダル内の画像ストックを初期化
-    function initImageStockModal() {
-      const stockFileInput = document.getElementById('stock-file-input-modal');
-      const clearStockBtn = document.getElementById('clear-stock-btn-modal');
-      const imageStockGrid = document.getElementById('image-stock-grid-modal');
-      
-      if (!stockFileInput || !imageStockGrid) return;
-      
-      // 画像ストック用の変数
-      let modalImageStock = [];
-      
-      stockFileInput.addEventListener('change', (e) => {
-        const files = Array.from(e.target.files);
-        const skippedFiles = [];
-        
-        files.forEach(file => {
-          if (file.type.startsWith('image/')) {
-            // 重複チェック（ファイル名とファイルサイズで判定）
-            const isDuplicate = modalImageStock.some(existing => 
-              existing.fileName === file.name && 
-              existing.file.size === file.size
-            );
-            
-            if (isDuplicate) {
-              skippedFiles.push(file.name);
-              return; // 重複している場合はスキップ
-            }
-            
-            const id = `stock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            const blobUrl = URL.createObjectURL(file);
-            modalImageStock.push({ id, file, blobUrl, fileName: file.name });
-            
-            const img = document.createElement('div');
-            img.className = 'image-stock-item';
-            img.dataset.stockId = id;
-            img.innerHTML = `
+  // モーダル内の実施清掃項目リストを更新
+  function updateCleaningItemsListModal() {
+    const cleaningItemsList = document.getElementById('cleaning-items-list-modal');
+    if (!cleaningItemsList) return;
+
+    const cleaningSections = Object.values(modalSections).filter(s => s.type === 'cleaning' && s.item_name);
+
+    if (cleaningSections.length === 0) {
+      cleaningItemsList.innerHTML = '<span class="items-list-empty">項目を追加してください</span>';
+    } else {
+      cleaningItemsList.innerHTML = cleaningSections.map(s => {
+        return `<span class="items-list-item">${escapeHtml(s.item_name)}</span>`;
+      }).join('');
+    }
+  }
+
+  // モーダル内の画像ストックを初期化
+  function initImageStockModal() {
+    const stockFileInput = document.getElementById('stock-file-input-modal');
+    const clearStockBtn = document.getElementById('clear-stock-btn-modal');
+    const imageStockGrid = document.getElementById('image-stock-grid-modal');
+
+    if (!stockFileInput || !imageStockGrid) return;
+
+    // 画像ストック用の変数
+    let modalImageStock = [];
+
+    stockFileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      const skippedFiles = [];
+
+      files.forEach(file => {
+        if (file.type.startsWith('image/')) {
+          // 重複チェック（ファイル名とファイルサイズで判定）
+          const isDuplicate = modalImageStock.some(existing =>
+            existing.fileName === file.name &&
+            existing.file.size === file.size
+          );
+
+          if (isDuplicate) {
+            skippedFiles.push(file.name);
+            return; // 重複している場合はスキップ
+          }
+
+          const id = `stock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          const blobUrl = URL.createObjectURL(file);
+          modalImageStock.push({ id, file, blobUrl, fileName: file.name });
+
+          const img = document.createElement('div');
+          img.className = 'image-stock-item';
+          img.dataset.stockId = id;
+          img.innerHTML = `
               <img src="${blobUrl}" alt="${file.name}">
               <button type="button" class="image-stock-remove" onclick="removeStockImage('${id}')">
                 <i class="fas fa-times"></i>
               </button>
             `;
-            
-            const empty = imageStockGrid.querySelector('.image-stock-empty');
-            if (empty) empty.remove();
-            imageStockGrid.appendChild(img);
-            
-            if (clearStockBtn) clearStockBtn.style.display = 'block';
-          }
-        });
-        
-        // 重複ファイルがあった場合は通知
-        if (skippedFiles.length > 0) {
-          const message = skippedFiles.length === 1 
-            ? `「${skippedFiles[0]}」は既にメディアに追加されています。`
-            : `${skippedFiles.length}件の画像は既にメディアに追加されているため、スキップしました。`;
-          alert(message);
+
+          const empty = imageStockGrid.querySelector('.image-stock-empty');
+          if (empty) empty.remove();
+          imageStockGrid.appendChild(img);
+
+          if (clearStockBtn) clearStockBtn.style.display = 'block';
         }
-        
-        e.target.value = '';
       });
-      
-      if (clearStockBtn) {
-        clearStockBtn.addEventListener('click', () => {
-          if (confirm('すべての画像を削除しますか？')) {
-            modalImageStock = [];
-            imageStockGrid.innerHTML = '<div class="image-stock-empty"><i class="fas fa-cloud-upload-alt"></i><p>画像をアップロードしてください</p><small>ドラッグ&ドロップで各セクションに配置できます</small></div>';
-            clearStockBtn.style.display = 'none';
-          }
-        });
+
+      // 重複ファイルがあった場合は通知
+      if (skippedFiles.length > 0) {
+        const message = skippedFiles.length === 1
+          ? `「${skippedFiles[0]}」は既にメディアに追加されています。`
+          : `${skippedFiles.length}件の画像は既にメディアに追加されているため、スキップしました。`;
+        alert(message);
       }
-      
-      window.removeStockImage = function(id) {
-        modalImageStock = modalImageStock.filter(item => item.id !== id);
-        const item = imageStockGrid.querySelector(`[data-stock-id="${id}"]`);
-        if (item) {
-          URL.revokeObjectURL(item.querySelector('img').src);
-          item.remove();
-        }
-        if (modalImageStock.length === 0) {
+
+      e.target.value = '';
+    });
+
+    if (clearStockBtn) {
+      clearStockBtn.addEventListener('click', () => {
+        if (confirm('すべての画像を削除しますか？')) {
+          modalImageStock = [];
           imageStockGrid.innerHTML = '<div class="image-stock-empty"><i class="fas fa-cloud-upload-alt"></i><p>画像をアップロードしてください</p><small>ドラッグ&ドロップで各セクションに配置できます</small></div>';
-          if (clearStockBtn) clearStockBtn.style.display = 'none';
+          clearStockBtn.style.display = 'none';
         }
-      };
+      });
     }
 
-    // 画像セクションタイプ選択モーダルを開く（管理側）
-    function openImageSectionTypeModalAdmin() {
-      const modal = document.getElementById('image-section-type-modal-admin');
-      if (modal) {
-        modal.style.display = 'flex';
+    window.removeStockImage = function (id) {
+      modalImageStock = modalImageStock.filter(item => item.id !== id);
+      const item = imageStockGrid.querySelector(`[data-stock-id="${id}"]`);
+      if (item) {
+        URL.revokeObjectURL(item.querySelector('img').src);
+        item.remove();
       }
-    }
-
-    // 画像セクションタイプ選択モーダルを閉じる（管理側）
-    window.closeImageSectionTypeModalAdmin = function() {
-      const modal = document.getElementById('image-section-type-modal-admin');
-      if (modal) {
-        modal.style.display = 'none';
+      if (modalImageStock.length === 0) {
+        imageStockGrid.innerHTML = '<div class="image-stock-empty"><i class="fas fa-cloud-upload-alt"></i><p>画像をアップロードしてください</p><small>ドラッグ&ドロップで各セクションに配置できます</small></div>';
+        if (clearStockBtn) clearStockBtn.style.display = 'none';
       }
     };
+  }
 
-    // 画像セクションを追加（作業前・作業後）
-    window.addImageSectionBeforeAfterAdmin = function() {
-      closeImageSectionTypeModalAdmin();
-      modalSectionCounter++;
-      const sectionId = `modal-section-${modalSectionCounter}`;
-      modalSections[sectionId] = { type: 'image', image_type: 'before_after', photos: { before: [], after: [] } };
+  // 画像セクションタイプ選択モーダルを開く（管理側）
+  function openImageSectionTypeModalAdmin() {
+    const modal = document.getElementById('image-section-type-modal-admin');
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+  }
 
-      const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg';
-      const html = `
+  // 画像セクションタイプ選択モーダルを閉じる（管理側）
+  window.closeImageSectionTypeModalAdmin = function () {
+    const modal = document.getElementById('image-section-type-modal-admin');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  };
+
+  // 画像セクションを追加（作業前・作業後）
+  window.addImageSectionBeforeAfterAdmin = function () {
+    closeImageSectionTypeModalAdmin();
+    modalSectionCounter++;
+    const sectionId = `modal-section-${modalSectionCounter}`;
+    modalSections[sectionId] = { type: 'image', image_type: 'before_after', photos: { before: [], after: [] } };
+
+    const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg';
+    const html = `
         <div class="section-card" data-section-id="${sectionId}">
           <div class="section-header">
             <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後）</span>
@@ -3600,21 +3600,21 @@
         </div>
       `;
 
-      const reportContent = document.getElementById('report-content-modal');
-      if (reportContent) {
-        reportContent.insertAdjacentHTML('beforeend', html);
-      }
-    };
+    const reportContent = document.getElementById('report-content-modal');
+    if (reportContent) {
+      reportContent.insertAdjacentHTML('beforeend', html);
+    }
+  };
 
-    // 画像セクションを追加（施工後）
-    window.addImageSectionCompletedAdmin = function() {
-      closeImageSectionTypeModalAdmin();
-      modalSectionCounter++;
-      const sectionId = `modal-section-${modalSectionCounter}`;
-      modalSections[sectionId] = { type: 'image', image_type: 'completed', photos: { completed: [] } };
+  // 画像セクションを追加（施工後）
+  window.addImageSectionCompletedAdmin = function () {
+    closeImageSectionTypeModalAdmin();
+    modalSectionCounter++;
+    const sectionId = `modal-section-${modalSectionCounter}`;
+    modalSections[sectionId] = { type: 'image', image_type: 'completed', photos: { completed: [] } };
 
-      const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg';
-      const html = `
+    const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg';
+    const html = `
         <div class="section-card" data-section-id="${sectionId}">
           <div class="section-header">
             <span class="section-title"><i class="fas fa-image"></i> 画像（施工後）</span>
@@ -3641,113 +3641,113 @@
         </div>
       `;
 
-      const reportContent = document.getElementById('report-content-modal');
-      if (reportContent) {
-        reportContent.insertAdjacentHTML('beforeend', html);
-      }
-    };
-
-    // モーダル内の画像ダイアログを開く
-    window.openImageDialogModal = function(sectionId, category) {
-      // 画像倉庫モーダルを開く
-      const modal = document.getElementById('warehouse-dialog-modal');
-      if (modal) {
-        modal.style.display = 'flex';
-        // TODO: 画像選択処理を実装
-      }
-    };
-
-    // モーダル内のフォーム送信処理
-    async function handleModalFormSubmit() {
-      const storeId = document.getElementById('report-store-modal')?.value || '';
-      const storeName = document.getElementById('report-store-name-modal')?.value || '';
-      const brandId = document.getElementById('report-brand-modal')?.value || '';
-      const brandName = document.getElementById('report-brand-name-modal')?.value || '';
-      const cleaningDate = document.getElementById('report-date-modal')?.value || '';
-      const startTime = document.getElementById('report-start-modal')?.value || '';
-      const endTime = document.getElementById('report-end-modal')?.value || '';
-
-      if (!storeId && !storeName) {
-        alert('店舗を選択または入力してください');
-        return;
-      }
-
-      if (!brandName) {
-        alert('ブランド名を入力してください');
-        return;
-      }
-
-      if (!cleaningDate) {
-        alert('清掃日を入力してください');
-        return;
-      }
-
-      // セクションデータを収集
-      const workItems = Object.values(modalSections)
-        .filter(s => s.type === 'cleaning' && s.item_name)
-        .map(s => ({
-          item_name: s.item_name,
-          item_id: s.item_name.toLowerCase().replace(/\s+/g, '-')
-        }));
-
-      const sections = Object.entries(modalSections).map(([id, section]) => {
-        if (section.type === 'cleaning') {
-          return {
-            type: 'cleaning',
-            item_name: section.item_name
-          };
-        } else if (section.type === 'image') {
-          return {
-            type: 'image',
-            image_type: section.image_type,
-            photos: section.photos || {}
-          };
-        } else if (section.type === 'comment') {
-          return {
-            type: 'comment',
-            content: section.content || ''
-          };
-        } else if (section.type === 'work_content') {
-          return {
-            type: 'work_content',
-            content: section.content || ''
-          };
-        }
-        return null;
-      }).filter(s => s !== null);
-
-      // APIに送信
-      try {
-        const idToken = await getFirebaseIdToken();
-        const response = await fetch(`${REPORT_API}/staff/reports`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
-          },
-          body: JSON.stringify({
-            store_id: storeId || null,
-            store_name: storeName,
-            brand_id: brandId || null,
-            brand_name: brandName,
-            cleaning_date: cleaningDate,
-            cleaning_start_time: startTime || null,
-            cleaning_end_time: endTime || null,
-            work_items: workItems,
-            sections: sections
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error('レポートの作成に失敗しました');
-        }
-
-        alert('レポートを作成しました');
-        document.getElementById('new-dialog').close();
-        await loadReports();
-      } catch (error) {
-        console.error('Error creating report:', error);
-        alert('レポートの作成に失敗しました: ' + error.message);
-      }
+    const reportContent = document.getElementById('report-content-modal');
+    if (reportContent) {
+      reportContent.insertAdjacentHTML('beforeend', html);
     }
-  })();
+  };
+
+  // モーダル内の画像ダイアログを開く
+  window.openImageDialogModal = function (sectionId, category) {
+    // 画像倉庫モーダルを開く
+    const modal = document.getElementById('warehouse-dialog-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      // TODO: 画像選択処理を実装
+    }
+  };
+
+  // モーダル内のフォーム送信処理
+  async function handleModalFormSubmit() {
+    const storeId = document.getElementById('report-store-modal')?.value || '';
+    const storeName = document.getElementById('report-store-name-modal')?.value || '';
+    const brandId = document.getElementById('report-brand-modal')?.value || '';
+    const brandName = document.getElementById('report-brand-name-modal')?.value || '';
+    const cleaningDate = document.getElementById('report-date-modal')?.value || '';
+    const startTime = document.getElementById('report-start-modal')?.value || '';
+    const endTime = document.getElementById('report-end-modal')?.value || '';
+
+    if (!storeId && !storeName) {
+      alert('店舗を選択または入力してください');
+      return;
+    }
+
+    if (!brandName) {
+      alert('ブランド名を入力してください');
+      return;
+    }
+
+    if (!cleaningDate) {
+      alert('清掃日を入力してください');
+      return;
+    }
+
+    // セクションデータを収集
+    const workItems = Object.values(modalSections)
+      .filter(s => s.type === 'cleaning' && s.item_name)
+      .map(s => ({
+        item_name: s.item_name,
+        item_id: s.item_name.toLowerCase().replace(/\s+/g, '-')
+      }));
+
+    const sections = Object.entries(modalSections).map(([id, section]) => {
+      if (section.type === 'cleaning') {
+        return {
+          type: 'cleaning',
+          item_name: section.item_name
+        };
+      } else if (section.type === 'image') {
+        return {
+          type: 'image',
+          image_type: section.image_type,
+          photos: section.photos || {}
+        };
+      } else if (section.type === 'comment') {
+        return {
+          type: 'comment',
+          content: section.content || ''
+        };
+      } else if (section.type === 'work_content') {
+        return {
+          type: 'work_content',
+          content: section.content || ''
+        };
+      }
+      return null;
+    }).filter(s => s !== null);
+
+    // APIに送信
+    try {
+      const idToken = await getFirebaseIdToken();
+      const response = await fetch(`${REPORT_API}/staff/reports`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          store_id: storeId || null,
+          store_name: storeName,
+          brand_id: brandId || null,
+          brand_name: brandName,
+          cleaning_date: cleaningDate,
+          cleaning_start_time: startTime || null,
+          cleaning_end_time: endTime || null,
+          work_items: workItems,
+          sections: sections
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('レポートの作成に失敗しました');
+      }
+
+      alert('レポートを作成しました');
+      document.getElementById('new-dialog').close();
+      await loadReports();
+    } catch (error) {
+      console.error('Error creating report:', error);
+      alert('レポートの作成に失敗しました: ' + error.message);
+    }
+  }
+})();

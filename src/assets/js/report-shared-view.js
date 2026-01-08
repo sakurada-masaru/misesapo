@@ -1,5 +1,5 @@
 // APIエンドポイント（将来的に実装）
-const API_BASE_URL = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+const API_BASE_URL = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
 // デフォルト画像（画像がない場合）
 const DEFAULT_NO_PHOTO_IMAGE = '/images-admin/sorry.png';

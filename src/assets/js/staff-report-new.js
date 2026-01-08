@@ -7757,7 +7757,7 @@
       // 編集モードの場合はPUT、新規作成の場合はPOST
       // CORS修正: /daily-reportsエンドポイントを使用
       const url = isEditMode
-        ? `${REPORT_API} /daily-reports/${reportId}?type = cleaning`
+        ? `${REPORT_API}/daily-reports/${reportId}?type=cleaning`
         : `${REPORT_API}/daily-reports?type=cleaning`;
       const method = isEditMode ? 'PUT' : 'POST';
 
@@ -9688,6 +9688,6 @@
       renderHaccpLauncher();
     });
 
-  };
+  })();
 })();
 
