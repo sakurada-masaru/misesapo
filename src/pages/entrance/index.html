@@ -1027,10 +1027,17 @@
 
                 if (isOnBreak) {
                     appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。現在休憩中ですね。業務を再開しますか？`);
-                    handleAiCommands({ ui_commands: [{ type: 'show_break_end' }, { type: 'show_sidebar' }] });
+                    handleAiCommands({ ui_commands: [{ type: 'show_break_end' }] });
                 } else if (isClockedIn) {
-                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。本日も業務をサポートいたします。何をしましょうか？`);
-                    handleAiCommands({ ui_commands: [{ type: 'show_work_options' }, { type: 'show_sidebar' }] });
+                    // Check if job type was already selected today
+                    const savedJobType = localStorage.getItem('current_job_type');
+                    if (savedJobType && JOB_TYPES[savedJobType]) {
+                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。${JOB_TYPES[savedJobType].label}モードで業務を継続します。`);
+                        filterSidebar(savedJobType);
+                    } else {
+                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。本日はどの業務を行いますか？`);
+                        showJobSelection();
+                    }
                 } else {
                     appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
                     handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
@@ -1109,8 +1116,8 @@
             });
 
             if (response.ok) {
-                appendChatMessage('ai', `${user.name || 'ユーザー'}様、出勤を記録しました。本日の業務を開始します。それでは、良い1日を！左側のメニューから各機能へアクセスできます。`);
-                handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }] });
+                appendChatMessage('ai', `${user.name || 'ユーザー'}様、出勤を記録しました。本日はどの業務を行いますか？`);
+                showJobSelection();
                 if (btn) btn.innerHTML = '<i class="fas fa-check"></i> 出勤済み';
             } else {
                 const err = await response.json();
@@ -1186,6 +1193,7 @@
             });
             if (response.ok) {
                 appendChatMessage('ai', 'お疲れ様でした。退勤を記録しました。また明日もお待ちしております。');
+                localStorage.removeItem('current_job_type'); // Clear job type on clock out
                 handleAiResponse({ intent: 'clock_out' }); // Trigger visual transition
             }
         } catch (e) { console.error(e); }
@@ -1492,6 +1500,113 @@
 
     if (textInput) {
         textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendTextMessage(); });
+    }
+
+    // ====== JOB TYPE SYSTEM ======
+    const JOB_TYPES = {
+        cleaning: {
+            label: '清掃',
+            menus: ['mypage', 'schedules', 'reports-new']
+        },
+        office: {
+            label: '事務',
+            menus: ['mypage', 'customers', 'estimates', 'orders', 'zaiko']
+        },
+        sales: {
+            label: '営業',
+            menus: ['mypage', 'schedules', 'customers', 'estimates', 'reports', 'reports-new']
+        },
+        hr: {
+            label: '人事',
+            menus: ['mypage', 'users', 'attendance-errors', 'schedules']
+        },
+        accounting: {
+            label: '経理',
+            menus: ['mypage', 'orders', 'zaiko', 'estimates']
+        },
+        admin: {
+            label: '管理',
+            menus: 'all'
+        },
+        dev: {
+            label: '開発',
+            menus: ['mypage', 'dashboard', 'services', 'analytics', 'images']
+        }
+    };
+
+    // Common menus for all job types
+    const COMMON_MENUS = ['mypage', 'announcements', 'wiki'];
+
+    let currentJobType = null;
+
+    function showJobSelection() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = '';
+        const btnDiv = document.createElement('div');
+        btnDiv.className = 'action-bubble-container';
+        btnDiv.style.display = 'flex';
+        btnDiv.style.gap = '8px';
+        btnDiv.style.flexWrap = 'wrap';
+        btnDiv.style.justifyContent = 'center';
+
+        Object.keys(JOB_TYPES).forEach(jobKey => {
+            const job = JOB_TYPES[jobKey];
+            const buttonHtml = `
+                <button class="job-select-btn" onclick="selectJobType('${jobKey}')" 
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
+                    color: #fff; padding: 10px 20px; border-radius: 20px; cursor: pointer;
+                    transition: all 0.3s; font-size: 0.9rem;">
+                    ${job.label}
+                </button>
+            `;
+            btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
+        });
+
+        actionContainer.appendChild(btnDiv);
+    }
+
+    function selectJobType(jobKey) {
+        currentJobType = jobKey;
+        const job = JOB_TYPES[jobKey];
+
+        // Save to localStorage for persistence
+        localStorage.setItem('current_job_type', jobKey);
+
+        // Show confirmation message
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        appendChatMessage('ai', `${job.label}モードを開始します。左側のメニューから各機能へアクセスできます。`);
+
+        // Filter and show sidebar
+        filterSidebar(jobKey);
+
+        // Clear action buttons
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (actionContainer) actionContainer.innerHTML = '';
+    }
+
+    function filterSidebar(jobKey) {
+        const job = JOB_TYPES[jobKey];
+        const allowedMenus = job.menus === 'all' ? 'all' : [...COMMON_MENUS, ...job.menus];
+
+        if (sidebar) {
+            sidebar.style.display = 'flex';
+            const navItems = sidebar.querySelectorAll('.nav-item');
+
+            navItems.forEach((item, index) => {
+                const page = item.dataset.page;
+
+                if (allowedMenus === 'all' || allowedMenus.includes(page)) {
+                    item.style.display = 'flex';
+                    setTimeout(() => item.classList.add('show'), index * 50);
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        if (chatContainer) chatContainer.classList.add('sidebar-active');
     }
 
     // Toggle Visualizer Simulation
