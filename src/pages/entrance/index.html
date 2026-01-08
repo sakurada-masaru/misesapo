@@ -76,8 +76,8 @@
 
     /* Visualizer Container (Persistent Core) */
     .visualizer-container {
-        width: 300px;
-        height: 300px;
+        width: 440px;
+        height: 440px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -86,8 +86,10 @@
         left: 50%;
         transform: translate(-50%, -50%);
         cursor: pointer;
-        z-index: 10;
+        z-index: 100;
+        /* Higher to stay on top */
         transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: none;
     }
 
     /* Core Pulse & Liquid Motion */
@@ -96,35 +98,132 @@
         height: 80px;
         background: var(--accent-color);
         border-radius: 50%;
-        box-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-glow);
-        position: absolute;
-        z-index: 10;
-        /* Simple breathe replaced by liquid motion */
+        box-shadow: 0 0 40px var(--accent-glow), 0 0 80px var(--accent-glow);
+        position: relative;
+        z-index: 150;
+        /* Above waves */
         animation: liquid 8s infinite linear, breathe 4s infinite ease-in-out;
     }
 
-    /* Waves (Ripples) */
+    /* Wavy Outline Effect */
+    .core-circle::before {
+        content: '';
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        bottom: -4px;
+        left: -4px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        animation: wavy-outline 12s infinite linear;
+        filter: blur(1px);
+    }
+
+    @keyframes wavy-outline {
+        0% {
+            transform: rotate(0deg);
+            border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+        }
+
+        25% {
+            border-radius: 40% 60% 45% 55% / 55% 45% 60% 40%;
+        }
+
+        50% {
+            border-radius: 60% 40% 55% 45% / 45% 55% 40% 60%;
+        }
+
+        75% {
+            border-radius: 45% 55% 40% 60% / 60% 40% 55% 45%;
+        }
+
+        100% {
+            transform: rotate(360deg);
+            border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+        }
+    }
+
+    /* Circle Text Rotation */
+    .circle-text-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 400px;
+        height: 400px;
+        margin-top: -200px;
+        /* Offset half height */
+        margin-left: -200px;
+        /* Offset half width */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 120;
+        opacity: 0.5;
+        animation: simple-rotate 60s linear infinite;
+        pointer-events: none;
+    }
+
+    .circle-svg {
+        width: 100%;
+        height: 100%;
+        fill: var(--accent-color);
+    }
+
+    /* Waves (Ripples) - MUST BE VISIBLE */
     .wave {
         position: absolute;
-        border: 1px solid var(--accent-color);
+        border: 2px solid var(--accent-color);
         border-radius: 50%;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
         opacity: 0;
+        z-index: 110;
+        /* Above any inner background, below core and text */
         pointer-events: none;
-    }
-
-    .wave:nth-child(1) {
-        animation: ripple 4s infinite 0s cubic-bezier(0.23, 1, 0.32, 1);
+        box-shadow: 0 0 15px var(--accent-glow);
     }
 
     .wave:nth-child(2) {
-        animation: ripple 4s infinite 1.3s cubic-bezier(0.23, 1, 0.32, 1);
+        animation: ripple 4s infinite 0s cubic-bezier(0.23, 1, 0.32, 1);
     }
 
     .wave:nth-child(3) {
+        animation: ripple 4s infinite 1.3s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .wave:nth-child(4) {
         animation: ripple 4s infinite 2.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    @keyframes simple-rotate {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes liquid {
+
+        0%,
+        100% {
+            border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+        }
+
+        25% {
+            border-radius: 58% 42% 55% 45% / 42% 58% 45% 55%;
+        }
+
+        50% {
+            border-radius: 45% 55% 42% 58% / 55% 45% 58% 42%;
+        }
+
+        75% {
+            border-radius: 55% 45% 58% 42% / 45% 55% 42% 58%;
+        }
     }
 
     @keyframes breathe {
@@ -132,13 +231,12 @@
         0%,
         100% {
             transform: scale(1);
-            opacity: 0.8;
+            opacity: 0.9;
         }
 
         50% {
-            transform: scale(1.05);
+            transform: scale(1.08);
             opacity: 1;
-            box-shadow: 0 0 50px var(--accent-glow), 0 0 90px var(--accent-glow);
         }
     }
 
@@ -146,15 +244,15 @@
         0% {
             width: 80px;
             height: 80px;
-            opacity: 0.6;
+            opacity: 0.8;
             border-width: 2px;
         }
 
         100% {
-            width: 450px;
-            height: 450px;
+            width: 500px;
+            height: 500px;
             opacity: 0;
-            border-width: 0px;
+            border-width: 0.5px;
         }
     }
 
