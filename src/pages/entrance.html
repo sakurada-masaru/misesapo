@@ -8,16 +8,18 @@
     :root {
         --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
         --font-jp: 'Zen Kaku Gothic New', sans-serif;
-        --color-bg: #030305;
-        --color-glass: rgba(255, 255, 255, 0.03);
-        --color-glass-border: rgba(255, 255, 255, 0.08);
+        --color-bg: #03060f;
+        /* Deeper Blue-Black */
+        --color-glass: rgba(255, 255, 255, 0.04);
+        --color-glass-border: rgba(255, 255, 255, 0.1);
         --color-text-main: rgba(255, 255, 255, 0.95);
-        --color-text-sub: rgba(255, 255, 255, 0.5);
+        --color-text-sub: rgba(147, 197, 253, 0.6);
+        /* Bluer subtext */
 
         /* Dynamic Theme Colors */
         --theme-color: #3b82f6;
-        /* Default Admin Blue */
-        --theme-glow: rgba(59, 130, 246, 0.4);
+        --theme-glow: rgba(59, 130, 246, 0.5);
+        --theme-accent: #60a5fa;
     }
 
     /* Global Reset & Layout Overrides */
@@ -33,18 +35,29 @@
         overflow: hidden !important;
     }
 
+    /* Subtle Background Grid */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image:
+            linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+        background-size: 50px 50px;
+        z-index: 0;
+        pointer-events: none;
+    }
+
     /* Disable layout defaults */
     #default-header-wrapper,
     #normal-header-wrapper,
-    footer {
-        display: none !important;
-    }
-
+    footer,
     #admin-sidebar {
         display: none !important;
     }
-
-    /* We use our own dynamic sidebar logic */
 
     .main-content {
         position: absolute;
@@ -54,7 +67,7 @@
         height: 100%;
         margin: 0 !important;
         padding: 0 !important;
-        background: radial-gradient(circle at center, #0a0a12 0%, #000000 100%);
+        background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);
         z-index: 1;
         display: flex;
         flex-direction: column;
@@ -69,11 +82,12 @@
         position: absolute;
         width: 150vw;
         height: 150vw;
-        background: radial-gradient(circle, var(--theme-glow) 0%, transparent 60%);
+        background: radial-gradient(circle, var(--theme-glow) 0%, transparent 70%);
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        opacity: 0.15;
+        opacity: 0.25;
+        /* Increased prominence */
         pointer-events: none;
         transition: background 1.5s ease;
         z-index: 0;
@@ -82,23 +96,217 @@
     /* =========================================
        Visualizer Core (The AI "Soul")
        ========================================= */
-    /* =========================================
-       Visualizer Core (The AI "Soul")
-       ========================================= */
     .visualizer-container {
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 400px;
-        height: 400px;
+        width: 440px;
+        height: 440px;
         display: flex;
         justify-content: center;
         align-items: center;
         z-index: 10000;
-        /* Higher than start-overlay (9999) */
         transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         pointer-events: none;
+    }
+
+    .core-circle {
+        width: 70px;
+        height: 70px;
+        /* Slightly larger */
+        border-radius: 50%;
+        background: #fff;
+        box-shadow:
+            0 0 20px #fff,
+            0 0 50px var(--theme-color),
+            0 0 100px var(--theme-color);
+        position: relative;
+        z-index: 20;
+        animation: breathe 4s infinite ease-in-out;
+    }
+
+    .wave {
+        position: absolute;
+        border: 2px solid var(--theme-color);
+        /* Thicker waves */
+        border-radius: 50%;
+        opacity: 0;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .wave:nth-child(1) {
+        animation: ripple 3s infinite 0s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .wave:nth-child(2) {
+        animation: ripple 3s infinite 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .wave:nth-child(3) {
+        animation: ripple 3s infinite 2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    @keyframes breathe {
+
+        0%,
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 40px var(--theme-color);
+        }
+
+        50% {
+            transform: scale(1.1);
+            box-shadow: 0 0 80px var(--theme-color);
+        }
+    }
+
+    @keyframes ripple {
+        0% {
+            width: 70px;
+            height: 70px;
+            opacity: 0.8;
+            border-width: 3px;
+        }
+
+        100% {
+            width: 450px;
+            height: 450px;
+            opacity: 0;
+            border-width: 0px;
+        }
+    }
+
+    /* =========================================
+       Start Overlay & Login
+       ========================================= */
+    #start-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, #0a1128 0%, #000 100%);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 0.8s ease, visibility 0.8s;
+    }
+
+    #start-overlay.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .logo-section {
+        margin-bottom: 320px;
+        text-align: center;
+        opacity: 0;
+        animation: fadeUp 1.2s ease 0.5s forwards;
+    }
+
+    .logo-main {
+        font-size: 4rem;
+        /* Larger */
+        font-weight: 200;
+        letter-spacing: 16px;
+        color: #fff;
+        margin-bottom: 10px;
+        position: relative;
+        display: inline-block;
+    }
+
+    .logo-main .initial {
+        color: var(--theme-color);
+        font-weight: 600;
+        text-shadow: 0 0 20px var(--theme-glow);
+        margin-right: -4px;
+    }
+
+    .logo-sub {
+        font-size: 0.9rem;
+        color: var(--color-text-sub);
+        letter-spacing: 6px;
+        font-weight: 300;
+        line-height: 1.8;
+    }
+
+    .start-btn {
+        position: absolute;
+        bottom: 18%;
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        color: #fff;
+        font-size: 28px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        backdrop-filter: blur(15px);
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+        opacity: 0;
+        animation: fadeIn 1s ease 1s forwards;
+    }
+
+    .start-btn::after {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        border-radius: 50%;
+        border: 1px solid var(--theme-color);
+        opacity: 0;
+        transform: scale(0.9);
+        transition: all 0.5s ease;
+    }
+
+    .start-btn:hover {
+        transform: scale(1.15);
+        background: rgba(59, 130, 246, 0.2);
+        box-shadow: 0 0 60px var(--theme-glow);
+        border-color: var(--theme-accent);
+    }
+
+    .start-btn:hover::after {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+
+    .start-label {
+        position: absolute;
+        bottom: -35px;
+        font-size: 11px;
+        letter-spacing: 3px;
+        opacity: 0.7;
+        color: var(--theme-accent);
+    }
+
+    /* =========================================
+       Chat Interface & Split Layout
+       ========================================= */
+    #chat-interface {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     /* ... core-circle styles ... */
@@ -470,8 +678,9 @@
     <!-- Start Overlay (Initial Screen) -->
     <div id="start-overlay">
         <div class="logo-section">
-            <div class="logo-main">MISOGI</div>
-            <div class="logo-sub">INTELLIGENT SYSTEM<br>DISCONNECTED</div>
+            <div class="logo-main"><span class="initial"></span>M</span>ISOGI</div>
+            <div class="logo-sub">INTELLIGENT SYSTEM<br><span
+                    style="opacity:0.5; font-size: 0.7rem; letter-spacing: 8px;">CONNECTED TO CORE</span></div>
         </div>
         <button class="start-btn" onclick="app.start()" id="start-btn">
             <i class="fas fa-power-off"></i>
