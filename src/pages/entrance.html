@@ -841,51 +841,27 @@
 
     const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
-    function ensureAuthOrRedirect() {
-        // Simple token check
-        const token = localStorage.getItem('cognito_id_token');
-        if (!token) {
-            // alert("認証が必要です。");
-            return null;
-        }
-        return token;
-    }
-
-    // UI Variables
-    const visualizer = document.querySelector('.visualizer-container');
-    const core = document.querySelector('.core-circle');
-    const circleText = document.getElementById('circle-text');
-    const statusText = document.getElementById('status-text');
-    const responseOverlay = document.getElementById('ai-response');
-    const messageText = document.getElementById('ai-message-text');
-    const voiceContent = document.getElementById('voice-content');
-    const chatContainer = document.getElementById('chat-container');
-    const chatHistory = document.getElementById('chat-history');
-    const textInput = document.getElementById('text-input');
-    const btnVoice = document.getElementById('btn-voice-mode');
-    const btnChat = document.getElementById('btn-chat-mode');
-    const sidebar = document.getElementById('admin-sidebar');
-    const startOverlay = document.getElementById('start-overlay');
-    const loginForm = document.getElementById('login-form');
-
-    let currentMode = 'chat';
-
-    // Hide sidebar by default for AI-centric feel
-    if (sidebar) sidebar.style.display = 'none';
-
     async function startWorkflow() {
         startOverlay.classList.add('hidden');
         switchMode('chat');
 
-        const token = localStorage.getItem('cognito_id_token');
-        if (!token) {
+        // Use new robust Auth check
+        const isAuth = window.CognitoAuth && window.CognitoAuth.isAuthenticated();
+
+        if (!isAuth) {
             appendChatMessage('ai', 'おはようございます。ミセサポ管理AIのMISOGIです。セッションを開始するために、まずはログイン情報を入力してください。');
             setTimeout(() => {
                 loginForm.style.display = 'flex';
             }, 800);
         } else {
-            const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
-            const staffId = user.id || user.sub;
+            const user = await window.CognitoAuth.getCurrentUser();
+            const staffId = user ? (user.id || user.sub) : null;
+
+            if (!user) {
+                // Should not happen if isAuth is true, but safety net
+                loginForm.style.display = 'flex';
+                return;
+            }
 
             // Helper to get JST date string (YYYY-MM-DD)
             const getJstDateStr = (d) => {
@@ -901,11 +877,9 @@
             yesterday.setDate(yesterday.getDate() - 1);
             const yesterdayStr = getJstDateStr(yesterday);
 
-            // console.log(`Checking status for ${staffId}, checking dates: ${todayStr}, ${yesterdayStr}`);
-
             try {
+                const token = window.CognitoAuth.getIdToken();
                 // Fetch recent records (limit 5) instead of specific date filter
-                // This handles cross-day workshifts and timezone mismatches better
                 const response = await fetch(`${API_BASE}/attendance?staff_id=${staffId}&limit=5`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -915,10 +889,9 @@
                 if (response.ok) {
                     const data = await response.json();
                     records = Array.isArray(data) ? data : (data.attendance || data.items || []);
-                    // console.log('Attendance Check Result:', records);
 
                     // Check logic: Has clock_in AND (clock_out is null OR empty)
-                    // AND the record is from today OR yesterday (to avoid picking up ancient unfinished records)
+                    // AND the record is from today OR yesterday
                     isClockedIn = records.some(r => {
                         return r.clock_in && !r.clock_out && (r.date === todayStr || r.date === yesterdayStr);
                     });
@@ -935,8 +908,6 @@
                 }
             } catch (e) {
                 console.error('Failed to check attendance:', e);
-                // Fallback: don't assume not clocked in if error, but we have to provide a path.
-                // For now, prompt for attendance but maybe with a caveat or retry
                 appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
                 handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
             }
@@ -954,7 +925,6 @@
         loginBtn.disabled = true;
 
         try {
-            // Use existing CognitoAuth if available, or simulate for now
             if (window.CognitoAuth) {
                 const result = await window.CognitoAuth.login(email, password);
                 if (result.success) {
@@ -978,10 +948,10 @@
         const btn = document.getElementById('active-attendance-btn');
         if (btn) btn.disabled = true;
 
-        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
-        const token = localStorage.getItem('cognito_id_token');
+        const user = await window.CognitoAuth.getCurrentUser();
+        const token = window.CognitoAuth.getIdToken();
 
-        if (!user.id || !token) {
+        if (!user || !user.id || !token) {
             appendChatMessage('ai', 'エラー：ログイン情報が見つかりません。再ログインしてください。');
             return;
         }
