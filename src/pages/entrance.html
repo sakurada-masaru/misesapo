@@ -3,411 +3,710 @@
 @json('data/meta/admin_dashboard_body_class.json', $body_class)
 
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap');
 
-    :root {
-        --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
-        --font-jp: 'Zen Kaku Gothic New', sans-serif;
-        --color-bg: #030305;
-        --color-glass: rgba(255, 255, 255, 0.03);
-        --color-glass-border: rgba(255, 255, 255, 0.08);
-        --color-text-main: rgba(255, 255, 255, 0.95);
-        --color-text-sub: rgba(255, 255, 255, 0.5);
-
-        /* Dynamic Theme Colors */
-        --theme-color: #3b82f6;
-        /* Default Admin Blue */
-        --theme-glow: rgba(59, 130, 246, 0.4);
+    #default-header-wrapper,
+    #normal-header-wrapper {
+        display: none !important;
     }
 
-    /* Global Reset & Layout Overrides */
-    body,
-    html {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        background-color: var(--color-bg) !important;
-        font-family: var(--font-primary);
-        color: var(--color-text-main);
+    /* Override Layout Styles for this specific page */
+    .admin-dashboard {
+        background-color: #000 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: relative !important;
         overflow: hidden !important;
     }
 
-    /* Disable layout defaults */
-    #default-header-wrapper,
-    #normal-header-wrapper,
-    footer {
-        display: none !important;
-    }
-
+    /* Dark Sidebar Overrides for MISOGI Theme */
     #admin-sidebar {
-        display: none !important;
+        background-color: transparent !important;
+        border-right: none !important;
+        position: absolute !important;
+        left: 20px !important;
+        top: 0 !important;
+        height: 100% !important;
+        width: 250px !important;
+        z-index: 100 !important;
+        display: none;
+        flex-direction: column;
+        justify-content: center;
     }
 
-    /* We use our own dynamic sidebar logic */
+    /* (sidebar styles skipped for brevity, keeping existing) */
+
+    #sidebar-toggle {
+        display: none !important;
+    }
 
     .main-content {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        margin: 0 !important;
         padding: 0 !important;
-        background: radial-gradient(circle at center, #0a0a12 0%, #000000 100%);
-        z-index: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* =========================================
-       Background Ambient Effects
-       ========================================= */
-    .ambient-glow {
-        position: absolute;
-        width: 150vw;
-        height: 150vw;
-        background: radial-gradient(circle, var(--theme-glow) 0%, transparent 60%);
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        opacity: 0.15;
-        pointer-events: none;
-        transition: background 1.5s ease;
-        z-index: 0;
-    }
-
-    /* =========================================
-       Visualizer Core (The AI "Soul")
-       ========================================= */
-    /* =========================================
-       Visualizer Core (The AI "Soul")
-       ========================================= */
-    .visualizer-container {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 400px;
-        height: 400px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        /* Fix: Higher than start-overlay (9999) to be visible initially */
-        z-index: 10000;
-        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        pointer-events: none;
-    }
-
-    /* ... core-circle styles ... */
-    .core-circle {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: #fff;
-        box-shadow: 0 0 40px var(--theme-color), 0 0 80px var(--theme-color);
-        position: relative;
-        z-index: 20;
-        animation: breathe 4s infinite ease-in-out;
-        transition: all 0.5s ease;
-    }
-
-    /* ... wave styles ... */
-
-    /* ... (Logic for History Right / Latest Center) ... */
-
-    /* Chat Layout Split */
-    #chat-interface {
-        /* ... existing ... */
-        /* Allow children to be positioned absolutely or flexed */
-    }
-
-    .chat-history-pane {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 25%;
-        /* History on right */
-        height: 100%;
-        padding: 40px 20px 140px 20px;
-        /* Bottom pad for dock/input */
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        z-index: 100;
-        background: linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent);
-        /* Fade out */
-        mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
-    }
-
-    .latest-message-area {
-        position: absolute;
-        top: 45%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 60%;
-        text-align: center;
-        z-index: 110;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-    }
-
-    /* Adjust bubbles for latest center view */
-    .latest-message-area .msg-bubble {
-        max-width: 100%;
-        font-size: 1.5rem;
-        /* Larger for focus */
-        padding: 0;
-        /* Remove padding for clean text look? Or keep it? */
-        background: transparent;
-        border: none;
-        box-shadow: none;
-        text-align: center;
-        backdrop-filter: none;
-    }
-
-    .latest-message-area .ai-avatar {
-        display: none;
-    }
-
-    /* Hide avatar in center view, pure voice-like text */
-
-    .latest-message-area .action-btn {
-        font-size: 1.1rem;
-        padding: 15px 40px;
-        box-shadow: 0 0 30px var(--theme-glow);
-    }
-
-    /* ... */
-
-    /* Input Area */
-    .input-container {
-        position: absolute;
-        bottom: 140px;
-        /* Above dock */
-        left: 50%;
-        transform: translateX(-50%);
-        width: 600px;
-        max-width: 90%;
-        z-index: 200;
-    }
-
-    .input-glass {
-        background: rgba(10, 10, 15, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 50px;
-        padding: 8px 8px 8px 24px;
-        display: flex;
-        align-items: center;
-        backdrop-filter: blur(20px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .input-glass:focus-within {
-        border-color: var(--theme-color);
-        box-shadow: 0 10px 40px var(--theme-glow);
-        background: rgba(10, 10, 15, 0.8);
-    }
-
-    .input-field {
-        flex: 1;
-        background: transparent;
-        border: none;
-        color: #fff;
-        font-size: 1rem;
-        outline: none;
-        font-family: var(--font-jp);
-    }
-
-    .send-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        background: var(--theme-color);
-        border: none;
-        color: #fff;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        transition: transform 0.2s;
-    }
-
-    .send-btn:hover {
-        transform: scale(1.1);
-    }
-
-    /* Login Form (Inside Chat) */
-    .login-card {
-        background: rgba(0, 0, 0, 0.6);
-        border: 1px solid var(--theme-color);
-        padding: 30px;
-        border-radius: 16px;
-        width: 300px;
-        margin: 20px 0;
-        backdrop-filter: blur(20px);
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .login-input {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 12px;
-        border-radius: 8px;
-        color: #fff;
-        outline: none;
-    }
-
-    .login-input:focus {
-        border-color: var(--theme-color);
-    }
-
-    .action-btn {
-        background: var(--theme-color);
-        color: #fff;
-        border: none;
-        padding: 12px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: opacity 0.2s;
-    }
-
-    .action-btn:hover {
-        opacity: 0.9;
-    }
-
-    /* =========================================
-       Dashboard View (The "Job" Workspace)
-       ========================================= */
-    #dashboard-view {
-        position: absolute;
+        margin-left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background-color: #000;
+        position: absolute !important;
+        /* Changed to absolute to match overlay */
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 50;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1;
+        /* Base z-index */
+    }
+
+    /* MISOGI Styles (Scoped) - keep root styles here */
+    :root {
+        --accent-color: #3b82f6;
+        --accent-glow: rgba(59, 130, 246, 0.5);
+    }
+
+    /* Visualizer Container (Persistent Core) */
+    .visualizer-container {
+        width: 300px;
+        height: 300px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Core Pulse */
+    .core-circle {
+        width: 80px;
+        height: 80px;
+        background: var(--accent-color);
+        border-radius: 50%;
+        box-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-glow);
+        position: absolute;
+        z-index: 10;
+        animation: breathe 4s infinite ease-in-out;
+    }
+
+    /* Waves */
+    .wave {
+        position: absolute;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         opacity: 0;
         pointer-events: none;
-        transform: scale(0.95);
-        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        overflow-y: auto;
-        padding: 20px;
-        /* Adjust based on content */
-        box-sizing: border-box;
     }
 
-    #dashboard-view.active {
-        opacity: 1;
-        pointer-events: auto;
-        transform: scale(1);
+    .wave:nth-child(1) {
+        width: 100px;
+        height: 100px;
+        animation: ripple 3s infinite 0s;
     }
 
-    /* =========================================
-       Job Change System (Dock)
-       ========================================= */
-    .mode-dock-container {
+    .wave:nth-child(2) {
+        width: 100px;
+        height: 100px;
+        animation: ripple 3s infinite 1s;
+    }
+
+    .wave:nth-child(3) {
+        width: 100px;
+        height: 100px;
+        animation: ripple 3s infinite 2s;
+    }
+
+    @keyframes breathe {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 1;
+            box-shadow: 0 0 50px var(--accent-glow), 0 0 90px var(--accent-glow);
+        }
+    }
+
+    @keyframes ripple {
+        0% {
+            width: 80px;
+            height: 80px;
+            opacity: 0.8;
+            border-color: var(--accent-color);
+        }
+
+        100% {
+            width: 300px;
+            height: 300px;
+            opacity: 0;
+            border-color: transparent;
+        }
+    }
+
+    .visualizer-container.active .wave {
+        animation-duration: 1s;
+    }
+
+    .core-circle.active {
+        transform: scale(1.3) !important;
+        filter: blur(2px);
+        background: #fff;
+        box-shadow: 0 0 100px var(--accent-color), 0 0 200px var(--accent-color);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Status Text */
+    .status-text {
+        margin-top: 220px;
+        font-weight: 300;
+        letter-spacing: 2px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        font-family: 'Inter', sans-serif;
+        animation: text-fade 3s infinite alternate;
+    }
+
+    @keyframes text-fade {
+        0% {
+            opacity: 0.4;
+        }
+
+        100% {
+            opacity: 0.8;
+        }
+    }
+
+    /* Rotating Text */
+    .circle-text-container {
         position: absolute;
+        width: 320px;
+        height: 320px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+        z-index: 5;
+        --base-scale: 0.45;
+        transform: scale(var(--base-scale));
+        animation: rotate-circle 30s linear infinite;
+        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        opacity: 0.6;
+    }
+
+    .circle-text-container.active {
+        --base-scale: 1.1;
+        transform: scale(var(--base-scale));
+        animation-play-state: paused;
+        opacity: 1;
+    }
+
+    @keyframes rotate-circle {
+        from {
+            transform: scale(var(--base-scale, 0.45)) rotate(0deg);
+        }
+
+        to {
+            transform: scale(var(--base-scale, 0.45)) rotate(360deg);
+        }
+    }
+
+    #circlePath {
+        fill: none;
+    }
+
+    .circle-svg text {
+        fill: rgba(255, 255, 255, 0.5);
+        font-size: 8.5px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 3.5px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Mode Switcher */
+    .mode-switch-container {
+        position: absolute;
+        /* Relative to main-content */
         bottom: 30px;
         left: 50%;
         transform: translateX(-50%);
+        display: flex;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 5px;
+        border-radius: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
         z-index: 1000;
     }
 
-    .mode-dock {
-        background: rgba(20, 20, 30, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
-        border-radius: 20px;
-        padding: 10px 15px;
+    .mode-btn {
+        border: none;
+        background: none;
+        color: rgba(255, 255, 255, 0.5);
+        padding: 10px 30px;
+        border-radius: 35px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
         display: flex;
-        gap: 12px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-        transition: all 0.3s ease;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.4s;
+        white-space: nowrap;
+        font-family: 'Inter', sans-serif;
     }
 
-    .dock-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
-        border: none;
+    .mode-btn.active {
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent-color), #2563eb);
+        box-shadow: 0 5px 15px var(--accent-glow);
+    }
+
+    /* Chat UI */
+    #chat-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /* Reset padding to center visualizer/buttons correctly */
+        padding: 60px 10% 40px 10%;
+        box-sizing: border-box;
         background: transparent;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 1.4rem;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(20px);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 400;
+        /* Behind core but above background */
+    }
+
+    #chat-container.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    .chat-history {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-end;
+        /* Align all messages to the right */
+        /* Ensure messages don't overlap sidebar if they get very long (though max-width handles most) */
+        padding-left: 260px;
+    }
+
+    .chat-bubble {
+        max-width: 80%;
+        padding: 12px 18px;
+        border-radius: 18px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        font-family: 'Inter', sans-serif;
         position: relative;
     }
 
-    .dock-icon:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-        transform: translateY(-8px) scale(1.15);
+    .chat-bubble.ai {
+        align-self: flex-end;
+        /* Align right like user */
+        background: #f0f9ff;
+        color: #0c4a6e;
+        border-bottom-right-radius: 4px;
+        border-bottom-left-radius: 18px;
+        /* Restore other corner */
+        border: 1px solid #bae6fd;
     }
 
-    .dock-icon.active {
-        background: var(--theme-color);
+    .chat-bubble.user {
+        align-self: flex-end;
+        background: #000;
         color: #fff;
-        box-shadow: 0 5px 20px var(--theme-glow);
-        transform: translateY(-5px);
-    }
-
-    .dock-tooltip {
-        position: absolute;
-        top: -40px;
-        left: 50%;
-        transform: translateX(-50%) translateY(10px);
-        background: rgba(0, 0, 0, 0.8);
-        color: #fff;
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-size: 10px;
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.2s;
-        white-space: nowrap;
+        border-bottom-right-radius: 4px;
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    .dock-icon:hover .dock-tooltip {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
+    /* Loading/Checking Indicator Style */
+    .checking-indicator {
+        margin-top: 15px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        height: 0;
+        overflow: hidden;
     }
 
-    /* Animations */
-    @keyframes fadeUp {
+    .checking-indicator.visible {
+        opacity: 1;
+        height: auto;
+        padding-bottom: 10px;
+    }
+
+    .checking-spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .chat-input-wrapper {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 8px;
+        border-radius: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        /* Shift input wrapper to the right to avoid sidebar */
+        margin-left: 260px;
+        width: calc(100% - 260px);
+    }
+
+    #text-input {
+        flex: 1;
+        background: none;
+        border: none;
+        color: #fff;
+        padding: 8px 15px;
+        outline: none;
+        font-size: 1rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .send-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--accent-color);
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .attach-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.3s;
+    }
+
+    .attach-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+
+    .voice-mode-content {
+        transition: all 0.5s ease;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 300;
+    }
+
+    .voice-mode-content.hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.95);
+        display: none;
+    }
+
+    /* AI Overlay */
+    .ai-response-overlay {
+        position: absolute;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        width: auto;
+        min-width: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 20px;
+        border-radius: 16px;
+        color: #fff;
+        font-size: 1rem;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.4s;
+        z-index: 120;
+    }
+
+    .ai-response-overlay.visible {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+        pointer-events: auto;
+    }
+
+    .ai-response-icon {
+        color: var(--accent-color);
+        margin-bottom: 8px;
+        font-size: 1.2rem;
+    }
+
+    /* Start Button Overlay */
+    #start-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #start-overlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .start-btn {
+        width: 100px;
+        height: 100px;
+        background: transparent;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        position: relative;
+    }
+
+    .start-btn i {
+        font-size: 2rem;
+        transition: all 0.4s;
+    }
+
+    .start-btn-label {
+        font-size: 0.5rem;
+        margin-top: 8px;
+        letter-spacing: 2px;
+        font-weight: 700;
+        opacity: 0.5;
+        transition: all 0.4s;
+    }
+
+    .start-btn:hover {
+        border-color: var(--accent-color);
+        color: #fff;
+        box-shadow: 0 0 40px var(--accent-glow);
+        transform: scale(1.1);
+    }
+
+    .start-btn:hover i {
+        color: var(--accent-color);
+        text-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .start-btn:hover .start-btn-label {
+        opacity: 1;
+        color: var(--accent-color);
+    }
+
+    .start-btn::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 1px solid var(--accent-color);
+        border-radius: 50%;
+        opacity: 0;
+        transform: scale(1);
+        transition: all 0.6s;
+    }
+
+    .start-btn:hover::after {
+        opacity: 0.5;
+        transform: scale(1.3);
+    }
+
+    /* Conversational Login UI */
+    .login-bubble-container {
+        position: absolute;
+        bottom: 120px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 400px;
+        z-index: 600;
+        display: none;
+        flex-direction: column;
+        gap: 15px;
+        animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translate(-50%, 20px);
         }
 
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translate(-50%, 0);
         }
+    }
+
+    .login-input-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .login-input-card input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 12px 15px;
+        color: #fff;
+        outline: none;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .login-input-card input:focus {
+        border-color: var(--accent-color);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .login-submit-btn {
+        background: var(--accent-color);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .login-submit-btn:hover {
+        filter: brightness(1.2);
+        box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    /* Attendance Button UI */
+    .action-bubble-container {
+        align-self: center;
+        margin-top: 10px;
+        display: none;
+    }
+
+    .attendance-btn {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+        border: none;
+        border-radius: 20px;
+        padding: 10px 25px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        transition: all 0.3s;
+    }
+
+    .attendance-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Latest Message Centered Style */
+    .latest-message-container {
+        width: 100%;
+        min-height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 10px 0 20px 0;
+        z-index: 10;
+        pointer-events: none;
+        /* Let text be selectable but pass clicks through if needed */
+    }
+
+    .latest-message-bubble {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        padding: 15px 25px;
+        border-radius: 20px;
+        font-size: 1.1rem;
+        text-align: center;
+        max-width: 80%;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 0.4s ease-out;
+        pointer-events: auto;
+    }
+
+    .latest-message-bubble.ai {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 15px var(--accent-glow);
     }
 
     @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
-    }
-
-    @keyframes slideInMsg {
         from {
             opacity: 0;
             transform: translateY(10px);
@@ -419,386 +718,592 @@
         }
     }
 
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-        .visualizer-container {
-            width: 300px;
-            height: 300px;
-        }
-
-        .input-container {
-            width: 95%;
-            bottom: 100px;
-        }
-
-        .mode-dock {
-            padding: 8px 10px;
-            gap: 8px;
-        }
-
-        .dock-icon {
-            width: 40px;
-            height: 40px;
-            font-size: 1.1rem;
-        }
+    /* Action Buttons Container Style */
+    .action-buttons-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+        margin-top: auto;
+        /* Push to bottom near input */
+        z-index: 20;
     }
 </style>
 
-<!-- =======================================================
-     HTML Structure
-     ======================================================= -->
 <main id="main" class="admin-dashboard">
-    <!-- Ambient Glow BG -->
-    <div class="ambient-glow"></div>
+    @include('partials.admin-sidebar')
 
-    <!-- Persistent Visualizer Core inside Main Content -->
-    <div class="visualizer-container">
-        <div class="text-ring">
-            <svg viewBox="0 0 200 200" width="100%" height="100%">
-                <path id="circlePath" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" fill="none" />
-                <text>
-                    <textPath href="#circlePath">MISOGI INTELLIGENT SYSTEM • OPERATIONAL GUIDANCE • </textPath>
-                </text>
-            </svg>
-        </div>
-        <div class="wave"></div>
-        <div class="wave"></div>
-        <div class="wave"></div>
-        <div class="core-circle"></div>
-    </div>
-
-    <!-- Start Overlay (Initial Screen) -->
     <div id="start-overlay">
-        <div class="logo-section">
-            <div class="logo-main">MISOGI</div>
-            <div class="logo-sub">INTELLIGENT SYSTEM<br>DISCONNECTED</div>
+        <div class="visualizer-container" style="cursor: default;">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="core-circle"></div>
         </div>
-        <button class="start-btn" onclick="app.start()" id="start-btn">
+        <button class="start-btn" onclick="startWorkflow()" style="position: absolute; bottom: 10%;">
             <i class="fas fa-power-off"></i>
-            <span class="start-label">CONNECT</span>
+            <div class="start-btn-label">LOGIN</div>
         </button>
     </div>
 
-    <!-- Chat Interface -->
-    <div id="chat-interface">
-        <!-- Center Focus: Latest Message & Actions -->
-        <div class="latest-message-area" id="latest-message-area">
-            <!-- Dynamic content injected here -->
+    <div class="main-content">
+        <!-- Persistent Visualizer Core -->
+        <div class="visualizer-container">
+            <div class="circle-text-container" id="circle-text">
+                <svg viewBox="0 0 200 200" class="circle-svg" width="320" height="320">
+                    <path id="circlePath" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" />
+                    <text>
+                        <textPath href="#circlePath">
+                            Misesapo Intelligent System for Operational Guidance &amp; Integration &bull; Misesapo
+                            Intelligent System for Operational Guidance &amp; Integration &bull;
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="core-circle"></div>
         </div>
 
-        <!-- Right Pane: History -->
-        <div class="chat-history-pane" id="chat-history">
-            <!-- Past messages injected here -->
-        </div>
-
-        <!-- Input Area -->
-        <div class="input-container">
-            <div class="input-glass">
-                <input type="text" id="user-input" class="input-field" placeholder="MISOGIに指示を出す..." autocomplete="off">
-                <button class="send-btn" onclick="app.sendMessage()"><i class="fas fa-arrow-up"></i></button>
+        <!-- Voice Content -->
+        <div class="voice-mode-content" id="voice-content">
+            <div class="status-text" id="status-text">LISTENING...</div>
+            <div class="ai-response-overlay" id="ai-response">
+                <div class="ai-response-icon"><i class="fas fa-sparkles"></i> MISOGI</div>
+                <div id="ai-message-text"></div>
             </div>
         </div>
-    </div>
 
-    <!-- Dashboard View (For Job Modes) -->
-    <div id="dashboard-view">
-        <!-- Dashboard HTML injected here -->
-    </div>
+        <!-- Chat Content -->
+        <div id="chat-container">
+            <div class="chat-history" id="chat-history">
+                <!-- Initial welcome will be injected by JS -->
+            </div>
 
-    <!-- Mode Dock (Job Change System) -->
-    <div class="mode-dock-container" id="mode-dock-container" style="display: none;">
-        <div class="mode-dock" id="mode-dock-items">
-            <!-- Icons injected by JS -->
+            <!-- New: Latest Message Display (Centered) -->
+            <div id="latest-message-container" class="latest-message-container"></div>
+
+            <!-- New: Action Buttons Container (Centered) -->
+            <div id="action-buttons-container" class="action-buttons-container"></div>
+
+            <!-- Login Bubble -->
+            <div class="login-bubble-container" id="login-form">
+                <div class="login-input-card">
+                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 5px;">ACCOUNT
+                        AUTHENTICATION</div>
+                    <input type="email" id="login-email" placeholder="メールアドレス" autocomplete="email">
+                    <input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">
+                    <button class="login-submit-btn" onclick="performLogin()">認証</button>
+                </div>
+            </div>
+
+            <div class="chat-input-wrapper">
+                <input type="file" id="image-upload" accept="image/*" style="display: none;"
+                    onchange="handleImageSelect(this)">
+                <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
+                <button class="send-btn" onclick="sendTextMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
         </div>
-    </div>
+
+        <!-- Mode Switcher -->
+        <div class="mode-switch-container" style="display: none;">
+            <button class="mode-btn" id="btn-voice-mode" onclick="switchMode('voice')">
+                <i class="fas fa-microphone"></i> 音声
+            </button>
+            <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
+                <i class="fas fa-comment-dots"></i> チャット
+            </button>
+            newBubble.dataset.role = role;
+            newBubble.innerHTML = text.replace(/\n/g, '<br>');
+            </content>
 </main>
 
-<!-- =======================================================
-     Logic & Scripts
-     ======================================================= -->
-<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
-<script
-    src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
-<script src="/js/cognito_config.js"></script>
-<script src="/js/cognito_auth.js"></script>
-
-<script type="module">
-    import { contextManager, MODES } from '/js/modules/context_manager.js?v=2';
-    import { STAFF_DASHBOARD_HTML } from '/js/modules/dashboard_templates.js';
-    import { DashboardController } from '/js/modules/dashboard_controller.js';
-
-    // Global Exposure
-    window.contextManager = contextManager;
-    window.MODES = MODES;
-    window.dashboardController = new DashboardController();
-    window.STAFF_DASHBOARD_HTML = STAFF_DASHBOARD_HTML;
-</script>
-
 <script>
-    /**
-     * Main Application Logic (MISOGI Entrance)
-     */
-    const app = {
-        // State
-        isLoggedIn: false,
-        currentUser: null,
+    // Image Upload Handling
+    function handleImageSelect(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            // For now, just show a message that image is selected.
+            // In a real app, we would upload via API or preview it.
+            appendChatMessage('user', `[画像を選択しました: ${file.name}]<br>(※画像送信機能は準備中です)`);
+            input.value = ''; // Reset
+        }
+    }
 
-        // UI Elements
-        ui: {
-            overlay: document.getElementById('start-overlay'),
-            chatInterface: document.getElementById('chat-interface'),
-            dashboardView: document.getElementById('dashboard-view'),
-            chatHistory: document.getElementById('chat-history'),
-            latestArea: document.getElementById('latest-message-area'),
-            inputField: document.getElementById('user-input'),
-            dockContainer: document.getElementById('mode-dock-container'),
-            dockItems: document.getElementById('mode-dock-items'),
-            visualizer: document.querySelector('.visualizer-container')
-        },
+    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
-        // Initialize
-        start: async function () {
-            const btn = document.getElementById('start-btn');
-            btn.style.transform = 'scale(0)';
-            btn.style.opacity = '0';
+    function ensureAuthOrRedirect() {
+        // Simple token check
+        const token = localStorage.getItem('cognito_id_token');
+        if (!token) {
+            // alert("認証が必要です。");
+            return null;
+        }
+        return token;
+    }
 
+    // UI Variables
+    const visualizer = document.querySelector('.visualizer-container');
+    const core = document.querySelector('.core-circle');
+    const circleText = document.getElementById('circle-text');
+    const statusText = document.getElementById('status-text');
+    const responseOverlay = document.getElementById('ai-response');
+    const messageText = document.getElementById('ai-message-text');
+    const voiceContent = document.getElementById('voice-content');
+    const chatContainer = document.getElementById('chat-container');
+    const chatHistory = document.getElementById('chat-history');
+    const textInput = document.getElementById('text-input');
+    const btnVoice = document.getElementById('btn-voice-mode');
+    const btnChat = document.getElementById('btn-chat-mode');
+    const sidebar = document.getElementById('admin-sidebar');
+    const startOverlay = document.getElementById('start-overlay');
+    const loginForm = document.getElementById('login-form');
+
+    let currentMode = 'chat';
+
+    // Hide sidebar by default for AI-centric feel
+    if (sidebar) sidebar.style.display = 'none';
+
+    async function startWorkflow() {
+        startOverlay.classList.add('hidden');
+        switchMode('chat');
+
+        const token = localStorage.getItem('cognito_id_token');
+        if (!token) {
+            appendChatMessage('ai', 'おはようございます。ミセサポ管理AIのMISOGIです。セッションを開始するために、まずはログイン情報を入力してください。');
             setTimeout(() => {
-                this.ui.overlay.classList.add('hidden');
-            }, 500);
+                loginForm.style.display = 'flex';
+            }, 800);
+        } else {
+            const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+            const staffId = user.id || user.sub;
 
-            await this.checkAuth();
-        },
+            // Helper to get JST date string (YYYY-MM-DD)
+            const getJstDateStr = (d) => {
+                const jstDate = new Date(d.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+                const y = jstDate.getFullYear();
+                const m = String(jstDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(jstDate.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dd}`;
+            };
 
-        checkAuth: async function () {
-            this.updateLatest('ai', '認証システムに接続中...');
+            const todayStr = getJstDateStr(new Date());
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = getJstDateStr(yesterday);
 
-            if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
-                try {
-                    const user = await window.CognitoAuth.getCurrentUser();
-                    this.currentUser = user;
-                    this.onLoginSuccess(user);
-                } catch (e) {
-                    console.error(e);
-                    this.showLoginForm();
-                }
-            } else {
-                setTimeout(() => {
-                    this.updateLatest('ai', 'アクセス権限が確認できません。<br>ログインしてください。');
-                    this.showLoginForm();
-                }, 1000);
-            }
-        },
-
-        onLoginSuccess: function (user) {
-            if (window.contextManager) {
-                window.contextManager.init(user);
-                this.renderDock();
-                this.ui.dockContainer.style.display = 'flex';
-            }
-
-            const name = user.name || user.username || 'User';
-            this.updateLatest('ai', `認証成功。<br>おかえりなさいませ、${name}様。`);
-
-            this.ui.chatInterface.classList.add('active');
-            this.checkAttendanceStatus(user);
-        },
-
-        showLoginForm: function () {
-            this.ui.chatInterface.classList.add('active');
-
-            // Show in center
-            this.ui.latestArea.innerHTML = `
-            <div class="msg-bubble ai" style="display:none"></div> <!-- Spacer -->
-            <div class="login-card">
-                <div style="color:var(--theme-color); font-size:0.8rem; letter-spacing:1px; text-align:center;">SYSTEM LOGIN</div>
-                <input type="email" id="login-email" class="login-input" placeholder="Email">
-                <input type="password" id="login-pass" class="login-input" placeholder="Password">
-                <button class="action-btn" onclick="app.performLogin()">LOGIN</button>
-            </div>
-        `;
-        },
-
-        performLogin: async function () {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-
-            if (!email || !pass) return;
-
-            this.updateLatest('user', '認証情報を送信...');
+            // console.log(`Checking status for ${staffId}, checking dates: ${todayStr}, ${yesterdayStr}`);
 
             try {
-                const result = await window.CognitoAuth.login(email, pass);
-                if (result.success) {
-                    window.location.reload();
-                } else {
-                    this.updateLatest('ai', 'ログイン失敗: ' + result.message);
-                    setTimeout(() => this.showLoginForm(), 2000); // Retry
-                }
-            } catch (e) {
-                this.updateLatest('ai', 'エラーが発生しました: ' + e.message);
-            }
-        },
-
-        checkAttendanceStatus: async function (user) {
-            setTimeout(() => {
-                // Center Layout: Message + Button
-                this.ui.latestArea.innerHTML = `
-                <div class="msg-bubble ai">本日の業務を開始しますか？</div>
-                <button class="action-btn" id="clock-in-btn" onclick="app.clockIn()">
-                    <i class="fas fa-clock"></i> 出勤する
-                </button>
-            `;
-
-                // Log to history
-                this.addToHistory('ai', '本日の業務を開始しますか？');
-            }, 1500);
-        },
-
-        clockIn: async function () {
-            const btn = document.getElementById('clock-in-btn');
-            if (btn) {
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 処理中...';
-                btn.disabled = true;
-            }
-
-            try {
-                const user = await window.CognitoAuth.getCurrentUser();
-                const token = window.CognitoAuth.getIdToken();
-                const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-
-                const sanitizedData = {
-                    staff_id: user.id || user.sub,
-                    staff_name: user.name || user.username,
-                    date: new Date().toLocaleDateString('sv-SE'),
-                    clock_in: new Date().toISOString()
-                };
-
-                const response = await fetch(`${API_BASE}/attendance`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(sanitizedData)
+                // Fetch recent records (limit 5) instead of specific date filter
+                // This handles cross-day workshifts and timezone mismatches better
+                const response = await fetch(`${API_BASE}/attendance?staff_id=${staffId}&limit=5`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
+                let isClockedIn = false;
+                let records = [];
                 if (response.ok) {
-                    this.updateLatest('ai', '出勤を確認しました。<br>業務モードへ移行します。');
+                    const data = await response.json();
+                    records = Array.isArray(data) ? data : (data.attendance || data.items || []);
+                    // console.log('Attendance Check Result:', records);
 
-                    setTimeout(() => {
-                        const defaultMode = window.contextManager.getAvailableModes()[0]?.id || 'office';
-                        window.contextManager.switchMode(defaultMode);
-                    }, 1500);
-
+                    // Check logic: Has clock_in AND (clock_out is null OR empty)
+                    // AND the record is from today OR yesterday (to avoid picking up ancient unfinished records)
+                    isClockedIn = records.some(r => {
+                        return r.clock_in && !r.clock_out && (r.date === todayStr || r.date === yesterdayStr);
+                    });
                 } else {
-                    throw new Error('API Error');
+                    console.error('Attendance check failed:', response.status);
+                }
+
+                if (isClockedIn) {
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。既に出勤を確認しました。本日も業務をサポートいたします。`);
+                    handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }] });
+                } else {
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
+                    handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
                 }
             } catch (e) {
-                console.error(e);
-                this.updateLatest('ai', '出勤処理に失敗しました。再試行してください。');
-                setTimeout(() => this.checkAttendanceStatus(this.currentUser), 2000);
+                console.error('Failed to check attendance:', e);
+                // Fallback: don't assume not clocked in if error, but we have to provide a path.
+                // For now, prompt for attendance but maybe with a caveat or retry
+                appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
+                handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
             }
-        },
+        }
+    }
 
-        // --- Helpers ---
+    async function performLogin() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
 
-        // Updates the Center "Latest" view AND logs to History
-        updateLatest: function (role, htmlContent) {
-            // 1. Update Center
-            this.ui.latestArea.innerHTML = `
-            <div class="msg-bubble ${role}">${htmlContent}</div>
-        `;
+        if (!email || !password) return;
 
-            // 2. Add to History
-            this.addToHistory(role, htmlContent);
-        },
+        const loginBtn = document.querySelector('.login-submit-btn');
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 認証中...';
+        loginBtn.disabled = true;
 
-        addToHistory: function (role, htmlContent) {
-            const div = document.createElement('div');
-            div.className = `message-row ${role}`;
-
-            let content = '';
-            if (role === 'ai') {
-                content = `<div class="ai-avatar"><i class="fas fa-cube"></i></div>
-                       <div class="msg-bubble ai" style="text-align: left;">${htmlContent}</div>`;
+        try {
+            // Use existing CognitoAuth if available, or simulate for now
+            if (window.CognitoAuth) {
+                const result = await window.CognitoAuth.login(email, password);
+                if (result.success) {
+                    loginForm.style.display = 'none';
+                    // Re-run workflow to check attendance state
+                    await startWorkflow();
+                } else {
+                    throw new Error(result.message);
+                }
             } else {
-                content = `<div class="msg-bubble user" style="text-align: left;">${htmlContent}</div>`;
+                throw new Error('認証システムが読み込まれていません');
             }
+        } catch (err) {
+            alert('ログインに失敗しました: ' + err.message);
+            loginBtn.innerHTML = '認証';
+            loginBtn.disabled = false;
+        }
+    }
 
-            div.innerHTML = content;
-            this.ui.chatHistory.appendChild(div);
-            this.ui.chatHistory.scrollTop = this.ui.chatHistory.scrollHeight;
-        },
+    async function performClockIn() {
+        const btn = document.getElementById('active-attendance-btn');
+        if (btn) btn.disabled = true;
 
-        sendMessage: function () {
-            const text = this.ui.inputField.value.trim();
-            if (!text) return;
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const token = localStorage.getItem('cognito_id_token');
 
-            this.updateLatest('user', text);
-            this.ui.inputField.value = '';
+        if (!user.id || !token) {
+            appendChatMessage('ai', 'エラー：ログイン情報が見つかりません。再ログインしてください。');
+            return;
+        }
 
-            setTimeout(() => {
-                this.handleAIResponse(text);
-            }, 600);
-        },
+        appendChatMessage('user', '出勤します');
 
-        handleAIResponse: function (userText) {
-            if (userText.includes('戻る') || userText.includes('チャット')) {
-                window.contextManager.switchMode('admin');
-                this.updateLatest('ai', 'チャットモードに戻ります。');
+        try {
+            const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
+            const now = new Date().toISOString();
+
+            const sanitizedData = {
+                staff_id: user.id || user.sub,
+                staff_name: user.name || user.username,
+                date: today,
+                clock_in: now
+            };
+
+            const response = await fetch(`${API_BASE}/attendance`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(sanitizedData)
+            });
+
+            if (response.ok) {
+                appendChatMessage('ai', `${user.name || 'ユーザー'}様、出勤を記録しました。本日の業務を開始します。それでは、良い1日を！左側のメニューから各機能へアクセスできます。`);
+                handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }] });
+                if (btn) btn.innerHTML = '<i class="fas fa-check"></i> 出勤済み';
+            } else {
+                const err = await response.json();
+                throw new Error(err.message || 'API Error');
+            }
+        } catch (err) {
+            console.error('Attendance Error:', err);
+            appendChatMessage('ai', 'エラーが発生しました：' + err.message);
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    function switchMode(mode) {
+        currentMode = mode;
+        if (mode === 'voice') {
+            btnVoice.classList.add('active');
+            btnChat.classList.remove('active');
+            chatContainer.classList.remove('active');
+            voiceContent.classList.remove('hidden');
+            voiceContent.style.display = 'flex';
+            // Adjust visualizer for voice mode
+            visualizer.style.transform = 'translate(-50%, -50%) scale(1)';
+        } else {
+            btnChat.classList.add('active');
+            btnVoice.classList.remove('active');
+            voiceContent.classList.add('hidden');
+            setTimeout(() => { if (currentMode === 'chat') voiceContent.style.display = 'none'; }, 500);
+            chatContainer.classList.add('active');
+            textInput.focus();
+            // Subtly shrink or adjust visualizer for chat mode to not overlap text
+            visualizer.style.transform = 'translate(-50%, -50%) scale(0.8)';
+        }
+    }
+
+    function appendChatMessage(role, text) {
+        // Move any existing latest message to history
+        const latestContainer = document.getElementById('latest-message-container');
+        if (latestContainer && latestContainer.children.length > 0) {
+            const oldMessage = latestContainer.firstElementChild;
+            const oldRole = oldMessage.dataset.role;
+            const oldText = oldMessage.innerHTML;
+
+            const historyBubble = document.createElement('div');
+            historyBubble.className = `chat-bubble ${oldRole}`;
+            historyBubble.innerHTML = oldText;
+            chatHistory.appendChild(historyBubble);
+        }
+
+        // Create new latest message
+        if (!latestContainer) return; // Safety check
+        latestContainer.innerHTML = ''; // Clear previous
+
+        const newBubble = document.createElement('div');
+        newBubble.className = `latest-message-bubble ${role}`;
+        newBubble.dataset.role = role;
+        newBubble.innerHTML = text.replace(/\n/g, '<br>');
+        latestContainer.appendChild(newBubble);
+
+        // Scroll history to bottom just in case
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    async function sendTextMessage() {
+        const text = textInput.value.trim();
+        if (!text) return;
+        appendChatMessage('user', text);
+        textInput.value = '';
+
+        const token = ensureAuthOrRedirect();
+
+        const loadingBubble = document.createElement('div');
+        loadingBubble.className = 'chat-bubble ai';
+        loadingBubble.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 解析中...';
+        chatHistory.appendChild(loadingBubble);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        // Force Persona (Temporary fix for outdated backend)
+        const systemPrompt = "(System: あなたは管理AI『Misogi』です。Sakuraと名乗らないでください。常に『Misogi』として振る舞ってください。)\n";
+        const textToSend = systemPrompt + text;
+
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            // Try the new admin action first
+            const response = await fetch(`${API_BASE}/ai/process`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ action: 'admin_concierge', text: textToSend })
+            });
+
+            if (!response.ok) {
+                // Return to old action if new one fails (e.g. backend not deployed)
+                console.warn("admin_concierge failed, trying assistant_concierge with forced persona");
+                const fallbackResponse = await fetch(`${API_BASE}/ai/process`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ action: 'assistant_concierge', text: textToSend })
+                });
+                if (!fallbackResponse.ok) throw new Error('API Error');
+                const data = await fallbackResponse.json();
+                await handleAiResponse(data, loadingBubble, text);
                 return;
             }
-            this.updateLatest('ai', '申し訳ありません、現在対話機能は縮小運転中です。<br>「コマンド」をご利用ください。');
-        },
 
-        renderDock: function () {
-            const modes = window.contextManager.getAvailableModes();
-            if (!modes.length) return;
+            const data = await response.json();
+            await handleAiResponse(data, loadingBubble, text);
 
-            this.ui.dockItems.innerHTML = '';
-            modes.forEach(mode => {
-                const btn = document.createElement('button');
-                btn.className = 'dock-icon';
-                btn.dataset.mode = mode.id;
-                btn.innerHTML = `<i class="${mode.icon}"></i><div class="dock-tooltip">${mode.jp_label}</div>`;
-                btn.onclick = () => window.contextManager.switchMode(mode.id);
-                this.ui.dockItems.appendChild(btn);
-            });
+        } catch (err) {
+            console.error(err);
+            if (loadingBubble.parentNode) loadingBubble.remove();
+            appendChatMessage('ai', 'エラーが発生しました。');
         }
-    };
+    }
 
-    document.getElementById('user-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') app.sendMessage();
-    });
+    async function handleAiResponse(data, loadingBubble, userText) {
+        if (loadingBubble.parentNode) loadingBubble.remove();
 
-    window.addEventListener('context-changed', (e) => {
-        const mode = e.detail;
+        let aiResult = data.result;
+        if (typeof aiResult === 'string') {
+            try {
+                const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
+                if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
+            } catch (e) { }
+        }
 
-        // Theme Update
-        const colors = { 'admin': '#3b82f6', 'office': '#0ea5e9', 'sales': '#f97316', 'operations': '#10b981' };
-        const newColor = colors[mode.id] || '#3b82f6';
-        document.documentElement.style.setProperty('--theme-color', newColor);
-        document.documentElement.style.setProperty('--theme-glow', `${newColor}66`);
+        let reply = aiResult.reply || aiResult.text || JSON.stringify(aiResult);
+        let intent = aiResult.intent;
+        let targetUrl = aiResult.target_url;
 
-        document.querySelectorAll('.dock-icon').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === mode.id);
-        });
+        // --- NEW: UI Command Handling ---
+        handleAiCommands(aiResult);
 
-        if (mode.id === 'admin') {
-            app.ui.dashboardView.classList.remove('active');
-            app.ui.chatInterface.classList.add('active');
-            // Visualizer Show
-            app.ui.visualizer.style.opacity = '1';
-            app.ui.visualizer.style.transform = 'translate(-50%, -50%) scale(1)';
-        } else {
-            app.ui.chatInterface.classList.remove('active');
-            app.ui.dashboardView.classList.add('active');
+        // --- Local Fallback Logic (Mock Navigation) ---
+        // If the backend didn't return an intent (e.g. backend code not yet deployed), 
+        // we simulate the navigation intent based on keywords.
+        if (!intent || intent === 'chat') {
+            const map = {
+                '/admin/dashboard': ['ダッシュボード', 'アクティビティ'],
+                '/admin/schedules/': ['スケジュール', 'カレンダー', '予定'],
+                '/admin/customers/': ['顧客', 'お客様'],
+                '/admin/reports/': ['レポート', '報告'],
+                '/admin/estimates/': ['見積', '請求'],
+                '/admin/orders': ['発注', '仕入'],
+                '/admin/partners': ['パートナー', '協力会社'],
+                '/admin/users/': ['ユーザー', '従業員', 'スタッフ'],
+                '/admin/attendance/errors': ['勤怠', '打刻'],
+                '/admin/services/': ['サービス', 'メニュー'],
+                '/admin/analytics/': ['分析', '売上', '統計'],
+                '/admin/images/': ['画像', '写真', 'メディア'],
+                '/admin/zaiko': ['在庫', '棚卸'],
+                '/admin/announcements': ['業務連絡', 'お知らせ', '通知'],
+                '/wiki': ['WIKI', 'マニュアル'],
+                '/admin/sitemap': ['サイトマップ']
+            };
 
-            if (!app.ui.dashboardView.innerHTML.trim() && window.STAFF_DASHBOARD_HTML) {
-                app.ui.dashboardView.innerHTML = window.STAFF_DASHBOARD_HTML;
-                if (window.dashboardController) window.dashboardController.init();
+            for (const [url, keywords] of Object.entries(map)) {
+                // Check if user input contains keyword OR if AI mention it and says "move/go"
+                if (keywords.some(k => userText.includes(k))) {
+                    // Force navigate intent
+                    intent = 'navigate';
+                    targetUrl = url;
+                    if (!reply.includes('移動します')) {
+                        reply += `<br><br><i class="fas fa-external-link-alt"></i> ${keywords[0]}へ移動します...`;
+                    }
+                    break;
+                }
             }
-
-            // Visualizer fade out
-            app.ui.visualizer.style.opacity = '0.1';
-            app.ui.visualizer.style.transform = 'translate(-50%, -50%) scale(0.6)';
         }
-    });
+
+        appendChatMessage('ai', reply);
+
+        if (intent === 'navigate' && targetUrl) {
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 1200);
+        }
+
+        // Handle Break and Clock-Out UI Logic
+        if (intent === 'break_start') {
+            // "Screensaver" Mode: Center Visualizer, simple status
+            sidebar.style.opacity = '0';
+            setTimeout(() => sidebar.style.display = 'none', 500);
+
+            chatContainer.classList.remove('sidebar-active');
+            chatContainer.style.opacity = '0'; // Hide chat momentarily? Or just clear it.
+
+            // Smooth transition to "Resting" state
+            setTimeout(() => {
+                statusText.textContent = "RESTING... (On Break)";
+                visualizer.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                // Maybe show a simple "Resume Work" button in center or let Chat reappear
+                chatContainer.style.opacity = '1';
+                // Clear history to reduce clutter? Or keep "Have a nice break"?
+                document.getElementById('latest-message-container').innerHTML = '';
+            }, 800);
+        }
+
+        if (intent === 'break_end') {
+            // Return to Work Mode
+            statusText.textContent = "WELCOME BACK";
+            visualizer.style.transform = 'translate(-50%, -50%) scale(0.8)';
+
+            sidebar.style.display = 'flex';
+            setTimeout(() => sidebar.style.opacity = '1', 10);
+            chatContainer.classList.add('sidebar-active');
+        }
+
+        if (intent === 'clock_out') {
+            // Full Reset to Entrance Standby
+            sidebar.style.opacity = '0';
+            setTimeout(() => sidebar.style.display = 'none', 500);
+            chatContainer.style.opacity = '0';
+
+            setTimeout(() => {
+                // Clear Chat
+                chatHistory.innerHTML = '';
+                document.getElementById('latest-message-container').innerHTML = '';
+
+                // Show Start Button again (Reset)
+                statusText.textContent = "See you next time.";
+                visualizer.style.transform = 'translate(-50%, -50%) scale(1)';
+
+                setTimeout(() => {
+                    startOverlay.style.display = 'flex';
+                    setTimeout(() => startOverlay.style.opacity = '1', 50);
+                    statusText.textContent = "READY TO ASSIST";
+                    // Reset state variable if needed
+                    // isClockedIn = false; // Ideally fetch fresh state next time
+                }, 2000);
+            }, 800);
+        }
+    }
+
+    async function handleAiCommands(aiResult) {
+        if (!aiResult.ui_commands) return;
+
+        for (const cmd of aiResult.ui_commands) {
+            switch (cmd.type) {
+                case 'request_login':
+                    loginForm.style.display = 'flex';
+                    break;
+                case 'show_attendance':
+                    const actionContainer = document.getElementById('action-buttons-container');
+                    if (actionContainer) {
+                        actionContainer.innerHTML = ''; // Clear previous actions
+                        const btnDiv = document.createElement('div');
+                        btnDiv.className = 'action-bubble-container';
+                        btnDiv.style.display = 'block';
+                        btnDiv.innerHTML = `
+                            <button class="attendance-btn" id="active-attendance-btn" onclick="performClockIn()">
+                                <i class="fas fa-sign-in-alt"></i> 出勤する
+                            </button>
+                        `;
+                        actionContainer.appendChild(btnDiv);
+                    }
+                    break;
+                case 'show_sidebar':
+                    if (sidebar) {
+                        sidebar.style.display = 'flex';
+                        const navItems = sidebar.querySelectorAll('.nav-item');
+                        navItems.forEach((item, index) => {
+                            setTimeout(() => {
+                                item.classList.add('show');
+                            }, index * 100);
+                        });
+                    }
+                    if (chatContainer) chatContainer.classList.add('sidebar-active'); // Adjust padding if needed
+                    break;
+            }
+        }
+    }
+
+    if (textInput) {
+        textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendTextMessage(); });
+    }
+
+    // Toggle Visualizer Simulation
+    let isRecording = false;
+    if (visualizer) {
+        visualizer.addEventListener('click', () => {
+            if (!isRecording) {
+                isRecording = true;
+                statusText.textContent = "LISTENING... (Simulation)";
+                core.classList.add('active');
+                circleText.classList.add('active');
+            } else {
+                isRecording = false;
+                statusText.textContent = "PROCESSING...";
+                core.classList.remove('active');
+                circleText.classList.remove('active');
+                setTimeout(() => { statusText.textContent = "READY TO ASSIST"; }, 1500);
+            }
+        });
+    }
 </script>
