@@ -1188,6 +1188,61 @@
                 window.location.href = targetUrl;
             }, 1200);
         }
+
+        // Handle Break and Clock-Out UI Logic
+        if (intent === 'break_start') {
+            // "Screensaver" Mode: Center Visualizer, simple status
+            sidebar.style.opacity = '0';
+            setTimeout(() => sidebar.style.display = 'none', 500);
+
+            chatContainer.classList.remove('sidebar-active');
+            chatContainer.style.opacity = '0'; // Hide chat momentarily? Or just clear it.
+
+            // Smooth transition to "Resting" state
+            setTimeout(() => {
+                statusText.textContent = "RESTING... (On Break)";
+                visualizer.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                // Maybe show a simple "Resume Work" button in center or let Chat reappear
+                chatContainer.style.opacity = '1';
+                // Clear history to reduce clutter? Or keep "Have a nice break"?
+                document.getElementById('latest-message-container').innerHTML = '';
+            }, 800);
+        }
+
+        if (intent === 'break_end') {
+            // Return to Work Mode
+            statusText.textContent = "WELCOME BACK";
+            visualizer.style.transform = 'translate(-50%, -50%) scale(0.8)';
+
+            sidebar.style.display = 'flex';
+            setTimeout(() => sidebar.style.opacity = '1', 10);
+            chatContainer.classList.add('sidebar-active');
+        }
+
+        if (intent === 'clock_out') {
+            // Full Reset to Entrance Standby
+            sidebar.style.opacity = '0';
+            setTimeout(() => sidebar.style.display = 'none', 500);
+            chatContainer.style.opacity = '0';
+
+            setTimeout(() => {
+                // Clear Chat
+                chatHistory.innerHTML = '';
+                document.getElementById('latest-message-container').innerHTML = '';
+
+                // Show Start Button again (Reset)
+                statusText.textContent = "See you next time.";
+                visualizer.style.transform = 'translate(-50%, -50%) scale(1)';
+
+                setTimeout(() => {
+                    startOverlay.style.display = 'flex';
+                    setTimeout(() => startOverlay.style.opacity = '1', 50);
+                    statusText.textContent = "READY TO ASSIST";
+                    // Reset state variable if needed
+                    // isClockedIn = false; // Ideally fetch fresh state next time
+                }, 2000);
+            }, 800);
+        }
     }
 
     async function handleAiCommands(aiResult) {
