@@ -880,22 +880,31 @@
         } else {
             const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
             const today = new Date().toLocaleDateString('sv-SE');
+            const staffId = user.id || user.sub;
+
+            // Show an initial status message only if we don't have immediate state
+            // console.log(`Checking attendance for ${staffId} on ${today}`);
 
             try {
                 // Check if already clocked in today
-                const response = await fetch(`${API_BASE}/attendance?staff_id=${user.id || user.sub}&date=${today}`, {
+                const response = await fetch(`${API_BASE}/attendance?staff_id=${staffId}&date=${today}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 let isClockedIn = false;
+                let records = [];
                 if (response.ok) {
                     const data = await response.json();
-                    const records = Array.isArray(data) ? data : (data.items || []);
+                    records = Array.isArray(data) ? data : (data.items || []);
+                    // Check logic: Has clock_in AND (clock_out is null OR empty)
                     isClockedIn = records.some(r => r.clock_in && !r.clock_out);
+                    // console.log('Attendance records:', records, 'Is Clocked In:', isClockedIn);
+                } else {
+                    console.error('Attendance check failed:', response.status);
                 }
 
                 if (isClockedIn) {
-                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。既に出勤記録を確認しております。引き続き業務をサポートいたします。`);
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。既に出勤を確認しました。本日も業務をサポートいたします。`);
                     handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }] });
                 } else {
                     appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
@@ -903,6 +912,8 @@
                 }
             } catch (e) {
                 console.error('Failed to check attendance:', e);
+                // Fallback: don't assume not clocked in if error, but we have to provide a path.
+                // For now, prompt for attendance but maybe with a caveat or retry
                 appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
                 handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
             }
