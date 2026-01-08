@@ -318,7 +318,8 @@
         left: 0;
         width: 100%;
         height: 100%;
-        padding: 60px 10% 40px 10%;
+        /* Adjusted padding: increased left padding to avoid sidebar and shift content right */
+        padding: 60px 10% 40px 280px;
         box-sizing: border-box;
         background: transparent;
         display: flex;
@@ -344,6 +345,8 @@
         display: flex;
         flex-direction: column;
         gap: 15px;
+        align-items: flex-end;
+        /* Align all messages to the right */
     }
 
     .chat-bubble {
@@ -357,10 +360,13 @@
     }
 
     .chat-bubble.ai {
-        align-self: flex-start;
+        align-self: flex-end;
+        /* Align right like user */
         background: #f0f9ff;
         color: #0c4a6e;
-        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+        border-bottom-left-radius: 18px;
+        /* Restore other corner */
         border: 1px solid #bae6fd;
     }
 
@@ -404,6 +410,25 @@
         display: flex;
         justify-content: center;
         align-items: center;
+    }
+
+    .attach-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.3s;
+    }
+
+    .attach-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
     }
 
     .voice-mode-content {
@@ -771,6 +796,11 @@
             </div>
 
             <div class="chat-input-wrapper">
+                <input type="file" id="image-upload" accept="image/*" style="display: none;"
+                    onchange="handleImageSelect(this)">
+                <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
+                    <i class="fas fa-camera"></i>
+                </button>
                 <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
                 <button class="send-btn" onclick="sendTextMessage()">
                     <i class="fas fa-paper-plane"></i>
@@ -786,12 +816,23 @@
             <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
                 <i class="fas fa-comment-dots"></i> チャット
             </button>
-        </div>
-    </div>
-
+            newBubble.dataset.role = role;
+            newBubble.innerHTML = text.replace(/\n/g, '<br>');
+            </content>
 </main>
 
 <script>
+    // Image Upload Handling
+    function handleImageSelect(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            // For now, just show a message that image is selected.
+            // In a real app, we would upload via API or preview it.
+            appendChatMessage('user', `[画像を選択しました: ${file.name}]<br>(※画像送信機能は準備中です)`);
+            input.value = ''; // Reset
+        }
+    }
+
     const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
     function ensureAuthOrRedirect() {
