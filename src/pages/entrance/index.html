@@ -1840,12 +1840,68 @@
 
                 // Show confirmation message
                 const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
-                appendChatMessage('ai', `${job.label}モードを開始します。左側のメニューから各機能へアクセスできます。`);
+                appendChatMessage('ai', `${job.label}モードを開始します。`);
 
                 // Filter and show sidebar
                 filterSidebar(jobKey);
+
+                // Show job-specific actions
+                showJobActions(jobKey);
             }, 100);
         }, 4500);
+    }
+
+    // Job-specific action buttons
+    function showJobActions(jobKey) {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = '';
+        const btnDiv = document.createElement('div');
+        btnDiv.className = 'action-bubble-container';
+        btnDiv.style.display = 'flex';
+        btnDiv.style.gap = '10px';
+        btnDiv.style.flexWrap = 'wrap';
+        btnDiv.style.justifyContent = 'center';
+
+        const jobActions = {
+            sales: [
+                { label: '依頼書を作成', action: 'startRequestWizard()' },
+                { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'" }
+            ],
+            cleaning: [
+                { label: 'レポートを作成', action: 'startReportWizard()' }
+            ],
+            office: [
+                { label: '作業指示書を作成', action: 'startWorkOrderWizard()' }
+            ],
+            hr: [
+                { label: '勤怠確認', action: "location.href='/admin/attendance/errors'" }
+            ],
+            accounting: [
+                { label: '請求処理', action: "location.href='/admin/orders'" }
+            ],
+            admin: [],
+            dev: []
+        };
+
+        const actions = jobActions[jobKey] || [];
+        actions.forEach(btn => {
+            const buttonHtml = `
+                <button class="job-action-btn" onclick="${btn.action}"
+                    style="background: var(--accent-color); border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    ${btn.label}
+                </button>
+            `;
+            btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
+        });
+
+        if (actions.length > 0) {
+            actionContainer.appendChild(btnDiv);
+        }
     }
 
     function filterSidebar(jobKey) {
@@ -1910,5 +1966,267 @@
                 setTimeout(() => { statusText.textContent = "READY TO ASSIST"; }, 1500);
             }
         });
+    }
+
+    // ====== REQUEST WIZARD (Sales) ======
+    let requestWizardState = {
+        active: false,
+        step: 0,
+        data: {}
+    };
+
+    const REQUEST_WIZARD_STEPS = [
+        { id: 'customer', question: '顧客名を選択してください', type: 'customer_select' },
+        { id: 'issue', question: '清掃の悩みを教えてください', type: 'text', placeholder: '例：厨房の油汚れが落ちない、臭気が気になる' },
+        { id: 'environment', question: '店内環境について教えてください', type: 'text', placeholder: '例：油煙が強い、湿気が多い、換気が弱い' },
+        { id: 'equipment', question: '清掃が必要な設備を選択してください', type: 'multi_select', options: ['空調', 'ダクト', 'レンジフード', 'グリストラップ', '床', '排水溝', 'トイレ', '窓・ガラス'] },
+        { id: 'plan', question: '依頼プランを選択してください', type: 'single_select', options: ['定期', 'スポット', '未定'] },
+        { id: 'notes', question: '注意事項があれば教えてください', type: 'text', placeholder: '例：薬剤の臭いNG、閉店後のみ作業可' },
+        { id: 'confirm', question: '以上の内容で依頼書を作成しますか？', type: 'confirm' }
+    ];
+
+    function startRequestWizard() {
+        requestWizardState = { active: true, step: 0, data: {} };
+
+        // Hide chat history temporarily
+        if (chatHistory) chatHistory.style.display = 'none';
+
+        appendChatMessage('ai', '依頼書を作成します。');
+        setTimeout(() => {
+            showRequestWizardStep(0);
+        }, 500);
+    }
+
+    function showRequestWizardStep(stepIndex) {
+        if (stepIndex >= REQUEST_WIZARD_STEPS.length) {
+            finishRequestWizard();
+            return;
+        }
+
+        requestWizardState.step = stepIndex;
+        const step = REQUEST_WIZARD_STEPS[stepIndex];
+
+        appendChatMessage('ai', step.question);
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+        actionContainer.innerHTML = '';
+
+        if (step.type === 'customer_select') {
+            renderCustomerSelect(actionContainer);
+        } else if (step.type === 'text') {
+            renderTextInput(actionContainer, step);
+        } else if (step.type === 'multi_select') {
+            renderMultiSelect(actionContainer, step);
+        } else if (step.type === 'single_select') {
+            renderSingleSelect(actionContainer, step);
+        } else if (step.type === 'confirm') {
+            renderConfirm(actionContainer);
+        }
+    }
+
+    function renderCustomerSelect(container) {
+        // For now, show sample customers - in production, fetch from API
+        const sampleCustomers = [
+            { id: '1', name: '株式会社 Dart Ace', store: '日本橋茅場町店' },
+            { id: '2', name: '株式会社 Dart Ace', store: '大塚店' },
+            { id: '3', name: 'アクティブソース', store: '本店' }
+        ];
+
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; flex-direction: column; gap: 8px; max-width: 400px; margin: 0 auto;';
+
+        sampleCustomers.forEach(c => {
+            btnDiv.innerHTML += `
+                <button class="wizard-option-btn" onclick="selectCustomer('${c.id}', '${c.name}', '${c.store}')"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
+                    color: #fff; padding: 12px 20px; border-radius: 12px; cursor: pointer; text-align: left;
+                    transition: all 0.3s;">
+                    <div style="font-weight: 600;">${c.name}</div>
+                    <div style="font-size: 0.85rem; opacity: 0.7;">${c.store}</div>
+                </button>
+            `;
+        });
+
+        btnDiv.innerHTML += `
+            <button class="wizard-option-btn" onclick="selectNewCustomer()"
+                style="background: transparent; border: 1px dashed rgba(255,255,255,0.3); 
+                color: rgba(255,255,255,0.7); padding: 12px 20px; border-radius: 12px; cursor: pointer;
+                transition: all 0.3s;">
+                + 新規顧客を登録
+            </button>
+        `;
+
+        container.appendChild(btnDiv);
+    }
+
+    function renderTextInput(container, step) {
+        const inputDiv = document.createElement('div');
+        inputDiv.style.cssText = 'max-width: 500px; margin: 0 auto;';
+        inputDiv.innerHTML = `
+            <textarea id="wizard-text-input" rows="3" placeholder="${step.placeholder || ''}"
+                style="width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                color: #fff; padding: 12px; border-radius: 12px; resize: none; font-family: inherit;"></textarea>
+            <div style="display: flex; gap: 10px; margin-top: 10px; justify-content: center;">
+                <button onclick="submitWizardText()" style="background: var(--accent-color); border: none; color: #fff;
+                    padding: 10px 24px; border-radius: 20px; cursor: pointer;">次へ</button>
+                <button onclick="skipWizardStep()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3);
+                    color: rgba(255,255,255,0.7); padding: 10px 24px; border-radius: 20px; cursor: pointer;">スキップ</button>
+            </div>
+        `;
+        container.appendChild(inputDiv);
+    }
+
+    function renderMultiSelect(container, step) {
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 500px; margin: 0 auto;';
+
+        step.options.forEach(opt => {
+            btnDiv.innerHTML += `
+                <button class="wizard-multi-btn" data-value="${opt}" onclick="toggleMultiOption(this)"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 10px 16px; border-radius: 20px; cursor: pointer; transition: all 0.3s;">
+                    ${opt}
+                </button>
+            `;
+        });
+
+        const confirmDiv = document.createElement('div');
+        confirmDiv.style.cssText = 'width: 100%; margin-top: 15px; text-align: center;';
+        confirmDiv.innerHTML = `
+            <button onclick="submitMultiSelect()" style="background: var(--accent-color); border: none; color: #fff;
+                padding: 10px 24px; border-radius: 20px; cursor: pointer;">次へ</button>
+        `;
+
+        container.appendChild(btnDiv);
+        container.appendChild(confirmDiv);
+    }
+
+    function renderSingleSelect(container, step) {
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; gap: 10px; justify-content: center;';
+
+        step.options.forEach(opt => {
+            btnDiv.innerHTML += `
+                <button onclick="submitSingleSelect('${opt}')"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 10px 20px; border-radius: 20px; cursor: pointer; transition: all 0.3s;">
+                    ${opt}
+                </button>
+            `;
+        });
+
+        container.appendChild(btnDiv);
+    }
+
+    function renderConfirm(container) {
+        const summary = Object.entries(requestWizardState.data)
+            .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+            .join('<br>');
+
+        const summaryDiv = document.createElement('div');
+        summaryDiv.style.cssText = 'background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; max-width: 500px; margin: 0 auto 15px; text-align: left; color: #fff; font-size: 0.9rem;';
+        summaryDiv.innerHTML = summary || '(データなし)';
+
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; gap: 10px; justify-content: center;';
+        btnDiv.innerHTML = `
+            <button onclick="finishRequestWizard()" style="background: var(--accent-color); border: none; color: #fff;
+                padding: 12px 24px; border-radius: 20px; cursor: pointer; font-weight: 600;">依頼書を作成</button>
+            <button onclick="cancelRequestWizard()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3);
+                color: rgba(255,255,255,0.7); padding: 12px 24px; border-radius: 20px; cursor: pointer;">キャンセル</button>
+        `;
+
+        container.appendChild(summaryDiv);
+        container.appendChild(btnDiv);
+    }
+
+    function selectCustomer(id, name, store) {
+        requestWizardState.data.customer_id = id;
+        requestWizardState.data.customer_name = name;
+        requestWizardState.data.store_name = store;
+        appendChatMessage('user', `${name} - ${store}`);
+        showRequestWizardStep(requestWizardState.step + 1);
+    }
+
+    function selectNewCustomer() {
+        appendChatMessage('ai', '新規顧客登録は現在準備中です。既存顧客を選択してください。');
+    }
+
+    function submitWizardText() {
+        const input = document.getElementById('wizard-text-input');
+        const value = input ? input.value.trim() : '';
+        const step = REQUEST_WIZARD_STEPS[requestWizardState.step];
+        requestWizardState.data[step.id] = value;
+        if (value) appendChatMessage('user', value);
+        showRequestWizardStep(requestWizardState.step + 1);
+    }
+
+    function skipWizardStep() {
+        showRequestWizardStep(requestWizardState.step + 1);
+    }
+
+    function toggleMultiOption(btn) {
+        btn.classList.toggle('selected');
+        if (btn.classList.contains('selected')) {
+            btn.style.background = 'var(--accent-color)';
+            btn.style.borderColor = 'var(--accent-color)';
+        } else {
+            btn.style.background = 'rgba(255,255,255,0.1)';
+            btn.style.borderColor = 'rgba(255,255,255,0.2)';
+        }
+    }
+
+    function submitMultiSelect() {
+        const selected = Array.from(document.querySelectorAll('.wizard-multi-btn.selected'))
+            .map(btn => btn.dataset.value);
+        const step = REQUEST_WIZARD_STEPS[requestWizardState.step];
+        requestWizardState.data[step.id] = selected;
+        if (selected.length) appendChatMessage('user', selected.join(', '));
+        showRequestWizardStep(requestWizardState.step + 1);
+    }
+
+    function submitSingleSelect(value) {
+        const step = REQUEST_WIZARD_STEPS[requestWizardState.step];
+        requestWizardState.data[step.id] = value;
+        appendChatMessage('user', value);
+        showRequestWizardStep(requestWizardState.step + 1);
+    }
+
+    function finishRequestWizard() {
+        appendChatMessage('ai', '依頼書を作成しました！事務に送信されます。');
+        console.log('Request Data:', requestWizardState.data);
+
+        // TODO: Save to API
+
+        // Reset wizard
+        requestWizardState = { active: false, step: 0, data: {} };
+        if (chatHistory) chatHistory.style.display = 'block';
+
+        // Clear action buttons
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (actionContainer) actionContainer.innerHTML = '';
+
+        // Show job actions again
+        setTimeout(() => showJobActions('sales'), 1000);
+    }
+
+    function cancelRequestWizard() {
+        requestWizardState = { active: false, step: 0, data: {} };
+        if (chatHistory) chatHistory.style.display = 'block';
+        appendChatMessage('ai', '依頼書作成をキャンセルしました。');
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (actionContainer) actionContainer.innerHTML = '';
+
+        showJobActions('sales');
+    }
+
+    // Placeholder functions for other wizards
+    function startReportWizard() {
+        appendChatMessage('ai', 'レポート作成機能は準備中です。');
+    }
+    function startWorkOrderWizard() {
+        appendChatMessage('ai', '作業指示書作成機能は準備中です。');
     }
 </script>
