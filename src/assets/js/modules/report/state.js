@@ -231,4 +231,51 @@ export class ReportStateManager {
             this.notify();
         }
     }
+
+    /**
+     * Load existing report data into state
+     * @param {Object} report 
+     */
+    loadReport(report) {
+        console.log('[ReportStateManager] Loading report data:', report);
+
+        // 1. Meta Data
+        this.state.meta = {
+            id: report.id || report.report_id,
+            brandId: report.brand_id,
+            storeId: report.store_id,
+            scheduleId: report.schedule_id,
+            date: report.cleaning_date || report.work_date,
+            startTime: report.cleaning_start_time || report.start_time,
+            endTime: report.cleaning_end_time || report.end_time
+        };
+
+        // 2. Clear existing sections
+        this.state.sections = {
+            new: {},
+            proposal: {}
+        };
+
+        // 3. Load Sections
+        // Backend might store sections in 'sections' field
+        const sectionsSource = report.sections || {};
+
+        // If it's a proposal mode load, we might want to shift everything to proposal tab?
+        // Or if the report itself is a proposal.
+        const targetTab = (report.proposal_type === 'proposal' || report.type === 'proposal') ? 'proposal' : 'new';
+
+        if (typeof sectionsSource === 'object') {
+            // If sectionsSource has 'new' and 'proposal' keys
+            if (sectionsSource.new || sectionsSource.proposal) {
+                this.state.sections.new = sectionsSource.new || {};
+                this.state.sections.proposal = sectionsSource.proposal || {};
+            } else {
+                // Otherwise assume it's the sections for the main report
+                this.state.sections[targetTab] = sectionsSource;
+            }
+        }
+
+        // 4. Update UI
+        this.notify();
+    }
 }

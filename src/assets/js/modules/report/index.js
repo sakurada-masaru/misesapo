@@ -118,6 +118,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (scheduleId) autoSaveManager.setScheduleId(scheduleId); // Ensure context is set if restored
     }
 
+    // Handle Edit Mode
+    const editId = urlParams.get('edit') || urlParams.get('id');
+    const isProposalForced = urlParams.get('proposal') === 'true';
+
+    if (editId) {
+        console.log('[Report Module] Loading report for editing:', editId);
+        try {
+            const report = await apiService.fetchReport(editId);
+            if (report) {
+                stateManager.loadReport(report);
+
+                // Update DOM inputs that aren't reactive yet
+                const brandInput = document.getElementById('report-brand-search');
+                const storeInput = document.getElementById('report-store-search');
+                const dateInput = document.getElementById('report-date');
+                const startInput = document.getElementById('report-start');
+                const endInput = document.getElementById('report-end');
+
+                if (brandInput) brandInput.value = report.brand_name || '';
+                if (storeInput) storeInput.value = report.store_name || '';
+                if (dateInput) dateInput.value = report.cleaning_date || report.work_date || '';
+                if (startInput) startInput.value = report.cleaning_start_time || report.start_time || '';
+                if (endInput) endInput.value = report.cleaning_end_time || report.end_time || '';
+
+                if (isProposalForced) {
+                    stateManager.setActiveTab('proposal');
+                } else if (report.proposal_type === 'proposal' || report.type === 'proposal') {
+                    stateManager.setActiveTab('proposal');
+                }
+            }
+        } catch (e) {
+            console.error('[Report Module] Failed to load report:', e);
+            alert('レポートの読み込みに失敗しました。');
+        }
+    }
+
     // Bind Submit Button
     const submitBtn = document.getElementById('report-submit-btn');
     if (submitBtn) {

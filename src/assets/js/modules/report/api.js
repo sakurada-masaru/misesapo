@@ -128,4 +128,17 @@ export class ReportApiService {
             return response.ok ? await response.json() : [];
         } catch (e) { return []; }
     }
+
+    async fetchReport(reportId) {
+        try {
+            const headers = await this._getAuthHeader();
+            const response = await fetch(`${REPORT_API}/daily-reports/${reportId}?type=cleaning`, { headers });
+            if (!response.ok) throw new Error(`Failed to fetch report: ${response.status}`);
+            const data = await response.json();
+            return data.report || data;
+        } catch (error) {
+            console.error('[API] Fetch Report Error:', error);
+            throw error;
+        }
+    }
 }

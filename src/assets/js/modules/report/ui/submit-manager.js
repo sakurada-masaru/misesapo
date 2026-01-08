@@ -41,14 +41,21 @@ export class SubmitManager {
             console.log('[Submit] Success:', result);
 
             // 4. Post-submission UX
-            // Check if OS user
-            const isOsUser = window.location.pathname.includes('/staff/os/');
-            if (isOsUser) {
+            const path = window.location.pathname;
+            if (path.includes('/staff/os/')) {
                 alert('作業完了報告を受け付けました。\n報告書データが保存されました。\nマイページへ戻ります。');
                 window.location.href = '/staff/os/mypage';
+            } else if (path.includes('/admin/')) {
+                alert('レポートを保存しました。');
+                // Check if in iframe/popup
+                if (window.opener) {
+                    window.close();
+                } else {
+                    window.location.href = '/admin/reports/';
+                }
             } else {
                 alert('レポートを送信しました。');
-                window.location.href = '/staff/reports'; // or dashboard
+                window.location.href = '/staff/reports';
             }
 
         } catch (error) {

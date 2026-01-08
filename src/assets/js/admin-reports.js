@@ -1232,39 +1232,8 @@
 
   // 次回提案を作成
   window.createProposal = async function (id) {
-    const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
-    if (!report) {
-      alert('レポートが見つかりませんでした');
-      return;
-    }
-
-    // レポート詳細を取得して、次回提案として編集モーダルを開く
-    try {
-      const idToken = await getFirebaseIdToken();
-      const response = await fetch(`${REPORT_API}/staff/reports/${id}`, {
-        headers: { 'Authorization': `Bearer ${idToken}` }
-      });
-
-      if (!response.ok) {
-        throw new Error('レポートの取得に失敗しました');
-      }
-
-      const data = await response.json();
-      const reportData = data.report || data;
-
-      // 次回提案として編集モーダルを開く（proposal_typeを設定）
-      document.getElementById('form-title').textContent = '次回提案を作成';
-      document.getElementById('report-form-modal').reset();
-      document.getElementById('report-id').value = '';
-
-      // レポートデータをモーダルに読み込む（forceIsProposal=trueで次回提案として扱う）
-      await window.editReport(id, true);
-
-      document.getElementById('new-dialog').showModal();
-    } catch (error) {
-      console.error('Error creating proposal:', error);
-      alert('次回提案の作成に失敗しました: ' + error.message);
-    }
+    // レポート詳細を取得して、次回提案として編集画面を新規ウィンドウで開く
+    await window.editReport(id, true);
   };
 
 
