@@ -129,6 +129,57 @@
         text-shadow: 0 0 20px var(--accent-glow);
     }
 
+    /* Floating Job Indicator Button */
+    #floating-job-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+        padding: 10px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        z-index: 8000;
+        display: none;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 20px var(--accent-glow);
+        backdrop-filter: blur(10px);
+    }
+
+    #floating-job-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px var(--accent-glow);
+        background: rgba(0, 0, 0, 0.9);
+    }
+
+    #floating-job-btn .job-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--accent-color);
+        border-radius: 50%;
+        animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.5;
+            transform: scale(1.2);
+        }
+    }
+
     /* CRT Blackout Effect */
     .crt-collapse {
         animation: crtCollapse 0.5s ease-in forwards;
@@ -1056,6 +1107,12 @@
         </div>
     </div>
     </div>
+
+    <!-- Floating Job Indicator Button -->
+    <button id="floating-job-btn" onclick="requestJobChange()">
+        <span class="job-dot"></span>
+        <span id="floating-job-label">-</span>
+    </button>
 </main>
 
 <script>
@@ -1674,8 +1731,8 @@
         }
     };
 
-    // Common menus for all job types
-    const COMMON_MENUS = ['mypage', 'announcements', 'wiki'];
+    // Common menus for all job types (always visible)
+    const COMMON_MENUS = ['mypage', 'announcements', 'wiki', 'job-change'];
 
     let currentJobType = null;
 
@@ -1809,6 +1866,14 @@
                     item.style.display = 'none';
                 }
             });
+        }
+
+        // Update floating job button
+        const floatingBtn = document.getElementById('floating-job-btn');
+        const floatingLabel = document.getElementById('floating-job-label');
+        if (floatingBtn && floatingLabel) {
+            floatingLabel.textContent = job.label;
+            floatingBtn.style.display = 'flex';
         }
 
         if (chatContainer) chatContainer.classList.add('sidebar-active');
