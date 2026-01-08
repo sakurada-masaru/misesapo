@@ -842,21 +842,26 @@
     <div class="main-content" style="background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);">
         <!-- Persistent Visualizer Core -->
         <div class="visualizer-container">
-            <div class="circle-text-container" id="circle-text">
-                <svg viewBox="0 0 200 200" class="circle-svg" width="320" height="320">
-                    <path id="circlePath" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" />
+            <div class="circle-text-container" id="circle-text"
+                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; animation: misogi-spin 40s linear infinite;">
+                <svg viewBox="0 0 200 200" class="circle-svg" width="200" height="200">
+                    <path id="circlePath" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
                     <text>
                         <textPath href="#circlePath">
-                            Misesapo Intelligent System for Operational Guidance &amp; interface &bull; M .I .S .O .G .I
-                            &bull;
+                            Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
                         </textPath>
                     </text>
                 </svg>
             </div>
-            <div class="wave"></div>
-            <div class="wave"></div>
-            <div class="wave"></div>
-            <div class="core-circle"></div>
+            <!-- The Liquid Core -->
+            <div class="core-circle"
+                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: liquid-core 6s infinite ease-in-out, core-breathe 4s infinite ease-in-out;">
+            </div>
+
+            <!-- Ripples -->
+            <div class="wave" style="animation: ripple-out 5s infinite 0s;"></div>
+            <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
+            <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
         </div>
 
         <!-- Voice Content -->
