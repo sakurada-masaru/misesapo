@@ -641,6 +641,51 @@
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
     }
+
+    /* Latest Message Centered Style */
+    .latest-message-container {
+        width: 100%;
+        min-height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 10px 0 20px 0;
+        z-index: 10;
+        pointer-events: none;
+        /* Let text be selectable but pass clicks through if needed */
+    }
+
+    .latest-message-bubble {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        padding: 15px 25px;
+        border-radius: 20px;
+        font-size: 1.1rem;
+        text-align: center;
+        max-width: 80%;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 0.4s ease-out;
+        pointer-events: auto;
+    }
+
+    .latest-message-bubble.ai {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 
 <main id="main" class="admin-dashboard">
@@ -693,6 +738,9 @@
             <div class="chat-history" id="chat-history">
                 <!-- Initial welcome will be injected by JS -->
             </div>
+
+            <!-- New: Latest Message Display (Centered) -->
+            <div id="latest-message-container" class="latest-message-container"></div>
 
             <!-- Login Bubble -->
             <div class="login-bubble-container" id="login-form">
@@ -907,10 +955,30 @@
     }
 
     function appendChatMessage(role, text) {
-        const bubble = document.createElement('div');
-        bubble.className = `chat-bubble ${role}`;
-        bubble.innerHTML = text.replace(/\n/g, '<br>');
-        chatHistory.appendChild(bubble);
+        // Move any existing latest message to history
+        const latestContainer = document.getElementById('latest-message-container');
+        if (latestContainer && latestContainer.children.length > 0) {
+            const oldMessage = latestContainer.firstElementChild;
+            const oldRole = oldMessage.dataset.role;
+            const oldText = oldMessage.innerHTML;
+
+            const historyBubble = document.createElement('div');
+            historyBubble.className = `chat-bubble ${oldRole}`;
+            historyBubble.innerHTML = oldText;
+            chatHistory.appendChild(historyBubble);
+        }
+
+        // Create new latest message
+        if (!latestContainer) return; // Safety check
+        latestContainer.innerHTML = ''; // Clear previous
+
+        const newBubble = document.createElement('div');
+        newBubble.className = `latest-message-bubble ${role}`;
+        newBubble.dataset.role = role;
+        newBubble.innerHTML = text.replace(/\n/g, '<br>');
+        latestContainer.appendChild(newBubble);
+
+        // Scroll history to bottom just in case
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
