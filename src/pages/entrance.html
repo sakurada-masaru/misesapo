@@ -1016,8 +1016,10 @@
         }
     }
 
-    if (textInput) {
-        textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendTextMessage(); });
+    // Ensure textInput listener is attached safely
+    const textInputEl = document.getElementById('text-input');
+    if (textInputEl) {
+        textInputEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendTextMessage(); });
     }
 
     // Toggle Visualizer Simulation
