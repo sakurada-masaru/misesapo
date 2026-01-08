@@ -762,11 +762,11 @@
         </div>
 
         <!-- Mode Switcher -->
-        <div class="mode-switch-container">
-            <button class="mode-btn active" id="btn-voice-mode" onclick="switchMode('voice')">
+        <div class="mode-switch-container" style="display: none;">
+            <button class="mode-btn" id="btn-voice-mode" onclick="switchMode('voice')">
                 <i class="fas fa-microphone"></i> 音声
             </button>
-            <button class="mode-btn" id="btn-chat-mode" onclick="switchMode('chat')">
+            <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
                 <i class="fas fa-comment-dots"></i> チャット
             </button>
         </div>
@@ -804,7 +804,7 @@
     const startOverlay = document.getElementById('start-overlay');
     const loginForm = document.getElementById('login-form');
 
-    let currentMode = 'voice';
+    let currentMode = 'chat';
 
     // Hide sidebar by default for AI-centric feel
     if (sidebar) sidebar.style.display = 'none';
