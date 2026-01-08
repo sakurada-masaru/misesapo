@@ -34,40 +34,44 @@ export class ReportApiService {
                 const reader = new FileReader();
 
                 reader.onload = async (e) => {
-                    const base64Data = e.target.result; // Data URL
-                    const base64Content = base64Data.split(',')[1];
+                    try {
+                        const base64Data = e.target.result; // Data URL
+                        const base64Content = base64Data.split(',')[1];
 
-                    const payload = {
-                        image_data: base64Content,
-                        category: category,
-                        file_name: imageFile.name,
-                        content_type: 'image/jpeg', // Always JPEG after compression
-                        report_id: reportId,
-                        cleaning_date: cleaningDate
-                    };
+                        const payload = {
+                            image_data: base64Content,
+                            category: category,
+                            file_name: imageFile.name,
+                            content_type: 'image/jpeg', // Always JPEG after compression
+                            report_id: reportId,
+                            cleaning_date: cleaningDate
+                        };
 
-                    console.log(`[API] Uploading compressed image (${(base64Content.length / 1024).toFixed(1)} KB)`);
-                    console.log('[API] Payload keys:', Object.keys(payload));
+                        console.log(`[API] Uploading compressed image (${(base64Content.length / 1024).toFixed(1)} KB)`);
+                        console.log('[API] Payload keys:', Object.keys(payload));
 
-                    const headers = await this._getAuthHeader();
-                    const response = await fetch(`${REPORT_API}/staff/report-images`, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(payload)
-                    });
+                        const headers = await this._getAuthHeader();
+                        const response = await fetch(`${REPORT_API}/staff/report-images`, {
+                            method: 'POST',
+                            headers: headers,
+                            body: JSON.stringify(payload)
+                        });
 
-                    if (!response.ok) {
-                        const errText = await response.text();
-                        throw new Error(`Upload failed: ${response.status} ${errText}`);
+                        if (!response.ok) {
+                            const errText = await response.text();
+                            throw new Error(`Upload failed: ${response.status} ${errText}`);
+                        }
+
+                        const result = await response.json();
+                        // Lambda returns { success: true, image: { url, image_id, ... } }
+                        const imageData = result.image || result;
+                        resolve({
+                            url: imageData.url || imageData.imageUrl,
+                            id: imageData.image_id || imageData.id || imageData.item_id
+                        });
+                    } catch (err) {
+                        reject(err);
                     }
-
-                    const result = await response.json();
-                    // Lambda returns { success: true, image: { url, image_id, ... } }
-                    const imageData = result.image || result;
-                    resolve({
-                        url: imageData.url || imageData.imageUrl,
-                        id: imageData.image_id || imageData.id || imageData.item_id
-                    });
                 };
                 reader.onerror = (err) => reject(err);
                 reader.readAsDataURL(compressedImage);
