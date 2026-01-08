@@ -499,6 +499,18 @@
 
     // --- Context & Mode Logic ---
 
+    // Define Global UI Elements
+    const startOverlay = document.getElementById('start-overlay');
+    const loginForm = document.getElementById('login-form');
+    const chatHistory = document.getElementById('chat-history');
+    const chatContainer = document.getElementById('chat-container');
+    const voiceContent = document.getElementById('voice-content');
+    const visualizer = document.querySelector('.visualizer-container'); // Main one
+    const statusText = document.getElementById('status-text');
+    const textInput = document.getElementById('text-input');
+    const btnChat = document.getElementById('btn-chat');
+    const btnVoice = document.getElementById('btn-voice');
+
     // Listen for mode changes to update UI
     window.addEventListener('context-changed', (e) => {
         const mode = e.detail;
