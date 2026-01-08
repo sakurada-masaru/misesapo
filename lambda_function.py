@@ -826,15 +826,20 @@ SERVICES_KEY = 'services/service_items.json'
 WIKI_KEY = 'wiki/wiki_entries.json'
 
 def resolve_cors_origin(event_headers: dict) -> str:
+    # クレデンシャルが false なので、特定のオリジンを返す代わりに * でも動作するが、
+    # 互換性のためにリクエストの Origin をそのまま返すか、許可リストをチェックする。
     origin = event_headers.get("origin") or event_headers.get("Origin") or ""
     
-    # ALLOWED_ORIGINS が空の場合はデフォルトで * を許可
-    if not ALLOWED_ORIGINS:
-        return origin if origin else "*"
+    if not origin:
+        return "*"
         
-    # * が許可されている場合はオリジンを返す（クレデンシャルがfalseなので安全）
+    # * が許可されている場合はオリジンを返す
     if "*" in ALLOWED_ORIGINS:
-        return origin if origin else "*"
+        return origin
+        
+    # ドメインマッチング（サフィックスチェック）
+    if origin.endswith('misesapo.co.jp') or origin.endswith('sakurada-masaru.github.io'):
+        return origin
         
     # 特定のオリジンが許可リストにある場合
     if origin in ALLOWED_ORIGINS:

@@ -77,7 +77,7 @@ export class SectionRenderer {
                     contentHtml = `
                        <div class="cleaning-item-image-area" style="display:flex; gap:10px; margin-top:10px;">
                             <!-- Before Drop Zone -->
-                            <div class="image-list" data-category="before" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 120px; padding: 10px; background: #fafafa; position:relative; overflow:hidden; display: flex; flex-direction: column; align-items: center;">
+                            <div class="image-list" data-category="before" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 180px; padding: 10px; background: #fafafa; position:relative; overflow:hidden; display: flex; flex-direction: column; align-items: center;">
                                 <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                     <div style="font-size:0.8rem; font-weight:bold; color:${pinkColor};">${beforeLabel}</div>
                                     <label style="cursor:pointer; background:${pinkColor}; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; display:flex; align-items:center;">
@@ -93,7 +93,7 @@ export class SectionRenderer {
                             <div style="align-self:center; font-size:1.5rem; color:#ccc;">➡</div>
 
                             <!-- After Drop Zone -->
-                            <div class="image-list" data-category="after" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 120px; padding: 10px; background: #fafafa; position:relative; overflow:hidden; display: flex; flex-direction: column; align-items: center;">
+                            <div class="image-list" data-category="after" style="flex:1; border: 2px dashed #ddd; border-radius: 6px; min-height: 180px; padding: 10px; background: #fafafa; position:relative; overflow:hidden; display: flex; flex-direction: column; align-items: center;">
                                 <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                     <div style="font-size:0.8rem; font-weight:bold; color:${pinkColor};">${afterLabel}</div>
                                     <label style="cursor:pointer; background:${pinkColor}; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; display:flex; align-items:center;">
@@ -216,7 +216,7 @@ export class SectionRenderer {
             const src = photo.blobUrl || photo.url || '';
 
             return `
-           <div class="image-thumb" style="width:80px; height:80px; display:inline-block; margin:4px; position:relative; opacity:${opacity};">
+           <div class="image-thumb" style="width:150px; height:150px; display:inline-block; margin:4px; position:relative; opacity:${opacity};">
                <img src="${src}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">
                ${statusIcon}
            </div>
