@@ -323,6 +323,104 @@
     return 'staff'; // デフォルト
   }
 
+  /**
+   * 現在のユーザー情報を取得
+   */
+  async function getCurrentUser() {
+    return new Promise((resolve) => {
+      const cognitoUser = userPool.getCurrentUser();
+
+      if (cognitoUser != null) {
+        cognitoUser.getSession(async function (err, session) {
+          if (err) {
+            resolve(null);
+            return;
+          }
+
+          // localStorageからユーザー情報を取得
+          const storedUser = localStorage.getItem('cognito_user');
+          if (storedUser) {
+            try {
+              resolve(JSON.parse(storedUser));
+            } catch (e) {
+              resolve(null);
+            }
+          } else {
+            // セッションから最低限の情報を構築
+            const idToken = session.getIdToken().getJwtToken();
+            const payload = session.getIdToken().decodePayload();
+            resolve({
+              email: payload.email,
+              sub: payload.sub
+            });
+          }
+        });
+      } else {
+        resolve(null);
+      }
+    });
+  }
+
+  /**
+   * IDトークンを取得
+   */
+  function getIdToken() {
+    return localStorage.getItem('cognito_id_token');
+  }
+
+  /**
+   * 認証済みかどうか判定
+   */
+  function isAuthenticated() {
+    const token = localStorage.getItem('cognito_id_token');
+    return !!token;
+  }
+
+  /**
+   * パスワード変更
+   */
+  function changePassword(oldPassword, newPassword) {
+    return new Promise((resolve, reject) => {
+      const cognitoUser = userPool.getCurrentUser();
+      if (!cognitoUser) {
+        reject({ message: 'ユーザーがログインしていません' });
+        return;
+      }
+
+      cognitoUser.getSession(function (err, session) {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        cognitoUser.changePassword(oldPassword, newPassword, function (err, result) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(result);
+          }
+        });
+      });
+    });
+  }
+
+  /**
+   * エラーメッセージの変換
+   */
+  function getCognitoErrorMessage(err) {
+    if (err.code === 'UserNotFoundException') {
+      return 'ユーザーが見つかりません。';
+    } else if (err.code === 'NotAuthorizedException') {
+      return 'メールアドレスまたはパスワードが間違っています。';
+    } else if (err.code === 'UserNotConfirmedException') {
+      return 'アカウントが確認されていません。メールを確認してください。';
+    } else if (err.code === 'PasswordResetRequiredException') {
+      return 'パスワードのリセットが必要です。';
+    } else {
+      return err.message || 'ログイン中にエラーが発生しました。';
+    }
+  }
+
   // グローバルに公開
   window.CognitoAuth = {
     login: login,
