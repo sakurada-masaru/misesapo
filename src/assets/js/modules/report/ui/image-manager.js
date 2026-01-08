@@ -239,7 +239,7 @@ export class ImageManager {
             this.state.updateSectionImage(tabName, sectionId, category, tempId, {
                 status: 'error'
             });
-            alert('画像のアップロードに失敗しました。');
+            console.warn('[ImageManager] Direct upload failed, but local preview remains available.');
         }
     }
 }

@@ -216,7 +216,7 @@ export class SectionRenderer {
             const src = photo.blobUrl || photo.url || '';
 
             return `
-           <div class="image-thumb" style="width:150px; height:150px; display:inline-block; margin:4px; position:relative; opacity:${opacity};">
+           <div class="image-thumb" style="width:220px; height:220px; display:inline-block; margin:4px; position:relative; opacity:${opacity};">
                <img src="${src}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">
                ${statusIcon}
            </div>

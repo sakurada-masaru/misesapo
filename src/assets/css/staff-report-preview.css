@@ -95,9 +95,9 @@ body {
 
 .photo-img {
     width: 100%;
-    height: 200px;
+    height: 350px;
     object-fit: contain;
-    background: #f0f0f0;
+    background: #fdf2f8;
 }
 
 .photo-label {
@@ -113,7 +113,7 @@ body {
 }
 
 .no-photo {
-    height: 200px;
+    height: 350px;
     display: flex;
     align-items: center;
     justify-content: center;
