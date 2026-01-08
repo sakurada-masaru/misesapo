@@ -82,6 +82,9 @@
     /* =========================================
        Visualizer Core (The AI "Soul")
        ========================================= */
+    /* =========================================
+       Visualizer Core (The AI "Soul")
+       ========================================= */
     .visualizer-container {
         position: absolute;
         top: 50%;
@@ -92,12 +95,13 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 10;
+        /* Fix: Higher than start-overlay (9999) to be visible initially */
+        z-index: 10000;
         transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         pointer-events: none;
-        /* Let clicks pass through unless active interaction needed */
     }
 
+    /* ... core-circle styles ... */
     .core-circle {
         width: 60px;
         height: 60px;
@@ -110,291 +114,77 @@
         transition: all 0.5s ease;
     }
 
-    .wave {
+    /* ... wave styles ... */
+
+    /* ... (Logic for History Right / Latest Center) ... */
+
+    /* Chat Layout Split */
+    #chat-interface {
+        /* ... existing ... */
+        /* Allow children to be positioned absolutely or flexed */
+    }
+
+    .chat-history-pane {
         position: absolute;
-        border: 1px solid var(--theme-color);
-        border-radius: 50%;
-        opacity: 0;
-        top: 50%;
+        top: 0;
+        right: 0;
+        width: 25%;
+        /* History on right */
+        height: 100%;
+        padding: 40px 20px 140px 20px;
+        /* Bottom pad for dock/input */
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        z-index: 100;
+        background: linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent);
+        /* Fade out */
+        mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+    }
+
+    .latest-message-area {
+        position: absolute;
+        top: 45%;
         left: 50%;
         transform: translate(-50%, -50%);
-    }
-
-    .wave:nth-child(1) {
-        animation: ripple 3s infinite 0s linear;
-    }
-
-    .wave:nth-child(2) {
-        animation: ripple 3s infinite 1s linear;
-    }
-
-    .wave:nth-child(3) {
-        animation: ripple 3s infinite 2s linear;
-    }
-
-    @keyframes breathe {
-
-        0%,
-        100% {
-            transform: scale(1);
-            opacity: 0.9;
-            box-shadow: 0 0 30px var(--theme-color);
-        }
-
-        50% {
-            transform: scale(1.05);
-            opacity: 1;
-            box-shadow: 0 0 60px var(--theme-color);
-        }
-    }
-
-    @keyframes ripple {
-        0% {
-            width: 60px;
-            height: 60px;
-            opacity: 0.6;
-            border-width: 2px;
-        }
-
-        100% {
-            width: 350px;
-            height: 350px;
-            opacity: 0;
-            border-width: 0px;
-        }
-    }
-
-    /* Rotating Text Ring */
-    .text-ring {
-        position: absolute;
-        width: 280px;
-        height: 280px;
-        animation: rotate 40s linear infinite;
-        opacity: 0.4;
-        transition: opacity 0.5s;
-    }
-
-    .text-ring text {
-        fill: var(--color-text-main);
-        font-family: var(--font-primary);
-        font-size: 9px;
-        letter-spacing: 4px;
-        text-transform: uppercase;
-    }
-
-    @keyframes rotate {
-        from {
-            transform: rotate(0deg);
-        }
-
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    /* =========================================
-       Start Overlay & Login
-       ========================================= */
-    #start-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #000;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        transition: opacity 0.8s ease, visibility 0.8s;
-    }
-
-    #start-overlay.hidden {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-    }
-
-    .logo-section {
-        margin-bottom: 300px;
-        /* Space for visualizer */
+        width: 60%;
         text-align: center;
-        opacity: 0;
-        animation: fadeUp 1s ease 0.5s forwards;
-    }
-
-    .logo-main {
-        font-size: 3rem;
-        font-weight: 200;
-        letter-spacing: 12px;
-        color: #fff;
-        margin-bottom: 10px;
-    }
-
-    .logo-sub {
-        font-size: 0.8rem;
-        color: var(--color-text-sub);
-        letter-spacing: 4px;
-        font-weight: 300;
-        line-height: 1.5;
-    }
-
-    .start-btn {
-        position: absolute;
-        bottom: 15%;
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: #fff;
-        font-size: 24px;
-        cursor: pointer;
+        z-index: 110;
         display: flex;
-        justify-content: center;
+        flex-direction: column;
         align-items: center;
-        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-        opacity: 0;
-        animation: fadeIn 1s ease 1s forwards;
-    }
-
-    .start-btn::after {
-        content: '';
-        position: absolute;
-        top: -5px;
-        left: -5px;
-        right: -5px;
-        bottom: -5px;
-        border-radius: 50%;
-        border: 1px solid var(--theme-color);
-        opacity: 0;
-        transform: scale(0.8);
-        transition: all 0.4s ease;
-    }
-
-    .start-btn:hover {
-        transform: scale(1.1);
-        background: rgba(255, 255, 255, 0.1);
-        box-shadow: 0 0 50px var(--theme-glow);
-    }
-
-    .start-btn:hover::after {
-        transform: scale(1);
-        opacity: 0.5;
-    }
-
-    .start-label {
-        position: absolute;
-        bottom: -30px;
-        font-size: 10px;
-        letter-spacing: 2px;
-        opacity: 0.5;
-    }
-
-    /* =========================================
-       Chat Interface
-       ========================================= */
-    #chat-interface {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 100;
-        pointer-events: none;
-        /* Let events pass to dashboard when hidden */
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        padding-bottom: 120px;
-        /* Space for Dock */
-        opacity: 0;
-        transform: translateY(20px);
-        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    #chat-interface.active {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateY(0);
-    }
-
-    .chat-scroll-area {
-        flex: 1;
-        overflow-y: auto;
-        padding: 40px 20% 20px 20%;
-        display: flex;
-        flex-direction: column;
         gap: 20px;
-        mask-image: linear-gradient(to bottom, transparent 0%, black 20%);
-        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%);
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     }
 
-    /* Scrollbar */
-    .chat-scroll-area::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .chat-scroll-area::-webkit-scrollbar-track {
+    /* Adjust bubbles for latest center view */
+    .latest-message-area .msg-bubble {
+        max-width: 100%;
+        font-size: 1.5rem;
+        /* Larger for focus */
+        padding: 0;
+        /* Remove padding for clean text look? Or keep it? */
         background: transparent;
+        border: none;
+        box-shadow: none;
+        text-align: center;
+        backdrop-filter: none;
     }
 
-    .chat-scroll-area::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 2px;
+    .latest-message-area .ai-avatar {
+        display: none;
     }
 
-    .message-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 15px;
-        opacity: 0;
-        animation: slideInMsg 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    /* Hide avatar in center view, pure voice-like text */
+
+    .latest-message-area .action-btn {
+        font-size: 1.1rem;
+        padding: 15px 40px;
+        box-shadow: 0 0 30px var(--theme-glow);
     }
 
-    .message-row.user {
-        justify-content: flex-end;
-    }
-
-    .msg-bubble {
-        max-width: 60%;
-        padding: 16px 24px;
-        border-radius: 20px;
-        font-size: 0.95rem;
-        line-height: 1.6;
-        position: relative;
-        font-family: var(--font-jp);
-    }
-
-    .msg-bubble.ai {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 4px 20px 20px 20px;
-        backdrop-filter: blur(10px);
-    }
-
-    .msg-bubble.user {
-        background: var(--theme-color);
-        color: #fff;
-        border-radius: 20px 20px 4px 20px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    }
-
-    .ai-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #000;
-        border: 1px solid var(--theme-color);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 12px;
-        color: var(--theme-color);
-    }
+    /* ... */
 
     /* Input Area */
     .input-container {
@@ -691,8 +481,14 @@
 
     <!-- Chat Interface -->
     <div id="chat-interface">
-        <div class="chat-scroll-area" id="chat-history">
-            <!-- Messages will be injected here -->
+        <!-- Center Focus: Latest Message & Actions -->
+        <div class="latest-message-area" id="latest-message-area">
+            <!-- Dynamic content injected here -->
+        </div>
+
+        <!-- Right Pane: History -->
+        <div class="chat-history-pane" id="chat-history">
+            <!-- Past messages injected here -->
         </div>
 
         <!-- Input Area -->
@@ -746,7 +542,6 @@
         // State
         isLoggedIn: false,
         currentUser: null,
-        currentMode: 'admin',
 
         // UI Elements
         ui: {
@@ -754,16 +549,15 @@
             chatInterface: document.getElementById('chat-interface'),
             dashboardView: document.getElementById('dashboard-view'),
             chatHistory: document.getElementById('chat-history'),
+            latestArea: document.getElementById('latest-message-area'),
             inputField: document.getElementById('user-input'),
             dockContainer: document.getElementById('mode-dock-container'),
             dockItems: document.getElementById('mode-dock-items'),
-            visualizer: document.querySelector('.visualizer-container'),
-            root: document.documentElement
+            visualizer: document.querySelector('.visualizer-container')
         },
 
         // Initialize
         start: async function () {
-            // 1. Animation: Hide Button & Overlay
             const btn = document.getElementById('start-btn');
             btn.style.transform = 'scale(0)';
             btn.style.opacity = '0';
@@ -772,34 +566,30 @@
                 this.ui.overlay.classList.add('hidden');
             }, 500);
 
-            // 2. Auth Check
             await this.checkAuth();
         },
 
         checkAuth: async function () {
-            this.addMessage('ai', '認証システムに接続中...');
+            this.updateLatest('ai', '認証システムに接続中...');
 
             if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
                 try {
                     const user = await window.CognitoAuth.getCurrentUser();
                     this.currentUser = user;
-                    this.isLoggedIn = true;
                     this.onLoginSuccess(user);
                 } catch (e) {
                     console.error(e);
                     this.showLoginForm();
                 }
             } else {
-                // Not logged in
                 setTimeout(() => {
-                    this.addMessage('ai', 'アクセス権限が確認できません。ログインしてください。');
+                    this.updateLatest('ai', 'アクセス権限が確認できません。<br>ログインしてください。');
                     this.showLoginForm();
                 }, 1000);
             }
         },
 
         onLoginSuccess: function (user) {
-            // Init Context Manager
             if (window.contextManager) {
                 window.contextManager.init(user);
                 this.renderDock();
@@ -807,32 +597,25 @@
             }
 
             const name = user.name || user.username || 'User';
-            this.addMessage('ai', `認証成功。おかえりなさいませ、${name}様。`);
+            this.updateLatest('ai', `認証成功。<br>おかえりなさいませ、${name}様。`);
 
-            // Show interface
             this.ui.chatInterface.classList.add('active');
-
-            // Check Attendance (Mock logic for flow)
             this.checkAttendanceStatus(user);
         },
 
         showLoginForm: function () {
             this.ui.chatInterface.classList.add('active');
 
-            // Create Login Card
-            const div = document.createElement('div');
-            div.className = 'message-row ai';
-            div.innerHTML = `
-            <div class="ai-avatar"><i class="fas fa-cube"></i></div>
+            // Show in center
+            this.ui.latestArea.innerHTML = `
+            <div class="msg-bubble ai" style="display:none"></div> <!-- Spacer -->
             <div class="login-card">
-                <div style="color:var(--theme-color); font-size:0.8rem; letter-spacing:1px;">SYSTEM LOGIN</div>
+                <div style="color:var(--theme-color); font-size:0.8rem; letter-spacing:1px; text-align:center;">SYSTEM LOGIN</div>
                 <input type="email" id="login-email" class="login-input" placeholder="Email">
                 <input type="password" id="login-pass" class="login-input" placeholder="Password">
                 <button class="action-btn" onclick="app.performLogin()">LOGIN</button>
             </div>
         `;
-            this.ui.chatHistory.appendChild(div);
-            this.ui.chatHistory.scrollTop = this.ui.chatHistory.scrollHeight;
         },
 
         performLogin: async function () {
@@ -841,38 +624,34 @@
 
             if (!email || !pass) return;
 
-            this.addMessage('user', '認証情報を送信...');
+            this.updateLatest('user', '認証情報を送信...');
 
             try {
                 const result = await window.CognitoAuth.login(email, pass);
                 if (result.success) {
-                    // Reload on success to refresh tokens and state properly
                     window.location.reload();
                 } else {
-                    this.addMessage('ai', 'ログイン失敗: ' + result.message);
+                    this.updateLatest('ai', 'ログイン失敗: ' + result.message);
+                    setTimeout(() => this.showLoginForm(), 2000); // Retry
                 }
             } catch (e) {
-                this.addMessage('ai', 'エラーが発生しました: ' + e.message);
+                this.updateLatest('ai', 'エラーが発生しました: ' + e.message);
             }
         },
 
         checkAttendanceStatus: async function (user) {
-            // Ask for clock-in
             setTimeout(() => {
-                this.addMessage('ai', '本日の業務を開始しますか？');
-
-                // Show Clock-In Button as a 'System Action'
-                const div = document.createElement('div');
-                div.className = 'message-row ai';
-                div.innerHTML = `
-                 <div class="ai-avatar"><i class="fas fa-cube"></i></div>
-                 <div class="msg-bubble ai" style="padding: 10px;">
-                    <button class="action-btn" id="clock-in-btn" onclick="app.clockIn()"><i class="fas fa-clock"></i> 出勤する</button>
-                 </div>
+                // Center Layout: Message + Button
+                this.ui.latestArea.innerHTML = `
+                <div class="msg-bubble ai">本日の業務を開始しますか？</div>
+                <button class="action-btn" id="clock-in-btn" onclick="app.clockIn()">
+                    <i class="fas fa-clock"></i> 出勤する
+                </button>
             `;
-                this.ui.chatHistory.appendChild(div);
-                this.ui.chatHistory.scrollTop = this.ui.chatHistory.scrollHeight;
-            }, 1000);
+
+                // Log to history
+                this.addToHistory('ai', '本日の業務を開始しますか？');
+            }, 1500);
         },
 
         clockIn: async function () {
@@ -882,7 +661,6 @@
                 btn.disabled = true;
             }
 
-            // --- Actual API Call Logic Here ---
             try {
                 const user = await window.CognitoAuth.getCurrentUser();
                 const token = window.CognitoAuth.getIdToken();
@@ -902,16 +680,9 @@
                 });
 
                 if (response.ok) {
-                    if (btn) {
-                        btn.innerHTML = '<i class="fas fa-check"></i> 出勤完了';
-                        btn.style.background = '#10b981'; // Success Green
-                    }
-                    this.addMessage('ai', '出勤を確認しました。業務モードへ移行します。');
+                    this.updateLatest('ai', '出勤を確認しました。<br>業務モードへ移行します。');
 
-                    // Switch to work mode automatically after delay
                     setTimeout(() => {
-                        // Determine User Default Role/Mode (Fallback to Office/Staff logic)
-                        // For now, let's switch to 'office' or whatever context manager decides
                         const defaultMode = window.contextManager.getAvailableModes()[0]?.id || 'office';
                         window.contextManager.switchMode(defaultMode);
                     }, 1500);
@@ -921,25 +692,34 @@
                 }
             } catch (e) {
                 console.error(e);
-                this.addMessage('ai', '出勤処理に失敗しました。再試行してください。');
-                if (btn) {
-                    btn.innerHTML = '再試行';
-                    btn.disabled = false;
-                }
+                this.updateLatest('ai', '出勤処理に失敗しました。再試行してください。');
+                setTimeout(() => this.checkAttendanceStatus(this.currentUser), 2000);
             }
         },
 
-        // UI Helpers
-        addMessage: function (role, text) {
+        // --- Helpers ---
+
+        // Updates the Center "Latest" view AND logs to History
+        updateLatest: function (role, htmlContent) {
+            // 1. Update Center
+            this.ui.latestArea.innerHTML = `
+            <div class="msg-bubble ${role}">${htmlContent}</div>
+        `;
+
+            // 2. Add to History
+            this.addToHistory(role, htmlContent);
+        },
+
+        addToHistory: function (role, htmlContent) {
             const div = document.createElement('div');
             div.className = `message-row ${role}`;
 
             let content = '';
             if (role === 'ai') {
                 content = `<div class="ai-avatar"><i class="fas fa-cube"></i></div>
-                       <div class="msg-bubble ai">${text}</div>`;
+                       <div class="msg-bubble ai" style="text-align: left;">${htmlContent}</div>`;
             } else {
-                content = `<div class="msg-bubble user">${text}</div>`;
+                content = `<div class="msg-bubble user" style="text-align: left;">${htmlContent}</div>`;
             }
 
             div.innerHTML = content;
@@ -951,23 +731,21 @@
             const text = this.ui.inputField.value.trim();
             if (!text) return;
 
-            this.addMessage('user', text);
+            this.updateLatest('user', text);
             this.ui.inputField.value = '';
 
-            // Basic AI Echo/Processing (Placeholder for full AI)
             setTimeout(() => {
                 this.handleAIResponse(text);
             }, 600);
         },
 
         handleAIResponse: function (userText) {
-            // Simple command handling for navigation
             if (userText.includes('戻る') || userText.includes('チャット')) {
-                window.contextManager.switchMode('admin'); // Assuming admin is chat base
-                this.addMessage('ai', 'チャットモードに戻ります。');
+                window.contextManager.switchMode('admin');
+                this.updateLatest('ai', 'チャットモードに戻ります。');
                 return;
             }
-            this.addMessage('ai', '申し訳ありません、現在対話機能は縮小運転中です。「コマンド」をご利用ください。');
+            this.updateLatest('ai', '申し訳ありません、現在対話機能は縮小運転中です。<br>「コマンド」をご利用ください。');
         },
 
         renderDock: function () {
@@ -986,56 +764,41 @@
         }
     };
 
-    // Listen for Enter key
     document.getElementById('user-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') app.sendMessage();
     });
 
-    // Context Manager Event Listener (The Bridge)
     window.addEventListener('context-changed', (e) => {
         const mode = e.detail;
-        console.log('Mode Switched:', mode);
 
-        // 1. Update Theme Colors
-        const colors = {
-            'admin': '#3b82f6',
-            'office': '#0ea5e9',
-            'sales': '#f97316',
-            'operations': '#10b981'
-        };
+        // Theme Update
+        const colors = { 'admin': '#3b82f6', 'office': '#0ea5e9', 'sales': '#f97316', 'operations': '#10b981' };
         const newColor = colors[mode.id] || '#3b82f6';
         document.documentElement.style.setProperty('--theme-color', newColor);
-        document.documentElement.style.setProperty('--theme-glow', `${newColor}66`); // 40% hex opacity
+        document.documentElement.style.setProperty('--theme-glow', `${newColor}66`);
 
-        // 2. Update Dock Active State
         document.querySelectorAll('.dock-icon').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === mode.id);
         });
 
-        // 3. Switch Views
         if (mode.id === 'admin') {
-            // Show Chat
             app.ui.dashboardView.classList.remove('active');
             app.ui.chatInterface.classList.add('active');
-            // Visualizer large
+            // Visualizer Show
+            app.ui.visualizer.style.opacity = '1';
             app.ui.visualizer.style.transform = 'translate(-50%, -50%) scale(1)';
-            app.ui.visualizer.style.top = '50%';
         } else {
-            // Show Dashboard
             app.ui.chatInterface.classList.remove('active');
             app.ui.dashboardView.classList.add('active');
 
-            // Render Dashboard Content if empty
             if (!app.ui.dashboardView.innerHTML.trim() && window.STAFF_DASHBOARD_HTML) {
                 app.ui.dashboardView.innerHTML = window.STAFF_DASHBOARD_HTML;
                 if (window.dashboardController) window.dashboardController.init();
             }
 
-            // Visualizer small & top-right or hidden?
-            // Let's make it faded background element
+            // Visualizer fade out
+            app.ui.visualizer.style.opacity = '0.1';
             app.ui.visualizer.style.transform = 'translate(-50%, -50%) scale(0.6)';
-            app.ui.visualizer.style.opacity = '0.3';
         }
     });
-
 </script>
