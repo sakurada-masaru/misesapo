@@ -1028,19 +1028,23 @@
                 }
 
                 if (isOnBreak) {
-                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。現在休憩中ですね。業務を再開しますか？`);
+                    // 休憩中
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。休憩中ですね。業務を再開しますか？`);
                     handleAiCommands({ ui_commands: [{ type: 'show_break_end' }] });
                 } else if (isClockedIn) {
-                    // Check if job type was already selected today
+                    // 出勤済み → 「再開」扱い（出勤ボタンは不要）
                     const savedJobType = localStorage.getItem('current_job_type');
                     if (savedJobType && JOB_TYPES[savedJobType]) {
-                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。${JOB_TYPES[savedJobType].label}モードで業務を継続します。`);
+                        // 仕事タイプ選択済み → 即座にそのモードで継続
+                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${JOB_TYPES[savedJobType].label}モードで業務を継続します。`);
                         filterSidebar(savedJobType);
                     } else {
-                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。本日はどの業務を行いますか？`);
+                        // 仕事タイプ未選択 → 選択を促す
+                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。本日はどの業務を行いますか？`);
                         showJobSelection();
                     }
                 } else {
+                    // 未出勤 → 出勤を促す
                     appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
                     handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
                 }
