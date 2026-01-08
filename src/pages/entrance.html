@@ -337,7 +337,46 @@
     /* Emerald */
 
 
-    /* Chat UI */
+    /* Start Button (Power) */
+    .start-btn {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        /* Ensure it's centered horizontally if absolute positioned with bottom */
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .start-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        box-shadow: 0 0 30px var(--accent-glow);
+        transform: translateX(-50%) scale(1.1);
+    }
+
+    .start-btn .start-btn-label {
+        position: absolute;
+        bottom: -25px;
+        font-size: 0.7rem;
+        letter-spacing: 2px;
+        opacity: 0.6;
+        font-weight: 500;
+        width: 100px;
+        text-align: center;
+    }
+
     #chat-container {
         position: absolute;
         top: 0;
