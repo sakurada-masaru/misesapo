@@ -2032,57 +2032,87 @@
         }
     }
 
-    function renderCustomerSelect(container) {
-        // Sample customers - in production, fetch from API
-        window.wizardCustomers = [
-            { id: '1', name: '株式会社 Dart Ace', store: '日本橋茅場町店' },
-            { id: '2', name: '株式会社 Dart Ace', store: '大塚店' },
-            { id: '3', name: 'アクティブソース', store: '本店' },
-            { id: '4', name: '株式会社 SSG', store: '渋谷店' },
-            { id: '5', name: 'カフェモカ', store: '新宿南口店' }
-        ];
+    async function renderCustomerSelect(container) {
+        // Fetch customers from clients.json
+        try {
+            const response = await fetch('/data/clients.json');
+            const data = await response.json();
 
-        // Show customer list in chat history area (right side)
+            // Get logged-in user's name for filtering
+            const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+            const userName = user.name || '';
+
+            // Filter by sales_rep (if user name matches)
+            let customers = data.clients || [];
+            if (userName) {
+                const namePart = userName.split(' ')[0];
+                customers = customers.filter(c => c.sales_rep && c.sales_rep.includes(namePart));
+            }
+
+            // If no matches, show all (for demo)
+            if (customers.length === 0) customers = data.clients || [];
+
+            // Sort by status priority
+            const statusPriority = { '稼働中': 1, '契約作業中': 2, '商談済': 3, '検討中': 4 };
+            customers.sort((a, b) => (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99));
+
+            // Limit to 50
+            window.wizardCustomers = customers.slice(0, 50);
+        } catch (e) {
+            console.error('Failed to load customers:', e);
+            window.wizardCustomers = [];
+        }
+
+        // Show customer list in chat history area
         if (chatHistory) {
             chatHistory.style.display = 'block';
             chatHistory.innerHTML = `
-                <div id="customer-list-container" style="padding: 10px;">
-                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 10px; text-align: center;">
-                        顧客リスト（入力で絞り込み）
+                <div id="customer-list-container" style="padding: 10px; height: 100%; overflow-y: auto;">
+                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 10px; text-align: center;">
+                        顧客リスト（${window.wizardCustomers.length}件）
                     </div>
-                    <div id="customer-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div id="customer-list" style="display: flex; flex-direction: column; gap: 6px;">
                         ${renderCustomerListItems(window.wizardCustomers)}
                     </div>
                 </div>
             `;
         }
 
-        // Show hint in action area
-        container.innerHTML = `
-            <div style="text-align: center; color: rgba(255,255,255,0.6); font-size: 0.9rem;">
-                右側のリストから選択 または 下の入力欄で顧客名を入力して絞り込み
-            </div>
-        `;
-
-        // Enable search filtering via text input
+        container.innerHTML = `<div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem;">入力欄で絞り込み</div>`;
         window.wizardCustomerSearchActive = true;
     }
 
     function renderCustomerListItems(customers) {
-        return customers.map(c => `
-            <button class="wizard-customer-btn" onclick="selectCustomer('${c.id}', '${c.name}', '${c.store}')"
-                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); 
-                color: #fff; padding: 12px 16px; border-radius: 10px; cursor: pointer; text-align: left;
-                transition: all 0.2s; display: block; width: 100%;">
-                <div style="font-weight: 600; font-size: 0.9rem;">${c.name}</div>
-                <div style="font-size: 0.8rem; opacity: 0.6;">${c.store}</div>
-            </button>
-        `).join('') + `
-            <button class="wizard-customer-btn" onclick="selectNewCustomer()"
-                style="background: transparent; border: 1px dashed rgba(255,255,255,0.25); 
-                color: rgba(255,255,255,0.5); padding: 12px 16px; border-radius: 10px; cursor: pointer;
-                text-align: center; width: 100%; font-size: 0.85rem;">
-                + 新規顧客を登録
+        if (!customers || customers.length === 0) {
+            return '<div style="text-align: center; color: rgba(255,255,255,0.4); padding: 20px;">顧客が見つかりません</div>';
+        }
+
+        const statusColors = { '稼働中': '#10b981', '契約作業中': '#f59e0b', '商談済': '#8b5cf6', '検討中': '#3b82f6' };
+
+        return customers.map(c => {
+            const statusColor = statusColors[c.status] || '#6b7280';
+            const store = c.store_name || '';
+            const escName = (c.company_name || '').replace(/'/g, "\\'");
+            const escStore = store.replace(/'/g, "\\'");
+
+            return `
+                <button class="wizard-customer-btn" onclick="selectCustomer('${c.id}', '${escName}', '${escStore}')"
+                    style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); 
+                    color: #fff; padding: 10px 12px; border-radius: 8px; cursor: pointer; text-align: left;
+                    transition: all 0.2s; display: block; width: 100%;">
+                    <div style="font-weight: 600; font-size: 0.8rem;">${c.company_name || ''}</div>
+                    <div style="font-size: 0.7rem; opacity: 0.6;">${c.brand_name || ''} ${store}</div>
+                    <div style="display: flex; align-items: center; gap: 4px; margin-top: 3px;">
+                        <span style="width: 5px; height: 5px; border-radius: 50%; background: ${statusColor};"></span>
+                        <span style="font-size: 0.65rem; color: ${statusColor};">${c.status || '未設定'}</span>
+                    </div>
+                </button>
+            `;
+        }).join('') + `
+            <button onclick="selectNewCustomer()" style="background: transparent; border: 1px dashed rgba(255,255,255,0.2); 
+                color: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px; cursor: pointer;
+                text-align: center; width: 100%; font-size: 0.75rem; margin-top: 5px;">
+                + 新規顧客
             </button>
         `;
     }
@@ -2090,15 +2120,19 @@
     function filterCustomerList(query) {
         if (!window.wizardCustomerSearchActive || !window.wizardCustomers) return;
 
+        const q = query.toLowerCase();
         const filtered = window.wizardCustomers.filter(c =>
-            c.name.toLowerCase().includes(query.toLowerCase()) ||
-            c.store.toLowerCase().includes(query.toLowerCase())
+            (c.company_name && c.company_name.toLowerCase().includes(q)) ||
+            (c.brand_name && c.brand_name.toLowerCase().includes(q)) ||
+            (c.store_name && c.store_name.toLowerCase().includes(q)) ||
+            (c.contact_person && c.contact_person.toLowerCase().includes(q))
         );
 
         const listContainer = document.getElementById('customer-list');
-        if (listContainer) {
-            listContainer.innerHTML = renderCustomerListItems(filtered);
-        }
+        if (listContainer) listContainer.innerHTML = renderCustomerListItems(filtered);
+
+        const countEl = document.querySelector('#customer-list-container > div:first-child');
+        if (countEl) countEl.textContent = `顧客リスト（${filtered.length}件）`;
     }
 
     // Override sendTextMessage to handle customer search during wizard
