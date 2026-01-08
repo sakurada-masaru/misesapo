@@ -1200,43 +1200,31 @@
                     break;
                 case 'show_attendance':
                     const actionContainer = document.getElementById('action-buttons-container');
-                    if (isClockedIn) {
-                        statusText.textContent = "Welcome back.";
-                        // Wait a moment then transition
-                        setTimeout(() => {
-                            if (checkingIndicator) checkingIndicator.classList.remove('visible');
-                            startOverlay.style.opacity = '0';
-                            setTimeout(() => {
-                                startOverlay.style.display = 'none';
-                                chatContainer.classList.add('active');
-
-                                // Show sidebar immediately
-                                document.getElementById('admin-sidebar').classList.add('visible');
-                                addMessage('ai', 'お疲れ様です。本日は既に出勤されています。');
-                            }, 500);
-                        }, 1000);
-                    } else {
-                        statusText.textContent = "Standby.";
-                        setTimeout(() => {
-                            if (checkingIndicator) checkingIndicator.classList.remove('visible');
-                            startOverlay.style.opacity = '0';
-                            setTimeout(() => {
-                                startOverlay.style.display = 'none';
-                                chatContainer.classList.add('active');
-                                initChat(); // Ask "Start Work?"
-                            }, 500);
-                        }, 800);
+                    if (actionContainer) {
+                        actionContainer.innerHTML = ''; // Clear previous actions
+                        const btnDiv = document.createElement('div');
+                        btnDiv.className = 'action-bubble-container';
+                        btnDiv.style.display = 'block';
+                        btnDiv.innerHTML = `
+                            <button class="attendance-btn" id="active-attendance-btn" onclick="performClockIn()">
+                                <i class="fas fa-sign-in-alt"></i> 出勤する
+                            </button>
+                        `;
+                        actionContainer.appendChild(btnDiv);
                     }
-            } catch (e) {
-                console.error(e);
-                // Fallback on error
-                if (checkingIndicator) checkingIndicator.classList.remove('visible');
-                startOverlay.style.opacity = '0';
-                setTimeout(() => {
-                    startOverlay.style.display = 'none';
-                    chatContainer.classList.add('active');
-                    initChat();
-                }, 500);
+                    break;
+                case 'show_sidebar':
+                    if (sidebar) {
+                        sidebar.style.display = 'flex';
+                        const navItems = sidebar.querySelectorAll('.nav-item');
+                        navItems.forEach((item, index) => {
+                            setTimeout(() => {
+                                item.classList.add('show');
+                            }, index * 100);
+                        });
+                    }
+                    if (chatContainer) chatContainer.classList.add('sidebar-active'); // Adjust padding if needed
+                    break;
             }
         }
     }
