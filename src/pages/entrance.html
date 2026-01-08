@@ -82,9 +82,6 @@
     /* =========================================
        Visualizer Core (The AI "Soul")
        ========================================= */
-    /* =========================================
-       Visualizer Core (The AI "Soul")
-       ========================================= */
     .visualizer-container {
         position: absolute;
         top: 50%;
@@ -95,8 +92,8 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        /* Fix: Higher than start-overlay (9999) to be visible initially */
         z-index: 10000;
+        /* Higher than start-overlay (9999) */
         transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         pointer-events: none;
     }
