@@ -1,121 +1,124 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <base href="{{ base_path }}" />
-    <title>{{ title }}</title>
-    @include('partials.head-links')
-    <link rel="stylesheet" href="/css/admin-sidebar.css" />
-    <!-- DataUtils スクリプト（schedulesページで使用） -->
-    <script src="/js/data_utils.js"></script>
-    <style>
-      /* 顧客ページでヘッダーを非表示 */
-      body[class*="admin-stores"] #default-header-wrapper,
-      body[class*="admin-stores"] #normal-header-wrapper,
-      body[class*="admin-stores"] header.site-header,
-      body[class*="admin-stores"] .nav-right,
-      body[class*="admin-stores"] nav[aria-label="User"],
-      body[class*="admin-stores"] nav.nav-right {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        height: 0 !important;
-        width: 0 !important;
-        overflow: hidden !important;
-      }
-    </style>
-    <script>
-      // 顧客ページでnav-right要素を完全に削除
-      (function() {
-        function removeNavRight() {
-          // document.bodyが存在しない場合はスキップ
-          if (!document.body) return;
-          
-          // 顧客ページかどうかを確認
-          const isCustomersPage = document.body.classList && document.body.classList.contains('admin-stores-v2') ||
-                                  document.querySelector('main.admin-stores-v2') ||
-                                  window.location.pathname.includes('/admin/customers');
-          
-          if (!isCustomersPage) return;
-          
-          // nav-right要素をすべて削除
-          const navRightElements = document.querySelectorAll('nav.nav-right, nav[aria-label="User"]');
-          navRightElements.forEach(el => {
-            el.remove();
-          });
-          
-          // 親要素ごと削除する場合も考慮
-          const headerElements = document.querySelectorAll('header.site-header, #default-header-wrapper');
-          headerElements.forEach(header => {
-            if (!header) return; // nullチェック
-            const navRight = header.querySelector('nav.nav-right, nav[aria-label="User"]');
-            if (navRight) {
-              navRight.remove();
-            }
-          });
-        }
-        
-        // 即座に実行
-        removeNavRight();
-        
-        // DOMContentLoaded時に実行
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', removeNavRight);
-        } else {
-          removeNavRight();
-        }
-        
-        // 動的に追加される可能性があるため、複数回実行
-        setTimeout(removeNavRight, 50);
-        setTimeout(removeNavRight, 100);
-        setTimeout(removeNavRight, 200);
-        setTimeout(removeNavRight, 500);
-        setTimeout(removeNavRight, 1000);
-        
-        // MutationObserverで動的に追加される要素も監視
-        const observer = new MutationObserver(function(mutations) {
-          removeNavRight();
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <base href="{{ base_path }}" />
+  <title>{{ title }}</title>
+  @include('partials.head-links')
+  <link rel="stylesheet" href="/css/admin-sidebar.css" />
+  <!-- DataUtils スクリプト（schedulesページで使用） -->
+  <script src="/js/data_utils.js"></script>
+  <style>
+    /* 顧客ページでヘッダーを非表示 */
+    body[class*="admin-stores"] #default-header-wrapper,
+    body[class*="admin-stores"] #normal-header-wrapper,
+    body[class*="admin-stores"] header.site-header,
+    body[class*="admin-stores"] .nav-right,
+    body[class*="admin-stores"] nav[aria-label="User"],
+    body[class*="admin-stores"] nav.nav-right {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      width: 0 !important;
+      overflow: hidden !important;
+    }
+  </style>
+  <script>
+    // 顧客ページでnav-right要素を完全に削除
+    (function () {
+      function removeNavRight() {
+        // document.bodyが存在しない場合はスキップ
+        if (!document.body) return;
+
+        // 顧客ページかどうかを確認
+        const isCustomersPage = document.body.classList && document.body.classList.contains('admin-stores-v2') ||
+          document.querySelector('main.admin-stores-v2') ||
+          window.location.pathname.includes('/admin/customers');
+
+        if (!isCustomersPage) return;
+
+        // nav-right要素をすべて削除
+        const navRightElements = document.querySelectorAll('nav.nav-right, nav[aria-label="User"]');
+        navRightElements.forEach(el => {
+          el.remove();
         });
-        
-        // body要素の変更を監視
-        if (document.body) {
+
+        // 親要素ごと削除する場合も考慮
+        const headerElements = document.querySelectorAll('header.site-header, #default-header-wrapper');
+        headerElements.forEach(header => {
+          if (!header) return; // nullチェック
+          const navRight = header.querySelector('nav.nav-right, nav[aria-label="User"]');
+          if (navRight) {
+            navRight.remove();
+          }
+        });
+      }
+
+      // 即座に実行
+      removeNavRight();
+
+      // DOMContentLoaded時に実行
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', removeNavRight);
+      } else {
+        removeNavRight();
+      }
+
+      // 動的に追加される可能性があるため、複数回実行
+      setTimeout(removeNavRight, 50);
+      setTimeout(removeNavRight, 100);
+      setTimeout(removeNavRight, 200);
+      setTimeout(removeNavRight, 500);
+      setTimeout(removeNavRight, 1000);
+
+      // MutationObserverで動的に追加される要素も監視
+      const observer = new MutationObserver(function (mutations) {
+        removeNavRight();
+      });
+
+      // body要素の変更を監視
+      if (document.body) {
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+      } else {
+        document.addEventListener('DOMContentLoaded', function () {
           observer.observe(document.body, {
             childList: true,
             subtree: true
           });
-        } else {
-          document.addEventListener('DOMContentLoaded', function() {
-            observer.observe(document.body, {
-              childList: true,
-              subtree: true
-            });
-          });
-        }
-      })();
-    </script>
-  </head>
-  <body class="theme-pink {{ body_class }}">
-    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
-    {{ content }}
-    @include('partials.footer')
-    <!-- AWS SDK and Cognito -->
-    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
-    <script src="/js/cognito_config.js"></script>
-    <script src="/js/cognito_auth.js"></script>
-    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
-    <script src="/js/role_config.js"></script>
-    <script src="/js/users.js"></script>
-    <script src="/js/auth.js"></script>
-    <script src="/js/navigation.js"></script>
-    <script src="/modal_manager.js"></script>
-    <script src="/app.js"></script>
-    <script src="/js/admin-sidebar.js"></script>
-    <!-- Page-specific scripts (injected by page content) -->
-    <script>
-      // 管理画面では共通ヘッダーを持たないため追加スクリプトは不要
-    </script>
-  </body>
-</html>
+        });
+      }
+    })();
+  </script>
+</head>
 
+<body class="theme-pink {{ body_class }}">
+  <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+  {{ content }}
+  <!-- Footer removed for admin layout -->
+  <!-- AWS SDK and Cognito -->
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+  <script src="/js/cognito_config.js"></script>
+  <script src="/js/cognito_auth.js"></script>
+  <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+  <script src="/js/role_config.js"></script>
+  <script src="/js/users.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/navigation.js"></script>
+  <script src="/modal_manager.js"></script>
+  <script src="/app.js"></script>
+  <script src="/js/admin-sidebar.js"></script>
+  <!-- Page-specific scripts (injected by page content) -->
+  <script>
+    // 管理画面では共通ヘッダーを持たないため追加スクリプトは不要
+  </script>
+</body>
+
+</html>
