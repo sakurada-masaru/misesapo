@@ -74,10 +74,10 @@
         margin-right: -2px;
     }
 
-    /* Visualizer Container */
+    /* Visualizer Core Container */
     .visualizer-container {
-        width: 440px;
-        height: 440px;
+        width: 500px;
+        height: 500px;
         position: absolute;
         top: 50%;
         left: 50%;
@@ -86,51 +86,36 @@
         pointer-events: none;
     }
 
-    /* Core Circle (The Nucleus) */
+    /* THE LIQUID CORE - The wave itself */
     .core-circle {
-        width: 80px;
-        height: 80px;
+        width: 100px;
+        height: 100px;
         background: var(--accent-color);
-        border-radius: 50%;
-        box-shadow: 0 0 40px var(--accent-glow), 0 0 80px var(--accent-glow);
+        box-shadow:
+            0 0 40px var(--accent-glow),
+            0 0 80px var(--accent-glow),
+            inset 0 0 20px rgba(255, 255, 255, 0.3);
         position: absolute;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%);
         z-index: 150;
-        animation: liquid 8s infinite linear, breathe 4s infinite ease-in-out;
+        /* Absolute centering and liquid animation */
+        animation:
+            liquid-core 6s infinite ease-in-out,
+            core-breathe 4s infinite ease-in-out;
     }
 
-    /* Wavy Outline Overlay - CHANGED TO BLUE */
-    .core-circle::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 90px;
-        height: 90px;
-        margin: -45px 0 0 -45px;
-        border: 2px solid var(--accent-color);
-        border-radius: 50%;
-        animation: wavy-outline 10s infinite linear;
-        filter: blur(2px);
-        z-index: 151;
-        opacity: 0.6;
-    }
-
-    /* Rotating Text Ring - ADDED STATIC CENTER */
+    /* ROTATING TEXT RING - Rebuilt */
     .circle-text-container {
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 400px;
-        height: 400px;
-        transform: translate(-50%, -50%);
-        /* Static centering */
+        width: 420px;
+        height: 420px;
         z-index: 120;
-        opacity: 0.6;
-        animation: misogi-rotate 60s linear infinite;
-        pointer-events: none;
+        opacity: 0.7;
+        /* Spin around the fixed center */
+        animation: misogi-spin 40s linear infinite;
     }
 
     .circle-svg {
@@ -139,33 +124,65 @@
         fill: var(--accent-color);
     }
 
-    /* Expansion Ripples */
+    /* THE RADIATING RIPPLES (Background) */
     .wave {
         position: absolute;
-        border: 2px solid var(--accent-color);
+        border: 1px solid var(--accent-color);
         border-radius: 50%;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
         opacity: 0;
         z-index: 110;
-        box-shadow: 0 0 20px var(--accent-glow);
     }
 
     .wave:nth-child(2) {
-        animation: ripple 4s infinite 0s cubic-bezier(0.23, 1, 0.32, 1);
+        animation: ripple-out 5s infinite 0s;
     }
 
     .wave:nth-child(3) {
-        animation: ripple 4s infinite 1.3s cubic-bezier(0.23, 1, 0.32, 1);
+        animation: ripple-out 5s infinite 1.6s;
     }
 
     .wave:nth-child(4) {
-        animation: ripple 4s infinite 2.6s cubic-bezier(0.23, 1, 0.32, 1);
+        animation: ripple-out 5s infinite 3.2s;
     }
 
-    /* Animations Cleaned Up */
-    @keyframes misogi-rotate {
+    /* CORE ANIMATIONS */
+    @keyframes liquid-core {
+
+        0%,
+        100% {
+            border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        33% {
+            border-radius: 70% 30% 46% 54% / 30% 29% 71% 70%;
+            transform: translate(-50%, -50%) rotate(120deg);
+        }
+
+        66% {
+            border-radius: 30% 70% 70% 30% / 67% 40% 60% 33%;
+            transform: translate(-50%, -50%) rotate(240deg);
+        }
+    }
+
+    @keyframes core-breathe {
+
+        0%,
+        100% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0.9;
+        }
+
+        50% {
+            transform: translate(-50%, -50%) scale(1.15);
+            opacity: 1;
+        }
+    }
+
+    @keyframes misogi-spin {
         from {
             transform: translate(-50%, -50%) rotate(0deg);
         }
@@ -175,65 +192,18 @@
         }
     }
 
-    @keyframes wavy-outline {
+    @keyframes ripple-out {
         0% {
-            transform: rotate(0deg);
-            border-radius: 50% 45% 55% 50% / 45% 55% 50% 50%;
-        }
-
-        50% {
-            border-radius: 55% 50% 45% 60% / 50% 60% 45% 55%;
+            width: 100px;
+            height: 100px;
+            opacity: 0.6;
         }
 
         100% {
-            transform: rotate(360deg);
-            border-radius: 50% 45% 55% 50% / 45% 55% 50% 50%;
-        }
-    }
-
-    @keyframes liquid {
-
-        0%,
-        100% {
-            border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
-        }
-
-        33% {
-            border-radius: 55% 45% 52% 48% / 45% 55% 48% 52%;
-        }
-
-        66% {
-            border-radius: 48% 52% 45% 55% / 52% 48% 55% 45%;
-        }
-    }
-
-    @keyframes breathe {
-
-        0%,
-        100% {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 0.9;
-        }
-
-        50% {
-            transform: translate(-50%, -50%) scale(1.08);
-            opacity: 1;
-        }
-    }
-
-    @keyframes ripple {
-        0% {
-            width: 80px;
-            height: 80px;
-            opacity: 0.8;
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        100% {
-            width: 500px;
-            height: 500px;
+            width: 600px;
+            height: 600px;
             opacity: 0;
-            transform: translate(-50%, -50%) scale(1);
+            border-width: 0.5px;
         }
     }
 
@@ -818,9 +788,17 @@
     @include('partials.admin-sidebar')
 
     <div id="start-overlay" style="background: radial-gradient(circle at center, #0a1128 0%, #000 100%);">
-        <div class="logo-section" style="text-align: center; margin-bottom: 30px; animation: fadeIn 1.5s ease-out;">
+        <div class="logo-section"
+            style="text-align: center; margin-bottom: 30px; animation: fadeIn 1.5s ease-out; position: relative;">
+            <!-- Background Water Drop Logo -->
+            <div class="logo-bg-water"
+                style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); width: 220px; height: 220px; opacity: 0.15; z-index: -1; pointer-events: none; filter: blur(2px);">
+                <img src="/assets/images/misogi-water-logo.png"
+                    style="width: 100%; height: 100%; object-fit: contain; animation: pulse-slow 8s infinite ease-in-out;">
+            </div>
+
             <div class="logo-main"
-                style="font-size: 3.5rem; font-weight: 300; letter-spacing: 12px; color: #fff; margin-bottom: 15px;">
+                style="font-size: 3.5rem; font-weight: 300; letter-spacing: 12px; color: #fff; margin-bottom: 15px; position: relative;">
                 <span class="initial-glow">M</span>ISOGI
             </div>
             <div class="logo-sub"
