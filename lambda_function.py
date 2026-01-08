@@ -6018,13 +6018,48 @@ def create_or_update_attendance(event, headers):
                 log_attendance_error(staff_id, 'DUPLICATE_RECORD', '既に退勤記録があります', body_json, 400)
                 return error_response
         
-        # 休憩時間の処理
+        
+        # ステータスによる休憩処理（シンプルなコマンド対応）
+        status = body_json.get('status')
+        status_timestamp = body_json.get('timestamp') or now
+        
+        # 既存の休憩をロード
         existing_breaks = existing_item.get('breaks', []) if existing_item else []
         processed_breaks = []
         
-        # 新しい休憩開始/終了を処理
-        if break_start and break_end:
-            # 新しい休憩を追加
+        if status == 'break_start':
+            # 休憩開始：新しいエントリを追加（終了時刻はNone/null）
+            new_break = {
+                'break_start': status_timestamp,
+                'break_end': None,
+                'break_duration': 0
+            }
+            # 既存の未完了の休憩がないかチェック（あれば無視 or 強制終了？）
+            # シンプルに追記する形にする
+            processed_breaks = existing_breaks + [new_break]
+            
+        elif status == 'break_end':
+            # 休憩終了：最後の未完了休憩を探して終了時刻をセット
+            if existing_breaks:
+                last_break = existing_breaks[-1]
+                if isinstance(last_break, dict) and not last_break.get('break_end'):
+                    # 完了させる
+                    start_ts = last_break.get('break_start')
+                    if start_ts:
+                        try:
+                            start_dt = datetime.fromisoformat(start_ts.replace('Z', '+00:00'))
+                            end_dt = datetime.fromisoformat(status_timestamp.replace('Z', '+00:00'))
+                            duration = (end_dt - start_dt).total_seconds() / 3600
+                            last_break['break_end'] = status_timestamp
+                            last_break['break_duration'] = round(duration, 2)
+                        except Exception as e:
+                            print(f"Error calculating break duration: {e}")
+                            last_break['break_end'] = status_timestamp
+                
+            processed_breaks = existing_breaks
+            
+        elif break_start and break_end:
+             # 明示的な休憩指定（従来ロジック）
             try:
                 break_start_dt = datetime.fromisoformat(break_start.replace('Z', '+00:00'))
                 break_end_dt = datetime.fromisoformat(break_end.replace('Z', '+00:00'))
@@ -6042,11 +6077,11 @@ def create_or_update_attendance(event, headers):
             # breaks配列が直接指定された場合
             processed_breaks = breaks
         else:
-            # 既存の休憩を保持
+            # 何も変更がない場合は既存を保持
             processed_breaks = existing_breaks
-        
-        # 総休憩時間を計算
-        total_break_hours = sum(b.get('break_duration', 0) for b in processed_breaks if isinstance(b, dict))
+            
+        # 総休憩時間を計算（完了しているものだけ）
+        total_break_hours = sum(b.get('break_duration', 0) for b in processed_breaks if isinstance(b, dict) and b.get('break_duration'))
         
         # 従業員の所定労働時間を取得
         scheduled_start_time = None
