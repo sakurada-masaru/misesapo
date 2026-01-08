@@ -12,7 +12,7 @@
 
     /* Override Layout Styles for this specific page */
     .admin-dashboard {
-        background-color: #000 !important;
+        background: radial-gradient(circle at center, #0a1128 0%, #000 100%) !important;
         width: 100vw !important;
         height: 100vh !important;
         margin: 0 !important;
@@ -47,7 +47,7 @@
         margin-left: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        background-color: #000;
+        background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);
         position: absolute !important;
         /* Changed to absolute to match overlay */
         top: 0;
@@ -65,6 +65,13 @@
     :root {
         --accent-color: #3b82f6;
         --accent-glow: rgba(59, 130, 246, 0.5);
+    }
+
+    .initial-glow {
+        color: var(--accent-color);
+        font-weight: 700;
+        text-shadow: 0 0 15px var(--accent-glow), 0 0 30px var(--accent-glow);
+        margin-right: -2px;
     }
 
     /* Visualizer Container (Persistent Core) */
@@ -736,20 +743,42 @@
 <main id="main" class="admin-dashboard">
     @include('partials.admin-sidebar')
 
-    <div id="start-overlay">
-        <div class="visualizer-container" style="cursor: default;">
+    <div id="start-overlay" style="background: radial-gradient(circle at center, #0a1128 0%, #000 100%);">
+        <div class="logo-section" style="text-align: center; margin-bottom: 30px; animation: fadeIn 1.5s ease-out;">
+            <div class="logo-main"
+                style="font-size: 3.5rem; font-weight: 300; letter-spacing: 12px; color: #fff; margin-bottom: 15px;">
+                <span class="initial-glow">M</span>ISOGI
+            </div>
+            <div class="logo-sub"
+                style="font-size: 0.7rem; color: rgba(255,255,255,0.4); letter-spacing: 4px; line-height: 1.6;">
+                MISESAPO INTELLIGENT SYSTEM FOR<br>OPERATIONAL GUIDANCE & INTERFACE
+            </div>
+        </div>
+        <div class="visualizer-container"
+            style="cursor: default; position: relative; transform: none; top: auto; left: auto; margin-bottom: 40px;">
+            <div class="circle-text-container active">
+                <svg viewBox="0 0 200 200" class="circle-svg" width="320" height="320">
+                    <path id="circlePathStart" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" />
+                    <text>
+                        <textPath href="#circlePathStart">
+                            Misesapo Intelligent System for Operational Guidance &amp; interface &bull; M .I .S .O .G .I
+                            &bull;
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
             <div class="wave"></div>
             <div class="wave"></div>
             <div class="wave"></div>
             <div class="core-circle"></div>
         </div>
-        <button class="start-btn" onclick="startWorkflow()" style="position: absolute; bottom: 10%;">
+        <button class="start-btn" onclick="startWorkflow()" style="margin-top: 20px;">
             <i class="fas fa-power-off"></i>
             <div class="start-btn-label">LOGIN</div>
         </button>
     </div>
 
-    <div class="main-content">
+    <div class="main-content" style="background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);">
         <!-- Persistent Visualizer Core -->
         <div class="visualizer-container">
             <div class="circle-text-container" id="circle-text">
@@ -757,8 +786,8 @@
                     <path id="circlePath" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" />
                     <text>
                         <textPath href="#circlePath">
-                            Misesapo Intelligent System for Operational Guidance &amp; Integration &bull; Misesapo
-                            Intelligent System for Operational Guidance &amp; Integration &bull;
+                            Misesapo Intelligent System for Operational Guidance &amp; interface &bull; M .I .S .O .G .I
+                            &bull;
                         </textPath>
                     </text>
                 </svg>
@@ -822,9 +851,9 @@
             <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
                 <i class="fas fa-comment-dots"></i> チャット
             </button>
-            newBubble.dataset.role = role;
-            newBubble.innerHTML = text.replace(/\n/g, '<br>');
-            </content>
+        </div>
+    </div>
+    </div>
 </main>
 
 <script>
@@ -911,33 +940,38 @@
                 });
 
                 let isClockedIn = false;
-                let records = [];
+                let isOnBreak = false;
+                let latestRecord = null;
+
                 if (response.ok) {
                     const data = await response.json();
-                    records = Array.isArray(data) ? data : (data.attendance || data.items || []);
-                    // console.log('Attendance Check Result:', records);
+                    const records = Array.isArray(data) ? data : (data.attendance || data.items || []);
 
-                    // Check logic: Has clock_in AND (clock_out is null OR empty)
-                    // AND the record is from today OR yesterday (to avoid picking up ancient unfinished records)
-                    isClockedIn = records.some(r => {
-                        return r.clock_in && !r.clock_out && (r.date === todayStr || r.date === yesterdayStr);
-                    });
-                } else {
-                    console.error('Attendance check failed:', response.status);
+                    // Find the most recent record for today or yesterday
+                    latestRecord = records.find(r => r.date === todayStr || r.date === yesterdayStr);
+
+                    if (latestRecord && latestRecord.clock_in && !latestRecord.clock_out) {
+                        isClockedIn = true;
+                        // Determine if user is currently on break
+                        if (latestRecord.break_start && !latestRecord.break_end) {
+                            isOnBreak = true;
+                        }
+                    }
                 }
 
-                if (isClockedIn) {
-                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。既に出勤を確認しました。本日も業務をサポートいたします。`);
-                    handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }] });
+                if (isOnBreak) {
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。現在休憩中ですね。業務を再開しますか？`);
+                    handleAiCommands({ ui_commands: [{ type: 'show_break_end' }, { type: 'show_sidebar' }] });
+                } else if (isClockedIn) {
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。本日も業務をサポートいたします。何をしましょうか？`);
+                    handleAiCommands({ ui_commands: [{ type: 'show_work_options' }, { type: 'show_sidebar' }] });
                 } else {
                     appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
                     handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
                 }
             } catch (e) {
                 console.error('Failed to check attendance:', e);
-                // Fallback: don't assume not clocked in if error, but we have to provide a path.
-                // For now, prompt for attendance but maybe with a caveat or retry
-                appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
+                appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。認証を確認しました。業務を開始される場合はお知らせください。`);
                 handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
             }
         }
@@ -1021,6 +1055,74 @@
             appendChatMessage('ai', 'エラーが発生しました：' + err.message);
             if (btn) btn.disabled = false;
         }
+    }
+
+    async function performBreakStart() {
+        if (!confirm('休憩に入りますか？')) return;
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const token = localStorage.getItem('cognito_id_token');
+        const now = new Date().toISOString();
+
+        try {
+            const response = await fetch(`${API_BASE}/attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    staff_id: user.id || user.sub,
+                    date: new Date().toLocaleDateString('sv-SE'),
+                    break_start: now
+                })
+            });
+            if (response.ok) {
+                appendChatMessage('ai', '休憩を記録しました。ゆっくりお休みください。');
+                handleAiResponse({ intent: 'break_start' }); // Trigger visual transition
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function performBreakEnd() {
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const token = localStorage.getItem('cognito_id_token');
+        const now = new Date().toISOString();
+
+        try {
+            const response = await fetch(`${API_BASE}/attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    staff_id: user.id || user.sub,
+                    date: new Date().toLocaleDateString('sv-SE'),
+                    break_end: now
+                })
+            });
+            if (response.ok) {
+                appendChatMessage('ai', 'お帰りなさいませ。業務の再開を記録しました。');
+                handleAiResponse({ intent: 'break_end' }); // Trigger visual transition
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function performClockOut() {
+        if (!confirm('本日の業務を終了し、退勤しますか？')) return;
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const token = localStorage.getItem('cognito_id_token');
+        const now = new Date().toISOString();
+
+        try {
+            const response = await fetch(`${API_BASE}/attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    staff_id: user.id || user.sub,
+                    date: new Date().toLocaleDateString('sv-SE'),
+                    clock_out: now
+                })
+            });
+            if (response.ok) {
+                appendChatMessage('ai', 'お疲れ様でした。退勤を記録しました。また明日もお待ちしております。');
+                handleAiResponse({ intent: 'clock_out' }); // Trigger visual transition
+            }
+        } catch (e) { console.error(e); }
     }
 
     function switchMode(mode) {
@@ -1280,8 +1382,46 @@
                     }
                     if (chatContainer) chatContainer.classList.add('sidebar-active'); // Adjust padding if needed
                     break;
+                case 'show_break_start':
+                    renderActionButtons([
+                        { id: 'btn-break-start', label: '休憩に入る', icon: 'fas fa-mug-hot', color: '#3b82f6', action: 'performBreakStart()' }
+                    ]);
+                    break;
+                case 'show_break_end':
+                    renderActionButtons([
+                        { id: 'btn-break-end', label: '業務を再開する', icon: 'fas fa-play', color: '#10b981', action: 'performBreakEnd()' }
+                    ]);
+                    break;
+                case 'show_work_options':
+                    renderActionButtons([
+                        { id: 'btn-break-start', label: '休憩に入る', icon: 'fas fa-mug-hot', color: '#6b7280', action: 'performBreakStart()' },
+                        { id: 'btn-clock-out', label: '退勤する', icon: 'fas fa-sign-out-alt', color: '#ef4444', action: 'performClockOut()' }
+                    ]);
+                    break;
             }
         }
+    }
+
+    function renderActionButtons(buttons) {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = ''; // Clear previous
+        const btnDiv = document.createElement('div');
+        btnDiv.className = 'action-bubble-container';
+        btnDiv.style.display = 'flex';
+        btnDiv.style.gap = '10px';
+        btnDiv.style.flexDirection = 'row';
+
+        buttons.forEach(btn => {
+            const buttonHtml = `
+                <button class="attendance-btn" id="${btn.id}" onclick="${btn.action}" style="background: ${btn.color};">
+                    <i class="${btn.icon}"></i> ${btn.label}
+                </button>
+            `;
+            btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
+        });
+        actionContainer.appendChild(btnDiv);
     }
 
     if (textInput) {
