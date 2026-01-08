@@ -849,23 +849,28 @@
             }, 800);
         } else {
             const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
-
-            // Explicitly use JST date to avoid timezone issues
-            const now = new Date();
-            const jstNow = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
-            const y = jstNow.getFullYear();
-            const m = String(jstNow.getMonth() + 1).padStart(2, '0');
-            const d = String(jstNow.getDate()).padStart(2, '0');
-            const today = `${y}-${m}-${d}`;
-
             const staffId = user.id || user.sub;
 
-            // Debug log
-            console.log(`Checking status for ${staffId} on ${today} (JST)`);
+            // Helper to get JST date string (YYYY-MM-DD)
+            const getJstDateStr = (d) => {
+                const jstDate = new Date(d.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+                const y = jstDate.getFullYear();
+                const m = String(jstDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(jstDate.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dd}`;
+            };
+
+            const todayStr = getJstDateStr(new Date());
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = getJstDateStr(yesterday);
+
+            // console.log(`Checking status for ${staffId}, checking dates: ${todayStr}, ${yesterdayStr}`);
 
             try {
-                // Check if already clocked in today
-                const response = await fetch(`${API_BASE}/attendance?staff_id=${staffId}&date=${today}`, {
+                // Fetch recent records (limit 5) instead of specific date filter
+                // This handles cross-day workshifts and timezone mismatches better
+                const response = await fetch(`${API_BASE}/attendance?staff_id=${staffId}&limit=5`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -873,12 +878,14 @@
                 let records = [];
                 if (response.ok) {
                     const data = await response.json();
-                    // Fix: API returns { attendance: [...] } or { items: [...] }
                     records = Array.isArray(data) ? data : (data.attendance || data.items || []);
-                    console.log('Attendance Check Result:', records);
+                    // console.log('Attendance Check Result:', records);
 
                     // Check logic: Has clock_in AND (clock_out is null OR empty)
-                    isClockedIn = records.some(r => r.clock_in && !r.clock_out);
+                    // AND the record is from today OR yesterday (to avoid picking up ancient unfinished records)
+                    isClockedIn = records.some(r => {
+                        return r.clock_in && !r.clock_out && (r.date === todayStr || r.date === yesterdayStr);
+                    });
                 } else {
                     console.error('Attendance check failed:', response.status);
                 }
