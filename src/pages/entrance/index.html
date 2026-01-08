@@ -110,8 +110,8 @@
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 420px;
-        height: 420px;
+        width: 200px;
+        height: 200px;
         z-index: 120;
         opacity: 0.7;
         /* Spin around the fixed center */
@@ -130,8 +130,8 @@
 
     .circle-svg text {
         fill: var(--accent-color);
-        font-size: 7px;
-        letter-spacing: 1px;
+        font-size: 5.5px;
+        letter-spacing: 0.3px;
     }
 
     /* THE RADIATING RIPPLES (Background) */
@@ -819,13 +819,12 @@
         <div class="visualizer-container"
             style="cursor: default; position: relative; transform: none; top: auto; left: auto; margin-bottom: 40px; display: inline-block;">
             <div class="circle-text-container"
-                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 420px; height: 420px; animation: misogi-spin 40s linear infinite;">
-                <svg viewBox="0 0 200 200" class="circle-svg" width="320" height="320">
-                    <path id="circlePathStart" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" />
+                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; animation: misogi-spin 40s linear infinite;">
+                <svg viewBox="0 0 200 200" class="circle-svg" width="200" height="200">
+                    <path id="circlePathStart" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
                     <text>
                         <textPath href="#circlePathStart">
-                            Misesapo Intelligent System for Operational Guidance &amp; interface &bull; M .I .S .O .G .I
-                            &bull;
+                            Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
                         </textPath>
                     </text>
                 </svg>
