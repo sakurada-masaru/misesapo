@@ -732,11 +732,34 @@
                 loginForm.style.display = 'flex';
             }, 800);
         } else {
-            // Check auth status
             const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
-            appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
-            // Show attendance button via command simulation
-            handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
+            const today = new Date().toLocaleDateString('sv-SE');
+
+            try {
+                // Check if already clocked in today
+                const response = await fetch(`${API_BASE}/attendance?staff_id=${user.id || user.sub}&date=${today}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                let isClockedIn = false;
+                if (response.ok) {
+                    const data = await response.json();
+                    const records = Array.isArray(data) ? data : (data.items || []);
+                    isClockedIn = records.some(r => r.clock_in && !r.clock_out);
+                }
+
+                if (isClockedIn) {
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。既に出勤記録を確認しております。引き続き業務をサポートいたします。`);
+                    handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }] });
+                } else {
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
+                    handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
+                }
+            } catch (e) {
+                console.error('Failed to check attendance:', e);
+                appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
+                handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
+            }
         }
     }
 
@@ -756,8 +779,8 @@
                 const result = await window.CognitoAuth.login(email, password);
                 if (result.success) {
                     loginForm.style.display = 'none';
-                    appendChatMessage('ai', `${result.user.name}様、認証を完了しました。おはようございます！業務を開始しますか？`);
-                    handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
+                    // Re-run workflow to check attendance state
+                    await startWorkflow();
                 } else {
                     throw new Error(result.message);
                 }
@@ -775,13 +798,49 @@
         const btn = document.getElementById('active-attendance-btn');
         if (btn) btn.disabled = true;
 
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const token = localStorage.getItem('cognito_id_token');
+
+        if (!user.id || !token) {
+            appendChatMessage('ai', 'エラー：ログイン情報が見つかりません。再ログインしてください。');
+            return;
+        }
+
         appendChatMessage('user', '出勤します');
 
-        // Simulate API call to clock in
-        setTimeout(() => {
-            appendChatMessage('ai', '出勤を記録しました。それでは、良い1日を！左側のメニューから業務を開始できます。');
-            handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }] });
-        }, 1000);
+        try {
+            const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
+            const now = new Date().toISOString();
+
+            const sanitizedData = {
+                staff_id: user.id || user.sub,
+                staff_name: user.name || user.username,
+                date: today,
+                clock_in: now
+            };
+
+            const response = await fetch(`${API_BASE}/attendance`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(sanitizedData)
+            });
+
+            if (response.ok) {
+                appendChatMessage('ai', `${user.name || 'ユーザー'}様、出勤を記録しました。本日の業務を開始します。それでは、良い1日を！左側のメニューから各機能へアクセスできます。`);
+                handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }] });
+                if (btn) btn.innerHTML = '<i class="fas fa-check"></i> 出勤済み';
+            } else {
+                const err = await response.json();
+                throw new Error(err.message || 'API Error');
+            }
+        } catch (err) {
+            console.error('Attendance Error:', err);
+            appendChatMessage('ai', 'エラーが発生しました：' + err.message);
+            if (btn) btn.disabled = false;
+        }
     }
 
     function switchMode(mode) {
