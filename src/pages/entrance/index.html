@@ -153,17 +153,17 @@
 
         0%,
         100% {
-            border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+            border-radius: 48% 52% 50% 50% / 50% 50% 52% 48%;
             transform: translate(-50%, -50%) rotate(0deg);
         }
 
         33% {
-            border-radius: 70% 30% 46% 54% / 30% 29% 71% 70%;
+            border-radius: 52% 48% 50% 50% / 48% 52% 50% 50%;
             transform: translate(-50%, -50%) rotate(120deg);
         }
 
         66% {
-            border-radius: 30% 70% 70% 30% / 67% 40% 60% 33%;
+            border-radius: 50% 50% 48% 52% / 52% 48% 50% 50%;
             transform: translate(-50%, -50%) rotate(240deg);
         }
     }
@@ -793,7 +793,7 @@
             <!-- Background Water Drop Logo -->
             <div class="logo-bg-water"
                 style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); width: 220px; height: 220px; opacity: 0.15; z-index: -1; pointer-events: none; filter: blur(2px);">
-                <img src="/assets/images/misogi-water-logo.png"
+                <img src="../../assets/images/misogi-water-logo.png"
                     style="width: 100%; height: 100%; object-fit: contain; animation: pulse-slow 8s infinite ease-in-out;">
             </div>
 
@@ -807,8 +807,9 @@
             </div>
         </div>
         <div class="visualizer-container"
-            style="cursor: default; position: relative; transform: none; top: auto; left: auto; margin-bottom: 40px;">
-            <div class="circle-text-container active">
+            style="cursor: default; position: relative; transform: none; top: auto; left: auto; margin-bottom: 40px; display: inline-block;">
+            <div class="circle-text-container"
+                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 420px; height: 420px; animation: misogi-spin 40s linear infinite;">
                 <svg viewBox="0 0 200 200" class="circle-svg" width="320" height="320">
                     <path id="circlePathStart" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" />
                     <text>
@@ -819,12 +820,18 @@
                     </text>
                 </svg>
             </div>
-            <div class="wave"></div>
-            <div class="wave"></div>
-            <div class="wave"></div>
-            <div class="core-circle"></div>
+            <!-- The Liquid Core -->
+            <div class="core-circle"
+                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: liquid-core 6s infinite ease-in-out, core-breathe 4s infinite ease-in-out;">
+            </div>
+
+            <!-- Ripples -->
+            <div class="wave" style="animation: ripple-out 5s infinite 0s;"></div>
+            <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
+            <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
         </div>
-        <button class="start-btn" onclick="startWorkflow()" style="margin-top: 20px;">
+        <button class="start-btn" onclick="startWorkflow()"
+            style="margin-top: 180px; position: relative; z-index: 200;">
             <i class="fas fa-power-off"></i>
             <div class="start-btn-label">LOGIN</div>
         </button>
