@@ -15,26 +15,29 @@ export class DashboardController {
     initClock() {
         const update = () => {
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
 
             const clockEl = document.getElementById('digital-clock-display');
             if (clockEl) clockEl.textContent = timeStr;
 
-            // Also update todo clock if it exists
-            const todoClock = document.getElementById('todo-clock-display');
-            if (todoClock) todoClock.textContent = timeStr;
+            const headerTimeEl = document.getElementById('header-time-display');
+            if (headerTimeEl) headerTimeEl.textContent = timeStr;
         };
         update();
         setInterval(update, 1000);
     }
 
     updateDateDisplay() {
-        const dateEl = document.getElementById('daily-report-today-date');
-        if (dateEl) {
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
-            dateEl.textContent = dateStr;
-        }
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+
+        // Target main card date
+        const dateEl = document.getElementById('date-display-main');
+        if (dateEl) dateEl.textContent = dateStr;
+
+        // Target report header date
+        const reportDateEl = document.getElementById('report-date-display');
+        if (reportDateEl) reportDateEl.textContent = dateStr;
     }
 
     setupEventListeners() {
@@ -107,52 +110,56 @@ export class DashboardController {
         if (!listEl) return;
 
         if (this.todoList.length === 0) {
-            listEl.innerHTML = '<li class="todo-item empty">タスクはありません</li>';
+            listEl.innerHTML = '<div class="empty-state">All tasks completed</div>';
             return;
         }
 
         listEl.innerHTML = '';
         this.todoList.forEach(item => {
-            const li = document.createElement('li');
-            li.className = `todo-item ${item.completed ? 'completed' : ''}`;
-            li.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee;';
+            const div = document.createElement('div');
+            div.className = `list-item ${item.completed ? 'completed' : ''}`;
+            // Use flex layout matching the new CSS
+            div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; opacity: ' + (item.completed ? '0.5' : '1');
 
-            li.innerHTML = `
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1;">
-                    <input type="checkbox" ${item.completed ? 'checked' : ''}>
-                    <span style="font-size: 0.95rem; color: #333;">${this.escapeHtml(item.text)}</span>
-                </label>
-                <button class="delete-btn" style="background: none; border: none; color: #ccc; cursor: pointer; padding: 4px;">
+            div.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer;">
+                    <i class="far ${item.completed ? 'fa-check-square' : 'fa-square'}" style="color:var(--theme-color);"></i>
+                    <span style="${item.completed ? 'text-decoration: line-through;' : ''}">${this.escapeHtml(item.text)}</span>
+                </div>
+                <button class="delete-btn" style="background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer;">
                     <i class="fas fa-times"></i>
                 </button>
             `;
 
             // Events
-            const checkbox = li.querySelector('input');
-            checkbox.onchange = () => this.toggleTodoItem(item.id);
+            const labelArea = div.querySelector('div');
+            labelArea.onclick = () => this.toggleTodoItem(item.id);
 
-            const delBtn = li.querySelector('.delete-btn');
+            const delBtn = div.querySelector('.delete-btn');
             delBtn.onclick = () => this.deleteTodoItem(item.id);
 
-            listEl.appendChild(li);
+            listEl.appendChild(div);
         });
-
-        // Update count if exists
-        const countEl = document.getElementById('todo-count');
-        if (countEl) countEl.textContent = this.todoList.filter(t => !t.completed).length;
     }
 
-    // --- Daily Report Logic (Mock/Simple) ---
+    // --- Daily Report Logic ---
     saveDailyReport() {
         const content = document.getElementById('daily-report-content')?.value;
         if (!content) return;
 
-        // In a real app, send to API. Here we just show a toast or message.
-        // We can hook into the global 'appendChatMessage' if available to show AI confirmation
-        if (window.appendChatMessage) {
-            window.appendChatMessage('ai', '日報を下書き保存しました。（※実際の送信機能は実装中です）');
-        } else {
-            alert('日報を保存しました');
+        // Mock feedback
+        // If app.addMessage is available globally (via entrance.html scope), we could use it, 
+        // but this controller is a module. The user will see a simple alert for now or we can try to find the 'app' object if attached to window.
+
+        // Try to verify if we can access the global app object
+        // But since app is defined in a non-module script in entrance.html, it is on window.
+        // Wait, app is defined in <script> in entrance.html.
+
+        if (content) {
+            const btn = document.getElementById('daily-report-save-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> SAVED';
+            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
         }
     }
 

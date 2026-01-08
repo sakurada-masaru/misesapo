@@ -3,126 +3,133 @@
 @json('data/meta/admin_dashboard_body_class.json', $body_class)
 
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap');
 
-    #default-header-wrapper,
-    #normal-header-wrapper {
-        display: none !important;
+    :root {
+        --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+        --font-jp: 'Zen Kaku Gothic New', sans-serif;
+        --color-bg: #030305;
+        --color-glass: rgba(255, 255, 255, 0.03);
+        --color-glass-border: rgba(255, 255, 255, 0.08);
+        --color-text-main: rgba(255, 255, 255, 0.95);
+        --color-text-sub: rgba(255, 255, 255, 0.5);
+
+        /* Dynamic Theme Colors */
+        --theme-color: #3b82f6;
+        /* Default Admin Blue */
+        --theme-glow: rgba(59, 130, 246, 0.4);
     }
 
-    /* Override Layout Styles for this specific page */
-    .admin-dashboard {
-        background-color: #000 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        position: relative !important;
+    /* Global Reset & Layout Overrides */
+    body,
+    html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--color-bg) !important;
+        font-family: var(--font-primary);
+        color: var(--color-text-main);
         overflow: hidden !important;
     }
 
-    /* Dark Sidebar Overrides for MISOGI Theme */
-    #admin-sidebar {
-        background-color: transparent !important;
-        border-right: none !important;
-        position: absolute !important;
-        left: 20px !important;
-        top: 0 !important;
-        height: 100% !important;
-        width: 250px !important;
-        z-index: 100 !important;
-        display: none;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    /* (sidebar styles skipped for brevity, keeping existing) */
-
-    #sidebar-toggle {
+    /* Disable layout defaults */
+    #default-header-wrapper,
+    #normal-header-wrapper,
+    footer {
         display: none !important;
     }
 
+    #admin-sidebar {
+        display: none !important;
+    }
+
+    /* We use our own dynamic sidebar logic */
+
     .main-content {
-        padding: 0 !important;
-        margin-left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        background-color: #000;
-        position: absolute !important;
-        /* Changed to absolute to match overlay */
+        position: absolute;
         top: 0;
         left: 0;
-        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: radial-gradient(circle at center, #0a0a12 0%, #000000 100%);
+        z-index: 1;
         display: flex;
         flex-direction: column;
-        justify-content: center;
         align-items: center;
-        z-index: 1;
-        /* Base z-index */
+        justify-content: center;
     }
 
-    /* MISOGI Styles (Scoped) - keep root styles here */
-    :root {
-        --accent-color: #3b82f6;
-        --accent-glow: rgba(59, 130, 246, 0.5);
+    /* =========================================
+       Background Ambient Effects
+       ========================================= */
+    .ambient-glow {
+        position: absolute;
+        width: 150vw;
+        height: 150vw;
+        background: radial-gradient(circle, var(--theme-glow) 0%, transparent 60%);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.15;
+        pointer-events: none;
+        transition: background 1.5s ease;
+        z-index: 0;
     }
 
-    /* Visualizer Container (Persistent Core) */
+    /* =========================================
+       Visualizer Core (The AI "Soul")
+       ========================================= */
     .visualizer-container {
-        width: 300px;
-        height: 300px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 400px;
+        height: 400px;
         display: flex;
         justify-content: center;
         align-items: center;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        cursor: pointer;
         z-index: 10;
         transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: none;
+        /* Let clicks pass through unless active interaction needed */
     }
 
-    /* Core Pulse */
     .core-circle {
-        width: 80px;
-        height: 80px;
-        background: var(--accent-color);
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
-        box-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-glow);
-        position: absolute;
-        z-index: 10;
+        background: #fff;
+        box-shadow: 0 0 40px var(--theme-color), 0 0 80px var(--theme-color);
+        position: relative;
+        z-index: 20;
         animation: breathe 4s infinite ease-in-out;
+        transition: all 0.5s ease;
     }
 
-    /* Waves */
     .wave {
         position: absolute;
-        border: 1px solid rgba(59, 130, 246, 0.3);
+        border: 1px solid var(--theme-color);
         border-radius: 50%;
+        opacity: 0;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        opacity: 0;
-        pointer-events: none;
     }
 
     .wave:nth-child(1) {
-        width: 100px;
-        height: 100px;
-        animation: ripple 3s infinite 0s;
+        animation: ripple 3s infinite 0s linear;
     }
 
     .wave:nth-child(2) {
-        width: 100px;
-        height: 100px;
-        animation: ripple 3s infinite 1s;
+        animation: ripple 3s infinite 1s linear;
     }
 
     .wave:nth-child(3) {
-        width: 100px;
-        height: 100px;
-        animation: ripple 3s infinite 2s;
+        animation: ripple 3s infinite 2s linear;
     }
 
     @keyframes breathe {
@@ -130,976 +137,905 @@
         0%,
         100% {
             transform: scale(1);
-            opacity: 0.8;
+            opacity: 0.9;
+            box-shadow: 0 0 30px var(--theme-color);
         }
 
         50% {
-            transform: scale(1.1);
+            transform: scale(1.05);
             opacity: 1;
-            box-shadow: 0 0 50px var(--accent-glow), 0 0 90px var(--accent-glow);
+            box-shadow: 0 0 60px var(--theme-color);
         }
     }
 
     @keyframes ripple {
         0% {
-            width: 80px;
-            height: 80px;
-            opacity: 0.8;
-            border-color: var(--accent-color);
+            width: 60px;
+            height: 60px;
+            opacity: 0.6;
+            border-width: 2px;
         }
 
         100% {
-            width: 300px;
-            height: 300px;
+            width: 350px;
+            height: 350px;
             opacity: 0;
-            border-color: transparent;
+            border-width: 0px;
         }
     }
 
-    .visualizer-container.active .wave {
-        animation-duration: 1s;
-    }
-
-    .core-circle.active {
-        transform: scale(1.3) !important;
-        filter: blur(2px);
-        background: #fff;
-        box-shadow: 0 0 100px var(--accent-color), 0 0 200px var(--accent-color);
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    /* Status Text */
-    .status-text {
-        margin-top: 220px;
-        font-weight: 300;
-        letter-spacing: 2px;
-        font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.6);
-        text-transform: uppercase;
-        font-family: 'Inter', sans-serif;
-        animation: text-fade 3s infinite alternate;
-    }
-
-    @keyframes text-fade {
-        0% {
-            opacity: 0.4;
-        }
-
-        100% {
-            opacity: 0.8;
-        }
-    }
-
-    /* Rotating Text */
-    .circle-text-container {
+    /* Rotating Text Ring */
+    .text-ring {
         position: absolute;
-        width: 320px;
-        height: 320px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        pointer-events: none;
-        z-index: 5;
-        --base-scale: 0.45;
-        transform: scale(var(--base-scale));
-        animation: rotate-circle 30s linear infinite;
-        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        opacity: 0.6;
+        width: 280px;
+        height: 280px;
+        animation: rotate 40s linear infinite;
+        opacity: 0.4;
+        transition: opacity 0.5s;
     }
 
-    .circle-text-container.active {
-        --base-scale: 1.1;
-        transform: scale(var(--base-scale));
-        animation-play-state: paused;
-        opacity: 1;
+    .text-ring text {
+        fill: var(--color-text-main);
+        font-family: var(--font-primary);
+        font-size: 9px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
     }
 
-    @keyframes rotate-circle {
+    @keyframes rotate {
         from {
-            transform: scale(var(--base-scale, 0.45)) rotate(0deg);
+            transform: rotate(0deg);
         }
 
         to {
-            transform: scale(var(--base-scale, 0.45)) rotate(360deg);
+            transform: rotate(360deg);
         }
     }
 
-    #circlePath {
-        fill: none;
+    /* =========================================
+       Start Overlay & Login
+       ========================================= */
+    #start-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 0.8s ease, visibility 0.8s;
     }
 
-    .circle-svg text {
-        fill: rgba(255, 255, 255, 0.5);
-        font-size: 8.5px;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 3.5px;
-        font-family: 'Inter', sans-serif;
+    #start-overlay.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
     }
 
-    /* Mode Dock (Dynamic Workspace Switcher) */
+    .logo-section {
+        margin-bottom: 300px;
+        /* Space for visualizer */
+        text-align: center;
+        opacity: 0;
+        animation: fadeUp 1s ease 0.5s forwards;
+    }
+
+    .logo-main {
+        font-size: 3rem;
+        font-weight: 200;
+        letter-spacing: 12px;
+        color: #fff;
+        margin-bottom: 10px;
+    }
+
+    .logo-sub {
+        font-size: 0.8rem;
+        color: var(--color-text-sub);
+        letter-spacing: 4px;
+        font-weight: 300;
+        line-height: 1.5;
+    }
+
+    .start-btn {
+        position: absolute;
+        bottom: 15%;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        font-size: 24px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        animation: fadeIn 1s ease 1s forwards;
+    }
+
+    .start-btn::after {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        border-radius: 50%;
+        border: 1px solid var(--theme-color);
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.4s ease;
+    }
+
+    .start-btn:hover {
+        transform: scale(1.1);
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 0 50px var(--theme-glow);
+    }
+
+    .start-btn:hover::after {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+
+    .start-label {
+        position: absolute;
+        bottom: -30px;
+        font-size: 10px;
+        letter-spacing: 2px;
+        opacity: 0.5;
+    }
+
+    /* =========================================
+       Chat Interface
+       ========================================= */
+    #chat-interface {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+        pointer-events: none;
+        /* Let events pass to dashboard when hidden */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding-bottom: 120px;
+        /* Space for Dock */
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #chat-interface.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    .chat-scroll-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 40px 20% 20px 20%;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        mask-image: linear-gradient(to bottom, transparent 0%, black 20%);
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%);
+    }
+
+    /* Scrollbar */
+    .chat-scroll-area::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .chat-scroll-area::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .chat-scroll-area::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+    }
+
+    .message-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        opacity: 0;
+        animation: slideInMsg 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .message-row.user {
+        justify-content: flex-end;
+    }
+
+    .msg-bubble {
+        max-width: 60%;
+        padding: 16px 24px;
+        border-radius: 20px;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        position: relative;
+        font-family: var(--font-jp);
+    }
+
+    .msg-bubble.ai {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 4px 20px 20px 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .msg-bubble.user {
+        background: var(--theme-color);
+        color: #fff;
+        border-radius: 20px 20px 4px 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .ai-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #000;
+        border: 1px solid var(--theme-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 12px;
+        color: var(--theme-color);
+    }
+
+    /* Input Area */
+    .input-container {
+        position: absolute;
+        bottom: 140px;
+        /* Above dock */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 600px;
+        max-width: 90%;
+        z-index: 200;
+    }
+
+    .input-glass {
+        background: rgba(10, 10, 15, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 50px;
+        padding: 8px 8px 8px 24px;
+        display: flex;
+        align-items: center;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .input-glass:focus-within {
+        border-color: var(--theme-color);
+        box-shadow: 0 10px 40px var(--theme-glow);
+        background: rgba(10, 10, 15, 0.8);
+    }
+
+    .input-field {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 1rem;
+        outline: none;
+        font-family: var(--font-jp);
+    }
+
+    .send-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--theme-color);
+        border: none;
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .send-btn:hover {
+        transform: scale(1.1);
+    }
+
+    /* Login Form (Inside Chat) */
+    .login-card {
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid var(--theme-color);
+        padding: 30px;
+        border-radius: 16px;
+        width: 300px;
+        margin: 20px 0;
+        backdrop-filter: blur(20px);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .login-input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px;
+        border-radius: 8px;
+        color: #fff;
+        outline: none;
+    }
+
+    .login-input:focus {
+        border-color: var(--theme-color);
+    }
+
+    .action-btn {
+        background: var(--theme-color);
+        color: #fff;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: opacity 0.2s;
+    }
+
+    .action-btn:hover {
+        opacity: 0.9;
+    }
+
+    /* =========================================
+       Dashboard View (The "Job" Workspace)
+       ========================================= */
+    #dashboard-view {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 50;
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.95);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow-y: auto;
+        padding: 20px;
+        /* Adjust based on content */
+        box-sizing: border-box;
+    }
+
+    #dashboard-view.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: scale(1);
+    }
+
+    /* =========================================
+       Job Change System (Dock)
+       ========================================= */
     .mode-dock-container {
         position: absolute;
         bottom: 30px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 1000;
-        display: flex;
-        justify-content: center;
-        perspective: 1000px;
     }
 
     .mode-dock {
-        background: rgba(255, 255, 255, 0.05);
-        /* Ultra-thin glass */
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        background: rgba(20, 20, 30, 0.4);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 24px;
-        padding: 8px 12px;
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border-radius: 20px;
+        padding: 10px 15px;
         display: flex;
-        gap: 8px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        transform-origin: bottom center;
+        gap: 12px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
     }
 
     .dock-icon {
-        position: relative;
-        width: 44px;
-        height: 44px;
-        border-radius: 16px;
-        background: transparent;
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
         border: none;
-        color: rgba(255, 255, 255, 0.4);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1.2rem;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.4rem;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        position: relative;
     }
 
     .dock-icon:hover {
         background: rgba(255, 255, 255, 0.1);
-        transform: translateY(-8px) scale(1.1);
         color: #fff;
+        transform: translateY(-8px) scale(1.15);
     }
 
     .dock-icon.active {
-        background: rgba(255, 255, 255, 0.15);
+        background: var(--theme-color);
         color: #fff;
-        box-shadow: 0 0 20px var(--accent-glow);
+        box-shadow: 0 5px 20px var(--theme-glow);
+        transform: translateY(-5px);
     }
 
-    .dock-icon .tooltip {
+    .dock-tooltip {
         position: absolute;
         top: -40px;
         left: 50%;
         transform: translateX(-50%) translateY(10px);
-        background: #000;
+        background: rgba(0, 0, 0, 0.8);
         color: #fff;
-        padding: 4px 10px;
+        padding: 5px 10px;
         border-radius: 6px;
-        font-size: 0.75rem;
-        white-space: nowrap;
+        font-size: 10px;
         opacity: 0;
         pointer-events: none;
         transition: all 0.2s;
+        white-space: nowrap;
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    .dock-icon:hover .tooltip {
+    .dock-icon:hover .dock-tooltip {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
     }
 
-    /* Core Visualizer Mode Adjustments */
-    .visualizer-container.mode-admin .core-circle {
-        background: #3b82f6;
+    /* Animations */
+    @keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    /* Blue */
-    .visualizer-container.mode-office .core-circle {
-        background: #0ea5e9;
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
     }
 
-    /* Sky */
-    .visualizer-container.mode-sales .core-circle {
-        background: #f97316;
+    @keyframes slideInMsg {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    /* Orange */
-    .visualizer-container.mode-operations .core-circle {
-        background: #10b981;
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .visualizer-container {
+            width: 300px;
+            height: 300px;
+        }
+
+        .input-container {
+            width: 95%;
+            bottom: 100px;
+        }
+
+        .mode-dock {
+            padding: 8px 10px;
+            gap: 8px;
+        }
+
+        .dock-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.1rem;
+        }
     }
-
-    /* Emerald */
-
-
-    /* Start Button (Power) */
-    .start-btn {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1.5rem;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-        /* Ensure it's centered horizontally if absolute positioned with bottom */
-        left: 50%;
-        transform: translateX(-50%);
-    }
-
-    .start-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: #fff;
-        box-shadow: 0 0 30px var(--accent-glow);
-        transform: translateX(-50%) scale(1.1);
-    }
-
-    .start-btn .start-btn-label {
-        position: absolute;
-        bottom: -25px;
-        font-size: 0.7rem;
-        letter-spacing: 2px;
-        opacity: 0.6;
-        font-weight: 500;
-        width: 100px;
-        text-align: center;
-    }
-
-    #chat-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        /* Reset padding to center visualizer/buttons correctly */
-        padding: 60px 10% 40px 10%;
-        box-sizing: border-box;
-        background: transparent;
-        display: flex;
-        flex-direction: column;
-        opacity: 0;
-        pointer-events: none;
-        transform: translateY(20px);
-        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        z-index: 400;
-        /* Behind core but above background */
-    }
-
-    #chat-container.active {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateY(0);
-    }
-
-    /* ... (rest of chat UI) */
-
-    /* ... (skipping unchanged styles) ... */
 </style>
-<link rel="stylesheet" href="/css/staff-mypage.css">
-<link rel="stylesheet" href="/css/staff-mypage-inline.css">
 
-<!-- Import Modules -->
+<!-- =======================================================
+     HTML Structure
+     ======================================================= -->
+<main id="main" class="admin-dashboard">
+    <!-- Ambient Glow BG -->
+    <div class="ambient-glow"></div>
+
+    <!-- Persistent Visualizer Core inside Main Content -->
+    <div class="visualizer-container">
+        <div class="text-ring">
+            <svg viewBox="0 0 200 200" width="100%" height="100%">
+                <path id="circlePath" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" fill="none" />
+                <text>
+                    <textPath href="#circlePath">MISOGI INTELLIGENT SYSTEM • OPERATIONAL GUIDANCE • </textPath>
+                </text>
+            </svg>
+        </div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="core-circle"></div>
+    </div>
+
+    <!-- Start Overlay (Initial Screen) -->
+    <div id="start-overlay">
+        <div class="logo-section">
+            <div class="logo-main">MISOGI</div>
+            <div class="logo-sub">INTELLIGENT SYSTEM<br>DISCONNECTED</div>
+        </div>
+        <button class="start-btn" onclick="app.start()" id="start-btn">
+            <i class="fas fa-power-off"></i>
+            <span class="start-label">CONNECT</span>
+        </button>
+    </div>
+
+    <!-- Chat Interface -->
+    <div id="chat-interface">
+        <div class="chat-scroll-area" id="chat-history">
+            <!-- Messages will be injected here -->
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-container">
+            <div class="input-glass">
+                <input type="text" id="user-input" class="input-field" placeholder="MISOGIに指示を出す..." autocomplete="off">
+                <button class="send-btn" onclick="app.sendMessage()"><i class="fas fa-arrow-up"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard View (For Job Modes) -->
+    <div id="dashboard-view">
+        <!-- Dashboard HTML injected here -->
+    </div>
+
+    <!-- Mode Dock (Job Change System) -->
+    <div class="mode-dock-container" id="mode-dock-container" style="display: none;">
+        <div class="mode-dock" id="mode-dock-items">
+            <!-- Icons injected by JS -->
+        </div>
+    </div>
+</main>
+
+<!-- =======================================================
+     Logic & Scripts
+     ======================================================= -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/js/cognito_config.js"></script>
+<script src="/js/cognito_auth.js"></script>
+
 <script type="module">
     import { contextManager, MODES } from '/js/modules/context_manager.js?v=2';
     import { STAFF_DASHBOARD_HTML } from '/js/modules/dashboard_templates.js';
     import { DashboardController } from '/js/modules/dashboard_controller.js';
 
-    // Expose for inline usage
+    // Global Exposure
     window.contextManager = contextManager;
     window.MODES = MODES;
     window.dashboardController = new DashboardController();
     window.STAFF_DASHBOARD_HTML = STAFF_DASHBOARD_HTML;
 </script>
 
-<script src="/js/admin-sidebar.js"></script>
-
-<main id="main" class="admin-dashboard">
-    @include('partials.admin-sidebar')
-
-    <div id="start-overlay">
-        <div class="start-content">
-            <h1 class="logo-title">MISOGI</h1>
-            <p class="logo-subtitle">Misesapo Intelligent System<br>for Operational Guidance & Integration</p>
-            <div class="checking-status" id="checking-status" style="display: none; margin-top: 20px;">
-                <i class="fas fa-circle-notch fa-spin"></i>
-                <span>Status Verifying...</span>
-            </div>
-        </div>
-        <div class="visualizer-container">
-            <div class="wave"></div>
-            <div class="wave"></div>
-            <div class="wave"></div>
-            <div class="core-circle"></div>
-        </div>
-        <button class="start-btn" onclick="startWorkflow()"
-            style="position: absolute; bottom: 10%; z-index: 100; cursor: pointer;">
-            <i class="fas fa-power-off"></i>
-            <div class="start-btn-label">LOGIN</div>
-        </button>
-    </div>
-
-    <div class="main-content">
-        <!-- Persistent Visualizer Core -->
-        <div class="visualizer-container">
-            <div class="circle-text-container" id="circle-text">
-                <svg viewBox="0 0 200 200" class="circle-svg" width="320" height="320">
-                    <path id="circlePath" d="M 100, 100 m -80, 0 a 80,80 0 1,1 160,0 a 80,80 0 1,1 -160,0" />
-                    <text>
-                        <textPath href="#circlePath">
-                            Misesapo Intelligent System for Operational Guidance &amp; Integration &bull; Misesapo
-                            Intelligent System for Operational Guidance &amp; Integration &bull;
-                        </textPath>
-                    </text>
-                </svg>
-            </div>
-            <div class="wave"></div>
-            <div class="wave"></div>
-            <div class="wave"></div>
-            <div class="core-circle"></div>
-        </div>
-
-        <!-- Voice Content -->
-        <div class="voice-mode-content" id="voice-content">
-            <div class="status-text" id="status-text">LISTENING...</div>
-            <div class="ai-response-overlay" id="ai-response">
-                <div class="ai-response-icon"><i class="fas fa-sparkles"></i> MISOGI</div>
-                <div id="ai-message-text"></div>
-            </div>
-        </div>
-
-        <!-- Dashboard View (For non-admin modes) -->
-        <div id="dashboard-view" style="display: none; height: 100%; overflow: auto;"></div>
-
-        <!-- Chat Content -->
-        <div id="chat-container">
-            <div class="chat-history" id="chat-history"></div>
-
-            <div id="latest-message-container" class="latest-message-container"></div>
-            <div id="action-buttons-container" class="action-buttons-container"></div>
-
-            <div class="login-bubble-container" id="login-form">
-                <div class="login-input-card">
-                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 5px;">ACCOUNT
-                        AUTHENTICATION</div>
-                    <input type="email" id="login-email" placeholder="メールアドレス" autocomplete="email">
-                    <input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">
-                    <button class="login-submit-btn" onclick="performLogin()">認証</button>
-                </div>
-            </div>
-
-            <div class="chat-input-wrapper">
-                <button class="mode-switch-btn chat active" id="btn-chat" onclick="switchMode('chat')">
-                    <i class="fas fa-keyboard"></i>
-                </button>
-                <button class="mode-switch-btn voice" id="btn-voice" onclick="switchMode('voice')">
-                    <i class="fas fa-microphone"></i>
-                </button>
-                <div class="divider"></div>
-                <input type="file" id="image-upload" accept="image/*" style="display: none;"
-                    onchange="handleImageSelect(this)">
-                <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
-                    <i class="fas fa-camera"></i>
-                </button>
-                <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
-                <button class="send-btn" onclick="sendTextMessage()">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Mode Dock -->
-        <div class="mode-dock-container" id="mode-dock-container" style="display: none;">
-            <div class="mode-dock" id="mode-dock-items"></div>
-        </div>
-    </div>
-</main>
-
 <script>
-    // Image Upload Handling
-    function handleImageSelect(input) {
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-            appendChatMessage('user', `[画像を選択しました: ${file.name}]<br>(※画像送信機能は準備中です)`);
-            input.value = '';
+    /**
+     * Main Application Logic (MISOGI Entrance)
+     */
+    const app = {
+        // State
+        isLoggedIn: false,
+        currentUser: null,
+        currentMode: 'admin',
+
+        // UI Elements
+        ui: {
+            overlay: document.getElementById('start-overlay'),
+            chatInterface: document.getElementById('chat-interface'),
+            dashboardView: document.getElementById('dashboard-view'),
+            chatHistory: document.getElementById('chat-history'),
+            inputField: document.getElementById('user-input'),
+            dockContainer: document.getElementById('mode-dock-container'),
+            dockItems: document.getElementById('mode-dock-items'),
+            visualizer: document.querySelector('.visualizer-container'),
+            root: document.documentElement
+        },
+
+        // Initialize
+        start: async function () {
+            // 1. Animation: Hide Button & Overlay
+            const btn = document.getElementById('start-btn');
+            btn.style.transform = 'scale(0)';
+            btn.style.opacity = '0';
+
+            setTimeout(() => {
+                this.ui.overlay.classList.add('hidden');
+            }, 500);
+
+            // 2. Auth Check
+            await this.checkAuth();
+        },
+
+        checkAuth: async function () {
+            this.addMessage('ai', '認証システムに接続中...');
+
+            if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+                try {
+                    const user = await window.CognitoAuth.getCurrentUser();
+                    this.currentUser = user;
+                    this.isLoggedIn = true;
+                    this.onLoginSuccess(user);
+                } catch (e) {
+                    console.error(e);
+                    this.showLoginForm();
+                }
+            } else {
+                // Not logged in
+                setTimeout(() => {
+                    this.addMessage('ai', 'アクセス権限が確認できません。ログインしてください。');
+                    this.showLoginForm();
+                }, 1000);
+            }
+        },
+
+        onLoginSuccess: function (user) {
+            // Init Context Manager
+            if (window.contextManager) {
+                window.contextManager.init(user);
+                this.renderDock();
+                this.ui.dockContainer.style.display = 'flex';
+            }
+
+            const name = user.name || user.username || 'User';
+            this.addMessage('ai', `認証成功。おかえりなさいませ、${name}様。`);
+
+            // Show interface
+            this.ui.chatInterface.classList.add('active');
+
+            // Check Attendance (Mock logic for flow)
+            this.checkAttendanceStatus(user);
+        },
+
+        showLoginForm: function () {
+            this.ui.chatInterface.classList.add('active');
+
+            // Create Login Card
+            const div = document.createElement('div');
+            div.className = 'message-row ai';
+            div.innerHTML = `
+            <div class="ai-avatar"><i class="fas fa-cube"></i></div>
+            <div class="login-card">
+                <div style="color:var(--theme-color); font-size:0.8rem; letter-spacing:1px;">SYSTEM LOGIN</div>
+                <input type="email" id="login-email" class="login-input" placeholder="Email">
+                <input type="password" id="login-pass" class="login-input" placeholder="Password">
+                <button class="action-btn" onclick="app.performLogin()">LOGIN</button>
+            </div>
+        `;
+            this.ui.chatHistory.appendChild(div);
+            this.ui.chatHistory.scrollTop = this.ui.chatHistory.scrollHeight;
+        },
+
+        performLogin: async function () {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+
+            if (!email || !pass) return;
+
+            this.addMessage('user', '認証情報を送信...');
+
+            try {
+                const result = await window.CognitoAuth.login(email, pass);
+                if (result.success) {
+                    // Reload on success to refresh tokens and state properly
+                    window.location.reload();
+                } else {
+                    this.addMessage('ai', 'ログイン失敗: ' + result.message);
+                }
+            } catch (e) {
+                this.addMessage('ai', 'エラーが発生しました: ' + e.message);
+            }
+        },
+
+        checkAttendanceStatus: async function (user) {
+            // Ask for clock-in
+            setTimeout(() => {
+                this.addMessage('ai', '本日の業務を開始しますか？');
+
+                // Show Clock-In Button as a 'System Action'
+                const div = document.createElement('div');
+                div.className = 'message-row ai';
+                div.innerHTML = `
+                 <div class="ai-avatar"><i class="fas fa-cube"></i></div>
+                 <div class="msg-bubble ai" style="padding: 10px;">
+                    <button class="action-btn" id="clock-in-btn" onclick="app.clockIn()"><i class="fas fa-clock"></i> 出勤する</button>
+                 </div>
+            `;
+                this.ui.chatHistory.appendChild(div);
+                this.ui.chatHistory.scrollTop = this.ui.chatHistory.scrollHeight;
+            }, 1000);
+        },
+
+        clockIn: async function () {
+            const btn = document.getElementById('clock-in-btn');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 処理中...';
+                btn.disabled = true;
+            }
+
+            // --- Actual API Call Logic Here ---
+            try {
+                const user = await window.CognitoAuth.getCurrentUser();
+                const token = window.CognitoAuth.getIdToken();
+                const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+                const sanitizedData = {
+                    staff_id: user.id || user.sub,
+                    staff_name: user.name || user.username,
+                    date: new Date().toLocaleDateString('sv-SE'),
+                    clock_in: new Date().toISOString()
+                };
+
+                const response = await fetch(`${API_BASE}/attendance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(sanitizedData)
+                });
+
+                if (response.ok) {
+                    if (btn) {
+                        btn.innerHTML = '<i class="fas fa-check"></i> 出勤完了';
+                        btn.style.background = '#10b981'; // Success Green
+                    }
+                    this.addMessage('ai', '出勤を確認しました。業務モードへ移行します。');
+
+                    // Switch to work mode automatically after delay
+                    setTimeout(() => {
+                        // Determine User Default Role/Mode (Fallback to Office/Staff logic)
+                        // For now, let's switch to 'office' or whatever context manager decides
+                        const defaultMode = window.contextManager.getAvailableModes()[0]?.id || 'office';
+                        window.contextManager.switchMode(defaultMode);
+                    }, 1500);
+
+                } else {
+                    throw new Error('API Error');
+                }
+            } catch (e) {
+                console.error(e);
+                this.addMessage('ai', '出勤処理に失敗しました。再試行してください。');
+                if (btn) {
+                    btn.innerHTML = '再試行';
+                    btn.disabled = false;
+                }
+            }
+        },
+
+        // UI Helpers
+        addMessage: function (role, text) {
+            const div = document.createElement('div');
+            div.className = `message-row ${role}`;
+
+            let content = '';
+            if (role === 'ai') {
+                content = `<div class="ai-avatar"><i class="fas fa-cube"></i></div>
+                       <div class="msg-bubble ai">${text}</div>`;
+            } else {
+                content = `<div class="msg-bubble user">${text}</div>`;
+            }
+
+            div.innerHTML = content;
+            this.ui.chatHistory.appendChild(div);
+            this.ui.chatHistory.scrollTop = this.ui.chatHistory.scrollHeight;
+        },
+
+        sendMessage: function () {
+            const text = this.ui.inputField.value.trim();
+            if (!text) return;
+
+            this.addMessage('user', text);
+            this.ui.inputField.value = '';
+
+            // Basic AI Echo/Processing (Placeholder for full AI)
+            setTimeout(() => {
+                this.handleAIResponse(text);
+            }, 600);
+        },
+
+        handleAIResponse: function (userText) {
+            // Simple command handling for navigation
+            if (userText.includes('戻る') || userText.includes('チャット')) {
+                window.contextManager.switchMode('admin'); // Assuming admin is chat base
+                this.addMessage('ai', 'チャットモードに戻ります。');
+                return;
+            }
+            this.addMessage('ai', '申し訳ありません、現在対話機能は縮小運転中です。「コマンド」をご利用ください。');
+        },
+
+        renderDock: function () {
+            const modes = window.contextManager.getAvailableModes();
+            if (!modes.length) return;
+
+            this.ui.dockItems.innerHTML = '';
+            modes.forEach(mode => {
+                const btn = document.createElement('button');
+                btn.className = 'dock-icon';
+                btn.dataset.mode = mode.id;
+                btn.innerHTML = `<i class="${mode.icon}"></i><div class="dock-tooltip">${mode.jp_label}</div>`;
+                btn.onclick = () => window.contextManager.switchMode(mode.id);
+                this.ui.dockItems.appendChild(btn);
+            });
         }
-    }
+    };
 
-    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    // Listen for Enter key
+    document.getElementById('user-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') app.sendMessage();
+    });
 
-    // --- Context & Mode Logic ---
-
-    // Define Global UI Elements
-    const startOverlay = document.getElementById('start-overlay');
-    const loginForm = document.getElementById('login-form');
-    const chatHistory = document.getElementById('chat-history');
-    const chatContainer = document.getElementById('chat-container');
-    const voiceContent = document.getElementById('voice-content');
-    const visualizer = document.querySelector('.visualizer-container'); // Main one
-    const statusText = document.getElementById('status-text');
-    const textInput = document.getElementById('text-input');
-    const btnChat = document.getElementById('btn-chat');
-    const btnVoice = document.getElementById('btn-voice');
-
-    // Listen for mode changes to update UI
+    // Context Manager Event Listener (The Bridge)
     window.addEventListener('context-changed', (e) => {
         const mode = e.detail;
-        console.log("Context Changed to:", mode.label);
+        console.log('Mode Switched:', mode);
 
-        // Update Dock Active State
+        // 1. Update Theme Colors
+        const colors = {
+            'admin': '#3b82f6',
+            'office': '#0ea5e9',
+            'sales': '#f97316',
+            'operations': '#10b981'
+        };
+        const newColor = colors[mode.id] || '#3b82f6';
+        document.documentElement.style.setProperty('--theme-color', newColor);
+        document.documentElement.style.setProperty('--theme-glow', `${newColor}66`); // 40% hex opacity
+
+        // 2. Update Dock Active State
         document.querySelectorAll('.dock-icon').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === mode.id);
         });
 
-        // Update Body Theme and Visualizer
-        document.body.className = `admin-dashboard ${mode.theme}`;
-
-        // Remove old mode classes from visualizer and add new one
-        const visualizer = document.querySelector('.visualizer-container');
-        if (visualizer) {
-            visualizer.classList.remove('mode-admin', 'mode-office', 'mode-sales', 'mode-operations');
-            visualizer.classList.add(`mode-${mode.id}`);
-        }
-
-        // --- DASHBOARD VIEW SWITCHING ---
-        const chatContainer = document.getElementById('chat-container');
-        const dashboardContainer = document.getElementById('dashboard-view');
-
+        // 3. Switch Views
         if (mode.id === 'admin') {
-            // Admin Mode: Chat interface is primary
-            if (chatContainer) chatContainer.style.display = 'flex';
-            if (dashboardContainer) dashboardContainer.style.display = 'none';
+            // Show Chat
+            app.ui.dashboardView.classList.remove('active');
+            app.ui.chatInterface.classList.add('active');
+            // Visualizer large
+            app.ui.visualizer.style.transform = 'translate(-50%, -50%) scale(1)';
+            app.ui.visualizer.style.top = '50%';
         } else {
-            // Staff/Office/Operations Mode: Dashboard is primary
-            if (chatContainer) chatContainer.style.display = 'none';
-            if (dashboardContainer) {
-                dashboardContainer.style.display = 'block';
-                if (!dashboardContainer.hasChildNodes()) {
-                    dashboardContainer.innerHTML = STAFF_DASHBOARD_HTML;
-                    // Init Dashboard Controller
-                    window.dashboardController.init();
-                }
-            }
-        }
+            // Show Dashboard
+            app.ui.chatInterface.classList.remove('active');
+            app.ui.dashboardView.classList.add('active');
 
-        // Update sidebar content (todo: SidebarManager)
-        if (typeof updateSidebarForMode === 'function') { // Check if function exists (loaded via script tag)
-            // updateSidebarForMode(mode); // Handled by event listener in admin-sidebar.js actually
+            // Render Dashboard Content if empty
+            if (!app.ui.dashboardView.innerHTML.trim() && window.STAFF_DASHBOARD_HTML) {
+                app.ui.dashboardView.innerHTML = window.STAFF_DASHBOARD_HTML;
+                if (window.dashboardController) window.dashboardController.init();
+            }
+
+            // Visualizer small & top-right or hidden?
+            // Let's make it faded background element
+            app.ui.visualizer.style.transform = 'translate(-50%, -50%) scale(0.6)';
+            app.ui.visualizer.style.opacity = '0.3';
         }
     });
 
-    function renderModeDock() {
-        const dockContainer = document.getElementById('mode-dock-container');
-        const dockItems = document.getElementById('mode-dock-items');
-
-        if (!dockContainer || !dockItems || !window.contextManager) return;
-
-        const modes = window.contextManager.getAvailableModes();
-        if (modes.length <= 1) {
-            dockContainer.style.display = 'none';
-            return;
-        }
-
-        dockItems.innerHTML = '';
-        modes.forEach(mode => {
-            const btn = document.createElement('button');
-            btn.className = `dock-icon ${window.contextManager.currentMode?.id === mode.id ? 'active' : ''}`;
-            btn.dataset.mode = mode.id;
-            btn.onclick = () => window.contextManager.switchMode(mode.id);
-            btn.innerHTML = `
-                <i class="${mode.icon}"></i>
-                <div class="tooltip">${mode.jp_label}</div>
-            `;
-            dockItems.appendChild(btn);
-        });
-    }
-
-
-    async function startWorkflow() {
-        startOverlay.classList.add('hidden');
-        switchMode('chat');
-
-        // Use new robust Auth check
-        const isAuth = window.CognitoAuth && window.CognitoAuth.isAuthenticated();
-
-        if (!isAuth) {
-            appendChatMessage('ai', 'おはようございます。ミセサポ管理AIのMISOGIです。セッションを開始するために、まずはログイン情報を入力してください。');
-            setTimeout(() => {
-                loginForm.style.display = 'flex';
-            }, 800);
-        } else {
-            const user = await window.CognitoAuth.getCurrentUser();
-            const staffId = user ? (user.id || user.sub) : null;
-
-            if (!user) {
-                // Should not happen if isAuth is true, but safety net
-                loginForm.style.display = 'flex';
-                return;
-            }
-
-            // Initialize Context Manager
-            if (window.contextManager) {
-                window.contextManager.init(user);
-                renderModeDock();
-            }
-
-            // Helper to get JST date string (YYYY-MM-DD)
-            const getJstDateStr = (d) => {
-                const jstDate = new Date(d.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
-                const y = jstDate.getFullYear();
-                const m = String(jstDate.getMonth() + 1).padStart(2, '0');
-                const dd = String(jstDate.getDate()).padStart(2, '0');
-                return `${y}-${m}-${dd}`;
-            };
-
-            const todayStr = getJstDateStr(new Date());
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = getJstDateStr(yesterday);
-
-            try {
-                const token = window.CognitoAuth.getIdToken();
-                // Fetch recent records (limit 5) instead of specific date filter
-                const response = await fetch(`${API_BASE}/attendance?staff_id=${staffId}&limit=5`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                let isClockedIn = false;
-                let records = [];
-                if (response.ok) {
-                    const data = await response.json();
-                    records = Array.isArray(data) ? data : (data.attendance || data.items || []);
-
-                    // Check logic: Has clock_in AND (clock_out is null OR empty)
-                    // AND the record is from today OR yesterday
-                    isClockedIn = records.some(r => {
-                        return r.clock_in && !r.clock_out && (r.date === todayStr || r.date === yesterdayStr);
-                    });
-                } else {
-                    console.error('Attendance check failed:', response.status);
-                }
-
-                if (isClockedIn) {
-                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。既に出勤を確認しました。本日も業務をサポートいたします。`);
-                    handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }, { type: 'show_mode_dock' }] });
-                } else {
-                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
-                    handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
-                }
-            } catch (e) {
-                console.error('Failed to check attendance:', e);
-                appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
-                handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
-            }
-        }
-    }
-
-    async function performLogin() {
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-
-        if (!email || !password) return;
-
-        const loginBtn = document.querySelector('.login-submit-btn');
-        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 認証中...';
-        loginBtn.disabled = true;
-
-        try {
-            if (window.CognitoAuth) {
-                const result = await window.CognitoAuth.login(email, password);
-                if (result.success) {
-                    loginForm.style.display = 'none';
-                    // Re-run workflow to check attendance state
-                    await startWorkflow();
-                } else {
-                    throw new Error(result.message);
-                }
-            } else {
-                throw new Error('認証システムが読み込まれていません');
-            }
-        } catch (err) {
-            alert('ログインに失敗しました: ' + err.message);
-            loginBtn.innerHTML = '認証';
-            loginBtn.disabled = false;
-        }
-    }
-
-    async function performClockIn() {
-        const btn = document.getElementById('active-attendance-btn');
-        if (btn) btn.disabled = true;
-
-        const user = await window.CognitoAuth.getCurrentUser();
-        const token = window.CognitoAuth.getIdToken();
-
-        if (!user || !user.id || !token) {
-            appendChatMessage('ai', 'エラー：ログイン情報が見つかりません。再ログインしてください。');
-            return;
-        }
-
-        appendChatMessage('user', '出勤します');
-
-        try {
-            const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
-            const now = new Date().toISOString();
-
-            const sanitizedData = {
-                staff_id: user.id || user.sub,
-                staff_name: user.name || user.username,
-                date: today,
-                clock_in: now
-            };
-
-            const response = await fetch(`${API_BASE}/attendance`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(sanitizedData)
-            });
-
-            if (response.ok) {
-                appendChatMessage('ai', `${user.name || 'ユーザー'}様、出勤を記録しました。本日の業務を開始します。それでは、良い1日を！左側のメニューから各機能へアクセスできます。`);
-                handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }, { type: 'show_mode_dock' }] });
-
-                // Update Chat Button
-                if (btn) btn.innerHTML = '<i class="fas fa-check"></i> 出勤済み';
-
-                // Update Dashboard Button
-                const dashBtn = document.getElementById('dashboard-clock-in-btn');
-                if (dashBtn) {
-                    dashBtn.disabled = true;
-                    dashBtn.innerHTML = '<i class="fas fa-check"></i> 出勤済み';
-                    dashBtn.classList.add('checked-in');
-                }
-            } else {
-                const err = await response.json();
-                throw new Error(err.message || 'API Error');
-            }
-        } catch (err) {
-            console.error('Attendance Error:', err);
-            appendChatMessage('ai', 'エラーが発生しました：' + err.message);
-            if (btn) btn.disabled = false;
-            // Re-enable dashboard button if it was disabled
-            const dashBtn = document.getElementById('dashboard-clock-in-btn');
-            if (dashBtn) dashBtn.disabled = false;
-        }
-    }
-
-    function switchMode(mode) {
-        currentMode = mode;
-        if (mode === 'voice') {
-            btnVoice.classList.add('active');
-            btnChat.classList.remove('active');
-            chatContainer.classList.remove('active');
-            voiceContent.classList.remove('hidden');
-            voiceContent.style.display = 'flex';
-            // Adjust visualizer for voice mode
-            visualizer.style.transform = 'translate(-50%, -50%) scale(1)';
-        } else {
-            btnChat.classList.add('active');
-            btnVoice.classList.remove('active');
-            voiceContent.classList.add('hidden');
-            setTimeout(() => { if (currentMode === 'chat') voiceContent.style.display = 'none'; }, 500);
-            chatContainer.classList.add('active');
-            textInput.focus();
-            // Subtly shrink or adjust visualizer for chat mode to not overlap text
-            visualizer.style.transform = 'translate(-50%, -50%) scale(0.8)';
-        }
-    }
-
-    function appendChatMessage(role, text) {
-        // Move any existing latest message to history
-        const latestContainer = document.getElementById('latest-message-container');
-        if (latestContainer && latestContainer.children.length > 0) {
-            const oldMessage = latestContainer.firstElementChild;
-            const oldRole = oldMessage.dataset.role;
-            const oldText = oldMessage.innerHTML;
-
-            const historyBubble = document.createElement('div');
-            historyBubble.className = `chat-bubble ${oldRole}`;
-            historyBubble.innerHTML = oldText;
-            chatHistory.appendChild(historyBubble);
-        }
-
-        // Create new latest message
-        if (!latestContainer) return; // Safety check
-        latestContainer.innerHTML = ''; // Clear previous
-
-        const newBubble = document.createElement('div');
-        newBubble.className = `latest-message-bubble ${role}`;
-        newBubble.dataset.role = role;
-        newBubble.innerHTML = text.replace(/\n/g, '<br>');
-        latestContainer.appendChild(newBubble);
-
-        // Scroll history to bottom just in case
-        chatHistory.scrollTop = chatHistory.scrollHeight;
-    }
-
-    async function sendTextMessage() {
-        const text = textInput.value.trim();
-        if (!text) return;
-        appendChatMessage('user', text);
-        textInput.value = '';
-
-        const token = ensureAuthOrRedirect();
-
-        const loadingBubble = document.createElement('div');
-        loadingBubble.className = 'chat-bubble ai';
-        loadingBubble.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 解析中...';
-        chatHistory.appendChild(loadingBubble);
-        chatHistory.scrollTop = chatHistory.scrollHeight;
-
-        // Force Persona (Temporary fix for outdated backend)
-        const systemPrompt = "(System: あなたは管理AI『Misogi』です。Sakuraと名乗らないでください。常に『Misogi』として振る舞ってください。)\n";
-        const textToSend = systemPrompt + text;
-
-        try {
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-
-            // Try the new admin action first
-            const response = await fetch(`${API_BASE}/ai/process`, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({ action: 'admin_concierge', text: textToSend })
-            });
-
-            if (!response.ok) {
-                // Return to old action if new one fails (e.g. backend not deployed)
-                console.warn("admin_concierge failed, trying assistant_concierge with forced persona");
-                const fallbackResponse = await fetch(`${API_BASE}/ai/process`, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify({ action: 'assistant_concierge', text: textToSend })
-                });
-                if (!fallbackResponse.ok) throw new Error('API Error');
-                const data = await fallbackResponse.json();
-                await handleAiResponse(data, loadingBubble, text);
-                return;
-            }
-
-            const data = await response.json();
-            await handleAiResponse(data, loadingBubble, text);
-
-        } catch (err) {
-            console.error(err);
-            if (loadingBubble.parentNode) loadingBubble.remove();
-            appendChatMessage('ai', 'エラーが発生しました。');
-        }
-    }
-
-    async function handleAiResponse(data, loadingBubble, userText) {
-        if (loadingBubble.parentNode) loadingBubble.remove();
-
-        let aiResult = data.result;
-        if (typeof aiResult === 'string') {
-            try {
-                const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
-                if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
-            } catch (e) { }
-        }
-
-        let reply = aiResult.reply || aiResult.text || JSON.stringify(aiResult);
-        let intent = aiResult.intent;
-        let targetUrl = aiResult.target_url;
-
-        // --- NEW: UI Command Handling ---
-        handleAiCommands(aiResult);
-
-        // --- Local Fallback Logic (Mock Navigation) ---
-        // If the backend didn't return an intent (e.g. backend code not yet deployed), 
-        // we simulate the navigation intent based on keywords.
-        if (!intent || intent === 'chat') {
-            const map = {
-                '/admin/dashboard': ['ダッシュボード', 'アクティビティ'],
-                '/admin/schedules/': ['スケジュール', 'カレンダー', '予定'],
-                '/admin/customers/': ['顧客', 'お客様'],
-                '/admin/reports/': ['レポート', '報告'],
-                '/admin/estimates/': ['見積', '請求'],
-                '/admin/orders': ['発注', '仕入'],
-                '/admin/partners': ['パートナー', '協力会社'],
-                '/admin/users/': ['ユーザー', '従業員', 'スタッフ'],
-                '/admin/attendance/errors': ['勤怠', '打刻'],
-                '/admin/services/': ['サービス', 'メニュー'],
-                '/admin/analytics/': ['分析', '売上', '統計'],
-                '/admin/images/': ['画像', '写真', 'メディア'],
-                '/admin/zaiko': ['在庫', '棚卸'],
-                '/admin/announcements': ['業務連絡', 'お知らせ', '通知'],
-                '/wiki': ['WIKI', 'マニュアル'],
-                '/admin/sitemap': ['サイトマップ']
-            };
-
-            for (const [url, keywords] of Object.entries(map)) {
-                // Check if user input contains keyword OR if AI mention it and says "move/go"
-                if (keywords.some(k => userText.includes(k))) {
-                    // Force navigate intent
-                    intent = 'navigate';
-                    targetUrl = url;
-                    if (!reply.includes('移動します')) {
-                        reply += `<br><br><i class="fas fa-external-link-alt"></i> ${keywords[0]}へ移動します...`;
-                    }
-                    break;
-                }
-            }
-        }
-
-        appendChatMessage('ai', reply);
-
-        if (intent === 'navigate' && targetUrl) {
-            setTimeout(() => {
-                window.location.href = targetUrl;
-            }, 1200);
-        }
-
-        // Handle Break and Clock-Out UI Logic
-        if (intent === 'break_start') {
-            // "Screensaver" Mode: Center Visualizer, simple status
-            sidebar.style.opacity = '0';
-            setTimeout(() => sidebar.style.display = 'none', 500);
-
-            chatContainer.classList.remove('sidebar-active');
-            chatContainer.style.opacity = '0'; // Hide chat momentarily? Or just clear it.
-
-            // Smooth transition to "Resting" state
-            setTimeout(() => {
-                statusText.textContent = "RESTING... (On Break)";
-                visualizer.style.transform = 'translate(-50%, -50%) scale(1.2)';
-                // Maybe show a simple "Resume Work" button in center or let Chat reappear
-                chatContainer.style.opacity = '1';
-                // Clear history to reduce clutter? Or keep "Have a nice break"?
-                document.getElementById('latest-message-container').innerHTML = '';
-            }, 800);
-        }
-
-        if (intent === 'break_end') {
-            // Return to Work Mode
-            statusText.textContent = "WELCOME BACK";
-            visualizer.style.transform = 'translate(-50%, -50%) scale(0.8)';
-
-            sidebar.style.display = 'flex';
-            setTimeout(() => sidebar.style.opacity = '1', 10);
-            chatContainer.classList.add('sidebar-active');
-        }
-
-        if (intent === 'clock_out') {
-            // Full Reset to Entrance Standby
-            sidebar.style.opacity = '0';
-            setTimeout(() => sidebar.style.display = 'none', 500);
-            chatContainer.style.opacity = '0';
-
-            setTimeout(() => {
-                // Clear Chat
-                chatHistory.innerHTML = '';
-                document.getElementById('latest-message-container').innerHTML = '';
-
-                // Show Start Button again (Reset)
-                statusText.textContent = "See you next time.";
-                visualizer.style.transform = 'translate(-50%, -50%) scale(1)';
-
-                setTimeout(() => {
-                    startOverlay.style.display = 'flex';
-                    setTimeout(() => startOverlay.style.opacity = '1', 50);
-                    statusText.textContent = "READY TO ASSIST";
-                    // Reset state variable if needed
-                    // isClockedIn = false; // Ideally fetch fresh state next time
-                }, 2000);
-            }, 800);
-        }
-    }
-
-    async function handleAiCommands(aiResult) {
-        if (!aiResult.ui_commands) return;
-
-        for (const cmd of aiResult.ui_commands) {
-            switch (cmd.type) {
-                case 'request_login':
-                    loginForm.style.display = 'flex';
-                    break;
-                case 'show_attendance':
-                    const actionContainer = document.getElementById('action-buttons-container');
-                    if (actionContainer) {
-                        actionContainer.innerHTML = ''; // Clear previous actions
-                        const btnDiv = document.createElement('div');
-                        btnDiv.className = 'action-bubble-container';
-                        btnDiv.style.display = 'block';
-                        btnDiv.innerHTML = `
-                            <button class="attendance-btn" id="active-attendance-btn" onclick="performClockIn()">
-                                <i class="fas fa-sign-in-alt"></i> 出勤する
-                            </button>
-                        `;
-                        actionContainer.appendChild(btnDiv);
-                    }
-                    break;
-                case 'show_sidebar':
-                    if (sidebar) {
-                        sidebar.style.display = 'flex';
-                        const navItems = sidebar.querySelectorAll('.nav-item');
-                        navItems.forEach((item, index) => {
-                            setTimeout(() => {
-                                item.classList.add('show');
-                            }, index * 100);
-                        });
-                    }
-                    if (chatContainer) chatContainer.classList.add('sidebar-active'); // Adjust padding if needed
-                    break;
-                case 'show_mode_dock':
-                    const dockContainer = document.getElementById('mode-dock-container');
-                    if (dockContainer && window.contextManager && window.contextManager.getAvailableModes().length > 1) {
-                        dockContainer.style.display = 'flex';
-                        // Add slide up animation class if needed
-                        dockContainer.animate([
-                            { transform: 'translateX(-50%) translateY(20px)', opacity: 0 },
-                            { transform: 'translateX(-50%) translateY(0)', opacity: 1 }
-                        ], { duration: 500, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'forwards' });
-                    }
-                    break;
-            }
-        }
-    }
-
-    // Ensure textInput listener is attached safely
-    const textInputEl = document.getElementById('text-input');
-    if (textInputEl) {
-        textInputEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendTextMessage(); });
-    }
-
-    // Toggle Visualizer Simulation
-    // Toggle Visualizer Simulation
-    let isRecording = false;
-    // Target the visualizer inside the start-overlay as it is the first one the user sees
-    const visualizerEl = document.querySelector('#start-overlay .visualizer-container') || document.querySelector('.visualizer-container');
-    const statusTextEl = document.querySelector('.status-text');
-    const coreEl = document.querySelector('.core-circle');
-    const circleTextEl = document.querySelector('.circle-text-container');
-
-    if (visualizerEl) {
-        visualizerEl.addEventListener('click', () => {
-            if (!isRecording) {
-                isRecording = true;
-                if (statusTextEl) statusTextEl.textContent = "LISTENING... (Simulation)";
-                // Animate both visualizers to be sure
-                document.querySelectorAll('.core-circle').forEach(el => el.classList.add('active'));
-                if (circleTextEl) circleTextEl.classList.add('active');
-            } else {
-                isRecording = false;
-                if (statusTextEl) statusTextEl.textContent = "PROCESSING...";
-                document.querySelectorAll('.core-circle').forEach(el => el.classList.remove('active'));
-                if (circleTextEl) circleTextEl.classList.remove('active');
-                setTimeout(() => { if (statusTextEl) statusTextEl.textContent = "READY TO ASSIST"; }, 1500);
-            }
-        });
-    }
 </script>
-<script src="/js/admin-sidebar.js"></script>
