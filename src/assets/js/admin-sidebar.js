@@ -935,5 +935,70 @@
 
   // 自動初期化
   init();
+  // --- Dynamic Sidebar Logic for Context Manager ---
+
+  /**
+   * Update sidebar based on the active workspace mode
+   * @param {Object} mode - The active mode object from ContextManager
+   */
+  function updateSidebarForMode(mode) {
+    console.log('[AdminSidebar] Updating for mode:', mode.id);
+
+    // 1. Update Role Badge style/text
+    const roleBadge = document.getElementById('sidebar-role-badge');
+    if (roleBadge) {
+      roleBadge.textContent = mode.jp_label;
+      // Reset classes and add specific theme class if needed
+      roleBadge.className = 'role-badge';
+      // We could add mode-specific classes here if defined in CSS
+    }
+
+    // 2. Filter Navigation Items
+    const sidebarNav = document.querySelector('.sidebar-nav');
+    if (!sidebarNav) return;
+
+    // Show/Hide logic
+    const allItems = sidebarNav.querySelectorAll('.nav-item');
+    const divider = sidebarNav.querySelector('.nav-divider');
+
+    if (mode.sidebar_config === 'full') {
+      // Show everything (Admin Mode)
+      allItems.forEach(item => item.style.display = 'flex');
+      if (divider) divider.style.display = 'block';
+    } else if (Array.isArray(mode.sidebar_config)) {
+      // Filter based on allowed page IDs
+      // We map 'dashboard' -> data-page="dashboard", etc.
+      // Some items like 'mypage', 'logout', 'entrance' should probably always be visible or handled separately.
+      const alwaysVisible = ['mypage', 'entrance', 'logout'];
+
+      allItems.forEach(item => {
+        const pageId = item.getAttribute('data-page');
+        const isButton = item.classList.contains('nav-item-button'); // Logout button often doesn't have data-page, or handled differently
+
+        // Check if matches config or always visible
+        // For logout (which might not have data-page), checks class or logic
+        if (alwaysVisible.includes(pageId) || isButton) {
+          item.style.display = 'flex';
+        } else if (mode.sidebar_config.includes(pageId)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+
+      if (divider) divider.style.display = 'block'; // Keep divider for visual separation? Or hidden if too few items?
+    }
+  }
+
+  // Listen for Context Changes
+  window.addEventListener('context-changed', (e) => {
+    updateSidebarForMode(e.detail);
+  });
+
+  // Initial check if context manager is already active (rare race condition, but good to have)
+  if (window.contextManager && window.contextManager.currentMode) {
+    updateSidebarForMode(window.contextManager.currentMode);
+  }
+
 })();
 

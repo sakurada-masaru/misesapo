@@ -237,44 +237,105 @@
         font-family: 'Inter', sans-serif;
     }
 
-    /* Mode Switcher */
-    .mode-switch-container {
+    /* Mode Dock (Dynamic Workspace Switcher) */
+    .mode-dock-container {
         position: absolute;
-        /* Relative to main-content */
         bottom: 30px;
         left: 50%;
         transform: translateX(-50%);
-        display: flex;
-        background: rgba(255, 255, 255, 0.05);
-        padding: 5px;
-        border-radius: 40px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(15px);
         z-index: 1000;
-    }
-
-    .mode-btn {
-        border: none;
-        background: none;
-        color: rgba(255, 255, 255, 0.5);
-        padding: 10px 30px;
-        border-radius: 35px;
-        cursor: pointer;
-        font-size: 0.85rem;
-        font-weight: 500;
         display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.4s;
-        white-space: nowrap;
-        font-family: 'Inter', sans-serif;
+        justify-content: center;
+        perspective: 1000px;
     }
 
-    .mode-btn.active {
-        color: #fff;
-        background: linear-gradient(135deg, var(--accent-color), #2563eb);
-        box-shadow: 0 5px 15px var(--accent-glow);
+    .mode-dock {
+        background: rgba(255, 255, 255, 0.05);
+        /* Ultra-thin glass */
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 8px 12px;
+        display: flex;
+        gap: 8px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        transform-origin: bottom center;
     }
+
+    .dock-icon {
+        position: relative;
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .dock-icon:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-8px) scale(1.1);
+        color: #fff;
+    }
+
+    .dock-icon.active {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .dock-icon .tooltip {
+        position: absolute;
+        top: -40px;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background: #000;
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.2s;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .dock-icon:hover .tooltip {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    /* Core Visualizer Mode Adjustments */
+    .visualizer-container.mode-admin .core-circle {
+        background: #3b82f6;
+    }
+
+    /* Blue */
+    .visualizer-container.mode-office .core-circle {
+        background: #0ea5e9;
+    }
+
+    /* Sky */
+    .visualizer-container.mode-sales .core-circle {
+        background: #f97316;
+    }
+
+    /* Orange */
+    .visualizer-container.mode-operations .core-circle {
+        background: #10b981;
+    }
+
+    /* Emerald */
+
 
     /* Chat UI */
     #chat-container {
@@ -303,440 +364,39 @@
         transform: translateY(0);
     }
 
-    .chat-history {
-        flex: 1;
-        overflow-y: auto;
-        padding: 10px 0;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        align-items: flex-end;
-        /* Align all messages to the right */
-        /* Ensure messages don't overlap sidebar if they get very long (though max-width handles most) */
-        padding-left: 260px;
-    }
+    /* ... (rest of chat UI) */
 
-    .chat-bubble {
-        max-width: 80%;
-        padding: 12px 18px;
-        border-radius: 18px;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        font-family: 'Inter', sans-serif;
-        position: relative;
-    }
-
-    .chat-bubble.ai {
-        align-self: flex-end;
-        /* Align right like user */
-        background: #f0f9ff;
-        color: #0c4a6e;
-        border-bottom-right-radius: 4px;
-        border-bottom-left-radius: 18px;
-        /* Restore other corner */
-        border: 1px solid #bae6fd;
-    }
-
-    .chat-bubble.user {
-        align-self: flex-end;
-        background: #000;
-        color: #fff;
-        border-bottom-right-radius: 4px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    /* Loading/Checking Indicator Style */
-    .checking-indicator {
-        margin-top: 15px;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        height: 0;
-        overflow: hidden;
-    }
-
-    .checking-indicator.visible {
-        opacity: 1;
-        height: auto;
-        padding-bottom: 10px;
-    }
-
-    .checking-spinner {
-        width: 14px;
-        height: 14px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    .chat-input-wrapper {
-        margin-top: 15px;
-        display: flex;
-        gap: 10px;
-        background: rgba(255, 255, 255, 0.05);
-        padding: 8px;
-        border-radius: 30px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        /* Shift input wrapper to the right to avoid sidebar */
-        margin-left: 260px;
-        width: calc(100% - 260px);
-    }
-
-    #text-input {
-        flex: 1;
-        background: none;
-        border: none;
-        color: #fff;
-        padding: 8px 15px;
-        outline: none;
-        font-size: 1rem;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .send-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: var(--accent-color);
-        border: none;
-        color: #fff;
-        cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .attach-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: rgba(255, 255, 255, 0.7);
-        cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        transition: all 0.3s;
-    }
-
-    .attach-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: #fff;
-    }
-
-    .voice-mode-content {
-        transition: all 0.5s ease;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        z-index: 300;
-    }
-
-    .voice-mode-content.hidden {
-        opacity: 0;
-        pointer-events: none;
-        transform: scale(0.95);
-        display: none;
-    }
-
-    /* AI Overlay */
-    .ai-response-overlay {
-        position: absolute;
-        top: 100px;
-        left: 50%;
-        transform: translateX(-50%) translateY(-20px);
-        width: auto;
-        min-width: 300px;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 20px;
-        border-radius: 16px;
-        color: #fff;
-        font-size: 1rem;
-        text-align: center;
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.4s;
-        z-index: 120;
-    }
-
-    .ai-response-overlay.visible {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-        pointer-events: auto;
-    }
-
-    .ai-response-icon {
-        color: var(--accent-color);
-        margin-bottom: 8px;
-        font-size: 1.2rem;
-    }
-
-    /* Start Button Overlay */
-    #start-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #000;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 2000;
-        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    #start-overlay.hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .start-btn {
-        width: 100px;
-        height: 100px;
-        background: transparent;
-        border: 2px solid rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.4);
-        border-radius: 50%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-        position: relative;
-    }
-
-    .start-btn i {
-        font-size: 2rem;
-        transition: all 0.4s;
-    }
-
-    .start-btn-label {
-        font-size: 0.5rem;
-        margin-top: 8px;
-        letter-spacing: 2px;
-        font-weight: 700;
-        opacity: 0.5;
-        transition: all 0.4s;
-    }
-
-    .start-btn:hover {
-        border-color: var(--accent-color);
-        color: #fff;
-        box-shadow: 0 0 40px var(--accent-glow);
-        transform: scale(1.1);
-    }
-
-    .start-btn:hover i {
-        color: var(--accent-color);
-        text-shadow: 0 0 10px var(--accent-glow);
-    }
-
-    .start-btn:hover .start-btn-label {
-        opacity: 1;
-        color: var(--accent-color);
-    }
-
-    .start-btn::after {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        border: 1px solid var(--accent-color);
-        border-radius: 50%;
-        opacity: 0;
-        transform: scale(1);
-        transition: all 0.6s;
-    }
-
-    .start-btn:hover::after {
-        opacity: 0.5;
-        transform: scale(1.3);
-    }
-
-    /* Conversational Login UI */
-    .login-bubble-container {
-        position: absolute;
-        bottom: 120px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100%;
-        max-width: 400px;
-        z-index: 600;
-        display: none;
-        flex-direction: column;
-        gap: 15px;
-        animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translate(-50%, 20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translate(-50%, 0);
-        }
-    }
-
-    .login-input-card {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .login-input-card input {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 12px 15px;
-        color: #fff;
-        outline: none;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .login-input-card input:focus {
-        border-color: var(--accent-color);
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .login-submit-btn {
-        background: var(--accent-color);
-        color: #fff;
-        border: none;
-        border-radius: 10px;
-        padding: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-
-    .login-submit-btn:hover {
-        filter: brightness(1.2);
-        box-shadow: 0 0 15px var(--accent-glow);
-    }
-
-    /* Attendance Button UI */
-    .action-bubble-container {
-        align-self: center;
-        margin-top: 10px;
-        display: none;
-    }
-
-    .attendance-btn {
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: #fff;
-        border: none;
-        border-radius: 20px;
-        padding: 10px 25px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        transition: all 0.3s;
-    }
-
-    .attendance-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-    }
-
-    /* Latest Message Centered Style */
-    .latest-message-container {
-        width: 100%;
-        min-height: 60px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 10px 0 20px 0;
-        z-index: 10;
-        pointer-events: none;
-        /* Let text be selectable but pass clicks through if needed */
-    }
-
-    .latest-message-bubble {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: #fff;
-        padding: 15px 25px;
-        border-radius: 20px;
-        font-size: 1.1rem;
-        text-align: center;
-        max-width: 80%;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        animation: fadeIn 0.4s ease-out;
-        pointer-events: auto;
-    }
-
-    .latest-message-bubble.ai {
-        border-color: var(--accent-color);
-        box-shadow: 0 0 15px var(--accent-glow);
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Action Buttons Container Style */
-    .action-buttons-container {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 20px;
-        margin-top: auto;
-        /* Push to bottom near input */
-        z-index: 20;
-    }
+    /* ... (skipping unchanged styles) ... */
 </style>
+<link rel="stylesheet" href="/css/staff-mypage.css">
+<link rel="stylesheet" href="/css/staff-mypage-inline.css">
+
+<!-- Import Modules -->
+<script type="module">
+    import { contextManager, MODES } from '/assets/js/modules/context_manager.js?v=2';
+    import { STAFF_DASHBOARD_HTML } from '/assets/js/modules/dashboard_templates.js';
+    import { DashboardController } from '/assets/js/modules/dashboard_controller.js';
+
+    // Expose for inline usage
+    window.contextManager = contextManager;
+    window.MODES = MODES;
+    window.dashboardController = new DashboardController();
+</script>
+
+<script src="/assets/js/admin-sidebar.js"></script>
 
 <main id="main" class="admin-dashboard">
     @include('partials.admin-sidebar')
 
     <div id="start-overlay">
+        <div class="start-content">
+            <h1 class="logo-title">MISOGI</h1>
+            <p class="logo-subtitle">Misesapo Intelligent System<br>for Operational Guidance & Integration</p>
+            <div class="checking-status" id="checking-status" style="display: none; margin-top: 20px;">
+                <i class="fas fa-circle-notch fa-spin"></i>
+                <span>Status Verifying...</span>
+            </div>
+        </div>
         <div class="visualizer-container" style="cursor: default;">
             <div class="wave"></div>
             <div class="wave"></div>
@@ -778,19 +438,16 @@
             </div>
         </div>
 
+        <!-- Dashboard View (For non-admin modes) -->
+        <div id="dashboard-view" style="display: none; height: 100%; overflow: auto;"></div>
+
         <!-- Chat Content -->
         <div id="chat-container">
-            <div class="chat-history" id="chat-history">
-                <!-- Initial welcome will be injected by JS -->
-            </div>
+            <div class="chat-history" id="chat-history"></div>
 
-            <!-- New: Latest Message Display (Centered) -->
             <div id="latest-message-container" class="latest-message-container"></div>
-
-            <!-- New: Action Buttons Container (Centered) -->
             <div id="action-buttons-container" class="action-buttons-container"></div>
 
-            <!-- Login Bubble -->
             <div class="login-bubble-container" id="login-form">
                 <div class="login-input-card">
                     <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 5px;">ACCOUNT
@@ -802,6 +459,13 @@
             </div>
 
             <div class="chat-input-wrapper">
+                <button class="mode-switch-btn chat active" id="btn-chat" onclick="switchMode('chat')">
+                    <i class="fas fa-keyboard"></i>
+                </button>
+                <button class="mode-switch-btn voice" id="btn-voice" onclick="switchMode('voice')">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <div class="divider"></div>
                 <input type="file" id="image-upload" accept="image/*" style="display: none;"
                     onchange="handleImageSelect(this)">
                 <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
@@ -814,17 +478,11 @@
             </div>
         </div>
 
-        <!-- Mode Switcher -->
-        <div class="mode-switch-container" style="display: none;">
-            <button class="mode-btn" id="btn-voice-mode" onclick="switchMode('voice')">
-                <i class="fas fa-microphone"></i> 音声
-            </button>
-            <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
-                <i class="fas fa-comment-dots"></i> チャット
-            </button>
-            newBubble.dataset.role = role;
-            newBubble.innerHTML = text.replace(/\n/g, '<br>');
-            </content>
+        <!-- Mode Dock -->
+        <div class="mode-dock-container" id="mode-dock-container" style="display: none;">
+            <div class="mode-dock" id="mode-dock-items"></div>
+        </div>
+    </div>
 </main>
 
 <script>
@@ -832,14 +490,88 @@
     function handleImageSelect(input) {
         if (input.files && input.files[0]) {
             const file = input.files[0];
-            // For now, just show a message that image is selected.
-            // In a real app, we would upload via API or preview it.
             appendChatMessage('user', `[画像を選択しました: ${file.name}]<br>(※画像送信機能は準備中です)`);
-            input.value = ''; // Reset
+            input.value = '';
         }
     }
 
     const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+    // --- Context & Mode Logic ---
+
+    // Listen for mode changes to update UI
+    window.addEventListener('context-changed', (e) => {
+        const mode = e.detail;
+        console.log("Context Changed to:", mode.label);
+
+        // Update Dock Active State
+        document.querySelectorAll('.dock-icon').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === mode.id);
+        });
+
+        // Update Body Theme and Visualizer
+        document.body.className = `admin-dashboard ${mode.theme}`;
+
+        // Remove old mode classes from visualizer and add new one
+        const visualizer = document.querySelector('.visualizer-container');
+        if (visualizer) {
+            visualizer.classList.remove('mode-admin', 'mode-office', 'mode-sales', 'mode-operations');
+            visualizer.classList.add(`mode-${mode.id}`);
+        }
+
+        // --- DASHBOARD VIEW SWITCHING ---
+        const chatContainer = document.getElementById('chat-container');
+        const dashboardContainer = document.getElementById('dashboard-view');
+
+        if (mode.id === 'admin') {
+            // Admin Mode: Chat interface is primary
+            if (chatContainer) chatContainer.style.display = 'flex';
+            if (dashboardContainer) dashboardContainer.style.display = 'none';
+        } else {
+            // Staff/Office/Operations Mode: Dashboard is primary
+            if (chatContainer) chatContainer.style.display = 'none';
+            if (dashboardContainer) {
+                dashboardContainer.style.display = 'block';
+                if (!dashboardContainer.hasChildNodes()) {
+                    dashboardContainer.innerHTML = STAFF_DASHBOARD_HTML;
+                    // Init Dashboard Controller
+                    window.dashboardController.init();
+                }
+            }
+        }
+
+        // Update sidebar content (todo: SidebarManager)
+        if (typeof updateSidebarForMode === 'function') { // Check if function exists (loaded via script tag)
+            // updateSidebarForMode(mode); // Handled by event listener in admin-sidebar.js actually
+        }
+    });
+
+    function renderModeDock() {
+        const dockContainer = document.getElementById('mode-dock-container');
+        const dockItems = document.getElementById('mode-dock-items');
+
+        if (!dockContainer || !dockItems || !window.contextManager) return;
+
+        const modes = window.contextManager.getAvailableModes();
+        if (modes.length <= 1) {
+            dockContainer.style.display = 'none';
+            return;
+        }
+
+        dockItems.innerHTML = '';
+        modes.forEach(mode => {
+            const btn = document.createElement('button');
+            btn.className = `dock-icon ${window.contextManager.currentMode?.id === mode.id ? 'active' : ''}`;
+            btn.dataset.mode = mode.id;
+            btn.onclick = () => window.contextManager.switchMode(mode.id);
+            btn.innerHTML = `
+                <i class="${mode.icon}"></i>
+                <div class="tooltip">${mode.jp_label}</div>
+            `;
+            dockItems.appendChild(btn);
+        });
+    }
+
 
     async function startWorkflow() {
         startOverlay.classList.add('hidden');
@@ -861,6 +593,12 @@
                 // Should not happen if isAuth is true, but safety net
                 loginForm.style.display = 'flex';
                 return;
+            }
+
+            // Initialize Context Manager
+            if (window.contextManager) {
+                window.contextManager.init(user);
+                renderModeDock();
             }
 
             // Helper to get JST date string (YYYY-MM-DD)
@@ -901,7 +639,7 @@
 
                 if (isClockedIn) {
                     appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。既に出勤を確認しました。本日も業務をサポートいたします。`);
-                    handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }] });
+                    handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }, { type: 'show_mode_dock' }] });
                 } else {
                     appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
                     handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
@@ -980,8 +718,18 @@
 
             if (response.ok) {
                 appendChatMessage('ai', `${user.name || 'ユーザー'}様、出勤を記録しました。本日の業務を開始します。それでは、良い1日を！左側のメニューから各機能へアクセスできます。`);
-                handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }] });
+                handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }, { type: 'show_mode_dock' }] });
+
+                // Update Chat Button
                 if (btn) btn.innerHTML = '<i class="fas fa-check"></i> 出勤済み';
+
+                // Update Dashboard Button
+                const dashBtn = document.getElementById('dashboard-clock-in-btn');
+                if (dashBtn) {
+                    dashBtn.disabled = true;
+                    dashBtn.innerHTML = '<i class="fas fa-check"></i> 出勤済み';
+                    dashBtn.classList.add('checked-in');
+                }
             } else {
                 const err = await response.json();
                 throw new Error(err.message || 'API Error');
@@ -990,6 +738,9 @@
             console.error('Attendance Error:', err);
             appendChatMessage('ai', 'エラーが発生しました：' + err.message);
             if (btn) btn.disabled = false;
+            // Re-enable dashboard button if it was disabled
+            const dashBtn = document.getElementById('dashboard-clock-in-btn');
+            if (dashBtn) dashBtn.disabled = false;
         }
     }
 
@@ -1250,6 +1001,17 @@
                     }
                     if (chatContainer) chatContainer.classList.add('sidebar-active'); // Adjust padding if needed
                     break;
+                case 'show_mode_dock':
+                    const dockContainer = document.getElementById('mode-dock-container');
+                    if (dockContainer && window.contextManager && window.contextManager.getAvailableModes().length > 1) {
+                        dockContainer.style.display = 'flex';
+                        // Add slide up animation class if needed
+                        dockContainer.animate([
+                            { transform: 'translateX(-50%) translateY(20px)', opacity: 0 },
+                            { transform: 'translateX(-50%) translateY(0)', opacity: 1 }
+                        ], { duration: 500, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'forwards' });
+                    }
+                    break;
             }
         }
     }
@@ -1277,3 +1039,4 @@
         });
     }
 </script>
+<script src="/assets/js/admin-sidebar.js"></script>
