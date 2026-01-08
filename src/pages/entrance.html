@@ -373,9 +373,9 @@
 
 <!-- Import Modules -->
 <script type="module">
-    import { contextManager, MODES } from '/assets/js/modules/context_manager.js?v=2';
-    import { STAFF_DASHBOARD_HTML } from '/assets/js/modules/dashboard_templates.js';
-    import { DashboardController } from '/assets/js/modules/dashboard_controller.js';
+    import { contextManager, MODES } from '/js/modules/context_manager.js?v=2';
+    import { STAFF_DASHBOARD_HTML } from '/js/modules/dashboard_templates.js';
+    import { DashboardController } from '/js/modules/dashboard_controller.js';
 
     // Expose for inline usage
     window.contextManager = contextManager;
@@ -383,7 +383,7 @@
     window.dashboardController = new DashboardController();
 </script>
 
-<script src="/assets/js/admin-sidebar.js"></script>
+<script src="/js/admin-sidebar.js"></script>
 
 <main id="main" class="admin-dashboard">
     @include('partials.admin-sidebar')
@@ -1039,4 +1039,4 @@
         });
     }
 </script>
-<script src="/assets/js/admin-sidebar.js"></script>
+<script src="/js/admin-sidebar.js"></script>
