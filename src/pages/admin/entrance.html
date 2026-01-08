@@ -879,11 +879,19 @@
             }, 800);
         } else {
             const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
-            const today = new Date().toLocaleDateString('sv-SE');
+
+            // Explicitly use JST date to avoid timezone issues
+            const now = new Date();
+            const jstNow = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+            const y = jstNow.getFullYear();
+            const m = String(jstNow.getMonth() + 1).padStart(2, '0');
+            const d = String(jstNow.getDate()).padStart(2, '0');
+            const today = `${y}-${m}-${d}`;
+
             const staffId = user.id || user.sub;
 
-            // Show an initial status message only if we don't have immediate state
-            // console.log(`Checking attendance for ${staffId} on ${today}`);
+            // Debug log
+            console.log(`Checking status for ${staffId} on ${today} (JST)`);
 
             try {
                 // Check if already clocked in today
@@ -895,10 +903,12 @@
                 let records = [];
                 if (response.ok) {
                     const data = await response.json();
-                    records = Array.isArray(data) ? data : (data.items || []);
+                    // Fix: API returns { attendance: [...] } or { items: [...] }
+                    records = Array.isArray(data) ? data : (data.attendance || data.items || []);
+                    console.log('Attendance Check Result:', records);
+
                     // Check logic: Has clock_in AND (clock_out is null OR empty)
                     isClockedIn = records.some(r => r.clock_in && !r.clock_out);
-                    // console.log('Attendance records:', records, 'Is Clocked In:', isClockedIn);
                 } else {
                     console.error('Attendance check failed:', response.status);
                 }
