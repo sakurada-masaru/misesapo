@@ -67,6 +67,135 @@
         --accent-glow: rgba(59, 130, 246, 0.5);
     }
 
+    /* Job Type Colors */
+    .job-cleaning {
+        --accent-color: #10b981;
+        --accent-glow: rgba(16, 185, 129, 0.5);
+    }
+
+    .job-office {
+        --accent-color: #3b82f6;
+        --accent-glow: rgba(59, 130, 246, 0.5);
+    }
+
+    .job-sales {
+        --accent-color: #f59e0b;
+        --accent-glow: rgba(245, 158, 11, 0.5);
+    }
+
+    .job-hr {
+        --accent-color: #8b5cf6;
+        --accent-glow: rgba(139, 92, 246, 0.5);
+    }
+
+    .job-accounting {
+        --accent-color: #eab308;
+        --accent-glow: rgba(234, 179, 8, 0.5);
+    }
+
+    .job-admin {
+        --accent-color: #ffffff;
+        --accent-glow: rgba(255, 255, 255, 0.5);
+    }
+
+    .job-dev {
+        --accent-color: #ef4444;
+        --accent-glow: rgba(239, 68, 68, 0.5);
+    }
+
+    /* Job Change Animation Overlay */
+    #job-change-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #000;
+        z-index: 9999;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+    }
+
+    #job-change-label {
+        position: absolute;
+        font-size: 2rem;
+        font-weight: 200;
+        letter-spacing: 8px;
+        color: #fff;
+        z-index: 10001;
+        opacity: 0;
+        text-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    /* CRT Blackout Effect */
+    .crt-collapse {
+        animation: crtCollapse 0.5s ease-in forwards;
+    }
+
+    @keyframes crtCollapse {
+        0% {
+            transform: scaleY(1) scaleX(1);
+            filter: brightness(1);
+        }
+
+        50% {
+            transform: scaleY(0.01) scaleX(1);
+            filter: brightness(2);
+        }
+
+        80% {
+            transform: scaleY(0.01) scaleX(0.01);
+            filter: brightness(3);
+        }
+
+        100% {
+            transform: scaleY(0) scaleX(0);
+            filter: brightness(0);
+            opacity: 0;
+        }
+    }
+
+    /* Rapid Ripple */
+    .rapid-ripple {
+        position: absolute;
+        border: 3px solid var(--accent-color);
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: rapidRippleExpand 0.6s ease-out forwards;
+        pointer-events: none;
+    }
+
+    @keyframes rapidRippleExpand {
+        0% {
+            width: 50px;
+            height: 50px;
+            opacity: 1;
+        }
+
+        100% {
+            width: 200vw;
+            height: 200vw;
+            opacity: 0;
+        }
+    }
+
+    /* Blink Animation */
+    @keyframes labelBlink {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.2;
+        }
+    }
+
     .initial-glow {
         color: var(--accent-color);
         font-weight: 700;
@@ -798,6 +927,11 @@
 
 <main id="main" class="admin-dashboard">
     @include('partials.admin-sidebar')
+
+    <!-- Job Change Animation Overlay -->
+    <div id="job-change-overlay">
+        <div id="job-change-label">CHANGE JOB...</div>
+    </div>
 
     <div id="start-overlay" style="background: radial-gradient(circle at center, #0a1128 0%, #000 100%);">
         <div class="logo-section"
@@ -1576,20 +1710,85 @@
     function selectJobType(jobKey) {
         currentJobType = jobKey;
         const job = JOB_TYPES[jobKey];
-
-        // Save to localStorage for persistence
         localStorage.setItem('current_job_type', jobKey);
 
-        // Show confirmation message
-        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
-        appendChatMessage('ai', `${job.label}モードを開始します。左側のメニューから各機能へアクセスできます。`);
-
-        // Filter and show sidebar
-        filterSidebar(jobKey);
-
-        // Clear action buttons
+        // Clear action buttons immediately
         const actionContainer = document.getElementById('action-buttons-container');
         if (actionContainer) actionContainer.innerHTML = '';
+
+        // Get overlay elements
+        const overlay = document.getElementById('job-change-overlay');
+        const label = document.getElementById('job-change-label');
+        const mainContent = document.querySelector('.main-content');
+
+        // Phase 1: Show label with fade in (500ms delay)
+        setTimeout(() => {
+            label.style.opacity = '1';
+            label.style.transition = 'opacity 0.5s';
+        }, 500);
+
+        // Phase 2: Blink label 3 times (1500ms - 3000ms)
+        setTimeout(() => {
+            label.style.animation = 'labelBlink 0.5s ease-in-out 3';
+        }, 1500);
+
+        // Phase 3: Rapid ripples (3000ms - 4000ms)
+        setTimeout(() => {
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => {
+                    const ripple = document.createElement('div');
+                    ripple.className = 'rapid-ripple';
+                    ripple.style.borderColor = 'var(--accent-color)';
+                    document.body.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 600);
+                }, i * 100);
+            }
+        }, 3000);
+
+        // Phase 4: CRT Blackout (4000ms)
+        setTimeout(() => {
+            label.style.opacity = '0';
+            overlay.style.display = 'flex';
+            overlay.style.opacity = '1';
+
+            if (mainContent) {
+                mainContent.classList.add('crt-collapse');
+            }
+        }, 4000);
+
+        // Phase 5: Apply new color and fade in (4500ms)
+        setTimeout(() => {
+            // Remove old job classes
+            document.body.classList.remove('job-cleaning', 'job-office', 'job-sales', 'job-hr', 'job-accounting', 'job-admin', 'job-dev');
+            // Add new job class
+            document.body.classList.add(`job-${jobKey}`);
+
+            // Reset main content
+            if (mainContent) {
+                mainContent.classList.remove('crt-collapse');
+                mainContent.style.transform = 'none';
+                mainContent.style.opacity = '0';
+            }
+
+            // Hide overlay
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 300);
+
+            // Fade in main content
+            setTimeout(() => {
+                if (mainContent) {
+                    mainContent.style.transition = 'opacity 0.8s ease-out';
+                    mainContent.style.opacity = '1';
+                }
+
+                // Show confirmation message
+                const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+                appendChatMessage('ai', `${job.label}モードを開始します。左側のメニューから各機能へアクセスできます。`);
+
+                // Filter and show sidebar
+                filterSidebar(jobKey);
+            }, 100);
+        }, 4500);
     }
 
     function filterSidebar(jobKey) {
