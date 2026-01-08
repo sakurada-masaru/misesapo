@@ -1041,7 +1041,12 @@
                 if (statusTextEl) statusTextEl.textContent = "PROCESSING...";
                 if (coreEl) coreEl.classList.remove('active');
                 if (circleTextEl) circleTextEl.classList.remove('active');
-                setTimeout(() => { if (statusTextEl) statusTextEl.textContent = "READY TO ASSIST"; }, 1500);
+
+                // Trigger Actual Workflow
+                setTimeout(() => {
+                    if (statusTextEl) statusTextEl.textContent = "READY TO ASSIST";
+                    startWorkflow();
+                }, 1000);
             }
         });
     }
