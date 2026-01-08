@@ -13,9 +13,10 @@
         --color-glass-border: rgba(255, 255, 255, 0.1);
         --color-text-main: rgba(255, 255, 255, 0.95);
         --color-text-sub: rgba(147, 197, 253, 0.6);
+
+        /* Dynamic Theme Colors */
         --theme-color: #3b82f6;
         --theme-glow: rgba(59, 130, 246, 0.5);
-        --theme-accent: #60a5fa;
     }
 
     body,
@@ -30,7 +31,7 @@
         overflow: hidden !important;
     }
 
-    /* Animated Cyber Grid Background */
+    /* Subtle Background Grid */
     body::before {
         content: '';
         position: fixed;
@@ -41,20 +42,9 @@
         background-image:
             linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
             linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
-        background-size: 60px 60px;
+        background-size: 50px 50px;
         z-index: 0;
         pointer-events: none;
-        animation: gridMove 20s linear infinite;
-    }
-
-    @keyframes gridMove {
-        from {
-            background-position: 0 0;
-        }
-
-        to {
-            background-position: 60px 60px;
-        }
     }
 
     #default-header-wrapper,
@@ -80,7 +70,6 @@
         justify-content: center;
     }
 
-    /* Ambient Effects */
     .ambient-glow {
         position: absolute;
         width: 150vw;
@@ -107,9 +96,9 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 1000;
-        /* Behind Chat Interface */
-        transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 10000;
+        /* Higher than start-overlay initial state */
+        transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
         pointer-events: none;
     }
 
@@ -118,10 +107,11 @@
         height: 70px;
         border-radius: 50%;
         background: #fff;
-        box-shadow: 0 0 30px #fff, 0 0 60px var(--theme-color), 0 0 120px var(--theme-color);
+        box-shadow: 0 0 40px var(--theme-color), 0 0 80px var(--theme-color);
         position: relative;
         z-index: 20;
         animation: breathe 4s infinite ease-in-out;
+        transition: all 0.5s ease;
     }
 
     .wave {
@@ -135,15 +125,15 @@
     }
 
     .wave:nth-child(1) {
-        animation: ripple 4s infinite 0s;
+        animation: ripple 3s infinite 0s linear;
     }
 
     .wave:nth-child(2) {
-        animation: ripple 4s infinite 1.3s;
+        animation: ripple 3s infinite 1s linear;
     }
 
     .wave:nth-child(3) {
-        animation: ripple 4s infinite 2.6s;
+        animation: ripple 3s infinite 2s linear;
     }
 
     @keyframes breathe {
@@ -155,8 +145,8 @@
         }
 
         50% {
-            transform: scale(1.15);
-            box-shadow: 0 0 90px var(--theme-color);
+            transform: scale(1.1);
+            box-shadow: 0 0 80px var(--theme-color);
         }
     }
 
@@ -164,25 +154,24 @@
         0% {
             width: 70px;
             height: 70px;
-            opacity: 0.6;
+            opacity: 0.8;
             border-width: 3px;
         }
 
         100% {
-            width: 500px;
-            height: 500px;
+            width: 450px;
+            height: 450px;
             opacity: 0;
             border-width: 0px;
         }
     }
 
-    /* Rotating Text Ring */
     .text-ring {
         position: absolute;
         width: 320px;
         height: 320px;
-        animation: rotateRing 60s linear infinite;
-        opacity: 0.4;
+        animation: rotate 40s linear infinite;
+        opacity: 0.3;
     }
 
     .text-ring text {
@@ -193,7 +182,7 @@
         text-transform: uppercase;
     }
 
-    @keyframes rotateRing {
+    @keyframes rotate {
         from {
             transform: rotate(0deg);
         }
@@ -204,7 +193,7 @@
     }
 
     /* =========================================
-       Start Overlay
+       Start Overlay & Login
        ========================================= */
     #start-overlay {
         position: fixed;
@@ -213,91 +202,83 @@
         width: 100%;
         height: 100%;
         background: radial-gradient(circle at center, #0a1128 0%, #000 100%);
-        z-index: 5000;
+        z-index: 9999;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        transition: all 1s ease;
+        transition: all 0.8s ease;
     }
 
     #start-overlay.hidden {
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
-        transform: scale(1.1);
     }
 
     .logo-section {
-        margin-bottom: 340px;
+        margin-bottom: 300px;
         text-align: center;
         opacity: 0;
-        animation: fadeUp 1.5s ease 0.5s forwards;
+        animation: fadeUp 1s ease 0.5s forwards;
     }
 
     .logo-main {
-        font-size: 4.5rem;
+        font-size: 4rem;
         font-weight: 200;
-        letter-spacing: 20px;
+        letter-spacing: 16px;
         color: #fff;
-        margin-bottom: 15px;
-        display: inline-block;
+        margin-bottom: 10px;
     }
 
     .logo-main .initial {
         display: inline-block;
         color: var(--theme-color);
         font-weight: 700;
-        text-shadow: 0 0 30px var(--theme-color);
-        transform: translateY(-2px);
+        text-shadow: 0 0 20px var(--theme-color);
     }
 
     .logo-sub {
-        font-size: 1rem;
+        font-size: 0.9rem;
         color: var(--color-text-sub);
-        letter-spacing: 8px;
+        letter-spacing: 6px;
         font-weight: 300;
-        line-height: 2;
     }
 
     .start-btn {
         position: absolute;
-        bottom: 15%;
-        width: 100px;
-        height: 100px;
+        bottom: 18%;
+        width: 90px;
+        height: 90px;
         border-radius: 50%;
         background: rgba(59, 130, 246, 0.1);
-        border: 1px solid rgba(59, 130, 246, 0.4);
+        border: 1px solid rgba(59, 130, 246, 0.3);
         color: #fff;
-        font-size: 32px;
+        font-size: 28px;
         cursor: pointer;
         display: flex;
         justify-content: center;
         align-items: center;
-        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        transition: all 0.5s ease;
         backdrop-filter: blur(15px);
-        box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-        opacity: 0;
-        animation: fadeIn 1s ease 1s forwards;
     }
 
     .start-btn:hover {
-        transform: scale(1.2);
-        background: rgba(59, 130, 246, 0.2);
-        box-shadow: 0 0 70px var(--theme-glow);
+        transform: scale(1.1);
+        box-shadow: 0 0 50px var(--theme-glow);
     }
 
     .start-label {
         position: absolute;
-        bottom: -40px;
-        font-size: 12px;
-        letter-spacing: 4px;
-        opacity: 0.8;
-        color: var(--theme-accent);
+        bottom: -35px;
+        font-size: 11px;
+        letter-spacing: 3px;
+        color: #fff;
+        opacity: 0.6;
     }
 
     /* =========================================
-       Chat Interface & Split Layout
+       Chat Interface - Premium Split Layout
        ========================================= */
     #chat-interface {
         position: absolute;
@@ -305,13 +286,13 @@
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: 2000;
+        z-index: 100;
         pointer-events: none;
         display: flex;
         flex-direction: column;
         opacity: 0;
         transform: translateY(20px);
-        transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     #chat-interface.active {
@@ -320,28 +301,13 @@
         transform: translateY(0);
     }
 
-    .chat-history-pane {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 28%;
-        height: 100%;
-        padding: 60px 30px 140px 30px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        z-index: 100;
-        background: linear-gradient(to left, rgba(0, 0, 0, 0.85), transparent);
-        mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
-    }
-
+    /* Centered "Latest" Area */
     .latest-message-area {
         position: absolute;
         top: 45%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 55%;
+        width: 60%;
         text-align: center;
         z-index: 110;
         display: flex;
@@ -351,71 +317,88 @@
     }
 
     .latest-message-area .msg-bubble {
+        max-width: 100%;
         font-size: 1.8rem;
         font-weight: 300;
         line-height: 1.6;
         color: #fff;
-        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
         font-family: var(--font-jp);
     }
 
-    /* Selection Cards (The Implementation Plan) */
-    .mode-selection-grid {
-        display: flex;
-        gap: 25px;
-        margin-top: 40px;
-        justify-content: center;
-        width: 100%;
+    /* Action Buttons in Center */
+    .action-btn {
+        background: var(--theme-color);
+        color: #fff;
+        border: none;
+        padding: 16px 40px;
+        border-radius: 14px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: 0.3s;
+        letter-spacing: 2px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px var(--theme-glow);
     }
 
-    .mode-card {
-        width: 160px;
-        height: 200px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
+    .action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 50px var(--theme-glow);
+        opacity: 0.9;
+    }
+
+    /* History Pane on the Right */
+    .chat-history-pane {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 25%;
+        height: 100%;
+        padding: 50px 25px 140px 25px;
+        overflow-y: auto;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-        cursor: pointer;
-        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-        backdrop-filter: blur(20px);
+        gap: 20px;
+        z-index: 100;
+        background: linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent);
+        mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
     }
 
-    .mode-card i {
-        font-size: 2.5rem;
-        color: rgba(255, 255, 255, 0.4);
-        transition: 0.3s;
+    .message-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        opacity: 0;
+        animation: slideInMsg 0.4s forwards;
     }
 
-    .mode-card span {
+    .message-row.ai {
+        align-items: flex-start;
+    }
+
+    .message-row.user {
+        align-items: flex-end;
+    }
+
+    .history-bubble {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px 18px;
+        border-radius: 12px;
         font-size: 0.9rem;
-        letter-spacing: 2px;
-        color: rgba(255, 255, 255, 0.6);
-    }
-
-    .mode-card:hover {
-        transform: translateY(-15px) scale(1.05);
-        background: rgba(59, 130, 246, 0.1);
-        border-color: var(--theme-color);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px var(--theme-glow);
-    }
-
-    .mode-card:hover i {
-        color: var(--theme-color);
-        transform: scale(1.2);
-    }
-
-    .mode-card:hover span {
-        color: #fff;
+        font-family: var(--font-jp);
+        color: rgba(255, 255, 255, 0.85);
+        max-width: 90%;
     }
 
     /* Input Container */
     .input-container {
         position: absolute;
-        bottom: 140px;
+        bottom: 130px;
         left: 50%;
         transform: translateX(-50%);
         width: 600px;
@@ -430,8 +413,8 @@
         padding: 10px 10px 10px 30px;
         display: flex;
         align-items: center;
-        backdrop-filter: blur(25px);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(30px);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     }
 
     .input-field {
@@ -455,98 +438,69 @@
         justify-content: center;
         align-items: center;
         cursor: pointer;
-        transition: 0.3s;
     }
 
-    /* Message Rows */
-    .message-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 15px;
-        opacity: 0;
-        animation: slideInMsg 0.5s forwards;
-    }
-
-    .message-row.user {
-        justify-content: flex-end;
-    }
-
-    .msg-bubble.history {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 12px 18px;
-        border-radius: 12px;
-        font-size: 0.9rem;
-        font-family: var(--font-jp);
-    }
-
-    /* Sidebar/Dashboard */
+    /* Dashboard & Dock */
     #dashboard-view {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: 1500;
+        z-index: 50;
         opacity: 0;
         pointer-events: none;
-        transform: scale(0.98);
-        transition: all 1s ease;
+        transition: all 0.8s ease;
+        overflow-y: auto;
         padding: 30px;
         box-sizing: border-box;
-        overflow-y: auto;
     }
 
     #dashboard-view.active {
         opacity: 1;
         pointer-events: auto;
-        transform: scale(1);
     }
 
-    /* Dock */
     .mode-dock-container {
         position: absolute;
-        bottom: 35px;
+        bottom: 30px;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 3000;
+        z-index: 1000;
     }
 
     .mode-dock {
         background: rgba(20, 20, 30, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(30px);
-        border-radius: 24px;
-        padding: 12px 18px;
+        backdrop-filter: blur(25px);
+        border-radius: 20px;
+        padding: 10px 15px;
         display: flex;
         gap: 15px;
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .dock-icon {
         width: 52px;
         height: 52px;
-        border-radius: 14px;
+        border-radius: 12px;
         border: none;
         background: transparent;
         color: rgba(255, 255, 255, 0.4);
         font-size: 1.5rem;
         cursor: pointer;
-        transition: 0.4s;
-        position: relative;
+        transition: 0.3s;
     }
 
     .dock-icon:hover {
-        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-5px);
         color: #fff;
-        transform: translateY(-10px);
     }
 
     .dock-icon.active {
         background: var(--theme-color);
         color: #fff;
-        box-shadow: 0 8px 25px var(--theme-glow);
+        box-shadow: 0 8px 20px var(--theme-glow);
     }
 
     @keyframes fadeUp {
@@ -558,16 +512,6 @@
         to {
             opacity: 1;
             transform: translateY(0);
-        }
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
         }
     }
 
@@ -585,51 +529,37 @@
 
     /* Login UI */
     .login-card {
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.6);
         border: 1px solid var(--theme-color);
         padding: 40px;
         border-radius: 24px;
         width: 340px;
-        backdrop-filter: blur(30px);
+        backdrop-filter: blur(25px);
         display: flex;
         flex-direction: column;
         gap: 20px;
-        box-shadow: 0 0 40px var(--theme-glow);
     }
 
     .login-input {
         background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         padding: 15px;
         border-radius: 12px;
         color: #fff;
         outline: none;
         font-size: 1rem;
     }
-
-    .login-btn {
-        background: var(--theme-color);
-        color: #fff;
-        border: none;
-        padding: 15px;
-        border-radius: 12px;
-        cursor: pointer;
-        font-weight: 600;
-        letter-spacing: 1px;
-    }
 </style>
 
 <main id="main">
     <div class="ambient-glow"></div>
 
-    <!-- Visualizer Core -->
     <div class="visualizer-container" id="visualizer">
         <div class="text-ring">
             <svg viewBox="0 0 200 200" width="100%" height="100%">
                 <path id="circlePath" d="M 100, 100 m -85, 0 a 85,85 0 1,1 170,0 a 85,85 0 1,1 -170,0" fill="none" />
                 <text>
-                    <textPath href="#circlePath">MISOGI INTELLIGENT SYSTEM • OPERATIONAL GUIDANCE • CORE PROTOCOL •
-                    </textPath>
+                    <textPath href="#circlePath">MISOGI INTELLIGENT SYSTEM • OPERATIONAL GUIDANCE • </textPath>
                 </text>
             </svg>
         </div>
@@ -639,20 +569,17 @@
         <div class="core-circle"></div>
     </div>
 
-    <!-- Start Overlay -->
     <div id="start-overlay">
         <div class="logo-section">
             <div class="logo-main"><span class="initial">M</span>ISOGI</div>
-            <div class="logo-sub">INTELLIGENT SYSTEM<br><span
-                    style="opacity:0.5; font-size: 0.8rem; letter-spacing: 10px;">STANDBY...</span></div>
+            <div class="logo-sub">INTELLIGENT SYSTEM<br>STANDBY</div>
         </div>
-        <button class="start-btn" onclick="app.activate()" id="start-btn">
+        <button class="start-btn" onclick="app.start()" id="start-btn">
             <i class="fas fa-power-off"></i>
             <span class="start-label">CONNECT</span>
         </button>
     </div>
 
-    <!-- Chat Interface -->
     <div id="chat-interface">
         <div class="latest-message-area" id="latest-area"></div>
         <div class="chat-history-pane" id="chat-history"></div>
@@ -664,10 +591,7 @@
         </div>
     </div>
 
-    <!-- Dashboard -->
     <div id="dashboard-view"></div>
-
-    <!-- Mode Dock -->
     <div class="mode-dock-container" id="mode-dock-container" style="display: none;">
         <div class="mode-dock" id="mode-dock-items"></div>
     </div>
@@ -704,41 +628,44 @@
             input: document.getElementById('user-input')
         },
 
-        activate: async function () {
+        start: async function () {
             this.ui.overlay.classList.add('hidden');
+            this.ui.chat.classList.add('active');
             await this.checkAuth();
         },
 
         checkAuth: async function () {
             this.renderLatest('ai', 'SYSTEM INITIALIZING...');
-
             if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
                 try {
                     const user = await window.CognitoAuth.getCurrentUser();
                     this.onLoginSuccess(user);
-                } catch (e) {
-                    this.showLoginForm();
-                }
+                } catch (e) { this.showLoginForm(); }
             } else {
-                setTimeout(() => this.showLoginForm(), 1200);
+                setTimeout(() => {
+                    this.renderLatest('ai', 'ACCESS RESTRICTED.<br>PLEASE LOGIN TO PROCEED.');
+                    this.showLoginForm();
+                }, 1000);
             }
         },
 
         onLoginSuccess: function (user) {
-            if (window.contextManager) window.contextManager.init(user);
+            if (window.contextManager) {
+                window.contextManager.init(user);
+                this.renderDock();
+                this.ui.dock.style.display = 'flex';
+            }
             this.renderLatest('ai', `ACCESS GRANTED.<br>WELCOME BACK, ${user.name || user.username}.`);
-            this.ui.chat.classList.add('active');
             this.checkAttendance();
         },
 
         showLoginForm: function () {
-            this.ui.chat.classList.add('active');
             this.ui.latest.innerHTML = `
             <div class="login-card">
-                <div style="color:var(--theme-color); font-size:0.9rem; letter-spacing:2px; text-align:center;">AUTHENTICATION REQUIRED</div>
+                <div style="color:var(--theme-color); font-size:1rem; letter-spacing:2px; text-align:center; font-weight:600;">SYSTEM AUTHENTICATION</div>
                 <input type="email" id="l-email" class="login-input" placeholder="EMAIL">
                 <input type="password" id="l-pass" class="login-input" placeholder="PASSWORD">
-                <button class="login-btn" onclick="app.performLogin()">VERIFY IDENTITY</button>
+                <button class="action-btn" onclick="app.performLogin()">VERIFY IDENTITY</button>
             </div>
         `;
         },
@@ -748,21 +675,19 @@
             const p = document.getElementById('l-pass').value;
             if (!e || !p) return;
             this.renderLatest('ai', 'VERIFYING...');
-            try {
-                const res = await window.CognitoAuth.login(e, p);
-                if (res.success) window.location.reload();
-                else {
-                    this.renderLatest('ai', 'AUTH FAILED.');
-                    setTimeout(() => this.showLoginForm(), 2000);
-                }
-            } catch (err) { this.renderLatest('ai', 'ERROR: ' + err.message); }
+            const res = await window.CognitoAuth.login(e, p);
+            if (res.success) window.location.reload();
+            else {
+                this.renderLatest('ai', 'AUTH FAILED.');
+                setTimeout(() => this.showLoginForm(), 2000);
+            }
         },
 
         checkAttendance: function () {
             setTimeout(() => {
                 this.ui.latest.innerHTML = `
                 <div class="msg-bubble">本日の業務を開始しますか？</div>
-                <button class="login-btn" style="margin-top:20px; width:240px;" onclick="app.doClockIn()">
+                <button class="action-btn" style="margin-top:30px;" onclick="app.doClockIn()">
                     <i class="fas fa-clock"></i> 出勤を記録する
                 </button>
             `;
@@ -772,32 +697,10 @@
 
         doClockIn: async function () {
             this.renderLatest('ai', '記録中...');
-            try {
-                // Mocking successful clock-in for speed
-                this.showModeSelection();
-            } catch (e) { this.renderLatest('ai', 'ERROR'); }
-        },
-
-        showModeSelection: function () {
-            const modes = window.contextManager.getAvailableModes();
-            let html = `<div class="msg-bubble">業務モードを選択してください</div>
-                    <div class="mode-selection-grid">`;
-
-            modes.forEach(m => {
-                html += `
-                <div class="mode-card" onclick="app.selectMode('${m.id}')">
-                    <i class="${m.icon}"></i>
-                    <span>${m.jp_label}</span>
-                </div>
-            `;
-            });
-            html += `</div>`;
-            this.ui.latest.innerHTML = html;
-            this.addToHistory('ai', '業務モードの選択待ち。');
-        },
-
-        selectMode: function (modeId) {
-            window.contextManager.switchMode(modeId);
+            // Mocking behavior for speed as requested in previous favorite flow
+            setTimeout(() => {
+                this.renderLatest('ai', '出勤を記録しました。<br>業務を開始してください。');
+            }, 800);
         },
 
         renderLatest: function (role, content) {
@@ -806,10 +709,10 @@
         },
 
         addToHistory: function (role, content) {
-            const d = document.createElement('div');
-            d.className = `message-row ${role}`;
-            d.innerHTML = `<div class="msg-bubble history">${content}</div>`;
-            this.ui.history.appendChild(d);
+            const row = document.createElement('div');
+            row.className = `message-row ${role}`;
+            row.innerHTML = `<div class="history-bubble">${content}</div>`;
+            this.ui.history.appendChild(row);
             this.ui.history.scrollTop = this.ui.history.scrollHeight;
         },
 
@@ -818,19 +721,19 @@
             if (!t) return;
             this.renderLatest('user', t);
             this.ui.input.value = '';
-            setTimeout(() => this.renderLatest('ai', '現在、特定の業務モード内でのみ指示を受け付けています。'), 800);
+            setTimeout(() => this.renderLatest('ai', '了解いたしました。指示を確認します。'), 800);
         },
 
         renderDock: function () {
             const modes = window.contextManager.getAvailableModes();
             this.ui.dockItems.innerHTML = '';
             modes.forEach(m => {
-                const b = document.createElement('button');
-                b.className = 'dock-icon';
-                b.dataset.mode = m.id;
-                b.innerHTML = `<i class="${m.icon}"></i>`;
-                b.onclick = () => window.contextManager.switchMode(m.id);
-                this.ui.dockItems.appendChild(b);
+                const btn = document.createElement('button');
+                btn.className = 'dock-icon';
+                btn.dataset.mode = m.id;
+                btn.innerHTML = `<i class="${m.icon}"></i>`;
+                btn.onclick = () => window.contextManager.switchMode(m.id);
+                this.ui.dockItems.appendChild(btn);
             });
         }
     };
@@ -842,8 +745,6 @@
         document.documentElement.style.setProperty('--theme-color', c);
         document.documentElement.style.setProperty('--theme-glow', `${c}66`);
 
-        if (!app.ui.dockItems.innerHTML) app.renderDock();
-        app.ui.dock.style.display = 'flex';
         document.querySelectorAll('.dock-icon').forEach(i => i.classList.toggle('active', i.dataset.mode === m.id));
 
         if (m.id === 'admin') {
@@ -858,7 +759,7 @@
                 app.ui.dashboard.innerHTML = window.STAFF_DASHBOARD_HTML;
                 if (window.dashboardController) window.dashboardController.init();
             }
-            app.ui.visualizer.style.opacity = '0.15';
+            app.ui.visualizer.style.opacity = '0.1';
             app.ui.visualizer.style.transform = 'translate(-50%, -50%) scale(0.6)';
         }
     });
