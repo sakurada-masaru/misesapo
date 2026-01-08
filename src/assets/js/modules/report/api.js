@@ -47,6 +47,7 @@ export class ReportApiService {
                     };
 
                     console.log(`[API] Uploading compressed image (${(base64Content.length / 1024).toFixed(1)} KB)`);
+                    console.log('[API] Payload keys:', Object.keys(payload));
 
                     const headers = await this._getAuthHeader();
                     const response = await fetch(`${REPORT_API}/staff/report-images`, {
