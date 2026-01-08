@@ -792,6 +792,7 @@ INVENTORY_TRANSACTIONS_TABLE = dynamodb.Table('inventory-transactions')
 DAILY_REPORTS_TABLE = dynamodb.Table('daily-reports')
 TODOS_TABLE = dynamodb.Table('todos')
 REIMBURSEMENTS_TABLE = dynamodb.Table('misesapo-reimbursements')
+REPORT_IMAGES_TABLE = dynamodb.Table('report-images')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -826,13 +827,20 @@ WIKI_KEY = 'wiki/wiki_entries.json'
 
 def resolve_cors_origin(event_headers: dict) -> str:
     origin = event_headers.get("origin") or event_headers.get("Origin") or ""
-    if not origin:
-        return ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "*"
     
-    # * が許可されている、あるいは特定のオリジンが許可リストにある場合はそのオリジンを返す
-    if "*" in ALLOWED_ORIGINS or origin in ALLOWED_ORIGINS:
+    # ALLOWED_ORIGINS が空の場合はデフォルトで * を許可
+    if not ALLOWED_ORIGINS:
+        return origin if origin else "*"
+        
+    # * が許可されている場合はオリジンを返す（クレデンシャルがfalseなので安全）
+    if "*" in ALLOWED_ORIGINS:
+        return origin if origin else "*"
+        
+    # 特定のオリジンが許可リストにある場合
+    if origin in ALLOWED_ORIGINS:
         return origin
     
+    # デフォルトのオリジンを返す
     return ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "*"
 
 def lambda_handler(event, context):
@@ -2406,17 +2414,26 @@ def upload_report_image(event, headers):
     レポート用画像をアップロード（清掃員用API）
     
     Request Body:
-        - image: Base64エンコードされた画像
-        - category: 'before' または 'after'
+        - image / image_data: Base64エンコードされた画像
+        - category: 'before', 'after', 'stock', 'extra'
         - cleaning_date: 清掃日 (YYYY-MM-DD形式)
         - folder_name: フォルダ名（オプション）
         - image_hash: 画像のハッシュ値（オプション）
     """
     try:
-        body = json.loads(event.get('body', '{}'))
+        # リクエストボディを安全に取得（Base64エンコード対策）
+        if event.get('isBase64Encoded'):
+            body_raw = base64.b64decode(event['body'])
+        else:
+            body_raw = event.get('body', '{}')
+            
+        if isinstance(body_raw, bytes):
+            body_raw = body_raw.decode('utf-8')
+            
+        body = json.loads(body_raw)
         
-        image_data = body.get('image')
-        category = body.get('category')
+        image_data = body.get('image') or body.get('image_data')
+        category = body.get('category') or 'extra'
         cleaning_date = body.get('cleaning_date')
         staff_id = body.get('staff_id', 'unknown')
         folder_name = body.get('folder_name')  # フォルダ名（オプション）
@@ -2430,11 +2447,11 @@ def upload_report_image(event, headers):
                 'body': json.dumps({'error': '画像データが必要です'}, ensure_ascii=False)
             }
         
-        if category not in ['before', 'after']:
+        if category not in ['before', 'after', 'stock', 'extra']:
             return {
                 'statusCode': 400,
                 'headers': headers,
-                'body': json.dumps({'error': 'categoryは"before"または"after"を指定してください'}, ensure_ascii=False)
+                'body': json.dumps({'error': 'categoryは"before", "after", "stock", "extra"を指定してください'}, ensure_ascii=False)
             }
         
         if not cleaning_date:

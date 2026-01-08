@@ -512,11 +512,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const brandInput = document.getElementById('report-brand-search');
 
                 if (storeInput) storeInput.value = schedule.store.name || '';
-                // Simple attempt to set brand name if available, often loaded separately
                 if (brandInput && schedule.store.brand) brandInput.value = schedule.store.brand.name || '';
             }
+
+            // 4. Update the new "Report Information" card fields
+            const infoClient = document.getElementById('report-info-client');
+            const infoBrand = document.getElementById('report-info-brand');
+            const infoStore = document.getElementById('report-info-store');
+            const infoDate = document.getElementById('report-info-date');
+
+            if (infoClient) infoClient.value = schedule.client_name || '';
+            if (infoBrand) infoBrand.value = (schedule.store && schedule.store.brand) ? (schedule.store.brand.name || '') : (schedule.brand_name || '');
+            if (infoStore) infoStore.value = schedule.store_name || (schedule.store ? schedule.store.name : '') || '';
+            if (infoDate) infoDate.value = schedule.date || schedule.scheduled_date || '';
         }
     }
+
+    // --- Sync Info Fields ---
+    const syncFields = (id1, id2) => {
+        const el1 = document.getElementById(id1);
+        const el2 = document.getElementById(id2);
+        if (el1 && el2) {
+            el1.addEventListener('input', () => { el2.value = el1.value; });
+            el2.addEventListener('input', () => { el1.value = el2.value; });
+        }
+    };
+    syncFields('report-brand-search', 'report-info-brand');
+    syncFields('report-store-search', 'report-info-store');
+    syncFields('report-date', 'report-info-date');
 
     // Bind Change Event for Schedule Select
     const scheduleSelectEl = document.getElementById('report-schedule-select');

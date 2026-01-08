@@ -105,7 +105,10 @@ export class SubmitManager {
         // Assuming the backend stores 'sections' field as JSON or similar.
 
         return {
-            date: dateInput ? dateInput.value : new Date().toISOString().split('T')[0],
+            date: (document.getElementById('report-info-date')?.value) || (dateInput ? dateInput.value : new Date().toISOString().split('T')[0]),
+            client_name: document.getElementById('report-info-client')?.value,
+            brand_name: document.getElementById('report-info-brand')?.value,
+            store_name: document.getElementById('report-info-store')?.value,
             store_id: storeId,
             schedule_id: scheduleId,
             status: 'pending', // Default status
