@@ -175,6 +175,14 @@ export class ReportApiService {
         } catch (e) { return []; }
     }
 
+    async fetchClients() {
+        try {
+            const headers = await this._getAuthHeader();
+            const response = await fetch(`${API_BASE}/clients`, { headers });
+            return response.ok ? await response.json() : [];
+        } catch (e) { return []; }
+    }
+
     async fetchReport(reportId) {
         try {
             const headers = await this._getAuthHeader();

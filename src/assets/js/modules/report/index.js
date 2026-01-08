@@ -549,8 +549,131 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Start loading
-    loadSchedules();
+    // --- Filter functionality for Report Info Fields ---
+    async function setupInfoFilters() {
+        const clientInput = document.getElementById('report-info-client');
+        const brandInput = document.getElementById('report-info-brand');
+        const storeInput = document.getElementById('report-info-store');
 
-    console.log('[Report Module] Ready v2', { stateManager, apiService, tabManager, sectionManager, previewGenerator });
+        const clientSuggestions = document.getElementById('report-info-client-suggestions');
+        const brandSuggestions = document.getElementById('report-info-brand-suggestions');
+        const storeSuggestions = document.getElementById('report-info-store-suggestions');
+
+        if (!clientInput || !brandInput || !storeInput) return;
+
+        // Cache for filter data
+        let allClients = [];
+        let allBrands = [];
+        let allStores = [];
+
+        // Load data
+        try {
+            console.log('[Filter] Loading master data...');
+            const [clientsRes, brandsRes, storesRes] = await Promise.all([
+                apiService.fetchClients(),
+                apiService.fetchBrands(),
+                apiService.fetchStores()
+            ]);
+
+            allClients = clientsRes.items || clientsRes || [];
+            allBrands = brandsRes.items || brandsRes || [];
+            allStores = storesRes.items || storesRes || [];
+
+            console.log('[Filter] Data processed:', { clients: allClients.length, brands: allBrands.length, stores: allStores.length });
+        } catch (e) {
+            console.error('[Filter] Failed to load master data', e);
+        }
+
+        const setupDropdown = (input, suggestions, data, getLabel, getSubLabel, onSelect) => {
+            const renderSuggestions = (filtered) => {
+                if (filtered.length === 0) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+                suggestions.innerHTML = filtered.map(item => `
+                    <div class="suggestion-item" data-id="${item.id}">
+                        <span class="item-label">${getLabel(item)}</span>
+                        ${getSubLabel ? `<span class="item-sub">${getSubLabel(item)}</span>` : ''}
+                    </div>
+                `).join('');
+                suggestions.style.display = 'block';
+
+                suggestions.querySelectorAll('.suggestion-item').forEach((el, index) => {
+                    el.addEventListener('mousedown', (e) => {
+                        e.preventDefault(); // Prevent blur before click
+                        const item = filtered[index];
+                        input.value = getLabel(item);
+                        suggestions.style.display = 'none';
+                        if (onSelect) onSelect(item);
+                        // Trigger input event manually to sync other fields
+                        input.dispatchEvent(new Event('input'));
+                    });
+                });
+            };
+
+            input.addEventListener('input', () => {
+                const val = input.value.trim().toLowerCase();
+                if (!val) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+                const filtered = data.filter(item => {
+                    const label = getLabel(item).toLowerCase();
+                    const sub = getSubLabel ? getSubLabel(item).toLowerCase() : '';
+                    return label.includes(val) || sub.includes(val);
+                }).slice(0, 10); // Limit to 10
+                renderSuggestions(filtered);
+            });
+
+            input.addEventListener('blur', () => {
+                setTimeout(() => { suggestions.style.display = 'none'; }, 200);
+            });
+
+            input.addEventListener('focus', () => {
+                if (input.value.trim()) {
+                    input.dispatchEvent(new Event('input'));
+                }
+            });
+        };
+
+        // Setup Clients
+        setupDropdown(clientInput, clientSuggestions, allClients,
+            (c) => c.name || c.client_name || '',
+            (c) => c.id || ''
+        );
+
+        // Setup Brands
+        setupDropdown(brandInput, brandSuggestions, allBrands,
+            (b) => b.name || '',
+            (b) => b.client_name || '',
+            (brand) => {
+                // When brand selected, filter stores? 
+                // For now just selection is fine
+            }
+        );
+
+        // Setup Stores
+        setupDropdown(storeInput, storeSuggestions, allStores,
+            (s) => s.name || '',
+            (s) => (s.brand ? s.brand.name : '') || (s.brand_name || ''),
+            (store) => {
+                // When store selected, auto-fill brand/client if possible
+                if (store.brand && brandInput) {
+                    brandInput.value = store.brand.name || '';
+                    brandInput.dispatchEvent(new Event('input'));
+                }
+                if ((store.client_name || (store.client && store.client.name)) && clientInput) {
+                    clientInput.value = store.client_name || (store.client ? store.client.name : '');
+                    clientInput.dispatchEvent(new Event('input'));
+                }
+            }
+        );
+    }
+
+    // Start loading schedules
+    loadSchedules();
+    // Setup Filters
+    setupInfoFilters();
+
+    console.log('[Report Module] Ready v3', { stateManager, apiService, tabManager, sectionManager, previewGenerator });
 });

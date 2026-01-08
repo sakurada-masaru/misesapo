@@ -41,6 +41,47 @@
   .site-footer {
     display: none !important;
   }
+
+  /* Suggestions List Styles */
+  .suggestions-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    max-height: 240px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    display: none;
+  }
+
+  .suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #1e293b;
+    transition: background 0.2s;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .suggestion-item:last-child {
+    border-bottom: none;
+  }
+
+  .suggestion-item:hover {
+    background: #fdf2f8;
+    color: #ec4899;
+  }
+
+  .suggestion-item .item-sub {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 2px;
+  }
 </style>
 
 <script src="/js/data_utils.js"></script>
@@ -232,7 +273,9 @@
                   <i class="fas fa-building"
                     style="position: absolute; left: 12px; top: 12px; color: #94a3b8; font-size: 0.9rem;"></i>
                   <input type="text" id="report-info-client" class="form-input" placeholder="法人名を入力"
-                    style="width:100%; padding-left: 36px; border-radius: 10px; background: #f8fafc; border-color: #e2e8f0;">
+                    style="width:100%; padding-left: 36px; border-radius: 10px; background: #f8fafc; border-color: #e2e8f0;"
+                    autocomplete="off">
+                  <div id="report-info-client-suggestions" class="suggestions-list"></div>
                 </div>
               </div>
 
@@ -243,7 +286,9 @@
                   <i class="fas fa-tag"
                     style="position: absolute; left: 12px; top: 12px; color: #94a3b8; font-size: 0.9rem;"></i>
                   <input type="text" id="report-info-brand" class="form-input" placeholder="ブランド名"
-                    style="width:100%; padding-left: 36px; border-radius: 10px; background: #f8fafc; border-color: #e2e8f0;">
+                    style="width:100%; padding-left: 36px; border-radius: 10px; background: #f8fafc; border-color: #e2e8f0;"
+                    autocomplete="off">
+                  <div id="report-info-brand-suggestions" class="suggestions-list"></div>
                 </div>
               </div>
 
@@ -254,7 +299,9 @@
                   <i class="fas fa-store"
                     style="position: absolute; left: 12px; top: 12px; color: #94a3b8; font-size: 0.9rem;"></i>
                   <input type="text" id="report-info-store" class="form-input" placeholder="店舗名"
-                    style="width:100%; padding-left: 36px; border-radius: 10px; background: #f8fafc; border-color: #e2e8f0;">
+                    style="width:100%; padding-left: 36px; border-radius: 10px; background: #f8fafc; border-color: #e2e8f0;"
+                    autocomplete="off">
+                  <div id="report-info-store-suggestions" class="suggestions-list"></div>
                 </div>
               </div>
 
