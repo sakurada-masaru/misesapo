@@ -147,6 +147,38 @@ export class PreviewGenerator {
     }
 
     let textHtml = '';
+
+    // --- Add HACCP Info to Preview ---
+    if (section.haccp_info) {
+      const h = section.haccp_info;
+      const items = [];
+      if (h.work_type) items.push(`<span class="tag">作業: ${this._escape(h.work_type)}</span>`);
+      if (h.abnormal) items.push(`<span class="tag ${h.abnormal !== '異常なし' && h.abnormal !== '生息なし' ? 'tag-alert' : ''}">状態: ${this._escape(h.abnormal)}</span>`);
+
+      if (items.length > 0) {
+        textHtml += `<div class="haccp-tags" style="margin-bottom:8px;">${items.join(' ')}</div>`;
+      }
+
+      if (h.correction) {
+        textHtml += `
+                <div class="section-row">
+                    <div class="section-label">処置・備考:</div>
+                    <div class="section-value">${this._escape(h.correction)}</div>
+                </div>`;
+      }
+
+      if (h.confirmer || h.next_date) {
+        textHtml += `<div class="section-row two-col" style="margin-top:4px; font-size: 0.9em; color:#555;">`;
+        if (h.confirmer) {
+          textHtml += `<div>確認者: ${this._escape(h.confirmer)}</div>`;
+        }
+        if (h.next_date) {
+          textHtml += `<div>次回予定: ${this._escape(h.next_date)}</div>`;
+        }
+        textHtml += `</div>`;
+      }
+    }
+
     if (section.subtitles) {
       section.subtitles.forEach(s => textHtml += `<div class="section-subtitle">■ ${this._escape(s.value)}</div>`);
     }
@@ -157,8 +189,10 @@ export class PreviewGenerator {
     return `
          <div class="report-section">
              <div class="section-heading">${this._escape(title)}</div>
-             ${textHtml}
              ${photosHtml}
+             <div class="section-text-content" style="padding: 10px; background: #f9f9f9; margin-top: 10px; border-radius: 4px;">
+                ${textHtml}
+             </div>
          </div>`;
   }
 

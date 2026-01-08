@@ -162,3 +162,57 @@ body {
         break-inside: avoid;
     }
 }
+
+/* HACCP Info Styles */
+.tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #e5e7eb;
+    color: #374151;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.tag-alert {
+    background: #fecaca;
+    color: #b91c1c;
+}
+
+.haccp-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.section-row {
+    margin-bottom: 4px;
+}
+
+.section-row.two-col {
+    display: flex;
+    gap: 20px;
+}
+
+.section-label {
+    font-weight: bold;
+    font-size: 0.9em;
+    color: #4b5563;
+    display: inline-block;
+    min-width: 80px;
+}
+
+.section-value {
+    display: inline;
+    font-size: 0.95em;
+    color: #1f2937;
+    white-space: pre-wrap;
+}
+
+.section-text-content {
+    padding: 10px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    margin-top: 10px;
+    border-radius: 6px;
+}
