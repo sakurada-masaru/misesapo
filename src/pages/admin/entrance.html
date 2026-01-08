@@ -419,10 +419,159 @@
         margin-bottom: 8px;
         font-size: 1.2rem;
     }
+
+    /* Start Button Overlay */
+    #start-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #start-overlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .start-btn {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #fff;
+        padding: 20px 40px;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        letter-spacing: 4px;
+        cursor: pointer;
+        transition: all 0.4s;
+        backdrop-filter: blur(10px);
+        font-family: 'Inter', sans-serif;
+        text-transform: uppercase;
+    }
+
+    .start-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--accent-color);
+        box-shadow: 0 0 30px var(--accent-glow);
+        transform: scale(1.05);
+    }
+
+    /* Conversational Login UI */
+    .login-bubble-container {
+        position: absolute;
+        bottom: 120px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 400px;
+        z-index: 600;
+        display: none;
+        flex-direction: column;
+        gap: 15px;
+        animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translate(-50%, 20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+    }
+
+    .login-input-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .login-input-card input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 12px 15px;
+        color: #fff;
+        outline: none;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .login-input-card input:focus {
+        border-color: var(--accent-color);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .login-submit-btn {
+        background: var(--accent-color);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .login-submit-btn:hover {
+        filter: brightness(1.2);
+        box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    /* Attendance Button UI */
+    .action-bubble-container {
+        align-self: flex-start;
+        margin-top: 10px;
+        display: none;
+    }
+
+    .attendance-btn {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+        border: none;
+        border-radius: 20px;
+        padding: 10px 25px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        transition: all 0.3s;
+    }
+
+    .attendance-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
 </style>
 
 <main id="main" class="admin-dashboard">
     @include('partials.admin-sidebar')
+
+    <div id="start-overlay">
+        <div class="visualizer-container" style="margin-bottom: 40px; cursor: default;">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="core-circle"></div>
+        </div>
+        <button class="start-btn" onclick="startWorkflow()">業務開始</button>
+    </div>
 
     <div class="main-content">
 
@@ -455,11 +604,20 @@
         <!-- Chat Content -->
         <div id="chat-container">
             <div class="chat-history" id="chat-history">
-                <div class="chat-bubble ai">
-                    お疲れ様です。管理AIアシスタントの『Misogi』です。<br>
-                    どのようなご用件でしょうか？
+                <!-- Initial welcome will be injected by JS -->
+            </div>
+
+            <!-- Login Bubble -->
+            <div class="login-bubble-container" id="login-form">
+                <div class="login-input-card">
+                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 5px;">ACCOUNT
+                        AUTHENTICATION</div>
+                    <input type="email" id="login-email" placeholder="メールアドレス" autocomplete="email">
+                    <input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">
+                    <button class="login-submit-btn" onclick="performLogin()">認証</button>
                 </div>
             </div>
+
             <div class="chat-input-wrapper">
                 <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
                 <button class="send-btn" onclick="sendTextMessage()">
@@ -507,8 +665,77 @@
     const textInput = document.getElementById('text-input');
     const btnVoice = document.getElementById('btn-voice-mode');
     const btnChat = document.getElementById('btn-chat-mode');
+    const sidebar = document.getElementById('admin-sidebar');
+    const startOverlay = document.getElementById('start-overlay');
+    const loginForm = document.getElementById('login-form');
 
     let currentMode = 'voice';
+
+    // Hide sidebar by default for AI-centric feel
+    if (sidebar) sidebar.style.display = 'none';
+
+    async function startWorkflow() {
+        startOverlay.classList.add('hidden');
+        switchMode('chat');
+
+        const token = localStorage.getItem('cognito_id_token');
+        if (!token) {
+            appendChatMessage('ai', 'おはようございます。ミセサポ管理AIのMISOGIです。セッションを開始するために、まずはログイン情報を入力してください。');
+            setTimeout(() => {
+                loginForm.style.display = 'flex';
+            }, 800);
+        } else {
+            // Check auth status
+            const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+            appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
+            // Show attendance button via command simulation
+            handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
+        }
+    }
+
+    async function performLogin() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        if (!email || !password) return;
+
+        const loginBtn = document.querySelector('.login-submit-btn');
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 認証中...';
+        loginBtn.disabled = true;
+
+        try {
+            // Use existing CognitoAuth if available, or simulate for now
+            if (window.CognitoAuth) {
+                const result = await window.CognitoAuth.login(email, password);
+                if (result.success) {
+                    loginForm.style.display = 'none';
+                    appendChatMessage('ai', `${result.user.name}様、認証を完了しました。おはようございます！業務を開始しますか？`);
+                    handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
+                } else {
+                    throw new Error(result.message);
+                }
+            } else {
+                throw new Error('認証システムが読み込まれていません');
+            }
+        } catch (err) {
+            alert('ログインに失敗しました: ' + err.message);
+            loginBtn.innerHTML = '認証';
+            loginBtn.disabled = false;
+        }
+    }
+
+    async function performClockIn() {
+        const btn = document.getElementById('active-attendance-btn');
+        if (btn) btn.disabled = true;
+
+        appendChatMessage('user', '出勤します');
+
+        // Simulate API call to clock in
+        setTimeout(() => {
+            appendChatMessage('ai', '出勤を記録しました。それでは、良い1日を！左側のメニューから業務を開始できます。');
+            handleAiCommands({ ui_commands: [{ type: 'show_sidebar' }] });
+        }, 1000);
+    }
 
     function switchMode(mode) {
         if (currentMode === mode) return;
@@ -605,6 +832,9 @@
         let intent = aiResult.intent;
         let targetUrl = aiResult.target_url;
 
+        // --- NEW: UI Command Handling ---
+        handleAiCommands(aiResult);
+
         // --- Local Fallback Logic (Mock Navigation) ---
         // If the backend didn't return an intent (e.g. backend code not yet deployed), 
         // we simulate the navigation intent based on keywords.
@@ -648,6 +878,37 @@
             setTimeout(() => {
                 window.location.href = targetUrl;
             }, 1200);
+        }
+    }
+
+    async function handleAiCommands(aiResult) {
+        if (!aiResult.ui_commands) return;
+
+        for (const cmd of aiResult.ui_commands) {
+            switch (cmd.type) {
+                case 'request_login':
+                    loginForm.style.display = 'flex';
+                    break;
+                case 'show_attendance':
+                    const container = document.createElement('div');
+                    container.className = 'action-bubble-container';
+                    container.style.display = 'block';
+                    container.innerHTML = `
+                        <button class="attendance-btn" id="active-attendance-btn" onclick="performClockIn()">
+                            <i class="fas fa-sign-in-alt"></i> 出勤する
+                        </button>
+                    `;
+                    chatHistory.appendChild(container);
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                    break;
+                case 'show_sidebar':
+                    if (sidebar) {
+                        sidebar.style.display = 'flex';
+                        // Add animation or class if needed
+                        sidebar.classList.add('fade-in');
+                    }
+                    break;
+            }
         }
     }
 

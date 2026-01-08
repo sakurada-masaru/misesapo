@@ -1119,53 +1119,96 @@ function setupEventListeners() {
           formStatus.textContent = '保存中...';
         }
 
-        const response = await fetch(`${API_BASE}/schedules${isNew ? '' : '/' + id}`, {
-          method: isNew ? 'POST' : 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
+        const isRegular = isNew && document.getElementById('type-regular').checked;
+        const interval = parseInt(document.getElementById('recurrence-interval').value) || 1;
+        const count = parseInt(document.getElementById('recurrence-count').value) || 1;
 
-        if (response.ok) {
-          if (formStatus) {
-            formStatus.textContent = '保存しました';
-            formStatus.className = 'form-status success';
+        if (isRegular && count > 1) {
+          // 定期登録処理（複数作成）
+          const baseDate = new Date(data.scheduled_date);
+          const promises = [];
+
+          if (formStatus) formStatus.textContent = `${count}件作成中...`;
+
+          for (let i = 0; i < count; i++) {
+            const currentData = { ...data };
+            const nextDate = new Date(baseDate);
+            nextDate.setMonth(baseDate.getMonth() + (i * interval));
+
+            // YYYY-MM-DD 形式に変換
+            currentData.scheduled_date = nextDate.toISOString().split('T')[0];
+            currentData.created_at = new Date().toISOString();
+            currentData.updated_at = new Date().toISOString();
+
+            promises.push(
+              fetch(`${API_BASE}/schedules`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(currentData)
+              })
+            );
           }
 
-          // レスポンスから作成されたスケジュールデータを取得
-          // バックエンドから返されたIDを使用（新規作成時はschedule_id、更新時は既存のid）
-          const responseData = await response.json();
-          const savedSchedule = responseData.schedule || {
-            ...data,
-            id: responseData.schedule_id || responseData.id || id
-          };
+          const results = await Promise.all(promises);
+          const okCount = results.filter(r => r.ok).length;
 
-          if (isNew) {
-            allSchedules.unshift(savedSchedule);
+          if (okCount > 0) {
+            if (formStatus) {
+              formStatus.textContent = `${okCount}件のスケジュールを作成しました`;
+              formStatus.className = 'form-status success';
+            }
+            await loadSchedules();
+            if (scheduleDialog) setTimeout(() => scheduleDialog.close(), 1000);
+            setTimeout(() => location.reload(), 1500);
           } else {
-            const idx = allSchedules.findIndex(s => s.id === id);
-            if (idx >= 0) allSchedules[idx] = { ...allSchedules[idx], ...savedSchedule };
+            throw new Error('スケジュールの作成に失敗しました');
           }
 
-          // データを再読み込みして最新の状態を取得
-          await loadSchedules();
-
-          if (scheduleDialog) {
-            setTimeout(() => scheduleDialog.close(), 500);
-          }
-
-          // 新規作成の場合は、適切な時間後に画面をリフレッシュ
-          if (isNew) {
-            setTimeout(() => {
-              location.reload();
-            }, 1000); // 1秒後にリフレッシュ（保存成功メッセージを表示してから）
-          } else {
-            // 編集の場合は、フィルターとレンダリングを更新
-            filterAndRender();
-            renderCalendar();
-          }
         } else {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || errorData.message || '保存に失敗しました');
+          // 通常の単発登録・更新処理
+          const response = await fetch(`${API_BASE}/schedules${isNew ? '' : '/' + id}`, {
+            method: isNew ? 'POST' : 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          if (response.ok) {
+            if (formStatus) {
+              formStatus.textContent = '保存しました';
+              formStatus.className = 'form-status success';
+            }
+
+            const responseData = await response.json();
+            const savedSchedule = responseData.schedule || {
+              ...data,
+              id: responseData.schedule_id || responseData.id || id
+            };
+
+            if (isNew) {
+              allSchedules.unshift(savedSchedule);
+            } else {
+              const idx = allSchedules.findIndex(s => s.id === id);
+              if (idx >= 0) allSchedules[idx] = { ...allSchedules[idx], ...savedSchedule };
+            }
+
+            await loadSchedules();
+
+            if (scheduleDialog) {
+              setTimeout(() => scheduleDialog.close(), 500);
+            }
+
+            if (isNew) {
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            } else {
+              filterAndRender();
+              renderCalendar();
+            }
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || errorData.message || '保存に失敗しました');
+          }
         }
       } catch (error) {
         console.error('Error:', error);
@@ -1228,6 +1271,13 @@ function openAddDialog(dateStr) {
   if (summaryAddressEl) summaryAddressEl.textContent = '-';
   if (scheduleDate) scheduleDate.value = dateStr || new Date().toISOString().split('T')[0];
 
+  // 清掃区分をリセット
+  const typeSpot = document.getElementById('type-spot');
+  const typeSelectionRow = document.getElementById('type-selection-row');
+  if (typeSpot) typeSpot.checked = true;
+  if (typeSelectionRow) typeSelectionRow.style.display = 'block';
+  toggleRecurrenceFields();
+
   // 清掃内容をリセット
   selectedCleaningItems = [];
   const selectedDiv = document.getElementById('cleaning-items-selected');
@@ -1280,6 +1330,13 @@ window.editSchedule = function (id) {
 
   if (dialogTitle) dialogTitle.textContent = 'スケジュール編集';
   if (scheduleIdEl) scheduleIdEl.value = schedule.id;
+
+  // 編集時は定期設定を隠す（一括作成は新規時のみ）
+  const typeSelectionRow = document.getElementById('type-selection-row');
+  const typeSpot = document.getElementById('type-spot');
+  if (typeSelectionRow) typeSelectionRow.style.display = 'none';
+  if (typeSpot) typeSpot.checked = true;
+  toggleRecurrenceFields();
 
   // 店舗検索フィールドの更新
   if (scheduleStoreEl && scheduleStoreSearchEl) {
@@ -1399,6 +1456,15 @@ window.editSchedule = function (id) {
 
   if (formStatus) formStatus.textContent = '';
   if (scheduleDialog) scheduleDialog.showModal();
+};
+
+// 定期清掃項目の表示/非表示切替
+window.toggleRecurrenceFields = function () {
+  const isRegular = document.getElementById('type-regular').checked;
+  const recurrenceSettings = document.getElementById('recurrence-settings');
+  if (recurrenceSettings) {
+    recurrenceSettings.style.display = isRegular ? 'block' : 'none';
+  }
 };
 
 // クイックアサイン（清掃員を素早く割り当てる）
