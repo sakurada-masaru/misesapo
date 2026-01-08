@@ -1024,19 +1024,24 @@
 
     // Toggle Visualizer Simulation
     let isRecording = false;
-    if (visualizer) {
-        visualizer.addEventListener('click', () => {
+    const visualizerEl = document.getElementById('visualizer-container');
+    const statusTextEl = document.querySelector('.status-text');
+    const coreEl = document.querySelector('.core-circle');
+    const circleTextEl = document.querySelector('.circle-text-container');
+
+    if (visualizerEl) {
+        visualizerEl.addEventListener('click', () => {
             if (!isRecording) {
                 isRecording = true;
-                statusText.textContent = "LISTENING... (Simulation)";
-                core.classList.add('active');
-                circleText.classList.add('active');
+                if (statusTextEl) statusTextEl.textContent = "LISTENING... (Simulation)";
+                if (coreEl) coreEl.classList.add('active');
+                if (circleTextEl) circleTextEl.classList.add('active');
             } else {
                 isRecording = false;
-                statusText.textContent = "PROCESSING...";
-                core.classList.remove('active');
-                circleText.classList.remove('active');
-                setTimeout(() => { statusText.textContent = "READY TO ASSIST"; }, 1500);
+                if (statusTextEl) statusTextEl.textContent = "PROCESSING...";
+                if (coreEl) coreEl.classList.remove('active');
+                if (circleTextEl) circleTextEl.classList.remove('active');
+                setTimeout(() => { if (statusTextEl) statusTextEl.textContent = "READY TO ASSIST"; }, 1500);
             }
         });
     }
