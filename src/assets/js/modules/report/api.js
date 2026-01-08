@@ -28,26 +28,26 @@ export class ReportApiService {
     // Upload image (Base64 JSON approach based on legacy code)
     async uploadImage(imageFile, category, reportId = null, cleaningDate = null) {
         return new Promise(async (resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const base64Data = e.target.result; // Data URL
+            try {
+                // 1. Compress Image before upload to avoid 413 Content Too Large (Lambda 6MB limit)
+                const compressedImage = await this._compressImage(imageFile);
+                const reader = new FileReader();
 
-                // Remove 'data:image/jpeg;base64,' prefix
-                const base64Content = base64Data.split(',')[1];
+                reader.onload = async (e) => {
+                    const base64Data = e.target.result; // Data URL
+                    const base64Content = base64Data.split(',')[1];
 
-                const payload = {
-                    image_data: base64Content,
-                    category: category,
-                    file_name: imageFile.name,
-                    content_type: imageFile.type, // Add content type explicitly
-                    report_id: reportId, // Optional
-                    cleaning_date: cleaningDate
-                };
+                    const payload = {
+                        image_data: base64Content,
+                        category: category,
+                        file_name: imageFile.name,
+                        content_type: 'image/jpeg', // Always JPEG after compression
+                        report_id: reportId,
+                        cleaning_date: cleaningDate
+                    };
 
-                // Debug logging
-                console.log('[API] Uploading payload:', { ...payload, image_data: '<<BASE64_TRUNCATED>>' });
+                    console.log(`[API] Uploading compressed image (${(base64Content.length / 1024).toFixed(1)} KB)`);
 
-                try {
                     const headers = await this._getAuthHeader();
                     const response = await fetch(`${REPORT_API}/staff/report-images`, {
                         method: 'POST',
@@ -61,17 +61,62 @@ export class ReportApiService {
                     }
 
                     const result = await response.json();
+                    // Lambda returns { success: true, image: { url, image_id, ... } }
+                    const imageData = result.image || result;
                     resolve({
-                        url: result.url || result.imageUrl,
-                        id: result.id || result.item_id
+                        url: imageData.url || imageData.imageUrl,
+                        id: imageData.image_id || imageData.id || imageData.item_id
                     });
-                } catch (err) {
-                    console.error('[API] Image Upload Error:', err);
-                    reject(err);
-                }
+                };
+                reader.onerror = (err) => reject(err);
+                reader.readAsDataURL(compressedImage);
+            } catch (err) {
+                console.error('[API] Image Compression/Upload Error:', err);
+                reject(err);
+            }
+        });
+    }
+
+    // Client-side image compression using Canvas
+    async _compressImage(file, maxWidth = 1600, maxHeight = 1600, quality = 0.8) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxWidth || height > maxHeight) {
+                        if (width > height) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        } else {
+                            width *= maxHeight / height;
+                            height = maxHeight;
+                        }
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        if (!blob) return reject(new Error('Canvas compression failed'));
+                        const compressedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+                        resolve(compressedFile);
+                    }, 'image/jpeg', quality);
+                };
+                img.onerror = (err) => reject(err);
             };
             reader.onerror = (err) => reject(err);
-            reader.readAsDataURL(imageFile);
         });
     }
 
