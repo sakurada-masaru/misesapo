@@ -345,6 +345,42 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
+    /* Loading/Checking Indicator Style */
+    .checking-indicator {
+        margin-top: 15px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        height: 0;
+        overflow: hidden;
+    }
+
+    .checking-indicator.visible {
+        opacity: 1;
+        height: auto;
+        padding-bottom: 10px;
+    }
+
+    .checking-spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
     .chat-input-wrapper {
         margin-top: 15px;
         display: flex;
@@ -1164,30 +1200,43 @@
                     break;
                 case 'show_attendance':
                     const actionContainer = document.getElementById('action-buttons-container');
-                    if (actionContainer) {
-                        actionContainer.innerHTML = ''; // Clear previous actions
-                        const btnDiv = document.createElement('div');
-                        btnDiv.className = 'action-bubble-container';
-                        btnDiv.style.display = 'block';
-                        btnDiv.innerHTML = `
-                            <button class="attendance-btn" id="active-attendance-btn" onclick="performClockIn()">
-                                <i class="fas fa-sign-in-alt"></i> 出勤する
-                            </button>
-                        `;
-                        actionContainer.appendChild(btnDiv);
-                    }
-                    break;
-                case 'show_sidebar':
-                    if (sidebar) {
-                        sidebar.style.display = 'flex';
-                        const navItems = sidebar.querySelectorAll('.nav-item');
-                        navItems.forEach((item, index) => {
+                    if (isClockedIn) {
+                        statusText.textContent = "Welcome back.";
+                        // Wait a moment then transition
+                        setTimeout(() => {
+                            if (checkingIndicator) checkingIndicator.classList.remove('visible');
+                            startOverlay.style.opacity = '0';
                             setTimeout(() => {
-                                item.classList.add('show');
-                            }, index * 100);
-                        });
+                                startOverlay.style.display = 'none';
+                                chatContainer.classList.add('active');
+
+                                // Show sidebar immediately
+                                document.getElementById('admin-sidebar').classList.add('visible');
+                                addMessage('ai', 'お疲れ様です。本日は既に出勤されています。');
+                            }, 500);
+                        }, 1000);
+                    } else {
+                        statusText.textContent = "Standby.";
+                        setTimeout(() => {
+                            if (checkingIndicator) checkingIndicator.classList.remove('visible');
+                            startOverlay.style.opacity = '0';
+                            setTimeout(() => {
+                                startOverlay.style.display = 'none';
+                                chatContainer.classList.add('active');
+                                initChat(); // Ask "Start Work?"
+                            }, 500);
+                        }, 800);
                     }
-                    break;
+            } catch (e) {
+                console.error(e);
+                // Fallback on error
+                if (checkingIndicator) checkingIndicator.classList.remove('visible');
+                startOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    startOverlay.style.display = 'none';
+                    chatContainer.classList.add('active');
+                    initChat();
+                }, 500);
             }
         }
     }
