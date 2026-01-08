@@ -90,7 +90,7 @@
         transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Core Pulse */
+    /* Core Pulse & Liquid Motion */
     .core-circle {
         width: 80px;
         height: 80px;
@@ -99,13 +99,14 @@
         box-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-glow);
         position: absolute;
         z-index: 10;
-        animation: breathe 4s infinite ease-in-out;
+        /* Simple breathe replaced by liquid motion */
+        animation: liquid 8s infinite linear, breathe 4s infinite ease-in-out;
     }
 
-    /* Waves */
+    /* Waves (Ripples) */
     .wave {
         position: absolute;
-        border: 1px solid rgba(59, 130, 246, 0.3);
+        border: 1px solid var(--accent-color);
         border-radius: 50%;
         top: 50%;
         left: 50%;
@@ -115,21 +116,15 @@
     }
 
     .wave:nth-child(1) {
-        width: 100px;
-        height: 100px;
-        animation: ripple 3s infinite 0s;
+        animation: ripple 4s infinite 0s cubic-bezier(0.23, 1, 0.32, 1);
     }
 
     .wave:nth-child(2) {
-        width: 100px;
-        height: 100px;
-        animation: ripple 3s infinite 1s;
+        animation: ripple 4s infinite 1.3s cubic-bezier(0.23, 1, 0.32, 1);
     }
 
     .wave:nth-child(3) {
-        width: 100px;
-        height: 100px;
-        animation: ripple 3s infinite 2s;
+        animation: ripple 4s infinite 2.6s cubic-bezier(0.23, 1, 0.32, 1);
     }
 
     @keyframes breathe {
@@ -141,7 +136,7 @@
         }
 
         50% {
-            transform: scale(1.1);
+            transform: scale(1.05);
             opacity: 1;
             box-shadow: 0 0 50px var(--accent-glow), 0 0 90px var(--accent-glow);
         }
@@ -151,15 +146,15 @@
         0% {
             width: 80px;
             height: 80px;
-            opacity: 0.8;
-            border-color: var(--accent-color);
+            opacity: 0.6;
+            border-width: 2px;
         }
 
         100% {
-            width: 300px;
-            height: 300px;
+            width: 450px;
+            height: 450px;
             opacity: 0;
-            border-color: transparent;
+            border-width: 0px;
         }
     }
 
