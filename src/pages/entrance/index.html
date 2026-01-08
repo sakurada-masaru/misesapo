@@ -74,102 +74,69 @@
         margin-right: -2px;
     }
 
-    /* Visualizer Container (Persistent Core) */
+    /* Visualizer Container */
     .visualizer-container {
         width: 440px;
         height: 440px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        cursor: pointer;
         z-index: 100;
-        /* Higher to stay on top */
-        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         pointer-events: none;
     }
 
-    /* Core Pulse & Liquid Motion */
+    /* Core Circle (The Nucleus) */
     .core-circle {
         width: 80px;
         height: 80px;
         background: var(--accent-color);
         border-radius: 50%;
         box-shadow: 0 0 40px var(--accent-glow), 0 0 80px var(--accent-glow);
-        position: relative;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         z-index: 150;
-        /* Above waves */
         animation: liquid 8s infinite linear, breathe 4s infinite ease-in-out;
     }
 
-    /* Wavy Outline Effect */
+    /* Wavy Outline Overlay */
     .core-circle::before {
         content: '';
         position: absolute;
-        top: -4px;
-        right: -4px;
-        bottom: -4px;
-        left: -4px;
-        border: 2px solid rgba(255, 255, 255, 0.4);
+        top: 50%;
+        left: 50%;
+        width: 90px;
+        height: 90px;
+        margin: -45px 0 0 -45px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
         border-radius: 50%;
-        animation: wavy-outline 12s infinite linear;
+        animation: wavy-outline 10s infinite linear;
         filter: blur(1px);
+        z-index: 151;
     }
 
-    @keyframes wavy-outline {
-        0% {
-            transform: rotate(0deg);
-            border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
-        }
-
-        25% {
-            border-radius: 40% 60% 45% 55% / 55% 45% 60% 40%;
-        }
-
-        50% {
-            border-radius: 60% 40% 55% 45% / 45% 55% 40% 60%;
-        }
-
-        75% {
-            border-radius: 45% 55% 40% 60% / 60% 40% 55% 45%;
-        }
-
-        100% {
-            transform: rotate(360deg);
-            border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
-        }
-    }
-
-    /* Circle Text Rotation */
+    /* Rotating Text Ring */
     .circle-text-container {
         position: absolute;
         top: 50%;
         left: 50%;
         width: 400px;
         height: 400px;
-        margin-top: -200px;
-        /* Offset half height */
-        margin-left: -200px;
-        /* Offset half width */
-        display: flex;
-        justify-content: center;
-        align-items: center;
         z-index: 120;
-        opacity: 0.5;
-        animation: simple-rotate 60s linear infinite;
+        opacity: 0.6;
+        /* Rotation MUST include centering translate */
+        animation: misogi-rotate 60s linear infinite;
         pointer-events: none;
     }
 
     .circle-svg {
         width: 100%;
         height: 100%;
-        fill: var(--accent-color);
     }
 
-    /* Waves (Ripples) - MUST BE VISIBLE */
+    /* Expansion Ripples */
     .wave {
         position: absolute;
         border: 2px solid var(--accent-color);
@@ -179,9 +146,7 @@
         transform: translate(-50%, -50%);
         opacity: 0;
         z-index: 110;
-        /* Above any inner background, below core and text */
-        pointer-events: none;
-        box-shadow: 0 0 15px var(--accent-glow);
+        box-shadow: 0 0 20px var(--accent-glow);
     }
 
     .wave:nth-child(2) {
@@ -196,13 +161,30 @@
         animation: ripple 4s infinite 2.6s cubic-bezier(0.23, 1, 0.32, 1);
     }
 
-    @keyframes simple-rotate {
+    /* Animations */
+    @keyframes misogi-rotate {
         from {
-            transform: rotate(0deg);
+            transform: translate(-50%, -50%) rotate(0deg);
         }
 
         to {
+            transform: translate(-50%, -50%) rotate(360deg);
+        }
+    }
+
+    @keyframes wavy-outline {
+        0% {
+            transform: rotate(0deg);
+            border-radius: 50% 45% 55% 50% / 45% 55% 50% 50%;
+        }
+
+        50% {
+            border-radius: 55% 50% 45% 60% / 50% 60% 45% 55%;
+        }
+
+        100% {
             transform: rotate(360deg);
+            border-radius: 50% 45% 55% 50% / 45% 55% 50% 50%;
         }
     }
 
@@ -213,16 +195,12 @@
             border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
         }
 
-        25% {
-            border-radius: 58% 42% 55% 45% / 42% 58% 45% 55%;
+        33% {
+            border-radius: 55% 45% 52% 48% / 45% 55% 48% 52%;
         }
 
-        50% {
-            border-radius: 45% 55% 42% 58% / 55% 45% 58% 42%;
-        }
-
-        75% {
-            border-radius: 55% 45% 58% 42% / 45% 55% 42% 58%;
+        66% {
+            border-radius: 48% 52% 45% 55% / 52% 48% 55% 45%;
         }
     }
 
@@ -230,12 +208,12 @@
 
         0%,
         100% {
-            transform: scale(1);
+            transform: translate(-50%, -50%) scale(1);
             opacity: 0.9;
         }
 
         50% {
-            transform: scale(1.08);
+            transform: translate(-50%, -50%) scale(1.08);
             opacity: 1;
         }
     }
@@ -245,14 +223,14 @@
             width: 80px;
             height: 80px;
             opacity: 0.8;
-            border-width: 2px;
+            transform: translate(-50%, -50%) scale(1);
         }
 
         100% {
             width: 500px;
             height: 500px;
             opacity: 0;
-            border-width: 0.5px;
+            transform: translate(-50%, -50%) scale(1);
         }
     }
 
