@@ -1620,14 +1620,16 @@
     if (sidebar) sidebar.style.display = 'none';
 
     async function startWorkflow() {
-        // Guard: If already in a work mode, do not reset/run startWorkflow again
-        const currentJob = localStorage.getItem('current_job_type');
-        if (currentJob && chatContainer.classList.contains('sidebar-active')) {
-            console.log("startWorkflow called but user is already in work mode. Ignoring.");
+        const overlay = document.getElementById('start-overlay');
+        if (!overlay) return;
+
+        // Guard: Prevent re-initialization if already in an active session
+        if (window.currentAttendanceRecord && !window.currentAttendanceRecord.clock_out) {
+            console.log("[GUARD] Already in an active session. Skipping full startWorkflow.");
             return;
         }
 
-        startOverlay.classList.add('hidden');
+        overlay.classList.add('hidden');
         switchMode('chat');
 
         const token = localStorage.getItem('cognito_id_token');
@@ -1674,20 +1676,22 @@
                     console.log('[DEBUG] Attendance records:', records);
                     console.log('[DEBUG] Checking dates:', todayStr, yesterdayStr);
 
-                    // Sort by date descending to get most recent first
-                    records.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+                    // Improved logic: Find latest record and check if it's still clocked in
+                    const latestRecord = records.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+                    console.log("[DEBUG] Latest record found:", latestRecord);
 
-                    // First try to find today's record
-                    latestRecord = records.find(r => r.date === todayStr);
+                    const currentDayStr = new Date().toISOString().split('T')[0];
+                    const isStillIn = latestRecord && !latestRecord.clock_out;
 
-                    // If no today record, check if yesterday's record is still open (cross-midnight shift)
-                    if (!latestRecord) {
-                        const yesterdayRecord = records.find(r => r.date === yesterdayStr);
-                        if (yesterdayRecord && yesterdayRecord.clock_in && !yesterdayRecord.clock_out) {
-                            latestRecord = yesterdayRecord;
-                        }
+                    if (isStillIn) {
+                        window.currentAttendanceRecord = latestRecord;
+                        let attendanceStatus = 'clock_in';
+                        showJobActions('cleaning');
+                        appendChatMessage('ai', `お疲れ様です、${latestRecord.staff_name || 'スタッフ'}さん。${latestRecord.store_name}での業務を継続します。`);
+                    } else {
+                        const startOverlay = document.getElementById('start-overlay');
+                        if (startOverlay) startOverlay.classList.remove('hidden');
                     }
-
                     // Critical Fallback: If still no record found but there ARE records, 
                     // check the very latest record regardless of date match of today/yesterday.
                     // If it's open (no clock_out), treat as clocked in.
@@ -2035,7 +2039,7 @@
                     </button>
                 </div>
                 <div class="chat-log-modal-body">
-                    ${chatLogData.all.map(entry => {
+                    ${chatLogData.messages.map(entry => { // Changed from chatLogData.all to chatLogData.messages
             const senderLabel = entry.sender === 'misogi' ? 'MISOGI' :
                 entry.sender === 'you' ? 'YOU' : 'SYSTEM';
             return `<div class="chat-log-line"><span class="sender-${entry.sender}">${senderLabel}>></span> ${entry.message}</div>`;
@@ -2424,29 +2428,31 @@
 
         // Create dynamic system prompt with context
         const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const attendance = window.currentAttendanceRecord;
+        const wizardStep = window.reportWizardState ? window.reportWizardState.step : 'none';
+
         const currentJob = localStorage.getItem('current_job_type');
         const jobLabel = currentJob ? (JOB_TYPES[currentJob]?.label || '不明') : '未選択';
         const isClockedIn = !!currentJob;
 
         let context = `現在は【${new Date().toLocaleString('ja-JP')}】です。
 ユーザー名: ${user.name || '不明'} 
+部署: ${user.department || '不明'}
 現在の業務モード: ${jobLabel} 
-認証ステータス: ${token ? 'ログイン済み (認証不要)' : '未ログイン'}
-出勤ステータス: ${isClockedIn ? '出勤中' : '未出勤'}
+認証ステータス: ${localStorage.getItem('cognito_id_token') ? 'ログイン済み (認証は完全に完了しており、再ログイン要求は不要です)' : '未ログイン'}
+出勤ステータス: ${attendance ? '出勤中 (' + attendance.store_name + ')' : '未出勤'}
+ウィザード状況: ${window.reportWizardActive ? '清掃レポート作成中 (Step: ' + reportWizardState.step + ')' : '通常モード'}
 `;
 
-        if (window.reportWizardActive) {
-            context += `状態: 清掃レポート作成のウィザードが進行中です。ステップ: ${reportWizardState.step} 
-対象: ${reportWizardState.cleaningTarget || '未設定'}
-`;
-        }
+        const systemPrompt = `(System: あなたは管理AI『Misogi』です。
+以下のコンテキストを理解し、常に『Misogi』として振る舞ってください。
 
-        const systemPrompt = `(System: あなたは管理AI『Misogi』です。以下のコンテキストを理解し、常に『Misogi』として振る舞ってください。
 ${context}
-【重要1】ユーザーは既にログイン・出勤している場合、挨拶のリセットや再度のログイン要求メッセージ、request_loginインテントの出力は厳禁です。
-【重要2】ユーザーが答えやすいよう、可能な限り ui_commands 内に {type: "show_options", options: ["選択肢1", "選択肢2"...]} を含めてください。
-特に「はい/いいえ」「特になし/備考あり」「完了」などの頻出する回答は必ずボタンとして提示してください。
-現在のウィザードや業務の文脈を維持し、ユーザーの入力を助ける返答をしてください。)\n`;
+
+【重要指示】
+1. ユーザーは既にログイン・出勤している場合、挨拶のリセットや再度のログイン要求メッセージ、および request_login インテントの出力は「絶対に」行わないでください。
+2. ユーザーが操作に迷わないよう、可能な限り show_options を使って次のアクションをボタンで提示してください。
+3. 業務の文脈を維持し、ユーザーの作業を最小限にする（ボタンをタップするだけで済む）ための返答を心がけてください。)`;
 
         const textToSend = systemPrompt + text;
 
