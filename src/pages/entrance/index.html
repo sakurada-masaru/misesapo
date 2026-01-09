@@ -2362,11 +2362,12 @@
         schedule: null,
         photos: { before: [], after: [] },
         cleaningTarget: '',
-        notes: ''
+        notes: '',
+        nextProposal: { timing: '', work: '' }
     };
 
     function startReportWizard() {
-        reportWizardState = { step: 0, store: null, schedule: null, photos: { before: [], after: [] }, cleaningTarget: '', notes: '' };
+        reportWizardState = { step: 0, store: null, schedule: null, photos: { before: [], after: [] }, cleaningTarget: '', notes: '', nextProposal: { timing: '', work: '' } };
 
         appendChatMessage('ai', `📋 レポート作成を開始します。
 
@@ -2623,7 +2624,11 @@
                     item_name: reportWizardState.cleaningTarget,
                     photos: photoUrls,
                     work_content: reportWizardState.notes
-                }]
+                }],
+                next_proposal: {
+                    timing: reportWizardState.nextProposal.timing || '',
+                    work: reportWizardState.nextProposal.work || ''
+                }
             };
 
             const response = await fetch(`${API_BASE}/staff/reports`, {
@@ -2683,23 +2688,127 @@
                 input.value = '';
                 window.reportWizardInputMode = null;
 
-                // Show confirmation
-                appendChatMessage('ai', `確認です：
+                // Proceed to next proposal selection
+                appendChatMessage('ai', `📅 **次回提案を選択してください：**
 
-📍 店舗: ${reportWizardState.store?.name}
-🧹 対象: ${reportWizardState.cleaningTarget}
-📷 写真: 作業前${reportWizardState.photos.before.length}枚 / 作業後${reportWizardState.photos.after.length}枚
-📝 備考: ${reportWizardState.notes || 'なし'}
-
-この内容でレポートを送信しますか？`);
-
-                showConfirmButtons();
+いつ頃の再訪問を推奨しますか？`);
+                showNextProposalTiming();
                 return;
             }
 
             // Default behavior
             if (_origSendTextMessage) _origSendTextMessage();
         };
+    }
+
+    function showNextProposalTiming() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        const timings = [
+            { value: '1month', label: '1ヶ月後' },
+            { value: '2months', label: '2ヶ月後' },
+            { value: '3months', label: '3ヶ月後' },
+            { value: '6months', label: '6ヶ月後' },
+            { value: '1year', label: '1年後' },
+            { value: 'urgent', label: '緊急対応必要' },
+            { value: 'none', label: '提案なし' }
+        ];
+
+        actionContainer.innerHTML = '';
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 350px; margin: 0 auto;';
+
+        timings.forEach(t => {
+            const bgColor = t.value === 'urgent' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)';
+            const borderColor = t.value === 'urgent' ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.2)';
+            btnDiv.insertAdjacentHTML('beforeend', `
+                <button onclick="selectNextProposalTiming('${t.value}', '${t.label}')"
+                    style="background: ${bgColor}; border: 1px solid ${borderColor};
+                    color: #fff; padding: 10px 16px; border-radius: 20px; cursor: pointer;
+                    font-size: 0.85rem; transition: all 0.2s;">
+                    ${t.label}
+                </button>
+            `);
+        });
+
+        actionContainer.appendChild(btnDiv);
+    }
+
+    function selectNextProposalTiming(value, label) {
+        reportWizardState.nextProposal.timing = label;
+        appendChatMessage('user', label);
+
+        if (value === 'none') {
+            // Skip work suggestion, go to confirmation
+            showReportConfirmation();
+        } else if (value === 'urgent') {
+            // Ask for urgent reason
+            appendChatMessage('ai', `⚠️ 緊急対応が必要ですね。
+
+追加で推奨する作業があれば選択してください：`);
+            showNextProposalWork();
+        } else {
+            appendChatMessage('ai', `${label}での再訪問を推奨しますね。
+
+追加で推奨する作業があれば選択してください：`);
+            showNextProposalWork();
+        }
+    }
+
+    function showNextProposalWork() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        const works = [
+            '定期清掃の継続',
+            '部品交換の検討',
+            '追加清掃箇所あり',
+            '設備点検を推奨',
+            '害虫駆除を推奨',
+            '特になし'
+        ];
+
+        actionContainer.innerHTML = '';
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 350px; margin: 0 auto;';
+
+        works.forEach(work => {
+            btnDiv.insertAdjacentHTML('beforeend', `
+                <button onclick="selectNextProposalWork('${work}')"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 10px 16px; border-radius: 20px; cursor: pointer;
+                    font-size: 0.85rem; transition: all 0.2s;">
+                    ${work}
+                </button>
+            `);
+        });
+
+        actionContainer.appendChild(btnDiv);
+    }
+
+    function selectNextProposalWork(work) {
+        reportWizardState.nextProposal.work = work === '特になし' ? '' : work;
+        appendChatMessage('user', work);
+        showReportConfirmation();
+    }
+
+    function showReportConfirmation() {
+        const nextProposalText = reportWizardState.nextProposal.timing
+            ? `${reportWizardState.nextProposal.timing}${reportWizardState.nextProposal.work ? ' / ' + reportWizardState.nextProposal.work : ''}`
+            : 'なし';
+
+        appendChatMessage('ai', `✅ **確認です：**
+
+📍 店舗: ${reportWizardState.store?.name}
+🧹 対象: ${reportWizardState.cleaningTarget}
+📷 写真: 作業前${reportWizardState.photos.before.length}枚 / 作業後${reportWizardState.photos.after.length}枚
+📝 備考: ${reportWizardState.notes || 'なし'}
+📅 次回提案: ${nextProposalText}
+
+この内容でレポートを送信しますか？`);
+
+        showConfirmButtons();
     }
 
     function showConfirmButtons() {
