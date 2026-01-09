@@ -1214,9 +1214,22 @@
                     console.log('[DEBUG] Attendance records:', records);
                     console.log('[DEBUG] Checking dates:', todayStr, yesterdayStr);
 
-                    // Find the most recent record for today or yesterday
-                    latestRecord = records.find(r => r.date === todayStr || r.date === yesterdayStr);
+                    // Sort by date descending to get most recent first
+                    records.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+                    // First try to find today's record
+                    latestRecord = records.find(r => r.date === todayStr);
+
+                    // If no today record, check if yesterday's record is still open (cross-midnight shift)
+                    if (!latestRecord) {
+                        const yesterdayRecord = records.find(r => r.date === yesterdayStr);
+                        if (yesterdayRecord && yesterdayRecord.clock_in && !yesterdayRecord.clock_out) {
+                            latestRecord = yesterdayRecord;
+                        }
+                    }
+
                     console.log('[DEBUG] Latest record found:', latestRecord);
+                    console.log('[DEBUG] All record dates:', records.map(r => r.date));
 
                     if (latestRecord && latestRecord.clock_in && !latestRecord.clock_out) {
                         isClockedIn = true;
