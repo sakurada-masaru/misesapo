@@ -2231,6 +2231,7 @@
         handles.forEach(handle => {
             handle.addEventListener('mousedown', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 const isRight = handle.classList.contains('right');
                 const isTop = handle.classList.contains('top');
                 const isCorner = handle.classList.contains('corner');
@@ -2238,8 +2239,9 @@
                 const startX = e.clientX;
                 const startY = e.clientY;
                 const startWidth = container.offsetWidth;
-                const startHeight = chatHistory.offsetHeight;
-                const startBottom = parseInt(getComputedStyle(container).bottom);
+                // Get current maxHeight value, default to 180 if not set
+                const currentMaxHeight = parseInt(getComputedStyle(chatHistory).maxHeight) || 180;
+                const startHeight = currentMaxHeight;
 
                 function onMouseMove(e) {
                     if (isRight || isCorner) {
@@ -2250,6 +2252,7 @@
                         const deltaY = startY - e.clientY;
                         const newHeight = Math.max(80, Math.min(400, startHeight + deltaY));
                         chatHistory.style.maxHeight = newHeight + 'px';
+                        chatHistory.style.height = newHeight + 'px';
                     }
                 }
 
