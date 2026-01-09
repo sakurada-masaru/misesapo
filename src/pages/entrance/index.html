@@ -545,16 +545,19 @@
     }
 
     .chat-history {
-        flex: 1;
+        position: absolute;
+        top: 60px;
+        right: 20px;
+        bottom: 150px;
+        width: 400px;
         overflow-y: auto;
-        padding: 10px 0;
+        padding: 10px 20px;
         display: flex;
         flex-direction: column;
         gap: 15px;
         align-items: flex-end;
-        /* Align all messages to the right */
-        /* Ensure messages don't overlap sidebar if they get very long (though max-width handles most) */
-        padding-left: 260px;
+        z-index: 100;
+        pointer-events: auto;
     }
 
     .chat-bubble {
@@ -963,16 +966,18 @@
 
     /* Action Buttons Container Style */
     .action-buttons-container {
-        width: 100%;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
         display: flex;
         justify-content: center;
         align-items: center;
         flex-direction: column;
         gap: 10px;
-        margin-bottom: 20px;
-        margin-top: auto;
-        /* Push to bottom near input */
-        z-index: 20;
+        z-index: 200;
+        max-width: 400px;
+        width: 90%;
     }
 </style>
 
@@ -2461,11 +2466,7 @@
     function proceedToPhotoUpload() {
         const storeName = reportWizardState.store?.name || '選択した店舗';
 
-        appendChatMessage('ai', `📍 ${storeName} のレポートを作成します。
-
-📸 **写真をアップロードしてください**
-
-作業前（Before）と作業後（After）の写真を追加してください。`);
+        appendChatMessage('ai', `📍 ${storeName} のレポート作成`);
 
         showPhotoUploadUI();
     }
