@@ -1209,18 +1209,25 @@
 
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('[DEBUG] Attendance API response:', data);
                     const records = Array.isArray(data) ? data : (data.attendance || data.items || []);
+                    console.log('[DEBUG] Attendance records:', records);
+                    console.log('[DEBUG] Checking dates:', todayStr, yesterdayStr);
 
                     // Find the most recent record for today or yesterday
                     latestRecord = records.find(r => r.date === todayStr || r.date === yesterdayStr);
+                    console.log('[DEBUG] Latest record found:', latestRecord);
 
                     if (latestRecord && latestRecord.clock_in && !latestRecord.clock_out) {
                         isClockedIn = true;
+                        console.log('[DEBUG] User is clocked in');
                         // Determine if user is currently on break
                         if (latestRecord.break_start && !latestRecord.break_end) {
                             isOnBreak = true;
                         }
                     }
+                } else {
+                    console.log('[DEBUG] Attendance API response not ok:', response.status);
                 }
 
                 if (isOnBreak) {
