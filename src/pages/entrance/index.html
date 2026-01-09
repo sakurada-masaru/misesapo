@@ -705,6 +705,154 @@
         line-height: 1.6;
     }
 
+    /* Team Chat Modal */
+    .team-chat-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    }
+
+    .team-chat-container {
+        width: 90%;
+        max-width: 700px;
+        height: 80vh;
+        max-height: 600px;
+        background: #1a1a2e;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .team-chat-header {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .team-chat-tabs {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+
+    .team-chat-tab {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        color: #888;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .team-chat-tab:hover {
+        color: var(--ch-color, #fff);
+        border-color: var(--ch-color, #fff);
+    }
+
+    .team-chat-tab.active {
+        color: var(--ch-color, #fff);
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--ch-color, #fff);
+    }
+
+    .team-chat-close {
+        background: none;
+        border: none;
+        color: #888;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    .team-chat-close:hover {
+        color: #fff;
+    }
+
+    .team-chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.85rem;
+        line-height: 1.8;
+    }
+
+    .team-chat-message {
+        margin-bottom: 4px;
+    }
+
+    .team-chat-time {
+        color: #555;
+        margin-right: 8px;
+    }
+
+    .team-chat-sender {
+        font-weight: 600;
+        margin-right: 8px;
+    }
+
+    .team-chat-text {
+        color: #e2e8f0;
+    }
+
+    .team-chat-empty,
+    .team-chat-loading {
+        color: #666;
+        text-align: center;
+        padding: 40px;
+    }
+
+    .team-chat-input-wrapper {
+        display: flex;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.3);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        gap: 8px;
+    }
+
+    .team-chat-input-wrapper input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px 16px;
+        color: #fff;
+        font-size: 0.9rem;
+        outline: none;
+    }
+
+    .team-chat-input-wrapper input:focus {
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .team-chat-input-wrapper button {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .team-chat-input-wrapper button:hover {
+        transform: scale(1.05);
+    }
+
     /* Custom scrollbar styling */
     .chat-history::-webkit-scrollbar {
         width: 4px;
@@ -1742,8 +1890,150 @@
         document.body.appendChild(modal);
     }
 
+    // ========================================
+    // Team Chat System
+    // ========================================
+    const CHAT_API = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod/chat';
+    let teamChatState = {
+        channel: 'misesapo',
+        polling: null,
+        lastTimestamp: null
+    };
+
     function openTeamChat() {
-        writeLog('system', 'チームチャット機能は準備中です。', 'event');
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+
+        const modal = document.createElement('div');
+        modal.className = 'team-chat-modal';
+        modal.id = 'team-chat-modal';
+        modal.innerHTML = `
+            <div class="team-chat-container">
+                <div class="team-chat-header">
+                    <div class="team-chat-tabs">
+                        ${Object.entries(CHAT_CHANNELS).map(([key, ch]) => `
+                            <button class="team-chat-tab ${key === 'misesapo' ? 'active' : ''}" 
+                                    data-channel="${key}" 
+                                    style="--ch-color: ${ch.color}"
+                                    onclick="switchChatChannel('${key}')">
+                                ${ch.label}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <button class="team-chat-close" onclick="closeTeamChat()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="team-chat-messages" id="team-chat-messages">
+                    <div class="team-chat-loading">読み込み中...</div>
+                </div>
+                <div class="team-chat-input-wrapper">
+                    <input type="text" id="team-chat-input" placeholder="メッセージを入力..." 
+                           onkeypress="if(event.key==='Enter') sendTeamMessage()">
+                    <button onclick="sendTeamMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Start polling
+        loadTeamMessages();
+        teamChatState.polling = setInterval(loadTeamMessages, 5000);
+
+        logEvent('チームチャットを開きました');
+    }
+
+    function closeTeamChat() {
+        const modal = document.getElementById('team-chat-modal');
+        if (modal) modal.remove();
+
+        if (teamChatState.polling) {
+            clearInterval(teamChatState.polling);
+            teamChatState.polling = null;
+        }
+    }
+
+    function switchChatChannel(channel) {
+        teamChatState.channel = channel;
+        teamChatState.lastTimestamp = null;
+
+        document.querySelectorAll('.team-chat-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.channel === channel);
+        });
+
+        loadTeamMessages();
+    }
+
+    async function loadTeamMessages() {
+        const msgContainer = document.getElementById('team-chat-messages');
+        if (!msgContainer) return;
+
+        try {
+            let url = `${CHAT_API}?channel=${teamChatState.channel}&limit=50`;
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Failed to load messages');
+
+            const data = await response.json();
+            const messages = data.messages || [];
+
+            if (messages.length === 0) {
+                msgContainer.innerHTML = '<div class="team-chat-empty">メッセージはまだありません</div>';
+                return;
+            }
+
+            const channelColor = CHAT_CHANNELS[teamChatState.channel]?.color || '#fff';
+
+            msgContainer.innerHTML = messages.map(msg => {
+                const time = new Date(msg.timestamp).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                return `
+                    <div class="team-chat-message">
+                        <span class="team-chat-time">${time}</span>
+                        <span class="team-chat-sender" style="color: ${channelColor}">${msg.sender_name}</span>
+                        <span class="team-chat-text">${msg.message}</span>
+                    </div>
+                `;
+            }).join('');
+
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+
+            if (messages.length > 0) {
+                teamChatState.lastTimestamp = messages[messages.length - 1].timestamp;
+            }
+        } catch (e) {
+            console.error('Failed to load team messages:', e);
+        }
+    }
+
+    async function sendTeamMessage() {
+        const input = document.getElementById('team-chat-input');
+        if (!input) return;
+
+        const message = input.value.trim();
+        if (!message) return;
+
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+
+        try {
+            const response = await fetch(CHAT_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    channel: teamChatState.channel,
+                    sender_id: user.id || user.sub || 'unknown',
+                    sender_name: user.name || 'Unknown',
+                    message: message
+                })
+            });
+
+            if (response.ok) {
+                input.value = '';
+                loadTeamMessages();
+            }
+        } catch (e) {
+            console.error('Failed to send message:', e);
+        }
     }
 
     // Log event actions (button clicks, etc.)
@@ -2015,32 +2305,51 @@
     const JOB_TYPES = {
         cleaning: {
             label: '清掃',
+            color: '#10b981',
             menus: ['mypage', 'schedules', 'reports-new']
         },
         office: {
             label: '事務',
+            color: '#8b5cf6',
             menus: ['mypage', 'customers', 'estimates', 'orders', 'zaiko']
         },
         sales: {
             label: '営業',
+            color: '#f59e0b',
             menus: ['mypage', 'schedules', 'customers', 'estimates', 'reports', 'reports-new']
         },
         hr: {
             label: '人事',
+            color: '#ec4899',
             menus: ['mypage', 'users', 'attendance-errors', 'schedules']
         },
         accounting: {
             label: '経理',
+            color: '#3b82f6',
             menus: ['mypage', 'orders', 'zaiko', 'estimates']
         },
         admin: {
             label: '管理',
+            color: '#ef4444',
             menus: 'all'
         },
         dev: {
             label: '開発',
+            color: '#06b6d4',
             menus: ['mypage', 'dashboard', 'services', 'analytics', 'images']
         }
+    };
+
+    // Chat channels (includes misesapo for general)
+    const CHAT_CHANNELS = {
+        misesapo: { label: '全体', color: '#ffffff' },
+        cleaning: { label: '清掃', color: '#10b981' },
+        office: { label: '事務', color: '#8b5cf6' },
+        sales: { label: '営業', color: '#f59e0b' },
+        hr: { label: '人事', color: '#ec4899' },
+        accounting: { label: '経理', color: '#3b82f6' },
+        admin: { label: '管理', color: '#ef4444' },
+        dev: { label: '開発', color: '#06b6d4' }
     };
 
     // Common menus for all job types (always visible)
