@@ -602,6 +602,7 @@
         font-family: 'Consolas', 'Monaco', monospace;
         font-size: 0.8rem;
         line-height: 1.5;
+        transition: height 0.1s ease-out, max-height 0.1s ease-out;
     }
 
     .chat-log-line {
@@ -628,12 +629,29 @@
     /* Chat Log Input Wrapper */
     .chat-log-input-wrapper {
         display: flex;
+        align-items: center;
         padding: 6px 8px;
         background: rgba(0, 0, 0, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-top: none;
         border-bottom: none;
         gap: 6px;
+    }
+
+    .chat-log-channel-tag {
+        font-size: 0.65rem;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        padding: 2px 6px;
+        border-radius: 4px;
+        cursor: pointer;
+        white-space: nowrap;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.2s;
+    }
+
+    .chat-log-channel-tag:hover {
+        background: rgba(255, 255, 255, 0.2);
     }
 
     .chat-log-input-wrapper input {
@@ -645,6 +663,7 @@
         color: #fff;
         font-size: 0.75rem;
         outline: none;
+        transition: border-color 0.3s, box-shadow 0.3s;
     }
 
     .chat-log-input-wrapper input:focus {
@@ -1475,7 +1494,9 @@
 
             <!-- Team chat input (for Call/General) -->
             <div class="chat-log-input-wrapper" id="chat-log-input-wrapper">
-                <input type="text" id="team-chat-inline-input" placeholder="社内チャット..."
+                <div class="chat-log-channel-tag" id="chat-log-current-channel" onclick="openChannelPicker()">Misesapo
+                </div>
+                <input type="text" id="team-chat-inline-input" placeholder="社内チャット（Alt+1~8で切替）..."
                     onkeypress="if(event.key==='Enter') sendInlineTeamMessage()">
                 <button onclick="sendInlineTeamMessage()">
                     <i class="fas fa-paper-plane"></i>
@@ -2074,14 +2095,59 @@
 
     function switchChatChannel(channel) {
         teamChatState.channel = channel;
+        chatLogData.currentChannel = channel;
         teamChatState.lastTimestamp = null;
 
+        // Update tags and labels
+        const chInfo = CHAT_CHANNELS[channel] || { label: 'Unknown', color: '#fff' };
+        const tag = document.getElementById('chat-log-current-channel');
+        if (tag) {
+            tag.textContent = chInfo.label;
+            tag.style.borderColor = chInfo.color;
+            tag.style.color = chInfo.color;
+        }
+
+        const inlineInput = document.getElementById('team-chat-inline-input');
+        if (inlineInput) {
+            inlineInput.style.borderColor = `rgba(${hexToRgb(chInfo.color)}, 0.3)`;
+            inlineInput.placeholder = `${chInfo.label}チャンネルに送信... (Alt+1~8で切替)`;
+        }
+
+        // Update active tab in any open modals
         document.querySelectorAll('.team-chat-tab').forEach(tab => {
             tab.classList.toggle('active', tab.dataset.channel === channel);
         });
 
         loadTeamMessages();
+        renderChatLog();
     }
+
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ?
+            `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
+    }
+
+    function openChannelPicker() {
+        // Create simple channel picker if not using the full modal
+        const existing = document.getElementById('team-chat-modal');
+        if (existing) return;
+
+        openTeamChat(); // For now use the same modal, but we could make a smaller list
+    }
+
+    // Alt + 1-8 Shortcut Handler
+    document.addEventListener('keydown', (e) => {
+        if (e.altKey && e.key >= '1' && e.key <= '8') {
+            const keys = Object.keys(CHAT_CHANNELS);
+            const index = parseInt(e.key) - 1;
+            if (keys[index]) {
+                e.preventDefault();
+                switchChatChannel(keys[index]);
+                writeLog('system', `チャンネルをルーム [${CHAT_CHANNELS[keys[index]].label}] に切り替えました`, 'system');
+            }
+        }
+    });
 
     async function loadTeamMessages() {
         const msgContainer = document.getElementById('team-chat-messages');
@@ -2210,6 +2276,7 @@
     window.switchChatChannel = switchChatChannel;
     window.sendTeamMessage = sendTeamMessage;
     window.sendInlineTeamMessage = sendInlineTeamMessage;
+    window.openChannelPicker = openChannelPicker;
 
     // ========================================
     // Chat Log Resize & Drag
