@@ -544,29 +544,165 @@
         transform: translateY(0);
     }
 
-    .chat-history {
+    /* FF14-style Chat Log Container */
+    .chat-log-container {
         position: fixed;
-        left: 200px;
-        bottom: 80px;
-        width: 320px;
-        max-height: 200px;
-        overflow-y: auto;
-        padding: 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        z-index: 50;
-        background: rgba(0, 0, 0, 0.5);
-        border-radius: 12px;
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        font-size: 0.8rem;
-        opacity: 0.7;
-        transition: opacity 0.3s;
+        left: 32px;
+        bottom: 40px;
+        width: 400px;
+        z-index: 100;
     }
 
-    .chat-history:hover {
-        opacity: 1;
+    .chat-log-container.hidden .chat-history {
+        display: none;
+    }
+
+    .chat-history {
+        max-height: 180px;
+        overflow-y: auto;
+        padding: 10px 12px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 8px 8px 0 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+
+    .chat-log-line {
+        color: #c8c8c8;
+        word-wrap: break-word;
+    }
+
+    .chat-log-line .sender-misogi {
+        color: #4fc3f7;
+    }
+
+    .chat-log-line .sender-you {
+        color: #81c784;
+    }
+
+    .chat-log-line .sender-system {
+        color: #ffb74d;
+    }
+
+    /* Chat Log Button Bar */
+    .chat-log-buttons {
+        display: flex;
+        align-items: center;
+        height: 28px;
+        background: rgba(40, 40, 40, 0.95);
+        border-radius: 0 0 8px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: none;
+        padding: 0 4px;
+        gap: 2px;
+    }
+
+    .chat-log-tab {
+        padding: 4px 12px;
+        font-size: 0.7rem;
+        color: #888;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .chat-log-tab:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-log-tab.active {
+        color: #fff;
+        background: rgba(79, 195, 247, 0.3);
+    }
+
+    .chat-log-spacer {
+        flex: 1;
+    }
+
+    .chat-log-icon-btn {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+        color: #888;
+        cursor: pointer;
+        font-size: 0.7rem;
+        transition: all 0.2s;
+    }
+
+    .chat-log-icon-btn:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Chat Log Modal */
+    .chat-log-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .chat-log-modal-content {
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        background: #1a1a1a;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+    }
+
+    .chat-log-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-log-modal-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: #fff;
+    }
+
+    .chat-log-modal-header button {
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .chat-log-modal-header button:hover {
+        color: #fff;
+    }
+
+    .chat-log-modal-body {
+        padding: 16px;
+        max-height: 60vh;
+        overflow-y: auto;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.85rem;
+        line-height: 1.6;
     }
 
     /* Custom scrollbar styling */
@@ -1089,11 +1225,29 @@
             </div>
         </div>
 
+        <!-- FF14-style Chat Log -->
+        <div class="chat-log-container" id="chat-log-container">
+            <div class="chat-history" id="chat-history">
+                <!-- Log lines injected by JS -->
+            </div>
+            <div class="chat-log-buttons">
+                <button class="chat-log-tab active" data-filter="all" onclick="filterChatLog('all')">General</button>
+                <button class="chat-log-tab" data-filter="event" onclick="filterChatLog('event')">Event</button>
+                <div class="chat-log-spacer"></div>
+                <button class="chat-log-icon-btn" onclick="expandChatLog()" title="ログを拡大">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button class="chat-log-icon-btn" onclick="toggleChatLog()" title="ログを非表示">
+                    <i class="fas fa-times"></i>
+                </button>
+                <button class="chat-log-icon-btn" onclick="openTeamChat()" title="チームチャット（準備中）">
+                    <i class="fas fa-comment"></i>
+                </button>
+            </div>
+        </div>
+
         <!-- Chat Content -->
         <div id="chat-container">
-            <div class="chat-history" id="chat-history">
-                <!-- Initial welcome will be injected by JS -->
-            </div>
 
             <!-- New: Latest Message Display (Centered) -->
             <div id="latest-message-container" class="latest-message-container"></div>
@@ -1493,6 +1647,108 @@
 
         // Scroll history to bottom just in case
         chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        // Write to independent log system
+        const sender = role === 'ai' ? 'misogi' : 'you';
+        writeLog(sender, text.replace(/<[^>]*>/g, '').replace(/\n/g, ' '));
+    }
+
+    // ========================================
+    // Independent Chat Log System (FF14-style)
+    // ========================================
+    const chatLogData = {
+        all: [],      // All messages
+        event: [],    // Button/action events
+        visible: true,
+        filter: 'all'
+    };
+
+    function writeLog(sender, message, type = 'all') {
+        const logEntry = {
+            sender: sender, // 'misogi', 'you', 'system'
+            message: message,
+            type: type,     // 'all' or 'event'
+            time: new Date()
+        };
+
+        chatLogData.all.push(logEntry);
+        if (type === 'event') {
+            chatLogData.event.push(logEntry);
+        }
+
+        renderChatLog();
+    }
+
+    function renderChatLog() {
+        const logContainer = document.getElementById('chat-history');
+        if (!logContainer) return;
+
+        const filter = chatLogData.filter;
+        const entries = filter === 'all' ? chatLogData.all : chatLogData.event;
+
+        // Keep only last 50 entries for performance
+        const recentEntries = entries.slice(-50);
+
+        logContainer.innerHTML = recentEntries.map(entry => {
+            const senderClass = `sender-${entry.sender}`;
+            const senderLabel = entry.sender === 'misogi' ? 'MISOGI' :
+                entry.sender === 'you' ? 'YOU' : 'SYSTEM';
+            return `<div class="chat-log-line"><span class="${senderClass}">${senderLabel}>></span> ${entry.message}</div>`;
+        }).join('');
+
+        logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    function filterChatLog(filter) {
+        chatLogData.filter = filter;
+
+        // Update tab active state
+        document.querySelectorAll('.chat-log-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.filter === filter);
+        });
+
+        renderChatLog();
+    }
+
+    function toggleChatLog() {
+        const container = document.getElementById('chat-log-container');
+        if (!container) return;
+
+        chatLogData.visible = !chatLogData.visible;
+        container.classList.toggle('hidden', !chatLogData.visible);
+    }
+
+    function expandChatLog() {
+        // Create modal for full log view
+        const modal = document.createElement('div');
+        modal.className = 'chat-log-modal';
+        modal.innerHTML = `
+            <div class="chat-log-modal-content">
+                <div class="chat-log-modal-header">
+                    <h3>チャットログ</h3>
+                    <button onclick="this.closest('.chat-log-modal').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="chat-log-modal-body">
+                    ${chatLogData.all.map(entry => {
+            const senderLabel = entry.sender === 'misogi' ? 'MISOGI' :
+                entry.sender === 'you' ? 'YOU' : 'SYSTEM';
+            return `<div class="chat-log-line"><span class="sender-${entry.sender}">${senderLabel}>></span> ${entry.message}</div>`;
+        }).join('')}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    function openTeamChat() {
+        writeLog('system', 'チームチャット機能は準備中です。', 'event');
+    }
+
+    // Log event actions (button clicks, etc.)
+    function logEvent(message) {
+        writeLog('system', message, 'event');
     }
 
     async function sendTextMessage() {
