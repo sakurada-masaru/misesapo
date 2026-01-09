@@ -2,6 +2,8 @@
 @json('data/meta/admin_dashboard_title.json', $title)
 @json('data/meta/admin_dashboard_body_class.json', $body_class)
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap');
 
@@ -1395,6 +1397,22 @@
         padding-top: 60px;
         z-index: 20;
     }
+
+    /* Water Morph Lottie Style */
+    #water-morph-lottie {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 140px;
+        /* Slightly smaller than the visualizer circle */
+        height: 140px;
+        z-index: 5;
+        mix-blend-mode: screen;
+        pointer-events: none;
+        opacity: 0.8;
+        filter: drop-shadow(0 0 15px var(--accent-glow));
+    }
 </style>
 
 <main id="main" class="admin-dashboard">
@@ -1540,6 +1558,14 @@
                     <button class="login-submit-btn" onclick="performLogin()">認証</button>
                 </div>
             </div>
+            <div id="water-morph-lottie"></div>
+            <div class="visualizer-circle">
+                <input type="file" id="image-upload" accept="image/*" style="display: none;"
+                    onchange="handleImageSelect(this)">
+                <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
+                    <i class="fas fa-camera"></i>
+                </button>
+            </div>
 
             <div class="chat-input-wrapper">
                 <input type="file" id="image-upload" accept="image/*" style="display: none;"
@@ -1584,6 +1610,20 @@
             input.value = ''; // Reset
         }
     }
+
+    // Initialize Water Morph Lottie Animation
+    function initWaterMorph() {
+        const container = document.getElementById('water-morph-lottie');
+        if (!container) return;
+        lottie.loadAnimation({
+            container: container,
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            path: '/Water%20Morph.json'
+        });
+    }
+    document.addEventListener('DOMContentLoaded', initWaterMorph);
 
     const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
