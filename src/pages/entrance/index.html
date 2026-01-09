@@ -2041,6 +2041,15 @@
         writeLog('system', message, 'event');
     }
 
+    // Expose chat functions to window for onclick handlers
+    window.filterChatLog = filterChatLog;
+    window.toggleChatLog = toggleChatLog;
+    window.expandChatLog = expandChatLog;
+    window.openTeamChat = openTeamChat;
+    window.closeTeamChat = closeTeamChat;
+    window.switchChatChannel = switchChatChannel;
+    window.sendTeamMessage = sendTeamMessage;
+
     async function sendTextMessage() {
         const text = textInput.value.trim();
         if (!text) return;
