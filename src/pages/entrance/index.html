@@ -1620,6 +1620,13 @@
     if (sidebar) sidebar.style.display = 'none';
 
     async function startWorkflow() {
+        // Guard: If already in a work mode, do not reset/run startWorkflow again
+        const currentJob = localStorage.getItem('current_job_type');
+        if (currentJob && chatContainer.classList.contains('sidebar-active')) {
+            console.log("startWorkflow called but user is already in work mode. Ignoring.");
+            return;
+        }
+
         startOverlay.classList.add('hidden');
         switchMode('chat');
 
@@ -1678,6 +1685,16 @@
                         const yesterdayRecord = records.find(r => r.date === yesterdayStr);
                         if (yesterdayRecord && yesterdayRecord.clock_in && !yesterdayRecord.clock_out) {
                             latestRecord = yesterdayRecord;
+                        }
+                    }
+
+                    // Critical Fallback: If still no record found but there ARE records, 
+                    // check the very latest record regardless of date match of today/yesterday.
+                    // If it's open (no clock_out), treat as clocked in.
+                    if (!latestRecord && records.length > 0) {
+                        if (records[0].clock_in && !records[0].clock_out) {
+                            console.log('[DEBUG] Found open record from another date:', records[0].date);
+                            latestRecord = records[0];
                         }
                     }
 
@@ -2405,8 +2422,30 @@
         chatHistory.appendChild(loadingBubble);
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
-        // Force Persona (Temporary fix for outdated backend)
-        const systemPrompt = "(System: あなたは管理AI『Misogi』です。Sakuraと名乗らないでください。常に『Misogi』として振る舞ってください。)\n";
+        // Create dynamic system prompt with context
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const currentJob = localStorage.getItem('current_job_type');
+        const jobLabel = currentJob ? (JOB_TYPES[currentJob]?.label || '不明') : '未選択';
+        const isClockedIn = !!currentJob;
+
+        let context = `現在は【${new Date().toLocaleString('ja-JP')}】です。
+ユーザー名: ${user.name || '不明'} 
+現在の業務モード: ${jobLabel} 
+認証ステータス: ${token ? 'ログイン済み (認証不要)' : '未ログイン'}
+出勤ステータス: ${isClockedIn ? '出勤中' : '未出勤'}
+`;
+
+        if (window.reportWizardActive) {
+            context += `状態: 清掃レポート作成のウィザードが進行中です。ステップ: ${reportWizardState.step} 
+対象: ${reportWizardState.cleaningTarget || '未設定'}
+`;
+        }
+
+        const systemPrompt = `(System: あなたは管理AI『Misogi』です。以下のコンテキストを理解し、常に『Misogi』として振る舞ってください。
+${context}
+【重要】ユーザーは既にログイン・出勤している場合、挨拶のリセットや再度のログイン要求メッセージ、request_loginインテントの出力は厳禁です。
+現在のウィザードや業務の文脈を維持し、ユーザーの入力を助ける返答をしてください。)\n`;
+
         const textToSend = systemPrompt + text;
 
         try {
@@ -2569,7 +2608,12 @@
         for (const cmd of aiResult.ui_commands) {
             switch (cmd.type) {
                 case 'request_login':
-                    loginForm.style.display = 'flex';
+                    const token = localStorage.getItem('cognito_id_token');
+                    if (!token) {
+                        loginForm.style.display = 'flex';
+                    } else {
+                        console.warn("AI requested login, but token already exists. Ignoring reset.");
+                    }
                     break;
                 case 'show_attendance':
                     const actionContainer = document.getElementById('action-buttons-container');
