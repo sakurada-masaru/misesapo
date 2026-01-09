@@ -180,10 +180,31 @@ export class PreviewGenerator {
     }
 
     if (section.subtitles) {
-      section.subtitles.forEach(s => textHtml += `<div class="section-subtitle">■ ${this._escape(s.value)}</div>`);
+      section.subtitles.forEach(s => {
+        const text = typeof s === 'string' ? s : (s.value || s.text || '');
+        textHtml += `<div class="section-subtitle">■ ${this._escape(text)}</div>`;
+      });
     }
     if (section.comments) {
-      section.comments.forEach(c => textHtml += `<div class="section-comment">${this._escape(c.value)}</div>`);
+      section.comments.forEach(c => {
+        const text = typeof c === 'string' ? c : (c.value || c.text || '');
+        textHtml += `<div class="section-comment">${this._escape(text)}</div>`;
+      });
+    }
+
+    // Render customContents (text and image items added via custom content feature)
+    let customHtml = '';
+    if (section.customContents && section.customContents.length > 0) {
+      section.customContents.forEach(cc => {
+        if (cc.type === 'text' && cc.value) {
+          customHtml += `<div class="custom-text-content" style="margin-top: 8px; padding: 8px; background: #fff; border: 1px solid #e5e7eb; border-radius: 4px;">${this._escape(cc.value)}</div>`;
+        } else if (cc.type === 'image' && cc.image) {
+          const imgUrl = cc.image.url || cc.image.blobUrl;
+          if (imgUrl) {
+            customHtml += `<div class="custom-image-content" style="margin-top: 8px;"><img src="${imgUrl}" style="max-width: 100%; border-radius: 4px;"></div>`;
+          }
+        }
+      });
     }
 
     return `
@@ -192,6 +213,7 @@ export class PreviewGenerator {
              ${photosHtml}
              <div class="section-text-content" style="padding: 10px; background: #f9f9f9; margin-top: 10px; border-radius: 4px;">
                 ${textHtml}
+                ${customHtml}
              </div>
          </div>`;
   }

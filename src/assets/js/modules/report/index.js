@@ -415,13 +415,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         formalPreviewBtn.addEventListener('click', () => {
             // Gather data (merging meta from inputs and sections from state)
             const meta = {
-                brandName: document.getElementById('report-brand-search')?.value,
-                storeName: document.getElementById('report-store-search')?.value,
-                date: document.getElementById('report-date')?.value
+                brandName: document.getElementById('report-brand-search')?.value || document.getElementById('report-info-brand')?.value,
+                storeName: document.getElementById('report-store-search')?.value || document.getElementById('report-info-store')?.value,
+                date: document.getElementById('report-date')?.value || document.getElementById('report-info-date')?.value
             };
 
             // Get current active tab sections
             const currentSections = stateManager.getCurrentSections();
+
+            // DEBUG: Log sections data for troubleshooting
+            console.log('[Preview Debug] Meta:', meta);
+            console.log('[Preview Debug] Sections:', JSON.stringify(currentSections, null, 2));
 
             previewGenerator.openFormalReportPreview({
                 meta: meta,
