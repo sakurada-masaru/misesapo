@@ -2443,7 +2443,9 @@
 
         const systemPrompt = `(System: あなたは管理AI『Misogi』です。以下のコンテキストを理解し、常に『Misogi』として振る舞ってください。
 ${context}
-【重要】ユーザーは既にログイン・出勤している場合、挨拶のリセットや再度のログイン要求メッセージ、request_loginインテントの出力は厳禁です。
+【重要1】ユーザーは既にログイン・出勤している場合、挨拶のリセットや再度のログイン要求メッセージ、request_loginインテントの出力は厳禁です。
+【重要2】ユーザーが答えやすいよう、可能な限り ui_commands 内に {type: "show_options", options: ["選択肢1", "選択肢2"...]} を含めてください。
+特に「はい/いいえ」「特になし/備考あり」「完了」などの頻出する回答は必ずボタンとして提示してください。
 現在のウィザードや業務の文脈を維持し、ユーザーの入力を助ける返答をしてください。)\n`;
 
         const textToSend = systemPrompt + text;
@@ -2630,6 +2632,18 @@ ${context}
                         actionContainer.appendChild(btnDiv);
                     }
                     break;
+                case 'show_options':
+                    if (cmd.options && Array.isArray(cmd.options)) {
+                        const buttons = cmd.options.map((opt, idx) => ({
+                            id: `opt-btn-${idx}`,
+                            label: opt,
+                            icon: 'fas fa-chevron-right',
+                            color: 'rgba(255,255,255,0.1)',
+                            action: `submitQuickReply('${opt.replace(/'/g, "\\'")}')`
+                        }));
+                        renderActionButtons(buttons);
+                    }
+                    break;
                 case 'show_sidebar':
                     if (sidebar) {
                         sidebar.style.display = 'flex';
@@ -2662,6 +2676,13 @@ ${context}
         }
     }
 
+    function submitQuickReply(text) {
+        if (textInput) {
+            textInput.value = text;
+            sendTextMessage();
+        }
+    }
+
     function renderActionButtons(buttons) {
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
@@ -2670,12 +2691,15 @@ ${context}
         const btnDiv = document.createElement('div');
         btnDiv.className = 'action-bubble-container';
         btnDiv.style.display = 'flex';
-        btnDiv.style.gap = '10px';
-        btnDiv.style.flexDirection = 'row';
+        btnDiv.style.gap = '8px';
+        btnDiv.style.flexWrap = 'wrap';
+        btnDiv.style.justifyContent = 'center';
+        btnDiv.style.padding = '5px';
 
         buttons.forEach(btn => {
             const buttonHtml = `
-                <button class="attendance-btn" id="${btn.id}" onclick="${btn.action}" style="background: ${btn.color};">
+                <button class="attendance-btn" id="${btn.id}" onclick="${btn.action}" 
+                        style="background: ${btn.color}; border: 1px solid rgba(255,255,255,0.1); margin: 2px;">
                     <i class="${btn.icon}"></i> ${btn.label}
                 </button>
             `;
@@ -2683,6 +2707,13 @@ ${context}
         });
         actionContainer.appendChild(btnDiv);
     }
+
+    // Expose to window
+    window.submitQuickReply = submitQuickReply;
+    window.performClockIn = performClockIn;
+    window.performClockOut = performClockOut;
+    window.performBreakStart = performBreakStart;
+    window.performBreakEnd = performBreakEnd;
 
     if (textInput) {
         textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendTextMessage(); });
