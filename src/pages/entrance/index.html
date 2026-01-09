@@ -2816,19 +2816,56 @@
         if (!actionContainer) return;
 
         actionContainer.innerHTML = `
-            <div style="display: flex; gap: 12px; justify-content: center;">
-                <button onclick="submitReport()"
-                    style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
-                    padding: 14px 32px; border-radius: 25px; font-size: 0.95rem; font-weight: 600; cursor: pointer;">
-                    ✓ 送信する
+            <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
+                <button onclick="openReportPreview()"
+                    style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none;
+                    padding: 12px 24px; border-radius: 25px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+                    display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-eye"></i> プレビューを確認
                 </button>
-                <button onclick="startReportWizard()"
-                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
-                    color: white; padding: 14px 24px; border-radius: 25px; font-size: 0.95rem; cursor: pointer;">
-                    やり直す
-                </button>
+                <div style="display: flex; gap: 12px;">
+                    <button onclick="submitReport()"
+                        style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+                        padding: 14px 32px; border-radius: 25px; font-size: 0.95rem; font-weight: 600; cursor: pointer;">
+                        ✓ 送信する
+                    </button>
+                    <button onclick="startReportWizard()"
+                        style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
+                        color: white; padding: 14px 24px; border-radius: 25px; font-size: 0.95rem; cursor: pointer;">
+                        やり直す
+                    </button>
+                </div>
             </div>
         `;
+    }
+
+    function openReportPreview() {
+        // Save preview data to localStorage
+        const previewData = {
+            store: reportWizardState.store,
+            cleaningTarget: reportWizardState.cleaningTarget,
+            photos: reportWizardState.photos,
+            notes: reportWizardState.notes,
+            nextProposal: reportWizardState.nextProposal
+        };
+        localStorage.setItem('report_preview_data', JSON.stringify(previewData));
+        localStorage.removeItem('report_preview_confirmed');
+
+        // Open preview window
+        const previewWindow = window.open('/reports/preview', 'reportPreview',
+            'width=450,height=750,left=100,top=100,scrollbars=yes');
+
+        // Check if preview was confirmed
+        const checkConfirmed = setInterval(() => {
+            if (localStorage.getItem('report_preview_confirmed') === 'true') {
+                clearInterval(checkConfirmed);
+                localStorage.removeItem('report_preview_confirmed');
+                appendChatMessage('ai', '✅ プレビューを確認しました。送信する準備ができています！');
+            }
+        }, 500);
+
+        // Stop checking after 60 seconds
+        setTimeout(() => clearInterval(checkConfirmed), 60000);
     }
 
     function startWorkOrderWizard() {

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レポートプレビュー | ミセサポ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: #0a1628;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .preview-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #1e293b;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .preview-header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 16px 20px;
+            text-align: center;
+        }
+
+        .preview-header h1 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .preview-header .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .preview-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .info-label {
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+
+        .info-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        /* Photo comparison */
+        .photo-comparison {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .photo-box {
+            background: #0f172a;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .photo-label {
+            padding: 6px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .photo-box.before .photo-label {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .photo-box.after .photo-label {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .photo-img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #475569;
+            font-size: 0.8rem;
+        }
+
+        .photo-arrow {
+            color: #ec4899;
+            font-size: 1.2rem;
+        }
+
+        /* Next proposal */
+        .proposal-box {
+            background: rgba(236, 72, 153, 0.1);
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .proposal-timing {
+            font-weight: 700;
+            color: #ec4899;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .proposal-work {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        /* Notes */
+        .notes-text {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        /* Actions */
+        .preview-actions {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-submit:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-close {
+            background: rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-close:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="preview-container" id="preview-container">
+        <div class="empty-message" id="empty-message">
+            <i class="fas fa-file-alt" style="font-size: 2rem; margin-bottom: 12px; color: #475569;"></i>
+            <p>プレビューデータがありません</p>
+        </div>
+    </div>
+
+    <script>
+        // Get preview data from localStorage
+        const previewData = localStorage.getItem('report_preview_data');
+
+        if (previewData) {
+            try {
+                const data = JSON.parse(previewData);
+                renderPreview(data);
+            } catch (e) {
+                console.error('Error parsing preview data:', e);
+            }
+        }
+
+        function renderPreview(data) {
+            const container = document.getElementById('preview-container');
+
+            // Format date
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+
+            // Build photo HTML
+            const beforePhoto = data.photos?.before?.[0]?.dataUrl || '';
+            const afterPhoto = data.photos?.after?.[0]?.dataUrl || '';
+
+            const beforePhotoHtml = beforePhoto
+                ? `<img src="${beforePhoto}" alt="作業前" class="photo-img">`
+                : `<div class="photo-placeholder"><i class="fas fa-image"></i></div>`;
+
+            const afterPhotoHtml = afterPhoto
+                ? `<img src="${afterPhoto}" alt="作業後" class="photo-img">`
+                : `<div class="photo-placeholder"><i class="fas fa-image"></i></div>`;
+
+            // Next proposal
+            const nextProposalHtml = data.nextProposal?.timing
+                ? `<div class="proposal-box">
+             <div class="proposal-timing">📅 ${data.nextProposal.timing}</div>
+             ${data.nextProposal.work ? `<div class="proposal-work">${data.nextProposal.work}</div>` : ''}
+           </div>`
+                : '<div class="info-value" style="color: #64748b;">なし</div>';
+
+            container.innerHTML = `
+        <div class="preview-header">
+          <h1>清掃実施報告書</h1>
+          <span class="badge">HACCP準拠</span>
+        </div>
+
+        <div class="preview-section">
+          <div class="section-title">基本情報</div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">実施日</span>
+              <span class="info-value">${dateStr}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">店舗</span>
+              <span class="info-value">${data.store?.name || '未設定'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">清掃対象</span>
+              <span class="info-value">${data.cleaningTarget || '未設定'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">写真</span>
+              <span class="info-value">${(data.photos?.before?.length || 0) + (data.photos?.after?.length || 0)}枚</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-section">
+          <div class="section-title">作業写真</div>
+          <div class="photo-comparison">
+            <div class="photo-box before">
+              <div class="photo-label">BEFORE</div>
+              ${beforePhotoHtml}
+            </div>
+            <div class="photo-arrow">
+              <i class="fas fa-arrow-right"></i>
+            </div>
+            <div class="photo-box after">
+              <div class="photo-label">AFTER</div>
+              ${afterPhotoHtml}
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-section">
+          <div class="section-title">備考</div>
+          <div class="notes-text">${data.notes || 'なし'}</div>
+        </div>
+
+        <div class="preview-section">
+          <div class="section-title">次回提案</div>
+          ${nextProposalHtml}
+        </div>
+
+        <div class="preview-actions">
+          <button class="btn btn-submit" onclick="confirmAndClose()">
+            ✓ 内容を確認しました
+          </button>
+          <button class="btn btn-close" onclick="window.close()">
+            閉じる
+          </button>
+        </div>
+      `;
+        }
+
+        function confirmAndClose() {
+            // Signal to parent that preview was confirmed
+            localStorage.setItem('report_preview_confirmed', 'true');
+            window.close();
+        }
+    </script>
+</body>
+
+</html>
