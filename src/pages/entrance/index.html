@@ -1000,6 +1000,7 @@
         gap: 10px;
         margin-bottom: 20px;
         margin-top: auto;
+        padding-top: 60px;
         z-index: 20;
     }
 </style>
@@ -2519,26 +2520,26 @@
         if (!actionContainer) return;
 
         actionContainer.innerHTML = `
-            <div style="display: flex; flex-direction: column; gap: 16px; max-width: 350px; margin: 0 auto; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 16px;">
-                <div style="display: flex; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 16px; max-width: 500px; width: 90%; margin: 0 auto; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 16px;">
+                <div style="display: flex; gap: 16px;">
                     <div style="flex: 1; text-align: center;">
-                        <div style="color: #fbbf24; font-size: 0.8rem; font-weight: 600; margin-bottom: 8px;">作業前</div>
+                        <div style="color: #fbbf24; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">作業前</div>
                         <label style="display: flex; flex-direction: column; align-items: center; justify-content: center;
-                            height: 100px; border: 2px dashed rgba(251,191,36,0.5); border-radius: 12px; cursor: pointer;
+                            height: 120px; border: 2px dashed rgba(251,191,36,0.5); border-radius: 12px; cursor: pointer;
                             background: rgba(251,191,36,0.1); transition: all 0.2s;">
                             <input type="file" accept="image/*" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'before')">
-                            <i class="fas fa-camera" style="font-size: 1.5rem; color: #fbbf24;"></i>
-                            <span id="before-count" style="font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-top: 4px;">0枚</span>
+                            <i class="fas fa-camera" style="font-size: 1.8rem; color: #fbbf24;"></i>
+                            <span id="before-count" style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px;">0枚</span>
                         </label>
                     </div>
                     <div style="flex: 1; text-align: center;">
-                        <div style="color: #10b981; font-size: 0.8rem; font-weight: 600; margin-bottom: 8px;">作業後</div>
+                        <div style="color: #10b981; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">作業後</div>
                         <label style="display: flex; flex-direction: column; align-items: center; justify-content: center;
-                            height: 100px; border: 2px dashed rgba(16,185,129,0.5); border-radius: 12px; cursor: pointer;
+                            height: 120px; border: 2px dashed rgba(16,185,129,0.5); border-radius: 12px; cursor: pointer;
                             background: rgba(16,185,129,0.1); transition: all 0.2s;">
                             <input type="file" accept="image/*" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'after')">
-                            <i class="fas fa-camera" style="font-size: 1.5rem; color: #10b981;"></i>
-                            <span id="after-count" style="font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-top: 4px;">0枚</span>
+                            <i class="fas fa-camera" style="font-size: 1.8rem; color: #10b981;"></i>
+                            <span id="after-count" style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px;">0枚</span>
                         </label>
                     </div>
                 </div>
