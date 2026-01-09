@@ -591,10 +591,6 @@
         cursor: nesw-resize;
     }
 
-    .chat-log-container.hidden .chat-history {
-        display: none;
-    }
-
     .chat-history {
         max-height: 180px;
         overflow-y: auto;
@@ -623,6 +619,61 @@
 
     .chat-log-line .sender-system {
         color: #ffb74d;
+    }
+
+    .chat-log-line .sender-team {
+        color: #ba68c8;
+    }
+
+    /* Chat Log Input Wrapper */
+    .chat-log-input-wrapper {
+        display: flex;
+        padding: 6px 8px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: none;
+        border-bottom: none;
+        gap: 6px;
+    }
+
+    .chat-log-input-wrapper input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        padding: 6px 10px;
+        color: #fff;
+        font-size: 0.75rem;
+        outline: none;
+    }
+
+    .chat-log-input-wrapper input:focus {
+        border-color: rgba(186, 104, 200, 0.5);
+    }
+
+    .chat-log-input-wrapper button {
+        background: rgba(186, 104, 200, 0.3);
+        border: none;
+        border-radius: 4px;
+        padding: 6px 10px;
+        color: #ba68c8;
+        cursor: pointer;
+        font-size: 0.7rem;
+    }
+
+    .chat-log-input-wrapper button:hover {
+        background: rgba(186, 104, 200, 0.5);
+    }
+
+    /* Hidden state - only hide log and input, keep buttons */
+    .chat-log-container.hidden .chat-history,
+    .chat-log-container.hidden .chat-log-input-wrapper,
+    .chat-log-container.hidden .chat-log-resize-handle {
+        display: none;
+    }
+
+    .chat-log-container.hidden .chat-log-buttons {
+        border-radius: 8px;
     }
 
     /* Chat Log Button Bar */
@@ -1421,9 +1472,21 @@
             <div class="chat-history" id="chat-history">
                 <!-- Log lines injected by JS -->
             </div>
+
+            <!-- Team chat input (for Call/General) -->
+            <div class="chat-log-input-wrapper" id="chat-log-input-wrapper">
+                <input type="text" id="team-chat-inline-input" placeholder="社内チャット..."
+                    onkeypress="if(event.key==='Enter') sendInlineTeamMessage()">
+                <button onclick="sendInlineTeamMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+
             <div class="chat-log-buttons">
-                <button class="chat-log-tab active" data-filter="all" onclick="filterChatLog('all')">General</button>
+                <button class="chat-log-tab active" data-filter="general"
+                    onclick="filterChatLog('general')">General</button>
                 <button class="chat-log-tab" data-filter="event" onclick="filterChatLog('event')">Event</button>
+                <button class="chat-log-tab" data-filter="call" onclick="filterChatLog('call')">Call</button>
                 <div class="chat-log-spacer"></div>
                 <button class="chat-log-icon-btn" onclick="expandChatLog()" title="ログを拡大">
                     <i class="fas fa-plus"></i>
@@ -1431,8 +1494,8 @@
                 <button class="chat-log-icon-btn" onclick="toggleChatLog()" title="ログを非表示">
                     <i class="fas fa-times"></i>
                 </button>
-                <button class="chat-log-icon-btn" onclick="openTeamChat()" title="チームチャット">
-                    <i class="fas fa-comment"></i>
+                <button class="chat-log-icon-btn" onclick="openTeamChat()" title="チャンネル選択">
+                    <i class="fas fa-hashtag"></i>
                 </button>
             </div>
         </div>
@@ -1839,34 +1902,32 @@
         // Scroll history to bottom just in case
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
-        // Write to independent log system
+        // Write to independent log system (type: misogi for AI conversation)
         const sender = role === 'ai' ? 'misogi' : 'you';
-        writeLog(sender, text.replace(/<[^>]*>/g, '').replace(/\n/g, ' '));
+        writeLog(sender, text.replace(/<[^>]*>/g, '').replace(/\n/g, ' '), 'misogi');
     }
 
     // ========================================
     // Independent Chat Log System (FF14-style)
     // ========================================
     const chatLogData = {
-        all: [],      // All messages
-        event: [],    // Button/action events
+        messages: [],   // All messages with type
         visible: true,
-        filter: 'all'
+        filter: 'general',  // 'general', 'event', 'call'
+        currentChannel: 'misesapo'  // For team chat
     };
 
-    function writeLog(sender, message, type = 'all') {
+    // type: 'misogi' (MISOGI conversation), 'team' (team chat), 'system' (events)
+    function writeLog(sender, message, type = 'misogi') {
         const logEntry = {
-            sender: sender, // 'misogi', 'you', 'system'
+            sender: sender,   // 'misogi', 'you', 'system', 'team'
             message: message,
-            type: type,     // 'all' or 'event'
-            time: new Date()
+            type: type,       // 'misogi', 'team', 'system'
+            time: new Date(),
+            channel: chatLogData.currentChannel
         };
 
-        chatLogData.all.push(logEntry);
-        if (type === 'event') {
-            chatLogData.event.push(logEntry);
-        }
-
+        chatLogData.messages.push(logEntry);
         renderChatLog();
     }
 
@@ -1875,15 +1936,29 @@
         if (!logContainer) return;
 
         const filter = chatLogData.filter;
-        const entries = filter === 'all' ? chatLogData.all : chatLogData.event;
+        let entries = chatLogData.messages;
+
+        // Filter based on tab selection
+        if (filter === 'event') {
+            // Event = MISOGI conversations only
+            entries = entries.filter(e => e.type === 'misogi');
+        } else if (filter === 'call') {
+            // Call = Team chat only
+            entries = entries.filter(e => e.type === 'team');
+        }
+        // General = show all
 
         // Keep only last 50 entries for performance
         const recentEntries = entries.slice(-50);
 
         logContainer.innerHTML = recentEntries.map(entry => {
             const senderClass = `sender-${entry.sender}`;
-            const senderLabel = entry.sender === 'misogi' ? 'MISOGI' :
-                entry.sender === 'you' ? 'YOU' : 'SYSTEM';
+            let senderLabel;
+            if (entry.sender === 'misogi') senderLabel = 'MISOGI';
+            else if (entry.sender === 'you') senderLabel = 'YOU';
+            else if (entry.sender === 'team') senderLabel = entry.senderName || 'TEAM';
+            else senderLabel = 'SYSTEM';
+
             return `<div class="chat-log-line"><span class="${senderClass}">${senderLabel}>></span> ${entry.message}</div>`;
         }).join('');
 
@@ -2081,7 +2156,49 @@
 
     // Log event actions (button clicks, etc.)
     function logEvent(message) {
-        writeLog('system', message, 'event');
+        writeLog('system', message, 'system');
+    }
+
+    // Send team message from inline input in chat log
+    async function sendInlineTeamMessage() {
+        const input = document.getElementById('team-chat-inline-input');
+        if (!input) return;
+
+        const message = input.value.trim();
+        if (!message) return;
+
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const senderName = user.name || 'Unknown';
+
+        try {
+            const response = await fetch(CHAT_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    channel: chatLogData.currentChannel,
+                    sender_id: user.id || user.sub || 'unknown',
+                    sender_name: senderName,
+                    message: message
+                })
+            });
+
+            if (response.ok) {
+                input.value = '';
+                // Add to local log immediately
+                const logEntry = {
+                    sender: 'team',
+                    senderName: senderName,
+                    message: message,
+                    type: 'team',
+                    time: new Date(),
+                    channel: chatLogData.currentChannel
+                };
+                chatLogData.messages.push(logEntry);
+                renderChatLog();
+            }
+        } catch (e) {
+            console.error('Failed to send inline team message:', e);
+        }
     }
 
     // Expose chat functions to window for onclick handlers
@@ -2092,6 +2209,7 @@
     window.closeTeamChat = closeTeamChat;
     window.switchChatChannel = switchChatChannel;
     window.sendTeamMessage = sendTeamMessage;
+    window.sendInlineTeamMessage = sendInlineTeamMessage;
 
     // ========================================
     // Chat Log Resize & Drag
