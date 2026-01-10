@@ -1337,9 +1337,8 @@
     }
 
     .chat-input-wrapper {
-        display: none;
+        display: flex;
         margin-top: 15px;
-        /* ... other styles preserved but hidden ... */
         gap: 10px;
         background: rgba(255, 255, 255, 0.05);
         padding: 8px;
@@ -1817,12 +1816,18 @@
         </div>
     </div>
 
-    <!-- Centered UI Elements (Message + Action Buttons) -->
+    <!-- Centered UI Elements (Message + Action Buttons + Input) -->
     <div id="centered-ui-container" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
         display: flex; flex-direction: column; align-items: center; justify-content: center; 
         z-index: 500; pointer-events: none; width: 80%; max-width: 600px; margin-top: 100px;">
         <div id="latest-message-container" class="latest-message-container" style="pointer-events: auto;"></div>
         <div id="action-buttons-container" class="action-buttons-container" style="pointer-events: auto;"></div>
+        <div class="chat-input-wrapper" style="pointer-events: auto; margin-top: 20px;">
+            <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
+            <button class="send-btn" onclick="sendTextMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
     </div>
 
     <!-- FF14-style Chat Log -->
