@@ -2839,6 +2839,13 @@ ${context}
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        // Auto-start for authenticated users coming from job change
+        const token = localStorage.getItem('cognito_id_token');
+        const startOverlay = document.getElementById('start-overlay');
+        if (token && startOverlay) {
+            startOverlay.classList.add('hidden');
+            startWorkflow();
+        }
         EntranceCore.initFadeIn();
     });
 
