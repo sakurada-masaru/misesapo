@@ -3127,9 +3127,9 @@ ${context}
 
         const jobActions = {
             sales: [
-                { label: '新規顧客登録', action: 'startCustomerWizard()' },
-                { label: '依頼書を作成', action: 'startRequestWizard()' },
-                { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'" }
+                { label: '顧客', action: 'showCustomerSubmenu()' },
+                { label: '契約', action: 'showContractSubmenu()' },
+                { label: '依頼', action: 'showRequestSubmenu()' }
             ],
             cleaning: [
                 { label: 'レポートを作成', action: 'startReportWizard()' }
@@ -3747,13 +3747,17 @@ ${context}
                 color: rgba(255,255,255,0.7); padding: 12px 24px; border-radius: 20px; cursor: pointer;">キャンセル</button>
         `;
 
-        function showContractSubmenu() {
-            const actionContainer = document.getElementById('action-buttons-container');
-            if (!actionContainer) return;
+        container.appendChild(summaryDiv);
+        container.appendChild(btnDiv);
+    }
 
-            appendChatMessage('ai', '契約メニューを選択してください。');
+    function showContractSubmenu() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
 
-            actionContainer.innerHTML = `
+        appendChatMessage('ai', '契約メニューを選択してください。');
+
+        actionContainer.innerHTML = `
             <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                 <button onclick="startRequestWizard('contract')" class="action-btn" style="flex: 1 1 40%; min-width: 150px;">
                     <i class="fas fa-plus-circle" style="color: #60a5fa;"></i> 新規契約作成
@@ -3766,15 +3770,15 @@ ${context}
                 ← メニューに戻る
             </button>
         `;
-        }
+    }
 
-        function showRequestSubmenu() {
-            const actionContainer = document.getElementById('action-buttons-container');
-            if (!actionContainer) return;
+    function showRequestSubmenu() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
 
-            appendChatMessage('ai', '依頼メニューを選択してください。');
+        appendChatMessage('ai', '依頼メニューを選択してください。');
 
-            actionContainer.innerHTML = `
+        actionContainer.innerHTML = `
             <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                 <button onclick="startRequestWizard('estimate')" class="action-btn" style="flex: 1 1 40%; min-width: 150px;">
                     <i class="fas fa-plus-circle" style="color: #34d399;"></i> 新規依頼作成
@@ -3787,13 +3791,11 @@ ${context}
                 ← メニューに戻る
             </button>
         `;
-        }
+    }
 
-        function showPlaceholder(featureName) {
-            appendChatMessage('ai', `**${featureName}** 機能は現在準備中です。`);
-            setTimeout(() => showJobActions('sales'), 1500);
-        }
-        container.appendChild(btnDiv);
+    function showPlaceholder(featureName) {
+        appendChatMessage('ai', `**${featureName}** 機能は現在準備中です。`);
+        setTimeout(() => showJobActions('sales'), 1500);
     }
 
     function cancelCustomerWizard() {
