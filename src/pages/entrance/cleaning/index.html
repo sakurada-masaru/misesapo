@@ -2196,6 +2196,12 @@
     <span class="job-dot"></span>
     <span id="floating-job-label">-</span>
 </button>
+<div id="live-mode-indicator" style="display: none; position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 4px 12px;
+    border-radius: 12px; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; z-index: 9999;
+    animation: pulse-badge 1s infinite;">
+    🔴 LIVE
+</div>
 </main>
 
 <script>
@@ -4005,31 +4011,27 @@ ${context}
         reportWizardState.mode = mode;
         appendChatMessage('user', mode === 'live' ? '🔴 LIVE モード' : '📝 AFTER モード');
 
-        const visualizer = document.querySelector('.visualizer-container');
+        const visualizers = document.querySelectorAll('.visualizer-container');
+        const liveIndicator = document.getElementById('live-mode-indicator');
 
         if (mode === 'live') {
             // Activate LIVE mode visualizer
-            if (visualizer) {
-                visualizer.classList.add('live-mode');
-                // Add LIVE badge if not exists
-                if (!document.querySelector('.live-mode-badge')) {
-                    const badge = document.createElement('div');
-                    badge.className = 'live-mode-badge';
-                    badge.textContent = '🔴 LIVE';
-                    visualizer.appendChild(badge);
-                }
-            }
+            visualizers.forEach(v => v.classList.add('live-mode'));
+
+            // Show LIVE indicator
+            if (liveIndicator) liveIndicator.style.display = 'block';
+
             appendChatMessage('ai', `🔴 **LIVE モード開始**
 
 スケジュールから作業を選択してください。`);
             fetchTodaySchedules();
         } else {
-            // AFTER mode - remove LIVE styling if present
-            if (visualizer) {
-                visualizer.classList.remove('live-mode');
-                const badge = document.querySelector('.live-mode-badge');
-                if (badge) badge.remove();
-            }
+            // AFTER mode - remove LIVE styling
+            visualizers.forEach(v => v.classList.remove('live-mode'));
+
+            // Hide LIVE indicator
+            if (liveIndicator) liveIndicator.style.display = 'none';
+
             appendChatMessage('ai', `📝 **AFTER モード**
 
 店舗を選択してください。
@@ -4692,12 +4694,9 @@ ${context}
 お疲れ様でした！`);
 
             // Remove LIVE mode styling
-            const visualizer = document.querySelector('.visualizer-container');
-            if (visualizer) {
-                visualizer.classList.remove('live-mode');
-                const badge = document.querySelector('.live-mode-badge');
-                if (badge) badge.remove();
-            }
+            document.querySelectorAll('.visualizer-container').forEach(v => v.classList.remove('live-mode'));
+            const liveIndicator = document.getElementById('live-mode-indicator');
+            if (liveIndicator) liveIndicator.style.display = 'none';
 
             // Reset state
             liveWorkState = { phase: null, startTime: null, beforePhotos: [], afterPhotos: [], notes: '', isActive: false, timerInterval: null };
@@ -4712,12 +4711,12 @@ ${context}
             clearInterval(liveWorkState.timerInterval);
         }
 
-        const visualizer = document.querySelector('.visualizer-container');
-        if (visualizer) {
-            visualizer.classList.remove('live-mode');
-            const badge = document.querySelector('.live-mode-badge');
-            if (badge) badge.remove();
-        }
+        // Reset all visualizers
+        document.querySelectorAll('.visualizer-container').forEach(v => v.classList.remove('live-mode'));
+
+        // Hide LIVE indicator
+        const liveIndicator = document.getElementById('live-mode-indicator');
+        if (liveIndicator) liveIndicator.style.display = 'none';
 
         liveWorkState = { phase: null, startTime: null, beforePhotos: [], afterPhotos: [], notes: '', isActive: false, timerInterval: null };
 
