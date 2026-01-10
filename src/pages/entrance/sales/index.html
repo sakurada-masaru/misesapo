@@ -3559,6 +3559,36 @@ ${context}
         container.appendChild(btnDiv);
     }
 
+    function showCustomerSubmenu() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        appendChatMessage('ai', '顧客メニューを選択してください。');
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="startCustomerWizard()" class="action-btn" style="flex: 1 1 40%; min-width: 150px;">
+                    <i class="fas fa-user-plus" style="color: #60a5fa;"></i> 新規顧客登録
+                </button>
+                <button onclick="showCustomerListOnly()" class="action-btn" style="flex: 1 1 40%; min-width: 150px;">
+                    <i class="fas fa-list" style="color: #a78bfa;"></i> 顧客データ閲覧
+                </button>
+            </div>
+            <button onclick="showJobActions('sales')" style="margin-top: 10px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.8rem;">
+                ← メニューに戻る
+            </button>
+        `;
+    }
+
+    function showCustomerListOnly() {
+        window.customerOverlayMode = 'view'; // Set mode to view only
+        renderCustomerSelect(document.createElement('div')); // Container ignored by overlay logic
+        // Reset action container
+        const ac = document.getElementById('action-buttons-container');
+        if (ac) ac.innerHTML = '';
+        setTimeout(() => showJobActions('sales'), 500); // Return to main menu in background
+    }
+
     function selectCustomer(id, name, store) {
         // Reset customer search mode
         window.wizardCustomerSearchActive = false;
@@ -3567,6 +3597,14 @@ ${context}
         const overlay = document.getElementById('customer-selection-overlay');
         if (overlay) overlay.classList.remove('active');
 
+        if (window.customerOverlayMode === 'view') {
+            // View mode: Just show selection in chat (or eventually open detail modal)
+            appendChatMessage('ai', `**${name} (${store})** を選択しました。\n(詳細表示機能は今後実装予定です)`);
+            window.customerOverlayMode = null; // Reset mode
+            return;
+        }
+
+        // Wizard mode (default)
         requestWizardState.data.customer_id = id;
         requestWizardState.data.customer_name = name;
         requestWizardState.data.store_name = store;
@@ -3579,6 +3617,48 @@ ${context}
 
         appendChatMessage('user', `${name} - ${store}`);
         showRequestWizardStep(requestWizardState.step + 1);
+    }
+
+    // Legacy function support
+    function renderCustomerSelect(container) {
+        // Fetch customers from API
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+        try {
+            const token = localStorage.getItem('id_token');
+            const headers = token ? { 'Authorization': token } : {};
+
+            // Reuse cached if available
+            if (window.wizardCustomers && window.wizardCustomers.length > 0) {
+                showCustomerOverlay();
+                return;
+            }
+
+            container.innerHTML = `<div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem;">顧客データを読み込み中...</div>`;
+
+            fetch(`${API_BASE}/stores`, { headers })
+                .then(res => res.json())
+                .then(data => {
+                    let customers = data.items || [];
+                    // Sort by status priority
+                    const statusPriority = { 'prospect': 0, '稼働中': 1, '契約作業中': 2, '商談済': 3, '検討中': 4 };
+                    customers.sort((a, b) => (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99));
+
+                    // Limit to 50
+                    window.wizardCustomers = customers.slice(0, 50);
+                    showCustomerOverlay();
+
+                    if (container) container.innerHTML = `<div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem;">画面上のオーバーレイから選択してください</div>`;
+                })
+                .catch(e => {
+                    console.error('Failed to load customers:', e);
+                    if (container) container.innerHTML = `<div style="text-align: center; color: #ef4444; font-size: 0.85rem;">読み込みエラー</div>`;
+                });
+
+        } catch (e) {
+            console.error('Failed to load customers:', e);
+        }
+        window.wizardCustomerSearchActive = true;
     }
 
     function selectNewCustomer() {
