@@ -3489,7 +3489,24 @@ ${context}
 
             if (response.ok) {
                 const data = await response.json();
-                customers = data.items || [];
+                customers = (data.items || []).map((item) => {
+                    const companyName = item.company_name ?? item.companyName ?? '';
+                    const rawBrandName = item.brand_name ?? item.brandName ?? item.brand ?? '';
+                    const rawStoreName = item.store_name ?? item.storeName ?? item.name ?? '';
+                    const brandName = rawBrandName || rawStoreName || companyName;
+                    const storeName = rawStoreName || brandName;
+                    const displayName = storeName && storeName !== brandName
+                        ? `${brandName} / ${storeName}`
+                        : brandName;
+
+                    return {
+                        ...item,
+                        company_name: companyName,
+                        brand_name: brandName,
+                        store_name: storeName,
+                        display_name: displayName
+                    };
+                });
             } else {
                 console.warn('API fetch failed');
             }
@@ -3623,20 +3640,22 @@ ${context}
         const statusColors = { '稼働中': '#10b981', '契約作業中': '#f59e0b', '商談済': '#8b5cf6', '検討中': '#3b82f6', 'prospect': '#3b82f6' };
         const statusColor = statusColors[customer.status] || '#6b7280';
         const storeName = customer.store_name || customer.name || '-';
+        const brandName = customer.brand_name || storeName || '-';
+        const displayName = customer.display_name || (storeName && storeName !== brandName ? `${brandName} / ${storeName}` : brandName);
 
         if (parts.listContainer) {
             parts.listContainer.innerHTML = `
                 <div style="padding: 12px 4px 24px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <div style="font-weight:700; font-size:1.05rem; color:#fff;">${customer.company_name || '会社名なし'}</div>
+                        <div style="font-weight:700; font-size:1.05rem; color:#fff;">${displayName}</div>
                         <div style="display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
                             <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusColor}; margin-right: 6px;"></span>
                             <span style="font-size: 0.75rem; color: ${statusColor}; font-weight: 600;">${customer.status || '未設定'}</span>
                         </div>
                     </div>
                     <div style="font-size:0.9rem; color:#e0e0e0; display:grid; gap:6px;">
+                        <div><span style="opacity:0.7;">ブランド:</span> ${brandName}</div>
                         <div><span style="opacity:0.7;">店舗:</span> ${storeName}</div>
-                        <div><span style="opacity:0.7;">ブランド:</span> ${customer.brand_name || '-'}</div>
                         <div><span style="opacity:0.7;">担当者:</span> ${customer.contact_person || '-'}</div>
                         <div><span style="opacity:0.7;">電話:</span> ${customer.phone || '-'}</div>
                         <div><span style="opacity:0.7;">住所:</span> ${customer.address || '-'}</div>
@@ -3703,7 +3722,8 @@ ${context}
         return customers.map(c => {
             const statusColor = statusColors[c.status] || '#6b7280';
             const store = c.store_name || c.name || '店舗名なし';
-            const brand = c.brand_name || 'ブランド名なし';
+            const brand = c.brand_name || store || 'ブランド名なし';
+            const displayName = c.display_name || (store && store !== brand ? `${brand} / ${store}` : brand);
             const escName = (c.company_name || '').replace(/'/g, "\\'");
             const escStore = store.replace(/'/g, "\\'");
 
@@ -3713,8 +3733,7 @@ ${context}
             return `
                 <button class="wizard-customer-btn" onclick="selectCustomer('${c.id}', '${escName}', '${escStore}')" style="${style}">
                     <div style="flex: 1;">
-                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; letter-spacing: 0.5px;">${brand}</div>
-                        <div style="font-size: 0.8rem; opacity: 0.7;">${store}</div>
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; letter-spacing: 0.5px;">${displayName}</div>
                         <div style="font-size: 0.7rem; opacity: 0.4;">${c.company_name || '会社名なし'}</div>
                     </div>
                     <div style="text-align: right; margin-left: 10px; display:flex; flex-direction:column; align-items:flex-end;">
