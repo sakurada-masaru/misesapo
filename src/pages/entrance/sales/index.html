@@ -3705,11 +3705,18 @@ ${context}
                 const result = await response.json();
                 appendChatMessage('ai', `✅ **登録が完了しました！**\n\n${customerData.store_name} を新規リードとして登録しました。`);
             } else {
-                const err = await response.json();
+                let err;
+                try {
+                    err = await response.json();
+                    console.error('Registration failed with response:', err);
+                } catch (e) {
+                    console.error('Failed to parse error response:', e);
+                    err = { message: response.statusText };
+                }
                 throw new Error(err.message || 'Unknown error');
             }
         } catch (error) {
-            console.error(error);
+            console.error('Submission error:', error);
             appendChatMessage('ai', `❌ 登録に失敗しました: ${error.message}`);
         }
 

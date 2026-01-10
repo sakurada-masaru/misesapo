@@ -7884,7 +7884,7 @@ def create_store(event, headers):
              return {
                 'statusCode': 401,
                 'headers': headers,
-                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+                'body': json.dumps({'error': 'Unauthorized', 'message': '認証に失敗しました。再ログインしてください。'}, ensure_ascii=False)
             }
 
         current_user_id = user_info.get('uid')
@@ -7897,10 +7897,17 @@ def create_store(event, headers):
         else:
             body = event.get('body', '')
         
-        if isinstance(body, str):
-            body_json = json.loads(body)
-        else:
-            body_json = json.loads(body.decode('utf-8'))
+        try:
+            if isinstance(body, str):
+                body_json = json.loads(body)
+            else:
+                body_json = json.loads(body.decode('utf-8'))
+        except Exception as e:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'Invalid JSON', 'message': 'リクエストの内容が正しくありません(JSON形式エラー)'}, ensure_ascii=False)
+            }
         
         # ID生成（5桁形式: ST00001〜）
         if 'id' not in body_json or not body_json['id']:
@@ -7972,7 +7979,7 @@ def create_store(event, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': '店舗の作成に失敗しました',
-                'message': str(e)
+                'message': f'システムエラー: {str(e)}'
             }, ensure_ascii=False)
         }
 
