@@ -1609,6 +1609,12 @@
             display: block;
         }
 
+        /* Hide content that overflows viewport (visualizer) */
+        html,
+        body {
+            overflow: hidden !important;
+        }
+
         /* Full-width main content */
         .main-content {
             margin-left: 0 !important;
@@ -1616,6 +1622,7 @@
             display: flex !important;
             flex-direction: column !important;
             height: 100vh !important;
+            overflow: hidden !important;
         }
 
         /* Visualizer - positioned at top, upper half hidden */
