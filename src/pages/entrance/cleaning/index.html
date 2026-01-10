@@ -606,6 +606,122 @@
         }
     }
 
+    /* === LIVE MODE VISUALIZER - Energetic & Spiky === */
+    .visualizer-container.live-mode .core-circle {
+        animation:
+            liquid-core-spiky 2s infinite ease-in-out,
+            core-breathe-fast 1.5s infinite ease-in-out;
+        box-shadow:
+            0 0 60px var(--accent-glow),
+            0 0 120px var(--accent-glow),
+            inset 0 0 30px rgba(255, 255, 255, 0.5);
+        filter: brightness(1.2);
+    }
+
+    .visualizer-container.live-mode .circle-text-container {
+        animation: misogi-spin 8s linear infinite;
+        /* 5x faster */
+    }
+
+    .visualizer-container.live-mode .wave:nth-child(2) {
+        animation: ripple-out-fast 2s infinite 0s;
+    }
+
+    .visualizer-container.live-mode .wave:nth-child(3) {
+        animation: ripple-out-fast 2s infinite 0.6s;
+    }
+
+    .visualizer-container.live-mode .wave:nth-child(4) {
+        animation: ripple-out-fast 2s infinite 1.2s;
+    }
+
+    /* Spiky liquid animation for LIVE mode */
+    @keyframes liquid-core-spiky {
+
+        0%,
+        100% {
+            border-radius: 30% 70% 40% 60% / 60% 30% 70% 40%;
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        25% {
+            border-radius: 60% 40% 70% 30% / 40% 60% 30% 70%;
+            transform: translate(-50%, -50%) rotate(90deg);
+        }
+
+        50% {
+            border-radius: 40% 60% 30% 70% / 70% 40% 60% 30%;
+            transform: translate(-50%, -50%) rotate(180deg);
+        }
+
+        75% {
+            border-radius: 70% 30% 60% 40% / 30% 70% 40% 60%;
+            transform: translate(-50%, -50%) rotate(270deg);
+        }
+    }
+
+    @keyframes core-breathe-fast {
+
+        0%,
+        100% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0.95;
+        }
+
+        50% {
+            transform: translate(-50%, -50%) scale(1.25);
+            opacity: 1;
+        }
+    }
+
+    @keyframes ripple-out-fast {
+        0% {
+            width: 100px;
+            height: 100px;
+            opacity: 0.8;
+        }
+
+        100% {
+            width: 500px;
+            height: 500px;
+            opacity: 0;
+            border-width: 2px;
+        }
+    }
+
+    /* LIVE mode indicator badge */
+    .live-mode-badge {
+        position: absolute;
+        top: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        animation: pulse-badge 1s infinite;
+        z-index: 200;
+    }
+
+    @keyframes pulse-badge {
+
+        0%,
+        100% {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+
+        50% {
+            opacity: 0.8;
+            transform: translateX(-50%) scale(1.05);
+        }
+    }
+
+
     /* Rotating Text */
     .circle-text-container {
         position: absolute;
@@ -3839,6 +3955,7 @@ ${context}
     // Report Wizard State
     let reportWizardState = {
         step: 0,
+        mode: null, // 'live' or 'after'
         store: null,
         schedule: null,
         photos: { before: [], after: [] },
@@ -3848,16 +3965,124 @@ ${context}
     };
 
     function startReportWizard() {
-        reportWizardState = { step: 0, store: null, schedule: null, photos: { before: [], after: [] }, cleaningTarget: '', notes: '', nextProposal: { timing: '', work: '' } };
+        // Reset state
+        reportWizardState = { step: 0, mode: null, store: null, schedule: null, photos: { before: [], after: [] }, cleaningTarget: '', notes: '', nextProposal: { timing: '', work: '' } };
 
-        appendChatMessage('ai', `📋 レポート作成を開始します。
+        // Show mode selection
+        showReportModeSelection();
+    }
 
-まず、どの店舗のレポートを作成しますか？
+    function showReportModeSelection() {
+        appendChatMessage('ai', `📋 **レポート作成**
 
-本日のスケジュールを取得中...`);
+どのモードで作成しますか？`);
 
-        // Fetch today's schedules
-        fetchTodaySchedules();
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 320px; margin: 0 auto;">
+                <button onclick="selectReportMode('live')"
+                    style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none;
+                    padding: 20px; border-radius: 16px; cursor: pointer; text-align: left;
+                    display: flex; flex-direction: column; gap: 6px; min-height: 80px;">
+                    <span style="font-size: 1.1rem; font-weight: 700;">🔴 LIVE モード</span>
+                    <span style="font-size: 0.8rem; opacity: 0.9;">作業中にリアルタイムで記録</span>
+                </button>
+                <button onclick="selectReportMode('after')"
+                    style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none;
+                    padding: 20px; border-radius: 16px; cursor: pointer; text-align: left;
+                    display: flex; flex-direction: column; gap: 6px; min-height: 80px;">
+                    <span style="font-size: 1.1rem; font-weight: 700;">📝 AFTER モード</span>
+                    <span style="font-size: 0.8rem; opacity: 0.9;">作業終了後に詳細を入力</span>
+                </button>
+            </div>
+        `;
+    }
+
+    function selectReportMode(mode) {
+        reportWizardState.mode = mode;
+        appendChatMessage('user', mode === 'live' ? '🔴 LIVE モード' : '📝 AFTER モード');
+
+        const visualizer = document.querySelector('.visualizer-container');
+
+        if (mode === 'live') {
+            // Activate LIVE mode visualizer
+            if (visualizer) {
+                visualizer.classList.add('live-mode');
+                // Add LIVE badge if not exists
+                if (!document.querySelector('.live-mode-badge')) {
+                    const badge = document.createElement('div');
+                    badge.className = 'live-mode-badge';
+                    badge.textContent = '🔴 LIVE';
+                    visualizer.appendChild(badge);
+                }
+            }
+            appendChatMessage('ai', `🔴 **LIVE モード開始**
+
+スケジュールから作業を選択してください。`);
+            fetchTodaySchedules();
+        } else {
+            // AFTER mode - remove LIVE styling if present
+            if (visualizer) {
+                visualizer.classList.remove('live-mode');
+                const badge = document.querySelector('.live-mode-badge');
+                if (badge) badge.remove();
+            }
+            appendChatMessage('ai', `📝 **AFTER モード**
+
+店舗を選択してください。
+スケジュール登録がなくても入力できます。`);
+            fetchTodaySchedulesWithManualOption();
+        }
+    }
+
+    function fetchTodaySchedulesWithManualOption() {
+        // Same as fetchTodaySchedules but always shows manual input option
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+        const today = new Date().toISOString().split('T')[0];
+
+        fetch(`${API_BASE}/schedules?date=${today}`)
+            .then(response => response.ok ? response.json() : { schedules: [] })
+            .then(data => {
+                const schedules = Array.isArray(data) ? data : (data.schedules || data.items || []);
+                showScheduleSelectionWithManual(schedules);
+            })
+            .catch(() => showManualStoreInput());
+    }
+
+    function showScheduleSelectionWithManual(schedules) {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = '';
+        const container = document.createElement('div');
+        container.style.cssText = 'display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 320px; margin: 0 auto;';
+
+        // Show schedules if available
+        schedules.slice(0, 4).forEach(schedule => {
+            const storeName = schedule.store_name || '店舗名不明';
+            const time = schedule.time_slot || schedule.start_time || '';
+            container.insertAdjacentHTML('beforeend', `
+                <button onclick="selectScheduleForReport('${schedule.id}', '${storeName.replace(/'/g, "\\'")}', '${schedule.store_id || ''}')"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 14px 16px; border-radius: 12px; cursor: pointer; text-align: left;">
+                    <div style="font-weight: 600;">${storeName}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.7;">${time}</div>
+                </button>
+            `);
+        });
+
+        // Always show manual input option
+        container.insertAdjacentHTML('beforeend', `
+            <button onclick="showManualStoreInput()"
+                style="background: rgba(59,130,246,0.2); border: 1px dashed rgba(59,130,246,0.5);
+                color: #3b82f6; padding: 14px 16px; border-radius: 12px; cursor: pointer; text-align: center;">
+                ✏️ 店舗名を手入力
+            </button>
+        `);
+
+        actionContainer.appendChild(container);
     }
 
     async function fetchTodaySchedules() {
