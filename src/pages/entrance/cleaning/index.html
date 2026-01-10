@@ -4898,39 +4898,64 @@ ${context}
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
+        // Generate thumbnail previews for before photos
+        const beforeThumbnails = reportWizardState.photos.before.map((photo, i) => {
+            return `<div style="width: 50px; height: 50px; border-radius: 6px; overflow: hidden; flex-shrink: 0;">
+                <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>`;
+        }).join('');
+
+        // Generate thumbnail previews for after photos
+        const afterThumbnails = reportWizardState.photos.after.map((photo, i) => {
+            return `<div style="width: 50px; height: 50px; border-radius: 6px; overflow: hidden; flex-shrink: 0;">
+                <img src="${photo.dataUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>`;
+        }).join('');
+
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 16px; max-width: 500px; width: 95%; margin: 0 auto; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 16px;">
                 <div style="text-align: center; color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 8px;">
-                    📸 作業前後の写真を撮影してください
+                    📸 作業前後の写真を選択してください
                 </div>
                 <div style="display: flex; gap: 12px;">
                     <div style="flex: 1; text-align: center;">
                         <div style="color: #fbbf24; font-size: 0.9rem; font-weight: 600; margin-bottom: 10px;">📷 作業前</div>
+                        ${reportWizardState.photos.before.length > 0 ? `
+                        <div style="display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; justify-content: center;">
+                            ${beforeThumbnails}
+                        </div>
+                        ` : ''}
                         <label style="display: flex; flex-direction: column; align-items: center; justify-content: center;
-                            min-height: 140px; border: 2px dashed rgba(251,191,36,0.5); border-radius: 16px; cursor: pointer;
-                            background: rgba(251,191,36,0.1); transition: all 0.2s; padding: 16px;">
-                            <input type="file" accept="image/*" capture="environment" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'before')">
-                            <i class="fas fa-camera" style="font-size: 2.5rem; color: #fbbf24; margin-bottom: 8px;"></i>
-                            <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">タップして撮影</span>
-                            <span id="before-count" style="font-size: 1rem; color: #fbbf24; margin-top: 6px; font-weight: 600;">0枚</span>
+                            min-height: 100px; border: 2px dashed rgba(251,191,36,0.5); border-radius: 16px; cursor: pointer;
+                            background: rgba(251,191,36,0.1); transition: all 0.2s; padding: 12px;">
+                            <input type="file" accept="image/*" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'before')">
+                            <i class="fas fa-plus" style="font-size: 1.5rem; color: #fbbf24; margin-bottom: 6px;"></i>
+                            <span style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">追加</span>
+                            <span id="before-count" style="font-size: 0.9rem; color: #fbbf24; margin-top: 4px; font-weight: 600;">${reportWizardState.photos.before.length}枚</span>
                         </label>
                     </div>
                     <div style="flex: 1; text-align: center;">
                         <div style="color: #10b981; font-size: 0.9rem; font-weight: 600; margin-bottom: 10px;">📷 作業後</div>
+                        ${reportWizardState.photos.after.length > 0 ? `
+                        <div style="display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; justify-content: center;">
+                            ${afterThumbnails}
+                        </div>
+                        ` : ''}
                         <label style="display: flex; flex-direction: column; align-items: center; justify-content: center;
-                            min-height: 140px; border: 2px dashed rgba(16,185,129,0.5); border-radius: 16px; cursor: pointer;
-                            background: rgba(16,185,129,0.1); transition: all 0.2s; padding: 16px;">
-                            <input type="file" accept="image/*" capture="environment" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'after')">
-                            <i class="fas fa-camera" style="font-size: 2.5rem; color: #10b981; margin-bottom: 8px;"></i>
-                            <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">タップして撮影</span>
-                            <span id="after-count" style="font-size: 1rem; color: #10b981; margin-top: 6px; font-weight: 600;">0枚</span>
+                            min-height: 100px; border: 2px dashed rgba(16,185,129,0.5); border-radius: 16px; cursor: pointer;
+                            background: rgba(16,185,129,0.1); transition: all 0.2s; padding: 12px;">
+                            <input type="file" accept="image/*" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'after')">
+                            <i class="fas fa-plus" style="font-size: 1.5rem; color: #10b981; margin-bottom: 6px;"></i>
+                            <span style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">追加</span>
+                            <span id="after-count" style="font-size: 0.9rem; color: #10b981; margin-top: 4px; font-weight: 600;">${reportWizardState.photos.after.length}枚</span>
                         </label>
                     </div>
                 </div>
                 <button onclick="proceedToReportDetails()" id="photo-next-btn"
                     style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
                     padding: 16px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
-                    cursor: pointer; opacity: 0.5; transition: all 0.2s; min-height: 52px;" disabled>
+                    cursor: pointer; opacity: ${(reportWizardState.photos.before.length > 0 || reportWizardState.photos.after.length > 0) ? '1' : '0.5'}; transition: all 0.2s; min-height: 52px;"
+                    ${(reportWizardState.photos.before.length === 0 && reportWizardState.photos.after.length === 0) ? 'disabled' : ''}>
                     次へ進む →
                 </button>
             </div>
@@ -4939,6 +4964,8 @@ ${context}
 
     function handleReportPhotoUpload(input, type) {
         const files = Array.from(input.files);
+        let loadedCount = 0;
+
         files.forEach(file => {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -4947,7 +4974,12 @@ ${context}
                     file: file,
                     name: file.name
                 });
-                updatePhotoCount();
+                loadedCount++;
+
+                // Re-render when all files loaded
+                if (loadedCount === files.length) {
+                    showPhotoUploadUI();
+                }
             };
             reader.readAsDataURL(file);
         });
