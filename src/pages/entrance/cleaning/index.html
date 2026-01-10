@@ -7,20 +7,176 @@
 
 <style>
     /* === CRT Animation Styles === */
-    #job-change-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: transparent !important; z-index: 1000000 !important; display: none; justify-content: center; align-items: center; pointer-events: none; }
-    #job-change-label { position: absolute; font-family: Inter, sans-serif; font-size: 2rem; font-weight: 800; letter-spacing: 15px; color: #fff !important; z-index: 1000001; opacity: 0; text-shadow: 0 0 30px rgba(255,255,255,0.8); text-transform: uppercase; }
-    .flicker { animation: flicker-text 0.8s ease-in-out forwards !important; }
-    @keyframes flicker-text { 0% { opacity: 0; } 10% { opacity: 1; } 15% { opacity: 0.1; } 25% { opacity: 1; } 30% { opacity: 0.2; } 40% { opacity: 1; } 100% { opacity: 1; } }
-    .flicker-active { animation: flicker-vibe 0.1s infinite !important; }
-    @keyframes flicker-vibe { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.01); } }
-    .glitch-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.2) 50%), linear-gradient(90deg, rgba(255,0,0,0.05), rgba(0,255,0,0.02), rgba(0,0,255,0.05)); background-size: 100% 3px, 3px 100%; opacity: 0; z-index: 999999; pointer-events: none; }
-    .glitch-active { animation: scanline-flicker 0.15s infinite; opacity: 1 !important; }
-    @keyframes scanline-flicker { 0% { opacity: 0.4; } 50% { opacity: 0.6; } 100% { opacity: 0.4; } }
-    .crt-off { animation: crt-turn-off 0.55s cubic-bezier(0.23,1,0.32,1) forwards !important; }
-    @keyframes crt-turn-off { 0% { transform: scale(1, 1.3); filter: brightness(1); opacity: 1; } 60% { transform: scale(1.3, 0.001); filter: brightness(10); } 100% { transform: scale(0, 0.0001); filter: brightness(50); opacity: 0; } }
-    body.fade-in-entrance { animation: crt-turn-on 1.5s cubic-bezier(0.23,1,0.32,1) forwards; }
-    @keyframes crt-turn-on { 0% { transform: scale(1, 0.8); filter: brightness(30); opacity: 0; } 5% { transform: scale(1.1, 0.5); opacity: 1; } 10% { transform: scale(1, 1); filter: contrast(0) brightness(0); opacity: 1; } 100% { transform: scale(1, 1); filter: contrast(1) brightness(1.2) saturate(1.3); opacity: 1; } }
-    .transitioning-out { opacity: 0 !important; transform: scale(0.9) !important; filter: blur(20px) !important; transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important; pointer-events: none !important; }
+    #job-change-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: transparent !important;
+        z-index: 1000000 !important;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+    }
+
+    #job-change-label {
+        position: absolute;
+        font-family: Inter, sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: 15px;
+        color: #fff !important;
+        z-index: 1000001;
+        opacity: 0;
+        text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+        text-transform: uppercase;
+    }
+
+    .flicker {
+        animation: flicker-text 0.8s ease-in-out forwards !important;
+    }
+
+    @keyframes flicker-text {
+        0% {
+            opacity: 0;
+        }
+
+        10% {
+            opacity: 1;
+        }
+
+        15% {
+            opacity: 0.1;
+        }
+
+        25% {
+            opacity: 1;
+        }
+
+        30% {
+            opacity: 0.2;
+        }
+
+        40% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .flicker-active {
+        animation: flicker-vibe 0.1s infinite !important;
+    }
+
+    @keyframes flicker-vibe {
+
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.8;
+            transform: scale(1.01);
+        }
+    }
+
+    .glitch-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+        background-size: 100% 3px, 3px 100%;
+        opacity: 0;
+        z-index: 999999;
+        pointer-events: none;
+    }
+
+    .glitch-active {
+        animation: scanline-flicker 0.15s infinite;
+        opacity: 1 !important;
+    }
+
+    @keyframes scanline-flicker {
+        0% {
+            opacity: 0.4;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+
+        100% {
+            opacity: 0.4;
+        }
+    }
+
+    .crt-off {
+        animation: crt-turn-off 0.55s cubic-bezier(0.23, 1, 0.32, 1) forwards !important;
+    }
+
+    @keyframes crt-turn-off {
+        0% {
+            transform: scale(1, 1.3);
+            filter: brightness(1);
+            opacity: 1;
+        }
+
+        60% {
+            transform: scale(1.3, 0.001);
+            filter: brightness(10);
+        }
+
+        100% {
+            transform: scale(0, 0.0001);
+            filter: brightness(50);
+            opacity: 0;
+        }
+    }
+
+    body.fade-in-entrance {
+        animation: crt-turn-on 1.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    }
+
+    @keyframes crt-turn-on {
+        0% {
+            transform: scale(1, 0.8);
+            filter: brightness(30);
+            opacity: 0;
+        }
+
+        5% {
+            transform: scale(1.1, 0.5);
+            opacity: 1;
+        }
+
+        10% {
+            transform: scale(1, 1);
+            filter: contrast(0) brightness(0);
+            opacity: 1;
+        }
+
+        100% {
+            transform: scale(1, 1);
+            filter: contrast(1) brightness(1.2) saturate(1.3);
+            opacity: 1;
+        }
+    }
+
+    .transitioning-out {
+        opacity: 0 !important;
+        transform: scale(0.9) !important;
+        filter: blur(20px) !important;
+        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        pointer-events: none !important;
+    }
 
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap');
 
@@ -1414,190 +1570,420 @@
         padding-top: 60px;
         z-index: 20;
     }
+
+    /* ========== MOBILE RESPONSIVE STYLES ========== */
+    @media screen and (max-width: 768px) {
+
+        /* Hide sidebar by default - will be toggled via nav button */
+        #admin-sidebar {
+            display: none !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 280px !important;
+            height: 100vh !important;
+            background: rgba(0, 0, 0, 0.95) !important;
+            z-index: 2000000 !important;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease !important;
+        }
+
+        #admin-sidebar.mobile-open {
+            display: flex !important;
+            transform: translateX(0) !important;
+        }
+
+        /* Sidebar overlay when open */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1999999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Full-width main content */
+        .main-content {
+            margin-left: 0 !important;
+            padding: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100vh !important;
+        }
+
+        /* Visualizer - positioned at top, upper half hidden */
+        .visualizer-container {
+            position: fixed !important;
+            top: -100px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 200px !important;
+            height: 200px !important;
+            z-index: 10 !important;
+        }
+
+        /* Message area - main scrollable content */
+        .latest-message-container {
+            position: fixed !important;
+            top: 100px !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 180px !important;
+            overflow-y: auto !important;
+            padding: 16px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-end !important;
+        }
+
+        .latest-message-bubble {
+            max-width: 95% !important;
+            font-size: 1rem !important;
+            padding: 16px 20px !important;
+            margin: 0 auto !important;
+        }
+
+        /* Floating action buttons - small, above chat input */
+        .action-buttons-container,
+        #action-buttons-container {
+            position: fixed !important;
+            bottom: 140px !important;
+            left: 0 !important;
+            right: 0 !important;
+            padding: 8px 12px !important;
+            background: transparent !important;
+            z-index: 100 !important;
+            margin: 0 !important;
+            display: flex !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
+        }
+
+        .action-buttons-container button,
+        #action-buttons-container button {
+            min-height: 44px !important;
+            font-size: 0.85rem !important;
+            padding: 10px 16px !important;
+            border-radius: 22px !important;
+            touch-action: manipulation !important;
+        }
+
+        /* Fixed bottom chat input area */
+        #chat-input-wrapper {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            background: rgba(10, 17, 40, 0.98) !important;
+            padding: 12px 16px !important;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+            z-index: 1000 !important;
+            margin: 0 !important;
+        }
+
+        #chat-input-wrapper input {
+            font-size: 16px !important;
+        }
+
+        /* Chat log container - fixed above input */
+        .chat-log-container {
+            position: fixed !important;
+            bottom: 70px !important;
+            left: 0 !important;
+            right: 0 !important;
+            max-height: 120px !important;
+            background: rgba(0, 0, 0, 0.8) !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+            z-index: 999 !important;
+            overflow-y: auto !important;
+        }
+
+        /* Navigation button (hamburger) */
+        .mobile-nav-btn {
+            position: fixed !important;
+            top: 12px !important;
+            left: 12px !important;
+            width: 44px !important;
+            height: 44px !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 12px !important;
+            color: #fff !important;
+            font-size: 1.2rem !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            z-index: 1000 !important;
+            cursor: pointer !important;
+        }
+
+        /* Floating job button - repositioned */
+        #floating-job-btn {
+            position: fixed !important;
+            top: 12px !important;
+            right: 12px !important;
+            bottom: auto !important;
+            padding: 10px 16px !important;
+            font-size: 0.85rem !important;
+            z-index: 1000 !important;
+        }
+
+        /* Mode switch - hidden on mobile, integrated elsewhere */
+        .mode-switch-container {
+            display: none !important;
+        }
+
+        /* Photo upload - adjusted for mobile */
+        input[type="file"][accept*="image"] {
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        /* Login form adjustments */
+        #login-form {
+            width: 90% !important;
+            max-width: 350px !important;
+        }
+
+        #login-form input {
+            font-size: 16px !important;
+            padding: 14px 16px !important;
+        }
+
+        #login-form button {
+            min-height: 48px !important;
+            font-size: 1rem !important;
+        }
+
+        /* Start overlay adjustments */
+        #start-overlay {
+            padding: 20px !important;
+        }
+    }
+
+    /* Extra small screens (iPhone SE, etc) */
+    @media screen and (max-width: 375px) {
+        .visualizer-container {
+            width: 150px !important;
+            height: 150px !important;
+            top: -75px !important;
+        }
+
+        .latest-message-bubble {
+            font-size: 0.95rem !important;
+            padding: 14px 16px !important;
+        }
+
+        .action-buttons-container button,
+        #action-buttons-container button {
+            font-size: 0.8rem !important;
+            padding: 8px 12px !important;
+        }
+
+        .latest-message-container {
+            top: 80px !important;
+        }
+    }
 </style>
 
 <main id="main" class="admin-dashboard">
+    <!-- Mobile Navigation Button -->
+    <button class="mobile-nav-btn" onclick="toggleMobileSidebar()" aria-label="メニュー">
+        <i class="fas fa-bars"></i>
+    </button>
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
     @include('partials.admin-sidebar')
 
     <!-- Job Change Animation Overlay -->
-    </main>
+</main>
 <div id="job-change-overlay">
-        <div id="job-change-label">CHANGE JOB...</div>
+    <div id="job-change-label">CHANGE JOB...</div>
+</div>
+
+<div id="start-overlay" style="background: radial-gradient(circle at center, #0a1128 0%, #000 100%);">
+    <div class="logo-section"
+        style="text-align: center; margin-bottom: 30px; animation: fadeIn 1.5s ease-out; position: relative;">
+
+        <div class="logo-main"
+            style="font-size: 3.5rem; font-weight: 300; letter-spacing: 12px; color: #fff; margin-bottom: 15px; position: relative;">
+            <span class="initial-glow">M</span>ISOGI
+        </div>
+        <div class="logo-sub"
+            style="font-size: 0.7rem; color: rgba(255,255,255,0.4); letter-spacing: 4px; line-height: 1.6;">
+            MISESAPO INTELLIGENT SYSTEM FOR<br>OPERATIONAL GUIDANCE & INTERFACE
+        </div>
+    </div>
+    <div class="visualizer-container"
+        style="cursor: default; position: relative; transform: none; top: auto; left: auto; margin-bottom: 40px; display: inline-block;">
+        <div class="circle-text-container"
+            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; animation: misogi-spin 40s linear infinite;">
+            <svg viewBox="0 0 200 200" class="circle-svg" width="200" height="200">
+                <path id="circlePathStart" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
+                <text>
+                    <textPath href="#circlePathStart">
+                        Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
+                    </textPath>
+                </text>
+            </svg>
+        </div>
+        <!-- The Liquid Core -->
+        <div class="core-circle"
+            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: liquid-core 6s infinite ease-in-out, core-breathe 4s infinite ease-in-out;">
+        </div>
+
+        <!-- Ripples -->
+        <div class="wave" style="animation: ripple-out 5s infinite 0s;"></div>
+        <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
+        <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
+    </div>
+    <button class="start-btn" onclick="startWorkflow()" style="margin-top: 40px; position: relative; z-index: 200;">
+        <i class="fas fa-power-off"></i>
+        <div class="start-btn-label">LOGIN</div>
+    </button>
+</div>
+
+<div class="main-content" style="background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);">
+    <!-- Persistent Visualizer Core -->
+    <div class="visualizer-container">
+        <div class="circle-text-container" id="circle-text"
+            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; animation: misogi-spin 40s linear infinite;">
+            <svg viewBox="0 0 200 200" class="circle-svg" width="200" height="200">
+                <path id="circlePath" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
+                <text>
+                    <textPath href="#circlePath">
+                        Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
+                    </textPath>
+                </text>
+            </svg>
+        </div>
+        <!-- The Liquid Core -->
+        <div class="core-circle"
+            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: liquid-core 6s infinite ease-in-out, core-breathe 4s infinite ease-in-out;">
+        </div>
+
+        <!-- Ripples -->
+        <div class="wave" style="animation: ripple-out 5s infinite 0s;"></div>
+        <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
+        <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
     </div>
 
-    <div id="start-overlay" style="background: radial-gradient(circle at center, #0a1128 0%, #000 100%);">
-        <div class="logo-section"
-            style="text-align: center; margin-bottom: 30px; animation: fadeIn 1.5s ease-out; position: relative;">
+    <!-- Voice Content -->
+    <div class="voice-mode-content" id="voice-content">
+        <div class="status-text" id="status-text">LISTENING...</div>
+        <div class="ai-response-overlay" id="ai-response">
+            <div class="ai-response-icon"><i class="fas fa-sparkles"></i> MISOGI</div>
+            <div id="ai-message-text"></div>
+        </div>
+    </div>
 
-            <div class="logo-main"
-                style="font-size: 3.5rem; font-weight: 300; letter-spacing: 12px; color: #fff; margin-bottom: 15px; position: relative;">
-                <span class="initial-glow">M</span>ISOGI
+    <!-- FF14-style Chat Log -->
+    <div class="chat-log-container" id="chat-log-container">
+        <!-- Resize handles -->
+        <div class="chat-log-resize-handle top"></div>
+        <div class="chat-log-resize-handle right"></div>
+        <div class="chat-log-resize-handle corner"></div>
+
+        <div class="chat-history" id="chat-history">
+            <!-- Log lines injected by JS -->
+        </div>
+
+        <!-- Team chat input (for Call/General) -->
+        <div class="chat-log-input-wrapper" id="chat-log-input-wrapper">
+            <div class="chat-log-channel-tag" id="chat-log-current-channel" onclick="openChannelPicker()">Misesapo
             </div>
-            <div class="logo-sub"
-                style="font-size: 0.7rem; color: rgba(255,255,255,0.4); letter-spacing: 4px; line-height: 1.6;">
-                MISESAPO INTELLIGENT SYSTEM FOR<br>OPERATIONAL GUIDANCE & INTERFACE
+            <input type="text" id="team-chat-inline-input" placeholder="社内チャット（Alt+1~8で切替）..."
+                onkeypress="if(event.key==='Enter') sendInlineTeamMessage()">
+            <button onclick="sendInlineTeamMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+
+        <div class="chat-log-buttons">
+            <button class="chat-log-tab active" data-filter="general"
+                onclick="filterChatLog('general')">General</button>
+            <button class="chat-log-tab" data-filter="event" onclick="filterChatLog('event')">Event</button>
+            <button class="chat-log-tab" data-filter="call" onclick="filterChatLog('call')">Call</button>
+            <div class="chat-log-spacer"></div>
+            <button class="chat-log-icon-btn" onclick="expandChatLog()" title="ログを拡大">
+                <i class="fas fa-plus"></i>
+            </button>
+            <button class="chat-log-icon-btn" onclick="toggleChatLog()" title="ログを非表示">
+                <i class="fas fa-times"></i>
+            </button>
+            <button class="chat-log-icon-btn" onclick="openTeamChat()" title="チャンネル選択">
+                <i class="fas fa-hashtag"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat Content -->
+    <div id="chat-container">
+
+        <!-- New: Latest Message Display (Centered) -->
+        <div id="latest-message-container" class="latest-message-container"></div>
+
+        <!-- New: Action Buttons Container (Centered) -->
+        <div id="action-buttons-container" class="action-buttons-container"></div>
+
+        <!-- Login Bubble -->
+        <div class="login-bubble-container" id="login-form">
+            <div class="login-input-card">
+                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 5px;">ACCOUNT
+                    AUTHENTICATION</div>
+                <input type="email" id="login-email" placeholder="メールアドレス" autocomplete="email">
+                <input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">
+                <button class="login-submit-btn" onclick="performLogin()">認証</button>
             </div>
         </div>
-        <div class="visualizer-container"
-            style="cursor: default; position: relative; transform: none; top: auto; left: auto; margin-bottom: 40px; display: inline-block;">
-            <div class="circle-text-container"
-                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; animation: misogi-spin 40s linear infinite;">
-                <svg viewBox="0 0 200 200" class="circle-svg" width="200" height="200">
-                    <path id="circlePathStart" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
-                    <text>
-                        <textPath href="#circlePathStart">
-                            Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
-                        </textPath>
-                    </text>
-                </svg>
-            </div>
-            <!-- The Liquid Core -->
-            <div class="core-circle"
-                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: liquid-core 6s infinite ease-in-out, core-breathe 4s infinite ease-in-out;">
-            </div>
-
-            <!-- Ripples -->
-            <div class="wave" style="animation: ripple-out 5s infinite 0s;"></div>
-            <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
-            <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
+        <div class="visualizer-circle">
+            <input type="file" id="image-upload" accept="image/*" style="display: none;"
+                onchange="handleImageSelect(this)">
+            <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
+                <i class="fas fa-camera"></i>
+            </button>
         </div>
-        <button class="start-btn" onclick="startWorkflow()" style="margin-top: 40px; position: relative; z-index: 200;">
-            <i class="fas fa-power-off"></i>
-            <div class="start-btn-label">LOGIN</div>
+
+        <div class="chat-input-wrapper">
+            <input type="file" id="image-upload" accept="image/*" style="display: none;"
+                onchange="handleImageSelect(this)">
+            <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
+                <i class="fas fa-camera"></i>
+            </button>
+            <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
+            <button class="send-btn" onclick="sendTextMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mode Switcher -->
+    <div class="mode-switch-container" style="display: none;">
+        <button class="mode-btn" id="btn-voice-mode" onclick="switchMode('voice')">
+            <i class="fas fa-microphone"></i> 音声
+        </button>
+        <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
+            <i class="fas fa-comment-dots"></i> チャット
         </button>
     </div>
+</div>
+</div>
 
-    <div class="main-content" style="background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);">
-        <!-- Persistent Visualizer Core -->
-        <div class="visualizer-container">
-            <div class="circle-text-container" id="circle-text"
-                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; animation: misogi-spin 40s linear infinite;">
-                <svg viewBox="0 0 200 200" class="circle-svg" width="200" height="200">
-                    <path id="circlePath" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
-                    <text>
-                        <textPath href="#circlePath">
-                            Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
-                        </textPath>
-                    </text>
-                </svg>
-            </div>
-            <!-- The Liquid Core -->
-            <div class="core-circle"
-                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: liquid-core 6s infinite ease-in-out, core-breathe 4s infinite ease-in-out;">
-            </div>
-
-            <!-- Ripples -->
-            <div class="wave" style="animation: ripple-out 5s infinite 0s;"></div>
-            <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
-            <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
-        </div>
-
-        <!-- Voice Content -->
-        <div class="voice-mode-content" id="voice-content">
-            <div class="status-text" id="status-text">LISTENING...</div>
-            <div class="ai-response-overlay" id="ai-response">
-                <div class="ai-response-icon"><i class="fas fa-sparkles"></i> MISOGI</div>
-                <div id="ai-message-text"></div>
-            </div>
-        </div>
-
-        <!-- FF14-style Chat Log -->
-        <div class="chat-log-container" id="chat-log-container">
-            <!-- Resize handles -->
-            <div class="chat-log-resize-handle top"></div>
-            <div class="chat-log-resize-handle right"></div>
-            <div class="chat-log-resize-handle corner"></div>
-
-            <div class="chat-history" id="chat-history">
-                <!-- Log lines injected by JS -->
-            </div>
-
-            <!-- Team chat input (for Call/General) -->
-            <div class="chat-log-input-wrapper" id="chat-log-input-wrapper">
-                <div class="chat-log-channel-tag" id="chat-log-current-channel" onclick="openChannelPicker()">Misesapo
-                </div>
-                <input type="text" id="team-chat-inline-input" placeholder="社内チャット（Alt+1~8で切替）..."
-                    onkeypress="if(event.key==='Enter') sendInlineTeamMessage()">
-                <button onclick="sendInlineTeamMessage()">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-
-            <div class="chat-log-buttons">
-                <button class="chat-log-tab active" data-filter="general"
-                    onclick="filterChatLog('general')">General</button>
-                <button class="chat-log-tab" data-filter="event" onclick="filterChatLog('event')">Event</button>
-                <button class="chat-log-tab" data-filter="call" onclick="filterChatLog('call')">Call</button>
-                <div class="chat-log-spacer"></div>
-                <button class="chat-log-icon-btn" onclick="expandChatLog()" title="ログを拡大">
-                    <i class="fas fa-plus"></i>
-                </button>
-                <button class="chat-log-icon-btn" onclick="toggleChatLog()" title="ログを非表示">
-                    <i class="fas fa-times"></i>
-                </button>
-                <button class="chat-log-icon-btn" onclick="openTeamChat()" title="チャンネル選択">
-                    <i class="fas fa-hashtag"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Chat Content -->
-        <div id="chat-container">
-
-            <!-- New: Latest Message Display (Centered) -->
-            <div id="latest-message-container" class="latest-message-container"></div>
-
-            <!-- New: Action Buttons Container (Centered) -->
-            <div id="action-buttons-container" class="action-buttons-container"></div>
-
-            <!-- Login Bubble -->
-            <div class="login-bubble-container" id="login-form">
-                <div class="login-input-card">
-                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 5px;">ACCOUNT
-                        AUTHENTICATION</div>
-                    <input type="email" id="login-email" placeholder="メールアドレス" autocomplete="email">
-                    <input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">
-                    <button class="login-submit-btn" onclick="performLogin()">認証</button>
-                </div>
-            </div>
-            <div class="visualizer-circle">
-                <input type="file" id="image-upload" accept="image/*" style="display: none;"
-                    onchange="handleImageSelect(this)">
-                <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
-                    <i class="fas fa-camera"></i>
-                </button>
-            </div>
-
-            <div class="chat-input-wrapper">
-                <input type="file" id="image-upload" accept="image/*" style="display: none;"
-                    onchange="handleImageSelect(this)">
-                <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
-                    <i class="fas fa-camera"></i>
-                </button>
-                <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
-                <button class="send-btn" onclick="sendTextMessage()">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Mode Switcher -->
-        <div class="mode-switch-container" style="display: none;">
-            <button class="mode-btn" id="btn-voice-mode" onclick="switchMode('voice')">
-                <i class="fas fa-microphone"></i> 音声
-            </button>
-            <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
-                <i class="fas fa-comment-dots"></i> チャット
-            </button>
-        </div>
-    </div>
-    </div>
-
-    <!-- Floating Job Indicator Button -->
-    <button id="floating-job-btn" onclick="requestJobChange()">
-        <span class="job-dot"></span>
-        <span id="floating-job-label">-</span>
-    </button>
+<!-- Floating Job Indicator Button -->
+<button id="floating-job-btn" onclick="requestJobChange()">
+    <span class="job-dot"></span>
+    <span id="floating-job-label">-</span>
+</button>
 </main>
 
 <script>
@@ -1918,6 +2304,15 @@
                 handleAiResponse({ intent: 'clock_out' }); // Trigger visual transition
             }
         } catch (e) { console.error(e); }
+    }
+    // Mobile sidebar toggle
+    function toggleMobileSidebar() {
+        const sidebar = document.getElementById('admin-sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        if (sidebar && overlay) {
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
+        }
     }
 
     function switchMode(mode) {
@@ -3503,33 +3898,38 @@ ${context}
         if (!actionContainer) return;
 
         actionContainer.innerHTML = `
-            <div style="display: flex; flex-direction: column; gap: 16px; max-width: 500px; width: 90%; margin: 0 auto; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 16px;">
-                <div style="display: flex; gap: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 16px; max-width: 500px; width: 95%; margin: 0 auto; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 16px;">
+                <div style="text-align: center; color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 8px;">
+                    📸 作業前後の写真を撮影してください
+                </div>
+                <div style="display: flex; gap: 12px;">
                     <div style="flex: 1; text-align: center;">
-                        <div style="color: #fbbf24; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">作業前</div>
+                        <div style="color: #fbbf24; font-size: 0.9rem; font-weight: 600; margin-bottom: 10px;">📷 作業前</div>
                         <label style="display: flex; flex-direction: column; align-items: center; justify-content: center;
-                            height: 120px; border: 2px dashed rgba(251,191,36,0.5); border-radius: 12px; cursor: pointer;
-                            background: rgba(251,191,36,0.1); transition: all 0.2s;">
-                            <input type="file" accept="image/*" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'before')">
-                            <i class="fas fa-camera" style="font-size: 1.8rem; color: #fbbf24;"></i>
-                            <span id="before-count" style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px;">0枚</span>
+                            min-height: 140px; border: 2px dashed rgba(251,191,36,0.5); border-radius: 16px; cursor: pointer;
+                            background: rgba(251,191,36,0.1); transition: all 0.2s; padding: 16px;">
+                            <input type="file" accept="image/*" capture="environment" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'before')">
+                            <i class="fas fa-camera" style="font-size: 2.5rem; color: #fbbf24; margin-bottom: 8px;"></i>
+                            <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">タップして撮影</span>
+                            <span id="before-count" style="font-size: 1rem; color: #fbbf24; margin-top: 6px; font-weight: 600;">0枚</span>
                         </label>
                     </div>
                     <div style="flex: 1; text-align: center;">
-                        <div style="color: #10b981; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">作業後</div>
+                        <div style="color: #10b981; font-size: 0.9rem; font-weight: 600; margin-bottom: 10px;">📷 作業後</div>
                         <label style="display: flex; flex-direction: column; align-items: center; justify-content: center;
-                            height: 120px; border: 2px dashed rgba(16,185,129,0.5); border-radius: 12px; cursor: pointer;
-                            background: rgba(16,185,129,0.1); transition: all 0.2s;">
-                            <input type="file" accept="image/*" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'after')">
-                            <i class="fas fa-camera" style="font-size: 1.8rem; color: #10b981;"></i>
-                            <span id="after-count" style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px;">0枚</span>
+                            min-height: 140px; border: 2px dashed rgba(16,185,129,0.5); border-radius: 16px; cursor: pointer;
+                            background: rgba(16,185,129,0.1); transition: all 0.2s; padding: 16px;">
+                            <input type="file" accept="image/*" capture="environment" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'after')">
+                            <i class="fas fa-camera" style="font-size: 2.5rem; color: #10b981; margin-bottom: 8px;"></i>
+                            <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">タップして撮影</span>
+                            <span id="after-count" style="font-size: 1rem; color: #10b981; margin-top: 6px; font-weight: 600;">0枚</span>
                         </label>
                     </div>
                 </div>
                 <button onclick="proceedToReportDetails()" id="photo-next-btn"
-                    style="background: linear-gradient(135deg, #ec4899, #db2777); color: white; border: none;
-                    padding: 14px 24px; border-radius: 25px; font-size: 0.95rem; font-weight: 600;
-                    cursor: pointer; opacity: 0.5; transition: all 0.2s;" disabled>
+                    style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+                    padding: 16px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
+                    cursor: pointer; opacity: 0.5; transition: all 0.2s; min-height: 52px;" disabled>
                     次へ進む →
                 </button>
             </div>
