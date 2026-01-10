@@ -1696,6 +1696,7 @@
 
     /* Mobile layout: match cleaning mode (hide chat log, top message, bottom actions) */
     @media (max-width: 768px) {
+
         html,
         body {
             overflow: hidden !important;
@@ -3481,42 +3482,65 @@ ${context}
         const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
         try {
-            const token = localStorage.getItem('id_token');
+            const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_access_token');
             const headers = token ? { 'Authorization': token } : {};
 
-            const response = await fetch(`${API_BASE}/stores`, { headers });
-            let customers = [];
+            // Fetch Stores, Clients, and Brands in parallel
+            const [storesRes, clientsRes, brandsRes] = await Promise.all([
+                fetch(`${API_BASE}/stores`, { headers }),
+                fetch(`${API_BASE}/clients`, { headers }),
+                fetch(`${API_BASE}/brands`, { headers })
+            ]);
 
-            if (response.ok) {
-                const data = await response.json();
-                customers = (data.items || []).map((item) => {
-                    const companyName = item.company_name ?? item.companyName ?? item.client_name ?? item.company?.name ?? item.client?.name ?? '';
-                    const rawBrandName = item.brand_name ?? item.brandName ?? item.brand?.name ?? item.brand?.brand_name ?? item.brand ?? '';
-                    const rawStoreName = item.store_name ?? item.storeName ?? item.store?.name ?? item.name ?? '';
-                    const brandName = rawBrandName || rawStoreName || companyName;
-                    const storeName = rawStoreName || brandName;
-                    const displayName = storeName && storeName !== brandName
-                        ? `${brandName} / ${storeName}`
-                        : brandName;
+            let storesData = [], clientsData = [], brandsData = [];
 
-                    return {
-                        ...item,
-                        company_name: companyName,
-                        brand_name: brandName,
-                        store_name: storeName,
-                        display_name: displayName
-                    };
-                });
-            } else {
-                console.warn('API fetch failed');
+            if (storesRes.ok) {
+                const data = await storesRes.json();
+                storesData = data.items || [];
+            }
+            if (clientsRes.ok) {
+                const data = await clientsRes.json();
+                clientsData = data.items || data || [];
+            }
+            if (brandsRes.ok) {
+                const data = await brandsRes.json();
+                brandsData = data.items || data || [];
             }
 
-            // Sort by status priority
-            const statusPriority = { 'prospect': 0, '稼働中': 1, '契約作業中': 2, '商談済': 3, '検討中': 4 };
-            customers.sort((a, b) => (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99));
+            // Create lookup maps
+            const clientMap = {};
+            clientsData.forEach(c => { if (c.id) clientMap[c.id] = c.name || c.company_name || ''; });
+            const brandMap = {};
+            brandsData.forEach(b => { if (b.id) brandMap[b.id] = b.name || ''; });
 
-            // Limit to 50
-            window.wizardCustomers = customers.slice(0, 50);
+            const customers = storesData.map((item) => {
+                const companyName = clientMap[item.client_id] || item.company_name || item.companyName || '';
+                const brandName = brandMap[item.brand_id] || item.brand_name || item.brandName || '';
+                const storeName = item.name || item.store_name || '';
+
+                const displayName = storeName && brandName && storeName !== brandName
+                    ? `${brandName} / ${storeName}`
+                    : (storeName || brandName || companyName || '名称未設定');
+
+                return {
+                    ...item,
+                    company_name: companyName,
+                    brand_name: brandName,
+                    store_name: storeName,
+                    display_name: displayName
+                };
+            });
+
+            // Sort by status priority
+            const statusPriority = { 'active': 0, '稼働中': 0, 'prospect': 1, '契約作業中': 2, '商談済': 3, '検討中': 4 };
+            customers.sort((a, b) => {
+                const statusA = a.status === 'active' ? '稼働中' : (a.status || '');
+                const statusB = b.status === 'active' ? '稼働中' : (b.status || '');
+                return (statusPriority[statusA] || 99) - (statusPriority[statusB] || 99);
+            });
+
+            // Use all customers instead of limiting to 50
+            window.wizardCustomers = customers;
         } catch (e) {
             console.error('Failed to load customers:', e);
             window.wizardCustomers = [];
@@ -3721,27 +3745,32 @@ ${context}
 
         return customers.map(c => {
             const statusColor = statusColors[c.status] || '#6b7280';
-            const store = c.store_name || c.name || '店舗名なし';
-            const brand = c.brand_name || store || 'ブランド名なし';
-            const displayName = c.display_name || (store && store !== brand ? `${brand} / ${store}` : brand);
-            const escName = displayName.replace(/'/g, "\\'");
+            const brand = c.brand_name || 'ブランド名未設定';
+            const store = c.store_name || '';
+            const company = c.company_name || '';
+
+            const escName = (c.display_name || brand).replace(/'/g, "\\'");
             const escStore = store.replace(/'/g, "\\'");
 
-            // Set CSS var for pseudo element
-            const style = `--status-color: ${statusColor}; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 16px 20px 16px 24px; border-radius: 12px; cursor: pointer; text-align: left; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;`;
+            const style = `background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 16px 20px; border-radius: 12px; cursor: pointer; text-align: left; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;`;
 
             return `
                 <button class="wizard-customer-btn" onclick="selectCustomer('${c.id}', '${escName}', '${escStore}')" style="${style}">
-                    <div style="flex: 1;">
-                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; letter-spacing: 0.5px;">${displayName}</div>
-                        <div style="font-size: 0.7rem; opacity: 0.4;">${c.company_name || '会社名なし'}</div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 800; font-size: 1rem; color: #fff; margin-bottom: 2px; letter-spacing: 0.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            <i class="fas fa-tag" style="font-size: 0.8rem; color: var(--accent-color); margin-right: 4px; opacity: 0.8;"></i>${brand}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            ${store && store !== brand ? `<span style="font-size: 0.8rem; color: #fff; font-weight: 500; opacity: 0.9;">${store}</span>` : ''}
+                            ${company ? `<span style="font-size: 0.7rem; color: rgba(255,255,255,0.4); border-left: 1px solid rgba(255,255,255,0.15); padding-left: 8px;">${company}</span>` : ''}
+                        </div>
                     </div>
-                    <div style="text-align: right; margin-left: 10px; display:flex; flex-direction:column; align-items:flex-end;">
+                    <div style="text-align: right; margin-left: 16px; flex-shrink: 0; display:flex; flex-direction:column; align-items:flex-end;">
                         <div style="display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
                             <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusColor}; margin-right: 6px;"></span>
-                            <span style="font-size: 0.75rem; color: ${statusColor}; font-weight: 600;">${c.status || '未設定'}</span>
+                            <span style="font-size: 0.75rem; color: ${statusColor}; font-weight: 600;">${c.status === 'active' ? '稼働中' : (c.status || '未設定')}</span>
                         </div>
-                         ${c.contact_person ? `<div style="font-size: 0.7rem; opacity: 0.4; margin-top: 6px;">担当: ${c.contact_person}</div>` : ''}
+                         ${c.contact_person ? `<div style="font-size: 0.7rem; opacity: 0.4; margin-top: 6px;"><i class="fas fa-user-circle" style="margin-right: 3px;"></i>${c.contact_person}</div>` : ''}
                     </div>
                 </button>
             `;
