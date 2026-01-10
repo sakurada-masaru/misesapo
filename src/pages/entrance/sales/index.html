@@ -1685,6 +1685,92 @@
         padding-top: 60px;
         z-index: 20;
     }
+
+    /* Mobile layout: match cleaning mode (hide chat log, top message, bottom actions) */
+    @media (max-width: 768px) {
+        html,
+        body {
+            overflow: hidden !important;
+        }
+
+        .main-content {
+            margin-left: 0 !important;
+            padding: 0 !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+        }
+
+        .visualizer-container {
+            position: fixed !important;
+            top: -100px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 200px !important;
+            height: 200px !important;
+            z-index: 10 !important;
+        }
+
+        .chat-log-container {
+            display: none !important;
+        }
+
+        #chat-container {
+            padding: 80px 6% 140px 6%;
+        }
+
+        .latest-message-container {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            margin: 0;
+            padding: 0 16px;
+            min-height: 0;
+            z-index: 650;
+        }
+
+        .action-buttons-container {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: calc(88px + env(safe-area-inset-bottom));
+            margin: 0;
+            padding: 0 16px;
+            z-index: 700;
+        }
+
+        .chat-input-wrapper {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: calc(12px + env(safe-area-inset-bottom));
+            width: calc(100% - 24px);
+            max-width: 560px;
+            z-index: 750;
+        }
+    }
+
+    @media (max-width: 375px) {
+        .visualizer-container {
+            width: 150px !important;
+            height: 150px !important;
+            top: -75px !important;
+        }
+
+        .latest-message-bubble {
+            font-size: 0.95rem;
+            padding: 14px 16px;
+        }
+
+        .action-buttons-container button {
+            font-size: 0.8rem;
+            padding: 8px 12px;
+        }
+
+        .latest-message-container {
+            top: 50px;
+        }
+    }
 </style>
 
 <main id="main" class="admin-dashboard">
