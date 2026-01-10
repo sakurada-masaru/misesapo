@@ -1868,50 +1868,6 @@
                 <i class="fas fa-hashtag"></i>
             </button>
         </div>
-
-        <!-- Chat Content -->
-        <div id="chat-container">
-
-            <!-- Login Bubble -->
-            <div class="login-bubble-container" id="login-form">
-                <div class="login-input-card">
-                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 5px;">ACCOUNT
-                        AUTHENTICATION</div>
-                    <input type="email" id="login-email" placeholder="メールアドレス" autocomplete="email">
-                    <input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">
-                    <button class="login-submit-btn" onclick="performLogin()">認証</button>
-                </div>
-            </div>
-            <div class="visualizer-circle">
-                <input type="file" id="image-upload" accept="image/*" style="display: none;"
-                    onchange="handleImageSelect(this)">
-                <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
-                    <i class="fas fa-camera"></i>
-                </button>
-            </div>
-
-            <div class="chat-input-wrapper">
-                <input type="file" id="image-upload" accept="image/*" style="display: none;"
-                    onchange="handleImageSelect(this)">
-                <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
-                    <i class="fas fa-camera"></i>
-                </button>
-                <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
-                <button class="send-btn" onclick="sendTextMessage()">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Mode Switcher -->
-        <div class="mode-switch-container" style="display: none;">
-            <button class="mode-btn" id="btn-voice-mode" onclick="switchMode('voice')">
-                <i class="fas fa-microphone"></i> 音声
-            </button>
-            <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
-                <i class="fas fa-comment-dots"></i> チャット
-            </button>
-        </div>
     </div>
 </div>
 
