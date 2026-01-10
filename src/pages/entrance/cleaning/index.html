@@ -606,21 +606,27 @@
         }
     }
 
-    /* === LIVE MODE VISUALIZER - Energetic & Spiky === */
+
+    /* === LIVE MODE VISUALIZER - Energetic & Spiky & RED === */
     .visualizer-container.live-mode .core-circle {
         animation:
             liquid-core-spiky 2s infinite ease-in-out,
             core-breathe-fast 1.5s infinite ease-in-out;
+        background: linear-gradient(135deg, #ef4444, #dc2626) !important;
         box-shadow:
-            0 0 60px var(--accent-glow),
-            0 0 120px var(--accent-glow),
-            inset 0 0 30px rgba(255, 255, 255, 0.5);
+            0 0 60px rgba(239, 68, 68, 0.6),
+            0 0 120px rgba(239, 68, 68, 0.4),
+            inset 0 0 30px rgba(255, 255, 255, 0.3);
         filter: brightness(1.2);
     }
 
     .visualizer-container.live-mode .circle-text-container {
         animation: misogi-spin 8s linear infinite;
         /* 5x faster */
+    }
+
+    .visualizer-container.live-mode .wave {
+        border-color: #ef4444 !important;
     }
 
     .visualizer-container.live-mode .wave:nth-child(2) {
@@ -634,6 +640,7 @@
     .visualizer-container.live-mode .wave:nth-child(4) {
         animation: ripple-out-fast 2s infinite 1.2s;
     }
+
 
     /* Spiky liquid animation for LIVE mode - more dramatic */
     @keyframes liquid-core-spiky {
@@ -4180,7 +4187,7 @@ ${context}
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 350px; margin: 0 auto;">
                 <div style="display: flex; gap: 8px;">
-                    <input type="text" id="store-search-input" placeholder="店舗名で検索..."
+                    <input type="text" id="store-search-input" placeholder="ブランド名で検索..."
                         style="flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                         color: #fff; padding: 12px 16px; border-radius: 12px; font-size: 1rem;"
                         oninput="searchStores(this.value)">
@@ -4271,10 +4278,13 @@ ${context}
             return;
         }
 
+        const q = query.toLowerCase();
         const filtered = stores.filter(store => {
-            const name = (store.name || store.store_name || '').toLowerCase();
-            const company = (store.company_name || '').toLowerCase();
-            return name.includes(query.toLowerCase()) || company.includes(query.toLowerCase());
+            // Primary: search by brand name (company_name)
+            const brandName = (store.company_name || store.brand_name || '').toLowerCase();
+            // Secondary: also include store name for completeness
+            const storeName = (store.name || store.store_name || '').toLowerCase();
+            return brandName.includes(q) || storeName.includes(q);
         });
 
         renderStoreList(filtered);
