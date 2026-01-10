@@ -706,10 +706,6 @@
         background: transparent;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        /* 横方向の中央揃え */
-        justify-content: center;
-        /* 垂直方向の中央揃え */
         opacity: 0;
         pointer-events: none;
         transform: translateY(20px);
@@ -1297,7 +1293,6 @@
         color: #fff;
         border-bottom-right-radius: 4px;
         border: 1px solid rgba(255, 255, 255, 0.2);
-        display: none;
     }
 
     /* Loading/Checking Indicator Style */
@@ -1337,8 +1332,8 @@
     }
 
     .chat-input-wrapper {
-        display: flex;
         margin-top: 15px;
+        display: flex;
         gap: 10px;
         background: rgba(255, 255, 255, 0.05);
         padding: 8px;
@@ -1680,54 +1675,15 @@
     /* Action Buttons Container Style */
     .action-buttons-container {
         width: 100%;
-        max-width: 800px;
         display: flex;
         justify-content: center;
         align-items: center;
         flex-direction: column;
-        gap: 20px;
-        margin-top: 30px;
-        /* 中央部分に適度な余白 */
-        padding: 20px;
-        z-index: 100;
-        background: transparent !important;
-        /* 絶対に白くしない */
-    }
-
-    /* Premium Action Button Style */
-    .action-btn {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #fff;
-        padding: 14px 28px;
-        border-radius: 30px;
-        font-weight: 600;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        display: flex;
-        align-items: center;
         gap: 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .action-btn:hover {
-        background: var(--accent-color);
-        border-color: var(--accent-color);
-        box-shadow: 0 0 20px var(--accent-glow);
-        transform: translateY(-2px) scale(1.02);
-    }
-
-    /* Override any layout-provided white backgrounds */
-    .main-content,
-    .admin-dashboard,
-    #chat-container {
-        background: transparent !important;
-    }
-
-    body {
-        background: #000 !important;
+        margin-bottom: 20px;
+        margin-top: auto;
+        padding-top: 60px;
+        z-index: 20;
     }
 </style>
 
@@ -1816,20 +1772,6 @@
         </div>
     </div>
 
-    <!-- Centered UI Elements (Message + Action Buttons + Input) -->
-    <div id="centered-ui-container" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-        display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        z-index: 500; pointer-events: none; width: 80%; max-width: 600px; margin-top: 100px;">
-        <div id="latest-message-container" class="latest-message-container" style="pointer-events: auto;"></div>
-        <div id="action-buttons-container" class="action-buttons-container" style="pointer-events: auto;"></div>
-        <div class="chat-input-wrapper" style="pointer-events: auto; margin-top: 20px;">
-            <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
-            <button class="send-btn" onclick="sendTextMessage()">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
-    </div>
-
     <!-- FF14-style Chat Log -->
     <div class="chat-log-container" id="chat-log-container">
         <!-- Resize handles -->
@@ -1869,6 +1811,57 @@
             </button>
         </div>
     </div>
+
+    <!-- Chat Content -->
+    <div id="chat-container">
+
+        <!-- New: Latest Message Display (Centered) -->
+        <div id="latest-message-container" class="latest-message-container"></div>
+
+        <!-- New: Action Buttons Container (Centered) -->
+        <div id="action-buttons-container" class="action-buttons-container"></div>
+
+        <!-- Login Bubble -->
+        <div class="login-bubble-container" id="login-form">
+            <div class="login-input-card">
+                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 5px;">ACCOUNT
+                    AUTHENTICATION</div>
+                <input type="email" id="login-email" placeholder="メールアドレス" autocomplete="email">
+                <input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">
+                <button class="login-submit-btn" onclick="performLogin()">認証</button>
+            </div>
+        </div>
+        <div class="visualizer-circle">
+            <input type="file" id="image-upload" accept="image/*" style="display: none;"
+                onchange="handleImageSelect(this)">
+            <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
+                <i class="fas fa-camera"></i>
+            </button>
+        </div>
+
+        <div class="chat-input-wrapper">
+            <input type="file" id="image-upload" accept="image/*" style="display: none;"
+                onchange="handleImageSelect(this)">
+            <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
+                <i class="fas fa-camera"></i>
+            </button>
+            <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
+            <button class="send-btn" onclick="sendTextMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mode Switcher -->
+    <div class="mode-switch-container" style="display: none;">
+        <button class="mode-btn" id="btn-voice-mode" onclick="switchMode('voice')">
+            <i class="fas fa-microphone"></i> 音声
+        </button>
+        <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
+            <i class="fas fa-comment-dots"></i> チャット
+        </button>
+    </div>
+</div>
 </div>
 
 <!-- Floating Job Indicator Button -->
@@ -3135,9 +3128,9 @@ ${context}
 
         const jobActions = {
             sales: [
-                { label: '顧客', action: 'showCustomerSubmenu()' },
-                { label: '契約', action: 'showContractSubmenu()' },
-                { label: '依頼', action: 'showRequestSubmenu()' }
+                { label: '新規顧客登録', action: 'startCustomerWizard()' },
+                { label: '依頼書を作成', action: 'startRequestWizard()' },
+                { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'" }
             ],
             cleaning: [
                 { label: 'レポートを作成', action: 'startReportWizard()' }
@@ -3158,7 +3151,11 @@ ${context}
         const actions = jobActions[jobKey] || [];
         actions.forEach(btn => {
             const buttonHtml = `
-                <button class="action-btn" onclick="${btn.action}">
+                <button class="job-action-btn" onclick="${btn.action}"
+                    style="background: var(--accent-color); border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px var(--accent-glow);">
                     ${btn.label}
                 </button>
             `;
@@ -3562,36 +3559,6 @@ ${context}
         container.appendChild(btnDiv);
     }
 
-    function showCustomerSubmenu() {
-        const actionContainer = document.getElementById('action-buttons-container');
-        if (!actionContainer) return;
-
-        appendChatMessage('ai', '顧客メニューを選択してください。');
-
-        actionContainer.innerHTML = `
-            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button onclick="startCustomerWizard()" class="action-btn" style="flex: 1 1 40%; min-width: 150px;">
-                    <i class="fas fa-user-plus" style="color: #60a5fa;"></i> 新規顧客登録
-                </button>
-                <button onclick="showCustomerListOnly()" class="action-btn" style="flex: 1 1 40%; min-width: 150px;">
-                    <i class="fas fa-list" style="color: #a78bfa;"></i> 顧客データ閲覧
-                </button>
-            </div>
-            <button onclick="showJobActions('sales')" style="margin-top: 10px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.8rem;">
-                ← メニューに戻る
-            </button>
-        `;
-    }
-
-    function showCustomerListOnly() {
-        window.customerOverlayMode = 'view'; // Set mode to view only
-        renderCustomerSelect(document.createElement('div')); // Container ignored by overlay logic
-        // Reset action container
-        const ac = document.getElementById('action-buttons-container');
-        if (ac) ac.innerHTML = '';
-        setTimeout(() => showJobActions('sales'), 500); // Return to main menu in background
-    }
-
     function selectCustomer(id, name, store) {
         // Reset customer search mode
         window.wizardCustomerSearchActive = false;
@@ -3600,14 +3567,6 @@ ${context}
         const overlay = document.getElementById('customer-selection-overlay');
         if (overlay) overlay.classList.remove('active');
 
-        if (window.customerOverlayMode === 'view') {
-            // View mode: Just show selection in chat (or eventually open detail modal)
-            appendChatMessage('ai', `**${name} (${store})** を選択しました。\n(詳細表示機能は今後実装予定です)`);
-            window.customerOverlayMode = null; // Reset mode
-            return;
-        }
-
-        // Wizard mode (default)
         requestWizardState.data.customer_id = id;
         requestWizardState.data.customer_name = name;
         requestWizardState.data.store_name = store;
@@ -3620,48 +3579,6 @@ ${context}
 
         appendChatMessage('user', `${name} - ${store}`);
         showRequestWizardStep(requestWizardState.step + 1);
-    }
-
-    // Legacy function support
-    function renderCustomerSelect(container) {
-        // Fetch customers from API
-        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-
-        try {
-            const token = localStorage.getItem('id_token');
-            const headers = token ? { 'Authorization': token } : {};
-
-            // Reuse cached if available
-            if (window.wizardCustomers && window.wizardCustomers.length > 0) {
-                showCustomerOverlay();
-                return;
-            }
-
-            container.innerHTML = `<div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem;">顧客データを読み込み中...</div>`;
-
-            fetch(`${API_BASE}/stores`, { headers })
-                .then(res => res.json())
-                .then(data => {
-                    let customers = data.items || [];
-                    // Sort by status priority
-                    const statusPriority = { 'prospect': 0, '稼働中': 1, '契約作業中': 2, '商談済': 3, '検討中': 4 };
-                    customers.sort((a, b) => (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99));
-
-                    // Limit to 50
-                    window.wizardCustomers = customers.slice(0, 50);
-                    showCustomerOverlay();
-
-                    if (container) container.innerHTML = `<div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem;">画面上のオーバーレイから選択してください</div>`;
-                })
-                .catch(e => {
-                    console.error('Failed to load customers:', e);
-                    if (container) container.innerHTML = `<div style="text-align: center; color: #ef4444; font-size: 0.85rem;">読み込みエラー</div>`;
-                });
-
-        } catch (e) {
-            console.error('Failed to load customers:', e);
-        }
-        window.wizardCustomerSearchActive = true;
     }
 
     function selectNewCustomer() {
@@ -3753,53 +3670,6 @@ ${context}
 
         container.appendChild(summaryDiv);
         container.appendChild(btnDiv);
-    }
-
-    function showContractSubmenu() {
-        const actionContainer = document.getElementById('action-buttons-container');
-        if (!actionContainer) return;
-
-        appendChatMessage('ai', '契約メニューを選択してください。');
-
-        actionContainer.innerHTML = `
-            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button onclick="startRequestWizard('contract')" class="action-btn" style="flex: 1 1 40%; min-width: 150px;">
-                    <i class="fas fa-plus-circle" style="color: #60a5fa;"></i> 新規契約作成
-                </button>
-                <button onclick="showPlaceholder('既存契約閲覧')" class="action-btn" style="flex: 1 1 40%; min-width: 150px;">
-                    <i class="fas fa-file-contract" style="color: #a78bfa;"></i> 既存契約閲覧
-                </button>
-            </div>
-            <button onclick="showJobActions('sales')" style="margin-top: 10px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.8rem;">
-                ← メニューに戻る
-            </button>
-        `;
-    }
-
-    function showRequestSubmenu() {
-        const actionContainer = document.getElementById('action-buttons-container');
-        if (!actionContainer) return;
-
-        appendChatMessage('ai', '依頼メニューを選択してください。');
-
-        actionContainer.innerHTML = `
-            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button onclick="startRequestWizard('estimate')" class="action-btn" style="flex: 1 1 40%; min-width: 150px;">
-                    <i class="fas fa-plus-circle" style="color: #34d399;"></i> 新規依頼作成
-                </button>
-                <button onclick="showPlaceholder('既存依頼閲覧')" class="action-btn" style="flex: 1 1 40%; min-width: 150px;">
-                    <i class="fas fa-history" style="color: #fbbf24;"></i> 既存依頼閲覧
-                </button>
-            </div>
-            <button onclick="showJobActions('sales')" style="margin-top: 10px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.8rem;">
-                ← メニューに戻る
-            </button>
-        `;
-    }
-
-    function showPlaceholder(featureName) {
-        appendChatMessage('ai', `**${featureName}** 機能は現在準備中です。`);
-        setTimeout(() => showJobActions('sales'), 1500);
     }
 
     function cancelCustomerWizard() {
