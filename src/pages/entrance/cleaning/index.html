@@ -4202,8 +4202,257 @@ ${context}
         reportWizardState.store = { id: storeId, name: storeName };
 
         appendChatMessage('user', storeName);
-        proceedToPhotoUpload();
+
+        // Branch based on mode
+        if (reportWizardState.mode === 'live') {
+            showLiveWorkStartScreen();
+        } else {
+            proceedToPhotoUpload();
+        }
     }
+
+    // ========================================
+    // LIVE Mode Functions
+    // ========================================
+
+    let liveWorkState = {
+        startTime: null,
+        photos: [],
+        isActive: false
+    };
+
+    function showLiveWorkStartScreen() {
+        const storeName = reportWizardState.store?.name || '選択した店舗';
+
+        appendChatMessage('ai', `🔴 **${storeName}** の作業を開始しますか？
+
+作業開始ボタンを押すと記録が始まります。`);
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 320px; margin: 0 auto;">
+                <button onclick="startLiveWork()"
+                    style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none;
+                    padding: 24px; border-radius: 16px; cursor: pointer; text-align: center;
+                    font-size: 1.2rem; font-weight: 700; min-height: 80px;
+                    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);">
+                    🔴 作業開始
+                </button>
+                <button onclick="cancelLiveMode()"
+                    style="background: transparent; border: 1px solid rgba(255,255,255,0.3);
+                    color: rgba(255,255,255,0.6); padding: 14px; border-radius: 12px; cursor: pointer;">
+                    キャンセル
+                </button>
+            </div>
+        `;
+    }
+
+    function startLiveWork() {
+        liveWorkState = {
+            startTime: new Date(),
+            photos: [],
+            isActive: true
+        };
+
+        const storeName = reportWizardState.store?.name || '店舗';
+        appendChatMessage('ai', `🔴 **作業開始**
+
+**${storeName}** の清掃作業を記録中です。
+写真を撮影しながら作業を進めてください。`);
+
+        showLiveWorkingUI();
+    }
+
+    function showLiveWorkingUI() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        const startTime = liveWorkState.startTime;
+        const storeName = reportWizardState.store?.name || '店舗';
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 350px; margin: 0 auto; padding: 20px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 16px;">
+                <div style="text-align: center;">
+                    <div style="color: #ef4444; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px;">🔴 LIVE 作業中</div>
+                    <div style="color: #fff; font-size: 1.1rem; font-weight: 700;">${storeName}</div>
+                    <div id="live-timer" style="color: rgba(255,255,255,0.7); font-size: 2rem; font-family: monospace; margin-top: 8px;">00:00:00</div>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <label style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+                        min-height: 100px; border: 2px dashed rgba(16,185,129,0.5); border-radius: 16px; cursor: pointer;
+                        background: rgba(16,185,129,0.1); transition: all 0.2s;">
+                        <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="addLivePhoto(this)">
+                        <i class="fas fa-camera" style="font-size: 2rem; color: #10b981; margin-bottom: 6px;"></i>
+                        <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">📸 写真を撮影</span>
+                        <span id="live-photo-count" style="font-size: 0.9rem; color: #10b981; margin-top: 4px; font-weight: 600;">${liveWorkState.photos.length}枚</span>
+                    </label>
+                </div>
+                <button onclick="finishLiveWork()"
+                    style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+                    padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
+                    cursor: pointer; min-height: 56px;">
+                    ✅ 作業完了
+                </button>
+            </div>
+        `;
+
+        // Start timer
+        updateLiveTimer();
+        liveWorkState.timerInterval = setInterval(updateLiveTimer, 1000);
+    }
+
+    function updateLiveTimer() {
+        const timerEl = document.getElementById('live-timer');
+        if (!timerEl || !liveWorkState.startTime) return;
+
+        const elapsed = Math.floor((new Date() - liveWorkState.startTime) / 1000);
+        const hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+        const seconds = String(elapsed % 60).padStart(2, '0');
+        timerEl.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    function addLivePhoto(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        liveWorkState.photos.push(file);
+
+        const countEl = document.getElementById('live-photo-count');
+        if (countEl) countEl.textContent = `${liveWorkState.photos.length}枚`;
+
+        appendChatMessage('ai', `📸 写真を追加しました (${liveWorkState.photos.length}枚目)`);
+
+        // Clear input for next photo
+        input.value = '';
+    }
+
+    function finishLiveWork() {
+        if (liveWorkState.timerInterval) {
+            clearInterval(liveWorkState.timerInterval);
+        }
+        liveWorkState.isActive = false;
+
+        const elapsed = Math.floor((new Date() - liveWorkState.startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const storeName = reportWizardState.store?.name || '店舗';
+
+        // Transfer photos to report state
+        reportWizardState.photos.after = liveWorkState.photos;
+
+        appendChatMessage('ai', `✅ **作業完了**
+
+**${storeName}**
+作業時間: ${minutes}分
+撮影枚数: ${liveWorkState.photos.length}枚
+
+レポートを送信しますか？`);
+
+        showLiveReportConfirmation(minutes);
+    }
+
+    function showLiveReportConfirmation(workMinutes) {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        const storeName = reportWizardState.store?.name || '店舗';
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 320px; margin: 0 auto;">
+                <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; color: #fff; font-size: 0.9rem;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">📋 レポート内容</div>
+                    <div>店舗: ${storeName}</div>
+                    <div>作業時間: ${workMinutes}分</div>
+                    <div>写真: ${liveWorkState.photos.length}枚</div>
+                </div>
+                <button onclick="submitLiveReport()"
+                    style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+                    padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
+                    cursor: pointer; min-height: 56px;">
+                    📤 レポートを送信
+                </button>
+                <button onclick="addLiveReportNotes()"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 14px; border-radius: 12px; cursor: pointer;">
+                    ✏️ 備考を追加
+                </button>
+            </div>
+        `;
+    }
+
+    function addLiveReportNotes() {
+        appendChatMessage('ai', '備考があれば入力してください。');
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin: 0 auto;">
+                <textarea id="live-notes-input" placeholder="備考・特記事項など..."
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 14px; border-radius: 12px; min-height: 100px; resize: none; font-size: 1rem;"></textarea>
+                <button onclick="saveLiveNotes()"
+                    style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+                    padding: 16px; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer;">
+                    完了
+                </button>
+            </div>
+        `;
+    }
+
+    function saveLiveNotes() {
+        const input = document.getElementById('live-notes-input');
+        reportWizardState.notes = input?.value || '';
+
+        const elapsed = Math.floor((new Date() - liveWorkState.startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+
+        showLiveReportConfirmation(minutes);
+    }
+
+    async function submitLiveReport() {
+        appendChatMessage('ai', '📤 レポートを送信中...');
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (actionContainer) actionContainer.innerHTML = '';
+
+        // TODO: Implement actual API call to submit report
+        // For now, simulate success
+        setTimeout(() => {
+            appendChatMessage('ai', `✅ **レポート送信完了**
+
+お疲れ様でした！次の作業もMISOGIにお任せください。`);
+
+            // Remove LIVE mode styling
+            const visualizer = document.querySelector('.visualizer-container');
+            if (visualizer) {
+                visualizer.classList.remove('live-mode');
+                const badge = document.querySelector('.live-mode-badge');
+                if (badge) badge.remove();
+            }
+
+            // Reset state
+            liveWorkState = { startTime: null, photos: [], isActive: false };
+            reportWizardState = { step: 0, mode: null, store: null, schedule: null, photos: { before: [], after: [] }, cleaningTarget: '', notes: '', nextProposal: { timing: '', work: '' } };
+
+            setTimeout(() => showJobActions('cleaning'), 2000);
+        }, 1500);
+    }
+
+    function cancelLiveMode() {
+        const visualizer = document.querySelector('.visualizer-container');
+        if (visualizer) {
+            visualizer.classList.remove('live-mode');
+            const badge = document.querySelector('.live-mode-badge');
+            if (badge) badge.remove();
+        }
+
+        appendChatMessage('ai', 'LIVEモードをキャンセルしました。');
+        showJobActions('cleaning');
+    }
+
 
     function proceedToPhotoUpload() {
         const storeName = reportWizardState.store?.name || '選択した店舗';
