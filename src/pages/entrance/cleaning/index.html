@@ -4256,19 +4256,32 @@ ${context}
 
         const storeName = reportWizardState.store?.name || '店舗';
 
+        // Generate thumbnail previews
+        const thumbnails = liveWorkState.beforePhotos.map((file, i) => {
+            const url = URL.createObjectURL(file);
+            return `<div style="width: 60px; height: 60px; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
+                <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>`;
+        }).join('');
+
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 350px; margin: 0 auto; padding: 20px; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 16px;">
                 <div style="text-align: center;">
                     <div style="color: #fbbf24; font-size: 1rem; font-weight: 600; margin-bottom: 4px;">📷 作業前の写真</div>
                     <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">現場の状態を記録してください</div>
                 </div>
+                ${liveWorkState.beforePhotos.length > 0 ? `
+                <div id="before-photo-gallery" style="display: flex; gap: 8px; overflow-x: auto; padding: 8px 0;">
+                    ${thumbnails}
+                </div>
+                ` : ''}
                 <label style="display: flex; flex-direction: column; align-items: center; justify-content: center;
-                    min-height: 120px; border: 2px dashed rgba(251,191,36,0.5); border-radius: 16px; cursor: pointer;
+                    min-height: 100px; border: 2px dashed rgba(251,191,36,0.5); border-radius: 16px; cursor: pointer;
                     background: rgba(251,191,36,0.1); transition: all 0.2s;">
                     <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="addBeforePhoto(this)">
-                    <i class="fas fa-camera" style="font-size: 2.5rem; color: #fbbf24; margin-bottom: 8px;"></i>
+                    <i class="fas fa-camera" style="font-size: 2rem; color: #fbbf24; margin-bottom: 6px;"></i>
                     <span style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">タップして撮影</span>
-                    <span id="before-photo-count" style="font-size: 1.1rem; color: #fbbf24; margin-top: 6px; font-weight: 700;">${liveWorkState.beforePhotos.length}枚</span>
+                    <span id="before-photo-count" style="font-size: 1rem; color: #fbbf24; margin-top: 4px; font-weight: 700;">${liveWorkState.beforePhotos.length}枚</span>
                 </label>
                 <button onclick="proceedToWorkingPhase()" id="before-next-btn"
                     style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none;
@@ -4291,16 +4304,10 @@ ${context}
 
         liveWorkState.beforePhotos.push(file);
 
-        const countEl = document.getElementById('before-photo-count');
-        if (countEl) countEl.textContent = `${liveWorkState.beforePhotos.length}枚`;
+        // Re-render UI to show new thumbnail
+        showBeforePhotoUI();
 
-        const nextBtn = document.getElementById('before-next-btn');
-        if (nextBtn) {
-            nextBtn.style.opacity = '1';
-            nextBtn.disabled = false;
-        }
-
-        appendChatMessage('ai', `📷 作業前写真 ${liveWorkState.beforePhotos.length}枚目を追加しました。`);
+        appendChatMessage('ai', `📷 作業前写真 ${liveWorkState.beforePhotos.length}枚目`);
 
         input.value = '';
     }
@@ -4407,19 +4414,32 @@ ${context}
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
+        // Generate thumbnail previews
+        const thumbnails = liveWorkState.afterPhotos.map((file, i) => {
+            const url = URL.createObjectURL(file);
+            return `<div style="width: 60px; height: 60px; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
+                <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>`;
+        }).join('');
+
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 350px; margin: 0 auto; padding: 20px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px;">
                 <div style="text-align: center;">
                     <div style="color: #10b981; font-size: 1rem; font-weight: 600; margin-bottom: 4px;">📷 作業後の写真</div>
                     <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">仕上がりを撮影してください</div>
                 </div>
+                ${liveWorkState.afterPhotos.length > 0 ? `
+                <div id="after-photo-gallery" style="display: flex; gap: 8px; overflow-x: auto; padding: 8px 0;">
+                    ${thumbnails}
+                </div>
+                ` : ''}
                 <label style="display: flex; flex-direction: column; align-items: center; justify-content: center;
-                    min-height: 120px; border: 2px dashed rgba(16,185,129,0.5); border-radius: 16px; cursor: pointer;
+                    min-height: 100px; border: 2px dashed rgba(16,185,129,0.5); border-radius: 16px; cursor: pointer;
                     background: rgba(16,185,129,0.1); transition: all 0.2s;">
                     <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="addAfterPhoto(this)">
-                    <i class="fas fa-camera" style="font-size: 2.5rem; color: #10b981; margin-bottom: 8px;"></i>
+                    <i class="fas fa-camera" style="font-size: 2rem; color: #10b981; margin-bottom: 6px;"></i>
                     <span style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">タップして撮影</span>
-                    <span id="after-photo-count" style="font-size: 1.1rem; color: #10b981; margin-top: 6px; font-weight: 700;">${liveWorkState.afterPhotos.length}枚</span>
+                    <span id="after-photo-count" style="font-size: 1rem; color: #10b981; margin-top: 4px; font-weight: 700;">${liveWorkState.afterPhotos.length}枚</span>
                 </label>
                 <button onclick="proceedToLiveReview()" id="after-next-btn"
                     style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
@@ -4438,16 +4458,10 @@ ${context}
 
         liveWorkState.afterPhotos.push(file);
 
-        const countEl = document.getElementById('after-photo-count');
-        if (countEl) countEl.textContent = `${liveWorkState.afterPhotos.length}枚`;
+        // Re-render UI to show new thumbnail
+        showAfterPhotoUI();
 
-        const nextBtn = document.getElementById('after-next-btn');
-        if (nextBtn) {
-            nextBtn.style.opacity = '1';
-            nextBtn.disabled = false;
-        }
-
-        appendChatMessage('ai', `📷 作業後写真 ${liveWorkState.afterPhotos.length}枚目を追加しました。`);
+        appendChatMessage('ai', `📷 作業後写真 ${liveWorkState.afterPhotos.length}枚目`);
 
         input.value = '';
     }
