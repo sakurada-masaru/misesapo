@@ -218,6 +218,14 @@
         display: none !important;
     }
 
+    .mobile-nav-btn {
+        display: none;
+    }
+
+    .sidebar-overlay {
+        display: none;
+    }
+
     .main-content {
         padding: 0 !important;
         margin-left: 0 !important;
@@ -1710,6 +1718,57 @@
             z-index: 10 !important;
         }
 
+        #admin-sidebar {
+            display: none !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 280px !important;
+            height: 100vh !important;
+            background: rgba(0, 0, 0, 0.95) !important;
+            z-index: 2000000 !important;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease !important;
+        }
+
+        #admin-sidebar.mobile-open {
+            display: flex !important;
+            transform: translateX(0) !important;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1999999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .mobile-nav-btn {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+
         .chat-log-container {
             display: none !important;
         }
@@ -1748,6 +1807,12 @@
             max-width: 560px;
             z-index: 750;
         }
+
+        #floating-job-btn {
+            top: 12px;
+            right: 12px;
+            bottom: auto;
+        }
     }
 
     @media (max-width: 375px) {
@@ -1774,6 +1839,13 @@
 </style>
 
 <main id="main" class="admin-dashboard">
+    <!-- Mobile Navigation Button -->
+    <button class="mobile-nav-btn" onclick="toggleMobileSidebar()" aria-label="メニュー">
+        <i class="fas fa-bars"></i>
+    </button>
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
     @include('partials.admin-sidebar')
 
     <!-- Job Change Animation Overlay -->
@@ -2000,6 +2072,15 @@
     const loginForm = document.getElementById('login-form');
 
     let currentMode = 'chat';
+
+    // Mobile sidebar toggle
+    function toggleMobileSidebar() {
+        const overlay = document.querySelector('.sidebar-overlay');
+        if (sidebar && overlay) {
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
+        }
+    }
 
     // Hide sidebar by default for AI-centric feel
     if (sidebar) sidebar.style.display = 'none';
@@ -3395,7 +3476,16 @@ ${context}
     }
 
     async function renderCustomerSelect(container) {
-        // Fetch customers from API
+        await fetchCustomersForOverlay();
+
+        // Use new Overlay instead of chat history
+        showCustomerOverlay();
+
+        container.innerHTML = `<div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem;">画面上のオーバーレイから選択してください</div>`;
+        window.wizardCustomerSearchActive = true;
+    }
+
+    async function fetchCustomersForOverlay() {
         const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
         try {
@@ -3423,11 +3513,12 @@ ${context}
             window.wizardCustomers = [];
         }
 
-        // Use new Overlay instead of chat history
-        showCustomerOverlay();
-
-        container.innerHTML = `<div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem;">画面上のオーバーレイから選択してください</div>`;
-        window.wizardCustomerSearchActive = true;
+        window.wizardCustomerMap = {};
+        (window.wizardCustomers || []).forEach((customer) => {
+            if (customer && customer.id) {
+                window.wizardCustomerMap[customer.id] = customer;
+            }
+        });
     }
 
     function showCustomerOverlay() {
@@ -3469,11 +3560,110 @@ ${context}
             }, 100);
         }
 
-        // Reset list
-        const listContainer = document.getElementById('overlay-customer-list');
-        if (listContainer) listContainer.innerHTML = renderCustomerListItems(window.wizardCustomers);
+        renderCustomerOverlayList();
 
         overlay.classList.add('active');
+    }
+
+    async function showCustomerSelectionOverlay() {
+        await fetchCustomersForOverlay();
+        showCustomerOverlay();
+        window.wizardCustomerSearchActive = false;
+    }
+
+    function getCustomerOverlayParts() {
+        const overlay = document.getElementById('customer-selection-overlay');
+        if (!overlay) return null;
+
+        return {
+            overlay,
+            headerTitle: overlay.querySelector('.customer-selection-header div span'),
+            headerCount: overlay.querySelector('.customer-selection-header div span:last-child'),
+            searchInput: overlay.querySelector('#overlay-search-input'),
+            listContainer: overlay.querySelector('#overlay-customer-list'),
+            footer: overlay.querySelector('.customer-selection-footer')
+        };
+    }
+
+    function renderCustomerOverlayList() {
+        const parts = getCustomerOverlayParts();
+        if (!parts) return;
+
+        if (parts.headerTitle) parts.headerTitle.textContent = '顧客を選択';
+        if (parts.headerCount) {
+            const count = window.wizardCustomers ? window.wizardCustomers.length : 0;
+            parts.headerCount.textContent = `${count}件`;
+        }
+        if (parts.searchInput) {
+            parts.searchInput.style.display = 'block';
+            parts.searchInput.value = '';
+        }
+        if (parts.listContainer) parts.listContainer.innerHTML = renderCustomerListItems(window.wizardCustomers);
+
+        if (parts.footer) {
+            if (customerSelectionMode === 'view') {
+                parts.footer.innerHTML = `
+                    <button onclick="closeCustomerOverlay()" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.7); padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">
+                        閉じる
+                    </button>
+                `;
+            } else {
+                parts.footer.innerHTML = `
+                    <button onclick="selectNewCustomer()" style="flex:1; background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.3); color:#fff; padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">
+                        <i class="fas fa-plus"></i> 新規顧客を登録
+                    </button>
+                    <button onclick="closeCustomerOverlay()" style="width:100px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.7); padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">
+                        キャンセル
+                    </button>
+                `;
+            }
+        }
+    }
+
+    function showCustomerDetail(customer) {
+        const parts = getCustomerOverlayParts();
+        if (!parts || !customer) return;
+
+        if (parts.headerTitle) parts.headerTitle.textContent = '顧客詳細';
+        if (parts.headerCount) parts.headerCount.textContent = '';
+        if (parts.searchInput) parts.searchInput.style.display = 'none';
+
+        const statusColors = { '稼働中': '#10b981', '契約作業中': '#f59e0b', '商談済': '#8b5cf6', '検討中': '#3b82f6', 'prospect': '#3b82f6' };
+        const statusColor = statusColors[customer.status] || '#6b7280';
+        const storeName = customer.store_name || customer.name || '-';
+
+        if (parts.listContainer) {
+            parts.listContainer.innerHTML = `
+                <div style="padding: 12px 4px 24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div style="font-weight:700; font-size:1.05rem; color:#fff;">${customer.company_name || '会社名なし'}</div>
+                        <div style="display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                            <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusColor}; margin-right: 6px;"></span>
+                            <span style="font-size: 0.75rem; color: ${statusColor}; font-weight: 600;">${customer.status || '未設定'}</span>
+                        </div>
+                    </div>
+                    <div style="font-size:0.9rem; color:#e0e0e0; display:grid; gap:6px;">
+                        <div><span style="opacity:0.7;">店舗:</span> ${storeName}</div>
+                        <div><span style="opacity:0.7;">ブランド:</span> ${customer.brand_name || '-'}</div>
+                        <div><span style="opacity:0.7;">担当者:</span> ${customer.contact_person || '-'}</div>
+                        <div><span style="opacity:0.7;">電話:</span> ${customer.phone || '-'}</div>
+                        <div><span style="opacity:0.7;">住所:</span> ${customer.address || '-'}</div>
+                        <div><span style="opacity:0.7;">メモ:</span> ${customer.memo || '-'}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        if (parts.footer) {
+            parts.footer.innerHTML = `
+                <button onclick="renderCustomerOverlayList()" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">
+                    一覧に戻る
+                </button>
+                <button onclick="closeCustomerOverlay()" style="width:100px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.7); padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">
+                    閉じる
+                </button>
+            `;
+        }
     }
 
     function closeCustomerOverlay() {
@@ -3483,10 +3673,15 @@ ${context}
             // Optional: remove after transition? leave it for performance
         }
 
-        // If closing without selection (cancel), maybe reset wizard or go back?
-        // For now, just close overlay implies cancel of selection action, but wizard stays at step.
-        // Or we can treat it as cancelWizard.
-        cancelRequestWizard(); // Treat as cancel for now as it's the start of flow
+        window.wizardCustomerSearchActive = false;
+
+        if (customerSelectionMode === 'view') {
+            customerSelectionMode = 'wizard';
+            setTimeout(() => showJobActions('sales'), 200);
+            return;
+        }
+
+        cancelRequestWizard();
     }
 
     function filterCustomerListInOverlay(query) {
@@ -3651,17 +3846,16 @@ ${context}
         // Reset customer search mode
         window.wizardCustomerSearchActive = false;
 
+        // Check if we're in view mode (not wizard mode)
+        if (customerSelectionMode === 'view') {
+            const customer = window.wizardCustomerMap?.[id] || (window.wizardCustomers || []).find((c) => c.id === id);
+            showCustomerDetail(customer);
+            return;
+        }
+
         // Close overlay if active
         const overlay = document.getElementById('customer-selection-overlay');
         if (overlay) overlay.classList.remove('active');
-
-        // Check if we're in view mode (not wizard mode)
-        if (customerSelectionMode === 'view') {
-            appendChatMessage('ai', `顧客情報: **${name}** (${store})`);
-            customerSelectionMode = 'wizard'; // Reset mode
-            setTimeout(() => showJobActions('sales'), 1500);
-            return;
-        }
 
         requestWizardState.data.customer_id = id;
         requestWizardState.data.customer_name = name;
