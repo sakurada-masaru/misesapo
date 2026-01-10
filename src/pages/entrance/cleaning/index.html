@@ -1701,55 +1701,79 @@
             font-size: 16px !important;
         }
 
-        /* Chat log container - solid fixed panel at bottom */
+        /* === HIDE TEAM CHAT LOG ON MOBILE - Focus on MISOGI === */
         .chat-log-container {
+            display: none !important;
+        }
+
+        /* === MISOGI AI CONVERSATION AREA === */
+        .latest-message-container {
+            position: fixed !important;
+            top: 80px !important;
+            left: 16px !important;
+            right: 16px !important;
+            bottom: 180px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            overflow-y: auto !important;
+        }
+
+        .latest-message-bubble {
+            max-width: 100% !important;
+            width: 100% !important;
+            font-size: 1rem !important;
+            padding: 20px !important;
+            margin: 0 !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+            border: 1px solid var(--accent-color, #10b981) !important;
+            border-radius: 20px !important;
+        }
+
+        /* === LARGE ACTION BUTTONS AT BOTTOM === */
+        .action-buttons-container,
+        #action-buttons-container {
+            position: fixed !important;
+            bottom: 80px !important;
+            left: 16px !important;
+            right: 16px !important;
+            padding: 0 !important;
+            background: transparent !important;
+            z-index: 100 !important;
+            margin: 0 !important;
+            display: flex !important;
+            justify-content: center !important;
+            gap: 12px !important;
+            flex-wrap: wrap !important;
+        }
+
+        .action-buttons-container button,
+        #action-buttons-container button {
+            min-height: 56px !important;
+            min-width: 100px !important;
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            padding: 14px 20px !important;
+            border-radius: 16px !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            touch-action: manipulation !important;
+        }
+
+        /* === MESSAGE INPUT AT VERY BOTTOM === */
+        .chat-input-wrapper {
             position: fixed !important;
             bottom: 0 !important;
             left: 0 !important;
             right: 0 !important;
-            height: 120px !important;
-            max-height: 120px !important;
-            background: linear-gradient(to bottom, rgba(10, 17, 40, 0.95), rgba(0, 0, 0, 0.98)) !important;
-            border-top: 1px solid var(--accent-color, #10b981) !important;
-            z-index: 500 !important;
-            overflow: hidden !important;
-            padding: 10px 16px !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: flex-end !important;
+            background: rgba(10, 17, 40, 0.98) !important;
+            padding: 12px 16px !important;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+            z-index: 1000 !important;
         }
 
-        .chat-log-container .chat-history {
-            overflow: hidden !important;
-            max-height: 100px !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: flex-end !important;
-        }
-
-        .chat-log-container .chat-log-line {
-            font-size: 0.8rem !important;
-            line-height: 1.4 !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-        }
-
-        /* Adjust input wrapper to sit above chat log */
-        .chat-input-wrapper {
-            bottom: 120px !important;
-        }
-
-        /* Adjust action buttons to sit above input */
-        .action-buttons-container,
-        #action-buttons-container {
-            bottom: 200px !important;
-        }
-
-        /* Adjust message area */
-        .latest-message-container {
-            bottom: 240px !important;
-        }
 
         /* Navigation button (hamburger) */
         .mobile-nav-btn {
