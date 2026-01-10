@@ -1,6 +1,6 @@
 @layout('layouts.admin')
-@json('data/meta/admin_dashboard_title.json', $title)
-@json('data/meta/admin_dashboard_body_class.json', $body_class)
+@json('data/meta/entrance_dev_title.json', $title)
+@json('data/meta/entrance_dev_body_class.json', $body_class)
 
 <script src="{{ base_path }}js/entrance-core.js"></script>
 
@@ -1398,188 +1398,191 @@
         padding-top: 60px;
         z-index: 20;
     }
+
 </style>
 
-</main>
+<main id="main" class="admin-dashboard">
+    @include('partials.admin-sidebar')
 
-<!-- Job Change Animation Overlay -->
+    <!-- Job Change Animation Overlay -->
+    </main>
 <div id="job-change-overlay">
-    <div id="job-change-label">CHANGE JOB...</div>
-</div>
+        <div id="job-change-label">CHANGE JOB...</div>
+    </div>
 
-<div id="start-overlay" style="background: radial-gradient(circle at center, #0a1128 0%, #000 100%);">
-    <div class="logo-section"
-        style="text-align: center; margin-bottom: 30px; animation: fadeIn 1.5s ease-out; position: relative;">
+    <div id="start-overlay" style="background: radial-gradient(circle at center, #0a1128 0%, #000 100%);">
+        <div class="logo-section"
+            style="text-align: center; margin-bottom: 30px; animation: fadeIn 1.5s ease-out; position: relative;">
 
-        <div class="logo-main"
-            style="font-size: 3.5rem; font-weight: 300; letter-spacing: 12px; color: #fff; margin-bottom: 15px; position: relative;">
-            <span class="initial-glow">M</span>ISOGI
+            <div class="logo-main"
+                style="font-size: 3.5rem; font-weight: 300; letter-spacing: 12px; color: #fff; margin-bottom: 15px; position: relative;">
+                <span class="initial-glow">M</span>ISOGI
+            </div>
+            <div class="logo-sub"
+                style="font-size: 0.7rem; color: rgba(255,255,255,0.4); letter-spacing: 4px; line-height: 1.6;">
+                MISESAPO INTELLIGENT SYSTEM FOR<br>OPERATIONAL GUIDANCE & INTERFACE
+            </div>
         </div>
-        <div class="logo-sub"
-            style="font-size: 0.7rem; color: rgba(255,255,255,0.4); letter-spacing: 4px; line-height: 1.6;">
-            MISESAPO INTELLIGENT SYSTEM FOR<br>OPERATIONAL GUIDANCE & INTERFACE
+        <div class="visualizer-container"
+            style="cursor: default; position: relative; transform: none; top: auto; left: auto; margin-bottom: 40px; display: inline-block;">
+            <div class="circle-text-container"
+                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; animation: misogi-spin 40s linear infinite;">
+                <svg viewBox="0 0 200 200" class="circle-svg" width="200" height="200">
+                    <path id="circlePathStart" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
+                    <text>
+                        <textPath href="#circlePathStart">
+                            Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+            <!-- The Liquid Core -->
+            <div class="core-circle"
+                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: liquid-core 6s infinite ease-in-out, core-breathe 4s infinite ease-in-out;">
+            </div>
+
+            <!-- Ripples -->
+            <div class="wave" style="animation: ripple-out 5s infinite 0s;"></div>
+            <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
+            <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
+        </div>
+        <button class="start-btn" onclick="startWorkflow()" style="margin-top: 40px; position: relative; z-index: 200;">
+            <i class="fas fa-power-off"></i>
+            <div class="start-btn-label">LOGIN</div>
+        </button>
+    </div>
+
+    <div class="main-content" style="background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);">
+        <!-- Persistent Visualizer Core -->
+        <div class="visualizer-container">
+            <div class="circle-text-container" id="circle-text"
+                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; animation: misogi-spin 40s linear infinite;">
+                <svg viewBox="0 0 200 200" class="circle-svg" width="200" height="200">
+                    <path id="circlePath" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
+                    <text>
+                        <textPath href="#circlePath">
+                            Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+            <!-- The Liquid Core -->
+            <div class="core-circle"
+                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: liquid-core 6s infinite ease-in-out, core-breathe 4s infinite ease-in-out;">
+            </div>
+
+            <!-- Ripples -->
+            <div class="wave" style="animation: ripple-out 5s infinite 0s;"></div>
+            <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
+            <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
+        </div>
+
+        <!-- Voice Content -->
+        <div class="voice-mode-content" id="voice-content">
+            <div class="status-text" id="status-text">LISTENING...</div>
+            <div class="ai-response-overlay" id="ai-response">
+                <div class="ai-response-icon"><i class="fas fa-sparkles"></i> MISOGI</div>
+                <div id="ai-message-text"></div>
+            </div>
+        </div>
+
+        <!-- FF14-style Chat Log -->
+        <div class="chat-log-container" id="chat-log-container">
+            <!-- Resize handles -->
+            <div class="chat-log-resize-handle top"></div>
+            <div class="chat-log-resize-handle right"></div>
+            <div class="chat-log-resize-handle corner"></div>
+
+            <div class="chat-history" id="chat-history">
+                <!-- Log lines injected by JS -->
+            </div>
+
+            <!-- Team chat input (for Call/General) -->
+            <div class="chat-log-input-wrapper" id="chat-log-input-wrapper">
+                <div class="chat-log-channel-tag" id="chat-log-current-channel" onclick="openChannelPicker()">Misesapo
+                </div>
+                <input type="text" id="team-chat-inline-input" placeholder="社内チャット（Alt+1~8で切替）..."
+                    onkeypress="if(event.key==='Enter') sendInlineTeamMessage()">
+                <button onclick="sendInlineTeamMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+
+            <div class="chat-log-buttons">
+                <button class="chat-log-tab active" data-filter="general"
+                    onclick="filterChatLog('general')">General</button>
+                <button class="chat-log-tab" data-filter="event" onclick="filterChatLog('event')">Event</button>
+                <button class="chat-log-tab" data-filter="call" onclick="filterChatLog('call')">Call</button>
+                <div class="chat-log-spacer"></div>
+                <button class="chat-log-icon-btn" onclick="expandChatLog()" title="ログを拡大">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button class="chat-log-icon-btn" onclick="toggleChatLog()" title="ログを非表示">
+                    <i class="fas fa-times"></i>
+                </button>
+                <button class="chat-log-icon-btn" onclick="openTeamChat()" title="チャンネル選択">
+                    <i class="fas fa-hashtag"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Content -->
+        <div id="chat-container">
+
+            <!-- New: Latest Message Display (Centered) -->
+            <div id="latest-message-container" class="latest-message-container"></div>
+
+            <!-- New: Action Buttons Container (Centered) -->
+            <div id="action-buttons-container" class="action-buttons-container"></div>
+
+            <!-- Login Bubble -->
+            <div class="login-bubble-container" id="login-form">
+                <div class="login-input-card">
+                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 5px;">ACCOUNT
+                        AUTHENTICATION</div>
+                    <input type="email" id="login-email" placeholder="メールアドレス" autocomplete="email">
+                    <input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">
+                    <button class="login-submit-btn" onclick="performLogin()">認証</button>
+                </div>
+            </div>
+            <div class="visualizer-circle">
+                <input type="file" id="image-upload" accept="image/*" style="display: none;"
+                    onchange="handleImageSelect(this)">
+                <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
+                    <i class="fas fa-camera"></i>
+                </button>
+            </div>
+
+            <div class="chat-input-wrapper">
+                <input type="file" id="image-upload" accept="image/*" style="display: none;"
+                    onchange="handleImageSelect(this)">
+                <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
+                <button class="send-btn" onclick="sendTextMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mode Switcher -->
+        <div class="mode-switch-container" style="display: none;">
+            <button class="mode-btn" id="btn-voice-mode" onclick="switchMode('voice')">
+                <i class="fas fa-microphone"></i> 音声
+            </button>
+            <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
+                <i class="fas fa-comment-dots"></i> チャット
+            </button>
         </div>
     </div>
-    <div class="visualizer-container"
-        style="cursor: default; position: relative; transform: none; top: auto; left: auto; margin-bottom: 40px; display: inline-block;">
-        <div class="circle-text-container"
-            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; animation: misogi-spin 40s linear infinite;">
-            <svg viewBox="0 0 200 200" class="circle-svg" width="200" height="200">
-                <path id="circlePathStart" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
-                <text>
-                    <textPath href="#circlePathStart">
-                        Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
-                    </textPath>
-                </text>
-            </svg>
-        </div>
-        <!-- The Liquid Core -->
-        <div class="core-circle"
-            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: liquid-core 6s infinite ease-in-out, core-breathe 4s infinite ease-in-out;">
-        </div>
-
-        <!-- Ripples -->
-        <div class="wave" style="animation: ripple-out 5s infinite 0s;"></div>
-        <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
-        <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
     </div>
-    <button class="start-btn" onclick="startWorkflow()" style="margin-top: 40px; position: relative; z-index: 200;">
-        <i class="fas fa-power-off"></i>
-        <div class="start-btn-label">LOGIN</div>
+
+    <!-- Floating Job Indicator Button -->
+    <button id="floating-job-btn" onclick="requestJobChange()">
+        <span class="job-dot"></span>
+        <span id="floating-job-label">-</span>
     </button>
-</div>
-
-<div class="main-content" style="background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);">
-    <!-- Persistent Visualizer Core -->
-    <div class="visualizer-container">
-        <div class="circle-text-container" id="circle-text"
-            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; animation: misogi-spin 40s linear infinite;">
-            <svg viewBox="0 0 200 200" class="circle-svg" width="200" height="200">
-                <path id="circlePath" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
-                <text>
-                    <textPath href="#circlePath">
-                        Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
-                    </textPath>
-                </text>
-            </svg>
-        </div>
-        <!-- The Liquid Core -->
-        <div class="core-circle"
-            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: liquid-core 6s infinite ease-in-out, core-breathe 4s infinite ease-in-out;">
-        </div>
-
-        <!-- Ripples -->
-        <div class="wave" style="animation: ripple-out 5s infinite 0s;"></div>
-        <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
-        <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
-    </div>
-
-    <!-- Voice Content -->
-    <div class="voice-mode-content" id="voice-content">
-        <div class="status-text" id="status-text">LISTENING...</div>
-        <div class="ai-response-overlay" id="ai-response">
-            <div class="ai-response-icon"><i class="fas fa-sparkles"></i> MISOGI</div>
-            <div id="ai-message-text"></div>
-        </div>
-    </div>
-
-    <!-- FF14-style Chat Log -->
-    <div class="chat-log-container" id="chat-log-container">
-        <!-- Resize handles -->
-        <div class="chat-log-resize-handle top"></div>
-        <div class="chat-log-resize-handle right"></div>
-        <div class="chat-log-resize-handle corner"></div>
-
-        <div class="chat-history" id="chat-history">
-            <!-- Log lines injected by JS -->
-        </div>
-
-        <!-- Team chat input (for Call/General) -->
-        <div class="chat-log-input-wrapper" id="chat-log-input-wrapper">
-            <div class="chat-log-channel-tag" id="chat-log-current-channel" onclick="openChannelPicker()">Misesapo
-            </div>
-            <input type="text" id="team-chat-inline-input" placeholder="社内チャット（Alt+1~8で切替）..."
-                onkeypress="if(event.key==='Enter') sendInlineTeamMessage()">
-            <button onclick="sendInlineTeamMessage()">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
-
-        <div class="chat-log-buttons">
-            <button class="chat-log-tab active" data-filter="general"
-                onclick="filterChatLog('general')">General</button>
-            <button class="chat-log-tab" data-filter="event" onclick="filterChatLog('event')">Event</button>
-            <button class="chat-log-tab" data-filter="call" onclick="filterChatLog('call')">Call</button>
-            <div class="chat-log-spacer"></div>
-            <button class="chat-log-icon-btn" onclick="expandChatLog()" title="ログを拡大">
-                <i class="fas fa-plus"></i>
-            </button>
-            <button class="chat-log-icon-btn" onclick="toggleChatLog()" title="ログを非表示">
-                <i class="fas fa-times"></i>
-            </button>
-            <button class="chat-log-icon-btn" onclick="openTeamChat()" title="チャンネル選択">
-                <i class="fas fa-hashtag"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- Chat Content -->
-    <div id="chat-container">
-
-        <!-- New: Latest Message Display (Centered) -->
-        <div id="latest-message-container" class="latest-message-container"></div>
-
-        <!-- New: Action Buttons Container (Centered) -->
-        <div id="action-buttons-container" class="action-buttons-container"></div>
-
-        <!-- Login Bubble -->
-        <div class="login-bubble-container" id="login-form">
-            <div class="login-input-card">
-                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 5px;">ACCOUNT
-                    AUTHENTICATION</div>
-                <input type="email" id="login-email" placeholder="メールアドレス" autocomplete="email">
-                <input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">
-                <button class="login-submit-btn" onclick="performLogin()">認証</button>
-            </div>
-        </div>
-        <div class="visualizer-circle">
-            <input type="file" id="image-upload" accept="image/*" style="display: none;"
-                onchange="handleImageSelect(this)">
-            <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
-                <i class="fas fa-camera"></i>
-            </button>
-        </div>
-
-        <div class="chat-input-wrapper">
-            <input type="file" id="image-upload" accept="image/*" style="display: none;"
-                onchange="handleImageSelect(this)">
-            <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
-                <i class="fas fa-camera"></i>
-            </button>
-            <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
-            <button class="send-btn" onclick="sendTextMessage()">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- Mode Switcher -->
-    <div class="mode-switch-container" style="display: none;">
-        <button class="mode-btn" id="btn-voice-mode" onclick="switchMode('voice')">
-            <i class="fas fa-microphone"></i> 音声
-        </button>
-        <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
-            <i class="fas fa-comment-dots"></i> チャット
-        </button>
-    </div>
-</div>
-</div>
-
-<!-- Floating Job Indicator Button -->
-<button id="floating-job-btn" onclick="requestJobChange()">
-    <span class="job-dot"></span>
-    <span id="floating-job-label">-</span>
-</button>
 </main>
 
 <script>
@@ -1733,16 +1736,13 @@
                     handleAiCommands({ ui_commands: [{ type: 'show_break_end' }] });
                 } else if (isClockedIn) {
                     // 出勤済み → 「再開」扱い（出勤ボタンは不要）
-                    const savedJobType = localStorage.getItem('current_job_type');
-                    if (savedJobType && JOB_TYPES[savedJobType]) {
-                        // 仕事タイプ選択済み → 即座にそのモードで継続
-                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${JOB_TYPES[savedJobType].label}モードで業務を継続します。`);
-                        filterSidebar(savedJobType);
-                    } else {
-                        // 仕事タイプ未選択 → 選択を促す
-                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。本日はどの業務を行いますか？`);
-                        showJobSelection();
-                    }
+                    // dev専用ページ: 常にdevモードで動作
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。開発モードで業務を継続します。`);
+                    currentJobType = 'dev';
+                    localStorage.setItem('current_job_type', 'dev');
+                    document.body.classList.add('job-dev');
+                    filterSidebar('dev');
+                    showJobActions('dev');
                 } else {
                     // 未出勤 → 出勤を促す
                     appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
@@ -2819,15 +2819,15 @@ ${context}
         actionContainer.appendChild(btnDiv);
     }
 
-    function selectJobType(jobKey) {
-        EntranceCore.performJobTransition(jobKey, '{{ base_path }}');
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        EntranceCore.initFadeIn();
-    });
 
     // Job-specific action buttons
+    function selectJobType(jobKey) {
+        EntranceCore.performJobTransition(jobKey, "../../");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        EntranceCore.initFadeIn();
+    });
     function showJobActions(jobKey) {
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;

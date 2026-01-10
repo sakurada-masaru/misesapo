@@ -521,7 +521,9 @@ def convert_csv_to_json(csv_path: Path, json_path: Path) -> None:
 def copy_assets(outputs: List[str]) -> None:
     base_path = get_base_path()
     
-    asset_dirs = [ASSETS_DIR, CORPORATE_ASSETS_DIR]
+    # Include entrance shared JS/CSS directories
+    entrance_shared_dir = SRC / "pages" / "entrance" / "shared"
+    asset_dirs = [ASSETS_DIR, CORPORATE_ASSETS_DIR, entrance_shared_dir]
     
     for asset_root in asset_dirs:
         if not asset_root.exists():
