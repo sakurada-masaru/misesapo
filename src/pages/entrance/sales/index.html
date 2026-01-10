@@ -3690,7 +3690,12 @@ ${context}
 
         try {
             const token = localStorage.getItem('id_token');
-            const customerData = customerWizardState.data;
+            // Wizard uses 'store_name', but API expects 'name' for the store name
+            const customerData = {
+                ...customerWizardState.data,
+                name: customerWizardState.data.store_name, // Map store_name to name
+                company_name: customerWizardState.data.company_name // Ensure company name is present
+            };
 
             const response = await fetch(`${API_BASE}/stores`, {
                 method: 'POST',
