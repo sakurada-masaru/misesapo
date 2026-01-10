@@ -4224,16 +4224,21 @@ ${context}
         }
 
         container.innerHTML = stores.slice(0, 10).map(store => {
-            const storeName = store.name || store.store_name || '店舗名不明';
-            const companyName = store.company_name || '';
+            const storeName = store.name || store.store_name || '';
+            const brandName = store.company_name || store.brand_name || '';
             const storeId = store.id || store.store_id || '';
+
+            // Display: Brand Name (Store Name) - brand is primary, store in parentheses
+            const displayName = brandName
+                ? (storeName ? `${brandName}（${storeName}）` : brandName)
+                : storeName || '店舗名不明';
+
             return `
-                <button onclick="selectStoreFromList('${storeId}', '${storeName.replace(/'/g, "\\'")}', '${companyName.replace(/'/g, "\\'")}')"
+                <button onclick="selectStoreFromList('${storeId}', '${storeName.replace(/'/g, "\\'")}', '${brandName.replace(/'/g, "\\'")}')"
                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                     color: #fff; padding: 14px 16px; border-radius: 12px; cursor: pointer; text-align: left;
                     transition: all 0.2s;">
-                    <div style="font-weight: 600;">${storeName}</div>
-                    ${companyName ? `<div style="font-size: 0.8rem; opacity: 0.7;">${companyName}</div>` : ''}
+                    <div style="font-weight: 600;">${displayName}</div>
                 </button>
             `;
         }).join('');
