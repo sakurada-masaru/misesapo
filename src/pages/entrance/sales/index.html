@@ -3490,9 +3490,9 @@ ${context}
             if (response.ok) {
                 const data = await response.json();
                 customers = (data.items || []).map((item) => {
-                    const companyName = item.company_name ?? item.companyName ?? '';
-                    const rawBrandName = item.brand_name ?? item.brandName ?? item.brand ?? '';
-                    const rawStoreName = item.store_name ?? item.storeName ?? item.name ?? '';
+                    const companyName = item.company_name ?? item.companyName ?? item.client_name ?? item.company?.name ?? item.client?.name ?? '';
+                    const rawBrandName = item.brand_name ?? item.brandName ?? item.brand?.name ?? item.brand?.brand_name ?? item.brand ?? '';
+                    const rawStoreName = item.store_name ?? item.storeName ?? item.store?.name ?? item.name ?? '';
                     const brandName = rawBrandName || rawStoreName || companyName;
                     const storeName = rawStoreName || brandName;
                     const displayName = storeName && storeName !== brandName
@@ -3724,7 +3724,7 @@ ${context}
             const store = c.store_name || c.name || '店舗名なし';
             const brand = c.brand_name || store || 'ブランド名なし';
             const displayName = c.display_name || (store && store !== brand ? `${brand} / ${store}` : brand);
-            const escName = (c.company_name || '').replace(/'/g, "\\'");
+            const escName = displayName.replace(/'/g, "\\'");
             const escStore = store.replace(/'/g, "\\'");
 
             // Set CSS var for pseudo element
