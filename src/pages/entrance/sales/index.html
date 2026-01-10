@@ -4322,12 +4322,7 @@ ${context}
             chatHistory.innerHTML = '';
         }
 
-        // Clear action buttons
-        const actionContainer = document.getElementById('action-buttons-container');
-        if (actionContainer) actionContainer.innerHTML = '';
-
-        // Show job actions again
-        setTimeout(() => showJobActions('sales'), 1000);
+        showRequestScheduleActions(requestData);
     }
 
     function cancelRequestWizard() {
@@ -4339,6 +4334,79 @@ ${context}
         if (actionContainer) actionContainer.innerHTML = '';
 
         showJobActions('sales');
+    }
+
+    function upsertLocalScheduleFromRequest(requestData) {
+        const stored = JSON.parse(localStorage.getItem('sales_created_schedules') || '[]');
+        const today = new Date().toISOString().split('T')[0];
+        const scheduleId = `SCH-${Date.now()}`;
+
+        const schedule = {
+            id: scheduleId,
+            request_id: requestData.id,
+            store_id: requestData.customer_id || requestData.store_id || '',
+            store_name: requestData.store_name || requestData.customer_name || '店舗名未設定',
+            brand_name: requestData.customer_name || '',
+            time_slot: requestData.preferred_time || '要調整',
+            date: today,
+            source: 'sales_request',
+            created_at: new Date().toISOString()
+        };
+
+        const existingIndex = stored.findIndex((item) => item.request_id === requestData.id);
+        if (existingIndex >= 0) {
+            stored[existingIndex] = { ...stored[existingIndex], ...schedule };
+        } else {
+            stored.push(schedule);
+        }
+
+        localStorage.setItem('sales_created_schedules', JSON.stringify(stored));
+        return schedule;
+    }
+
+    function showRequestScheduleActions(requestData) {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        appendChatMessage('ai', '依頼書をスケジュールに落とし込みますか？必要なら清掃モードで確認できます。');
+
+        actionContainer.innerHTML = `
+            <div class="action-bubble-container" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="job-action-btn" onclick="createScheduleFromRequest()"
+                    style="background: var(--accent-color); border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    <i class="fas fa-calendar-plus"></i> スケジュールに登録
+                </button>
+                <button class="job-action-btn" onclick="createScheduleAndOpenCleaning()"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;">
+                    <i class="fas fa-broom"></i> 清掃モードで確認
+                </button>
+            </div>
+            <button onclick="showJobActions('sales')" style="margin-top: 12px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                ← メニューに戻る
+            </button>
+        `;
+
+        window._latestRequestData = requestData;
+    }
+
+    function createScheduleFromRequest() {
+        const requestData = window._latestRequestData;
+        if (!requestData) return;
+        upsertLocalScheduleFromRequest(requestData);
+        appendChatMessage('ai', '✅ スケジュールを登録しました。清掃モードで確認できます。');
+    }
+
+    function createScheduleAndOpenCleaning() {
+        const requestData = window._latestRequestData;
+        if (!requestData) return;
+        upsertLocalScheduleFromRequest(requestData);
+        appendChatMessage('ai', '🧹 清掃モードを開きます。');
+        selectJobType('cleaning');
     }
 
     // Placeholder functions for other wizards
