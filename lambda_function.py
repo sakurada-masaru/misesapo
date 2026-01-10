@@ -7787,27 +7787,58 @@ def delete_brand(brand_id, headers):
 def get_stores(event, headers):
     """
     店舗一覧を取得
+    営業担当者は自分の担当店舗のみ、その他は権限に応じてフィルタリング
     """
     try:
+        # 認証・権限チェック
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        
+        # 開発環境などのためのフォールバック: 認証なしでも一旦通すが、本番では厳格化推奨
+        if not user_info and os.environ.get('STAGE') == 'dev':
+            # 開発用ダミーユーザー
+            print("WARNING: No auth token, using dev fallback")
+            user_info = {'uid': 'dev_user', 'role': 'admin'}
+
+        current_user_id = user_info.get('uid') if user_info else None
+        current_role = user_info.get('role') if user_info else None
+
         # クエリパラメータからフィルタ条件を取得
         query_params = event.get('queryStringParameters') or {}
         client_id = query_params.get('client_id')
         brand_id = query_params.get('brand_id')
         
-        # スキャンまたはクエリを実行
+        # フィルタリング条件の構築
+        filter_expressions = []
+        expression_attribute_names = {}
+        expression_attribute_values = {}
+        
+        # 1. ユーザーロールによる強制フィルタ
+        if current_role == 'sales':
+            # 営業担当: 自分がオーナーのデータのみ表示
+            # ただし、将来的に「割り当てられたデータ」も見れるようにするなら条件追加
+            filter_expressions.append('#owner_id = :current_user_id')
+            expression_attribute_names['#owner_id'] = 'owner_id'
+            expression_attribute_values[':current_user_id'] = current_user_id
+        
+        # 2. クエリパラメータによるフィルタ
         if brand_id:
-            # ブランドIDでフィルタ
-            response = STORES_TABLE.scan(
-                FilterExpression=Attr('brand_id').eq(brand_id)
-            )
+            filter_expressions.append('brand_id = :brand_id')
+            expression_attribute_values[':brand_id'] = brand_id
         elif client_id:
-            # クライアントIDでフィルタ
-            response = STORES_TABLE.scan(
-                FilterExpression=Attr('client_id').eq(client_id)
-            )
-        else:
-            # 全件取得
-            response = STORES_TABLE.scan()
+            filter_expressions.append('client_id = :client_id')
+            expression_attribute_values[':client_id'] = client_id
+            
+        # スキャンパラメータの構築
+        scan_params = {}
+        if filter_expressions:
+            scan_params['FilterExpression'] = ' AND '.join(filter_expressions)
+            if expression_attribute_names:
+                scan_params['ExpressionAttributeNames'] = expression_attribute_names
+            scan_params['ExpressionAttributeValues'] = expression_attribute_values
+            
+        response = STORES_TABLE.scan(**scan_params)
         
         stores = response.get('Items', [])
         
@@ -7817,7 +7848,8 @@ def get_stores(event, headers):
             'headers': headers,
             'body': json.dumps({
                 'items': stores,
-                'count': len(stores)
+                'count': len(stores),
+                'debug_info': {'role': current_role, 'uid': current_user_id} # デバッグ用
             }, ensure_ascii=False, default=str)
         }
     except Exception as e:
@@ -7836,8 +7868,29 @@ def get_stores(event, headers):
 def create_store(event, headers):
     """
     店舗を作成
+    営業担当者が作成した場合、自動的にowner_idを付与しstatusをprospectにする
     """
     try:
+        # 認証チェック
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        
+        # 開発環境フォールバック
+        if not user_info and os.environ.get('STAGE') == 'dev':
+            user_info = {'uid': 'dev_user', 'role': 'admin', 'name': 'Dev User'}
+            
+        if not user_info:
+             return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+
+        current_user_id = user_info.get('uid')
+        current_role = user_info.get('role')
+        current_user_name = user_info.get('name')
+
         # リクエストボディを取得
         if event.get('isBase64Encoded'):
             body = base64.b64decode(event['body'])
@@ -7857,24 +7910,42 @@ def create_store(event, headers):
         
         now = datetime.utcnow().isoformat() + 'Z'
         
+        # デフォルトステータスの決定
+        # 営業担当なら 'prospect'、それ以外（管理者など）は指定がなければ 'active'
+        default_status = 'prospect' if current_role == 'sales' else 'active'
+        status = body_json.get('status', default_status)
+        
+        # データマッピング (Wizardからの入力に対応)
+        store_name = body_json.get('name') or body_json.get('store_name', '')
+        address1 = body_json.get('address1') or body_json.get('address', '')
+        notes = body_json.get('notes') or body_json.get('memo', '')
+        
         # デフォルト値を設定
         store_data = {
             'id': store_id,
-            'name': body_json.get('name', ''),
+            'name': store_name,
             'client_id': body_json.get('client_id', ''),
+            'company_name': body_json.get('company_name', ''), # テキスト入力の会社名
             'brand_id': body_json.get('brand_id', ''),
+            'brand_name': body_json.get('brand_name', ''),     # テキスト入力のブランド名
             'postcode': body_json.get('postcode', ''),
             'pref': body_json.get('pref', ''),
             'city': body_json.get('city', ''),
-            'address1': body_json.get('address1', ''),
+            'address1': address1,
             'address2': body_json.get('address2', ''),
             'phone': body_json.get('phone', ''),
             'email': body_json.get('email', ''),
             'contact_person': body_json.get('contact_person', ''),
-            'status': body_json.get('status', 'active'),
-            'notes': body_json.get('notes', ''),
+            'status': status,
+            'notes': notes,
             'sales_notes': body_json.get('sales_notes', ''),
             'registration_type': body_json.get('registration_type', 'manual'),
+            
+            # オーナー情報（最重要）
+            'owner_id': current_user_id,
+            'created_by': current_user_id,
+            'created_by_name': current_user_name,
+            
             'created_at': body_json.get('created_at', now),
             'updated_at': now
         }
