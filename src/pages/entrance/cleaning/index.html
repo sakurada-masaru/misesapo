@@ -1771,13 +1771,17 @@
         /* === MESSAGE INPUT AT VERY BOTTOM === */
         .chat-input-wrapper {
             position: fixed !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            background: rgba(10, 17, 40, 0.98) !important;
+            bottom: 16px !important;
+            left: 50% !important;
+            right: auto !important;
+            transform: translateX(-50%) !important;
+            width: calc(100% - 40px) !important;
+            max-width: 400px !important;
+            background: rgba(10, 17, 40, 0.95) !important;
             padding: 10px 16px !important;
             padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 30px !important;
             z-index: 1000 !important;
             display: flex !important;
             align-items: center !important;
@@ -1788,6 +1792,13 @@
         .chat-input-wrapper input {
             flex: 1 !important;
             font-size: 16px !important;
+            background: transparent !important;
+            border: none !important;
+            color: #fff !important;
+        }
+
+        .chat-input-wrapper input::placeholder {
+            color: rgba(255, 255, 255, 0.5) !important;
         }
 
 
