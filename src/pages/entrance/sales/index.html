@@ -3128,9 +3128,9 @@ ${context}
 
         const jobActions = {
             sales: [
-                { label: '新規顧客登録', action: 'startCustomerWizard()' },
-                { label: '依頼書を作成', action: 'startRequestWizard()' },
-                { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'" }
+                { label: '顧客', action: 'showCustomerSubmenu()' },
+                { label: '契約', action: 'showContractSubmenu()' },
+                { label: '依頼', action: 'showRequestSubmenu()' }
             ],
             cleaning: [
                 { label: 'レポートを作成', action: 'startReportWizard()' }
@@ -3265,6 +3265,8 @@ ${context}
         step: 0,
         data: {}
     };
+
+    let customerSelectionMode = 'wizard'; // 'wizard' or 'view'
 
     function startRequestWizard() {
         requestWizardState = { active: true, step: 0, data: {} };
@@ -3567,6 +3569,14 @@ ${context}
         const overlay = document.getElementById('customer-selection-overlay');
         if (overlay) overlay.classList.remove('active');
 
+        // Check if we're in view mode (not wizard mode)
+        if (customerSelectionMode === 'view') {
+            appendChatMessage('ai', `顧客情報: **${name}** (${store})`);
+            customerSelectionMode = 'wizard'; // Reset mode
+            setTimeout(() => showJobActions('sales'), 1500);
+            return;
+        }
+
         requestWizardState.data.customer_id = id;
         requestWizardState.data.customer_name = name;
         requestWizardState.data.store_name = store;
@@ -3670,6 +3680,108 @@ ${context}
 
         container.appendChild(summaryDiv);
         container.appendChild(btnDiv);
+    }
+
+    // ========================================
+    // Submenu Functions for Hierarchical Menu
+    // ========================================
+
+    function showCustomerSubmenu() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        appendChatMessage('ai', '顧客メニューを選択してください。');
+
+        actionContainer.innerHTML = `
+            <div class="action-bubble-container" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="job-action-btn" onclick="startCustomerWizard()"
+                    style="background: var(--accent-color); border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    <i class="fas fa-user-plus"></i> 新規顧客登録
+                </button>
+                <button class="job-action-btn" onclick="showCustomerListOnly()"
+                    style="background: var(--accent-color); border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    <i class="fas fa-list"></i> 顧客データ閲覧
+                </button>
+            </div>
+            <button onclick="showJobActions('sales')" style="margin-top: 15px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                ← メニューに戻る
+            </button>
+        `;
+    }
+
+    function showContractSubmenu() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        appendChatMessage('ai', '契約メニューを選択してください。');
+
+        actionContainer.innerHTML = `
+            <div class="action-bubble-container" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="job-action-btn" onclick="startRequestWizard('contract')"
+                    style="background: var(--accent-color); border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    <i class="fas fa-plus-circle"></i> 新規契約作成
+                </button>
+                <button class="job-action-btn" onclick="showPlaceholder('既存契約閲覧')"
+                    style="background: var(--accent-color); border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    <i class="fas fa-file-contract"></i> 既存契約閲覧
+                </button>
+            </div>
+            <button onclick="showJobActions('sales')" style="margin-top: 15px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                ← メニューに戻る
+            </button>
+        `;
+    }
+
+    function showRequestSubmenu() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        appendChatMessage('ai', '依頼メニューを選択してください。');
+
+        actionContainer.innerHTML = `
+            <div class="action-bubble-container" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="job-action-btn" onclick="startRequestWizard('estimate')"
+                    style="background: var(--accent-color); border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    <i class="fas fa-plus-circle"></i> 新規依頼作成
+                </button>
+                <button class="job-action-btn" onclick="showPlaceholder('既存依頼閲覧')"
+                    style="background: var(--accent-color); border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    <i class="fas fa-history"></i> 既存依頼閲覧
+                </button>
+            </div>
+            <button onclick="showJobActions('sales')" style="margin-top: 15px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                ← メニューに戻る
+            </button>
+        `;
+    }
+
+    function showPlaceholder(featureName) {
+        appendChatMessage('ai', `**${featureName}** 機能は現在準備中です。`);
+        setTimeout(() => showJobActions('sales'), 1500);
+    }
+
+    function showCustomerListOnly() {
+        // Open customer selection overlay in view-only mode
+        customerSelectionMode = 'view';
+        showCustomerSelectionOverlay();
     }
 
     function cancelCustomerWizard() {
