@@ -3907,13 +3907,19 @@ ${context}
         container.appendChild(btnDiv);
     }
 
-    function selectCustomer(id, name, store) {
+    function selectCustomer(id, displayName, store) {
         // Reset customer search mode
         window.wizardCustomerSearchActive = false;
 
+        const customer = window.wizardCustomerMap?.[id] || (window.wizardCustomers || []).find((c) => c.id === id);
+        const resolvedStore = customer?.store_name || store;
+        const resolvedBrand = customer?.brand_name || resolvedStore || '';
+        const resolvedDisplayName = customer?.display_name
+            || displayName
+            || (resolvedStore && resolvedStore !== resolvedBrand ? `${resolvedBrand} / ${resolvedStore}` : resolvedBrand);
+
         // Check if we're in view mode (not wizard mode)
         if (customerSelectionMode === 'view') {
-            const customer = window.wizardCustomerMap?.[id] || (window.wizardCustomers || []).find((c) => c.id === id);
             showCustomerDetail(customer);
             return;
         }
@@ -3923,8 +3929,8 @@ ${context}
         if (overlay) overlay.classList.remove('active');
 
         requestWizardState.data.customer_id = id;
-        requestWizardState.data.customer_name = name;
-        requestWizardState.data.store_name = store;
+        requestWizardState.data.customer_name = resolvedDisplayName || displayName;
+        requestWizardState.data.store_name = resolvedStore || store;
 
         // Clear the customer list from chat history (legacy code, keeping for safety)
         if (chatHistory) {
@@ -3932,7 +3938,7 @@ ${context}
             chatHistory.style.display = 'none';
         }
 
-        appendChatMessage('user', `${name} - ${store}`);
+        appendChatMessage('user', resolvedDisplayName || displayName || store);
         showRequestWizardStep(requestWizardState.step + 1);
     }
 
@@ -3947,10 +3953,31 @@ ${context}
     function startCustomerWizard() {
         customerWizardState = { active: true, step: 0, data: {} };
         if (chatHistory) chatHistory.style.display = 'none';
-        appendChatMessage('ai', '新規顧客を登録します。');
+        appendChatMessage('ai', '新規顧客を登録します。屋号（ブランド）を軸に、店舗ごとの情報を整理していきます。');
         setTimeout(() => {
             showCustomerWizardStep(0);
         }, 500);
+    }
+
+    function getCustomerWizardHint(stepId) {
+        switch (stepId) {
+            case 'company_name':
+                return '請求先の法人名です。個人店で法人名がなければ「なし」でもOKです。';
+            case 'brand_name':
+                return '屋号・ブランド名を入力してください（個人店は店舗名と同じでOKです）。';
+            case 'store_name':
+                return '清掃対象の店舗名です。複数店舗がある場合は必ず店舗名で区別してください。';
+            case 'phone':
+                return '店舗または請求先の連絡先を入力してください。';
+            case 'contact_person':
+                return '現場や請求窓口の担当者名が分かれば入力してください。';
+            case 'address':
+                return '店舗の所在地を入力してください（清掃条件や移動に影響します）。';
+            case 'memo':
+                return '鍵の受け渡しや営業時間など、現場条件があれば記入してください。';
+            default:
+                return '';
+        }
     }
 
     function showCustomerWizardStep(stepIndex) {
@@ -3962,6 +3989,8 @@ ${context}
         const step = CUSTOMER_WIZARD_STEPS[stepIndex];
 
         appendChatMessage('ai', step.question);
+        const hint = getCustomerWizardHint(step.id);
+        if (hint) appendChatMessage('ai', hint);
 
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
@@ -3984,11 +4013,27 @@ ${context}
             <div style="display: flex; gap: 10px; margin-top: 10px; justify-content: center;">
                 <button onclick="submitCustomerWizardText()" style="background: var(--accent-color); border: none; color: #fff;
                     padding: 10px 24px; border-radius: 20px; cursor: pointer;">次へ</button>
+                <button onclick="skipCustomerWizardStep()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+                    color: rgba(255,255,255,0.8); padding: 10px 20px; border-radius: 20px; cursor: pointer;">なし</button>
+                <button onclick="goBackCustomerWizardStep()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3);
+                    color: rgba(255,255,255,0.7); padding: 10px 20px; border-radius: 20px; cursor: pointer;">戻る</button>
                 <button onclick="cancelCustomerWizard()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3);
                     color: rgba(255,255,255,0.7); padding: 10px 24px; border-radius: 20px; cursor: pointer;">キャンセル</button>
             </div>
         `;
         container.appendChild(inputDiv);
+    }
+
+    function skipCustomerWizardStep() {
+        const step = CUSTOMER_WIZARD_STEPS[customerWizardState.step];
+        customerWizardState.data[step.id] = '';
+        appendChatMessage('user', 'なし');
+        showCustomerWizardStep(customerWizardState.step + 1);
+    }
+
+    function goBackCustomerWizardStep() {
+        const prevStep = Math.max(customerWizardState.step - 1, 0);
+        showCustomerWizardStep(prevStep);
     }
 
     function submitCustomerWizardText() {
