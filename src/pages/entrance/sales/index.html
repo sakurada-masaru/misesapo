@@ -3681,14 +3681,16 @@ ${context}
 
         const q = query.toLowerCase();
         const filtered = window.wizardCustomers.filter(c =>
-            (c.company_name && c.company_name.toLowerCase().includes(q)) ||
             (c.brand_name && c.brand_name.toLowerCase().includes(q)) ||
             (c.store_name && c.store_name.toLowerCase().includes(q)) ||
+            (c.company_name && c.company_name.toLowerCase().includes(q)) ||
             (c.contact_person && c.contact_person.toLowerCase().includes(q))
         );
 
+        const ranked = rankCustomersByQuery(filtered, q);
+
         const listContainer = document.getElementById('overlay-customer-list');
-        if (listContainer) listContainer.innerHTML = renderCustomerListItems(filtered);
+        if (listContainer) listContainer.innerHTML = renderCustomerListItems(ranked);
     }
 
     function renderCustomerListItems(customers) {
@@ -3701,6 +3703,7 @@ ${context}
         return customers.map(c => {
             const statusColor = statusColors[c.status] || '#6b7280';
             const store = c.store_name || c.name || '店舗名なし';
+            const brand = c.brand_name || 'ブランド名なし';
             const escName = (c.company_name || '').replace(/'/g, "\\'");
             const escStore = store.replace(/'/g, "\\'");
 
@@ -3710,8 +3713,9 @@ ${context}
             return `
                 <button class="wizard-customer-btn" onclick="selectCustomer('${c.id}', '${escName}', '${escStore}')" style="${style}">
                     <div style="flex: 1;">
-                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; letter-spacing: 0.5px;">${c.company_name || '会社名なし'}</div>
-                        <div style="font-size: 0.8rem; opacity: 0.6;">${c.brand_name || ''} ${store}</div>
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; letter-spacing: 0.5px;">${brand}</div>
+                        <div style="font-size: 0.8rem; opacity: 0.7;">${store}</div>
+                        <div style="font-size: 0.7rem; opacity: 0.4;">${c.company_name || '会社名なし'}</div>
                     </div>
                     <div style="text-align: right; margin-left: 10px; display:flex; flex-direction:column; align-items:flex-end;">
                         <div style="display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
@@ -3730,17 +3734,38 @@ ${context}
 
         const q = query.toLowerCase();
         const filtered = window.wizardCustomers.filter(c =>
-            (c.company_name && c.company_name.toLowerCase().includes(q)) ||
             (c.brand_name && c.brand_name.toLowerCase().includes(q)) ||
             (c.store_name && c.store_name.toLowerCase().includes(q)) ||
+            (c.company_name && c.company_name.toLowerCase().includes(q)) ||
             (c.contact_person && c.contact_person.toLowerCase().includes(q))
         );
 
+        const ranked = rankCustomersByQuery(filtered, q);
+
         const listContainer = document.getElementById('customer-list');
-        if (listContainer) listContainer.innerHTML = renderCustomerListItems(filtered);
+        if (listContainer) listContainer.innerHTML = renderCustomerListItems(ranked);
 
         const countEl = document.querySelector('#customer-list-container > div:first-child');
         if (countEl) countEl.textContent = `顧客リスト（${filtered.length}件）`;
+    }
+
+    function rankCustomersByQuery(customers, query) {
+        if (!query) return customers;
+
+        const getMatchRank = (customer, q) => {
+            const brand = customer.brand_name?.toLowerCase() || '';
+            const store = customer.store_name?.toLowerCase() || customer.name?.toLowerCase() || '';
+            const company = customer.company_name?.toLowerCase() || '';
+            const contact = customer.contact_person?.toLowerCase() || '';
+
+            if (brand.includes(q)) return 0;
+            if (store.includes(q)) return 1;
+            if (company.includes(q)) return 2;
+            if (contact.includes(q)) return 3;
+            return 4;
+        };
+
+        return [...customers].sort((a, b) => getMatchRank(a, query) - getMatchRank(b, query));
     }
 
     // Override sendTextMessage to handle customer search during wizard
