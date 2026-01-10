@@ -1694,17 +1694,54 @@
             font-size: 16px !important;
         }
 
-        /* Chat log container - fixed above input */
+        /* Chat log container - solid fixed panel at bottom */
         .chat-log-container {
             position: fixed !important;
-            bottom: 70px !important;
+            bottom: 0 !important;
             left: 0 !important;
             right: 0 !important;
+            height: 120px !important;
             max-height: 120px !important;
-            background: rgba(0, 0, 0, 0.8) !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-            z-index: 999 !important;
-            overflow-y: auto !important;
+            background: linear-gradient(to bottom, rgba(10, 17, 40, 0.95), rgba(0, 0, 0, 0.98)) !important;
+            border-top: 1px solid var(--accent-color, #10b981) !important;
+            z-index: 500 !important;
+            overflow: hidden !important;
+            padding: 10px 16px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-end !important;
+        }
+
+        .chat-log-container .chat-history {
+            overflow: hidden !important;
+            max-height: 100px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-end !important;
+        }
+
+        .chat-log-container .chat-log-line {
+            font-size: 0.8rem !important;
+            line-height: 1.4 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        /* Adjust input wrapper to sit above chat log */
+        #chat-input-wrapper {
+            bottom: 120px !important;
+        }
+
+        /* Adjust action buttons to sit above input */
+        .action-buttons-container,
+        #action-buttons-container {
+            bottom: 200px !important;
+        }
+
+        /* Adjust message area */
+        .latest-message-container {
+            bottom: 240px !important;
         }
 
         /* Navigation button (hamburger) */
