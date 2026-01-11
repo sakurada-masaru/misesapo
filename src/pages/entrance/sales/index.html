@@ -4544,6 +4544,46 @@ ${context}
         }
     }
 
+    function splitJapaneseAddress(address) {
+        if (!address) return { pref: '', city: '', address1: '' };
+        const prefectures = [
+            '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+            '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+            '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県',
+            '岐阜県', '静岡県', '愛知県', '三重県',
+            '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
+            '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+            '徳島県', '香川県', '愛媛県', '高知県',
+            '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県',
+            '沖縄県'
+        ];
+
+        let pref = '';
+        for (const p of prefectures) {
+            if (address.startsWith(p)) {
+                pref = p;
+                break;
+            }
+        }
+
+        let rest = pref ? address.slice(pref.length) : address;
+        let city = '';
+        let address1 = '';
+        const cityMatch = rest.match(/^(.+?[市区町村])(.+)?$/);
+        if (cityMatch) {
+            city = cityMatch[1];
+            address1 = (cityMatch[2] || '').trim();
+        } else {
+            address1 = rest.trim();
+        }
+
+        return {
+            pref,
+            city,
+            address1
+        };
+    }
+
     function applyCustomerInfoToWizard(info, sourceUrl) {
         const name = info.name || '';
         const companyName = info.company_name || info.legal_name || '';
@@ -4568,6 +4608,27 @@ ${context}
         customerWizardState.data.store_name = name;
         customerWizardState.data.phone = phone;
         customerWizardState.data.address = address;
+        if (info.postal_code && !customerWizardState.data.postcode) {
+            customerWizardState.data.postcode = info.postal_code;
+        }
+        if (address) {
+            const parts = splitJapaneseAddress(address);
+            if (parts.pref && !customerWizardState.data.pref) {
+                customerWizardState.data.pref = parts.pref;
+            }
+            if (parts.city && !customerWizardState.data.city) {
+                customerWizardState.data.city = parts.city;
+            }
+            if (parts.address1 && !customerWizardState.data.address1) {
+                customerWizardState.data.address1 = parts.address1;
+            }
+        }
+        if (info.access && !customerWizardState.data.nearest_station) {
+            customerWizardState.data.nearest_station = info.access;
+        }
+        if (info.parking && !customerWizardState.data.parking) {
+            customerWizardState.data.parking = info.parking;
+        }
         customerWizardState.data.memo = memoParts.join('\n');
     }
 
@@ -4610,9 +4671,50 @@ ${context}
 
         if (step.type === 'text') {
             renderCustomerTextInput(actionContainer, step);
+        } else if (step.type === 'single_select') {
+            renderCustomerSingleSelect(actionContainer, step);
         } else if (step.type === 'confirm_customer') {
             renderCustomerConfirm(actionContainer);
         }
+    }
+
+    function renderCustomerSingleSelect(container, step) {
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; flex-direction: column; gap: 10px; max-width: 420px; margin: 0 auto;';
+
+        const currentValue = customerWizardState.data[step.id] || '';
+        step.options.forEach(opt => {
+            const isActive = currentValue === opt;
+            btnDiv.innerHTML += `
+                <button onclick="submitCustomerWizardSingleSelect('${opt}')"
+                    style="background: ${isActive ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)'};
+                    border: 1px solid ${isActive ? 'var(--accent-color)' : 'rgba(255,255,255,0.2)'};
+                    color: #fff; padding: 10px 20px; border-radius: 20px; cursor: pointer; transition: all 0.3s;">
+                    ${opt}
+                </button>
+            `;
+        });
+
+        const controlDiv = document.createElement('div');
+        controlDiv.style.cssText = 'display: flex; gap: 10px; margin-top: 12px; justify-content: center;';
+        controlDiv.innerHTML = `
+            <button onclick="skipCustomerWizardStep()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+                color: rgba(255,255,255,0.8); padding: 10px 20px; border-radius: 20px; cursor: pointer;">なし</button>
+            <button onclick="goBackCustomerWizardStep()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3);
+                color: rgba(255,255,255,0.7); padding: 10px 20px; border-radius: 20px; cursor: pointer;">戻る</button>
+            <button onclick="cancelCustomerWizard()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3);
+                color: rgba(255,255,255,0.7); padding: 10px 24px; border-radius: 20px; cursor: pointer;">キャンセル</button>
+        `;
+
+        container.appendChild(btnDiv);
+        container.appendChild(controlDiv);
+    }
+
+    function submitCustomerWizardSingleSelect(value) {
+        const step = CUSTOMER_WIZARD_STEPS[customerWizardState.step];
+        customerWizardState.data[step.id] = value;
+        if (value) appendChatMessage('user', value);
+        showCustomerWizardStep(customerWizardState.step + 1);
     }
 
     function renderCustomerTextInput(container, step) {
