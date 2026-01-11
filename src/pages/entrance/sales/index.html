@@ -1837,6 +1837,63 @@
             top: 50px;
         }
     }
+
+    /* Floating Schedule Button (FAB) */
+    .schedule-fab {
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--accent-color);
+        border: none;
+        color: #fff;
+        font-size: 1.3rem;
+        cursor: pointer;
+        z-index: 900;
+        box-shadow: 0 4px 20px var(--accent-glow), 0 2px 10px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .schedule-fab:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 30px var(--accent-glow), 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .schedule-fab:active {
+        transform: scale(0.95);
+    }
+
+    .schedule-fab .fab-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 700;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+    }
+
+    @media (max-width: 768px) {
+        .schedule-fab {
+            bottom: 90px;
+            right: 16px;
+            width: 50px;
+            height: 50px;
+            font-size: 1.1rem;
+        }
+    }
 </style>
 
 <main id="main" class="admin-dashboard">
@@ -1896,6 +1953,12 @@
         <div class="start-btn-label">LOGIN</div>
     </button>
 </div>
+
+<!-- Floating Schedule Button -->
+<button class="schedule-fab" onclick="showScheduleOverlay()" aria-label="スケジュール">
+    <i class="fas fa-calendar-alt"></i>
+    <span class="fab-badge" id="schedule-fab-badge" style="display: none;">0</span>
+</button>
 
 <div class="main-content" style="background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);">
     <!-- Persistent Visualizer Core -->
@@ -3290,7 +3353,8 @@ ${context}
             sales: [
                 { label: '顧客', action: 'showCustomerSubmenu()' },
                 { label: '契約', action: 'showContractSubmenu()' },
-                { label: '依頼', action: 'showRequestSubmenu()' }
+                { label: '依頼', action: 'showRequestSubmenu()' },
+                { label: '📅 スケジュール', action: 'showScheduleOverlay()' }
             ],
             cleaning: [
                 { label: 'レポートを作成', action: 'startReportWizard()' }
@@ -3745,11 +3809,24 @@ ${context}
 
         return customers.map(c => {
             const statusColor = statusColors[c.status] || '#6b7280';
-            const brand = c.brand_name || 'ブランド名未設定';
-            const store = c.store_name || '';
+            const brand = c.brand_name || '';
+            const store = c.store_name || c.name || '';
             const company = c.company_name || '';
 
-            const escName = (c.display_name || brand).replace(/'/g, "\\'");
+            // Build display name: prioritize "Brand Store" format
+            // e.g., "セブンイレブン 新宿店" or just "セブンイレブン" if no store
+            let mainTitle = '';
+            if (brand && store && brand !== store) {
+                mainTitle = `${brand} ${store}`;
+            } else if (brand) {
+                mainTitle = brand;
+            } else if (store) {
+                mainTitle = store;
+            } else {
+                mainTitle = '名称未設定';
+            }
+
+            const escName = mainTitle.replace(/'/g, "\\'");
             const escStore = store.replace(/'/g, "\\'");
 
             const style = `background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 16px 20px; border-radius: 12px; cursor: pointer; text-align: left; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;`;
@@ -3757,20 +3834,19 @@ ${context}
             return `
                 <button class="wizard-customer-btn" onclick="selectCustomer('${c.id}', '${escName}', '${escStore}')" style="${style}">
                     <div style="flex: 1; min-width: 0;">
-                        <div style="font-weight: 800; font-size: 1rem; color: #fff; margin-bottom: 2px; letter-spacing: 0.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            <i class="fas fa-tag" style="font-size: 0.8rem; color: var(--accent-color); margin-right: 4px; opacity: 0.8;"></i>${brand}
+                        <div style="font-weight: 800; font-size: 1rem; color: #fff; margin-bottom: 4px; letter-spacing: 0.3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${mainTitle}
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            ${store && store !== brand ? `<span style="font-size: 0.8rem; color: #fff; font-weight: 500; opacity: 0.9;">${store}</span>` : ''}
-                            ${company ? `<span style="font-size: 0.7rem; color: rgba(255,255,255,0.4); border-left: 1px solid rgba(255,255,255,0.15); padding-left: 8px;">${company}</span>` : ''}
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.75rem; opacity: 0.5;">
+                            ${company ? `<span><i class="fas fa-building" style="margin-right: 3px;"></i>${company}</span>` : ''}
+                            ${c.contact_person ? `<span><i class="fas fa-user" style="margin-right: 3px;"></i>${c.contact_person}</span>` : ''}
                         </div>
                     </div>
-                    <div style="text-align: right; margin-left: 16px; flex-shrink: 0; display:flex; flex-direction:column; align-items:flex-end;">
+                    <div style="text-align: right; margin-left: 16px; flex-shrink: 0;">
                         <div style="display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
                             <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusColor}; margin-right: 6px;"></span>
                             <span style="font-size: 0.75rem; color: ${statusColor}; font-weight: 600;">${c.status === 'active' ? '稼働中' : (c.status || '未設定')}</span>
                         </div>
-                         ${c.contact_person ? `<div style="font-size: 0.7rem; opacity: 0.4; margin-top: 6px;"><i class="fas fa-user-circle" style="margin-right: 3px;"></i>${c.contact_person}</div>` : ''}
                     </div>
                 </button>
             `;
@@ -4149,7 +4225,7 @@ ${context}
                     box-shadow: 0 4px 15px var(--accent-glow);">
                     <i class="fas fa-plus-circle"></i> 新規依頼作成
                 </button>
-                <button class="job-action-btn" onclick="showPlaceholder('既存依頼閲覧')"
+                <button class="job-action-btn" onclick="showExistingRequestsOverlay()"
                     style="background: var(--accent-color); border: none; color: #fff; 
                     padding: 12px 24px; border-radius: 25px; cursor: pointer;
                     font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
@@ -4161,6 +4237,252 @@ ${context}
                 ← メニューに戻る
             </button>
         `;
+    }
+
+    // ========================================
+    // Existing Requests Overlay
+    // ========================================
+
+    function showExistingRequestsOverlay() {
+        let overlay = document.getElementById('requests-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'requests-overlay';
+            overlay.className = 'customer-selection-overlay';
+            overlay.innerHTML = `
+                <div class="customer-selection-card">
+                    <div class="customer-selection-header">
+                        <div style="font-weight:700; font-size:1.1rem; color:#fff; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                            <span><i class="fas fa-file-alt" style="margin-right: 8px;"></i>依頼一覧</span>
+                            <span id="requests-count" style="font-size:0.8rem; color:rgba(255,255,255,0.5); font-weight:400;">0件</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button onclick="filterRequestsByDate('today')" class="request-filter-btn active" data-filter="today" style="flex:1; background: var(--accent-color); border: none; color: #fff; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;">今日</button>
+                            <button onclick="filterRequestsByDate('week')" class="request-filter-btn" data-filter="week" style="flex:1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;">今週</button>
+                            <button onclick="filterRequestsByDate('all')" class="request-filter-btn" data-filter="all" style="flex:1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;">すべて</button>
+                        </div>
+                    </div>
+                    <div class="customer-selection-body" id="requests-list">
+                        <!-- Request items go here -->
+                    </div>
+                    <div class="customer-selection-footer" style="padding:16px 20px; border-top:1px solid rgba(255,255,255,0.1); display:flex; gap:12px; background:rgba(0,0,0,0.2);">
+                        <button onclick="startRequestWizard('estimate')" style="flex:1; background:var(--accent-color); border:none; color:#fff; padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem; font-weight:600;">
+                            <i class="fas fa-plus"></i> 新規依頼作成
+                        </button>
+                        <button onclick="closeRequestsOverlay()" style="width:80px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem;">
+                            閉じる
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        renderRequestsList('all');
+        overlay.classList.add('active');
+    }
+
+    function filterRequestsByDate(filter) {
+        document.querySelectorAll('.request-filter-btn').forEach(btn => {
+            if (btn.dataset.filter === filter) {
+                btn.style.background = 'var(--accent-color)';
+                btn.style.border = 'none';
+                btn.classList.add('active');
+            } else {
+                btn.style.background = 'rgba(255,255,255,0.1)';
+                btn.style.border = '1px solid rgba(255,255,255,0.2)';
+                btn.classList.remove('active');
+            }
+        });
+        renderRequestsList(filter);
+    }
+
+    function renderRequestsList(filter = 'all') {
+        const listContainer = document.getElementById('requests-list');
+        const countEl = document.getElementById('requests-count');
+        if (!listContainer) return;
+
+        // Get requests from localStorage
+        const stored = JSON.parse(localStorage.getItem('sales_requests') || '[]');
+        const today = new Date().toISOString().split('T')[0];
+        const weekEnd = new Date();
+        weekEnd.setDate(weekEnd.getDate() + 7);
+        const weekEndStr = weekEnd.toISOString().split('T')[0];
+
+        let filteredRequests = stored;
+        if (filter === 'today') {
+            filteredRequests = stored.filter(r => {
+                const created = r.created_at ? r.created_at.split(' ')[0] : '';
+                return created === today || created.startsWith(today);
+            });
+        } else if (filter === 'week') {
+            filteredRequests = stored.filter(r => {
+                const created = r.created_at ? r.created_at.split(' ')[0] : '';
+                return created >= today && created <= weekEndStr;
+            });
+        }
+
+        // Sort by date (newest first)
+        filteredRequests.sort((a, b) => {
+            const dateA = a.created_at || '';
+            const dateB = b.created_at || '';
+            return dateB.localeCompare(dateA);
+        });
+
+        if (countEl) countEl.textContent = `${filteredRequests.length}件`;
+
+        if (filteredRequests.length === 0) {
+            listContainer.innerHTML = `
+                <div style="text-align: center; color: rgba(255,255,255,0.4); padding: 60px 20px;">
+                    <i class="fas fa-inbox" style="font-size: 2.5rem; margin-bottom: 16px; display: block;"></i>
+                    <div>依頼がありません</div>
+                    <div style="font-size: 0.8rem; margin-top: 8px;">下の「新規依頼作成」から作成してください</div>
+                </div>
+            `;
+            return;
+        }
+
+        listContainer.innerHTML = filteredRequests.map(request => {
+            const customerName = request.customer_name || '顧客名未設定';
+            const storeName = request.store_name || '';
+            const displayName = storeName && storeName !== customerName
+                ? `${customerName} ${storeName}`
+                : customerName;
+
+            const createdAt = request.created_at || '';
+            const dateDisplay = formatRequestDate(createdAt);
+
+            const equipment = Array.isArray(request.equipment) ? request.equipment.join(', ') : (request.equipment || '');
+            const plan = request.plan || '';
+
+            const statusColors = {
+                'submitted': '#10b981',
+                'scheduled': '#3b82f6',
+                'pending': '#f59e0b'
+            };
+            const statusLabels = {
+                'submitted': '送信済み',
+                'scheduled': 'スケジュール済',
+                'pending': '未送信'
+            };
+            const status = request.status || 'submitted';
+            const statusColor = statusColors[status] || '#6b7280';
+            const statusLabel = statusLabels[status] || status;
+
+            return `
+                <div onclick="showRequestDetail('${request.id}')" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; font-size: 1rem; color: #fff; margin-bottom: 4px;">
+                                ${displayName}
+                            </div>
+                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">
+                                <i class="fas fa-clock" style="margin-right: 4px;"></i>${dateDisplay}
+                            </div>
+                        </div>
+                        <div style="background: rgba(${status === 'submitted' ? '16, 185, 129' : '59, 130, 246'}, 0.2); color: ${statusColor}; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                            ${statusLabel}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px; font-size: 0.8rem; color: rgba(255,255,255,0.6); flex-wrap: wrap;">
+                        ${equipment ? `<span><i class="fas fa-tools" style="margin-right: 4px;"></i>${equipment}</span>` : ''}
+                        ${plan ? `<span><i class="fas fa-clipboard-list" style="margin-right: 4px;"></i>${plan}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function formatRequestDate(dateStr) {
+        if (!dateStr) return '';
+        try {
+            const date = new Date(dateStr.replace(' ', 'T'));
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const dateOnly = dateStr.split(' ')[0] || dateStr.split('T')[0];
+
+            if (dateOnly === today) {
+                return '今日 ' + date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            }
+
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            return `${month}/${day} ${date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+        } catch (e) {
+            return dateStr;
+        }
+    }
+
+    function showRequestDetail(requestId) {
+        const stored = JSON.parse(localStorage.getItem('sales_requests') || '[]');
+        const request = stored.find(r => r.id === requestId);
+        if (!request) return;
+
+        const customerName = request.customer_name || '顧客名未設定';
+        const storeName = request.store_name || '';
+        const equipment = Array.isArray(request.equipment) ? request.equipment.join(', ') : (request.equipment || '-');
+        const plan = request.plan || '-';
+        const notes = request.notes || '-';
+        const createdAt = request.created_at || '-';
+        const salesRep = request.sales_rep || '-';
+
+        const detailHtml = `
+            <div style="padding: 20px;">
+                <div style="font-weight: 700; font-size: 1.2rem; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-file-alt"></i> 依頼書詳細
+                </div>
+                <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                    <div style="display: grid; gap: 12px; font-size: 0.9rem;">
+                        <div><span style="color: rgba(255,255,255,0.5);">ID:</span> <span style="color: #fff; margin-left: 8px;">${request.id}</span></div>
+                        <div><span style="color: rgba(255,255,255,0.5);">顧客:</span> <span style="color: #fff; margin-left: 8px;">${customerName}</span></div>
+                        ${storeName ? `<div><span style="color: rgba(255,255,255,0.5);">店舗:</span> <span style="color: #fff; margin-left: 8px;">${storeName}</span></div>` : ''}
+                        <div><span style="color: rgba(255,255,255,0.5);">設備:</span> <span style="color: #fff; margin-left: 8px;">${equipment}</span></div>
+                        <div><span style="color: rgba(255,255,255,0.5);">プラン:</span> <span style="color: #fff; margin-left: 8px;">${plan}</span></div>
+                        <div><span style="color: rgba(255,255,255,0.5);">備考:</span> <span style="color: #fff; margin-left: 8px;">${notes}</span></div>
+                        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; margin-top: 4px;">
+                            <span style="color: rgba(255,255,255,0.5);">作成者:</span> <span style="color: #fff; margin-left: 8px;">${salesRep}</span>
+                        </div>
+                        <div><span style="color: rgba(255,255,255,0.5);">作成日時:</span> <span style="color: #fff; margin-left: 8px;">${createdAt}</span></div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="addRequestToSchedule('${requestId}')" style="flex: 1; background: var(--accent-color); border: none; color: #fff; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-calendar-plus"></i> スケジュールに追加
+                    </button>
+                    <button onclick="renderRequestsList('all')" style="width: 80px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 14px; border-radius: 12px; cursor: pointer;">
+                        戻る
+                    </button>
+                </div>
+            </div>
+        `;
+
+        const listContainer = document.getElementById('requests-list');
+        if (listContainer) listContainer.innerHTML = detailHtml;
+    }
+
+    function addRequestToSchedule(requestId) {
+        const stored = JSON.parse(localStorage.getItem('sales_requests') || '[]');
+        const request = stored.find(r => r.id === requestId);
+        if (!request) return;
+
+        // Add to schedule
+        upsertLocalScheduleFromRequest(request);
+
+        // Update request status
+        const updatedRequests = stored.map(r =>
+            r.id === requestId ? { ...r, status: 'scheduled' } : r
+        );
+        localStorage.setItem('sales_requests', JSON.stringify(updatedRequests));
+
+        appendChatMessage('ai', `✅ 「${request.customer_name || '依頼'}」をスケジュールに追加しました。`);
+        closeRequestsOverlay();
+    }
+
+    function closeRequestsOverlay() {
+        const overlay = document.getElementById('requests-overlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
     }
 
     function showPlaceholder(featureName) {
@@ -4361,6 +4683,7 @@ ${context}
         }
 
         localStorage.setItem('sales_created_schedules', JSON.stringify(stored));
+        updateScheduleFabBadge();
         return schedule;
     }
 
@@ -4398,7 +4721,8 @@ ${context}
         const requestData = window._latestRequestData;
         if (!requestData) return;
         upsertLocalScheduleFromRequest(requestData);
-        appendChatMessage('ai', '✅ スケジュールを登録しました。清掃モードで確認できます。');
+        appendChatMessage('ai', '✅ スケジュールを登録しました。');
+        showScheduleOverlay();
     }
 
     function createScheduleAndOpenCleaning() {
@@ -4408,6 +4732,164 @@ ${context}
         appendChatMessage('ai', '🧹 清掃モードを開きます。');
         selectJobType('cleaning');
     }
+
+    // ========================================
+    // Schedule Overlay (Mobile-Friendly)
+    // ========================================
+
+    function showScheduleOverlay() {
+        let overlay = document.getElementById('schedule-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'schedule-overlay';
+            overlay.className = 'customer-selection-overlay';
+            overlay.innerHTML = `
+                <div class="customer-selection-card">
+                    <div class="customer-selection-header">
+                        <div style="font-weight:700; font-size:1.1rem; color:#fff; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                            <span><i class="fas fa-calendar-alt" style="margin-right: 8px;"></i>スケジュール</span>
+                            <span id="schedule-count" style="font-size:0.8rem; color:rgba(255,255,255,0.5); font-weight:400;">0件</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button onclick="filterScheduleByDate('today')" class="schedule-filter-btn active" data-filter="today" style="flex:1; background: var(--accent-color); border: none; color: #fff; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;">今日</button>
+                            <button onclick="filterScheduleByDate('week')" class="schedule-filter-btn" data-filter="week" style="flex:1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;">今週</button>
+                            <button onclick="filterScheduleByDate('all')" class="schedule-filter-btn" data-filter="all" style="flex:1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;">すべて</button>
+                        </div>
+                    </div>
+                    <div class="customer-selection-body" id="schedule-list">
+                        <!-- Schedule items go here -->
+                    </div>
+                    <div class="customer-selection-footer" style="padding:16px 20px; border-top:1px solid rgba(255,255,255,0.1); display:flex; gap:12px; background:rgba(0,0,0,0.2);">
+                        <button onclick="closeScheduleOverlay()" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem;">
+                            閉じる
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        renderScheduleList('today');
+        overlay.classList.add('active');
+    }
+
+    function filterScheduleByDate(filter) {
+        // Update button styles
+        document.querySelectorAll('.schedule-filter-btn').forEach(btn => {
+            if (btn.dataset.filter === filter) {
+                btn.style.background = 'var(--accent-color)';
+                btn.style.border = 'none';
+                btn.classList.add('active');
+            } else {
+                btn.style.background = 'rgba(255,255,255,0.1)';
+                btn.style.border = '1px solid rgba(255,255,255,0.2)';
+                btn.classList.remove('active');
+            }
+        });
+        renderScheduleList(filter);
+    }
+
+    function renderScheduleList(filter = 'today') {
+        const listContainer = document.getElementById('schedule-list');
+        const countEl = document.getElementById('schedule-count');
+        if (!listContainer) return;
+
+        const stored = JSON.parse(localStorage.getItem('sales_created_schedules') || '[]');
+        const today = new Date().toISOString().split('T')[0];
+        const weekEnd = new Date();
+        weekEnd.setDate(weekEnd.getDate() + 7);
+        const weekEndStr = weekEnd.toISOString().split('T')[0];
+
+        let filteredSchedules = stored;
+        if (filter === 'today') {
+            filteredSchedules = stored.filter(s => s.date === today);
+        } else if (filter === 'week') {
+            filteredSchedules = stored.filter(s => s.date >= today && s.date <= weekEndStr);
+        }
+
+        // Sort by date and time
+        filteredSchedules.sort((a, b) => {
+            if (a.date !== b.date) return a.date.localeCompare(b.date);
+            return (a.time_slot || '').localeCompare(b.time_slot || '');
+        });
+
+        if (countEl) countEl.textContent = `${filteredSchedules.length}件`;
+
+        if (filteredSchedules.length === 0) {
+            listContainer.innerHTML = `
+                <div style="text-align: center; color: rgba(255,255,255,0.4); padding: 60px 20px;">
+                    <i class="fas fa-calendar-times" style="font-size: 2.5rem; margin-bottom: 16px; display: block;"></i>
+                    <div>スケジュールがありません</div>
+                    <div style="font-size: 0.8rem; margin-top: 8px;">依頼書を作成するとここに表示されます</div>
+                </div>
+            `;
+            return;
+        }
+
+        listContainer.innerHTML = filteredSchedules.map(schedule => {
+            const displayName = schedule.brand_name && schedule.store_name && schedule.brand_name !== schedule.store_name
+                ? `${schedule.brand_name} ${schedule.store_name}`
+                : (schedule.brand_name || schedule.store_name || '店舗名未設定');
+
+            const dateStr = schedule.date === today ? '今日' : formatDateJP(schedule.date);
+            const timeStr = schedule.time_slot || '時間未定';
+
+            return `
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <div style="font-weight: 700; font-size: 1rem; color: #fff; flex: 1;">
+                            ${displayName}
+                        </div>
+                        <div style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                            ${schedule.source === 'sales_request' ? '依頼書' : 'スケジュール'}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 16px; font-size: 0.85rem; color: rgba(255,255,255,0.7);">
+                        <span><i class="fas fa-calendar" style="margin-right: 4px; opacity: 0.6;"></i>${dateStr}</span>
+                        <span><i class="fas fa-clock" style="margin-right: 4px; opacity: 0.6;"></i>${timeStr}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function formatDateJP(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+        const weekday = weekdays[date.getDay()];
+        return `${month}/${day} (${weekday})`;
+    }
+
+    function closeScheduleOverlay() {
+        const overlay = document.getElementById('schedule-overlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+    }
+
+    function updateScheduleFabBadge() {
+        const badge = document.getElementById('schedule-fab-badge');
+        if (!badge) return;
+
+        const stored = JSON.parse(localStorage.getItem('sales_created_schedules') || '[]');
+        const today = new Date().toISOString().split('T')[0];
+        const todayCount = stored.filter(s => s.date === today).length;
+
+        if (todayCount > 0) {
+            badge.textContent = todayCount;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    // Update badge on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(updateScheduleFabBadge, 500);
+    });
 
     // Placeholder functions for other wizards
     // Report Wizard State
