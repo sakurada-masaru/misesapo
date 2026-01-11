@@ -10462,6 +10462,13 @@ def handle_extract_store_info(event, headers):
         phone = body.get('phone') or ''
         query = body.get('query') or ''
 
+        if target_url and not re.match(r'^https?://', target_url):
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'invalid_url'}, ensure_ascii=False)
+            }
+
         if not target_url:
             search_query = query or f"{name} {phone}".strip()
             if not search_query:
