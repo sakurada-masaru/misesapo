@@ -3529,6 +3529,7 @@ ${context}
     };
 
     let customerSelectionMode = 'wizard'; // 'wizard' or 'view'
+    let customerListFilter = 'all'; // 'all' or 'mine'
 
     function startRequestWizard() {
         requestWizardState = { active: true, step: 0, data: {} };
@@ -3668,6 +3669,18 @@ ${context}
                             <span>顧客を選択</span>
                             <span style="font-size:0.8rem; color:rgba(255,255,255,0.5); font-weight:400;">${window.wizardCustomers ? window.wizardCustomers.length : 0}件</span>
                         </div>
+                        <div id="overlay-filter-bar" style="display:none; gap:8px; margin-bottom:10px;">
+                            <button id="filter-all-btn" onclick="setCustomerListFilter('all')"
+                                style="flex:1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+                                color: #fff; padding: 8px 12px; border-radius: 12px; cursor: pointer; font-size: 0.8rem;">
+                                顧客マスター
+                            </button>
+                            <button id="filter-mine-btn" onclick="setCustomerListFilter('mine')"
+                                style="flex:1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+                                color: rgba(255,255,255,0.7); padding: 8px 12px; border-radius: 12px; cursor: pointer; font-size: 0.8rem;">
+                                自分の顧客
+                            </button>
+                        </div>
                         <input type="text" id="overlay-search-input" class="customer-search-input" placeholder="会社名、店舗名、担当者で検索..." autofocus>
                     </div>
                     <div class="customer-selection-body" id="overlay-customer-list">
@@ -3714,10 +3727,36 @@ ${context}
             overlay,
             headerTitle: overlay.querySelector('.customer-selection-header div span'),
             headerCount: overlay.querySelector('.customer-selection-header div span:last-child'),
+            filterBar: overlay.querySelector('#overlay-filter-bar'),
+            filterAllBtn: overlay.querySelector('#filter-all-btn'),
+            filterMineBtn: overlay.querySelector('#filter-mine-btn'),
             searchInput: overlay.querySelector('#overlay-search-input'),
             listContainer: overlay.querySelector('#overlay-customer-list'),
             footer: overlay.querySelector('.customer-selection-footer')
         };
+    }
+
+    function getFilteredCustomers(customers) {
+        const list = customers || [];
+        if (customerListFilter !== 'mine') return list;
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const userName = (user.name || user.username || '').trim();
+        if (!userName) return [];
+        return list.filter(c => {
+            const concierge = (c.concierge || '').trim();
+            const salesRep = (c.sales_rep || '').trim();
+            return concierge === userName || salesRep === userName;
+        });
+    }
+
+    function setCustomerListFilter(filter) {
+        customerListFilter = filter;
+        const input = document.getElementById('overlay-search-input');
+        if (input && input.value.trim()) {
+            filterCustomerListInOverlay(input.value);
+        } else {
+            renderCustomerOverlayList();
+        }
     }
 
     function renderCustomerOverlayList() {
@@ -3726,14 +3765,26 @@ ${context}
 
         if (parts.headerTitle) parts.headerTitle.textContent = '顧客を選択';
         if (parts.headerCount) {
-            const count = window.wizardCustomers ? window.wizardCustomers.length : 0;
+            const count = getFilteredCustomers(window.wizardCustomers).length;
             parts.headerCount.textContent = `${count}件`;
+        }
+        if (parts.filterBar) {
+            parts.filterBar.style.display = customerSelectionMode === 'view' ? 'flex' : 'none';
+        }
+        if (parts.filterAllBtn && parts.filterMineBtn) {
+            const isAll = customerListFilter === 'all';
+            parts.filterAllBtn.style.background = isAll ? 'var(--accent-color)' : 'rgba(255,255,255,0.08)';
+            parts.filterAllBtn.style.borderColor = isAll ? 'var(--accent-color)' : 'rgba(255,255,255,0.2)';
+            parts.filterAllBtn.style.color = '#fff';
+            parts.filterMineBtn.style.background = isAll ? 'rgba(255,255,255,0.05)' : 'var(--accent-color)';
+            parts.filterMineBtn.style.borderColor = isAll ? 'rgba(255,255,255,0.15)' : 'var(--accent-color)';
+            parts.filterMineBtn.style.color = isAll ? 'rgba(255,255,255,0.7)' : '#fff';
         }
         if (parts.searchInput) {
             parts.searchInput.style.display = 'block';
             parts.searchInput.value = '';
         }
-        if (parts.listContainer) parts.listContainer.innerHTML = renderCustomerListItems(window.wizardCustomers);
+        if (parts.listContainer) parts.listContainer.innerHTML = renderCustomerListItems(getFilteredCustomers(window.wizardCustomers));
 
         if (parts.footer) {
             if (customerSelectionMode === 'view') {
@@ -4176,7 +4227,7 @@ ${context}
         if (!window.wizardCustomers) return;
 
         const q = query.toLowerCase();
-        const filtered = window.wizardCustomers.filter(c =>
+        const filtered = getFilteredCustomers(window.wizardCustomers).filter(c =>
             (c.brand_name && c.brand_name.toLowerCase().includes(q)) ||
             (c.store_name && c.store_name.toLowerCase().includes(q)) ||
             (c.company_name && c.company_name.toLowerCase().includes(q)) ||
