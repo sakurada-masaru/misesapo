@@ -4416,7 +4416,9 @@ ${context}
     }
 
     function startCustomerWizard() {
-        customerWizardState = { active: true, step: 0, data: {} };
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const conciergeName = user.name || user.username || '';
+        customerWizardState = { active: true, step: 0, data: { concierge: conciergeName } };
         if (chatHistory) chatHistory.style.display = 'none';
         appendChatMessage('ai', '新規顧客を登録します。屋号（ブランド）を軸に、店舗ごとの情報を整理していきます。');
         setTimeout(() => {
