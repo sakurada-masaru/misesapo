@@ -10533,11 +10533,24 @@ def search_url_with_cse(query):
     return items[0].get('link')
 
 def extract_store_info_from_url(url):
+    html_text = fetch_html_text(url)
+
+    info = extract_store_info_from_html(html_text)
+
+    if not info.get('name') and 'tabelog.com' in url:
+        jina_text = fetch_jina_text(url)
+        if jina_text:
+            info = extract_store_info_from_tabelog_markdown(jina_text, info)
+
+    return info
+
+def fetch_html_text(url):
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     with urllib.request.urlopen(req, timeout=10) as resp:
-        html_text = resp.read().decode('utf-8', errors='ignore')
+        return resp.read().decode('utf-8', errors='ignore')
 
-    jsonld_blocks = re.findall(r'<script type="application/ld\\+json">(.*?)</script>', html_text, re.S)
+def extract_store_info_from_html(html_text):
+    jsonld_blocks = re.findall(r'<script\\s+type="application/ld\\+json"\\s*>(.*?)</script>', html_text, re.S)
     parsed_blocks = []
     for block in jsonld_blocks:
         block = block.strip()
@@ -10591,6 +10604,64 @@ def extract_store_info_from_url(url):
         'private_room': normalize_yes_no(private_room),
         'latitude': latitude,
         'longitude': longitude,
+        'cuisine': cuisine,
+        'price_range': price_range
+    }
+
+def fetch_jina_text(url):
+    target = re.sub(r'^https?://', '', url)
+    jina_url = f"https://r.jina.ai/http://{target}"
+    try:
+        req = urllib.request.Request(jina_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.read().decode('utf-8', errors='ignore')
+    except Exception as e:
+        print(f"Jina fetch failed: {str(e)}")
+        return ''
+
+def extract_store_info_from_tabelog_markdown(text, fallback):
+    if not text:
+        return fallback or {}
+
+    def find_row(label):
+        match = re.search(rf'\|\s*{re.escape(label)}\s*\|\s*(.+?)\s*\|', text)
+        if not match:
+            return ''
+        value = match.group(1) or ''
+        value = re.sub(r'!\[[^\]]*\]\([^\)]*\)', '', value)
+        value = re.sub(r'\[\]\([^\)]*\)', '', value)
+        value = re.sub(r'\[([^\]]+)\]\([^\)]*\)', r'\1', value)
+        value = value.replace('**', '').replace('_', '').replace('*', '')
+        value = re.sub(r'\s+', ' ', value).strip()
+        return value
+
+    def truncate_note(value):
+        for marker in ['大きな地図を見る', '周辺のお店を探す', '利用金額分布を見る']:
+            if marker in value:
+                value = value.split(marker)[0].strip()
+        return value
+
+    name = find_row('店名') or fallback.get('name', '')
+    telephone = find_row('お問い合わせ') or fallback.get('telephone', '')
+    address = truncate_note(find_row('住所') or fallback.get('address', ''))
+    access = find_row('交通手段') or fallback.get('access', '')
+    opening_hours = find_row('営業時間') or fallback.get('opening_hours', '')
+    cuisine = find_row('ジャンル') or fallback.get('cuisine', '')
+    price_range = truncate_note(find_row('予算（口コミ集計）') or fallback.get('price_range', ''))
+    parking = find_row('駐車場') or fallback.get('parking', '不明')
+    private_room = find_row('個室') or fallback.get('private_room', '不明')
+
+    return {
+        'name': name,
+        'address': address,
+        'postal_code': fallback.get('postal_code', ''),
+        'telephone': telephone,
+        'opening_hours': opening_hours,
+        'access': access,
+        'parking': normalize_yes_no(parking),
+        'private_room': normalize_yes_no(private_room),
+        'latitude': fallback.get('latitude', ''),
+        'longitude': fallback.get('longitude', ''),
         'cuisine': cuisine,
         'price_range': price_range
     }

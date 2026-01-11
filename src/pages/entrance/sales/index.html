@@ -4546,6 +4546,7 @@ ${context}
 
     function applyCustomerInfoToWizard(info, sourceUrl) {
         const name = info.name || '';
+        const companyName = info.company_name || info.legal_name || '';
         const address = info.address || '';
         const phone = info.telephone || '';
         const memoParts = [];
@@ -4558,6 +4559,11 @@ ${context}
         if (info.price_range) memoParts.push(`価格帯: ${info.price_range}`);
         if (sourceUrl) memoParts.push(`参照URL: ${sourceUrl}`);
 
+        if (companyName) {
+            customerWizardState.data.company_name = companyName;
+        } else if (!customerWizardState.data.company_name && name) {
+            customerWizardState.data.company_name = name;
+        }
         customerWizardState.data.brand_name = name;
         customerWizardState.data.store_name = name;
         customerWizardState.data.phone = phone;
