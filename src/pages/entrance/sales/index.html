@@ -1955,7 +1955,7 @@
 </div>
 
 <!-- Floating Schedule Button -->
-<button class="schedule-fab" onclick="showScheduleOverlay()" aria-label="スケジュール">
+<button class="schedule-fab" onclick="showScheduleOverlay()" aria-label="予定">
     <i class="fas fa-calendar-alt"></i>
     <span class="fab-badge" id="schedule-fab-badge" style="display: none;">0</span>
 </button>
@@ -3353,8 +3353,7 @@ ${context}
             sales: [
                 { label: '顧客', action: 'showCustomerSubmenu()' },
                 { label: '契約', action: 'showContractSubmenu()' },
-                { label: '依頼', action: 'showRequestSubmenu()' },
-                { label: '📅 スケジュール', action: 'showScheduleOverlay()' }
+                { label: '予定', action: 'showScheduleOverlay()' }
             ],
             cleaning: [
                 { label: 'レポートを作成', action: 'startReportWizard()' }
@@ -4835,7 +4834,7 @@ ${context}
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button onclick="addRequestToSchedule('${requestId}')" style="flex: 1; background: var(--accent-color); border: none; color: #fff; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 600;">
-                        <i class="fas fa-calendar-plus"></i> スケジュールに追加
+                        <i class="fas fa-calendar-plus"></i> 予定に追加
                     </button>
                     <button onclick="renderRequestsList('all')" style="width: 80px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 14px; border-radius: 12px; cursor: pointer;">
                         戻る
@@ -4848,13 +4847,18 @@ ${context}
         if (listContainer) listContainer.innerHTML = detailHtml;
     }
 
-    function addRequestToSchedule(requestId) {
+    async function addRequestToSchedule(requestId) {
         const stored = JSON.parse(localStorage.getItem('sales_requests') || '[]');
         const request = stored.find(r => r.id === requestId);
         if (!request) return;
 
-        // Add to schedule
-        upsertLocalScheduleFromRequest(request);
+        try {
+            await createScheduleFromRequestData(request);
+        } catch (error) {
+            console.error('Failed to add request to schedule:', error);
+            appendChatMessage('ai', '❌ 予定の登録に失敗しました。');
+            return;
+        }
 
         // Update request status
         const updatedRequests = stored.map(r =>
@@ -4862,7 +4866,7 @@ ${context}
         );
         localStorage.setItem('sales_requests', JSON.stringify(updatedRequests));
 
-        appendChatMessage('ai', `✅ 「${request.customer_name || '依頼'}」をスケジュールに追加しました。`);
+        appendChatMessage('ai', `✅ 「${request.customer_name || '依頼'}」を予定に追加しました。`);
         closeRequestsOverlay();
     }
 
@@ -5046,40 +5050,29 @@ ${context}
         showJobActions('sales');
     }
 
-    function upsertLocalScheduleFromRequest(requestData) {
-        const stored = JSON.parse(localStorage.getItem('sales_created_schedules') || '[]');
-        const today = new Date().toISOString().split('T')[0];
-        const scheduleId = `SCH-${Date.now()}`;
+    async function createScheduleFromRequestData(requestData) {
+        const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = token;
 
-        const schedule = {
-            id: scheduleId,
-            request_id: requestData.id,
-            store_id: requestData.customer_id || requestData.store_id || '',
-            store_name: requestData.store_name || requestData.customer_name || '店舗名未設定',
-            brand_name: requestData.customer_name || '',
-            time_slot: requestData.preferred_time || '要調整',
-            date: today,
-            source: 'sales_request',
-            created_at: new Date().toISOString()
-        };
+        const payload = buildSchedulePayloadFromRequest(requestData);
+        const response = await fetch(`${API_BASE}/schedules`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload)
+        });
 
-        const existingIndex = stored.findIndex((item) => item.request_id === requestData.id);
-        if (existingIndex >= 0) {
-            stored[existingIndex] = { ...stored[existingIndex], ...schedule };
-        } else {
-            stored.push(schedule);
-        }
+        if (!response.ok) throw new Error('schedule_create_failed');
 
-        localStorage.setItem('sales_created_schedules', JSON.stringify(stored));
         updateScheduleFabBadge();
-        return schedule;
+        return response.json().catch(() => ({}));
     }
 
     function showRequestScheduleActions(requestData) {
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
-        appendChatMessage('ai', '依頼書をスケジュールに落とし込みますか？必要なら清掃モードで確認できます。');
+        appendChatMessage('ai', '依頼書を予定に落とし込みますか？必要なら清掃モードで確認できます。');
 
         actionContainer.innerHTML = `
             <div class="action-bubble-container" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
@@ -5088,7 +5081,7 @@ ${context}
                     padding: 12px 24px; border-radius: 25px; cursor: pointer;
                     font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
                     box-shadow: 0 4px 15px var(--accent-glow);">
-                    <i class="fas fa-calendar-plus"></i> スケジュールに登録
+                    <i class="fas fa-calendar-plus"></i> 予定に登録
                 </button>
                 <button class="job-action-btn" onclick="createScheduleAndOpenCleaning()"
                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; 
@@ -5105,18 +5098,46 @@ ${context}
         window._latestRequestData = requestData;
     }
 
-    function createScheduleFromRequest() {
-        const requestData = window._latestRequestData;
-        if (!requestData) return;
-        upsertLocalScheduleFromRequest(requestData);
-        appendChatMessage('ai', '✅ スケジュールを登録しました。');
-        showScheduleOverlay();
+    function buildSchedulePayloadFromRequest(requestData) {
+        const today = new Date().toISOString().split('T')[0];
+        const notes = [
+            requestData.issue ? `課題: ${requestData.issue}` : '',
+            requestData.environment ? `環境: ${requestData.environment}` : '',
+            requestData.notes ? `注意事項: ${requestData.notes}` : ''
+        ].filter(Boolean).join(' / ');
+
+        return {
+            store_id: requestData.customer_id || requestData.store_id || null,
+            store_name: requestData.store_name || '',
+            brand_name: requestData.customer_name || '',
+            scheduled_date: requestData.preferred_date || today,
+            scheduled_time: requestData.preferred_time || '',
+            duration_minutes: 60,
+            status: 'draft',
+            work_content: Array.isArray(requestData.equipment) ? requestData.equipment.join(', ') : '',
+            notes: notes
+        };
     }
 
-    function createScheduleAndOpenCleaning() {
+    async function createScheduleFromRequest() {
         const requestData = window._latestRequestData;
         if (!requestData) return;
-        upsertLocalScheduleFromRequest(requestData);
+
+        try {
+            await createScheduleFromRequestData(requestData);
+            appendChatMessage('ai', '✅ 予定を登録しました。');
+            showScheduleOverlay();
+        } catch (error) {
+            console.error('Failed to create schedule:', error);
+            appendChatMessage('ai', '❌ 予定の登録に失敗しました。もう一度お試しください。');
+        }
+    }
+
+    async function createScheduleAndOpenCleaning() {
+        const requestData = window._latestRequestData;
+        if (!requestData) return;
+
+        await createScheduleFromRequest();
         appendChatMessage('ai', '🧹 清掃モードを開きます。');
         selectJobType('cleaning');
     }
@@ -5135,7 +5156,7 @@ ${context}
                 <div class="customer-selection-card">
                     <div class="customer-selection-header">
                         <div style="font-weight:700; font-size:1.1rem; color:#fff; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-                            <span><i class="fas fa-calendar-alt" style="margin-right: 8px;"></i>スケジュール</span>
+                            <span><i class="fas fa-calendar-alt" style="margin-right: 8px;"></i>予定</span>
                             <span id="schedule-count" style="font-size:0.8rem; color:rgba(255,255,255,0.5); font-weight:400;">0件</span>
                         </div>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -5177,22 +5198,29 @@ ${context}
         renderScheduleList(filter);
     }
 
-    function renderScheduleList(filter = 'today') {
+    async function renderScheduleList(filter = 'today') {
         const listContainer = document.getElementById('schedule-list');
         const countEl = document.getElementById('schedule-count');
         if (!listContainer) return;
 
-        const stored = JSON.parse(localStorage.getItem('sales_created_schedules') || '[]');
+        listContainer.innerHTML = `
+            <div style="text-align: center; color: rgba(255,255,255,0.4); padding: 40px 20px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 12px; display: block;"></i>
+                <div>予定を読み込み中...</div>
+            </div>
+        `;
+
+        const schedules = await fetchSchedulesForOverlay(filter);
         const today = new Date().toISOString().split('T')[0];
         const weekEnd = new Date();
         weekEnd.setDate(weekEnd.getDate() + 7);
         const weekEndStr = weekEnd.toISOString().split('T')[0];
 
-        let filteredSchedules = stored;
+        let filteredSchedules = schedules;
         if (filter === 'today') {
-            filteredSchedules = stored.filter(s => s.date === today);
+            filteredSchedules = schedules.filter(s => s.date === today);
         } else if (filter === 'week') {
-            filteredSchedules = stored.filter(s => s.date >= today && s.date <= weekEndStr);
+            filteredSchedules = schedules.filter(s => s.date >= today && s.date <= weekEndStr);
         }
 
         // Sort by date and time
@@ -5207,16 +5235,18 @@ ${context}
             listContainer.innerHTML = `
                 <div style="text-align: center; color: rgba(255,255,255,0.4); padding: 60px 20px;">
                     <i class="fas fa-calendar-times" style="font-size: 2.5rem; margin-bottom: 16px; display: block;"></i>
-                    <div>スケジュールがありません</div>
-                    <div style="font-size: 0.8rem; margin-top: 8px;">依頼書を作成するとここに表示されます</div>
+                    <div>予定がありません</div>
+                    <div style="font-size: 0.8rem; margin-top: 8px;">予定を作成するとここに表示されます</div>
                 </div>
             `;
             return;
         }
 
+        window._scheduleOverlayCache = filteredSchedules;
+
         listContainer.innerHTML = filteredSchedules.map(schedule => {
             const displayName = schedule.brand_name && schedule.store_name && schedule.brand_name !== schedule.store_name
-                ? `${schedule.brand_name} ${schedule.store_name}`
+                ? `${schedule.brand_name} / ${schedule.store_name}`
                 : (schedule.brand_name || schedule.store_name || '店舗名未設定');
 
             const dateStr = schedule.date === today ? '今日' : formatDateJP(schedule.date);
@@ -5229,16 +5259,60 @@ ${context}
                             ${displayName}
                         </div>
                         <div style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
-                            ${schedule.source === 'sales_request' ? '依頼書' : 'スケジュール'}
+                            ${schedule.source === 'sales_request' ? '依頼書' : '予定'}
                         </div>
                     </div>
                     <div style="display: flex; gap: 16px; font-size: 0.85rem; color: rgba(255,255,255,0.7);">
                         <span><i class="fas fa-calendar" style="margin-right: 4px; opacity: 0.6;"></i>${dateStr}</span>
                         <span><i class="fas fa-clock" style="margin-right: 4px; opacity: 0.6;"></i>${timeStr}</span>
                     </div>
+                    <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
+                        <button onclick="startRequestWizardFromSchedule('${schedule.id}')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 14px; border-radius: 16px; cursor: pointer; font-size: 0.8rem;">
+                            <i class="fas fa-file-alt"></i> 依頼書を作成
+                        </button>
+                    </div>
                 </div>
             `;
         }).join('');
+    }
+
+    async function fetchSchedulesForOverlay(filter) {
+        const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
+        const headers = {};
+        if (token) headers['Authorization'] = token;
+
+        const today = new Date().toISOString().split('T')[0];
+        const url = filter === 'today'
+            ? `${API_BASE}/schedules?date=${today}`
+            : `${API_BASE}/schedules`;
+
+        try {
+            const response = await fetch(url, { headers });
+            if (!response.ok) throw new Error('schedule_fetch_failed');
+            const data = await response.json();
+            const rawSchedules = Array.isArray(data) ? data : (data.schedules || data.items || []);
+            return rawSchedules.map(normalizeScheduleForOverlay).filter((s) => s.id);
+        } catch (error) {
+            console.error('Failed to load schedules:', error);
+            return [];
+        }
+    }
+
+    function normalizeScheduleForOverlay(schedule) {
+        const id = schedule.id || schedule.schedule_id || '';
+        const date = schedule.scheduled_date || schedule.date || '';
+        const time = schedule.scheduled_time || schedule.time_slot || schedule.start_time || '';
+        const storeName = schedule.store_name || schedule.client_name || schedule.store?.name || '';
+        const brandName = schedule.brand_name || schedule.brand?.name || '';
+
+        return {
+            ...schedule,
+            id,
+            date,
+            time_slot: time,
+            store_name: storeName,
+            brand_name: brandName
+        };
     }
 
     function formatDateJP(dateStr) {
@@ -5258,13 +5332,42 @@ ${context}
         }
     }
 
-    function updateScheduleFabBadge() {
+    function startRequestWizardFromSchedule(scheduleId) {
+        const schedules = window._scheduleOverlayCache || [];
+        const schedule = schedules.find((item) => String(item.id) === String(scheduleId));
+        if (!schedule) return;
+
+        const displayName = schedule.brand_name && schedule.store_name && schedule.brand_name !== schedule.store_name
+            ? `${schedule.brand_name} / ${schedule.store_name}`
+            : (schedule.brand_name || schedule.store_name || '店舗名未設定');
+
+        requestWizardState = {
+            active: true,
+            step: 1,
+            data: {
+                customer_id: schedule.store_id || schedule.client_id || '',
+                customer_name: displayName,
+                store_name: schedule.store_name || '',
+                schedule_id: schedule.id
+            }
+        };
+
+        if (chatHistory) {
+            chatHistory.style.display = 'none';
+            chatHistory.innerHTML = '';
+        }
+
+        closeScheduleOverlay();
+        appendChatMessage('ai', `「${displayName}」の依頼書を作成します。`);
+        showRequestWizardStep(1);
+    }
+
+    async function updateScheduleFabBadge() {
         const badge = document.getElementById('schedule-fab-badge');
         if (!badge) return;
 
-        const stored = JSON.parse(localStorage.getItem('sales_created_schedules') || '[]');
-        const today = new Date().toISOString().split('T')[0];
-        const todayCount = stored.filter(s => s.date === today).length;
+        const schedules = await fetchSchedulesForOverlay('today');
+        const todayCount = schedules.length;
 
         if (todayCount > 0) {
             badge.textContent = todayCount;

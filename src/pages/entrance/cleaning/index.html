@@ -4076,30 +4076,9 @@ ${context}
             .then(response => response.ok ? response.json() : { schedules: [] })
             .then(data => {
                 const schedules = Array.isArray(data) ? data : (data.schedules || data.items || []);
-                const localSchedules = getLocalSchedulesForDate(today);
-                const mergedSchedules = mergeSchedules(schedules, localSchedules);
-                showScheduleSelectionWithManual(mergedSchedules);
+                showScheduleSelectionWithManual(schedules);
             })
             .catch(() => showManualStoreInput());
-    }
-
-    function getLocalSchedulesForDate(dateStr) {
-        const stored = JSON.parse(localStorage.getItem('sales_created_schedules') || '[]');
-        return stored.filter((item) => item.date === dateStr || item.scheduled_date === dateStr);
-    }
-
-    function mergeSchedules(apiSchedules, localSchedules) {
-        const seen = new Set();
-        const merged = [];
-
-        [...apiSchedules, ...localSchedules].forEach((schedule) => {
-            if (!schedule || !schedule.id) return;
-            if (seen.has(schedule.id)) return;
-            seen.add(schedule.id);
-            merged.push(schedule);
-        });
-
-        return merged;
     }
 
     function showScheduleSelectionWithManual(schedules) {
@@ -4146,11 +4125,8 @@ ${context}
             if (response.ok) {
                 const data = await response.json();
                 const schedules = Array.isArray(data) ? data : (data.schedules || data.items || []);
-                const localSchedules = getLocalSchedulesForDate(today);
-                const mergedSchedules = mergeSchedules(schedules, localSchedules);
-
-                if (mergedSchedules.length > 0) {
-                    showScheduleSelection(mergedSchedules);
+                if (schedules.length > 0) {
+                    showScheduleSelection(schedules);
                 } else {
                     showManualStoreInput();
                 }
