@@ -4420,8 +4420,145 @@ ${context}
         if (chatHistory) chatHistory.style.display = 'none';
         appendChatMessage('ai', '新規顧客を登録します。屋号（ブランド）を軸に、店舗ごとの情報を整理していきます。');
         setTimeout(() => {
-            showCustomerWizardStep(0);
+            showCustomerImportOptions();
         }, 500);
+    }
+
+    function showCustomerImportOptions() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        appendChatMessage('ai', 'WEBから情報を取得しますか？URL入力か、店名と電話番号で検索できます。');
+
+        actionContainer.innerHTML = `
+            <div class="action-bubble-container" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="job-action-btn" onclick="showCustomerUrlImportForm()"
+                    style="background: var(--accent-color); border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    <i class="fas fa-link"></i> URLを入力
+                </button>
+                <button class="job-action-btn" onclick="showCustomerSearchImportForm()"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;">
+                    <i class="fas fa-search"></i> 店名/電話で検索
+                </button>
+                <button class="job-action-btn" onclick="showCustomerWizardStep(0)"
+                    style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;">
+                    <i class="fas fa-keyboard"></i> 手入力で進める
+                </button>
+            </div>
+        `;
+    }
+
+    function showCustomerUrlImportForm() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div style="max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px;">
+                <input type="text" id="customer-url-input" placeholder="https://..." 
+                    style="width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 12px 14px; border-radius: 12px; font-family: inherit;">
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="handleCustomerUrlImport()" style="background: var(--accent-color); border: none; color: #fff;
+                        padding: 10px 24px; border-radius: 20px; cursor: pointer;">取得する</button>
+                    <button onclick="showCustomerImportOptions()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3);
+                        color: rgba(255,255,255,0.8); padding: 10px 24px; border-radius: 20px; cursor: pointer;">戻る</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function showCustomerSearchImportForm() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div style="max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px;">
+                <input type="text" id="customer-search-name" placeholder="店名・屋号" 
+                    style="width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 12px 14px; border-radius: 12px; font-family: inherit;">
+                <input type="text" id="customer-search-phone" placeholder="電話番号" 
+                    style="width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 12px 14px; border-radius: 12px; font-family: inherit;">
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="handleCustomerSearchImport()" style="background: var(--accent-color); border: none; color: #fff;
+                        padding: 10px 24px; border-radius: 20px; cursor: pointer;">検索する</button>
+                    <button onclick="showCustomerImportOptions()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3);
+                        color: rgba(255,255,255,0.8); padding: 10px 24px; border-radius: 20px; cursor: pointer;">戻る</button>
+                </div>
+            </div>
+        `;
+    }
+
+    async function handleCustomerUrlImport() {
+        const input = document.getElementById('customer-url-input');
+        const url = input ? input.value.trim() : '';
+        if (!url) return;
+        await fetchAndApplyCustomerInfo({ url });
+    }
+
+    async function handleCustomerSearchImport() {
+        const nameInput = document.getElementById('customer-search-name');
+        const phoneInput = document.getElementById('customer-search-phone');
+        const name = nameInput ? nameInput.value.trim() : '';
+        const phone = phoneInput ? phoneInput.value.trim() : '';
+        if (!name && !phone) return;
+        await fetchAndApplyCustomerInfo({ name, phone });
+    }
+
+    async function fetchAndApplyCustomerInfo(payload) {
+        appendChatMessage('ai', 'WEBから情報を取得しています...');
+
+        try {
+            const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = token;
+
+            const response = await fetch(`${API_BASE}/extract/store-info`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error('extract_failed');
+
+            const data = await response.json();
+            const info = data.data || {};
+            applyCustomerInfoToWizard(info, data.url || '');
+            appendChatMessage('ai', '取得できた情報を反映しました。内容を確認しながら進めます。');
+            showCustomerWizardStep(0);
+        } catch (error) {
+            console.error('Failed to fetch store info:', error);
+            appendChatMessage('ai', '❌ 情報の取得に失敗しました。手入力で進めるか、別のURLをお試しください。');
+            showCustomerImportOptions();
+        }
+    }
+
+    function applyCustomerInfoToWizard(info, sourceUrl) {
+        const name = info.name || '';
+        const address = info.address || '';
+        const phone = info.telephone || '';
+        const memoParts = [];
+
+        if (info.opening_hours) memoParts.push(`営業時間: ${info.opening_hours}`);
+        if (info.access) memoParts.push(`アクセス: ${info.access}`);
+        if (info.parking) memoParts.push(`駐車場: ${info.parking}`);
+        if (info.private_room) memoParts.push(`個室: ${info.private_room}`);
+        if (info.cuisine) memoParts.push(`ジャンル: ${info.cuisine}`);
+        if (info.price_range) memoParts.push(`価格帯: ${info.price_range}`);
+        if (sourceUrl) memoParts.push(`参照URL: ${sourceUrl}`);
+
+        customerWizardState.data.brand_name = name;
+        customerWizardState.data.store_name = name;
+        customerWizardState.data.phone = phone;
+        customerWizardState.data.address = address;
+        customerWizardState.data.memo = memoParts.join('\n');
     }
 
     function getCustomerWizardHint(stepId) {
@@ -4487,6 +4624,12 @@ ${context}
             </div>
         `;
         container.appendChild(inputDiv);
+
+        const input = inputDiv.querySelector('#wizard-customer-input');
+        const currentValue = customerWizardState.data[step.id] || '';
+        if (input && currentValue) {
+            input.value = currentValue;
+        }
     }
 
     function skipCustomerWizardStep() {
@@ -5161,6 +5304,16 @@ ${context}
                             <span><i class="fas fa-calendar-alt" style="margin-right: 8px;"></i>予定</span>
                             <span id="schedule-count" style="font-size:0.8rem; color:rgba(255,255,255,0.5); font-weight:400;">0件</span>
                         </div>
+                        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                            <button onclick="setScheduleViewMode('list')" id="schedule-view-list"
+                                style="flex:1; background: var(--accent-color); border: none; color: #fff; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;">
+                                <i class="fas fa-list" style="margin-right: 6px;"></i>リスト
+                            </button>
+                            <button onclick="setScheduleViewMode('calendar')" id="schedule-view-calendar"
+                                style="flex:1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;">
+                                <i class="fas fa-calendar-day" style="margin-right: 6px;"></i>カレンダー
+                            </button>
+                        </div>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button onclick="filterScheduleByDate('today')" class="schedule-filter-btn active" data-filter="today" style="flex:1; background: var(--accent-color); border: none; color: #fff; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;">今日</button>
                             <button onclick="filterScheduleByDate('week')" class="schedule-filter-btn" data-filter="week" style="flex:1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;">今週</button>
@@ -5169,6 +5322,9 @@ ${context}
                     </div>
                     <div class="customer-selection-body" id="schedule-list">
                         <!-- Schedule items go here -->
+                    </div>
+                    <div class="customer-selection-body" id="schedule-calendar" style="display: none;">
+                        <!-- Calendar view goes here -->
                     </div>
                     <div class="customer-selection-footer" style="padding:16px 20px; border-top:1px solid rgba(255,255,255,0.1); display:flex; gap:12px; background:rgba(0,0,0,0.2);">
                         <button onclick="closeScheduleOverlay()" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem;">
@@ -5180,8 +5336,46 @@ ${context}
             document.body.appendChild(overlay);
         }
 
-        renderScheduleList('today');
+        scheduleFilterMode = 'today';
+        setScheduleViewMode('list');
         overlay.classList.add('active');
+    }
+
+    let scheduleViewMode = 'list';
+    let scheduleFilterMode = 'today';
+
+    function setScheduleViewMode(mode) {
+        scheduleViewMode = mode;
+        const listEl = document.getElementById('schedule-list');
+        const calendarEl = document.getElementById('schedule-calendar');
+        const listBtn = document.getElementById('schedule-view-list');
+        const calendarBtn = document.getElementById('schedule-view-calendar');
+
+        if (listBtn && calendarBtn) {
+            if (mode === 'list') {
+                listBtn.style.background = 'var(--accent-color)';
+                listBtn.style.border = 'none';
+                calendarBtn.style.background = 'rgba(255,255,255,0.1)';
+                calendarBtn.style.border = '1px solid rgba(255,255,255,0.2)';
+            } else {
+                calendarBtn.style.background = 'var(--accent-color)';
+                calendarBtn.style.border = 'none';
+                listBtn.style.background = 'rgba(255,255,255,0.1)';
+                listBtn.style.border = '1px solid rgba(255,255,255,0.2)';
+            }
+        }
+
+        if (listEl && calendarEl) {
+            if (mode === 'list') {
+                listEl.style.display = 'block';
+                calendarEl.style.display = 'none';
+                renderScheduleList(scheduleFilterMode);
+            } else {
+                listEl.style.display = 'none';
+                calendarEl.style.display = 'block';
+                renderScheduleCalendar();
+            }
+        }
     }
 
     function filterScheduleByDate(filter) {
@@ -5197,6 +5391,7 @@ ${context}
                 btn.classList.remove('active');
             }
         });
+        scheduleFilterMode = filter;
         renderScheduleList(filter);
     }
 
@@ -5276,6 +5471,66 @@ ${context}
                 </div>
             `;
         }).join('');
+    }
+
+    async function renderScheduleCalendar() {
+        const calendarContainer = document.getElementById('schedule-calendar');
+        if (!calendarContainer) return;
+
+        calendarContainer.innerHTML = `
+            <div style="text-align: center; color: rgba(255,255,255,0.4); padding: 40px 20px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 12px; display: block;"></i>
+                <div>カレンダーを読み込み中...</div>
+            </div>
+        `;
+
+        const schedules = await fetchSchedulesForOverlay('all');
+        window._scheduleOverlayCache = schedules;
+
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startWeekday = firstDay.getDay();
+        const totalDays = lastDay.getDate();
+
+        const scheduleMap = {};
+        schedules.forEach((item) => {
+            if (!item.date) return;
+            if (!scheduleMap[item.date]) scheduleMap[item.date] = [];
+            scheduleMap[item.date].push(item);
+        });
+
+        const monthLabel = `${year}年${month + 1}月`;
+        let gridHtml = `
+            <div style="text-align:center; font-weight:600; color:#fff; margin-bottom:12px;">${monthLabel}</div>
+            <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap: 6px; font-size: 0.75rem; color: rgba(255,255,255,0.5); text-align:center;">
+                <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 6px;">
+        `;
+
+        const totalCells = Math.ceil((startWeekday + totalDays) / 7) * 7;
+        for (let i = 0; i < totalCells; i++) {
+            const dayNum = i - startWeekday + 1;
+            const isInMonth = dayNum >= 1 && dayNum <= totalDays;
+            const dateStr = isInMonth ? `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}` : '';
+            const daySchedules = dateStr ? (scheduleMap[dateStr] || []) : [];
+            const badge = daySchedules.length > 0
+                ? `<div style="margin-top:4px; font-size:0.65rem; color:#10b981;">${daySchedules.length}件</div>`
+                : '<div style="margin-top:4px; font-size:0.65rem; color: rgba(255,255,255,0.2);">-</div>';
+
+            gridHtml += `
+                <div style="min-height: 64px; padding: 8px 6px; border-radius: 10px; background: ${isInMonth ? 'rgba(255,255,255,0.05)' : 'transparent'}; border: ${isInMonth ? '1px solid rgba(255,255,255,0.08)' : 'none'}; text-align:center; color: ${isInMonth ? '#fff' : 'rgba(255,255,255,0.2)'};">
+                    <div style="font-size: 0.8rem; font-weight:600;">${isInMonth ? dayNum : ''}</div>
+                    ${isInMonth ? badge : ''}
+                </div>
+            `;
+        }
+
+        gridHtml += '</div>';
+        calendarContainer.innerHTML = gridHtml;
     }
 
     async function fetchSchedulesForOverlay(filter) {

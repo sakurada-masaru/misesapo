@@ -6,6 +6,8 @@ import uuid
 import hashlib
 import urllib.request
 import urllib.parse
+import re
+import html
 from decimal import Decimal
 from datetime import datetime, timedelta, timezone
 from boto3.dynamodb.conditions import Key, Attr
@@ -909,6 +911,10 @@ def lambda_handler(event, context):
             # AIによるデータ処理（要約・生成・分析）
             if method == 'POST':
                 return handle_ai_process(event, headers)
+        elif normalized_path == '/extract/store-info':
+            # URLや店名から店舗情報を抽出
+            if method == 'POST':
+                return handle_extract_store_info(event, headers)
         elif normalized_path == '/cleaning-manual':
             # 清掃マニュアルデータの読み書き
             if method == 'GET':
@@ -10444,3 +10450,169 @@ def handle_ai_process(event, headers):
                 'debug': error_detail[:300]
             }, ensure_ascii=False)
         }
+
+def handle_extract_store_info(event, headers):
+    """
+    URLや店名/電話番号から店舗情報を抽出する
+    """
+    try:
+        body = json.loads(event.get('body') or '{}')
+        target_url = body.get('url') or ''
+        name = body.get('name') or ''
+        phone = body.get('phone') or ''
+        query = body.get('query') or ''
+
+        if not target_url:
+            search_query = query or f"{name} {phone}".strip()
+            if not search_query:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'url or query is required'}, ensure_ascii=False)
+                }
+            target_url = search_url_with_cse(search_query)
+
+        if not target_url:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'no_url_found'}, ensure_ascii=False)
+            }
+
+        info = extract_store_info_from_url(target_url)
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'url': target_url,
+                'data': info
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Extract Store Info Error: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'extract_failed', 'message': str(e)}, ensure_ascii=False)
+        }
+
+def search_url_with_cse(query):
+    api_key = os.environ.get('GOOGLE_CSE_API_KEY')
+    cx = os.environ.get('GOOGLE_CSE_CX')
+    if not api_key or not cx:
+        print("Google CSE key/cx not configured")
+        return None
+
+    params = {
+        'key': api_key,
+        'cx': cx,
+        'q': query
+    }
+    url = 'https://www.googleapis.com/customsearch/v1?' + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        data = json.loads(resp.read().decode('utf-8'))
+
+    items = data.get('items') or []
+    if not items:
+        return None
+
+    preferred = ['tabelog.com']
+    for item in items:
+        link = item.get('link') or ''
+        if any(domain in link for domain in preferred):
+            return link
+
+    return items[0].get('link')
+
+def extract_store_info_from_url(url):
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        html_text = resp.read().decode('utf-8', errors='ignore')
+
+    jsonld_blocks = re.findall(r'<script type="application/ld\\+json">(.*?)</script>', html_text, re.S)
+    parsed_blocks = []
+    for block in jsonld_blocks:
+        block = block.strip()
+        try:
+            parsed = json.loads(block)
+            parsed_blocks.append(parsed)
+        except Exception:
+            continue
+
+    restaurant = None
+    faq = None
+    for block in parsed_blocks:
+        if isinstance(block, list):
+            for item in block:
+                if isinstance(item, dict) and item.get('@type') == 'Restaurant':
+                    restaurant = item
+        elif isinstance(block, dict):
+            if block.get('@type') == 'Restaurant':
+                restaurant = block
+            if block.get('@type') == 'FAQPage':
+                faq = block
+
+    name = (restaurant or {}).get('name', '')
+    telephone = (restaurant or {}).get('telephone', '')
+    address_obj = (restaurant or {}).get('address', {}) if isinstance((restaurant or {}).get('address', {}), dict) else {}
+    address = ''.join([
+        address_obj.get('addressRegion', ''),
+        address_obj.get('addressLocality', ''),
+        address_obj.get('streetAddress', '')
+    ])
+    postal_code = address_obj.get('postalCode', '')
+    geo = (restaurant or {}).get('geo', {}) if isinstance((restaurant or {}).get('geo', {}), dict) else {}
+    latitude = geo.get('latitude', '')
+    longitude = geo.get('longitude', '')
+    cuisine = (restaurant or {}).get('servesCuisine', '')
+    price_range = (restaurant or {}).get('priceRange', '')
+
+    opening_hours = extract_faq_answer(faq, '営業時間')
+    access = extract_faq_answer(faq, 'アクセス')
+    parking = extract_faq_answer(faq, '駐車場')
+    private_room = extract_faq_answer(faq, '個室')
+
+    return {
+        'name': name,
+        'address': address,
+        'postal_code': postal_code,
+        'telephone': telephone,
+        'opening_hours': opening_hours,
+        'access': access,
+        'parking': normalize_yes_no(parking),
+        'private_room': normalize_yes_no(private_room),
+        'latitude': latitude,
+        'longitude': longitude,
+        'cuisine': cuisine,
+        'price_range': price_range
+    }
+
+def extract_faq_answer(faq_block, keyword):
+    if not faq_block:
+        return ''
+    entities = faq_block.get('mainEntity') or []
+    for entity in entities:
+        if not isinstance(entity, dict):
+            continue
+        question = entity.get('name', '')
+        if keyword in question:
+            answer = (entity.get('acceptedAnswer') or {}).get('text', '')
+            return strip_html(answer)
+    return ''
+
+def strip_html(text):
+    if not text:
+        return ''
+    clean = re.sub(r'<[^>]+>', '', text)
+    clean = html.unescape(clean)
+    return clean.strip()
+
+def normalize_yes_no(text):
+    if not text:
+        return '不明'
+    if 'なし' in text:
+        return 'なし'
+    if 'あり' in text:
+        return 'あり'
+    return text
