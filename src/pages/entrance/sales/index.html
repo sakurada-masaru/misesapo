@@ -3474,14 +3474,51 @@ ${context}
 
     // ====== CUSTOMER REGISTRATION WIZARD (Sales) ======
     const CUSTOMER_WIZARD_STEPS = [
-        { id: 'company_name', question: '会社名を入力してください', type: 'text', placeholder: '例：株式会社ミセサポ' },
-        { id: 'store_name', question: '店舗名を入力してください', type: 'text', placeholder: '例：渋谷店' },
-        { id: 'brand_name', question: 'ブランド名（屋号）を入力してください', type: 'text', placeholder: '例：ミセサポ食堂' },
-        { id: 'phone', question: '電話番号を入力してください', type: 'text', placeholder: '03-1234-5678' },
-        { id: 'contact_person', question: '担当者名を入力してください', type: 'text', placeholder: '佐藤 太郎' },
-        { id: 'address', question: '住所を入力してください', type: 'text', placeholder: '東京都渋谷区...' },
-        { id: 'memo', question: 'メモがあれば入力してください', type: 'text', placeholder: '休業日、連絡のつきやすい時間帯など' },
-        { id: 'confirm', question: '以上の内容で顧客を登録しますか？', type: 'confirm_customer' }
+        // 基本情報
+        { id: 'company_name', question: '会社名（法人名）を入力してください', type: 'text', placeholder: '例：株式会社ミセサポ', category: '基本情報' },
+        { id: 'brand_name', question: 'ブランド名（屋号）を入力してください', type: 'text', placeholder: '例：ミセサポ食堂', category: '基本情報' },
+        { id: 'store_name', question: '店舗名を入力してください', type: 'text', placeholder: '例：渋谷店', category: '基本情報' },
+        { id: 'contact_person', question: '担当者名を入力してください', type: 'text', placeholder: '佐藤 太郎', category: '基本情報' },
+        { id: 'phone', question: '電話番号を入力してください', type: 'text', placeholder: '03-1234-5678', category: '基本情報' },
+        { id: 'email', question: 'メールアドレスを入力してください', type: 'text', placeholder: 'example@company.com', category: '基本情報' },
+
+        // 住所情報
+        { id: 'postcode', question: '郵便番号を入力してください', type: 'text', placeholder: '150-0001', category: '住所' },
+        { id: 'pref', question: '都道府県を入力してください', type: 'text', placeholder: '東京都', category: '住所' },
+        { id: 'city', question: '市区町村を入力してください', type: 'text', placeholder: '渋谷区', category: '住所' },
+        { id: 'address1', question: '番地を入力してください', type: 'text', placeholder: '神南1-2-3', category: '住所' },
+        { id: 'address2', question: '建物名・階数を入力してください', type: 'text', placeholder: '○○ビル 2F', category: '住所' },
+        { id: 'nearest_station', question: '最寄り駅を入力してください', type: 'text', placeholder: '渋谷駅 徒歩5分', category: '住所' },
+        { id: 'parking', question: '駐車場の有無', type: 'single_select', options: ['あり', 'なし', '近隣にコインパーキング'], category: '住所' },
+
+        // 営業・契約関連
+        { id: 'contract_type', question: '契約タイプを選択してください', type: 'single_select', options: ['スポット清掃', '定期清掃', '毎月清掃', '年間契約'], category: '契約' },
+        { id: 'contract_start_date', question: '契約開始日を入力してください', type: 'text', placeholder: '2026-01-01', category: '契約' },
+        { id: 'contract_end_date', question: '契約終了日を入力してください（未定の場合はスキップ）', type: 'text', placeholder: '2026-12-31', category: '契約' },
+        { id: 'monthly_fee', question: '月額料金を入力してください', type: 'text', placeholder: '50000', category: '契約' },
+        { id: 'unit_price', question: '単価（1回あたり）を入力してください', type: 'text', placeholder: '15000', category: '契約' },
+        { id: 'payment_terms', question: '支払い条件を入力してください', type: 'text', placeholder: '月末締め翌月末払い', category: '契約' },
+        { id: 'concierge', question: '担当コンシェルジュを入力してください', type: 'text', placeholder: '山田 花子', category: '契約' },
+
+        // 店舗詳細
+        { id: 'business_hours', question: '営業時間を入力してください', type: 'text', placeholder: '11:00-23:00', category: '店舗詳細' },
+        { id: 'holidays', question: '定休日を入力してください', type: 'text', placeholder: '毎週月曜日', category: '店舗詳細' },
+        { id: 'seats', question: '席数を入力してください', type: 'text', placeholder: '30席', category: '店舗詳細' },
+        { id: 'area_size', question: '面積（坪数）を入力してください', type: 'text', placeholder: '20坪', category: '店舗詳細' },
+        { id: 'business_type', question: '業種を選択してください', type: 'single_select', options: ['飲食店', '小売店', 'オフィス', 'クリニック', 'その他'], category: '店舗詳細' },
+        { id: 'cleaning_frequency', question: '希望清掃頻度を選択してください', type: 'single_select', options: ['毎日', '週1回', '週2回', '月1回', '月2回', 'スポット'], category: '店舗詳細' },
+
+        // アクセス・鍵情報
+        { id: 'key_handover', question: '鍵の受け渡し方法を入力してください', type: 'text', placeholder: 'キーボックス（暗証番号:1234）', category: 'アクセス' },
+        { id: 'entry_time', question: '入店可能時間を入力してください', type: 'text', placeholder: '閉店後 23:00〜', category: 'アクセス' },
+
+        // その他
+        { id: 'referral_source', question: '紹介元を入力してください', type: 'text', placeholder: '○○様からのご紹介', category: 'その他' },
+        { id: 'priority', question: '優先度・ランクを選択してください', type: 'single_select', options: ['S（最重要）', 'A（重要）', 'B（通常）', 'C（低）'], category: 'その他' },
+        { id: 'notes', question: 'メモ・備考があれば入力してください', type: 'text', placeholder: '特記事項など', category: 'その他' },
+
+        // 確認
+        { id: 'confirm', question: '以上の内容で顧客を登録しますか？', type: 'confirm_customer', category: '確認' }
     ];
 
     let customerWizardState = {
@@ -3721,48 +3758,399 @@ ${context}
         const parts = getCustomerOverlayParts();
         if (!parts || !customer) return;
 
+        // Store selected customer for editing
+        window.selectedCustomerForEdit = customer;
+
         if (parts.headerTitle) parts.headerTitle.textContent = '顧客詳細';
         if (parts.headerCount) parts.headerCount.textContent = '';
         if (parts.searchInput) parts.searchInput.style.display = 'none';
 
-        const statusColors = { '稼働中': '#10b981', '契約作業中': '#f59e0b', '商談済': '#8b5cf6', '検討中': '#3b82f6', 'prospect': '#3b82f6' };
+        const statusColors = { 'active': '#10b981', '稼働中': '#10b981', '契約作業中': '#f59e0b', '商談済': '#8b5cf6', '検討中': '#3b82f6', 'prospect': '#3b82f6' };
         const statusColor = statusColors[customer.status] || '#6b7280';
+        const statusLabel = customer.status === 'active' ? '稼働中' : (customer.status || '未設定');
+
         const storeName = customer.store_name || customer.name || '-';
-        const brandName = customer.brand_name || storeName || '-';
-        const displayName = customer.display_name || (storeName && storeName !== brandName ? `${brandName} / ${storeName}` : brandName);
+        const brandName = customer.brand_name || '-';
+        const companyName = customer.company_name || '-';
+        const displayName = brandName && storeName && brandName !== storeName
+            ? `${brandName} ${storeName}`
+            : (brandName || storeName);
+
+        // Build detail sections
+        const sections = [
+            {
+                title: '基本情報',
+                items: [
+                    { label: '法人名', value: companyName },
+                    { label: 'ブランド', value: brandName },
+                    { label: '店舗名', value: storeName },
+                    { label: '担当者', value: customer.contact_person || '-' },
+                    { label: '電話', value: customer.phone || '-' },
+                    { label: 'メール', value: customer.email || '-' }
+                ]
+            },
+            {
+                title: '住所',
+                items: [
+                    { label: '郵便番号', value: customer.postcode || '-' },
+                    { label: '住所', value: [customer.pref, customer.city, customer.address1, customer.address2].filter(Boolean).join(' ') || customer.address || '-' },
+                    { label: '最寄駅', value: customer.nearest_station || '-' },
+                    { label: '駐車場', value: customer.parking || '-' }
+                ]
+            },
+            {
+                title: '契約情報',
+                items: [
+                    { label: '契約タイプ', value: customer.contract_type || '-' },
+                    { label: '月額料金', value: customer.monthly_fee ? `¥${Number(customer.monthly_fee).toLocaleString()}` : '-' },
+                    { label: '単価', value: customer.unit_price ? `¥${Number(customer.unit_price).toLocaleString()}` : '-' },
+                    { label: '支払条件', value: customer.payment_terms || '-' },
+                    { label: 'コンシェルジュ', value: customer.concierge || '-' }
+                ]
+            },
+            {
+                title: '店舗詳細',
+                items: [
+                    { label: '営業時間', value: customer.business_hours || '-' },
+                    { label: '定休日', value: customer.holidays || '-' },
+                    { label: '業種', value: customer.business_type || '-' },
+                    { label: '清掃頻度', value: customer.cleaning_frequency || '-' },
+                    { label: '席数', value: customer.seats || '-' },
+                    { label: '面積', value: customer.area_size || '-' }
+                ]
+            },
+            {
+                title: 'アクセス',
+                items: [
+                    { label: '鍵の受渡', value: customer.key_handover || '-' },
+                    { label: '入店可能時間', value: customer.entry_time || '-' }
+                ]
+            },
+            {
+                title: 'その他',
+                items: [
+                    { label: '優先度', value: customer.priority || '-' },
+                    { label: '紹介元', value: customer.referral_source || '-' },
+                    { label: 'メモ', value: customer.notes || customer.memo || customer.sales_notes || '-' }
+                ]
+            }
+        ];
+
+        const sectionsHtml = sections.map(section => `
+            <div style="margin-bottom: 16px;">
+                <div style="font-size: 0.75rem; color: var(--accent-color); font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">
+                    ${section.title}
+                </div>
+                <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px;">
+                    ${section.items.map(item => `
+                        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${item.label}</span>
+                            <span style="color: #fff; font-size: 0.85rem; text-align: right; max-width: 60%; word-break: break-word;">${item.value}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
 
         if (parts.listContainer) {
             parts.listContainer.innerHTML = `
                 <div style="padding: 12px 4px 24px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <div style="font-weight:700; font-size:1.05rem; color:#fff;">${displayName}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <div style="font-weight:700; font-size:1.1rem; color:#fff;">${displayName}</div>
                         <div style="display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
                             <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusColor}; margin-right: 6px;"></span>
-                            <span style="font-size: 0.75rem; color: ${statusColor}; font-weight: 600;">${customer.status || '未設定'}</span>
+                            <span style="font-size: 0.75rem; color: ${statusColor}; font-weight: 600;">${statusLabel}</span>
                         </div>
                     </div>
-                    <div style="font-size:0.9rem; color:#e0e0e0; display:grid; gap:6px;">
-                        <div><span style="opacity:0.7;">ブランド:</span> ${brandName}</div>
-                        <div><span style="opacity:0.7;">店舗:</span> ${storeName}</div>
-                        <div><span style="opacity:0.7;">担当者:</span> ${customer.contact_person || '-'}</div>
-                        <div><span style="opacity:0.7;">電話:</span> ${customer.phone || '-'}</div>
-                        <div><span style="opacity:0.7;">住所:</span> ${customer.address || '-'}</div>
-                        <div><span style="opacity:0.7;">メモ:</span> ${customer.memo || '-'}</div>
-                    </div>
+                    ${sectionsHtml}
                 </div>
             `;
         }
 
         if (parts.footer) {
             parts.footer.innerHTML = `
+                <button onclick="startEditCustomerWithMisogi()" style="flex:1; background:var(--accent-color); border:none; color:#fff; padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem; font-weight:600; transition:all 0.2s;">
+                    <i class="fas fa-edit"></i> 編集する
+                </button>
                 <button onclick="renderCustomerOverlayList()" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">
                     一覧に戻る
                 </button>
-                <button onclick="closeCustomerOverlay()" style="width:100px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.7); padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">
+                <button onclick="closeCustomerOverlay()" style="width:80px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.7); padding:12px; border-radius:12px; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">
                     閉じる
                 </button>
             `;
         }
+    }
+
+    function startEditCustomerWithMisogi() {
+        const customer = window.selectedCustomerForEdit;
+        if (!customer) return;
+
+        // Close overlay
+        closeCustomerOverlay();
+
+        // Clear action buttons
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (actionContainer) actionContainer.innerHTML = '';
+
+        // Start conversation with MISOGI about editing
+        const displayName = customer.brand_name && customer.store_name && customer.brand_name !== customer.store_name
+            ? `${customer.brand_name} ${customer.store_name}`
+            : (customer.brand_name || customer.store_name || '顧客');
+
+        setTimeout(() => {
+            appendChatMessage('ai', `📝 **${displayName}** の情報を編集します。
+
+どの項目を変更しますか？`);
+
+            showCustomerEditOptions(customer);
+        }, 300);
+    }
+
+    function showCustomerEditOptions(customer) {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        const categories = [
+            { id: 'basic', label: '基本情報', icon: 'fa-user' },
+            { id: 'address', label: '住所', icon: 'fa-map-marker-alt' },
+            { id: 'contract', label: '契約情報', icon: 'fa-file-contract' },
+            { id: 'store', label: '店舗詳細', icon: 'fa-store' },
+            { id: 'access', label: 'アクセス・鍵', icon: 'fa-key' },
+            { id: 'other', label: 'その他', icon: 'fa-ellipsis-h' }
+        ];
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 350px; margin: 0 auto;">
+                ${categories.map(cat => `
+                    <button onclick="startCategoryEdit('${cat.id}', '${customer.id}')"
+                        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+                        color: #fff; padding: 14px 16px; border-radius: 12px; cursor: pointer;
+                        text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 12px;">
+                        <i class="fas ${cat.icon}" style="width: 20px; color: var(--accent-color);"></i>
+                        <span style="font-weight: 500;">${cat.label}</span>
+                    </button>
+                `).join('')}
+                <button onclick="showJobActions('sales')" style="margin-top: 8px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                    ← キャンセル
+                </button>
+            </div>
+        `;
+    }
+
+    function startCategoryEdit(category, customerId) {
+        const customer = window.selectedCustomerForEdit;
+        if (!customer) return;
+
+        const categoryFields = {
+            basic: ['company_name', 'brand_name', 'store_name', 'contact_person', 'phone', 'email'],
+            address: ['postcode', 'pref', 'city', 'address1', 'address2', 'nearest_station', 'parking'],
+            contract: ['contract_type', 'contract_start_date', 'contract_end_date', 'monthly_fee', 'unit_price', 'payment_terms', 'concierge'],
+            store: ['business_hours', 'holidays', 'seats', 'area_size', 'business_type', 'cleaning_frequency'],
+            access: ['key_handover', 'entry_time'],
+            other: ['referral_source', 'priority', 'notes']
+        };
+
+        const fields = categoryFields[category] || [];
+        const steps = CUSTOMER_WIZARD_STEPS.filter(s => fields.includes(s.id));
+
+        if (steps.length === 0) {
+            appendChatMessage('ai', 'この項目は現在編集できません。');
+            return;
+        }
+
+        // Start edit wizard
+        window.customerEditState = {
+            active: true,
+            customerId: customerId,
+            customer: customer,
+            category: category,
+            steps: steps,
+            currentStep: 0,
+            updates: {}
+        };
+
+        showNextEditStep();
+    }
+
+    function showNextEditStep() {
+        const state = window.customerEditState;
+        if (!state || !state.active) return;
+
+        if (state.currentStep >= state.steps.length) {
+            // All steps done, save
+            saveCustomerEdits();
+            return;
+        }
+
+        const step = state.steps[state.currentStep];
+        const currentValue = state.customer[step.id] || '';
+        const canGoBack = state.currentStep > 0;
+
+        appendChatMessage('ai', `**${step.question}**
+
+現在の値: ${currentValue || '(未設定)'}`);
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        const backButton = canGoBack
+            ? `<button onclick="goBackEditStep()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); padding: 12px; border-radius: 12px; cursor: pointer; font-size: 0.9rem;">
+                <i class="fas fa-arrow-left"></i> 戻る
+            </button>`
+            : '';
+
+        if (step.type === 'single_select' && step.options) {
+            actionContainer.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 350px; margin: 0 auto;">
+                    ${step.options.map(opt => `
+                        <button onclick="submitEditValue('${opt}')"
+                            style="background: ${currentValue === opt ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)'}; 
+                            border: 1px solid ${currentValue === opt ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)'};
+                            color: #fff; padding: 12px 16px; border-radius: 12px; cursor: pointer; text-align: left;">
+                            ${opt}
+                        </button>
+                    `).join('')}
+                    <div style="display: flex; gap: 10px; margin-top: 8px;">
+                        ${backButton}
+                        <button onclick="skipEditStep()" style="flex: 1; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); padding: 12px; border-radius: 12px; cursor: pointer; font-size: 0.9rem;">
+                            変更しない →
+                        </button>
+                    </div>
+                    <button onclick="cancelCustomerEdit()" style="background: transparent; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 0.8rem; margin-top: 4px;">
+                        キャンセル
+                    </button>
+                </div>
+            `;
+        } else {
+            actionContainer.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 350px; margin: 0 auto;">
+                    <input type="text" id="edit-input" value="${currentValue}" placeholder="${step.placeholder || ''}"
+                        style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                        color: #fff; padding: 14px 16px; border-radius: 12px; font-size: 1rem;">
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="submitEditInputValue()" style="flex: 1; background: var(--accent-color); border: none; color: #fff; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 600;">
+                            更新
+                        </button>
+                        <button onclick="skipEditStep()" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px; border-radius: 12px; cursor: pointer;">
+                            変更しない
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        ${backButton}
+                        <button onclick="cancelCustomerEdit()" style="flex: 1; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                            キャンセル
+                        </button>
+                    </div>
+                </div>
+            `;
+            setTimeout(() => document.getElementById('edit-input')?.focus(), 100);
+        }
+    }
+
+    function goBackEditStep() {
+        const state = window.customerEditState;
+        if (!state || state.currentStep <= 0) return;
+
+        // Remove the last update if exists
+        const previousStep = state.steps[state.currentStep - 1];
+        if (previousStep && state.updates[previousStep.id] !== undefined) {
+            delete state.updates[previousStep.id];
+        }
+
+        state.currentStep--;
+        appendChatMessage('user', '← 戻る');
+        showNextEditStep();
+    }
+
+    function submitEditValue(value) {
+        const state = window.customerEditState;
+        if (!state) return;
+
+        const step = state.steps[state.currentStep];
+        state.updates[step.id] = value;
+        appendChatMessage('user', value);
+
+        state.currentStep++;
+        showNextEditStep();
+    }
+
+    function submitEditInputValue() {
+        const input = document.getElementById('edit-input');
+        const value = input?.value?.trim() || '';
+        submitEditValue(value);
+    }
+
+    function skipEditStep() {
+        const state = window.customerEditState;
+        if (!state) return;
+
+        appendChatMessage('user', '(変更なし)');
+        state.currentStep++;
+        showNextEditStep();
+    }
+
+    function cancelCustomerEdit() {
+        window.customerEditState = null;
+        appendChatMessage('ai', '編集をキャンセルしました。');
+        showJobActions('sales');
+    }
+
+    async function saveCustomerEdits() {
+        const state = window.customerEditState;
+        if (!state) return;
+
+        const updates = state.updates;
+        const hasUpdates = Object.keys(updates).length > 0;
+
+        if (!hasUpdates) {
+            appendChatMessage('ai', '変更はありませんでした。');
+            window.customerEditState = null;
+            showJobActions('sales');
+            return;
+        }
+
+        appendChatMessage('ai', '💾 顧客情報を更新中...');
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (actionContainer) actionContainer.innerHTML = '';
+
+        try {
+            const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+            const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
+
+            const response = await fetch(`${API_BASE}/stores/${state.customerId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify({
+                    ...state.customer,
+                    ...updates,
+                    updated_at: new Date().toISOString()
+                })
+            });
+
+            if (response.ok) {
+                const updatedFields = Object.keys(updates).map(k => {
+                    const step = CUSTOMER_WIZARD_STEPS.find(s => s.id === k);
+                    return step ? step.question.replace('を入力してください', '').replace('を選択してください', '') : k;
+                }).join('、');
+
+                appendChatMessage('ai', `✅ 顧客情報を更新しました。
+
+**更新した項目**: ${updatedFields}`);
+            } else {
+                throw new Error('API Error');
+            }
+        } catch (error) {
+            console.error('Update error:', error);
+            appendChatMessage('ai', '❌ 更新に失敗しました。もう一度お試しください。');
+        }
+
+        window.customerEditState = null;
+        setTimeout(() => showJobActions('sales'), 1500);
     }
 
     function closeCustomerOverlay() {
