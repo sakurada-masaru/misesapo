@@ -119,6 +119,13 @@
   <script>
     // 管理画面では共通ヘッダーを持たないため追加スクリプトは不要
   </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 
 </html>
