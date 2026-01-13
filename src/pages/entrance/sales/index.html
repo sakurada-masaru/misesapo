@@ -1896,6 +1896,84 @@
             font-size: 1.1rem;
         }
     }
+
+    /* === Attendance Status Indicator === */
+    .attendance-status-indicator {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 1500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .attendance-status-indicator:hover {
+        background: rgba(0, 0, 0, 0.85);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .attendance-status-indicator .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #6b7280;
+        transition: all 0.3s ease;
+    }
+
+    .attendance-status-indicator.clocked-in .status-dot {
+        background: #10b981;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        animation: pulse-dot 2s infinite;
+    }
+
+    .attendance-status-indicator.on-break .status-dot {
+        background: #f59e0b;
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+    }
+
+    .attendance-status-indicator .status-text {
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+
+    .attendance-status-indicator .status-time {
+        font-size: 0.65rem;
+        opacity: 0.6;
+        margin-left: 4px;
+    }
+
+    @keyframes pulse-dot {
+
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.7;
+            transform: scale(1.1);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .attendance-status-indicator {
+            top: 12px;
+            right: 60px;
+            padding: 6px 10px;
+            font-size: 0.7rem;
+        }
+    }
 </style>
 
 <main id="main" class="admin-dashboard">

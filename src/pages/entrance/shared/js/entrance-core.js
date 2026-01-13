@@ -493,8 +493,498 @@ const EntranceCore = {
     initFadeIn() {
         console.log('[EntranceCore] INITIALIZING FADE-IN');
         document.body.classList.add('fade-in-entrance');
+    },
+
+    // ========================================
+    // Status UI (Attendance + Menu)
+    // ========================================
+
+    initStatusUI() {
+        // Create attendance indicator
+        this.createAttendanceIndicator();
+        // Create menu button
+        this.createMenuButton();
+        // Check attendance status
+        this.checkAndUpdateAttendance();
+    },
+
+    createAttendanceIndicator() {
+        if (document.getElementById('attendance-status-indicator')) return;
+
+        const indicator = document.createElement('div');
+        indicator.id = 'attendance-status-indicator';
+        indicator.className = 'attendance-status-indicator';
+        indicator.innerHTML = `
+            <span class="status-dot"></span>
+            <span class="status-text">未出勤</span>
+        `;
+        indicator.onclick = () => this.toggleAttendanceMenu();
+        document.body.appendChild(indicator);
+    },
+
+    createMenuButton() {
+        if (document.getElementById('entrance-menu-btn')) return;
+
+        const menuBtn = document.createElement('button');
+        menuBtn.id = 'entrance-menu-btn';
+        menuBtn.className = 'entrance-menu-btn';
+        menuBtn.innerHTML = '<i class="fas fa-ellipsis-v"></i>';
+        menuBtn.onclick = () => this.toggleMenuOverlay();
+        document.body.appendChild(menuBtn);
+
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'entrance-menu-overlay';
+        overlay.className = 'entrance-menu-overlay';
+        overlay.innerHTML = `
+            <div class="entrance-menu-container">
+                <div class="entrance-menu-header">
+                    <div class="entrance-menu-tabs">
+                        <button class="entrance-menu-tab active" data-tab="daily-report" onclick="EntranceCore.switchMenuTab('daily-report')">
+                            <i class="fas fa-clipboard-list"></i> 日報
+                        </button>
+                        <button class="entrance-menu-tab" data-tab="todos" onclick="EntranceCore.switchMenuTab('todos')">
+                            <i class="fas fa-tasks"></i> TODO
+                        </button>
+                    </div>
+                    <button class="entrance-menu-close" onclick="EntranceCore.closeMenuOverlay()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="entrance-menu-content">
+                    <div id="menu-tab-daily-report" class="entrance-menu-tab-content active">
+                        <div class="menu-loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>
+                    </div>
+                    <div id="menu-tab-todos" class="entrance-menu-tab-content">
+                        <div class="menu-loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        overlay.onclick = (e) => {
+            if (e.target === overlay) this.closeMenuOverlay();
+        };
+        document.body.appendChild(overlay);
+
+        // Add styles
+        this.injectStatusStyles();
+    },
+
+    injectStatusStyles() {
+        if (document.getElementById('entrance-status-styles')) return;
+
+        const styles = document.createElement('style');
+        styles.id = 'entrance-status-styles';
+        styles.textContent = `
+            /* Attendance Status Indicator */
+            .attendance-status-indicator {
+                position: fixed;
+                top: 16px;
+                right: 60px;
+                z-index: 1500;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                background: rgba(0, 0, 0, 0.7);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 20px;
+                font-size: 0.75rem;
+                color: rgba(255, 255, 255, 0.8);
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            .attendance-status-indicator:hover {
+                background: rgba(0, 0, 0, 0.85);
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+            .attendance-status-indicator .status-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #6b7280;
+                transition: all 0.3s ease;
+            }
+            .attendance-status-indicator.clocked-in .status-dot {
+                background: #10b981;
+                box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+                animation: pulse-dot 2s infinite;
+            }
+            .attendance-status-indicator.on-break .status-dot {
+                background: #f59e0b;
+                box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+            }
+            @keyframes pulse-dot {
+                0%, 100% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.7; transform: scale(1.1); }
+            }
+
+            /* Menu Button */
+            .entrance-menu-btn {
+                position: fixed;
+                top: 16px;
+                right: 16px;
+                z-index: 1500;
+                width: 36px;
+                height: 36px;
+                background: rgba(0, 0, 0, 0.7);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 50%;
+                color: rgba(255, 255, 255, 0.8);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .entrance-menu-btn:hover {
+                background: rgba(0, 0, 0, 0.85);
+                border-color: rgba(255, 255, 255, 0.3);
+                color: #fff;
+            }
+
+            /* Menu Overlay */
+            .entrance-menu-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.85);
+                z-index: 2000;
+                display: none;
+                align-items: center;
+                justify-content: center;
+            }
+            .entrance-menu-overlay.active {
+                display: flex;
+            }
+            .entrance-menu-container {
+                width: 90%;
+                max-width: 500px;
+                max-height: 80vh;
+                background: #1a1a2e;
+                border-radius: 16px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            .entrance-menu-header {
+                display: flex;
+                align-items: center;
+                padding: 12px 16px;
+                background: rgba(0, 0, 0, 0.3);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            .entrance-menu-tabs {
+                display: flex;
+                gap: 8px;
+                flex: 1;
+            }
+            .entrance-menu-tab {
+                padding: 8px 16px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                color: #888;
+                cursor: pointer;
+                font-size: 0.85rem;
+                transition: all 0.2s;
+            }
+            .entrance-menu-tab:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: #fff;
+            }
+            .entrance-menu-tab.active {
+                background: var(--accent-color, #3b82f6);
+                border-color: var(--accent-color, #3b82f6);
+                color: #fff;
+            }
+            .entrance-menu-close {
+                background: none;
+                border: none;
+                color: #888;
+                font-size: 1.2rem;
+                cursor: pointer;
+                padding: 8px;
+            }
+            .entrance-menu-close:hover {
+                color: #fff;
+            }
+            .entrance-menu-content {
+                flex: 1;
+                overflow-y: auto;
+                padding: 16px;
+            }
+            .entrance-menu-tab-content {
+                display: none;
+            }
+            .entrance-menu-tab-content.active {
+                display: block;
+            }
+            .menu-loading {
+                text-align: center;
+                color: rgba(255, 255, 255, 0.5);
+                padding: 40px;
+            }
+            .menu-item {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 14px;
+                margin-bottom: 10px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .menu-item:hover {
+                background: rgba(255, 255, 255, 0.1);
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+            .menu-item-title {
+                font-weight: 600;
+                color: #fff;
+                margin-bottom: 4px;
+            }
+            .menu-item-meta {
+                font-size: 0.75rem;
+                color: rgba(255, 255, 255, 0.5);
+            }
+            .todo-checkbox {
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                margin-right: 12px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+            }
+            .todo-checkbox.completed {
+                background: #10b981;
+                border-color: #10b981;
+            }
+            .todo-item {
+                display: flex;
+                align-items: center;
+            }
+            .todo-item.completed .menu-item-title {
+                text-decoration: line-through;
+                opacity: 0.5;
+            }
+            .empty-state {
+                text-align: center;
+                color: rgba(255, 255, 255, 0.4);
+                padding: 40px 20px;
+            }
+            .empty-state i {
+                font-size: 2rem;
+                margin-bottom: 12px;
+                opacity: 0.3;
+            }
+
+            @media (max-width: 768px) {
+                .attendance-status-indicator {
+                    top: 12px;
+                    right: 56px;
+                    padding: 6px 10px;
+                    font-size: 0.7rem;
+                }
+                .entrance-menu-btn {
+                    top: 12px;
+                    right: 12px;
+                    width: 32px;
+                    height: 32px;
+                }
+            }
+        `;
+        document.head.appendChild(styles);
+    },
+
+    async checkAndUpdateAttendance() {
+        const user = this.getUser();
+        const token = this.getToken();
+        if (!user.id || !token) return;
+
+        try {
+            const response = await fetch(`${this.API_BASE}/attendance?staff_id=${user.id || user.sub}&limit=1`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const records = Array.isArray(data) ? data : (data.attendance || data.items || []);
+                const latest = records[0];
+
+                if (latest && latest.clock_in && !latest.clock_out) {
+                    this.updateAttendanceIndicator('clocked-in', latest.clock_in);
+                    window.currentAttendanceRecord = latest;
+                } else {
+                    this.updateAttendanceIndicator('not-clocked');
+                }
+            }
+        } catch (e) {
+            console.error('Attendance check failed:', e);
+        }
+    },
+
+    updateAttendanceIndicator(status, clockInTime) {
+        const indicator = document.getElementById('attendance-status-indicator');
+        if (!indicator) return;
+
+        indicator.classList.remove('clocked-in', 'on-break');
+
+        if (status === 'clocked-in') {
+            indicator.classList.add('clocked-in');
+            const time = clockInTime ? new Date(clockInTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+            indicator.querySelector('.status-text').innerHTML = `出勤中${time ? `<span class="status-time">${time}〜</span>` : ''}`;
+        } else if (status === 'on-break') {
+            indicator.classList.add('on-break');
+            indicator.querySelector('.status-text').textContent = '休憩中';
+        } else {
+            indicator.querySelector('.status-text').textContent = '未出勤';
+        }
+    },
+
+    toggleAttendanceMenu() {
+        // For now, just show a simple info
+        alert('出勤管理機能はMISOGIに話しかけてください。');
+    },
+
+    toggleMenuOverlay() {
+        const overlay = document.getElementById('entrance-menu-overlay');
+        if (overlay) {
+            overlay.classList.add('active');
+            this.loadDailyReports();
+            this.loadTodos();
+        }
+    },
+
+    closeMenuOverlay() {
+        const overlay = document.getElementById('entrance-menu-overlay');
+        if (overlay) overlay.classList.remove('active');
+    },
+
+    switchMenuTab(tab) {
+        document.querySelectorAll('.entrance-menu-tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.tab === tab);
+        });
+        document.querySelectorAll('.entrance-menu-tab-content').forEach(c => {
+            c.classList.toggle('active', c.id === `menu-tab-${tab}`);
+        });
+    },
+
+    async loadDailyReports() {
+        const container = document.getElementById('menu-tab-daily-report');
+        if (!container) return;
+
+        const user = this.getUser();
+        const token = this.getToken();
+
+        try {
+            const response = await fetch(`${this.API_BASE}/daily-reports?staff_id=${user.id || user.sub}&limit=10`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const reports = Array.isArray(data) ? data : (data.reports || data.items || []);
+
+                if (reports.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard-list"></i>
+                            <div>日報がありません</div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = reports.map(r => `
+                        <div class="menu-item" onclick="window.open('/admin/daily-reports/${r.id}', '_blank')">
+                            <div class="menu-item-title">${r.date || r.report_date || '日付不明'}</div>
+                            <div class="menu-item-meta">${r.summary || r.content?.substring(0, 50) || '内容なし'}...</div>
+                        </div>
+                    `).join('');
+                }
+            } else {
+                container.innerHTML = '<div class="empty-state">読み込みに失敗しました</div>';
+            }
+        } catch (e) {
+            console.error('Failed to load daily reports:', e);
+            container.innerHTML = '<div class="empty-state">読み込みに失敗しました</div>';
+        }
+    },
+
+    async loadTodos() {
+        const container = document.getElementById('menu-tab-todos');
+        if (!container) return;
+
+        const user = this.getUser();
+        const token = this.getToken();
+
+        try {
+            const response = await fetch(`${this.API_BASE}/todos?staff_id=${user.id || user.sub}&limit=20`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const todos = Array.isArray(data) ? data : (data.todos || data.items || []);
+
+                if (todos.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-tasks"></i>
+                            <div>TODOがありません</div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = todos.map(t => `
+                        <div class="menu-item todo-item ${t.completed || t.status === 'completed' ? 'completed' : ''}" onclick="EntranceCore.toggleTodo('${t.id}')">
+                            <div class="todo-checkbox ${t.completed || t.status === 'completed' ? 'completed' : ''}">
+                                ${t.completed || t.status === 'completed' ? '<i class="fas fa-check" style="color:#fff;font-size:0.7rem;"></i>' : ''}
+                            </div>
+                            <div>
+                                <div class="menu-item-title">${t.title || t.content || 'タイトルなし'}</div>
+                                <div class="menu-item-meta">${t.due_date ? `期限: ${t.due_date}` : ''}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } else {
+                container.innerHTML = '<div class="empty-state">読み込みに失敗しました</div>';
+            }
+        } catch (e) {
+            console.error('Failed to load todos:', e);
+            container.innerHTML = '<div class="empty-state">読み込みに失敗しました</div>';
+        }
+    },
+
+    async toggleTodo(todoId) {
+        const token = this.getToken();
+        try {
+            await fetch(`${this.API_BASE}/todos/${todoId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ completed: true })
+            });
+            this.loadTodos();
+        } catch (e) {
+            console.error('Failed to toggle todo:', e);
+        }
     }
 };
 
 // Export for global access
 window.EntranceCore = EntranceCore;
+
+// Auto-initialize status UI when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (window.EntranceCore) {
+            window.EntranceCore.initStatusUI();
+        }
+    }, 500);
+});
