@@ -44,6 +44,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/header.css">
     <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
+
     <style>
         * {
             margin: 0;
@@ -2902,13 +2903,44 @@
             border: 1px solid rgba(22, 39, 53, 0.08);
             padding: clamp(1.6rem, 2.4vw, 3.2rem);
             box-shadow: 0 15px 30px rgba(15, 15, 15, 0.05);
+            font-size: 16px;
+        }
+
+        .area-content-wrapper {
+            display: block;
+        }
+
+        @media (min-width: 768px) {
+            .area-content-wrapper {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 2rem;
+            }
+        }
+
+        .area_text_box {
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .area_image_box {
+            flex: 0 0 auto;
+        }
+
+        .area_image_box img {
+            width: 350px;
+            max-width: 35350px;
+            height: auto;
+            border-radius: 12px;
+            margin: auto;
+            ;
         }
 
         .area-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 0.8rem;
-            margin-top: 1.2rem;
         }
 
         .area-tag {
@@ -2919,12 +2951,10 @@
             background: rgba(255, 103, 156, 0.12);
             color: #FF679C;
             font-weight: 600;
-            font-size: 1.2rem;
         }
 
         .area-description {
             margin-top: 1.2rem;
-            font-size: 1.3rem;
             line-height: 1.8;
             color: #555;
         }
@@ -3335,8 +3365,8 @@
             </div>
             <!-- マスク画像 -->
             <div class="hero-mask">
-                <img src="/images-admin/mask01.png" alt="" class="hero-mask-image"
-                    data-desktop-src="/images-admin/mask01.png" data-sp-src="/images-admin/mask-sp.png">
+                <img src="/images/mask01.svg" alt="" class="hero-mask-image" data-desktop-src="/images/mask01.svg"
+                    data-sp-src="/images-admin/mask-sp.png">
             </div>
 
         </div>
@@ -3415,9 +3445,9 @@
     <!-- イベント・キャンペーン -->
     <section id="use" class="service-sections use-sections">
         <div class="service-sections-header">
-            <p class="section-tag-label">EVENT/CAMPAIGN
+            <p class="section-tag-label">EVENT
             </p>
-            <h2 class="service-sections-title">イベント/キャンペーン</h2>
+            <h2 class="service-sections-title">イベント</h2>
         </div>
         <div class="event-container">
             <a href="/event/2026_yakiniku.html"><img src="/images/2026_yakiniku.png" alt="2026年焼肉ビジネスフェア出店！"></a>
@@ -3585,59 +3615,6 @@
     </section>
 
 
-    <!-- 導入事例セクション -->
-    <section id="case-study" class="section-box case-study-section">
-        <div class="wrapper">
-            <div class="service-sections-header">
-                <p class="section-tag-label">Case Study</p>
-                <h2 class="service-sections-title">導入事例</h2>
-            </div>
-            <div class="case-study-grid">
-                <article class="case-card">
-                    <div class="case-meta">
-                        <span>飲食チェーン</span>
-                        <span>月次契約</span>
-                    </div>
-                    <h3>全国 20 店舗の厨房衛生を一括管理</h3>
-                    <p>グリストラップ／ダクト清掃／フロア洗浄をすべて夜間帯で実施し、担当者の残業をゼロに。レポート連携で本部確認の手間も削減しました。</p>
-                    <ul class="case-results">
-                        <li class="case-stat">清掃工数 -35%</li>
-                        <li class="case-stat">残業時間 -28h / 月</li>
-                        <li class="case-stat">本部承認フロー 1/2 に短縮</li>
-                    </ul>
-                    <a class="case-link" href="/lp#case-study">詳細を見る</a>
-                </article>
-                <article class="case-card">
-                    <div class="case-meta">
-                        <span>新規開店</span>
-                        <span>スポット + 定期</span>
-                    </div>
-                    <h3>開店前クリーニングと定期清掃を一括依頼</h3>
-                    <p>オープン前の厨房設備リセットと、開店後の定期巡回を同じチームが担当。設備トラブル時も即日で応援スタッフを手配しました。</p>
-                    <ul class="case-results">
-                        <li class="case-stat">開店準備コスト -18%</li>
-                        <li class="case-stat">設備トラブル即応率 100%</li>
-                        <li class="case-stat">スタッフ満足度 +2.1pt</li>
-                    </ul>
-                    <a class="case-link" href="/teikiseisou">定期清掃を見る</a>
-                </article>
-                <article class="case-card">
-                    <div class="case-meta">
-                        <span>複合施設</span>
-                        <span>DXサポート</span>
-                    </div>
-                    <h3>館内クリーニングを DX 管理に移行</h3>
-                    <p>マイページとレポートIDを複数拠点に発行し、写真付き作業ログを自動共有。契約先との情報格差を解消し、監査対応も容易になりました。</p>
-                    <ul class="case-results">
-                        <li class="case-stat">レポート確認時間 -40%</li>
-                        <li class="case-stat">是正依頼の未読 0 件</li>
-                        <li class="case-stat">年間コスト -12%</li>
-                    </ul>
-                    <a class="case-link" href="/customers">導入店舗一覧</a>
-                </article>
-            </div>
-        </div>
-    </section>
 
     <!-- 対応エリアセクション -->
     <section id="area" class="section-box area-coverage-section">
@@ -3647,24 +3624,24 @@
                 <h2 class="service-sections-title">対応エリア＆サポート拠点</h2>
             </div>
             <div class="area-coverage-content">
-                <div class="area-map">
-                    <img src="/images-admin/misesapoteiki.png" alt="対応エリアマップ">
-                </div>
                 <div class="area-list">
-                    <h3>首都圏を中心に全国主要都市へ展開</h3>
-                    <p class="area-description">東京 23 区・神奈川・千葉・埼玉の店舗清掃に即応。関西・東海・北海道でもパートナーネットワークを活用し、現地スタッフによる定期巡回が可能です。
-                    </p>
-                    <div class="area-tags">
-                        <span class="area-tag">東京</span>
-                        <span class="area-tag">神奈川</span>
-                        <span class="area-tag">千葉</span>
-                        <span class="area-tag">埼玉</span>
-                        <span class="area-tag">大阪</span>
-                        <span class="area-tag">名古屋</span>
-                        <span class="area-tag">札幌</span>
-                        <span class="area-tag">福岡</span>
+                    <h3>首都圏を中心に展開中</h3>
+                    <div class="area-content-wrapper">
+                        <div class="area_text_box">
+                            <p class="area-description">東京 23 区・神奈川・千葉・埼玉の店舗清掃に即応。パートナーネットワークを活用し、現地スタッフによる定期巡回が可能です。
+                            </p>
+                            <div class="area-tags">
+                                <span class="area-tag">東京</span>
+                                <span class="area-tag">神奈川</span>
+                                <span class="area-tag">千葉</span>
+                                <span class="area-tag">埼玉</span>
+                            </div>
+                            <p class="area-description">対応エリア拡大中！お問い合わせください。</p>
+                        </div>
+                        <div class="area_image_box">
+                            <a href="/area-info.html"><img src="/images/area-info_kv.png" alt="対応エリア"></a>
+                        </div>
                     </div>
-                    <p class="area-description">エリア外の案件もお気軽にご相談ください。全国対応するパートナー網と、AWS 上の運用基盤で同品質のサービスを提供します。</p>
                 </div>
             </div>
         </div>
@@ -3681,6 +3658,12 @@
                 <a href="nighttime.html"><img src="/images/nighttime_kv_sp.webp"></a>
                 <a href="quotation.html"><img src="/images/quotation_kv_sp.webp"></a>
                 <a href="chuo-ward.html"><img src="/images/chuo-word_kv_sp.webp"></a>
+                <a href="cleaning-cost.html"><img src="/images/cleaning-cost_kv_sp.png"></a>
+                <a href="regular-cleaning.html"><img src="/images/regular-cleaning_kv_sp.webp"></a>
+                <a href="service-plan.html"><img src="/images/service-plan_kv_sp.png"></a>
+                <a href="subsidy.html"><img src="/images/subsidy_kv_sp.webp"></a>
+                <a href="grease-trap-cleaning-guide.html"><img src="/images/grease-trap-cleaning-guide_kv_sp.png"></a>
+
             </div>
         </div>
     </section>

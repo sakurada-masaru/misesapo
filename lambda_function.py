@@ -795,6 +795,7 @@ DAILY_REPORTS_TABLE = dynamodb.Table('daily-reports')
 TODOS_TABLE = dynamodb.Table('todos')
 REIMBURSEMENTS_TABLE = dynamodb.Table('misesapo-reimbursements')
 REPORT_IMAGES_TABLE = dynamodb.Table('report-images')
+STORE_AUDITS_TABLE = dynamodb.Table('misesapo-store-audits')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -1369,6 +1370,29 @@ def lambda_handler(event, context):
             # Cognitoユーザー作成（管理者のみ）
             if method == 'POST':
                 return create_cognito_user(event, headers)
+        elif normalized_path == '/store-audits':
+            # 店舗査定一覧の取得・作成
+            if method == 'GET':
+                return get_store_audits(event, headers)
+            elif method == 'POST':
+                return create_store_audit(event, headers)
+            else:
+                return {
+                    'statusCode': 405,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                }
+        elif normalized_path.startswith('/store-audits/'):
+            # 店舗査定詳細の取得
+            audit_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_store_audit_detail(audit_id, headers)
+            else:
+                return {
+                    'statusCode': 405,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                }
         else:
             # デバッグ: パスが一致しなかった場合
             print(f"DEBUG: Path not matched. normalized_path={normalized_path}, original_path={path}")
@@ -10694,3 +10718,185 @@ def normalize_yes_no(text):
     if 'あり' in text:
         return 'あり'
     return text
+
+
+# ===== 店舗査定（Store Audit）関連の関数 =====
+
+def get_store_audits(event, headers):
+    """
+    店舗査定一覧を取得
+    クエリパラメータ:
+      - store_id: 特定店舗の査定のみ取得
+      - type: 'before' または 'after'
+      - limit: 取得件数の上限
+    """
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        store_id = query_params.get('store_id')
+        audit_type = query_params.get('type')
+        limit = int(query_params.get('limit', 100))
+
+        # フィルター条件を構築
+        filter_expression = None
+        expression_attribute_values = {}
+
+        if store_id:
+            filter_expression = Attr('store_id').eq(store_id)
+            expression_attribute_values[':store_id'] = store_id
+
+        if audit_type:
+            type_filter = Attr('type').eq(audit_type)
+            if filter_expression:
+                filter_expression = filter_expression & type_filter
+            else:
+                filter_expression = type_filter
+            expression_attribute_values[':type'] = audit_type
+
+        # スキャン実行
+        scan_params = {'Limit': limit}
+        if filter_expression:
+            scan_params['FilterExpression'] = filter_expression
+
+        response = STORE_AUDITS_TABLE.scan(**scan_params)
+        items = response.get('Items', [])
+
+        # Decimalを変換
+        items = json.loads(json.dumps(items, default=str))
+
+        # 日付でソート（新しい順）
+        items.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'audits': items,
+                'count': len(items)
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error getting store audits: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
+        }
+
+
+def create_store_audit(event, headers):
+    """
+    店舗査定を作成
+    リクエストボディ:
+      - store_id: 店舗ID
+      - store_name: 店舗名
+      - type: 'before' または 'after'
+      - total_score: 総合スコア (0-100)
+      - total_rank: 総合ランク (A/B/C)
+      - location_results: 箇所別の査定結果リスト
+      - auditor_id: 査定者ID
+      - auditor_name: 査定者名
+    """
+    try:
+        body = json.loads(event.get('body', '{}'))
+
+        # IDを生成（AUD-YYYYMMDD-NNN形式）
+        now = datetime.utcnow()
+        date_prefix = now.strftime('%Y%m%d')
+        
+        # その日の最大連番を取得
+        prefix = f"AUD-{date_prefix}-"
+        try:
+            response = STORE_AUDITS_TABLE.scan(
+                FilterExpression=Attr('id').begins_with(prefix),
+                ProjectionExpression='id'
+            )
+            max_seq = 0
+            for item in response.get('Items', []):
+                audit_id = item.get('id', '')
+                if audit_id.startswith(prefix):
+                    seq_str = audit_id[len(prefix):]
+                    try:
+                        seq = int(seq_str)
+                        if seq > max_seq:
+                            max_seq = seq
+                    except:
+                        pass
+            next_seq = max_seq + 1
+        except:
+            next_seq = 1
+
+        audit_id = f"AUD-{date_prefix}-{str(next_seq).zfill(3)}"
+
+        # 査定データを構築
+        audit_item = {
+            'id': audit_id,
+            'store_id': body.get('store_id', ''),
+            'store_name': body.get('store_name', ''),
+            'type': body.get('type', 'before'),
+            'total_score': body.get('total_score', 0),
+            'total_rank': body.get('total_rank', 'B'),
+            'location_results': body.get('location_results', []),
+            'auditor_id': body.get('auditor_id', ''),
+            'auditor_name': body.get('auditor_name', ''),
+            'cycle': body.get('cycle', 1),
+            'created_at': now.isoformat() + 'Z',
+            'updated_at': now.isoformat() + 'Z'
+        }
+
+        # Decimalに変換（DynamoDB対応）
+        audit_item = json.loads(json.dumps(audit_item), parse_float=Decimal)
+
+        # DynamoDBに保存
+        STORE_AUDITS_TABLE.put_item(Item=audit_item)
+
+        return {
+            'statusCode': 201,
+            'headers': headers,
+            'body': json.dumps({
+                'message': '査定データを保存しました',
+                'audit_id': audit_id,
+                'audit': json.loads(json.dumps(audit_item, default=str))
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error creating store audit: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
+        }
+
+
+def get_store_audit_detail(audit_id, headers):
+    """
+    店舗査定詳細を取得
+    """
+    try:
+        response = STORE_AUDITS_TABLE.get_item(Key={'id': audit_id})
+        item = response.get('Item')
+
+        if not item:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': '査定データが見つかりません'}, ensure_ascii=False)
+            }
+
+        # Decimalを変換
+        item = json.loads(json.dumps(item, default=str))
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'audit': item}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error getting store audit detail: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
+        }
+
