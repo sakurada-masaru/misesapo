@@ -912,6 +912,10 @@ def lambda_handler(event, context):
             # AIによるデータ処理（要約・生成・分析）
             if method == 'POST':
                 return handle_ai_process(event, headers)
+        elif normalized_path == '/chat':
+            # 汎用チャットエンドポイント（画像解析対応）
+            if method == 'POST':
+                return handle_chat(event, headers)
         elif normalized_path == '/extract/store-info':
             # URLや店名から店舗情報を抽出
             if method == 'POST':
@@ -10326,6 +10330,82 @@ def call_gemini_api(prompt, system_instruction=None, media=None):
         print(f"Gemini Call Failed: {str(e)}")
         raise e
 
+def handle_chat(event, headers):
+    """
+    汎用チャットエンドポイント
+    営業モードの店舗査定（AIスコアリング）などで使用
+    
+    リクエストボディ:
+    {
+        "message": "ユーザーメッセージ",
+        "image": "base64エンコードされた画像データ（オプション）",
+        "system_prompt": "システムプロンプト（オプション）",
+        "response_format": "json" or "text"
+    }
+    """
+    try:
+        body = json.loads(event.get('body') or '{}')
+        message = body.get('message', '')
+        image_data = body.get('image')  # Base64 encoded
+        system_prompt = body.get('system_prompt', '')
+        response_format = body.get('response_format', 'text')
+        
+        if not message:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'message is required'}, ensure_ascii=False)
+            }
+        
+        # メディアデータの準備
+        media = None
+        if image_data:
+            # Base64データの先頭にdata:image/...が含まれている場合は除去
+            if ',' in image_data:
+                image_data = image_data.split(',')[1]
+            media = {
+                'mime_type': 'image/jpeg',
+                'data': image_data
+            }
+        
+        # システムプロンプトの構築
+        full_system_prompt = system_prompt if system_prompt else """あなたはMISESAPO AI System『MISOGI』です。
+ユーザーからの質問やリクエストに対して、的確かつ丁寧に応答してください。
+画像が添付されている場合は、その画像を詳細に分析してください。"""
+        
+        # JSON形式での応答が要求されている場合
+        if response_format == 'json':
+            if 'json' not in full_system_prompt.lower():
+                full_system_prompt += "\n\n必ずJSON形式で応答してください。"
+        
+        # Gemini APIを呼び出し
+        result = call_gemini_api(message, full_system_prompt, media)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'response': result
+            }, ensure_ascii=False)
+        }
+        
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"ERROR in handle_chat: {str(e)}")
+        print(f"Traceback: {error_detail}")
+        
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'CHAT_FAILED',
+                'message': str(e),
+                'debug': error_detail[:300]
+            }, ensure_ascii=False)
+        }
+
 def handle_ai_process(event, headers):
     """
     AI処理のエンドポイント
@@ -10574,7 +10654,7 @@ def fetch_html_text(url):
         return resp.read().decode('utf-8', errors='ignore')
 
 def extract_store_info_from_html(html_text):
-    jsonld_blocks = re.findall(r'<script\\s+type="application/ld\\+json"\\s*>(.*?)</script>', html_text, re.S)
+    jsonld_blocks = re.findall(r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>', html_text, re.S | re.I)
     parsed_blocks = []
     for block in jsonld_blocks:
         block = block.strip()
@@ -10633,11 +10713,12 @@ def extract_store_info_from_html(html_text):
     }
 
 def fetch_jina_text(url):
-    target = re.sub(r'^https?://', '', url)
-    jina_url = f"https://r.jina.ai/http://{target}"
+    # Jina AIのReader APIを使用してWebページをMarkdown形式で取得
+    # URLをそのまま渡す（https:// または http://）
+    jina_url = f"https://r.jina.ai/{url}"
     try:
         req = urllib.request.Request(jina_url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=20) as resp:
             return resp.read().decode('utf-8', errors='ignore')
     except Exception as e:
         print(f"Jina fetch failed: {str(e)}")
