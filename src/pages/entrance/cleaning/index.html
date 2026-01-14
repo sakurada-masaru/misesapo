@@ -4050,8 +4050,10 @@ ${context}
 
             appendChatMessage('ai', `🔴 **LIVE モード開始**
 
-スケジュールから作業を選択してください。`);
-            fetchTodaySchedules();
+清掃する現場を選択してください。`);
+
+            // Show customer search overlay directly for LIVE mode
+            showLiveModeCustomerSelection();
         } else {
             // AFTER mode - remove LIVE styling
             visualizers.forEach(v => v.classList.remove('live-mode'));
@@ -4065,6 +4067,97 @@ ${context}
 スケジュール登録がなくても入力できます。`);
             fetchTodaySchedulesWithManualOption();
         }
+    }
+
+    function showLiveModeCustomerSelection() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 350px; margin: 0 auto;">
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="color: #ef4444; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px;">🔴 LIVE モード</div>
+                    <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">清掃する現場を選択してください</div>
+                </div>
+                <button onclick="showCustomerSearchOverlay()"
+                    style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+                    padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
+                    cursor: pointer; min-height: 56px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <i class="fas fa-search"></i> 顧客を検索
+                </button>
+                <button onclick="fetchTodaySchedulesForLive()"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 0.9rem;">
+                    📅 本日のスケジュールから選択
+                </button>
+                <button onclick="cancelLiveMode()"
+                    style="background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                    キャンセル
+                </button>
+            </div>
+        `;
+    }
+
+    function fetchTodaySchedulesForLive() {
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+        const today = new Date().toISOString().split('T')[0];
+
+        appendChatMessage('ai', 'スケジュールを取得中...');
+
+        fetch(`${API_BASE}/schedules?date=${today}`)
+            .then(response => response.ok ? response.json() : { schedules: [] })
+            .then(data => {
+                const schedules = Array.isArray(data) ? data : (data.schedules || data.items || []);
+                showScheduleSelectionForLive(schedules);
+            })
+            .catch(error => {
+                console.error('Schedule fetch error:', error);
+                appendChatMessage('ai', 'スケジュールの取得に失敗しました。顧客検索をご利用ください。');
+                showLiveModeCustomerSelection();
+            });
+    }
+
+    function showScheduleSelectionForLive(schedules) {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        if (schedules.length === 0) {
+            appendChatMessage('ai', '本日のスケジュールはありません。顧客を検索してください。');
+            showLiveModeCustomerSelection();
+            return;
+        }
+
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 320px; margin: 0 auto;';
+
+        schedules.slice(0, 5).forEach(schedule => {
+            const storeName = schedule.store_name || '店舗名不明';
+            const time = schedule.time_slot || schedule.start_time || '';
+            const buttonHtml = `
+                <button class="schedule-btn" onclick="selectScheduleForReport('${schedule.id}', '${storeName.replace(/'/g, "\\'")}', '${schedule.store_id || ''}')"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
+                    color: #fff; padding: 12px 16px; border-radius: 12px; cursor: pointer;
+                    text-align: left; transition: all 0.2s;">
+                    <div style="font-weight: 600;">${storeName}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.7;">${time}</div>
+                </button>
+            `;
+            btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
+        });
+
+        // Add customer search option
+        btnDiv.insertAdjacentHTML('beforeend', `
+            <button onclick="showCustomerSearchOverlay()" 
+                style="background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4);
+                color: #10b981; padding: 12px 16px; border-radius: 12px; cursor: pointer;
+                font-size: 0.9rem; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fas fa-search"></i> 他の顧客を検索
+            </button>
+        `);
+
+        actionContainer.innerHTML = '';
+        actionContainer.appendChild(btnDiv);
+        appendChatMessage('ai', '本日のスケジュールから選択、または顧客を検索してください：');
     }
 
     function fetchTodaySchedulesWithManualOption() {
