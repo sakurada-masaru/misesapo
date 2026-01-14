@@ -587,7 +587,7 @@ const EntranceCore = {
         const menuBtn = document.createElement('button');
         menuBtn.id = 'entrance-menu-btn';
         menuBtn.className = 'entrance-menu-btn';
-        menuBtn.innerHTML = '<i class="fas fa-ellipsis-v"></i>';
+        menuBtn.innerHTML = '<i class="fas fa-bars"></i>';
         menuBtn.onclick = () => this.toggleMenuOverlay();
         document.body.appendChild(menuBtn);
 
