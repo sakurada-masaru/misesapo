@@ -5146,38 +5146,69 @@ ${context}
         input.value = '';
     }
 
-    // ========================================
     // Review & Submit
     // ========================================
 
-    // AI Scoring Prompt for Cleaning Quality Assessment
-    const CLEANING_SCORING_PROMPT = `あなたは清掃品質管理AI「MISOGI」です。清掃後の写真を解析し、客観的な品質評価を行ってください。
+    // Enhanced AI Scoring Prompt for Professional Cleaning Quality Assessment
+    const CLEANING_SCORING_PROMPT = `あなたはプロフェッショナル清掃品質管理AI「MISOGI」です。
+現場写真を厳格かつ客観的に解析し、清掃品質を徹底的に評価してください。
 
-## 評価基準（100点満点からの減点方式）
+## 🎯 評価の目的
+お客様に「プロの仕事」と感動していただける品質を担保すること。
+厳しい評価こそが品質向上につながります。妥協は許されません。
 
-### 基本評価項目
-- **汚れの残存** (-5〜-30点): 目視で確認できる汚れが残っている
-- **拭き残し・水垢** (-5〜-15点): 拭き跡や水垢が見える
-- **整理整頓** (-5〜-10点): 物の配置が乱れている
-- **光沢・清潔感** (-5〜-15点): 表面に輝きがない、くすんでいる
+## 📊 評価基準（100点満点からの減点方式）
 
-### ランク基準
-- **A ランク (85-100点)**: 高品質な仕上がり、プロフェッショナルな清掃
-- **B ランク (60-84点)**: 標準的な清掃、一部改善の余地あり
-- **C ランク (0-59点)**: 改善が必要、やり直しを推奨
+### 1. 汚れ・ゴミの除去 (-0〜-35点)
+- 床のゴミ、埃、髪の毛が残っている (-5〜-15点)
+- 壁・窓・ガラスに汚れ・指紋が残っている (-5〜-10点)
+- コーナー・隅に汚れが蓄積している (-5〜-10点)
 
-## 出力フォーマット (JSON)
+### 2. 拭き上げ品質 (-0〜-25点)
+- 拭きムラ・拭き残しが見える (-5〜-15点)
+- 水垢・乾燥跡が残っている (-5〜-10点)
+
+### 3. 光沢・ツヤ (-0〜-15点)
+- 床・鏡・金属部分に十分な光沢がない (-5〜-10点)
+- くすみ・曇りが見られる (-3〜-5点)
+
+### 4. 整理整頓 (-0〜-10点)
+- 物の配置が乱れている (-3〜-5点)
+- 清掃用具の片付け忘れ (-3〜-5点)
+
+### 5. 細部の仕上げ (-0〜-15点)
+- スイッチ・ドアノブ等の細部が拭かれていない (-5〜-10点)
+- 見落としやすい場所（棚の上、機器の裏など）に埃 (-3〜-5点)
+
+## 🏆 ランク基準（厳格版）
+- **S ランク (95-100点)**: 完璧。ホテル・病院レベルの仕上がり
+- **A ランク (85-94点)**: 優秀。プロフェッショナルな清掃
+- **B ランク (70-84点)**: 合格。標準的だが改善の余地あり
+- **C ランク (50-69点)**: 要改善。一部やり直しを推奨
+- **D ランク (0-49点)**: 不合格。全面的なやり直しが必要
+
+## 📋 出力フォーマット (JSON)
 {
   "score": 数値(0-100),
-  "rank": "A" または "B" または "C",
-  "overall_quality": "総合評価コメント（短く）",
+  "rank": "S" または "A" または "B" または "C" または "D",
+  "overall_quality": "総合評価コメント（具体的に）",
+  "improvement_rate": "作業前からの改善度（高/中/低）※比較画像がある場合",
   "deductions": [
-    { "item": "減点項目", "points": 減点数, "reason": "理由" }
+    { "category": "評価カテゴリ", "item": "具体的な減点項目", "points": 減点数, "location": "問題箇所", "severity": "重度/中度/軽度" }
   ],
+  "critical_issues": ["重大な問題点（あれば）"],
   "strengths": ["良かった点1", "良かった点2"],
-  "improvements": ["改善点1", "改善点2"],
-  "recommendation": "次回への推奨事項"
+  "improvements": ["改善すべき点1", "改善すべき点2"],
+  "specific_advice": "次回この現場を清掃する際の具体的アドバイス",
+  "redo_recommended": true/false,
+  "redo_areas": ["やり直しが必要な箇所（あれば）"]
 }
+
+## ⚠️ 重要な注意点
+1. 画像が不鮮明な場合は、その旨を明記し、撮り直しを推奨してください
+2. 「まあまあ」「普通」という曖昧な評価は避け、具体的に指摘してください
+3. 甘い評価は品質低下を招きます。厳格に評価してください
+4. スコアが70点未満の場合は redo_recommended を true にしてください
 
 必ずJSON形式のみで回答してください。`;
 
@@ -5186,27 +5217,31 @@ ${context}
         const minutes = Math.floor(elapsed / 60);
         const storeName = reportWizardState.store?.name || '店舗';
 
-        appendChatMessage('ai', `🤖 **AIスコアリング中...**
+        appendChatMessage('ai', `🤖 **AI品質チェック実行中...**
 
-作業後の写真を解析しています。`);
+作業前・作業後の写真を比較解析しています。
+厳格な品質基準で評価します。`);
 
         // Show loading UI
         const actionContainer = document.getElementById('action-buttons-container');
         if (actionContainer) {
             actionContainer.innerHTML = `
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 40px;">
-                    <div style="width: 50px; height: 50px; border: 3px solid #10b981; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                    <div style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">AI解析中...</div>
+                    <div style="width: 60px; height: 60px; border: 4px solid #ef4444; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                    <div style="color: #ef4444; font-size: 1rem; font-weight: 600;">AI品質チェック中...</div>
+                    <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">厳格な基準で評価しています</div>
                 </div>
                 <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
             `;
         }
 
         try {
-            // Analyze after photos with AI
+            // Analyze with both before and after photos for comparison
             let aiScore = null;
             if (liveWorkState.afterPhotos.length > 0) {
-                aiScore = await analyzeCleaningWithAI(liveWorkState.afterPhotos[0]);
+                const beforePhoto = liveWorkState.beforePhotos.length > 0 ? liveWorkState.beforePhotos[0] : null;
+                const afterPhoto = liveWorkState.afterPhotos[0];
+                aiScore = await analyzeCleaningWithAI(afterPhoto, beforePhoto);
             }
 
             // Store AI result
@@ -5217,24 +5252,43 @@ ${context}
                 displayAIScoreResult(aiScore, minutes);
             } else {
                 // Fallback if AI fails
-                appendChatMessage('ai', `📋 **レポート確認**
+                appendChatMessage('ai', `⚠️ **AI解析を完了できませんでした**
 
-AI解析は完了しませんでしたが、レポートを送信できます。`);
+レポートは送信可能ですが、品質チェックなしでの提出となります。`);
                 showLiveReportConfirmation(minutes);
             }
         } catch (error) {
             console.error('AI Scoring Error:', error);
-            appendChatMessage('ai', `⚠️ AI解析に失敗しましたが、レポート送信は可能です。`);
+            appendChatMessage('ai', `⚠️ AI解析に失敗しました。
+
+レポート送信は可能ですが、再度写真を撮影することをお勧めします。`);
             showLiveReportConfirmation(minutes);
         }
     }
 
-    async function analyzeCleaningWithAI(photoFile) {
+    async function analyzeCleaningWithAI(afterPhotoFile, beforePhotoFile = null) {
         const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
         const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
 
-        // Convert file to base64
-        const base64Image = await fileToBase64(photoFile);
+        // Convert files to base64
+        const afterBase64 = await fileToBase64(afterPhotoFile);
+
+        let message = '清掃後の写真です。プロフェッショナル基準で厳格に品質を査定し、スコアを算出してください。';
+        let imageData = afterBase64;
+
+        // If we have before photo, include comparison instruction
+        if (beforePhotoFile) {
+            const beforeBase64 = await fileToBase64(beforePhotoFile);
+            message = `清掃の作業後写真です。プロフェッショナル基準で厳格に品質を査定してください。
+            
+【チェックポイント】
+- 汚れ・ゴミは完全に除去されているか
+- 拭きムラ・水垢はないか
+- 光沢・ツヤは十分か
+- 細部まで行き届いているか
+
+厳しい目で評価し、改善点があれば明確に指摘してください。`;
+        }
 
         const response = await fetch(`${API_BASE}/chat`, {
             method: 'POST',
@@ -5243,8 +5297,8 @@ AI解析は完了しませんでしたが、レポートを送信できます。
                 'Authorization': token ? `Bearer ${token}` : ''
             },
             body: JSON.stringify({
-                message: `この清掃後の写真を査定し、品質スコアを算出してください。`,
-                image: base64Image,
+                message: message,
+                image: imageData,
                 system_prompt: CLEANING_SCORING_PROMPT,
                 response_format: 'json'
             })
@@ -5276,31 +5330,89 @@ AI解析は完了しませんでしたが、レポートを送信できます。
     }
 
     function displayAIScoreResult(result, workMinutes) {
-        const rankColors = { A: '#10b981', B: '#f59e0b', C: '#ef4444' };
+        const rankColors = { S: '#a855f7', A: '#10b981', B: '#f59e0b', C: '#ef4444', D: '#dc2626' };
         const rankColor = rankColors[result.rank] || '#6b7280';
         const storeName = reportWizardState.store?.name || '店舗';
+        const isLowScore = result.score < 70 || result.redo_recommended;
+        const isCritical = result.score < 50;
 
-        appendChatMessage('ai', `🏆 **AI品質スコア: ${result.score}点 (${result.rank}ランク)**
+        // Build detailed message
+        let detailMessage = `🏆 **AI品質スコア: ${result.score}点 (${result.rank}ランク)**
 
-${result.overall_quality}
+${result.overall_quality}`;
 
-${result.strengths && result.strengths.length > 0 ? `✅ **良い点**: ${result.strengths.join('、')}` : ''}
-${result.improvements && result.improvements.length > 0 ? `📝 **改善点**: ${result.improvements.join('、')}` : ''}`);
+        if (result.critical_issues && result.critical_issues.length > 0) {
+            detailMessage += `
+
+⚠️ **重大な問題点**: ${result.critical_issues.join('、')}`;
+        }
+
+        if (result.strengths && result.strengths.length > 0) {
+            detailMessage += `
+
+✅ **良い点**: ${result.strengths.join('、')}`;
+        }
+
+        if (result.improvements && result.improvements.length > 0) {
+            detailMessage += `
+
+📝 **改善すべき点**: ${result.improvements.join('、')}`;
+        }
+
+        if (result.specific_advice) {
+            detailMessage += `
+
+💡 **アドバイス**: ${result.specific_advice}`;
+        }
+
+        if (result.redo_areas && result.redo_areas.length > 0) {
+            detailMessage += `
+
+🔄 **やり直し推奨箇所**: ${result.redo_areas.join('、')}`;
+        }
+
+        appendChatMessage('ai', detailMessage);
 
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
+        // Warning banner for low scores
+        const warningBanner = isLowScore ? `
+            <div style="background: ${isCritical ? 'rgba(220, 38, 38, 0.2)' : 'rgba(245, 158, 11, 0.2)'}; 
+                border: 1px solid ${isCritical ? 'rgba(220, 38, 38, 0.5)' : 'rgba(245, 158, 11, 0.5)'}; 
+                border-radius: 12px; padding: 14px; text-align: center;">
+                <div style="color: ${isCritical ? '#ef4444' : '#f59e0b'}; font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">
+                    ${isCritical ? '⚠️ 品質基準を満たしていません' : '⚠️ 改善が推奨されます'}
+                </div>
+                <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">
+                    ${isCritical ? '全面的なやり直しを強くお勧めします' : '一部箇所の再清掃をご検討ください'}
+                </div>
+            </div>
+        ` : '';
+
+        // Redo button for low scores
+        const redoButton = isLowScore ? `
+            <button onclick="retryCleaningAfterPhoto()"
+                style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none;
+                padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
+                cursor: pointer; min-height: 56px;">
+                🔄 再清掃してやり直す
+            </button>
+        ` : '';
+
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 350px; margin: 0 auto;">
                 <!-- Score Card -->
-                <div style="background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6)); border: 2px solid ${rankColor}; border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6)); border: 3px solid ${rankColor}; border-radius: 16px; padding: 24px; text-align: center; ${isLowScore ? 'animation: pulse-warning 2s infinite;' : ''}">
                     <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">AI品質スコア</div>
-                    <div style="font-size: 3rem; font-weight: 800; color: ${rankColor}; text-shadow: 0 0 20px ${rankColor}80;">${result.score}</div>
-                    <div style="display: inline-block; background: ${rankColor}; color: #fff; font-size: 1.2rem; font-weight: 700; padding: 4px 16px; border-radius: 20px; margin-top: 8px;">${result.rank} ランク</div>
+                    <div style="font-size: 3.5rem; font-weight: 900; color: ${rankColor}; text-shadow: 0 0 30px ${rankColor}80;">${result.score}</div>
+                    <div style="display: inline-block; background: ${rankColor}; color: #fff; font-size: 1.3rem; font-weight: 800; padding: 6px 20px; border-radius: 25px; margin-top: 10px;">${result.rank} ランク</div>
                 </div>
 
+                ${warningBanner}
+
                 <!-- Summary -->
-                <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; color: #fff; font-size: 0.9rem;">
+                <div style="background: rgba(255,255,255,0.08); padding: 16px; border-radius: 12px; color: #fff; font-size: 0.9rem;">
                     <div style="font-weight: 600; margin-bottom: 8px;">📋 レポート内容</div>
                     <div>店舗: ${storeName}</div>
                     <div>作業時間: ${workMinutes}分</div>
@@ -5310,11 +5422,12 @@ ${result.improvements && result.improvements.length > 0 ? `📝 **改善点**: $
                 </div>
 
                 <!-- Actions -->
+                ${redoButton}
                 <button onclick="submitLiveReport()"
-                    style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+                    style="background: ${isLowScore ? 'rgba(107, 114, 128, 0.5)' : 'linear-gradient(135deg, #10b981, #059669)'}; color: white; border: none;
                     padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
                     cursor: pointer; min-height: 56px;">
-                    📤 レポートを送信
+                    📤 ${isLowScore ? 'このまま送信（非推奨）' : 'レポートを送信'}
                 </button>
                 <button onclick="showAddFinalNoteUI()"
                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
@@ -5322,7 +5435,23 @@ ${result.improvements && result.improvements.length > 0 ? `📝 **改善点**: $
                     ✏️ 備考を編集
                 </button>
             </div>
+            <style>
+                @keyframes pulse-warning {
+                    0%, 100% { box-shadow: 0 0 0 0 ${rankColor}40; }
+                    50% { box-shadow: 0 0 20px 5px ${rankColor}40; }
+                }
+            </style>
         `;
+    }
+
+    function retryCleaningAfterPhoto() {
+        appendChatMessage('ai', `🔄 **再清掃モード**
+
+指摘された箇所を再清掃してから、もう一度作業後の写真を撮影してください。`);
+
+        // Clear after photos and go back to after photo UI
+        liveWorkState.afterPhotos = [];
+        showAfterPhotoUI();
     }
 
 
