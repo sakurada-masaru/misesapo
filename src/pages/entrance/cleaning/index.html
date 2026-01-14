@@ -4380,52 +4380,53 @@ ${context}
         const countEl = document.getElementById('cleaning-customer-count');
         if (countEl) countEl.textContent = `${customers.length}件`;
 
-        const statusColors = { '稼働中': '#10b981', 'active': '#10b981', '契約作業中': '#f59e0b', '商談済': '#8b5cf6', '検討中': '#3b82f6' };
+        const statusColors = { '稼働中': '#10b981', 'active': '#10b981', '契約作業中': '#f59e0b', '商談済': '#8b5cf6', '検討中': '#3b82f6', 'prospect': '#3b82f6' };
 
         container.innerHTML = customers.map(c => {
-            const name = c.name || c.store_name || '';
-            const brand = c.brand_name || c.company_name || '';
+            const statusColor = statusColors[c.status] || '#6b7280';
+            const brand = c.brand_name || '';
+            const store = c.store_name || c.name || '';
             const company = c.company_name || '';
             const phone = c.phone || c.telephone || '';
             const id = c.id || c.store_id || '';
-            const status = c.status || '';
-            const statusColor = statusColors[status] || '#6b7280';
-            const statusLabel = status === 'active' ? '稼働中' : (status || '');
+            const contactPerson = c.contact_person || '';
 
-            // Build display name like sales mode
+            // Build display name: prioritize "Brand Store" format (same as sales mode)
+            // e.g., "セブンイレブン 新宿店" or just "セブンイレブン" if no store
             let mainTitle = '';
-            if (brand && name && brand !== name) {
-                mainTitle = `${brand} ${name}`;
+            if (brand && store && brand !== store) {
+                mainTitle = `${brand} ${store}`;
             } else if (brand) {
                 mainTitle = brand;
-            } else if (name) {
-                mainTitle = name;
+            } else if (store) {
+                mainTitle = store;
             } else {
                 mainTitle = '名称未設定';
             }
 
+            const statusLabel = c.status === 'active' ? '稼働中' : (c.status || '未設定');
+
             return `
-                <button onclick="selectCleaningCustomer('${id}', '${name.replace(/'/g, "\\'")}', '${brand.replace(/'/g, "\\'")}')"
+                <button onclick="selectCleaningCustomer('${id}', '${store.replace(/'/g, "\\'")}', '${brand.replace(/'/g, "\\'")}')"
                     style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-                    color: #fff; padding: 14px 16px; border-radius: 12px; cursor: pointer; text-align: left;
-                    margin-bottom: 8px; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center;">
+                    color: #fff; padding: 16px 20px; border-radius: 12px; cursor: pointer; text-align: left;
+                    margin-bottom: 10px; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center;">
                     <div style="flex: 1; min-width: 0;">
-                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <div style="font-weight: 800; font-size: 1rem; color: #fff; margin-bottom: 4px; letter-spacing: 0.3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                             ${mainTitle}
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: rgba(255,255,255,0.5);">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.75rem; opacity: 0.5;">
                             ${company ? `<span><i class="fas fa-building" style="margin-right: 3px;"></i>${company}</span>` : ''}
+                            ${contactPerson ? `<span><i class="fas fa-user" style="margin-right: 3px;"></i>${contactPerson}</span>` : ''}
                             ${phone ? `<span>📞 ${phone}</span>` : ''}
                         </div>
                     </div>
-                    ${statusLabel ? `
-                    <div style="margin-left: 12px; flex-shrink: 0;">
-                        <span style="display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
-                            <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusColor}; margin-right: 5px;"></span>
-                            <span style="font-size: 0.7rem; color: ${statusColor}; font-weight: 600;">${statusLabel}</span>
-                        </span>
+                    <div style="text-align: right; margin-left: 16px; flex-shrink: 0;">
+                        <div style="display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                            <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusColor}; margin-right: 6px;"></span>
+                            <span style="font-size: 0.75rem; color: ${statusColor}; font-weight: 600;">${statusLabel}</span>
+                        </div>
                     </div>
-                    ` : ''}
                 </button>
             `;
         }).join('');
