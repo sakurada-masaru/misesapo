@@ -639,48 +639,43 @@ const EntranceCore = {
         const styles = document.createElement('style');
         styles.id = 'entrance-status-styles';
         styles.textContent = `
-            /* Attendance Status Indicator - Compact */
+            /* Attendance Status Indicator - Minimal (top-left) */
             .attendance-status-indicator {
                 position: fixed;
-                top: 12px;
-                right: 50px;
+                top: 6px;
+                left: 50%;
+                transform: translateX(-50%);
                 z-index: 1500;
                 display: flex;
                 align-items: center;
-                gap: 5px;
-                padding: 4px 10px;
-                background: rgba(0, 0, 0, 0.6);
-                backdrop-filter: blur(8px);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 14px;
-                font-size: 0.65rem;
-                color: rgba(255, 255, 255, 0.7);
+                gap: 4px;
+                padding: 2px 8px;
+                background: rgba(0, 0, 0, 0.4);
+                backdrop-filter: blur(4px);
+                border-radius: 10px;
+                font-size: 0.6rem;
+                color: rgba(255, 255, 255, 0.5);
                 cursor: pointer;
                 transition: all 0.3s ease;
             }
             .attendance-status-indicator:hover {
-                background: rgba(0, 0, 0, 0.8);
-                border-color: rgba(255, 255, 255, 0.15);
+                background: rgba(0, 0, 0, 0.7);
+                color: rgba(255, 255, 255, 0.8);
             }
             .attendance-status-indicator .status-dot {
-                width: 6px;
-                height: 6px;
+                width: 5px;
+                height: 5px;
                 border-radius: 50%;
                 background: #6b7280;
                 flex-shrink: 0;
             }
             .attendance-status-indicator.clocked-in .status-dot {
                 background: #10b981;
-                box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
-                animation: pulse-dot 2s infinite;
+                box-shadow: 0 0 4px rgba(16, 185, 129, 0.5);
             }
             .attendance-status-indicator.on-break .status-dot {
                 background: #f59e0b;
-                box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
-            }
-            @keyframes pulse-dot {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.6; }
+                box-shadow: 0 0 4px rgba(245, 158, 11, 0.5);
             }
 
             /* Menu Button - Compact */
