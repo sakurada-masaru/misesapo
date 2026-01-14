@@ -1760,6 +1760,30 @@
         const evalLabels = { 'S': '⭐ S評価', 'A': '🌟 A評価', 'B': '✨ B評価', 'C': '📋 C評価', 'D': '📝 D評価' };
         document.getElementById('hr-evaluation').textContent = evalLabels[user.evaluation] || user.evaluation || '-';
         document.getElementById('hr-notes').textContent = user.hr_notes || '-';
+
+        // AI分析結果の反映
+        if (user.hr_ai_analysis) {
+          renderAIAnalysis(user.hr_ai_analysis);
+        } else {
+          document.getElementById('ai-analysis-container').style.display = 'none';
+        }
+      }
+
+      function renderAIAnalysis(analysis) {
+        const container = document.getElementById('ai-analysis-container');
+        const content = document.getElementById('ai-analysis-content');
+        if (!container || !content) return;
+
+        container.style.display = 'block';
+        content.innerHTML = `
+          <div style="margin-bottom: 12px;"><strong>【要約】</strong><br>${analysis.summary || '-'}</div>
+          <div style="margin-bottom: 12px;"><strong>【推奨される役割】</strong><br>${analysis.suitability || '-'}</div>
+          <div style="margin-bottom: 12px;"><strong>【成長アドバイス】</strong><br>${analysis.growth_points || '-'}</div>
+          <div style="background: rgba(255,255,255,0.5); padding: 8px; border-radius: 6px; font-style: italic;">
+            <small><strong>※管理者用メモ:</strong> ${analysis.memo || '-'}</small>
+            ${analysis.generated_at ? `<br><small style="color: #64748b;">(分析日時: ${formatDateTime(analysis.generated_at)})</small>` : ''}
+          </div>
+        `;
       }
 
       function openHREditModal() {
@@ -1893,7 +1917,7 @@
             headers: buildAuthHeaders(true),
             body: JSON.stringify({
               action: 'analyze_worker',
-              text: context
+              id: currentUser.id
             })
           });
 
@@ -1902,14 +1926,7 @@
           const data = await response.json();
           const analysis = JSON.parse(data.response);
 
-          content.innerHTML = `
-            <div style="margin-bottom: 12px;"><strong>【要約】</strong><br>${analysis.summary || '-'}</div>
-            <div style="margin-bottom: 12px;"><strong>【推奨される役割】</strong><br>${analysis.suitability || '-'}</div>
-            <div style="margin-bottom: 12px;"><strong>【成長アドバイス】</strong><br>${analysis.growth_points || '-'}</div>
-            <div style="background: rgba(255,255,255,0.5); padding: 8px; border-radius: 6px; font-style: italic;">
-              <small><strong>※管理者用メモ:</strong> ${analysis.memo || '-'}</small>
-            </div>
-          `;
+          renderAIAnalysis(analysis);
         } catch (error) {
           console.error('AI Analysis Error:', error);
           content.innerHTML = `<span style="color: #ef4444;">${error.message}</span>`;

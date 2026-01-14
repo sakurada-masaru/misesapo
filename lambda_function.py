@@ -5636,36 +5636,73 @@ def update_worker(worker_id, event, headers):
         
         existing_item = response['Item']
         
-        # 更新可能なフィールドを更新
-        update_expression_parts = []
-        expression_attribute_values = {}
-        expression_attribute_names = {}
+        # 更新可能なフィールドの定義とバリデーションルール
+        update_parts = []
+        remove_parts = []
+        attr_values = {}
+        attr_names = {}
         
-        updatable_fields = [
+        # 許容される選択肢
+        OPTIONS = {
+            'employment_type': ['full_time', 'part_time', 'contract', 'temporary'],
+            'salary_type': ['hourly', 'monthly', 'annual'],
+            'evaluation': ['S', 'A', 'B', 'C', 'D'],
+            'language': ['ja', 'pt', 'en']
+        }
+        
+        fields = [
             'name', 'email', 'phone', 'role', 'role_code', 'department', 'job', 'status',
             'scheduled_start_time', 'scheduled_end_time', 'scheduled_work_hours', 'work_pattern',
             'hire_date', 'employment_type', 'contract_period', 'certifications', 'skills',
             'experience_years', 'previous_experience', 'emergency_contact_name', 'emergency_contact_phone',
-            'emergency_contact_relation', 'address', 'salary', 'salary_type', 'evaluation', 'hr_notes'
+            'emergency_contact_relation', 'address', 'salary', 'salary_type', 'evaluation', 'hr_notes', 'language'
         ]
         
-        for field in updatable_fields:
-            if field in body_json:
-                update_expression_parts.append(f"#{field} = :{field}")
-                expression_attribute_names[f"#{field}"] = field
-                expression_attribute_values[f":{field}"] = body_json[field]
+        for f in fields:
+            if f not in body_json: continue
+            val = body_json[f]
+            
+            # 空値は削除 (REMOVE)
+            if val == "" or val is None:
+                if f not in ['name', 'email', 'status', 'role']:
+                    remove_parts.append(f"#{f}")
+                    attr_names[f"#{f}"] = f
+                continue
+
+            # 数値型変換
+            if f in ['salary', 'experience_years', 'scheduled_work_hours']:
+                try:
+                    val = Decimal(str(val))
+                    if val < 0: raise ValueError()
+                except:
+                    return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': f'Invalid value for {f}'})}
+            
+            # 形式チェック
+            elif f == 'hire_date' and not re.match(r'^\d{4}-\d{2}-\d{2}$', str(val)):
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'hire_date format: YYYY-MM-DD'})}
+            
+            # 選択肢チェック
+            elif f in OPTIONS and val not in OPTIONS[f]:
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': f'Invalid Option for {f}'})}
+
+            update_parts.append(f"#{f} = :{f}")
+            attr_names[f"#{f}"] = f
+            attr_values[f":{f}"] = val
         
-        # updated_atを更新
-        update_expression_parts.append("#updated_at = :updated_at")
-        expression_attribute_names["#updated_at"] = "updated_at"
-        expression_attribute_values[":updated_at"] = datetime.utcnow().isoformat() + 'Z'
+        update_parts.append("#updated_at = :updated_at")
+        attr_names["#updated_at"] = "updated_at"
+        attr_values[":updated_at"] = datetime.utcnow().isoformat() + 'Z'
         
-        if update_expression_parts:
+        expressions = []
+        if update_parts: expressions.append('SET ' + ', '.join(update_parts))
+        if remove_parts: expressions.append('REMOVE ' + ', '.join(remove_parts))
+            
+        if expressions:
             WORKERS_TABLE.update_item(
                 Key={'id': worker_id},
-                UpdateExpression='SET ' + ', '.join(update_expression_parts),
-                ExpressionAttributeNames=expression_attribute_names,
-                ExpressionAttributeValues=expression_attribute_values
+                UpdateExpression=' '.join(expressions),
+                ExpressionAttributeNames=attr_names,
+                ExpressionAttributeValues=attr_values if update_parts else None
             )
         
         return {
@@ -10459,16 +10496,57 @@ def handle_ai_process(event, headers):
             if not input_text: input_text = "この画像を解析してください。"
 
         if action == 'analyze_worker':
-            system_instruction = """あなたはプロの人材開発アドバイザーおよびキャリアコンサルタントです。
-提供された従業員データ（スキル、資格、経歴、評価など）を分析し、以下の情報をJSON形式で返してください。
+            worker_id = body.get('id')
+            if not worker_id:
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'id (worker_id) is required'})}
+            
+            # 1. 従業員データを取得
+            res = WORKERS_TABLE.get_item(Key={'id': worker_id})
+            if 'Item' not in res:
+                return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Worker not found'})}
+            
+            worker = res['Item']
+            
+            # 2. 分析用コンテキスト構築
+            ctx = f"""
+名前: {worker.get('name', '-')}
+部署: {worker.get('department', '-')}
+担当: {worker.get('job', '-')}
+資格: {worker.get('certifications', '-')}
+スキル: {worker.get('skills', '-')}
+経験年数: {worker.get('experience_years', '-')}
+前職: {worker.get('previous_experience', '-')}
+評価: {worker.get('evaluation', '-')}
+備考: {worker.get('hr_notes', '-')}
+"""
+            sys_inst = """あなたはプロの人材コンサルタントです。
+提供されたデータから強み・適正・アドバイスを抽出し、以下のJSON形式で返してください。
+{
+  "summary": "要約",
+  "suitability": "適正配置",
+  "growth_points": "成長助言",
+  "memo": "管理者メモ"
+}
+必ず日本語のJSONのみを返してください。"""
 
-1. "summary": 従業員の強みや特徴の簡潔な要約（3行程度）
-2. "suitability": 推奨されるポジションや役割
-3. "growth_points": 今後の成長・スキルアップのためのアドバイス
-4. "memo": 管理者向けの機密コメント（性格的特徴の推察や注意点など）
-
-必ず日本語で、JSONフォーマットのみを返してください。"""
-            result = call_gemini_api(f"分析対象データ:\n{input_text}", system_instruction)
+            # 3. Gemini呼び出し
+            ai_text = call_gemini_api(f"対象者データ:\n{ctx}", sys_inst)
+            
+            try:
+                # 分析結果を保存
+                analysis = json.loads(ai_text)
+                analysis['generated_at'] = datetime.utcnow().isoformat() + 'Z'
+                
+                WORKERS_TABLE.update_item(
+                    Key={'id': worker_id},
+                    UpdateExpression="SET hr_ai_analysis = :v",
+                    ExpressionAttributeValues={":v": analysis}
+                )
+                result = ai_text
+                
+            except Exception as e:
+                print(f"AI Parse/Save Error: {str(e)}")
+                return {'statusCode': 200, 'headers': headers, 'body': json.dumps({'status': 'PARTIAL_SUCCESS', 'response': ai_text, 'save_error': str(e)})}
             
         elif action == 'summarize_report':
             system_instruction = "あなたはプロの清掃管理アドバイザーです。ユーザーの清掃メモから、丁寧な清掃報告書を作成してください。"
