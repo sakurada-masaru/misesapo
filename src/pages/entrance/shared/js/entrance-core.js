@@ -639,63 +639,64 @@ const EntranceCore = {
         const styles = document.createElement('style');
         styles.id = 'entrance-status-styles';
         styles.textContent = `
-            /* Attendance Status Indicator */
+            /* Attendance Status Indicator - Compact */
             .attendance-status-indicator {
                 position: fixed;
-                top: 16px;
-                right: 60px;
+                top: 12px;
+                right: 50px;
                 z-index: 1500;
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                padding: 8px 14px;
-                background: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 20px;
-                font-size: 0.75rem;
-                color: rgba(255, 255, 255, 0.8);
+                gap: 5px;
+                padding: 4px 10px;
+                background: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 14px;
+                font-size: 0.65rem;
+                color: rgba(255, 255, 255, 0.7);
                 cursor: pointer;
                 transition: all 0.3s ease;
             }
             .attendance-status-indicator:hover {
-                background: rgba(0, 0, 0, 0.85);
-                border-color: rgba(255, 255, 255, 0.2);
+                background: rgba(0, 0, 0, 0.8);
+                border-color: rgba(255, 255, 255, 0.15);
             }
             .attendance-status-indicator .status-dot {
-                width: 8px;
-                height: 8px;
+                width: 6px;
+                height: 6px;
                 border-radius: 50%;
                 background: #6b7280;
-                transition: all 0.3s ease;
+                flex-shrink: 0;
             }
             .attendance-status-indicator.clocked-in .status-dot {
                 background: #10b981;
-                box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+                box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
                 animation: pulse-dot 2s infinite;
             }
             .attendance-status-indicator.on-break .status-dot {
                 background: #f59e0b;
-                box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+                box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
             }
             @keyframes pulse-dot {
-                0%, 100% { opacity: 1; transform: scale(1); }
-                50% { opacity: 0.7; transform: scale(1.1); }
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.6; }
             }
 
-            /* Menu Button */
+            /* Menu Button - Compact */
             .entrance-menu-btn {
                 position: fixed;
-                top: 16px;
-                right: 16px;
+                top: 10px;
+                right: 12px;
                 z-index: 1500;
-                width: 36px;
-                height: 36px;
-                background: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.1);
+                width: 28px;
+                height: 28px;
+                background: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(255, 255, 255, 0.08);
                 border-radius: 50%;
-                color: rgba(255, 255, 255, 0.8);
+                color: rgba(255, 255, 255, 0.7);
+                font-size: 0.75rem;
                 cursor: pointer;
                 transition: all 0.3s ease;
                 display: flex;
@@ -703,8 +704,8 @@ const EntranceCore = {
                 justify-content: center;
             }
             .entrance-menu-btn:hover {
-                background: rgba(0, 0, 0, 0.85);
-                border-color: rgba(255, 255, 255, 0.3);
+                background: rgba(0, 0, 0, 0.8);
+                border-color: rgba(255, 255, 255, 0.2);
                 color: #fff;
             }
 
