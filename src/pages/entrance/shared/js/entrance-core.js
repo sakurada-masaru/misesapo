@@ -639,32 +639,31 @@ const EntranceCore = {
         const styles = document.createElement('style');
         styles.id = 'entrance-status-styles';
         styles.textContent = `
-            /* Attendance Status Indicator - Minimal (top-left) */
+            /* Attendance Status Indicator - Top Left */
             .attendance-status-indicator {
                 position: fixed;
-                top: 6px;
-                left: 50%;
-                transform: translateX(-50%);
+                top: 12px;
+                left: 12px;
                 z-index: 1500;
                 display: flex;
                 align-items: center;
                 gap: 4px;
-                padding: 2px 8px;
-                background: rgba(0, 0, 0, 0.4);
+                padding: 3px 10px;
+                background: rgba(0, 0, 0, 0.5);
                 backdrop-filter: blur(4px);
-                border-radius: 10px;
-                font-size: 0.6rem;
-                color: rgba(255, 255, 255, 0.5);
+                border-radius: 12px;
+                font-size: 0.65rem;
+                color: rgba(255, 255, 255, 0.6);
                 cursor: pointer;
                 transition: all 0.3s ease;
             }
             .attendance-status-indicator:hover {
                 background: rgba(0, 0, 0, 0.7);
-                color: rgba(255, 255, 255, 0.8);
+                color: rgba(255, 255, 255, 0.9);
             }
             .attendance-status-indicator .status-dot {
-                width: 5px;
-                height: 5px;
+                width: 6px;
+                height: 6px;
                 border-radius: 50%;
                 background: #6b7280;
                 flex-shrink: 0;
