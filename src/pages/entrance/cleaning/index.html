@@ -2246,6 +2246,178 @@
 
     const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
+    // ==================================================
+    // Multi-language Translation System
+    // ==================================================
+    const translations = {
+        ja: {
+            // Login
+            login: '認証',
+            loggingIn: '認証中...',
+            email: 'メールアドレス',
+            password: 'パスワード',
+
+            // Main UI
+            selectJob: '業務を選択',
+            cleaning: '清掃',
+            sales: '営業',
+
+            // Attendance
+            clockIn: '出勤',
+            clockOut: '退勤',
+            onBreak: '休憩中',
+            notClockedIn: '未出勤',
+
+            // Cleaning Mode
+            liveMode: 'LIVE モード',
+            afterMode: 'AFTER モード',
+            liveModeDesc: 'リアルタイムで清掃を記録',
+            afterModeDesc: '作業終了後に詳細を入力',
+            selectWorksite: '清掃する現場を選択してください',
+            searchCustomer: '顧客を検索',
+            selectFromSchedule: '本日のスケジュールから選択',
+            cancel: 'キャンセル',
+
+            // Customer Search
+            searchPlaceholder: '会社名、店舗名、電話番号...',
+            noResults: '該当する顧客がありません',
+            items: '件',
+
+            // Photo Upload
+            takePhoto: '写真を撮影',
+            beforePhoto: '清掃前の写真',
+            afterPhoto: '清掃後の写真',
+            addPhoto: '写真を追加',
+
+            // Actions
+            submit: '提出',
+            retry: 'やり直し',
+            back: '戻る',
+            next: '次へ',
+            complete: '完了',
+
+            // Messages
+            goodMorning: 'おはようございます',
+            selectTask: 'どの業務を行いますか？',
+            cleaningRecorded: '清掃が記録されました',
+        },
+        pt: {
+            // Login
+            login: 'Entrar',
+            loggingIn: 'Entrando...',
+            email: 'E-mail',
+            password: 'Senha',
+
+            // Main UI
+            selectJob: 'Selecionar trabalho',
+            cleaning: 'Limpeza',
+            sales: 'Vendas',
+
+            // Attendance
+            clockIn: 'Entrada',
+            clockOut: 'Saída',
+            onBreak: 'Em pausa',
+            notClockedIn: 'Não registrado',
+
+            // Cleaning Mode
+            liveMode: 'Modo AO VIVO',
+            afterMode: 'Modo DEPOIS',
+            liveModeDesc: 'Registrar limpeza em tempo real',
+            afterModeDesc: 'Inserir detalhes após o trabalho',
+            selectWorksite: 'Selecione o local de limpeza',
+            searchCustomer: 'Buscar cliente',
+            selectFromSchedule: 'Selecionar da agenda de hoje',
+            cancel: 'Cancelar',
+
+            // Customer Search
+            searchPlaceholder: 'Nome da empresa, loja, telefone...',
+            noResults: 'Nenhum cliente encontrado',
+            items: 'itens',
+
+            // Photo Upload
+            takePhoto: 'Tirar foto',
+            beforePhoto: 'Foto antes da limpeza',
+            afterPhoto: 'Foto após a limpeza',
+            addPhoto: 'Adicionar foto',
+
+            // Actions
+            submit: 'Enviar',
+            retry: 'Tentar novamente',
+            back: 'Voltar',
+            next: 'Próximo',
+            complete: 'Concluído',
+
+            // Messages
+            goodMorning: 'Bom dia',
+            selectTask: 'Qual trabalho você vai fazer?',
+            cleaningRecorded: 'Limpeza registrada',
+        },
+        en: {
+            // Login
+            login: 'Login',
+            loggingIn: 'Logging in...',
+            email: 'Email',
+            password: 'Password',
+
+            // Main UI
+            selectJob: 'Select job',
+            cleaning: 'Cleaning',
+            sales: 'Sales',
+
+            // Attendance
+            clockIn: 'Clock In',
+            clockOut: 'Clock Out',
+            onBreak: 'On Break',
+            notClockedIn: 'Not clocked in',
+
+            // Cleaning Mode
+            liveMode: 'LIVE Mode',
+            afterMode: 'AFTER Mode',
+            liveModeDesc: 'Record cleaning in real-time',
+            afterModeDesc: 'Enter details after work',
+            selectWorksite: 'Select the cleaning site',
+            searchCustomer: 'Search customer',
+            selectFromSchedule: 'Select from today\'s schedule',
+            cancel: 'Cancel',
+
+            // Customer Search
+            searchPlaceholder: 'Company name, store, phone...',
+            noResults: 'No customers found',
+            items: 'items',
+
+            // Photo Upload
+            takePhoto: 'Take photo',
+            beforePhoto: 'Photo before cleaning',
+            afterPhoto: 'Photo after cleaning',
+            addPhoto: 'Add photo',
+
+            // Actions
+            submit: 'Submit',
+            retry: 'Retry',
+            back: 'Back',
+            next: 'Next',
+            complete: 'Complete',
+
+            // Messages
+            goodMorning: 'Good morning',
+            selectTask: 'Which job will you do?',
+            cleaningRecorded: 'Cleaning recorded',
+        }
+    };
+
+    // Get translation by key
+    function t(key) {
+        const lang = window.currentLanguage || localStorage.getItem('user_language') || 'ja';
+        return translations[lang]?.[key] || translations['ja'][key] || key;
+    }
+
+    // Load translations and apply to UI (called when language changes)
+    function loadTranslations(lang) {
+        console.log('[i18n] Loading translations for:', lang);
+        // Update dynamic UI elements that need translation
+        // This will be called when user logs in with non-Japanese language
+    }
+
     function ensureAuthOrRedirect() {
         // Simple token check
         const token = localStorage.getItem('cognito_id_token');
