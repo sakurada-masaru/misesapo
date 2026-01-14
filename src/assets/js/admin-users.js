@@ -826,6 +826,11 @@
             </div>
             <div>${reportBadgeHTML}</div>
 
+            <div style="display: flex; align-items: center; gap: 6px; color: #6b7280;">
+              <i class="fas fa-language" style="width: 14px;"></i> 言語
+            </div>
+            <div>${getLanguageBadge(user.language)}</div>
+
           </div>
         </div>
         
@@ -1007,6 +1012,16 @@
       return '管理者';
     }
     return '';
+  }
+
+  function getLanguageBadge(language) {
+    const langConfig = {
+      'ja': { label: '日本語', flag: '🇯🇵', bg: '#f0f9ff', color: '#0369a1' },
+      'pt': { label: 'Português', flag: '🇧🇷', bg: '#fef3c7', color: '#d97706' },
+      'en': { label: 'English', flag: '🇺🇸', bg: '#f0fdf4', color: '#15803d' }
+    };
+    const config = langConfig[language] || langConfig['ja'];
+    return `<span style="font-size: 0.75rem; padding: 2px 8px; background: ${config.bg}; color: ${config.color}; border-radius: 9999px;">${config.flag} ${config.label}</span>`;
   }
 
   function renderPagination() {
