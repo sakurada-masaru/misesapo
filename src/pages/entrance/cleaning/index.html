@@ -2275,6 +2275,11 @@
 
     let currentMode = 'chat';
 
+    // Apply saved language on page load
+    const savedLanguage = localStorage.getItem('user_language') || 'ja';
+    window.currentLanguage = savedLanguage;
+    document.documentElement.setAttribute('lang', savedLanguage);
+
     // Hide sidebar by default for AI-centric feel
     if (sidebar) sidebar.style.display = 'none';
 
@@ -2418,6 +2423,10 @@
                 const result = await window.CognitoAuth.login(email, password);
                 if (result.success) {
                     loginForm.style.display = 'none';
+
+                    // Fetch user's language setting from workers API
+                    await fetchAndApplyUserLanguage();
+
                     // Re-run workflow to check attendance state
                     await startWorkflow();
                 } else {
@@ -2430,6 +2439,39 @@
             alert('ログインに失敗しました: ' + err.message);
             loginBtn.innerHTML = '認証';
             loginBtn.disabled = false;
+        }
+    }
+
+    async function fetchAndApplyUserLanguage() {
+        try {
+            const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+            const userId = user.id || user.sub;
+            if (!userId) return;
+
+            const response = await fetch(`${API_BASE}/workers/${encodeURIComponent(userId)}`);
+            if (response.ok) {
+                const workerData = await response.json();
+                const language = workerData.language || 'ja';
+                localStorage.setItem('user_language', language);
+                console.log('[Language] User language set to:', language);
+
+                // Apply language immediately
+                applyLanguage(language);
+            }
+        } catch (error) {
+            console.warn('[Language] Failed to fetch user language, using default (ja):', error);
+            localStorage.setItem('user_language', 'ja');
+        }
+    }
+
+    function applyLanguage(lang) {
+        // Store for UI components to use
+        window.currentLanguage = lang;
+        document.documentElement.setAttribute('lang', lang);
+
+        // If language is not Japanese, load translations
+        if (lang !== 'ja' && typeof loadTranslations === 'function') {
+            loadTranslations(lang);
         }
     }
 
