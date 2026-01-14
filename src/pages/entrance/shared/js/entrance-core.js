@@ -46,7 +46,68 @@ const EntranceCore = {
     // Authentication Functions
     // ========================================
 
+    /**
+     * 毎朝7時に認証をリセットする
+     * ログイン時に last_auth_date を記録し、
+     * 翌日の7時以降にアクセスした場合は強制ログアウト
+     */
+    checkDailyAuthReset() {
+        const RESET_HOUR = 7; // 朝7時にリセット
+        const lastAuthDate = localStorage.getItem('last_auth_date');
+        const token = localStorage.getItem('cognito_id_token');
+
+        if (!token) return false; // トークンがなければ何もしない
+
+        const now = new Date();
+        const currentHour = now.getHours();
+
+        if (lastAuthDate) {
+            const lastDate = new Date(lastAuthDate);
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const lastDay = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
+
+            // 日付が変わり、かつ現在時刻が7時以降の場合
+            if (today > lastDay && currentHour >= RESET_HOUR) {
+                console.log('[EntranceCore] Daily auth reset triggered - forcing logout');
+                this.forceLogout();
+                return true;
+            }
+        }
+
+        return false;
+    },
+
+    /**
+     * 認証日時を記録
+     */
+    recordAuthDate() {
+        localStorage.setItem('last_auth_date', new Date().toISOString());
+    },
+
+    /**
+     * 強制ログアウト
+     */
+    forceLogout() {
+        // すべての認証関連データを削除
+        localStorage.removeItem('cognito_id_token');
+        localStorage.removeItem('cognito_access_token');
+        localStorage.removeItem('cognito_refresh_token');
+        localStorage.removeItem('cognito_user');
+        localStorage.removeItem('id_token');
+        localStorage.removeItem('last_auth_date');
+        localStorage.removeItem('current_job_type');
+        localStorage.removeItem('currentAttendanceRecord');
+
+        // ページをリロードしてログイン画面を表示
+        window.location.reload();
+    },
+
     ensureAuthOrRedirect() {
+        // まず日次リセットをチェック
+        if (this.checkDailyAuthReset()) {
+            return null;
+        }
+
         const token = localStorage.getItem('cognito_id_token');
         if (!token) {
             return null;
@@ -76,6 +137,8 @@ const EntranceCore = {
             if (window.CognitoAuth) {
                 const result = await window.CognitoAuth.login(email, password);
                 if (result.success) {
+                    // 認証日時を記録（毎朝7時リセット用）
+                    this.recordAuthDate();
                     document.getElementById('login-form').style.display = 'none';
                     if (onSuccess) await onSuccess();
                 } else {

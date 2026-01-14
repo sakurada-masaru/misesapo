@@ -3415,6 +3415,10 @@ ${context}
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+        // 毎朝7時に認証をリセット
+        if (window.EntranceCore && window.EntranceCore.checkDailyAuthReset) {
+            window.EntranceCore.checkDailyAuthReset();
+        }
         EntranceCore.initFadeIn();
     });
     function showJobActions(jobKey) {
