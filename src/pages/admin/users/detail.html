@@ -111,9 +111,26 @@
             <i class="fas fa-database"></i>
             人材DB
           </h3>
-          <button class="btn btn-outline btn-sm" onclick="openHREditModal()">
-            <i class="fas fa-edit"></i> 編集
-          </button>
+          <div class="header-actions" style="display: flex; gap: 8px;">
+            <button class="btn btn-outline btn-sm" onclick="analyzeWorkerWithAI()" id="ai-analyze-btn">
+              <i class="fas fa-robot"></i> AI分析
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="openHREditModal()">
+              <i class="fas fa-edit"></i> 編集
+            </button>
+          </div>
+        </div>
+
+        <!-- AI分析結果表示エリア -->
+        <div id="ai-analysis-container"
+          style="display: none; margin-top: 16px; padding: 16px; background: #f0f7ff; border: 1px solid #dbeafe; border-radius: 12px;">
+          <h4
+            style="font-size: 0.9rem; color: #1e40af; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-magic"></i> AIによる人材分析レポート
+          </h4>
+          <div id="ai-analysis-content" style="font-size: 0.85rem; line-height: 1.6; color: #1e3a8a;">
+            分析中...
+          </div>
         </div>
 
         <div class="info-grid" style="margin-top: 24px;">
@@ -397,6 +414,106 @@
             <div class="form-status" id="edit-form-status"></div>
             <div class="modal-actions">
               <button type="button" class="btn btn-secondary" onclick="closeEditModal()">キャンセル</button>
+              <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 人材DB編集モーダル -->
+    <div class="edit-modal" id="hr-edit-modal" style="display:none;">
+      <div class="modal-overlay" onclick="closeHREditModal()"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>人材DB情報編集</h2>
+          <button class="modal-close" onclick="closeHREditModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="hr-edit-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="hr-edit-hire-date">入社日</label>
+                <input type="date" id="hr-edit-hire-date">
+              </div>
+              <div class="form-group">
+                <label for="hr-edit-employment-type">雇用形態</label>
+                <select id="hr-edit-employment-type">
+                  <option value="">未設定</option>
+                  <option value="full_time">正社員</option>
+                  <option value="part_time">パート</option>
+                  <option value="contract">契約社員</option>
+                  <option value="temporary">派遣</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label for="hr-edit-contract-period">契約期間</label>
+                <input type="text" id="hr-edit-contract-period" placeholder="例: 2024/04/01 - 2025/03/31">
+              </div>
+              <div class="form-group full">
+                <label for="hr-edit-certifications">保有資格</label>
+                <input type="text" id="hr-edit-certifications" placeholder="例: 清掃技能検定1級、衛生管理者">
+              </div>
+              <div class="form-group full">
+                <label for="hr-edit-skills">スキル</label>
+                <input type="text" id="hr-edit-skills" placeholder="例: ワックス、床洗浄、設備メンテナンス">
+              </div>
+              <div class="form-group">
+                <label for="hr-edit-experience-years">経験年数</label>
+                <input type="number" id="hr-edit-experience-years" min="0" step="1" placeholder="例: 5">
+              </div>
+              <div class="form-group full">
+                <label for="hr-edit-previous-experience">前職・経歴</label>
+                <textarea id="hr-edit-previous-experience" rows="3" placeholder="例: ビルメンテナンス会社で5年勤務"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="hr-edit-emergency-name">緊急連絡先名前</label>
+                <input type="text" id="hr-edit-emergency-name" placeholder="例: 山田 花子">
+              </div>
+              <div class="form-group">
+                <label for="hr-edit-emergency-phone">緊急連絡先電話</label>
+                <input type="tel" id="hr-edit-emergency-phone" placeholder="例: 090-1234-5678">
+              </div>
+              <div class="form-group">
+                <label for="hr-edit-emergency-relation">続柄</label>
+                <input type="text" id="hr-edit-emergency-relation" placeholder="例: 配偶者">
+              </div>
+              <div class="form-group full">
+                <label for="hr-edit-address">住所</label>
+                <input type="text" id="hr-edit-address" placeholder="例: 東京都渋谷区...">
+              </div>
+              <div class="form-group">
+                <label for="hr-edit-salary">時給/月給</label>
+                <input type="number" id="hr-edit-salary" min="0" step="1" placeholder="例: 1200">
+              </div>
+              <div class="form-group">
+                <label for="hr-edit-salary-type">給与形態</label>
+                <select id="hr-edit-salary-type">
+                  <option value="">未設定</option>
+                  <option value="hourly">時給</option>
+                  <option value="monthly">月給</option>
+                  <option value="annual">年俸</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="hr-edit-evaluation">評価</label>
+                <select id="hr-edit-evaluation">
+                  <option value="">未設定</option>
+                  <option value="S">S評価</option>
+                  <option value="A">A評価</option>
+                  <option value="B">B評価</option>
+                  <option value="C">C評価</option>
+                  <option value="D">D評価</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label for="hr-edit-notes">備考</label>
+                <textarea id="hr-edit-notes" rows="3" placeholder="例: 週3勤務、夜間帯中心"></textarea>
+              </div>
+            </div>
+            <div class="form-status" id="hr-edit-form-status"></div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-secondary" onclick="closeHREditModal()">キャンセル</button>
               <button type="submit" class="btn btn-primary">保存</button>
             </div>
           </form>
@@ -1110,16 +1227,19 @@
       }
 
       .form-group input,
-      .form-group select {
+      .form-group select,
+      .form-group textarea {
         padding: 10px 12px;
         border: 1px solid #d1d5db;
         border-radius: 8px;
         font-size: 0.95rem;
         transition: border-color 0.2s;
+        font-family: inherit;
       }
 
       .form-group input:focus,
-      .form-group select:focus {
+      .form-group select:focus,
+      .form-group textarea:focus {
         outline: none;
         border-color: var(--primary);
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -1284,6 +1404,19 @@
           month: 'long',
           day: 'numeric'
         });
+      }
+
+      function formatDateForInput(dateString) {
+        if (!dateString) return '';
+        if (typeof dateString === 'string' && dateString.length >= 10 && dateString.includes('-')) {
+          return dateString.slice(0, 10);
+        }
+        const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return '';
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
       }
 
       function formatDateTime(dateString) {
@@ -1602,7 +1735,10 @@
         // スキル・資格
         document.getElementById('hr-certifications').textContent = user.certifications || '-';
         document.getElementById('hr-skills').textContent = user.skills || '-';
-        document.getElementById('hr-experience-years').textContent = user.experience_years ? `${user.experience_years}年` : '-';
+        const experienceYears = user.experience_years;
+        document.getElementById('hr-experience-years').textContent = (experienceYears !== null && experienceYears !== undefined && experienceYears !== '')
+          ? `${experienceYears}年`
+          : '-';
         document.getElementById('hr-previous-experience').textContent = user.previous_experience || '-';
 
         // 緊急連絡先
@@ -1612,7 +1748,7 @@
         document.getElementById('hr-address').textContent = user.address || '-';
 
         // 給与・評価
-        if (user.salary) {
+        if (user.salary !== null && user.salary !== undefined && user.salary !== '') {
           const salaryFormatted = new Intl.NumberFormat('ja-JP').format(user.salary);
           document.getElementById('hr-salary').textContent = `¥${salaryFormatted}`;
         } else {
@@ -1627,8 +1763,159 @@
       }
 
       function openHREditModal() {
-        alert('人材DB編集機能は準備中です。管理者にお問い合わせください。');
-        // TODO: Implement HR edit modal
+        if (!currentUser) return;
+
+        // AI分析結果をリセット（編集時はクリア）
+        document.getElementById('ai-analysis-container').style.display = 'none';
+
+        document.getElementById('hr-edit-hire-date').value = formatDateForInput(currentUser.hire_date);
+        document.getElementById('hr-edit-employment-type').value = currentUser.employment_type || '';
+        document.getElementById('hr-edit-contract-period').value = currentUser.contract_period || '';
+        document.getElementById('hr-edit-certifications').value = currentUser.certifications || '';
+        document.getElementById('hr-edit-skills').value = currentUser.skills || '';
+        document.getElementById('hr-edit-experience-years').value = currentUser.experience_years || '';
+        document.getElementById('hr-edit-previous-experience').value = currentUser.previous_experience || '';
+        document.getElementById('hr-edit-emergency-name').value = currentUser.emergency_contact_name || '';
+        document.getElementById('hr-edit-emergency-phone').value = currentUser.emergency_contact_phone || '';
+        document.getElementById('hr-edit-emergency-relation').value = currentUser.emergency_contact_relation || '';
+        document.getElementById('hr-edit-address').value = currentUser.address || '';
+        document.getElementById('hr-edit-salary').value = currentUser.salary ?? '';
+        document.getElementById('hr-edit-salary-type').value = currentUser.salary_type || '';
+        document.getElementById('hr-edit-evaluation').value = currentUser.evaluation || '';
+        document.getElementById('hr-edit-notes').value = currentUser.hr_notes || '';
+        document.getElementById('hr-edit-form-status').textContent = '';
+        document.getElementById('hr-edit-form-status').className = 'form-status';
+
+        document.getElementById('hr-edit-modal').style.display = 'flex';
+      }
+
+      function closeHREditModal() {
+        document.getElementById('hr-edit-modal').style.display = 'none';
+      }
+
+      function setupHREditForm() {
+        const hrForm = document.getElementById('hr-edit-form');
+        if (!hrForm) {
+          console.warn('HR edit form not found');
+          return;
+        }
+
+        hrForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+
+          if (!currentUser) return;
+
+          const statusEl = document.getElementById('hr-edit-form-status');
+          statusEl.textContent = '保存中...';
+          statusEl.className = 'form-status';
+
+          const salaryValue = document.getElementById('hr-edit-salary').value;
+          const salary = salaryValue === '' ? null : Number(salaryValue);
+          const experienceValue = document.getElementById('hr-edit-experience-years').value;
+          const experienceYears = experienceValue === '' ? null : Number(experienceValue);
+
+          const data = {
+            hire_date: document.getElementById('hr-edit-hire-date').value || null,
+            employment_type: document.getElementById('hr-edit-employment-type').value || '',
+            contract_period: document.getElementById('hr-edit-contract-period').value || '',
+            certifications: document.getElementById('hr-edit-certifications').value || '',
+            skills: document.getElementById('hr-edit-skills').value || '',
+            experience_years: Number.isFinite(experienceYears) ? experienceYears : null,
+            previous_experience: document.getElementById('hr-edit-previous-experience').value || '',
+            emergency_contact_name: document.getElementById('hr-edit-emergency-name').value || '',
+            emergency_contact_phone: document.getElementById('hr-edit-emergency-phone').value || '',
+            emergency_contact_relation: document.getElementById('hr-edit-emergency-relation').value || '',
+            address: document.getElementById('hr-edit-address').value || '',
+            salary: Number.isFinite(salary) ? salary : null,
+            salary_type: document.getElementById('hr-edit-salary-type').value || '',
+            evaluation: document.getElementById('hr-edit-evaluation').value || '',
+            hr_notes: document.getElementById('hr-edit-notes').value || ''
+          };
+
+          try {
+            const response = await fetch(`${API_BASE}/workers/${currentUser.id}`, {
+              method: 'PUT',
+              headers: buildAuthHeaders(true),
+              body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+              statusEl.textContent = '保存しました';
+              statusEl.className = 'form-status success';
+
+              setTimeout(async () => {
+                currentUser = null;
+                await new Promise(resolve => setTimeout(resolve, 300));
+                await loadUser();
+                closeHREditModal();
+              }, 500);
+            } else {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(errorData.error || errorData.message || '保存に失敗しました');
+            }
+          } catch (error) {
+            console.error('Error updating HR data:', error);
+            statusEl.textContent = error.message || '保存に失敗しました';
+            statusEl.className = 'form-status error';
+          }
+        });
+      }
+
+      async function analyzeWorkerWithAI() {
+        if (!currentUser) return;
+
+        const container = document.getElementById('ai-analysis-container');
+        const content = document.getElementById('ai-analysis-content');
+        const btn = document.getElementById('ai-analyze-btn');
+
+        container.style.display = 'block';
+        content.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 人材データを分析中です。数秒かかります...';
+        btn.disabled = true;
+
+        // 分析対象のテキストデータを構築
+        const context = `
+名前: ${currentUser.name}
+部署: ${currentUser.department}
+業務: ${currentUser.job}
+入社日: ${currentUser.hire_date}
+雇用形態: ${currentUser.employment_type}
+資格: ${currentUser.certifications}
+スキル: ${currentUser.skills}
+経験年数: ${currentUser.experience_years}
+前職: ${currentUser.previous_experience}
+現在の評価: ${currentUser.evaluation}
+管理者備考: ${currentUser.hr_notes}
+`;
+
+        try {
+          const response = await fetch(`${API_BASE}/ai/process`, {
+            method: 'POST',
+            headers: buildAuthHeaders(true),
+            body: JSON.stringify({
+              action: 'analyze_worker',
+              text: context
+            })
+          });
+
+          if (!response.ok) throw new Error('AI分析に失敗しました');
+
+          const data = await response.json();
+          const analysis = JSON.parse(data.response);
+
+          content.innerHTML = `
+            <div style="margin-bottom: 12px;"><strong>【要約】</strong><br>${analysis.summary || '-'}</div>
+            <div style="margin-bottom: 12px;"><strong>【推奨される役割】</strong><br>${analysis.suitability || '-'}</div>
+            <div style="margin-bottom: 12px;"><strong>【成長アドバイス】</strong><br>${analysis.growth_points || '-'}</div>
+            <div style="background: rgba(255,255,255,0.5); padding: 8px; border-radius: 6px; font-style: italic;">
+              <small><strong>※管理者用メモ:</strong> ${analysis.memo || '-'}</small>
+            </div>
+          `;
+        } catch (error) {
+          console.error('AI Analysis Error:', error);
+          content.innerHTML = `<span style="color: #ef4444;">${error.message}</span>`;
+        } finally {
+          btn.disabled = false;
+        }
       }
 
       function getRoleColor(role) {
@@ -2233,6 +2520,7 @@
       document.addEventListener('DOMContentLoaded', () => {
         loadUser();
         setupEditForm();
+        setupHREditForm();
         setupAttendanceButton();
         setupMonthNavigation();
         initSidebar();

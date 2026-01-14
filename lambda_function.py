@@ -5643,7 +5643,10 @@ def update_worker(worker_id, event, headers):
         
         updatable_fields = [
             'name', 'email', 'phone', 'role', 'role_code', 'department', 'job', 'status',
-            'scheduled_start_time', 'scheduled_end_time', 'scheduled_work_hours', 'work_pattern'
+            'scheduled_start_time', 'scheduled_end_time', 'scheduled_work_hours', 'work_pattern',
+            'hire_date', 'employment_type', 'contract_period', 'certifications', 'skills',
+            'experience_years', 'previous_experience', 'emergency_contact_name', 'emergency_contact_phone',
+            'emergency_contact_relation', 'address', 'salary', 'salary_type', 'evaluation', 'hr_notes'
         ]
         
         for field in updatable_fields:
@@ -10454,8 +10457,20 @@ def handle_ai_process(event, headers):
             
             media = {'mime_type': clean_mime, 'data': image_data}
             if not input_text: input_text = "この画像を解析してください。"
+
+        if action == 'analyze_worker':
+            system_instruction = """あなたはプロの人材開発アドバイザーおよびキャリアコンサルタントです。
+提供された従業員データ（スキル、資格、経歴、評価など）を分析し、以下の情報をJSON形式で返してください。
+
+1. "summary": 従業員の強みや特徴の簡潔な要約（3行程度）
+2. "suitability": 推奨されるポジションや役割
+3. "growth_points": 今後の成長・スキルアップのためのアドバイス
+4. "memo": 管理者向けの機密コメント（性格的特徴の推察や注意点など）
+
+必ず日本語で、JSONフォーマットのみを返してください。"""
+            result = call_gemini_api(f"分析対象データ:\n{input_text}", system_instruction)
             
-        if action == 'summarize_report':
+        elif action == 'summarize_report':
             system_instruction = "あなたはプロの清掃管理アドバイザーです。ユーザーの清掃メモから、丁寧な清掃報告書を作成してください。"
             result = call_gemini_api(f"作成依頼:\n{input_text}", system_instruction, media)
             
@@ -10980,4 +10995,3 @@ def get_store_audit_detail(audit_id, headers):
             'headers': headers,
             'body': json.dumps({'error': str(e)}, ensure_ascii=False)
         }
-
