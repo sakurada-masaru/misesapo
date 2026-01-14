@@ -1165,7 +1165,8 @@
         role: document.getElementById('user-role').value,
         department: document.getElementById('user-department').value,
         job: document.getElementById('user-job')?.value || '',  // 担当業務を追加
-        status: document.getElementById('user-status').value
+        status: document.getElementById('user-status').value,
+        language: document.getElementById('user-language')?.value || 'ja'  // 言語設定
       };
 
       const password = document.getElementById('user-password').value;
@@ -1656,6 +1657,8 @@
       deptSelect.value = userDept;
     }
     document.getElementById('user-status').value = user.status || 'active';
+    const langSelect = document.getElementById('user-language');
+    if (langSelect) langSelect.value = user.language || 'ja';
     document.getElementById('user-password').value = '';
     document.getElementById('password-required').style.display = 'none';
     document.getElementById('user-password').required = false;
