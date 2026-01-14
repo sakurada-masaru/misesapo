@@ -4876,16 +4876,179 @@ ${context}
     // Review & Submit
     // ========================================
 
-    function proceedToLiveReview() {
+    // AI Scoring Prompt for Cleaning Quality Assessment
+    const CLEANING_SCORING_PROMPT = `あなたは清掃品質管理AI「MISOGI」です。清掃後の写真を解析し、客観的な品質評価を行ってください。
+
+## 評価基準（100点満点からの減点方式）
+
+### 基本評価項目
+- **汚れの残存** (-5〜-30点): 目視で確認できる汚れが残っている
+- **拭き残し・水垢** (-5〜-15点): 拭き跡や水垢が見える
+- **整理整頓** (-5〜-10点): 物の配置が乱れている
+- **光沢・清潔感** (-5〜-15点): 表面に輝きがない、くすんでいる
+
+### ランク基準
+- **A ランク (85-100点)**: 高品質な仕上がり、プロフェッショナルな清掃
+- **B ランク (60-84点)**: 標準的な清掃、一部改善の余地あり
+- **C ランク (0-59点)**: 改善が必要、やり直しを推奨
+
+## 出力フォーマット (JSON)
+{
+  "score": 数値(0-100),
+  "rank": "A" または "B" または "C",
+  "overall_quality": "総合評価コメント（短く）",
+  "deductions": [
+    { "item": "減点項目", "points": 減点数, "reason": "理由" }
+  ],
+  "strengths": ["良かった点1", "良かった点2"],
+  "improvements": ["改善点1", "改善点2"],
+  "recommendation": "次回への推奨事項"
+}
+
+必ずJSON形式のみで回答してください。`;
+
+    async function proceedToLiveReview() {
         const elapsed = Math.floor((new Date() - liveWorkState.startTime) / 1000);
         const minutes = Math.floor(elapsed / 60);
         const storeName = reportWizardState.store?.name || '店舗';
 
-        appendChatMessage('ai', `📋 **レポート確認**
+        appendChatMessage('ai', `🤖 **AIスコアリング中...**
 
-この内容で送信しますか？`);
+作業後の写真を解析しています。`);
 
-        showLiveReportConfirmation(minutes);
+        // Show loading UI
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (actionContainer) {
+            actionContainer.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 40px;">
+                    <div style="width: 50px; height: 50px; border: 3px solid #10b981; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <div style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">AI解析中...</div>
+                </div>
+                <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+            `;
+        }
+
+        try {
+            // Analyze after photos with AI
+            let aiScore = null;
+            if (liveWorkState.afterPhotos.length > 0) {
+                aiScore = await analyzeCleaningWithAI(liveWorkState.afterPhotos[0]);
+            }
+
+            // Store AI result
+            liveWorkState.aiScore = aiScore;
+
+            // Show result
+            if (aiScore) {
+                displayAIScoreResult(aiScore, minutes);
+            } else {
+                // Fallback if AI fails
+                appendChatMessage('ai', `📋 **レポート確認**
+
+AI解析は完了しませんでしたが、レポートを送信できます。`);
+                showLiveReportConfirmation(minutes);
+            }
+        } catch (error) {
+            console.error('AI Scoring Error:', error);
+            appendChatMessage('ai', `⚠️ AI解析に失敗しましたが、レポート送信は可能です。`);
+            showLiveReportConfirmation(minutes);
+        }
+    }
+
+    async function analyzeCleaningWithAI(photoFile) {
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+        const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
+
+        // Convert file to base64
+        const base64Image = await fileToBase64(photoFile);
+
+        const response = await fetch(`${API_BASE}/chat`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : ''
+            },
+            body: JSON.stringify({
+                message: `この清掃後の写真を査定し、品質スコアを算出してください。`,
+                image: base64Image,
+                system_prompt: CLEANING_SCORING_PROMPT,
+                response_format: 'json'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('AI解析リクエストに失敗しました');
+        }
+
+        const data = await response.json();
+        const aiResponse = data.response || data.message || data.text || '';
+
+        // Parse JSON from response
+        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+        }
+
+        return null;
+    }
+
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    function displayAIScoreResult(result, workMinutes) {
+        const rankColors = { A: '#10b981', B: '#f59e0b', C: '#ef4444' };
+        const rankColor = rankColors[result.rank] || '#6b7280';
+        const storeName = reportWizardState.store?.name || '店舗';
+
+        appendChatMessage('ai', `🏆 **AI品質スコア: ${result.score}点 (${result.rank}ランク)**
+
+${result.overall_quality}
+
+${result.strengths && result.strengths.length > 0 ? `✅ **良い点**: ${result.strengths.join('、')}` : ''}
+${result.improvements && result.improvements.length > 0 ? `📝 **改善点**: ${result.improvements.join('、')}` : ''}`);
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 350px; margin: 0 auto;">
+                <!-- Score Card -->
+                <div style="background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6)); border: 2px solid ${rankColor}; border-radius: 16px; padding: 20px; text-align: center;">
+                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">AI品質スコア</div>
+                    <div style="font-size: 3rem; font-weight: 800; color: ${rankColor}; text-shadow: 0 0 20px ${rankColor}80;">${result.score}</div>
+                    <div style="display: inline-block; background: ${rankColor}; color: #fff; font-size: 1.2rem; font-weight: 700; padding: 4px 16px; border-radius: 20px; margin-top: 8px;">${result.rank} ランク</div>
+                </div>
+
+                <!-- Summary -->
+                <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; color: #fff; font-size: 0.9rem;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">📋 レポート内容</div>
+                    <div>店舗: ${storeName}</div>
+                    <div>作業時間: ${workMinutes}分</div>
+                    <div>作業前写真: ${liveWorkState.beforePhotos.length}枚</div>
+                    <div>作業後写真: ${liveWorkState.afterPhotos.length}枚</div>
+                    ${liveWorkState.notes ? `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">メモ: ${liveWorkState.notes}</div>` : ''}
+                </div>
+
+                <!-- Actions -->
+                <button onclick="submitLiveReport()"
+                    style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+                    padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
+                    cursor: pointer; min-height: 56px;">
+                    📤 レポートを送信
+                </button>
+                <button onclick="showAddFinalNoteUI()"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 14px; border-radius: 12px; cursor: pointer;">
+                    ✏️ 備考を編集
+                </button>
+            </div>
+        `;
     }
 
 
@@ -4958,10 +5121,15 @@ ${context}
         reportWizardState.photos.before = liveWorkState.beforePhotos;
         reportWizardState.photos.after = liveWorkState.afterPhotos;
         reportWizardState.notes = liveWorkState.notes;
+        reportWizardState.aiScore = liveWorkState.aiScore;
+
+        // Build success message with AI score if available
+        const aiScore = liveWorkState.aiScore;
+        const scoreText = aiScore ? `\n\n🏆 **AI品質スコア: ${aiScore.score}点 (${aiScore.rank}ランク)**` : '';
 
         // TODO: Implement actual API call to submit report
         setTimeout(() => {
-            appendChatMessage('ai', `✅ **レポート送信完了**
+            appendChatMessage('ai', `✅ **レポート送信完了**${scoreText}
 
 お疲れ様でした！`);
 
@@ -4971,8 +5139,8 @@ ${context}
             if (liveIndicator) liveIndicator.style.display = 'none';
 
             // Reset state
-            liveWorkState = { phase: null, startTime: null, beforePhotos: [], afterPhotos: [], notes: '', isActive: false, timerInterval: null };
-            reportWizardState = { step: 0, mode: null, store: null, schedule: null, photos: { before: [], after: [] }, cleaningTarget: '', notes: '', nextProposal: { timing: '', work: '' } };
+            liveWorkState = { phase: null, startTime: null, beforePhotos: [], afterPhotos: [], notes: '', isActive: false, timerInterval: null, aiScore: null };
+            reportWizardState = { step: 0, mode: null, store: null, schedule: null, photos: { before: [], after: [] }, cleaningTarget: '', notes: '', nextProposal: { timing: '', work: '' }, aiScore: null };
 
             setTimeout(() => showJobActions('cleaning'), 2000);
         }, 1500);
