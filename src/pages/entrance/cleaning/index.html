@@ -4329,21 +4329,53 @@ ${context}
     async function fetchCleaningCustomers() {
         const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
         const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
+        const headers = token ? { 'Authorization': token } : {};
 
         try {
-            const response = await fetch(`${API_BASE}/stores`, {
-                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            // Fetch Stores, Clients, and Brands in parallel (same as sales mode)
+            const [storesRes, clientsRes, brandsRes] = await Promise.all([
+                fetch(`${API_BASE}/stores`, { headers }),
+                fetch(`${API_BASE}/clients`, { headers }),
+                fetch(`${API_BASE}/brands`, { headers })
+            ]);
+
+            let storesData = [], clientsData = [], brandsData = [];
+
+            if (storesRes.ok) {
+                const data = await storesRes.json();
+                storesData = data.items || data || [];
+            }
+            if (clientsRes.ok) {
+                const data = await clientsRes.json();
+                clientsData = data.items || data || [];
+            }
+            if (brandsRes.ok) {
+                const data = await brandsRes.json();
+                brandsData = data.items || data || [];
+            }
+
+            // Create lookup maps
+            const clientMap = {};
+            clientsData.forEach(c => { if (c.id) clientMap[c.id] = c.name || c.company_name || ''; });
+            const brandMap = {};
+            brandsData.forEach(b => { if (b.id) brandMap[b.id] = b.name || ''; });
+
+            // Map stores with brand and company names
+            cleaningCustomers = storesData.map(item => {
+                const companyName = clientMap[item.client_id] || item.company_name || item.companyName || '';
+                const brandName = brandMap[item.brand_id] || item.brand_name || item.brandName || '';
+                const storeName = item.name || item.store_name || '';
+
+                return {
+                    ...item,
+                    company_name: companyName,
+                    brand_name: brandName,
+                    store_name: storeName
+                };
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                cleaningCustomers = Array.isArray(data) ? data : (data.stores || data.items || []);
-                filteredCleaningCustomers = cleaningCustomers;
-                renderCleaningCustomerList(cleaningCustomers);
-            } else {
-                document.getElementById('cleaning-customer-list').innerHTML =
-                    '<div style="text-align: center; color: rgba(255,255,255,0.5); padding: 40px;">顧客データを取得できませんでした</div>';
-            }
+            filteredCleaningCustomers = cleaningCustomers;
+            renderCleaningCustomerList(cleaningCustomers);
         } catch (error) {
             console.error('Failed to fetch customers:', error);
             document.getElementById('cleaning-customer-list').innerHTML =
