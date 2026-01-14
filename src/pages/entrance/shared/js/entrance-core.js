@@ -572,14 +572,13 @@ const EntranceCore = {
     },
 
     createAttendanceIndicator() {
-        if (document.getElementById('attendance-status-indicator')) return;
+        if (document.getElementById('attendance-status-tag')) return;
 
-        const indicator = document.createElement('div');
-        indicator.id = 'attendance-status-indicator';
-        indicator.className = 'attendance-status-indicator';
-        indicator.innerHTML = `<span class="status-text">退</span>`;
-        indicator.onclick = () => this.toggleAttendanceMenu();
-        document.body.appendChild(indicator);
+        const tag = document.createElement('div');
+        tag.id = 'attendance-status-tag';
+        tag.className = 'attendance-status-tag';
+        tag.innerHTML = `<span class="tag-text">退</span>`;
+        document.body.appendChild(tag);
     },
 
     createMenuButton() {
@@ -636,33 +635,30 @@ const EntranceCore = {
         const styles = document.createElement('style');
         styles.id = 'entrance-status-styles';
         styles.textContent = `
-            /* Attendance Status Tag - Minimal */
-            .attendance-status-indicator {
+            /* Attendance Status Tag - 16x16 non-interactive */
+            .attendance-status-tag {
                 position: fixed;
-                top: 10px;
-                left: 10px;
+                top: 8px;
+                left: 8px;
                 z-index: 1500;
-                padding: 2px 6px;
-                background: rgba(107, 114, 128, 0.6);
-                border-radius: 4px;
-                font-size: 0.55rem;
+                width: 16px;
+                height: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(107, 114, 128, 0.5);
+                border-radius: 3px;
+                font-size: 9px;
                 font-weight: 700;
-                color: rgba(255, 255, 255, 0.7);
-                cursor: pointer;
-                transition: all 0.2s ease;
+                color: rgba(255, 255, 255, 0.6);
+                pointer-events: none;
             }
-            .attendance-status-indicator:hover {
-                background: rgba(107, 114, 128, 0.9);
-            }
-            .attendance-status-indicator.clocked-in {
-                background: rgba(16, 185, 129, 0.7);
+            .attendance-status-tag.clocked-in {
+                background: rgba(16, 185, 129, 0.6);
                 color: #fff;
             }
-            .attendance-status-indicator.clocked-in:hover {
-                background: rgba(16, 185, 129, 0.9);
-            }
-            .attendance-status-indicator.on-break {
-                background: rgba(245, 158, 11, 0.7);
+            .attendance-status-tag.on-break {
+                background: rgba(245, 158, 11, 0.6);
                 color: #fff;
             }
 
@@ -879,19 +875,19 @@ const EntranceCore = {
     },
 
     updateAttendanceIndicator(status, clockInTime) {
-        const indicator = document.getElementById('attendance-status-indicator');
-        if (!indicator) return;
+        const tag = document.getElementById('attendance-status-tag');
+        if (!tag) return;
 
-        indicator.classList.remove('clocked-in', 'on-break');
+        tag.classList.remove('clocked-in', 'on-break');
 
         if (status === 'clocked-in') {
-            indicator.classList.add('clocked-in');
-            indicator.querySelector('.status-text').textContent = '出';
+            tag.classList.add('clocked-in');
+            tag.querySelector('.tag-text').textContent = '出';
         } else if (status === 'on-break') {
-            indicator.classList.add('on-break');
-            indicator.querySelector('.status-text').textContent = '休';
+            tag.classList.add('on-break');
+            tag.querySelector('.tag-text').textContent = '休';
         } else {
-            indicator.querySelector('.status-text').textContent = '退';
+            tag.querySelector('.tag-text').textContent = '退';
         }
     },
 
