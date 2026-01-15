@@ -16,6 +16,13 @@
 <header class="entrance-header">
     <div class="header-controls" id="entrance-header-controls">
         <!-- Job button will be moved here by JS -->
+        
+        <!-- Chat Toggle Button -->
+        <button class="floating-btn" id="chat-toggle-btn" onclick="EntranceCore.toggleChatLog()" title="チャットログ">
+            <i class="fas fa-comment-alt"></i>
+        </button>
+
+        <!-- Menu Toggle Button -->
         <button class="floating-btn" id="menu-toggle-btn" onclick="EntranceMenu.toggle()" title="メニュー">
             <i class="fas fa-bars"></i>
         </button>
@@ -225,11 +232,15 @@
             const jobBtn = document.getElementById('floating-job-btn');
 
             if (headerControls && jobBtn) {
-                // Prepend job button so menu is on the right
-                headerControls.insertBefore(jobBtn, document.getElementById('menu-toggle-btn'));
-                // Remove fixed positioning from job btn to let it flow in header
+                // Prepend job button so it's on the far left of the controls group
+                headerControls.insertBefore(jobBtn, headerControls.firstChild);
+                // Reset styles to ensure header alignment
                 jobBtn.style.position = 'static';
                 jobBtn.style.margin = '0';
+                jobBtn.style.display = 'flex';
+                jobBtn.style.bottom = 'auto';
+                jobBtn.style.right = 'auto';
+                jobBtn.classList.add('header-job-btn');
             }
         },
 

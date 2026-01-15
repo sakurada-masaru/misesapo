@@ -18,15 +18,17 @@
     z-index: 8000;
     pointer-events: none;
     /* Let clicks pass through except for buttons */
-    background: transparent !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
-.entrance-header .header-controls {
+/* Header Control Buttons */
+.header-controls {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     pointer-events: auto;
-    /* Re-enable clicks for buttons */
 }
 
 /* Content Area Adjustment (Safe Area) */
@@ -43,26 +45,53 @@
     /* Use header instead */
 }
 
-.floating-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    font-size: 1.2rem;
+.floating-btn,
+#floating-job-btn {
+    width: auto;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+    font-size: 1rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 10px;
+    padding: 0 16px;
     transition: all 0.3s;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    white-space: nowrap;
 }
 
-.floating-btn:hover {
+.floating-btn i {
+    font-size: 1.1rem;
+}
+
+.floating-btn:hover,
+#floating-job-btn:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-2px);
+}
+
+/* Redefine specific job button appearance when in header */
+#floating-job-btn.header-job-btn {
+    padding: 0 18px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}
+
+#floating-job-btn .job-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
     background: var(--accent-color, #10b981);
-    border-color: var(--accent-color, #10b981);
-    transform: scale(1.1);
+    box-shadow: 0 0 10px var(--accent-glow, rgba(16, 185, 129, 0.5));
 }
 
 /* Chat Toggle Button - positioned separately */
@@ -582,49 +611,22 @@
         right: 15px;
     }
 
-    .floating-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
+    /* Responsive Header & Footer */
+    .entrance-header {
+        padding: 0 15px;
+        height: 60px;
     }
 
-    /* Hide chat toggle button on mobile */
+    .floating-btn,
+    #floating-job-btn {
+        height: 38px;
+        padding: 0 12px;
+        font-size: 0.8rem;
+    }
+
     #chat-toggle-btn {
         display: none !important;
-    }
-
-    /* Hide chat log container on mobile */
-    #chat-log-container {
-        display: none !important;
-    }
-
-    /* Job button positioned left of hamburger */
-    #floating-job-btn {
-        top: 15px;
-        right: 65px;
-        padding: 8px 12px;
-        font-size: 0.75rem;
-        height: 40px;
-        border-radius: 20px;
-    }
-
-    .entrance-menu-item a,
-    .entrance-menu-item button {
-        padding: 15px 30px;
-        font-size: 1.1rem;
-        min-width: 240px;
-    }
-
-    .entrance-menu-item i {
-        font-size: 1.3rem;
-    }
-}
-
-@media (max-width: 480px) {
-    #floating-job-btn {
-        right: 60px;
-        padding: 6px 10px;
-        font-size: 0.7rem;
+        /* Keep hidden on mobile as per user's earlier requirement */
     }
 
     #floating-job-btn .job-dot {
