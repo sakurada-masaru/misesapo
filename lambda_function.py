@@ -1308,14 +1308,28 @@ def lambda_handler(event, context):
             elif method == 'POST':
                 return create_client(event, headers)
         elif normalized_path.startswith('/clients/'):
-            # クライアント（お客様）詳細の取得・更新・削除
-            client_id = normalized_path.split('/')[-1]
-            if method == 'GET':
-                return get_client_detail(client_id, headers)
-            elif method == 'PUT':
-                return update_client(client_id, event, headers)
-            elif method == 'DELETE':
-                return delete_client(client_id, headers)
+            # クライアント（お客様）詳細の取得・更新・削除、または登録申込書送付
+            parts = normalized_path.split('/')
+            if len(parts) >= 4 and parts[-1] == 'send-registration':
+                # /clients/{client_id}/send-registration - 登録申込書メール送付
+                client_id = parts[-2]
+                if method == 'POST':
+                    return send_registration_form(client_id, event, headers)
+                else:
+                    return {
+                        'statusCode': 405,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                    }
+            else:
+                client_id = parts[-1]
+                if method == 'GET':
+                    return get_client_detail(client_id, headers)
+                elif method == 'PUT':
+                    return update_client(client_id, event, headers)
+                elif method == 'DELETE':
+                    return delete_client(client_id, headers)
+
         elif normalized_path == '/brands':
             # ブランド一覧の取得・作成
             if method == 'GET':
@@ -5152,7 +5166,159 @@ def create_client(event, headers):
             }, ensure_ascii=False)
         }
 
+def send_registration_form(client_id, event, headers):
+    """
+    クライアントに登録申込書フォームのリンクをメールで送信
+    """
+    try:
+        # リクエストボディを取得
+        body_json = {}
+        if event.get('body'):
+            if event.get('isBase64Encoded'):
+                body = base64.b64decode(event['body'])
+            else:
+                body = event.get('body', '')
+            
+            if isinstance(body, str):
+                body_json = json.loads(body) if body else {}
+            else:
+                body_json = json.loads(body.decode('utf-8')) if body else {}
+        
+        # フォームタイプ（regular or spot）
+        form_type = body_json.get('form_type', 'regular')
+        
+        # クライアント情報を取得
+        response = CLIENTS_TABLE.get_item(Key={'id': client_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'クライアントが見つかりません',
+                    'id': client_id
+                }, ensure_ascii=False)
+            }
+        
+        client = response['Item']
+        client_email = client.get('email')
+        client_name = client.get('company_name') or client.get('name') or 'お客様'
+        contact_name = client.get('contact_name') or client.get('name', '')
+        phone = client.get('phone', '')
+        
+        if not client_email:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'クライアントのメールアドレスが設定されていません'
+                }, ensure_ascii=False)
+            }
+        
+        # 登録フォームのURLを生成（事前入力パラメータ付き）
+        base_url = "https://misesapo.co.jp/registration"
+        params = [
+            f"customer_id={client_id}",
+            f"type={form_type}",
+            f"company_name={urllib.parse.quote(client_name)}",
+            f"email={urllib.parse.quote(client_email)}",
+        ]
+        if contact_name:
+            params.append(f"contact_name={urllib.parse.quote(contact_name)}")
+        if phone:
+            params.append(f"phone={urllib.parse.quote(phone)}")
+        
+        registration_url = f"{base_url}?{'&'.join(params)}"
+        
+        # フォームタイプに応じたメール内容
+        if form_type == 'spot':
+            form_type_label = "スポット利用者登録（簡易契約書）"
+        else:
+            form_type_label = "利用者登録（契約書）"
+        
+        # メール送信
+        sender = "info@misesapo.co.jp"
+        recipient = client_email
+        
+        mail_subject = f"【ミセサポ】{form_type_label}のご案内"
+        mail_body = f"""{client_name} 様
+
+いつもお世話になっております。
+株式会社ミセサポでございます。
+
+この度は弊社サービスのご利用をご検討いただき、誠にありがとうございます。
+
+下記リンクより、{form_type_label}のご登録をお願いいたします。
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+▼ 登録申込フォーム
+{registration_url}
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+ご不明点がございましたら、お気軽にお問い合わせください。
+
+今後ともミセサポをよろしくお願いいたします。
+
+--------------------------------
+株式会社ミセサポ
+代表取締役 正田 和輝
+住所：東京都中央区日本橋茅場町1-8-1 7F
+電話：070-3332-3939
+メール：info@misesapo.co.jp
+--------------------------------
+"""
+        
+        ses_client.send_email(
+            Source=sender,
+            Destination={'ToAddresses': [recipient]},
+            Message={
+                'Subject': {'Data': mail_subject},
+                'Body': {'Text': {'Data': mail_body}}
+            }
+        )
+        
+        # クライアントのregistration_statusを更新
+        now = datetime.now(timezone.utc).isoformat()
+        try:
+            CLIENTS_TABLE.update_item(
+                Key={'id': client_id},
+                UpdateExpression='SET registration_status = :status, registration_sent_at = :sent_at, registration_form_type = :form_type',
+                ExpressionAttributeValues={
+                    ':status': 'sent',
+                    ':sent_at': now,
+                    ':form_type': form_type
+                }
+            )
+        except Exception as e:
+            print(f"Failed to update client registration status: {str(e)}")
+        
+        print(f"Registration form email sent to {recipient} (client_id: {client_id}, type: {form_type})")
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': f'登録申込書を {client_email} に送信しました',
+                'form_type': form_type,
+                'registration_url': registration_url
+            }, ensure_ascii=False)
+        }
+        
+    except Exception as e:
+        import traceback
+        print(f"Error sending registration form: {str(e)}")
+        print(traceback.format_exc())
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '登録申込書の送信に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
 def get_client_detail(client_id, headers):
+
     """
     クライアント詳細を取得
     """
