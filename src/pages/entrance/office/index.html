@@ -3023,6 +3023,7 @@ ${context}
                 { label: 'レポートを作成', action: 'startReportWizard()' }
             ],
             office: [
+                { label: '登録申込書を送付', action: 'openRegistrationFormSelector()' },
                 { label: '作業指示書を作成', action: 'startWorkOrderWizard()' }
             ],
             hr: [
@@ -4022,7 +4023,7 @@ ${context}
     function openRegistrationFormSelector(client = null) {
         registrationFormState.selectedClient = client;
         registrationFormState.selectedFormType = null;
-        
+
         // モーダルを作成
         const overlay = document.createElement('div');
         overlay.id = 'registration-form-overlay';
@@ -4168,11 +4169,11 @@ ${context}
 
     function selectRegistrationFormType(type) {
         registrationFormState.selectedFormType = type;
-        
+
         // 書類選択画面を閉じる
         const formOverlay = document.getElementById('registration-form-overlay');
         if (formOverlay) formOverlay.remove();
-        
+
         // メール送信画面を表示
         showRegistrationEmailPreview(type);
     }
@@ -4181,11 +4182,11 @@ ${context}
         const client = registrationFormState.selectedClient;
         const clientName = client?.company_name || client?.name || '（顧客名を入力）';
         const clientEmail = client?.email || '（メールアドレスを入力）';
-        
-        const formTypeLabel = formType === 'spot' 
-            ? 'スポット利用者登録（簡易契約書）' 
+
+        const formTypeLabel = formType === 'spot'
+            ? 'スポット利用者登録（簡易契約書）'
             : '利用者登録（契約書）';
-        
+
         const emailBody = `${clientName} 様
 
 いつもお世話になっております。
@@ -4372,18 +4373,18 @@ ${context}
     async function sendRegistrationEmail(formType) {
         const sendBtn = document.getElementById('reg-send-btn');
         const emailTo = document.getElementById('reg-email-to').value;
-        
+
         if (!emailTo || !emailTo.includes('@')) {
             alert('有効なメールアドレスを入力してください。');
             return;
         }
-        
+
         sendBtn.disabled = true;
         sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
-        
+
         try {
             const client = registrationFormState.selectedClient;
-            
+
             if (client && client.id) {
                 // APIを使って送信
                 const response = await fetch(`${API_BASE}/clients/${client.id}/send-registration`, {
@@ -4394,13 +4395,13 @@ ${context}
                     },
                     body: JSON.stringify({ form_type: formType })
                 });
-                
+
                 if (!response.ok) throw new Error('送信に失敗しました');
             }
-            
+
             closeRegistrationFormSelector();
             appendChatMessage('ai', `✅ **登録申込書を送信しました**\n\n📧 送信先: ${emailTo}\n📄 種類: ${formType === 'spot' ? 'スポット契約' : '通常契約'}\n\n顧客がフォームに入力後、自動的にデータが登録されます。`);
-            
+
         } catch (error) {
             console.error('Registration email error:', error);
             sendBtn.disabled = false;
