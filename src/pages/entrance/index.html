@@ -521,6 +521,225 @@
         color: #fff;
     }
 
+    /* Feature Overlay Styles (TODO / Daily Report) */
+    .feature-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(20px);
+        z-index: 10000;
+        display: none;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .feature-overlay.visible {
+        display: flex;
+    }
+
+    .feature-overlay-content {
+        width: 100%;
+        max-width: 500px;
+        margin-top: 40px;
+    }
+
+    .feature-overlay-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .feature-overlay-header h2 {
+        flex: 1;
+        color: #fff;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .feature-overlay-back,
+    .feature-overlay-add {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        font-size: 1.1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+    }
+
+    .feature-overlay-back:hover {
+        background: var(--accent-color);
+    }
+
+    .feature-overlay-add:hover {
+        background: #10b981;
+    }
+
+    .feature-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .feature-loading {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.5);
+        padding: 40px;
+    }
+
+    .feature-item {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .feature-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--accent-color);
+    }
+
+    .feature-item.completed {
+        opacity: 0.5;
+    }
+
+    .feature-item-title {
+        color: #fff;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .feature-item.completed .feature-item-title {
+        text-decoration: line-through;
+    }
+
+    .feature-item-meta {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+    }
+
+    .feature-item-checkbox {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .feature-item-checkbox.checked {
+        background: #10b981;
+        border-color: #10b981;
+    }
+
+    .feature-form {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .feature-input,
+    .feature-textarea {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: #fff;
+        font-size: 1rem;
+        margin-bottom: 12px;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .feature-input::placeholder,
+    .feature-textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .feature-textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .feature-form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .feature-btn-cancel,
+    .feature-btn-submit,
+    .feature-btn-ai {
+        padding: 10px 20px;
+        border-radius: 10px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .feature-btn-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .feature-btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .feature-btn-submit {
+        background: var(--accent-color);
+        color: #fff;
+    }
+
+    .feature-btn-submit:hover {
+        filter: brightness(1.2);
+    }
+
+    .feature-btn-ai {
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        color: #fff;
+    }
+
+    .feature-btn-ai:hover {
+        filter: brightness(1.2);
+    }
+
+    .feature-empty {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.4);
+        padding: 40px 20px;
+    }
+
+    .feature-empty i {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        display: block;
+    }
 
     /* Responsive adjustments for small screens */
     @media (max-width: 768px) {
@@ -2152,6 +2371,69 @@
     </div>
 </div>
 
+<!-- TODO Overlay -->
+<div id="todo-overlay" class="feature-overlay">
+    <div class="feature-overlay-content">
+        <div class="feature-overlay-header">
+            <button class="feature-overlay-back" onclick="closeTodoOverlay()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2><i class="fas fa-tasks"></i> TODO</h2>
+            <button class="feature-overlay-add" onclick="showAddTodoForm()">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- Add TODO Form (hidden by default) -->
+        <div id="add-todo-form" class="feature-form" style="display: none;">
+            <input type="text" id="new-todo-title" placeholder="TODOのタイトル..." class="feature-input">
+            <input type="date" id="new-todo-due" class="feature-input">
+            <div class="feature-form-actions">
+                <button onclick="hideAddTodoForm()" class="feature-btn-cancel">キャンセル</button>
+                <button onclick="submitNewTodo()" class="feature-btn-submit">追加</button>
+            </div>
+        </div>
+
+        <!-- TODO List -->
+        <div id="todo-list-container" class="feature-list">
+            <div class="feature-loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Daily Report Overlay -->
+<div id="daily-report-overlay" class="feature-overlay">
+    <div class="feature-overlay-content">
+        <div class="feature-overlay-header">
+            <button class="feature-overlay-back" onclick="closeDailyReportOverlay()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2><i class="fas fa-file-alt"></i> 日報</h2>
+            <button class="feature-overlay-add" onclick="showAddReportForm()">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- Add Report Form (hidden by default) -->
+        <div id="add-report-form" class="feature-form" style="display: none;">
+            <input type="date" id="new-report-date" class="feature-input">
+            <textarea id="new-report-content" placeholder="本日の業務内容・成果・課題など..." class="feature-textarea"
+                rows="5"></textarea>
+            <div class="feature-form-actions">
+                <button onclick="hideAddReportForm()" class="feature-btn-cancel">キャンセル</button>
+                <button onclick="askMisogiToWrite()" class="feature-btn-ai"><i class="fas fa-robot"></i>
+                    MISOGIに書かせる</button>
+                <button onclick="submitNewReport()" class="feature-btn-submit">保存</button>
+            </div>
+        </div>
+
+        <!-- Report List -->
+        <div id="report-list-container" class="feature-list">
+            <div class="feature-loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>
+        </div>
+    </div>
+</div>
+
 <button class="floating-btn" id="chat-toggle-btn" onclick="EntranceCore.toggleChatLog()" title="チャットログ">
     <i class="fas fa-comment-alt"></i>
 </button>
@@ -3605,23 +3887,247 @@ ${context}`;
         }
     }
 
+    // ========================================
+    // TODO Overlay Functions
+    // ========================================
     function openTodoOverlay() {
         toggleEntranceMenu(); // Close menu first
-        // TODO機能を呼び出す（EntranceCoreのloadTodosを使用）
-        if (window.EntranceCore && typeof window.EntranceCore.loadTodos === 'function') {
-            window.EntranceCore.loadTodos();
+        const overlay = document.getElementById('todo-overlay');
+        if (overlay) {
+            overlay.classList.add('visible');
+            loadTodoList();
         }
-        // チャットでTODOを表示するようMISOGIに依頼
-        appendChatMessage('ai', 'TODOリストを表示します。現在のタスクを確認してください。');
     }
 
+    function closeTodoOverlay() {
+        const overlay = document.getElementById('todo-overlay');
+        if (overlay) overlay.classList.remove('visible');
+        hideAddTodoForm();
+    }
+
+    function showAddTodoForm() {
+        document.getElementById('add-todo-form').style.display = 'block';
+        document.getElementById('new-todo-title').focus();
+    }
+
+    function hideAddTodoForm() {
+        document.getElementById('add-todo-form').style.display = 'none';
+        document.getElementById('new-todo-title').value = '';
+        document.getElementById('new-todo-due').value = '';
+    }
+
+    async function loadTodoList() {
+        const container = document.getElementById('todo-list-container');
+        container.innerHTML = '<div class="feature-loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
+
+        const token = EntranceCore.getToken();
+        const user = EntranceCore.getUser();
+        if (!user) {
+            container.innerHTML = '<div class="feature-empty"><i class="fas fa-lock"></i><div>ログインが必要です</div></div>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/todos?staff_id=${user.id || user.sub}&limit=30`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const todos = Array.isArray(data) ? data : (data.todos || data.items || []);
+
+                if (todos.length === 0) {
+                    container.innerHTML = '<div class="feature-empty"><i class="fas fa-tasks"></i><div>TODOがありません<br>＋ボタンで追加してください</div></div>';
+                } else {
+                    container.innerHTML = todos.map(t => {
+                        const isCompleted = t.completed || t.status === 'completed';
+                        return `
+                            <div class="feature-item ${isCompleted ? 'completed' : ''}" onclick="toggleTodoItem('${t.id}')" style="display: flex; align-items: center;">
+                                <div class="feature-item-checkbox ${isCompleted ? 'checked' : ''}">
+                                    ${isCompleted ? '<i class="fas fa-check" style="color:#fff;font-size:0.7rem;"></i>' : ''}
+                                </div>
+                                <div style="flex:1;">
+                                    <div class="feature-item-title">${t.title || t.content || 'タイトルなし'}</div>
+                                    <div class="feature-item-meta">${t.due_date ? `期限: ${t.due_date}` : '期限なし'}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } else {
+                container.innerHTML = '<div class="feature-empty"><i class="fas fa-exclamation-triangle"></i><div>読み込みに失敗しました</div></div>';
+            }
+        } catch (e) {
+            console.error('Failed to load todos:', e);
+            container.innerHTML = '<div class="feature-empty"><i class="fas fa-exclamation-triangle"></i><div>読み込みに失敗しました</div></div>';
+        }
+    }
+
+    async function toggleTodoItem(todoId) {
+        const token = EntranceCore.getToken();
+        try {
+            await fetch(`${API_BASE}/todos/${todoId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ completed: true })
+            });
+            loadTodoList();
+        } catch (e) {
+            console.error('Failed to toggle todo:', e);
+        }
+    }
+
+    async function submitNewTodo() {
+        const title = document.getElementById('new-todo-title').value.trim();
+        const dueDate = document.getElementById('new-todo-due').value;
+
+        if (!title) {
+            alert('タイトルを入力してください');
+            return;
+        }
+
+        const token = EntranceCore.getToken();
+        const user = EntranceCore.getUser();
+
+        try {
+            const response = await fetch(`${API_BASE}/todos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    staff_id: user.id || user.sub,
+                    title: title,
+                    due_date: dueDate || null,
+                    status: 'pending'
+                })
+            });
+
+            if (response.ok) {
+                hideAddTodoForm();
+                loadTodoList();
+                appendChatMessage('ai', `✅ TODOを追加しました：「${title}」`);
+            } else {
+                alert('追加に失敗しました');
+            }
+        } catch (e) {
+            console.error('Failed to create todo:', e);
+            alert('追加に失敗しました');
+        }
+    }
+
+    // ========================================
+    // Daily Report Overlay Functions
+    // ========================================
     function openDailyReportOverlay() {
         toggleEntranceMenu(); // Close menu first
-        // 日報入力画面を開く
-        const basePath = '{{ base_path }}' || '/';
-        window.location.href = basePath + 'staff/daily-reports';
+        const overlay = document.getElementById('daily-report-overlay');
+        if (overlay) {
+            overlay.classList.add('visible');
+            // Set today's date as default
+            document.getElementById('new-report-date').value = new Date().toISOString().split('T')[0];
+            loadReportList();
+        }
     }
 
+    function closeDailyReportOverlay() {
+        const overlay = document.getElementById('daily-report-overlay');
+        if (overlay) overlay.classList.remove('visible');
+        hideAddReportForm();
+    }
+
+    function showAddReportForm() {
+        document.getElementById('add-report-form').style.display = 'block';
+    }
+
+    function hideAddReportForm() {
+        document.getElementById('add-report-form').style.display = 'none';
+        document.getElementById('new-report-content').value = '';
+    }
+
+    async function loadReportList() {
+        const container = document.getElementById('report-list-container');
+        container.innerHTML = '<div class="feature-loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
+
+        const token = EntranceCore.getToken();
+        const user = EntranceCore.getUser();
+        if (!user) {
+            container.innerHTML = '<div class="feature-empty"><i class="fas fa-lock"></i><div>ログインが必要です</div></div>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/daily-reports?staff_id=${user.id || user.sub}&limit=15`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const reports = Array.isArray(data) ? data : (data.reports || data.items || []);
+
+                if (reports.length === 0) {
+                    container.innerHTML = '<div class="feature-empty"><i class="fas fa-file-alt"></i><div>日報がありません<br>＋ボタンで作成してください</div></div>';
+                } else {
+                    container.innerHTML = reports.map(r => `
+                        <div class="feature-item">
+                            <div class="feature-item-title">${r.date || r.report_date || '日付不明'}</div>
+                            <div class="feature-item-meta">${r.summary || (r.content ? r.content.substring(0, 60) + '...' : '内容なし')}</div>
+                        </div>
+                    `).join('');
+                }
+            } else {
+                container.innerHTML = '<div class="feature-empty"><i class="fas fa-exclamation-triangle"></i><div>読み込みに失敗しました</div></div>';
+            }
+        } catch (e) {
+            console.error('Failed to load daily reports:', e);
+            container.innerHTML = '<div class="feature-empty"><i class="fas fa-exclamation-triangle"></i><div>読み込みに失敗しました</div></div>';
+        }
+    }
+
+    async function submitNewReport() {
+        const date = document.getElementById('new-report-date').value;
+        const content = document.getElementById('new-report-content').value.trim();
+
+        if (!content) {
+            alert('内容を入力してください');
+            return;
+        }
+
+        const token = EntranceCore.getToken();
+        const user = EntranceCore.getUser();
+
+        try {
+            const response = await fetch(`${API_BASE}/daily-reports`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    staff_id: user.id || user.sub,
+                    date: date,
+                    content: content,
+                    summary: content.substring(0, 50),
+                    status: 'submitted'
+                })
+            });
+
+            if (response.ok) {
+                hideAddReportForm();
+                loadReportList();
+                appendChatMessage('ai', `✅ 日報を保存しました（${date}）`);
+            } else {
+                alert('保存に失敗しました');
+            }
+        } catch (e) {
+            console.error('Failed to create report:', e);
+            alert('保存に失敗しました');
+        }
+    }
+
+    function askMisogiToWrite() {
+        closeDailyReportOverlay();
+        appendChatMessage('ai', '日報の作成をお手伝いします。<br><br>今日行った業務を教えてください。例えば：<br>• どんな作業をしましたか？<br>• 成果はありましたか？<br>• 課題や気づきはありましたか？<br><br>お話しいただければ、日報の形にまとめます。');
+    }
+
+    // ========================================
+    // Attendance Overlay Function
+    // ========================================
     function openAttendanceOverlay() {
         toggleEntranceMenu(); // Close menu first
         // 出退勤操作をチャットで案内
