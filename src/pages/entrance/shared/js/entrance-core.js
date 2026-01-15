@@ -42,6 +42,18 @@ const EntranceCore = {
         currentChannel: 'misesapo'
     },
 
+    getCurrentJobFromUrl() {
+        const path = window.location.pathname;
+        if (path.includes('/cleaning/')) return 'cleaning';
+        if (path.includes('/office/')) return 'office';
+        if (path.includes('/sales/')) return 'sales';
+        if (path.includes('/hr/')) return 'hr';
+        if (path.includes('/accounting/')) return 'accounting';
+        if (path.includes('/admin/')) return 'admin';
+        if (path.includes('/dev/')) return 'dev';
+        return null;
+    },
+
     // ========================================
     // Authentication Functions
     // ========================================
@@ -563,6 +575,17 @@ const EntranceCore = {
     // ========================================
 
     initStatusUI() {
+        // Sync job type from URL
+        const urlJob = this.getCurrentJobFromUrl();
+        if (urlJob) {
+            this.setJobType(urlJob);
+        } else {
+            // If on main entrance, we might want to clear or handle differently
+            // but for now, let it be null or from storage if needed.
+            const saved = localStorage.getItem('current_job_type');
+            if (saved) this.setJobType(saved);
+        }
+
         // Create attendance indicator
         this.createAttendanceIndicator();
         // Create menu button

@@ -2746,12 +2746,22 @@
                 } else if (isClockedIn) {
                     // 出勤済み → 「再開」扱い
                     EntranceCore.updateAttendanceIndicator('clocked-in');
+
+                    // URLから現在のジョブを判定
+                    const urlJob = EntranceCore.getCurrentJobFromUrl();
                     const savedJobType = localStorage.getItem('current_job_type');
                     const storeName = window.currentAttendanceRecord?.store_name || '';
-                    if (savedJobType && JOB_TYPES[savedJobType]) {
-                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${storeName ? '【' + storeName + '】での' : ''}${JOB_TYPES[savedJobType].label}モードの業務を継続中です。`);
-                        filterSidebar(savedJobType);
+
+                    if (urlJob && JOB_TYPES[urlJob]) {
+                        // 特定の職種ディレクトリにいる場合のみ「継続中」とする
+                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${storeName ? '【' + storeName + '】での' : ''}${JOB_TYPES[urlJob].label}モードの業務を継続中です。`);
+                        filterSidebar(urlJob);
+                    } else if (!urlJob && savedJobType && JOB_TYPES[savedJobType]) {
+                        // トップ（/entrance/）にいて、保存された職種がある場合
+                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${storeName ? '【' + storeName + '】で' : ''}出勤中ですが、本日はどの業務（モード）を行いますか？`);
+                        showJobSelection();
                     } else {
+                        // それ以外（保存された職種もない場合など）
                         appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${storeName ? '【' + storeName + '】で' : ''}出勤中ですが、本日はどの業務（モード）を行いますか？`);
                         showJobSelection();
                     }

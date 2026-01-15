@@ -602,3 +602,25 @@
         height: 6px;
     }
 }
+
+/* Action Buttons / Hotbar adjustments */
+#action-buttons-container {
+    position: fixed;
+    bottom: 120px;
+    /* Raise above message input */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    max-width: 90%;
+    pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+    #action-buttons-container {
+        bottom: 110px;
+    }
+}
