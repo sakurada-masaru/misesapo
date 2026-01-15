@@ -4010,4 +4010,405 @@ ${context}
     function startWorkOrderWizard() {
         appendChatMessage('ai', '作業指示書作成機能は準備中です。');
     }
+
+    // ========================================
+    // 登録申込書送付機能
+    // ========================================
+    let registrationFormState = {
+        selectedClient: null,
+        selectedFormType: null
+    };
+
+    function openRegistrationFormSelector(client = null) {
+        registrationFormState.selectedClient = client;
+        registrationFormState.selectedFormType = null;
+        
+        // モーダルを作成
+        const overlay = document.createElement('div');
+        overlay.id = 'registration-form-overlay';
+        overlay.innerHTML = `
+            <style>
+                #registration-form-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.9);
+                    z-index: 100000;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    animation: fadeIn 0.3s ease;
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                .reg-form-header {
+                    color: #fff;
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    margin-bottom: 24px;
+                    text-align: center;
+                }
+                .reg-form-subheader {
+                    color: rgba(255,255,255,0.7);
+                    font-size: 1rem;
+                    margin-bottom: 32px;
+                }
+                .reg-form-container {
+                    display: flex;
+                    gap: 40px;
+                    align-items: flex-start;
+                }
+                .reg-form-card {
+                    background: rgba(255,255,255,0.05);
+                    border: 2px solid rgba(255,255,255,0.2);
+                    border-radius: 16px;
+                    padding: 20px;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    text-align: center;
+                }
+                .reg-form-card:hover {
+                    border-color: var(--accent-color);
+                    transform: translateY(-8px);
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+                }
+                .reg-form-card.regular:hover {
+                    border-color: #f43f5e;
+                    box-shadow: 0 20px 40px rgba(244, 63, 94, 0.3);
+                }
+                .reg-form-card.spot:hover {
+                    border-color: #3b82f6;
+                    box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
+                }
+                .reg-form-card img {
+                    width: 280px;
+                    height: auto;
+                    border-radius: 8px;
+                    margin-bottom: 16px;
+                    border: 1px solid rgba(255,255,255,0.1);
+                }
+                .reg-form-card h3 {
+                    color: #fff;
+                    font-size: 1.1rem;
+                    margin: 0 0 8px 0;
+                }
+                .reg-form-card p {
+                    color: rgba(255,255,255,0.6);
+                    font-size: 0.85rem;
+                    margin: 0;
+                }
+                .reg-form-badge {
+                    display: inline-block;
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    margin-top: 12px;
+                }
+                .reg-form-card.regular .reg-form-badge {
+                    background: #f43f5e;
+                    color: #fff;
+                }
+                .reg-form-card.spot .reg-form-badge {
+                    background: #3b82f6;
+                    color: #fff;
+                }
+                .reg-form-close {
+                    position: absolute;
+                    top: 20px;
+                    right: 20px;
+                    background: rgba(255,255,255,0.1);
+                    border: none;
+                    color: #fff;
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    font-size: 1.2rem;
+                    transition: all 0.2s;
+                }
+                .reg-form-close:hover {
+                    background: rgba(255,255,255,0.2);
+                }
+            </style>
+            <button class="reg-form-close" onclick="closeRegistrationFormSelector()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="reg-form-header">登録申込書を選択</div>
+            <div class="reg-form-subheader">どちらの書類を送付しますか？</div>
+            <div class="reg-form-container">
+                <div class="reg-form-card regular" onclick="selectRegistrationFormType('regular')">
+                    <img src="/images/forms/registration_regular.png" alt="利用者登録 申込書">
+                    <h3>利用者登録 申込書</h3>
+                    <p>継続的なサービス利用のための<br>通常契約の申込書</p>
+                    <div class="reg-form-badge">契約書</div>
+                </div>
+                <div class="reg-form-card spot" onclick="selectRegistrationFormType('spot')">
+                    <img src="/images/forms/registration_spot.png" alt="スポット利用者登録 申込書">
+                    <h3>スポット利用者登録 申込書</h3>
+                    <p>単発・スポットサービス利用のための<br>簡易契約の申込書</p>
+                    <div class="reg-form-badge">簡易契約書</div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
+    function closeRegistrationFormSelector() {
+        const overlay = document.getElementById('registration-form-overlay');
+        if (overlay) overlay.remove();
+        const emailOverlay = document.getElementById('registration-email-overlay');
+        if (emailOverlay) emailOverlay.remove();
+    }
+
+    function selectRegistrationFormType(type) {
+        registrationFormState.selectedFormType = type;
+        
+        // 書類選択画面を閉じる
+        const formOverlay = document.getElementById('registration-form-overlay');
+        if (formOverlay) formOverlay.remove();
+        
+        // メール送信画面を表示
+        showRegistrationEmailPreview(type);
+    }
+
+    function showRegistrationEmailPreview(formType) {
+        const client = registrationFormState.selectedClient;
+        const clientName = client?.company_name || client?.name || '（顧客名を入力）';
+        const clientEmail = client?.email || '（メールアドレスを入力）';
+        
+        const formTypeLabel = formType === 'spot' 
+            ? 'スポット利用者登録（簡易契約書）' 
+            : '利用者登録（契約書）';
+        
+        const emailBody = `${clientName} 様
+
+いつもお世話になっております。
+株式会社ミセサポでございます。
+
+この度は弊社サービスのご利用をご検討いただき、誠にありがとうございます。
+
+下記リンクより、${formTypeLabel}のご登録をお願いいたします。
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+▼ 登録申込フォーム
+[登録URLが自動挿入されます]
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+ご不明点がございましたら、お気軽にお問い合わせください。
+
+今後ともミセサポをよろしくお願いいたします。
+
+--------------------------------
+株式会社ミセサポ
+代表取締役 正田 和輝
+住所：東京都中央区日本橋茅場町1-8-1 7F
+電話：070-3332-3939
+メール：info@misesapo.co.jp
+--------------------------------`;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'registration-email-overlay';
+        overlay.innerHTML = `
+            <style>
+                #registration-email-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.9);
+                    z-index: 100000;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 40px;
+                    animation: fadeIn 0.3s ease;
+                }
+                .email-preview-container {
+                    background: #fff;
+                    border-radius: 16px;
+                    width: 100%;
+                    max-width: 600px;
+                    max-height: 80vh;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .email-preview-header {
+                    background: ${formType === 'spot' ? '#3b82f6' : '#f43f5e'};
+                    color: #fff;
+                    padding: 20px 24px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .email-preview-header h2 {
+                    margin: 0;
+                    font-size: 1.1rem;
+                }
+                .email-preview-close {
+                    background: rgba(255,255,255,0.2);
+                    border: none;
+                    color: #fff;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    font-size: 1rem;
+                }
+                .email-preview-body {
+                    padding: 24px;
+                    overflow-y: auto;
+                    flex: 1;
+                }
+                .email-field {
+                    margin-bottom: 16px;
+                }
+                .email-field label {
+                    display: block;
+                    font-size: 0.8rem;
+                    color: #6b7280;
+                    margin-bottom: 6px;
+                    font-weight: 600;
+                }
+                .email-field input {
+                    width: 100%;
+                    padding: 12px;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                    font-size: 1rem;
+                }
+                .email-field input:focus {
+                    outline: none;
+                    border-color: ${formType === 'spot' ? '#3b82f6' : '#f43f5e'};
+                }
+                .email-field textarea {
+                    width: 100%;
+                    min-height: 300px;
+                    padding: 12px;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                    font-size: 0.9rem;
+                    font-family: inherit;
+                    line-height: 1.6;
+                    resize: vertical;
+                }
+                .email-preview-footer {
+                    padding: 16px 24px;
+                    background: #f9fafb;
+                    border-top: 1px solid #e5e7eb;
+                    display: flex;
+                    gap: 12px;
+                    justify-content: flex-end;
+                }
+                .email-btn {
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .email-btn-cancel {
+                    background: #fff;
+                    border: 1px solid #e5e7eb;
+                    color: #6b7280;
+                }
+                .email-btn-cancel:hover {
+                    background: #f3f4f6;
+                }
+                .email-btn-send {
+                    background: ${formType === 'spot' ? '#3b82f6' : '#f43f5e'};
+                    border: none;
+                    color: #fff;
+                }
+                .email-btn-send:hover {
+                    opacity: 0.9;
+                    transform: translateY(-2px);
+                }
+                .email-btn-send:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            </style>
+            <div class="email-preview-container">
+                <div class="email-preview-header">
+                    <h2><i class="fas fa-envelope"></i> ${formTypeLabel}のご案内</h2>
+                    <button class="email-preview-close" onclick="closeRegistrationFormSelector()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="email-preview-body">
+                    <div class="email-field">
+                        <label>宛先メールアドレス</label>
+                        <input type="email" id="reg-email-to" value="${clientEmail}" placeholder="example@email.com">
+                    </div>
+                    <div class="email-field">
+                        <label>件名</label>
+                        <input type="text" id="reg-email-subject" value="【ミセサポ】${formTypeLabel}のご案内">
+                    </div>
+                    <div class="email-field">
+                        <label>本文</label>
+                        <textarea id="reg-email-body">${emailBody}</textarea>
+                    </div>
+                </div>
+                <div class="email-preview-footer">
+                    <button class="email-btn email-btn-cancel" onclick="closeRegistrationFormSelector()">キャンセル</button>
+                    <button class="email-btn email-btn-send" id="reg-send-btn" onclick="sendRegistrationEmail('${formType}')">
+                        <i class="fas fa-paper-plane"></i> 送信する
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
+    async function sendRegistrationEmail(formType) {
+        const sendBtn = document.getElementById('reg-send-btn');
+        const emailTo = document.getElementById('reg-email-to').value;
+        
+        if (!emailTo || !emailTo.includes('@')) {
+            alert('有効なメールアドレスを入力してください。');
+            return;
+        }
+        
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
+        
+        try {
+            const client = registrationFormState.selectedClient;
+            
+            if (client && client.id) {
+                // APIを使って送信
+                const response = await fetch(`${API_BASE}/clients/${client.id}/send-registration`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('cognito_id_token') || ''}`
+                    },
+                    body: JSON.stringify({ form_type: formType })
+                });
+                
+                if (!response.ok) throw new Error('送信に失敗しました');
+            }
+            
+            closeRegistrationFormSelector();
+            appendChatMessage('ai', `✅ **登録申込書を送信しました**\n\n📧 送信先: ${emailTo}\n📄 種類: ${formType === 'spot' ? 'スポット契約' : '通常契約'}\n\n顧客がフォームに入力後、自動的にデータが登録されます。`);
+            
+        } catch (error) {
+            console.error('Registration email error:', error);
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送信する';
+            alert('送信に失敗しました: ' + error.message);
+        }
+    }
+
+    // AIから呼び出し可能な関数として登録
+    window.openRegistrationFormSelector = openRegistrationFormSelector;
 </script>
