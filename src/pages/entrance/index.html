@@ -300,6 +300,99 @@
         z-index: 2000;
     }
 
+    /* Entrance Menu Overlay */
+    #entrance-menu-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(20px);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #entrance-menu-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .entrance-menu-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        font-size: 1.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+    }
+
+    .entrance-menu-close:hover {
+        background: #ef4444;
+        border-color: #ef4444;
+        transform: rotate(90deg);
+    }
+
+    .entrance-menu-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .entrance-menu-item {
+        text-align: center;
+    }
+
+    .entrance-menu-item a,
+    .entrance-menu-item button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        padding: 20px 50px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        color: #fff;
+        font-size: 1.3rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        min-width: 280px;
+    }
+
+    .entrance-menu-item a:hover,
+    .entrance-menu-item button:hover {
+        background: var(--accent-color);
+        border-color: var(--accent-color);
+        transform: scale(1.05);
+        box-shadow: 0 10px 40px var(--accent-glow);
+    }
+
+    .entrance-menu-item i {
+        font-size: 1.5rem;
+        width: 30px;
+    }
+
     /* Responsive adjustments for small screens */
     @media (max-width: 768px) {
         .floating-controls {
@@ -321,12 +414,19 @@
         #attendance-status-tag {
             top: 15px;
             left: auto;
-            right: 70px;
+            right: 110px;
             padding: 6px 12px;
         }
 
         #attendance-status-tag .tag-text {
             font-size: 0.7rem;
+        }
+
+        .entrance-menu-item a,
+        .entrance-menu-item button {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            min-width: 240px;
         }
     }
 
@@ -1844,11 +1944,47 @@
     </button>
 </div>
 
-<!-- Theme & Chat Controls -->
+<!-- Theme & Menu Controls -->
 <div class="floating-controls">
+    <button class="floating-btn" id="entrance-menu-btn" onclick="toggleEntranceMenu()" title="メニュー">
+        <i class="fas fa-bars"></i>
+    </button>
     <button class="floating-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="テーマ切替">
         <i class="fas fa-moon"></i>
     </button>
+</div>
+
+<!-- Entrance Menu Overlay -->
+<div id="entrance-menu-overlay">
+    <button class="entrance-menu-close" onclick="toggleEntranceMenu()">
+        <i class="fas fa-times"></i>
+    </button>
+    <ul class="entrance-menu-list">
+        <li class="entrance-menu-item">
+            <a href="/staff/mypage">
+                <i class="fas fa-cog"></i>
+                <span>設定</span>
+            </a>
+        </li>
+        <li class="entrance-menu-item">
+            <button onclick="openTodoOverlay()">
+                <i class="fas fa-tasks"></i>
+                <span>TODO</span>
+            </button>
+        </li>
+        <li class="entrance-menu-item">
+            <button onclick="openDailyReportOverlay()">
+                <i class="fas fa-file-alt"></i>
+                <span>日報</span>
+            </button>
+        </li>
+        <li class="entrance-menu-item">
+            <button onclick="openAttendanceOverlay()">
+                <i class="fas fa-clock"></i>
+                <span>出退勤</span>
+            </button>
+        </li>
+    </ul>
 </div>
 
 <button class="floating-btn" id="chat-toggle-btn" onclick="EntranceCore.toggleChatLog()" title="チャットログ">
@@ -3230,6 +3366,46 @@ ${context}`;
 
         if (btn) {
             btn.innerHTML = isLight ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+    }
+
+    // Entrance Menu Functions
+    function toggleEntranceMenu() {
+        const overlay = document.getElementById('entrance-menu-overlay');
+        if (overlay) {
+            overlay.classList.toggle('visible');
+        }
+    }
+
+    function openTodoOverlay() {
+        toggleEntranceMenu(); // Close menu first
+        // TODO機能を呼び出す（EntranceCoreのloadTodosを使用）
+        if (window.EntranceCore && typeof window.EntranceCore.loadTodos === 'function') {
+            window.EntranceCore.loadTodos();
+        }
+        // チャットでTODOを表示するようMISOGIに依頼
+        appendChatMessage('ai', 'TODOリストを表示します。現在のタスクを確認してください。');
+    }
+
+    function openDailyReportOverlay() {
+        toggleEntranceMenu(); // Close menu first
+        // 日報入力画面を開く
+        const basePath = '{{ base_path }}' || '/';
+        window.location.href = basePath + 'staff/daily-reports';
+    }
+
+    function openAttendanceOverlay() {
+        toggleEntranceMenu(); // Close menu first
+        // 出退勤操作をチャットで案内
+        const attendance = window.currentAttendanceRecord;
+        if (attendance) {
+            if (attendance.on_break) {
+                appendChatMessage('ai', '現在は【休憩中】です。<br><br><button class="attendance-btn" onclick="performBreakEnd()"><i class="fas fa-play"></i> 休憩終了</button> <button class="attendance-btn" style="background: linear-gradient(135deg, #ef4444, #dc2626);" onclick="performClockOut()"><i class="fas fa-sign-out-alt"></i> 退勤</button>');
+            } else {
+                appendChatMessage('ai', '現在は【出勤中】です。<br><br><button class="attendance-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706);" onclick="performBreakStart()"><i class="fas fa-coffee"></i> 休憩開始</button> <button class="attendance-btn" style="background: linear-gradient(135deg, #ef4444, #dc2626);" onclick="performClockOut()"><i class="fas fa-sign-out-alt"></i> 退勤</button>');
+            }
+        } else {
+            appendChatMessage('ai', '現在は【未出勤】です。出勤するには「出勤」ボタンを押してください。<br><br><button class="attendance-btn" onclick="performClockIn()"><i class="fas fa-sign-in-alt"></i> 出勤</button>');
         }
     }
 
