@@ -741,6 +741,36 @@
         display: block;
     }
 
+    /* Filter Tabs */
+    .feature-filter-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    .feature-filter-btn {
+        flex: 1;
+        padding: 10px 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .feature-filter-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .feature-filter-btn.active {
+        background: var(--accent-color);
+        border-color: var(--accent-color);
+        color: #fff;
+    }
+
     /* Responsive adjustments for small screens */
     @media (max-width: 768px) {
         .floating-controls {
@@ -2394,6 +2424,13 @@
             </div>
         </div>
 
+        <!-- Filter Tabs -->
+        <div class="feature-filter-tabs" id="todo-filter-tabs">
+            <button class="feature-filter-btn active" data-filter="all" onclick="filterTodos('all')">すべて</button>
+            <button class="feature-filter-btn" data-filter="active" onclick="filterTodos('active')">未完了</button>
+            <button class="feature-filter-btn" data-filter="completed" onclick="filterTodos('completed')">完了</button>
+        </div>
+
         <!-- TODO List -->
         <div id="todo-list-container" class="feature-list">
             <div class="feature-loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>
@@ -3916,6 +3953,51 @@ ${context}`;
         document.getElementById('new-todo-due').value = '';
     }
 
+    // TODO filter state
+    let currentTodoFilter = 'all';
+    let cachedTodos = [];
+
+    function filterTodos(filter) {
+        currentTodoFilter = filter;
+        // Update active button
+        document.querySelectorAll('#todo-filter-tabs .feature-filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === filter);
+        });
+        renderFilteredTodos();
+    }
+
+    function renderFilteredTodos() {
+        const container = document.getElementById('todo-list-container');
+        let filtered = cachedTodos;
+
+        if (currentTodoFilter === 'active') {
+            filtered = cachedTodos.filter(t => !t.completed && t.status !== 'completed');
+        } else if (currentTodoFilter === 'completed') {
+            filtered = cachedTodos.filter(t => t.completed || t.status === 'completed');
+        }
+
+        if (filtered.length === 0) {
+            const msg = currentTodoFilter === 'all' ? 'TODOがありません<br>＋ボタンで追加してください' :
+                currentTodoFilter === 'active' ? '未完了のTODOはありません' : '完了したTODOはありません';
+            container.innerHTML = `<div class="feature-empty"><i class="fas fa-tasks"></i><div>${msg}</div></div>`;
+        } else {
+            container.innerHTML = filtered.map(t => {
+                const isCompleted = t.completed || t.status === 'completed';
+                return `
+                    <div class="feature-item ${isCompleted ? 'completed' : ''}" onclick="toggleTodoItem('${t.id}', ${isCompleted})" style="display: flex; align-items: center;">
+                        <div class="feature-item-checkbox ${isCompleted ? 'checked' : ''}">
+                            ${isCompleted ? '<i class="fas fa-check" style="color:#fff;font-size:0.7rem;"></i>' : ''}
+                        </div>
+                        <div style="flex:1;">
+                            <div class="feature-item-title">${t.text || t.title || t.content || 'タイトルなし'}</div>
+                            <div class="feature-item-meta">${t.due_date ? `期限: ${t.due_date}` : (t.created_at ? `作成: ${new Date(t.created_at).toLocaleDateString('ja-JP')}` : '')}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
     async function loadTodoList() {
         const container = document.getElementById('todo-list-container');
         container.innerHTML = '<div class="feature-loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
@@ -3928,32 +4010,14 @@ ${context}`;
         }
 
         try {
-            const response = await fetch(`${API_BASE}/todos?staff_id=${user.id || user.sub}&limit=30`, {
+            const response = await fetch(`${API_BASE}/todos?staff_id=${user.id || user.sub}&limit=50`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (response.ok) {
                 const data = await response.json();
-                const todos = Array.isArray(data) ? data : (data.todos || data.items || []);
-
-                if (todos.length === 0) {
-                    container.innerHTML = '<div class="feature-empty"><i class="fas fa-tasks"></i><div>TODOがありません<br>＋ボタンで追加してください</div></div>';
-                } else {
-                    container.innerHTML = todos.map(t => {
-                        const isCompleted = t.completed || t.status === 'completed';
-                        return `
-                            <div class="feature-item ${isCompleted ? 'completed' : ''}" onclick="toggleTodoItem('${t.id}')" style="display: flex; align-items: center;">
-                                <div class="feature-item-checkbox ${isCompleted ? 'checked' : ''}">
-                                    ${isCompleted ? '<i class="fas fa-check" style="color:#fff;font-size:0.7rem;"></i>' : ''}
-                                </div>
-                                <div style="flex:1;">
-                                    <div class="feature-item-title">${t.title || t.content || 'タイトルなし'}</div>
-                                    <div class="feature-item-meta">${t.due_date ? `期限: ${t.due_date}` : '期限なし'}</div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
+                cachedTodos = Array.isArray(data) ? data : (data.todos || data.items || []);
+                renderFilteredTodos();
             } else {
                 container.innerHTML = '<div class="feature-empty"><i class="fas fa-exclamation-triangle"></i><div>読み込みに失敗しました</div></div>';
             }
@@ -3963,13 +4027,13 @@ ${context}`;
         }
     }
 
-    async function toggleTodoItem(todoId) {
+    async function toggleTodoItem(todoId, currentlyCompleted) {
         const token = EntranceCore.getToken();
         try {
             await fetch(`${API_BASE}/todos/${todoId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ completed: true })
+                body: JSON.stringify({ completed: !currentlyCompleted })
             });
             loadTodoList();
         } catch (e) {
@@ -3995,9 +4059,8 @@ ${context}`;
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({
                     staff_id: user.id || user.sub,
-                    title: title,
-                    due_date: dueDate || null,
-                    status: 'pending'
+                    text: title,
+                    completed: false
                 })
             });
 
