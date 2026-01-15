@@ -2143,8 +2143,9 @@
                     <span>言語</span>
                 </div>
                 <select id="language-select" class="settings-select" onchange="changeLanguage()">
-                    <option value="ja" selected>日本語</option>
+                    <option value="ja">日本語</option>
                     <option value="en">English</option>
+                    <option value="pt">Português</option>
                 </select>
             </div>
         </div>
@@ -3590,13 +3591,17 @@ ${context}`;
         const langSelect = document.getElementById('language-select');
         if (langSelect) {
             const lang = langSelect.value;
+            // Save to both keys for compatibility with cleaning module
             localStorage.setItem('entrance-language', lang);
-            // Show confirmation in chat
-            if (lang === 'en') {
-                appendChatMessage('ai', 'Language has been changed to English. Some UI elements will update on next reload.');
-            } else {
-                appendChatMessage('ai', '言語を日本語に設定しました。');
-            }
+            localStorage.setItem('user_language', lang);
+
+            // Show confirmation in appropriate language
+            const messages = {
+                ja: '言語を日本語に設定しました。',
+                en: 'Language has been changed to English. Some UI elements will update on next reload.',
+                pt: 'Idioma alterado para Português. Alguns elementos serão atualizados ao recarregar.'
+            };
+            appendChatMessage('ai', messages[lang] || messages.ja);
         }
     }
 
