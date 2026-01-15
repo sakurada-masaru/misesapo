@@ -577,7 +577,10 @@ const EntranceCore = {
         const tag = document.createElement('div');
         tag.id = 'attendance-status-tag';
         tag.className = 'attendance-status-tag';
-        tag.innerHTML = `<span class="tag-text">退</span>`;
+        tag.innerHTML = `
+            <div class="tag-dot"></div>
+            <span class="tag-text">未出勤</span>
+        `;
         document.body.appendChild(tag);
     },
 
@@ -882,12 +885,12 @@ const EntranceCore = {
 
         if (status === 'clocked-in') {
             tag.classList.add('clocked-in');
-            tag.querySelector('.tag-text').textContent = '出';
+            tag.querySelector('.tag-text').textContent = '出勤中';
         } else if (status === 'on-break') {
             tag.classList.add('on-break');
-            tag.querySelector('.tag-text').textContent = '休';
+            tag.querySelector('.tag-text').textContent = '休憩中';
         } else {
-            tag.querySelector('.tag-text').textContent = '退';
+            tag.querySelector('.tag-text').textContent = '未出勤';
         }
     },
 
@@ -1015,6 +1018,22 @@ const EntranceCore = {
             this.loadTodos();
         } catch (e) {
             console.error('Failed to toggle todo:', e);
+        }
+    },
+
+    toggleChatLog() {
+        const container = document.getElementById('chat-log-container');
+        if (container) {
+            container.classList.toggle('hidden');
+            const isHidden = container.classList.contains('hidden');
+            localStorage.setItem('chatLogHidden', isHidden);
+
+            // Toggle active state on the button
+            const btn = document.getElementById('chat-toggle-btn');
+            if (btn) {
+                btn.style.background = isHidden ? 'var(--panel-bg)' : 'var(--accent-color)';
+                btn.style.color = isHidden ? 'var(--text-primary)' : '#fff';
+            }
         }
     }
 };

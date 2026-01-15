@@ -196,35 +196,118 @@
         overflow: hidden !important;
     }
 
-    /* Dark Sidebar Overrides for MISOGI Theme */
-    #admin-sidebar {
-        background-color: transparent !important;
-        border-right: none !important;
-        position: absolute !important;
-        left: 20px !important;
-        top: 0 !important;
-        height: 100% !important;
-        width: 250px !important;
-        z-index: 100 !important;
-        display: none;
+    :root {
+        --bg-gradient: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);
+        --panel-bg: rgba(0, 0, 0, 0.7);
+        --text-primary: #fff;
+        --text-secondary: rgba(255, 255, 255, 0.6);
+        --border-color: rgba(255, 255, 255, 0.1);
+        --accent-glow: rgba(59, 130, 246, 0.5);
+    }
+
+    body.light-mode {
+        --bg-gradient: radial-gradient(circle at center, #f8fafc 0%, #e2e8f0 100%);
+        --panel-bg: rgba(255, 255, 255, 0.85);
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --border-color: rgba(0, 0, 0, 0.1);
+        --accent-glow: rgba(59, 130, 246, 0.3);
+    }
+
+    /* Attendance Status Tag */
+    #attendance-status-tag {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1500;
+        padding: 8px 16px;
+        background: var(--panel-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--border-color);
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    #attendance-status-tag .tag-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #6b7280;
+    }
+
+    #attendance-status-tag.clocked-in .tag-dot {
+        background: #10b981;
+        box-shadow: 0 0 12px #10b981;
+    }
+
+    #attendance-status-tag.on-break .tag-dot {
+        background: #f59e0b;
+        box-shadow: 0 0 12px #f59e0b;
+    }
+
+    #attendance-status-tag .tag-text {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: 0.5px;
+    }
+
+    /* Floating Toggle Buttons */
+    .floating-controls {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        display: flex;
         flex-direction: column;
+        gap: 15px;
+        z-index: 2000;
+    }
+
+    .floating-btn {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: var(--panel-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
         justify-content: center;
+        font-size: 1.4rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
     }
 
-    /* (sidebar styles skipped for brevity, keeping existing) */
-
-    #sidebar-toggle {
-        display: none !important;
+    .floating-btn:hover {
+        transform: scale(1.1) translateY(-5px);
+        background: var(--accent-color);
+        color: #fff;
+        border-color: var(--accent-color);
+        box-shadow: 0 12px 40px var(--accent-glow);
     }
 
+    #chat-toggle-btn {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        z-index: 2000;
+    }
+
+    /* Restored Main Content Styles */
     .main-content {
         padding: 0 !important;
         margin-left: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);
+        background: var(--bg-gradient) !important;
         position: absolute !important;
-        /* Changed to absolute to match overlay */
         top: 0;
         left: 0;
         overflow: hidden;
@@ -233,7 +316,60 @@
         justify-content: center;
         align-items: center;
         z-index: 1;
-        /* Base z-index */
+        transition: background 0.8s ease;
+    }
+
+    .chat-log-container {
+        position: fixed;
+        left: 32px;
+        bottom: 100px;
+        /* Slightly above the toggle button */
+        width: 400px;
+        min-width: 250px;
+        max-width: 600px;
+        z-index: 1900;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    .chat-log-container.hidden {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+        pointer-events: none;
+        display: block !important;
+        /* Keep in DOM for state */
+    }
+
+    /* Rest of the styles adapted for light mode */
+    .chat-history {
+        background: var(--panel-bg) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    .chat-log-line {
+        color: var(--text-primary) !important;
+        opacity: 0.9;
+    }
+
+    .mode-switch-container {
+        background: var(--panel-bg) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    .mode-btn {
+        color: var(--text-secondary);
+    }
+
+    .chat-input-wrapper {
+        background: var(--panel-bg) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    #text-input {
+        color: var(--text-primary) !important;
     }
 
     /* MISOGI Styles (Scoped) - keep root styles here */
@@ -1621,7 +1757,23 @@
     </button>
 </div>
 
-<div class="main-content" style="background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);">
+<!-- Theme & Chat Controls -->
+<div class="floating-controls">
+    <button class="floating-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="テーマ切替">
+        <i class="fas fa-moon"></i>
+    </button>
+</div>
+
+<button class="floating-btn" id="chat-toggle-btn" onclick="EntranceCore.toggleChatLog()" title="チャットログ">
+    <i class="fas fa-comment-alt"></i>
+</button>
+
+<main id="main" class="main-content" style="background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);">
+    <!-- Attendance Status Indicator -->
+    <div id="attendance-status-tag">
+        <div class="tag-dot"></div>
+        <span class="tag-text">未出勤</span>
+    </div>
     <!-- Persistent Visualizer Core -->
     <div class="visualizer-container">
         <div class="circle-text-container" id="circle-text"
@@ -1714,25 +1866,18 @@
                 <button class="login-submit-btn" onclick="performLogin()">認証</button>
             </div>
         </div>
-        <div class="visualizer-circle">
-            <input type="file" id="image-upload" accept="image/*" style="display: none;"
-                onchange="handleImageSelect(this)">
-            <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
-                <i class="fas fa-camera"></i>
-            </button>
-        </div>
+    </div>
 
-        <div class="chat-input-wrapper">
-            <input type="file" id="image-upload" accept="image/*" style="display: none;"
-                onchange="handleImageSelect(this)">
-            <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
-                <i class="fas fa-camera"></i>
-            </button>
-            <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
-            <button class="send-btn" onclick="sendTextMessage()">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
+    <div class="chat-input-wrapper">
+        <input type="file" id="image-upload" accept="image/*" style="display: none;" onchange="handleImageSelect(this)">
+        <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
+            <i class="fas fa-camera"></i>
+        </button>
+        <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
+        <button class="send-btn" onclick="sendTextMessage()">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
     </div>
 
     <!-- Mode Switcher -->
@@ -1744,14 +1889,14 @@
             <i class="fas fa-comment-dots"></i> チャット
         </button>
     </div>
-</div>
-</div>
+    </div>
+    </div>
 
-<!-- Floating Job Indicator Button -->
-<button id="floating-job-btn" onclick="requestJobChange()">
-    <span class="job-dot"></span>
-    <span id="floating-job-label">-</span>
-</button>
+    <!-- Floating Job Indicator Button -->
+    <button id="floating-job-btn" onclick="requestJobChange()">
+        <span class="job-dot"></span>
+        <span id="floating-job-label">-</span>
+    </button>
 </main>
 
 <script>
@@ -1861,65 +2006,52 @@
                     console.log('[DEBUG] Checking dates:', todayStr, yesterdayStr);
 
                     // Improved logic: Find latest record and check if it's still clocked in
-                    const latestRecord = records.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+                    latestRecord = records.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
                     console.log("[DEBUG] Latest record found:", latestRecord);
 
-                    const currentDayStr = new Date().toISOString().split('T')[0];
+                    // Check if the latest record is still open
                     const isStillIn = latestRecord && !latestRecord.clock_out;
 
                     if (isStillIn) {
                         window.currentAttendanceRecord = latestRecord;
-                        let attendanceStatus = 'clock_in';
-                        showJobActions('cleaning');
-                        appendChatMessage('ai', `お疲れ様です、${latestRecord.staff_name || 'スタッフ'}さん。${latestRecord.store_name}での業務を継続します。`);
-                    } else {
-                        const startOverlay = document.getElementById('start-overlay');
-                        if (startOverlay) startOverlay.classList.remove('hidden');
-                    }
-                    // Critical Fallback: If still no record found but there ARE records, 
-                    // check the very latest record regardless of date match of today/yesterday.
-                    // If it's open (no clock_out), treat as clocked in.
-                    if (!latestRecord && records.length > 0) {
-                        if (records[0].clock_in && !records[0].clock_out) {
-                            console.log('[DEBUG] Found open record from another date:', records[0].date);
-                            latestRecord = records[0];
-                        }
-                    }
-
-                    console.log('[DEBUG] Latest record found:', latestRecord);
-                    console.log('[DEBUG] All record dates:', records.map(r => r.date));
-
-                    if (latestRecord && latestRecord.clock_in && !latestRecord.clock_out) {
                         isClockedIn = true;
-                        console.log('[DEBUG] User is clocked in');
-                        // Determine if user is currently on break
                         if (latestRecord.break_start && !latestRecord.break_end) {
                             isOnBreak = true;
                         }
+                        // Successfully found and loaded previous state
+                        console.log("[DEBUG] Resuming active session:", latestRecord.store_name);
                     }
+
+                    // Ensure overlay stays hidden once logged in
+                    const startOverlay = document.getElementById('start-overlay');
+                    if (startOverlay) startOverlay.classList.add('hidden');
                 } else {
                     console.log('[DEBUG] Attendance API response not ok:', response.status);
+                    const startOverlay = document.getElementById('start-overlay');
+                    if (startOverlay) startOverlay.classList.add('hidden');
                 }
 
                 if (isOnBreak) {
                     // 休憩中
-                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。休憩中ですね。業務を再開しますか？`);
+                    EntranceCore.updateAttendanceIndicator('on-break');
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。現在は【休憩中】として認識されています。業務を再開しますか？`);
                     handleAiCommands({ ui_commands: [{ type: 'show_break_end' }] });
                 } else if (isClockedIn) {
-                    // 出勤済み → 「再開」扱い（出勤ボタンは不要）
+                    // 出勤済み → 「再開」扱い
+                    EntranceCore.updateAttendanceIndicator('clocked-in');
                     const savedJobType = localStorage.getItem('current_job_type');
+                    const storeName = window.currentAttendanceRecord?.store_name || '';
                     if (savedJobType && JOB_TYPES[savedJobType]) {
-                        // 仕事タイプ選択済み → 即座にそのモードで継続
-                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${JOB_TYPES[savedJobType].label}モードで業務を継続します。`);
+                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${storeName ? '【' + storeName + '】での' : ''}${JOB_TYPES[savedJobType].label}モードの業務を継続中です。`);
                         filterSidebar(savedJobType);
                     } else {
-                        // 仕事タイプ未選択 → 選択を促す
-                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。本日はどの業務を行いますか？`);
+                        appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${storeName ? '【' + storeName + '】で' : ''}出勤中ですが、本日はどの業務（モード）を行いますか？`);
                         showJobSelection();
                     }
                 } else {
                     // 未出勤 → 出勤を促す
-                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
+                    EntranceCore.updateAttendanceIndicator('not-clocked');
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。現在は【未出勤】の状態です。業務を開始しますか？`);
                     handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
                 }
             } catch (e) {
@@ -2997,8 +3129,35 @@ ${context}
         EntranceCore.performJobTransition(jobKey, '{{ base_path }}');
     }
 
+    function toggleTheme() {
+        const body = document.body;
+        const btn = document.getElementById('theme-toggle-btn');
+        body.classList.toggle('light-mode');
+
+        const isLight = body.classList.contains('light-mode');
+        localStorage.setItem('entrance-theme', isLight ? 'light' : 'dark');
+
+        if (btn) {
+            btn.innerHTML = isLight ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+    }
+
+    // Initialize Theme
+    const savedTheme = localStorage.getItem('entrance-theme');
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        const btn = document.getElementById('theme-toggle-btn');
+        if (btn) btn.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         EntranceCore.initFadeIn();
+
+        // Ensure chat log is hidden initially
+        const chatLog = document.getElementById('chat-log-container');
+        if (chatLog) {
+            chatLog.classList.add('hidden');
+        }
     });
 
     // Job-specific action buttons
