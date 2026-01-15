@@ -2738,37 +2738,41 @@
 
         const loadingBubble = document.createElement('div');
         loadingBubble.className = 'chat-bubble ai';
-        loadingBubble.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 解析中...';
+        loadingBubble.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 思考中...';
         chatHistory.appendChild(loadingBubble);
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
         // Create dynamic system prompt with context
         const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
         const attendance = window.currentAttendanceRecord;
-        const wizardStep = window.reportWizardState ? window.reportWizardState.step : 'none';
-
         const currentJob = localStorage.getItem('current_job_type');
         const jobLabel = currentJob ? (JOB_TYPES[currentJob]?.label || '不明') : '未選択';
-        const isClockedIn = !!currentJob;
 
-        let context = `現在は【${new Date().toLocaleString('ja-JP')}】です。
-ユーザー名: ${user.name || '不明'} 
-部署: ${user.department || '不明'}
-現在の業務モード: ${jobLabel} 
-認証ステータス: ${localStorage.getItem('cognito_id_token') ? 'ログイン済み (認証は完全に完了しており、再ログイン要求は不要です)' : '未ログイン'}
-出勤ステータス: ${attendance ? '出勤中 (' + attendance.store_name + ')' : '未出勤'}
-ウィザード状況: ${window.reportWizardActive ? '清掃レポート作成中 (Step: ' + reportWizardState.step + ')' : '通常モード'}
+        // Detailed Status Determination
+        let statusLabel = "未出勤";
+        if (attendance) {
+            statusLabel = "出勤中";
+            if (attendance.on_break) statusLabel = "休憩中";
+        }
+
+        let context = `【現在の状況】
+時刻: ${new Date().toLocaleString('ja-JP')}
+ユーザー名: ${user.name || '不明'} (${user.department || '不明'})
+現在のステータス: 【${statusLabel}】
+店舗名: ${attendance ? attendance.store_name : '未所属'}
+業務モード: ${jobLabel}
 `;
 
-        const systemPrompt = `(System: あなたは管理AI『Misogi』です。
-以下のコンテキストを理解し、常に『Misogi』として振る舞ってください。
+        const systemPrompt = `(System: あなたはミセサポの管理AI『Misogi』です。
 
-${context}
+【最重要ルール】
+1. 思考プロセス（Thinking process）および回答は、常に「日本語」で行ってください。英語は使用禁止です。
+2. ユーザーの現在のステータスは「${statusLabel}」です。この状況に合わせた適切な声掛けを行ってください。
+3. すでにログイン・出勤しているユーザーに対して、ログインを促すメッセージは絶対に送らないでください。
+4. 可能な限り show_options を使って次のアクションを提示し、ユーザーの手間を減らしてください。
+5. 親しみやすく、かつプロフェッショナルな「頼れる秘書」として振る舞ってください。)
 
-【重要指示】
-1. ユーザーは既にログイン・出勤している場合、挨拶のリセットや再度のログイン要求メッセージ、および request_login インテントの出力は「絶対に」行わないでください。
-2. ユーザーが操作に迷わないよう、可能な限り show_options を使って次のアクションをボタンで提示してください。
-3. 業務の文脈を維持し、ユーザーの作業を最小限にする（ボタンをタップするだけで済む）ための返答を心がけてください。)`;
+${context}`;
 
         const textToSend = systemPrompt + text;
 
