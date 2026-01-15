@@ -223,7 +223,9 @@
             // Force cleanup legacy layout elements
             const legacyElements = [
                 'admin-sidebar', 'sidebar-toggle', 'normal-header-wrapper',
-                'default-header-wrapper', 'navbar', 'breadcrumb'
+                'default-header-wrapper', 'navbar', 'breadcrumb',
+                'attendance-status-tag', 'entrance-menu-btn', 'mobile-menu-button',
+                'mobile-nav-btn'
             ];
             legacyElements.forEach(item => {
                 // Try as ID

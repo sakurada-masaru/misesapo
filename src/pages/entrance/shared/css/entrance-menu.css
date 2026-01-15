@@ -16,7 +16,25 @@
 #normal-header-wrapper,
 #default-header-wrapper,
 aside,
-.sidebar {
+.sidebar,
+#attendance-status-tag,
+/* Added */
+.attendance-status-tag,
+/* Added */
+#entrance-menu-btn,
+/* Added */
+.entrance-menu-btn,
+/* Added */
+#mobile-menu-button,
+/* Added */
+.mobile-nav-btn,
+/* Added */
+[class*="status-tag"],
+/* Added generic */
+[id*="status-tag"]
+
+/* Added generic */
+    {
     display: none !important;
 }
 
@@ -805,12 +823,13 @@ body {
 
 @media (max-width: 768px) {
     .latest-message-container {
-        top: 18% !important;
+        top: 50% !important;
+        /* Centered on SP as requested */
         max-width: 95% !important;
     }
 
     .latest-message-bubble {
-        padding: 12px 18px !important;
-        font-size: 0.85rem !important;
+        padding: 15px 22px !important;
+        font-size: 0.95rem !important;
     }
 }
