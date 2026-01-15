@@ -364,15 +364,53 @@
     }
 
     .chat-input-wrapper {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
         background: var(--panel-bg) !important;
-        border-color: var(--border-color) !important;
+        padding: 8px;
+        border-radius: 30px;
+        border: 1px solid var(--border-color) !important;
+        max-width: 600px;
+        width: 90%;
+        margin: 0;
+        z-index: 2000;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
     }
 
     #text-input {
+        flex: 1;
+        background: none !important;
+        border: none !important;
         color: var(--text-primary) !important;
+        padding: 8px 15px;
+        outline: none;
+        font-size: 1rem;
+        font-family: 'Inter', sans-serif;
     }
 
-    /* MISOGI Styles (Scoped) - keep root styles here */
+    #text-input::placeholder {
+        color: var(--text-secondary) !important;
+        opacity: 0.7;
+    }
+
+    /* Fixed Button Visibility and Job Selection */
+    .job-select-btn {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #fff !important;
+        font-weight: 600 !important;
+    }
+
+    body.light-mode .job-select-btn {
+        background: rgba(0, 0, 0, 0.05) !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        color: #1e293b !important;
+    }
+
     :root {
         --accent-color: #3b82f6;
         --accent-glow: rgba(59, 130, 246, 0.5);
@@ -1352,18 +1390,37 @@
         }
     }
 
-    .chat-input-wrapper {
-        margin-top: 15px;
+    .send-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--accent-color) !important;
+        border: none;
+        color: #fff !important;
+        cursor: pointer;
         display: flex;
-        gap: 10px;
-        background: rgba(255, 255, 255, 0.05);
-        padding: 8px;
-        border-radius: 30px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        max-width: 600px;
-        width: 90%;
-        margin-left: auto;
-        margin-right: auto;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.3s;
+    }
+
+    .attach-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.3s;
+    }
+
+    body.light-mode .attach-btn {
+        background: rgba(0, 0, 0, 0.05);
+        color: #1e293b;
     }
 
     #text-input {
