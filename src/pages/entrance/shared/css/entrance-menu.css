@@ -4,12 +4,31 @@
     --entrance-footer-height: 100px;
 }
 
-/* Force Hide Legacy Layout Buttons */
+/* Force Hide ANY Layout / Sidebar / Legacy Elements globally for Entrance */
+#admin-sidebar,
+.admin-sidebar,
 #sidebar-toggle,
 .sidebar-toggle,
+.navbar,
 .navbar-toggler,
-.admin-sidebar-toggle {
+.admin-sidebar-toggle,
+.breadcrumb,
+#normal-header-wrapper,
+#default-header-wrapper,
+aside,
+.sidebar {
     display: none !important;
+}
+
+/* Ensure main-content takes full width without sidebar */
+.main-content,
+.admin-dashboard,
+body {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    left: 0 !important;
 }
 
 .entrance-header {
@@ -22,8 +41,8 @@
     align-items: center;
     justify-content: flex-end;
     padding: 0 25px;
-    z-index: 9000;
-    /* Higher than any layout element */
+    z-index: 9500 !important;
+    /* Above everything */
     pointer-events: none;
     background: none !important;
 }
@@ -618,7 +637,9 @@
     #chat-log-container,
     .chat-log-container,
     .chat-history,
-    #chat-history {
+    #chat-history,
+    #chat-toggle-btn,
+    .chat-toggle-btn {
         display: none !important;
     }
 
@@ -729,20 +750,21 @@
     flex-wrap: wrap !important;
     gap: 12px !important;
     justify-content: center !important;
-    margin-bottom: 15px !important;
+    margin-bottom: 35px !important;
+    /* Larger gap to prevent click overlap */
     z-index: 7001 !important;
 }
 
-/* MISOGI Message (AI Speech Bubble) Positioning */
+/* Message positioning and styling */
 .latest-message-container {
     position: fixed !important;
-    top: 40% !important;
-    /* Position near center */
+    top: 18% !important;
+    /* Unified top position */
     left: 50% !important;
-    transform: translate(-50%, -50%) !important;
+    transform: translateX(-50%) !important;
     width: 90% !important;
-    max-width: 600px !important;
-    z-index: 6000 !important;
+    max-width: 700px !important;
+    z-index: 9600 !important;
     pointer-events: none !important;
     display: flex !important;
     justify-content: center !important;
@@ -750,18 +772,18 @@
 }
 
 .latest-message-bubble {
-    background: rgba(0, 0, 0, 0.4) !important;
-    backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(59, 130, 246, 0.3) !important;
-    border-radius: 24px !important;
-    padding: 20px 30px !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(25px) !important;
+    border: 1px solid rgba(59, 130, 246, 0.4) !important;
+    border-radius: 20px !important;
+    padding: 18px 28px !important;
     color: #fff !important;
     font-size: 1.1rem !important;
     line-height: 1.6 !important;
     text-align: center !important;
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.2) !important;
     pointer-events: auto !important;
-    animation: message-appear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    animation: message-appear 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 
 .latest-message-bubble.user {
@@ -783,13 +805,12 @@
 
 @media (max-width: 768px) {
     .latest-message-container {
-        top: 45% !important;
-        /* Slightly lower on mobile to clear visualizer */
-        max-width: 90% !important;
+        top: 18% !important;
+        max-width: 95% !important;
     }
 
     .latest-message-bubble {
-        padding: 15px 20px !important;
-        font-size: 0.9rem !important;
+        padding: 12px 18px !important;
+        font-size: 0.85rem !important;
     }
 }

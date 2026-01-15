@@ -220,6 +220,20 @@
             // Insert menu HTML into page
             document.body.insertAdjacentHTML('beforeend', menuHTML);
 
+            // Force cleanup legacy layout elements
+            const legacyElements = [
+                'admin-sidebar', 'sidebar-toggle', 'normal-header-wrapper',
+                'default-header-wrapper', 'navbar', 'breadcrumb'
+            ];
+            legacyElements.forEach(item => {
+                // Try as ID
+                const elById = document.getElementById(item);
+                if (elById) elById.remove();
+                // Try as Class
+                const elsByClass = document.querySelectorAll(`.${item}`);
+                elsByClass.forEach(el => el.remove());
+            });
+
             // Initialize theme from storage
             const savedTheme = localStorage.getItem('entrance-theme');
             if (savedTheme === 'light') {
@@ -236,7 +250,7 @@
             // Move existing job button into header if present
             this.moveControlsToHeader();
 
-            console.log('[EntranceMenu] Initialized with Header');
+            console.log('[EntranceMenu] Initialized & Cleaned Legacy Layout');
         },
 
         moveControlsToHeader() {
