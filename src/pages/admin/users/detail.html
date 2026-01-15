@@ -2059,11 +2059,12 @@
                     <span class="history-score">${report.ai_score || 0}点</span>
                     <span class="history-rank" style="background: ${rankColor}">${report.ai_rank || '-'}</span>
                   </div>
-                  <div class="history-store">${report.store_name || '店舗未選択'} • ${formatDate(report.cleaning_date)}</div>
+                  <div class="history-store">${report.store_name || '店舗未選択'} • ${report.cleaning_date ? new Date(report.cleaning_date).toLocaleDateString('ja-JP') : '-'}</div>
                   <div class="history-feedback">${ai.feedback?.improvement || ai.analysis || ai.improvement || '診断結果の詳細なし'}</div>
                 </div>
               </div>
             `;
+
           }).join('');
 
         } catch (error) {

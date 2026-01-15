@@ -1805,14 +1805,16 @@
         const overlay = document.getElementById('start-overlay');
         if (!overlay) return;
 
-        // Guard: Prevent re-initialization if already in an active session
+        // Ensure overlay is hidden if we are starting or already started
+        overlay.classList.add('hidden');
+        switchMode('chat');
+
+        // Guard: Prevent re-initialization of attendance logic if already in an active session
         if (window.currentAttendanceRecord && !window.currentAttendanceRecord.clock_out) {
-            console.log("[GUARD] Already in an active session. Skipping full startWorkflow.");
+            console.log("[GUARD] Already in an active session. UI shown, skipping attendance check.");
             return;
         }
 
-        overlay.classList.add('hidden');
-        switchMode('chat');
 
         const token = localStorage.getItem('cognito_id_token');
         if (!token) {
