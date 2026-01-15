@@ -613,80 +613,25 @@
    Responsive Adjustments
    ================================== */
 @media (max-width: 768px) {
-    .floating-controls {
-        top: 15px;
-        right: 15px;
-    }
 
-    /* Responsive Header & Footer */
-    .entrance-header {
-        padding: 0 15px;
-        height: 60px;
-    }
-
-    .floating-btn,
-    #floating-job-btn {
-        height: 38px;
-        padding: 0 12px;
-        font-size: 0.8rem;
-    }
-
-    #chat-toggle-btn {
+    /* Hide Chat Log (History) on mobile for all modes */
+    #chat-log-container,
+    .chat-log-container,
+    .chat-history,
+    #chat-history {
         display: none !important;
-        /* Keep hidden on mobile as per user's earlier requirement */
     }
 
-    #floating-job-btn .job-dot {
-        width: 6px;
-        height: 6px;
+    /* Force hide any white nav/legacy buttons on mobile */
+    #sidebar-toggle,
+    .sidebar-toggle,
+    .navbar-toggler,
+    .admin-sidebar-toggle,
+    .breadcrumb,
+    #normal-header-wrapper {
+        display: none !important;
     }
-}
 
-/* Fixed Footer for Message Input */
-#chat-container {
-    position: fixed !important;
-    bottom: 20px !important;
-    /* Fixed position from bottom */
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: 90% !important;
-    max-width: 800px !important;
-    height: auto !important;
-    /* Height follows content */
-    padding: 0 !important;
-    margin: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 15px !important;
-    background: transparent !important;
-    z-index: 7000 !important;
-    pointer-events: auto !important;
-}
-
-.chat-input-wrapper {
-    width: 100% !important;
-    max-width: 800px !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    backdrop-filter: blur(25px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 40px !important;
-    display: flex !important;
-    align-items: center !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
-}
-
-#text-input {
-    flex: 1 !important;
-    background: transparent !important;
-    border: none !important;
-    color: #fff !important;
-    padding: 12px 15px !important;
-    font-size: 1rem !important;
-    outline: none !important;
-}
-
-@media (max-width: 768px) {
     .entrance-header {
         padding: 0 15px;
         height: 60px;
@@ -725,32 +670,72 @@
     .status-text {
         margin-top: 180px !important;
     }
+
+    /* Standardize Action Buttons inside chat container on mobile */
+    #action-buttons-container {
+        margin-bottom: 8px !important;
+        gap: 6px !important;
+    }
 }
 
-/* Action Buttons / Hotbar adjustments */
+/* Fixed Footer for Message Input (Global) */
+#chat-container {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+    max-width: 800px !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 15px !important;
+    background: transparent !important;
+    z-index: 7000 !important;
+    pointer-events: auto !important;
+}
+
+.chat-input-wrapper {
+    width: 100% !important;
+    max-width: 800px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(25px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    padding: 8px 18px !important;
+}
+
+#text-input {
+    flex: 1 !important;
+    background: transparent !important;
+    border: none !important;
+    color: #fff !important;
+    padding: 12px 15px !important;
+    font-size: 1rem !important;
+    outline: none !important;
+}
+
+/* Action Buttons / Hotbar adjustments (Global) */
 #action-buttons-container {
     position: relative !important;
-    /* Inside chat-container now */
-    bottom: auto !important;
-    left: auto !important;
-    transform: none !important;
     width: 100% !important;
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 10px !important;
+    gap: 12px !important;
     justify-content: center !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 15px !important;
     z-index: 7001 !important;
 }
 
 .latest-message-container {
     width: 100% !important;
     max-width: 800px !important;
-    margin-bottom: 10px !important;
-}
-
-@media (max-width: 768px) {
-    #action-buttons-container {
-        bottom: 110px;
-    }
+    margin-bottom: 15px !important;
+    text-align: center;
 }
