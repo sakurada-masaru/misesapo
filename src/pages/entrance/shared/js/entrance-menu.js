@@ -61,6 +61,18 @@
                 <span>出退勤</span>
             </button>
         </div>
+        <div class="entrance-menu-item">
+            <button onclick="window.open('/wiki', '_blank')">
+                <i class="fas fa-book"></i>
+                <span>WIKI</span>
+            </button>
+        </div>
+        <div class="entrance-menu-item">
+            <button onclick="EntranceMenu.logout()" style="color: #ef4444;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>ログアウト</span>
+            </button>
+        </div>
     </div>
     
     <!-- Settings Panel -->
@@ -580,6 +592,12 @@
             } else {
                 appendChatMessage('ai', '現在は【未出勤】です。出勤するには「出勤」ボタンを押してください。<br><br><button class="attendance-btn" onclick="performClockIn()"><i class="fas fa-sign-in-alt"></i> 出勤</button>');
             }
+        },
+
+        logout() {
+            if (!confirm('ログアウトしますか？')) return;
+            localStorage.clear();
+            window.location.href = '/entrance';
         }
     };
 
