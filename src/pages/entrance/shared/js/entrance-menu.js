@@ -12,12 +12,15 @@
     // Menu HTML Templates
     // ========================================
     const menuHTML = `
-<!-- Floating Controls -->
-<div class="floating-controls" id="entrance-floating-controls">
-    <button class="floating-btn" id="menu-toggle-btn" onclick="EntranceMenu.toggle()" title="メニュー">
-        <i class="fas fa-bars"></i>
-    </button>
-</div>
+<!-- Entrance Header -->
+<header class="entrance-header">
+    <div class="header-controls" id="entrance-header-controls">
+        <!-- Job button will be moved here by JS -->
+        <button class="floating-btn" id="menu-toggle-btn" onclick="EntranceMenu.toggle()" title="メニュー">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+</header>
 
 <!-- Main Menu Overlay -->
 <div id="entrance-menu-overlay">
@@ -120,7 +123,7 @@
     </div>
 </div>
 
-<!-- Daily Report Overlay -->
+<!--Daily Report Overlay-- >
 <div id="daily-report-overlay" class="feature-overlay">
     <div class="feature-overlay-content">
         <div class="feature-overlay-header">
@@ -149,11 +152,11 @@
     </div>
 </div>
 
-<!-- Chat Toggle Button -->
-<button class="floating-btn" id="chat-toggle-btn" onclick="EntranceCore.toggleChatLog()" title="チャットログ">
-    <i class="fas fa-comment-alt"></i>
-</button>
-`;
+<!--Chat Toggle Button-- >
+        <button class="floating-btn" id="chat-toggle-btn" onclick="EntranceCore.toggleChatLog()" title="チャットログ">
+            <i class="fas fa-comment-alt"></i>
+        </button>
+    `;
 
     // ========================================
     // State
@@ -186,7 +189,7 @@
         if (typeof window.appendChatMessage === 'function') {
             window.appendChatMessage(type, message);
         } else {
-            console.log(`[${type}] ${message}`);
+            console.log(`[${type}] ${message} `);
         }
     }
 
@@ -211,7 +214,23 @@
             const langSelect = document.getElementById('language-select');
             if (langSelect) langSelect.value = savedLang;
 
-            console.log('[EntranceMenu] Initialized');
+            // Move existing job button into header if present
+            this.moveControlsToHeader();
+
+            console.log('[EntranceMenu] Initialized with Header');
+        },
+
+        moveControlsToHeader() {
+            const headerControls = document.getElementById('entrance-header-controls');
+            const jobBtn = document.getElementById('floating-job-btn');
+
+            if (headerControls && jobBtn) {
+                // Prepend job button so menu is on the right
+                headerControls.insertBefore(jobBtn, document.getElementById('menu-toggle-btn'));
+                // Remove fixed positioning from job btn to let it flow in header
+                jobBtn.style.position = 'static';
+                jobBtn.style.margin = '0';
+            }
         },
 
         toggle() {
@@ -325,12 +344,12 @@
             if (filtered.length === 0) {
                 const msg = currentTodoFilter === 'all' ? 'TODOがありません<br>＋ボタンで追加してください' :
                     currentTodoFilter === 'active' ? '未完了のTODOはありません' : '完了したTODOはありません';
-                container.innerHTML = `<div class="feature-empty"><i class="fas fa-tasks"></i><div>${msg}</div></div>`;
+                container.innerHTML = `< div class="feature-empty" ><i class="fas fa-tasks"></i><div>${msg}</div></div > `;
             } else {
                 container.innerHTML = filtered.map(t => {
                     const isCompleted = t.completed || t.status === 'completed';
                     return `
-                        <div class="feature-item ${isCompleted ? 'completed' : ''}" onclick="EntranceMenu.toggleTodoItem('${t.id}', ${isCompleted})" style="display: flex; align-items: center;">
+        < div class="feature-item ${isCompleted ? 'completed' : ''}" onclick = "EntranceMenu.toggleTodoItem('${t.id}', ${isCompleted})" style = "display: flex; align-items: center;" >
                             <div class="feature-item-checkbox ${isCompleted ? 'checked' : ''}">
                                 ${isCompleted ? '<i class="fas fa-check" style="color:#fff;font-size:0.7rem;"></i>' : ''}
                             </div>
@@ -338,8 +357,8 @@
                                 <div class="feature-item-title">${t.text || t.title || t.content || 'タイトルなし'}</div>
                                 <div class="feature-item-meta">${t.created_at ? `作成: ${new Date(t.created_at).toLocaleDateString('ja-JP')}` : ''}</div>
                             </div>
-                        </div>
-                    `;
+                        </div >
+        `;
                 }).join('');
             }
         },
