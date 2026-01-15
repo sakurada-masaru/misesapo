@@ -213,20 +213,54 @@
               給与・評価
             </h4>
             <div class="info-item">
-              <span class="info-label">時給/月給</span>
-              <span class="info-value" id="hr-salary">-</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">給与形態</span>
-              <span class="info-value" id="hr-salary-type">-</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">評価</span>
-              <span class="info-value" id="hr-evaluation">-</span>
-            </div>
-            <div class="info-item">
               <span class="info-label">備考</span>
               <span class="info-value" id="hr-notes">-</span>
+            </div>
+          </div>
+
+          <!-- 清掃スキル (AI診断) -->
+          <div class="info-section" style="grid-column: 1 / -1;">
+            <h4 class="section-subtitle">
+              <i class="fas fa-magic"></i>
+              清掃スキル (AI診断)
+            </h4>
+            <div class="info-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
+              <div class="info-item">
+                <span class="info-label">最新スコア</span>
+                <div class="info-value">
+                  <span id="hr-cleaning-score"
+                    style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">-</span>
+                  <span style="font-size: 0.875rem; color: #64748b; margin-left: 4px;">/ 100</span>
+                </div>
+              </div>
+              <div class="info-item">
+                <span class="info-label">最新ランク</span>
+                <div class="info-value">
+                  <span id="hr-cleaning-rank" style="font-size: 1.5rem; font-weight: 700;">-</span>
+                </div>
+              </div>
+              <div class="info-item">
+                <span class="info-label">最終診断日</span>
+                <span class="info-value" id="hr-cleaning-date" style="font-size: 0.95rem;">-</span>
+              </div>
+            </div>
+
+            <div id="cleaning-history-container"
+              style="margin-top: 16px; border-top: 1px dashed #e5e7eb; padding-top: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h5 style="margin: 0; font-size: 1rem; color: #374151;">診断履歴</h5>
+                <small id="diagnosis-count" style="color: #64748b;"></small>
+              </div>
+              <div id="cleaning-history-loading" style="text-align: center; padding: 20px; color: #64748b;">
+                <i class="fas fa-spinner fa-spin"></i> 履歴を読み込み中...
+              </div>
+              <div id="cleaning-history-empty"
+                style="display: none; text-align: center; padding: 30px; color: #94a3b8; background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0;">
+                <i class="fas fa-clipboard-check"
+                  style="font-size: 2rem; margin-bottom: 12px; display: block; opacity: 0.5;"></i>
+                診断履歴はまだありません
+              </div>
+              <div id="cleaning-history-list"></div>
             </div>
           </div>
         </div>
@@ -1322,6 +1356,74 @@
           max-height: 95vh;
         }
       }
+
+      /* 清掃診断履歴のスタイル */
+      .cleaning-history-item {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        gap: 16px;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .cleaning-history-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .cleaning-history-thumb {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: #f3f4f6;
+        flex-shrink: 0;
+      }
+
+      .cleaning-history-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .history-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+
+      .history-rank {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 0.875rem;
+        color: white;
+      }
+
+      .history-score {
+        font-weight: 700;
+        font-size: 1.125rem;
+        color: var(--primary);
+      }
+
+      .history-store {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 4px;
+      }
+
+      .history-feedback {
+        font-size: 0.875rem;
+        color: #374151;
+        line-height: 1.5;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
     </style>
 
     <script>
@@ -1761,6 +1863,27 @@
         document.getElementById('hr-evaluation').textContent = evalLabels[user.evaluation] || user.evaluation || '-';
         document.getElementById('hr-notes').textContent = user.hr_notes || '-';
 
+        // 清掃スキル最新情報の表示
+        const rankColors = { S: '#a855f7', A: '#10b981', B: '#f59e0b', C: '#ef4444', D: '#dc2626' };
+        const scoreEl = document.getElementById('hr-cleaning-score');
+        const rankEl = document.getElementById('hr-cleaning-rank');
+        const dateEl = document.getElementById('hr-cleaning-date');
+
+        if (user.latest_cleaning_score !== undefined && user.latest_cleaning_score !== null) {
+          scoreEl.textContent = user.latest_cleaning_score;
+          rankEl.textContent = user.latest_cleaning_rank || '-';
+          rankEl.style.color = rankColors[user.latest_cleaning_rank] || '#64748b';
+          dateEl.textContent = formatDateTime(user.last_cleaning_at);
+        } else {
+          scoreEl.textContent = '-';
+          rankEl.textContent = '-';
+          rankEl.style.color = '#64748b';
+          dateEl.textContent = '-';
+        }
+
+        // 診断履歴を読み込み
+        loadCleaningDiagnosisHistory(user.id);
+
         // AI分析結果の反映
         if (user.hr_ai_analysis) {
           renderAIAnalysis(user.hr_ai_analysis);
@@ -1883,6 +2006,74 @@
             statusEl.className = 'form-status error';
           }
         });
+      }
+
+      async function loadCleaningDiagnosisHistory(userId) {
+        const loadingEl = document.getElementById('cleaning-history-loading');
+        const emptyEl = document.getElementById('cleaning-history-empty');
+        const listEl = document.getElementById('cleaning-history-list');
+        const countEl = document.getElementById('diagnosis-count');
+
+        if (!loadingEl || !listEl) return;
+
+        try {
+          loadingEl.style.display = 'block';
+          emptyEl.style.display = 'none';
+          listEl.innerHTML = '';
+
+          // Fetch only diagnosis type reports for this specific staff
+          const response = await fetch(`${API_BASE}/reports?report_type=diagnosis&staff_id=${encodeURIComponent(userId)}`, {
+            headers: buildAuthHeaders(),
+            cache: 'no-store'
+          });
+
+          if (!response.ok) throw new Error('診断履歴の取得に失敗しました');
+
+          const data = await response.json();
+          const reports = data.items || data.reports || (Array.isArray(data) ? data : []);
+
+          loadingEl.style.display = 'none';
+
+          if (reports.length === 0) {
+            emptyEl.style.display = 'block';
+            if (countEl) countEl.textContent = '0件';
+            return;
+          }
+
+          if (countEl) countEl.textContent = `${reports.length}件`;
+          const rankColors = { S: '#a855f7', A: '#10b981', B: '#f59e0b', C: '#ef4444', D: '#dc2626' };
+
+          listEl.innerHTML = reports.map(report => {
+            const ai = report.ai_result || {};
+            const photo = (report.photos && report.photos.length > 0) ? report.photos[0] : '';
+            const rankColor = rankColors[report.ai_rank] || '#64748b';
+
+            return `
+              <div class="cleaning-history-item">
+                ${photo ? `<img src="${photo}" class="cleaning-history-thumb" alt="診断写真">` :
+                `<div class="cleaning-history-thumb" style="display: flex; align-items: center; justify-content: center; background: #f1f5f9;">
+                    <i class="fas fa-image" style="color: #cbd5e1; font-size: 1.5rem;"></i>
+                  </div>`}
+                <div class="cleaning-history-content">
+                  <div class="history-meta">
+                    <span class="history-score">${report.ai_score || 0}点</span>
+                    <span class="history-rank" style="background: ${rankColor}">${report.ai_rank || '-'}</span>
+                  </div>
+                  <div class="history-store">${report.store_name || '店舗未選択'} • ${formatDate(report.cleaning_date)}</div>
+                  <div class="history-feedback">${ai.feedback?.improvement || ai.analysis || ai.improvement || '診断結果の詳細なし'}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+        } catch (error) {
+          console.error('Error loading cleaning diagnosis history:', error);
+          loadingEl.style.display = 'none';
+          if (emptyEl) {
+            emptyEl.style.display = 'block';
+            emptyEl.innerHTML = '<span style="color: #ef4444;">履歴の取得中にエラーが発生しました</span>';
+          }
+        }
       }
 
       async function analyzeWorkerWithAI() {

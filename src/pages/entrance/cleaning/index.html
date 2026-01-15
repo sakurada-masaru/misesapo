@@ -1714,6 +1714,13 @@
         z-index: 20;
     }
 
+    .action-buttons-container button,
+    #action-buttons-container button {
+        white-space: normal;
+        line-height: 1.3;
+        text-align: center;
+    }
+
     /* ========== MOBILE RESPONSIVE STYLES ========== */
     @media screen and (max-width: 768px) {
 
@@ -2185,9 +2192,10 @@
             <div class="login-input-card">
                 <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 5px;">ACCOUNT
                     AUTHENTICATION</div>
-                <input type="email" id="login-email" placeholder="メールアドレス" autocomplete="email">
-                <input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">
-                <button class="login-submit-btn" onclick="performLogin()">認証</button>
+                <input type="email" id="login-email" data-i18n-placeholder="email" autocomplete="email">
+                <input type="password" id="login-password" data-i18n-placeholder="password"
+                    autocomplete="current-password">
+                <button class="login-submit-btn" onclick="performLogin()" data-i18n="login">認証</button>
             </div>
         </div>
         <div class="visualizer-circle">
@@ -2196,10 +2204,11 @@
         <div class="chat-input-wrapper">
             <input type="file" id="image-upload" accept="image/*" style="display: none;"
                 onchange="handleImageSelect(this)">
-            <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
+            <button class="attach-btn" onclick="document.getElementById('image-upload').click()"
+                data-i18n-title="addPhoto">
                 <i class="fas fa-camera"></i>
             </button>
-            <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
+            <input type="text" id="text-input" data-i18n-placeholder="chatPlaceholder" autocomplete="off">
             <button class="send-btn" onclick="sendTextMessage()">
                 <i class="fas fa-paper-plane"></i>
             </button>
@@ -2209,10 +2218,10 @@
     <!-- Mode Switcher -->
     <div class="mode-switch-container" style="display: none;">
         <button class="mode-btn" id="btn-voice-mode" onclick="switchMode('voice')">
-            <i class="fas fa-microphone"></i> 音声
+            <i class="fas fa-microphone"></i> <span data-i18n="voice">音声</span>
         </button>
         <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
-            <i class="fas fa-comment-dots"></i> チャット
+            <i class="fas fa-comment-dots"></i> <span data-i18n="chat">チャット</span>
         </button>
     </div>
 </div>
@@ -2256,38 +2265,134 @@
             loggingIn: '認証中...',
             email: 'メールアドレス',
             password: 'パスワード',
+            loginError: 'エラー：ログイン情報が見つかりません。再ログインしてください。',
+            authRequired: '認証が必要です。',
+            loginFailed: 'ログインに失敗しました',
+            noAuthSystem: '認証システムが読み込まれていません',
+            loginPrompt: 'おはようございます。ミセサポ管理AIのMISOGIです。セッションを開始するために、まずはログイン情報を入力してください。',
+            chatPlaceholder: '社内チャット（Alt+1~8で切替）...',
+            hideLog: 'ログを非表示',
+            expandLog: 'ログを拡大',
+            selectChannel: 'チャンネル選択',
+            attachFile: 'ファイルを添付',
 
             // Main UI
             selectJob: '業務を選択',
             cleaning: '清掃',
             sales: '営業',
+            office: '事務',
+            hr: '人事',
+            accounting: '経理',
+            selectTask: 'どの業務を行いますか？',
+            goodMorning: 'おはようございます',
+            workChangePrompt: 'お仕事内容の変更ですね？どの業務を行いますか？',
 
             // Attendance
             clockIn: '出勤',
             clockOut: '退勤',
             onBreak: '休憩中',
             notClockedIn: '未出勤',
+            clockInUser: '出勤します',
+            clockInSuccess: '{name}様、出勤を記録しました。本日はどの業務を行いますか？',
+            clockedInStatus: '出勤済み',
+            breakStartConfirm: '休憩に入りますか？',
+            breakStartSuccess: '休憩を記録しました。ゆっくりお休みください。',
+            breakEndSuccess: 'お帰りなさいませ。業務の再開を記録しました。',
+            clockOutConfirm: '本日の業務を終了し、退勤しますか？',
+            clockOutSuccess: 'お疲れ様でした。退勤を記録しました。また明日もお待ちしております。',
+            resumeWorkMsg: 'お疲れ様です、{name}さん。{store}での業務を継続します。',
+            resumeBreakMsg: '{name}様、お疲れ様です。休憩中ですね。業務を再開しますか？',
+            resumeSalesMsg: '{name}様、おかえりなさい。営業モードで業務を継続します。',
 
-            // Cleaning Mode
+            // Cleaning Mode Base
+            cleaningTitle: 'レポートを作成',
+            scoreDiagnosisLabel: 'スコア診断',
             liveMode: 'LIVE モード',
             afterMode: 'AFTER モード',
             liveModeDesc: 'リアルタイムで清掃を記録',
             afterModeDesc: '作業終了後に詳細を入力',
+            selectReportModeTitle: '📋 レポート作成',
+            selectReportModePrompt: 'どのモードで作成しますか？',
+            scoreDiagnosisTitle: '🧪 スコア診断',
+            scoreDiagnosisDesc: '写真を1枚アップしてMISOGIで判定',
+            scoreDiagnosisPrompt: 'スコア診断用の写真をアップしてください。',
+            scoreDiagnosisAnalyze: '診断を開始',
+            scoreDiagnosisNoPhoto: '写真を選択してください。',
+            scoreDiagnosisResultTitle: '診断結果',
+            liveModeStartMsg: '🔴 LIVE モード開始',
             selectWorksite: '清掃する現場を選択してください',
-            searchCustomer: '顧客を検索',
-            selectFromSchedule: '本日のスケジュールから選択',
+            afterModeMsg: '📝 AFTER モード',
+            afterModeDesc2: '店舗を選択してください。スケジュール登録がなくても入力できます。',
             cancel: 'キャンセル',
+            cancelMsg: 'キャンセルしました。',
+            cancelLiveModeMsg: 'LIVEモードをキャンセルしました。',
 
-            // Customer Search
+            // Customer Selection
+            searchCustomer: '顧客を検索',
             searchPlaceholder: '会社名、店舗名、電話番号...',
             noResults: '該当する顧客がありません',
             items: '件',
+            selectFromSchedule: '本日のスケジュールから選択',
+            searchCompanyPlaceholder: '法人名で検索...',
+            enterStoreNamePrompt: '店舗名を入力してください：',
+            manualStorePlaceholder: '店舗名...',
+            manualStoreInput: '✏️ 店舗名を手入力',
+            backToCustomerList: '← 顧客リストに戻る',
+            selectCompany: '法人を選択してください。',
+            manualInput: '手入力',
+            unknownStore: '店舗名不明',
 
-            // Photo Upload
+            // Phase: Working & Photos
             takePhoto: '写真を撮影',
             beforePhoto: '清掃前の写真',
             afterPhoto: '清掃後の写真',
             addPhoto: '写真を追加',
+            beforePhotoTitle: '📷 作業前の写真',
+            beforePhotoMsg: '現場の状態を記録してください',
+            tapToTakePhoto: 'タップして撮影',
+            startCleaning: '🔴 清掃を開始する',
+            liveCleaning: '🔴 LIVE 清掃中',
+            addMemo: '✏️ メモ追加',
+            cleaningComplete: '✅ 清掃完了',
+            afterPhotoTitle: '📷 作業後の写真',
+            afterPhotoMsg: '仕上がりを撮影してください',
+            toReportConfirmation: '📤 レポート確認へ',
+            photoSelectionTitle: '📸 作業前後の写真を選択してください',
+            cleaningRecorded: '清掃が記録されました',
+            liveBeforePhotoPrompt: '🔴 **{store}**\n\nまず、清掃前の現場写真を撮影してください。',
+            beforePhotoAdded: '📷 作業前写真 {count}枚目',
+            afterPhotoAdded: '📷 作業後写真 {count}枚目',
+            liveWorkStartMsg: '🔴 **清掃開始**\n\n**{store}** の清掃作業を開始しました。\n作業が完了したら「{complete}」を押してください。',
+            enterMemo: 'メモを入力してください。',
+            saveAndBack: '保存して戻る',
+            memoSaved: 'メモを保存しました。',
+            cleaningDonePrompt: '✅ **清掃完了** ({minutes}{minutesSuffix})\n\n最後に、作業後の写真を撮影してください。',
+            photoCountSuffix: '枚',
+            addShort: '追加',
+
+            // AI Quality Check
+            aiChecking: '🤖 AI品質チェック実行中...',
+            aiComparing: '作業前・作業後の写真を比較解析しています。',
+            aiStrict: '厳格な品質基準で評価します。',
+            aiAnalyzing: 'AI品質チェック中...',
+            aiStrictDesc: '厳格な基準で評価しています',
+            aiScoreTitle: '🏆 AI品質スコア: {score}点 ({rank}ランク)',
+            aiAnalysisFailed: '⚠️ AI解析を完了できませんでした',
+            aiAnalysisFailedDesc: 'レポートは送信可能ですが、品質チェックなしでの提出となります。',
+            redoRecommended: '🔄 再清掃モード',
+            redoRecommendedDesc: '指摘された箇所を再清掃してから、もう一度作業後の写真を撮影してください。',
+            criticalIssuesLabel: '⚠️ 重大な問題点',
+            strengthsLabel: '✅ 良い点',
+            improvementsLabel: '📝 改善すべき点',
+            adviseLabel: '💡 アドバイス',
+            redoAreasLabel: '🔄 やり直し推奨箇所',
+            qualityLow: '⚠️ 品質基準を満たしていません',
+            qualityWarning: '⚠️ 改善が推奨されます',
+            redoStronglyAdvised: '全面的なやり直しを強くお勧めします',
+            redoPartiallyAdvised: '一部箇所の再清掃をご検討ください',
+            aiScoreLabel: 'AI品質スコア',
+            rankLabel: '{rank} ランク',
+            redoAction: '🔄 再清掃してやり直す',
 
             // Actions
             submit: '提出',
@@ -2295,11 +2400,77 @@
             back: '戻る',
             next: '次へ',
             complete: '完了',
+            decide: '決定',
+            save: '保存',
+            send: '送信',
 
-            // Messages
-            goodMorning: 'おはようございます',
-            selectTask: 'どの業務を行いますか？',
-            cleaningRecorded: '清掃が記録されました',
+            // Report Wizard & Final Submission
+            reportContent: '📋 レポート内容',
+            store: '店舗',
+            workTime: '作業時間',
+            beforePhotoCount: '作業前写真',
+            afterPhotoCount: '作業後写真',
+            memoLabel: 'メモ',
+            editNotes: '✏️ 備考を編集',
+            addNotes: '✏️ 備考を追加',
+            notesPlaceholder: '備考・特記事項など...',
+            submitReport: '📤 レポートを送信',
+            submitting: '📤 レポートを送信中...',
+            submitSuccess: '✅ レポート送信完了',
+            submitFullSuccess: '✅ レポートを送信しました！',
+            nextJobMISOGI: 'お疲れ様でした！次の作業もMISOGIにお任せください。',
+            reportIdLabel: 'レポートID',
+            selectCleaningTarget: '🧹 清掃対象を選択してください：',
+            inputNotesPrompt: '📝 備考やコメントがあれば入力してください。（なければ「なし」と入力）',
+            nextProposalTitle: '📅 次回提案を選択してください：',
+            nextProposalPrompt: 'いつ頃の再訪問を推奨しますか？',
+            urgentProposal: '緊急対応必要',
+            noProposal: '提案なし',
+            urgentWarningMsg: '⚠️ 緊急対応が必要ですね。',
+            urgentWorkPrompt: '追加で推奨する作業があれば選択してください：',
+            proposalRecMsg: '{label}での再訪問を推奨しますね。',
+            confirmationMsg: '✅ 確認です：',
+            nextProposalLabel: '次回提案',
+            previewReport: 'プレビューを確認',
+            sendReportBtn: '✓ 送信する',
+            retryBtn: 'やり直し',
+            previewReady: '✅ プレビューを確認しました。送信する準備ができています！',
+            reportStartWithStore: '📍 {store} のレポート作成',
+            photosUploadedMsg: '📷 {count}枚の写真をアップロードしました',
+            photosReceivedMsg: '写真を受け取りました！',
+            reportSendQuestion: 'この内容でレポートを送信しますか？',
+            nextProceed: '次へ進む →',
+            workOrderNotReady: '作業指示書作成機能は準備中です。',
+            thanksSimple: 'お疲れ様でした！',
+            sendReportNotRecommended: 'このまま送信（非推奨）',
+            photoAddedMsg: '📸 写真を追加しました ({count}枚目)',
+            staffLabel: 'スタッフ',
+            reportSendFailed: 'レポートの送信に失敗しました',
+
+            // Other
+            errorOccurred: 'エラーが発生しました：',
+            loadingMsg: '読み込み中...',
+            none: 'なし',
+            minutes: '分',
+            generating: '生成中...',
+            selectedStoreFallback: '選択した店舗',
+            targetVentilationDuct: '換気扇・ダクト',
+            targetGreaseTrap: 'グリストラップ',
+            targetFloor: '床面清掃',
+            targetKitchen: '厨房機器',
+            targetAircon: 'エアコン',
+            targetOther: 'その他',
+            timing1Month: '1ヶ月後',
+            timing2Months: '2ヶ月後',
+            timing3Months: '3ヶ月後',
+            timing6Months: '6ヶ月後',
+            timing1Year: '1年後',
+            workRegular: '定期清掃の継続',
+            workParts: '部品交換の検討',
+            workExtraCleaning: '追加清掃箇所あり',
+            workEquipmentCheck: '設備点検を推奨',
+            workPestControl: '害虫駆除を推奨',
+            workNone: '特になし'
         },
         pt: {
             // Login
@@ -2307,38 +2478,134 @@
             loggingIn: 'Entrando...',
             email: 'E-mail',
             password: 'Senha',
+            loginError: 'Erro: Informações de login não encontradas. Por favor, faça login novamente.',
+            authRequired: 'Autenticação necessária.',
+            loginFailed: 'Falha no login',
+            noAuthSystem: 'Sistema de autenticação não carregado',
+            loginPrompt: 'Bom dia. Sou MISOGI, o AI de gestão do Misesapo. Para iniciar a sessão, insira suas informações de login.',
+            chatPlaceholder: 'Chat interno (Alt+1~8 para alternar)...',
+            hideLog: 'Ocultar log',
+            expandLog: 'Expandir log',
+            selectChannel: 'Selecionar canal',
+            attachFile: 'Anexar arquivo',
 
             // Main UI
             selectJob: 'Selecionar trabalho',
             cleaning: 'Limpeza',
             sales: 'Vendas',
+            office: 'Escritório',
+            hr: 'RH',
+            accounting: 'Contabilidade',
+            selectTask: 'Qual trabalho você vai fazer?',
+            goodMorning: 'Bom dia',
+            workChangePrompt: 'Mudança de trabalho? Qual trabalho você fará?',
 
             // Attendance
             clockIn: 'Entrada',
             clockOut: 'Saída',
             onBreak: 'Em pausa',
             notClockedIn: 'Não registrado',
+            clockInUser: 'Vou bater o ponto',
+            clockInSuccess: 'Olá {name}, ponto registrado. Qual trabalho você fará hoje?',
+            clockedInStatus: 'Já entrou',
+            breakStartConfirm: 'Deseja entrar em pausa?',
+            breakStartSuccess: 'Pausa registrada. Descanse um pouco.',
+            breakEndSuccess: 'Bem-vindo de volta. Retomada do trabalho registrada.',
+            clockOutConfirm: 'Deseja finalizar o trabalho de hoje e sair?',
+            clockOutSuccess: 'Bom trabalho. Saída registrada. Esperamos por você amanhã.',
+            resumeWorkMsg: 'Bom trabalho, {name}. Continuando o trabalho em {store}.',
+            resumeBreakMsg: 'Olá {name}, você está em pausa. Deseja retomar o trabalho?',
+            resumeSalesMsg: 'Olá {name}, bem-vindo de volta. Continuando em modo de vendas.',
 
-            // Cleaning Mode
+            // Cleaning Mode Base
+            cleaningTitle: 'Criar relatório',
+            scoreDiagnosisLabel: 'Diagnóstico de score',
             liveMode: 'Modo AO VIVO',
             afterMode: 'Modo DEPOIS',
             liveModeDesc: 'Registrar limpeza em tempo real',
             afterModeDesc: 'Inserir detalhes após o trabalho',
+            selectReportModeTitle: '📋 Criação de relatório',
+            selectReportModePrompt: 'Qual modo você deseja usar?',
+            scoreDiagnosisTitle: '🧪 Diagnóstico de score',
+            scoreDiagnosisDesc: 'Envie 1 foto para avaliação MISOGI',
+            scoreDiagnosisPrompt: 'Envie uma foto para o diagnóstico.',
+            scoreDiagnosisAnalyze: 'Iniciar diagnóstico',
+            scoreDiagnosisNoPhoto: 'Selecione uma foto.',
+            scoreDiagnosisResultTitle: 'Resultado do diagnóstico',
+            liveModeStartMsg: '🔴 Modo AO VIVO iniciado',
             selectWorksite: 'Selecione o local de limpeza',
-            searchCustomer: 'Buscar cliente',
-            selectFromSchedule: 'Selecionar da agenda de hoje',
+            afterModeMsg: '📝 Modo DEPOIS',
+            afterModeDesc2: 'Selecione a loja. Você pode inserir mesmo sem agendamento.',
             cancel: 'Cancelar',
+            cancelMsg: 'Cancelado.',
+            cancelLiveModeMsg: 'Modo AO VIVO cancelado.',
 
-            // Customer Search
+            // Customer Selection
+            searchCustomer: 'Buscar cliente',
             searchPlaceholder: 'Nome da empresa, loja, telefone...',
             noResults: 'Nenhum cliente encontrado',
             items: 'itens',
+            selectFromSchedule: 'Selecionar da agenda de hoje',
+            searchCompanyPlaceholder: 'Pesquisar por nome da empresa...',
+            enterStoreNamePrompt: 'Por favor, insira o nome da loja:',
+            manualStorePlaceholder: 'Nome da loja...',
+            manualStoreInput: '✏️ Digitar nome da loja',
+            backToCustomerList: '← Voltar para lista de clientes',
+            selectCompany: 'Por favor, selecione a empresa.',
+            manualInput: 'Digitação manual',
+            unknownStore: 'Loja desconhecida',
 
-            // Photo Upload
+            // Phase: Working & Photos
             takePhoto: 'Tirar foto',
-            beforePhoto: 'Foto antes da limpeza',
-            afterPhoto: 'Foto após a limpeza',
+            beforePhoto: 'Foto antes',
+            afterPhoto: 'Foto depois',
             addPhoto: 'Adicionar foto',
+            beforePhotoTitle: '📷 Foto antes da limpeza',
+            beforePhotoMsg: 'Registre o estado atual do local',
+            tapToTakePhoto: 'Toque para tirar foto',
+            startCleaning: '🔴 Iniciar limpeza',
+            liveCleaning: '🔴 Limpeza AO VIVO em andamento',
+            addMemo: '✏️ Adicionar nota',
+            cleaningComplete: '✅ Limpeza concluída',
+            afterPhotoTitle: '📷 Foto após a limpeza',
+            afterPhotoMsg: 'Registre o resultado final',
+            toReportConfirmation: '📤 Ir para confirmação',
+            photoSelectionTitle: '📸 Selecione as fotos de antes e depois',
+            cleaningRecorded: 'Limpeza registrada',
+            liveBeforePhotoPrompt: '🔴 **{store}**\n\nPrimeiro, tire a foto antes da limpeza.',
+            beforePhotoAdded: '📷 Foto antes {count}ª',
+            afterPhotoAdded: '📷 Foto depois {count}ª',
+            liveWorkStartMsg: '🔴 **Início da limpeza**\n\nO trabalho em **{store}** começou.\nAo terminar, toque em "{complete}".',
+            enterMemo: 'Digite a nota.',
+            saveAndBack: 'Salvar e voltar',
+            memoSaved: 'Nota salva.',
+            cleaningDonePrompt: '✅ **Limpeza concluída** ({minutes}{minutesSuffix})\n\nPor fim, tire a foto depois da limpeza.',
+            photoCountSuffix: ' fotos',
+            addShort: 'Adicionar',
+
+            // AI Quality Check
+            aiChecking: '🤖 Verificação de qualidade AI...',
+            aiComparing: 'Comparando fotos de antes e depois.',
+            aiStrict: 'Avaliando com padrões rigorosos.',
+            aiAnalyzing: 'Analisando qualidade...',
+            aiStrictDesc: 'Avaliando com critérios rigorosos',
+            aiScoreTitle: '🏆 Score AI: {score} pontos (Rank {rank})',
+            aiAnalysisFailed: '⚠️ Falha na análise AI',
+            aiAnalysisFailedDesc: 'O relatório pode ser enviado, mas sem verificação de qualidade.',
+            redoRecommended: '🔄 Modo de nova limpeza',
+            redoRecommendedDesc: 'Limpe as áreas indicadas e tire a foto de depois novamente.',
+            criticalIssuesLabel: '⚠️ Problemas graves',
+            strengthsLabel: '✅ Pontos positivos',
+            improvementsLabel: '📝 Pontos a melhorar',
+            adviseLabel: '💡 Conselho',
+            redoAreasLabel: '🔄 Áreas para nova limpeza',
+            qualityLow: '⚠️ Não atende aos padrões',
+            qualityWarning: '⚠️ Melhoria recomendada',
+            redoStronglyAdvised: 'Recomendamos fortemente uma limpeza completa',
+            redoPartiallyAdvised: 'Considere limpar novamente algumas partes',
+            aiScoreLabel: 'Score de qualidade AI',
+            rankLabel: 'Rank {rank}',
+            redoAction: '🔄 Refazer limpeza',
 
             // Actions
             submit: 'Enviar',
@@ -2346,11 +2613,77 @@
             back: 'Voltar',
             next: 'Próximo',
             complete: 'Concluído',
+            decide: 'Confirmar',
+            save: 'Salvar',
+            send: 'Enviar',
 
-            // Messages
-            goodMorning: 'Bom dia',
-            selectTask: 'Qual trabalho você vai fazer?',
-            cleaningRecorded: 'Limpeza registrada',
+            // Report Wizard & Final Submission
+            reportContent: '📋 Conteúdo do relatório',
+            store: 'Loja',
+            workTime: 'Tempo de trabalho',
+            beforePhotoCount: 'Fotos antes',
+            afterPhotoCount: 'Fotos depois',
+            memoLabel: 'Nota',
+            editNotes: '✏️ Editar notas',
+            addNotes: '✏️ Adicionar notas',
+            notesPlaceholder: 'Notas, observações especiais, etc...',
+            submitReport: '📤 Enviar relatório',
+            submitting: '📤 Enviando relatório...',
+            submitSuccess: '✅ Relatório enviado',
+            submitFullSuccess: '✅ O relatório foi enviado!',
+            nextJobMISOGI: 'Bom trabalho! Conte com o MISOGI para o próximo trabalho.',
+            reportIdLabel: 'ID do relatório',
+            selectCleaningTarget: '🧹 Selecione o alvo da limpeza:',
+            inputNotesPrompt: '📝 Insira notas ou comentários (ou "nenhum").',
+            nextProposalTitle: '📅 Selecione a próxima visita:',
+            nextProposalPrompt: 'Quando você recomenda uma nova visita?',
+            urgentProposal: 'Urgente',
+            noProposal: 'Sem proposta',
+            urgentWarningMsg: '⚠️ Necessário atendimento urgente.',
+            urgentWorkPrompt: 'Selecione trabalhos adicionais recomendados:',
+            proposalRecMsg: 'Recomendamos uma nova visita em {label}.',
+            confirmationMsg: '✅ Confirmação:',
+            nextProposalLabel: 'Próxima proposta',
+            previewReport: 'Ver prévia',
+            sendReportBtn: '✓ Enviar',
+            retryBtn: 'Recomeçar',
+            previewReady: '✅ Prévia confirmada. Pronto para enviar!',
+            reportStartWithStore: '📍 Relatório de {store}',
+            photosUploadedMsg: '📷 {count} fotos enviadas',
+            photosReceivedMsg: 'Fotos recebidas!',
+            reportSendQuestion: 'Deseja enviar o relatório com este conteúdo?',
+            nextProceed: 'Próximo →',
+            workOrderNotReady: 'A criação de ordem de trabalho ainda não está pronta.',
+            thanksSimple: 'Bom trabalho!',
+            sendReportNotRecommended: 'Enviar assim mesmo (não recomendado)',
+            photoAddedMsg: '📸 Foto adicionada ({count}ª)',
+            staffLabel: 'Equipe',
+            reportSendFailed: 'Falha ao enviar o relatório',
+
+            // Other
+            errorOccurred: 'Ocorreu um erro:',
+            loadingMsg: 'Carregando...',
+            none: 'nenhum',
+            minutes: 'min',
+            generating: 'Gerando...',
+            selectedStoreFallback: 'Loja selecionada',
+            targetVentilationDuct: 'Ventilação e dutos',
+            targetGreaseTrap: 'Caixa de gordura',
+            targetFloor: 'Limpeza do piso',
+            targetKitchen: 'Equipamentos de cozinha',
+            targetAircon: 'Ar-condicionado',
+            targetOther: 'Outros',
+            timing1Month: '1 mês',
+            timing2Months: '2 meses',
+            timing3Months: '3 meses',
+            timing6Months: '6 meses',
+            timing1Year: '1 ano',
+            workRegular: 'Continuar limpeza regular',
+            workParts: 'Considerar troca de peças',
+            workExtraCleaning: 'Limpeza adicional necessária',
+            workEquipmentCheck: 'Recomendar inspeção do equipamento',
+            workPestControl: 'Recomendar controle de pragas',
+            workNone: 'Nenhum'
         },
         en: {
             // Login
@@ -2358,38 +2691,134 @@
             loggingIn: 'Logging in...',
             email: 'Email',
             password: 'Password',
+            loginError: 'Error: Login information not found. Please log in again.',
+            authRequired: 'Authentication required.',
+            loginFailed: 'Login failed',
+            noAuthSystem: 'Auth system not loaded',
+            loginPrompt: 'Good morning. I am MISOGI, the Misesapo management AI. To start the session, please enter your login information.',
+            chatPlaceholder: 'Internal chat (Alt+1-8 to switch)...',
+            hideLog: 'Hide log',
+            expandLog: 'Expand log',
+            selectChannel: 'Select channel',
+            attachFile: 'Attach file',
 
             // Main UI
             selectJob: 'Select job',
             cleaning: 'Cleaning',
             sales: 'Sales',
+            office: 'Office',
+            hr: 'HR',
+            accounting: 'Accounting',
+            selectTask: 'Which job will you do?',
+            goodMorning: 'Good morning',
+            workChangePrompt: 'Job change? Which job will you do?',
 
             // Attendance
             clockIn: 'Clock In',
             clockOut: 'Clock Out',
             onBreak: 'On Break',
             notClockedIn: 'Not clocked in',
+            clockInUser: 'Clocking in',
+            clockInSuccess: 'Hello {name}, clock-in recorded. What job will you do today?',
+            clockedInStatus: 'Clocked in',
+            breakStartConfirm: 'Do you want to take a break?',
+            breakStartSuccess: 'Break recorded. Please rest well.',
+            breakEndSuccess: 'Welcome back. Work resumption recorded.',
+            clockOutConfirm: 'Do you want to finish today\'s work and clock out?',
+            clockOutSuccess: 'Good job. Clock-out recorded. We look forward to seeing you tomorrow.',
+            resumeWorkMsg: 'Good job, {name}. Continuing work at {store}.',
+            resumeBreakMsg: 'Hello {name}, you are on break. Would you like to resume work?',
+            resumeSalesMsg: 'Hello {name}, welcome back. Continuing in sales mode.',
 
-            // Cleaning Mode
+            // Cleaning Mode Base
+            cleaningTitle: 'Create Report',
+            scoreDiagnosisLabel: 'Score diagnosis',
             liveMode: 'LIVE Mode',
             afterMode: 'AFTER Mode',
             liveModeDesc: 'Record cleaning in real-time',
             afterModeDesc: 'Enter details after work',
+            selectReportModeTitle: '📋 Report Creation',
+            selectReportModePrompt: 'Which mode do you want to use?',
+            scoreDiagnosisTitle: '🧪 Score diagnosis',
+            scoreDiagnosisDesc: 'Upload one photo for MISOGI evaluation',
+            scoreDiagnosisPrompt: 'Upload a photo for diagnosis.',
+            scoreDiagnosisAnalyze: 'Start diagnosis',
+            scoreDiagnosisNoPhoto: 'Please select a photo.',
+            scoreDiagnosisResultTitle: 'Diagnosis result',
+            liveModeStartMsg: '🔴 LIVE Mode started',
             selectWorksite: 'Select the cleaning site',
-            searchCustomer: 'Search customer',
-            selectFromSchedule: 'Select from today\'s schedule',
+            afterModeMsg: '📝 AFTER Mode',
+            afterModeDesc2: 'Select the store. You can enter even without a schedule.',
             cancel: 'Cancel',
+            cancelMsg: 'Cancelled.',
+            cancelLiveModeMsg: 'LIVE mode cancelled.',
 
-            // Customer Search
+            // Customer Selection
+            searchCustomer: 'Search Customer',
             searchPlaceholder: 'Company name, store, phone...',
             noResults: 'No customers found',
             items: 'items',
+            selectFromSchedule: 'Select from today\'s schedule',
+            searchCompanyPlaceholder: 'Search by company name...',
+            enterStoreNamePrompt: 'Please enter the store name:',
+            manualStorePlaceholder: 'Store name...',
+            manualStoreInput: '✏️ Enter store name manually',
+            backToCustomerList: '← Back to customer list',
+            selectCompany: 'Please select the company.',
+            manualInput: 'Manual input',
+            unknownStore: 'Unknown store',
 
-            // Photo Upload
-            takePhoto: 'Take photo',
-            beforePhoto: 'Photo before cleaning',
-            afterPhoto: 'Photo after cleaning',
-            addPhoto: 'Add photo',
+            // Phase: Working & Photos
+            takePhoto: 'Take Photo',
+            beforePhoto: 'Photo Before',
+            afterPhoto: 'Photo After',
+            addPhoto: 'Add Photo',
+            beforePhotoTitle: '📷 Photo Before Cleaning',
+            beforePhotoMsg: 'Record the current state of the site',
+            tapToTakePhoto: 'Tap to take photo',
+            startCleaning: '🔴 Start Cleaning',
+            liveCleaning: '🔴 LIVE Cleaning in progress',
+            addMemo: '✏️ Add Memo',
+            cleaningComplete: '✅ Cleaning complete',
+            afterPhotoTitle: '📷 Photo After Cleaning',
+            afterPhotoMsg: 'Record the final result',
+            toReportConfirmation: '📤 Go to confirmation',
+            photoSelectionTitle: '📸 Select before and after photos',
+            cleaningRecorded: 'Cleaning recorded',
+            liveBeforePhotoPrompt: '🔴 **{store}**\n\nFirst, take the before-cleaning photo.',
+            beforePhotoAdded: '📷 Before photo #{count}',
+            afterPhotoAdded: '📷 After photo #{count}',
+            liveWorkStartMsg: '🔴 **Cleaning started**\n\nCleaning has started at **{store}**.\nWhen finished, tap "{complete}".',
+            enterMemo: 'Please enter a memo.',
+            saveAndBack: 'Save and back',
+            memoSaved: 'Memo saved.',
+            cleaningDonePrompt: '✅ **Cleaning completed** ({minutes}{minutesSuffix})\n\nFinally, take the after-cleaning photo.',
+            photoCountSuffix: ' photos',
+            addShort: 'Add',
+
+            // AI Quality Check
+            aiChecking: '🤖 AI Quality Checking...',
+            aiComparing: 'Comparing before and after photos.',
+            aiStrict: 'Evaluating with strict standards.',
+            aiAnalyzing: 'Analyzing quality...',
+            aiStrictDesc: 'Evaluating with strict criteria',
+            aiScoreTitle: '🏆 AI Score: {score} points (Rank {rank})',
+            aiAnalysisFailed: '⚠️ AI analysis failed',
+            aiAnalysisFailedDesc: 'The report can be submitted, but without a quality check.',
+            redoRecommended: '🔄 Re-cleaning Mode',
+            redoRecommendedDesc: 'Please re-clean the indicated areas and take the after photo again.',
+            criticalIssuesLabel: '⚠️ Critical Issues',
+            strengthsLabel: '✅ Strengths',
+            improvementsLabel: '📝 Improvements Needed',
+            adviseLabel: '💡 Advice',
+            redoAreasLabel: '🔄 Re-cleaning Areas',
+            qualityLow: '⚠️ Quality standards not met',
+            qualityWarning: '⚠️ Improvement recommended',
+            redoStronglyAdvised: 'Complete re-cleaning is strongly recommended',
+            redoPartiallyAdvised: 'Consider re-cleaning some parts',
+            aiScoreLabel: 'AI quality score',
+            rankLabel: 'Rank {rank}',
+            redoAction: '🔄 Re-clean and retry',
 
             // Actions
             submit: 'Submit',
@@ -2397,11 +2826,77 @@
             back: 'Back',
             next: 'Next',
             complete: 'Complete',
+            decide: 'Confirm',
+            save: 'Save',
+            send: 'Send',
 
-            // Messages
-            goodMorning: 'Good morning',
-            selectTask: 'Which job will you do?',
-            cleaningRecorded: 'Cleaning recorded',
+            // Report Wizard & Final Submission
+            reportContent: '📋 Report Content',
+            store: 'Store',
+            workTime: 'Work Time',
+            beforePhotoCount: 'Before Photos',
+            afterPhotoCount: 'After Photos',
+            memoLabel: 'Memo',
+            editNotes: '✏️ Edit Notes',
+            addNotes: '✏️ Add Notes',
+            notesPlaceholder: 'Notes, special remarks, etc...',
+            submitReport: '📤 Submit Report',
+            submitting: '📤 Submitting report...',
+            submitSuccess: '✅ Report submitted',
+            submitFullSuccess: '✅ Report sent successfully!',
+            nextJobMISOGI: 'Good job! Trust MISOGI for your next task.',
+            reportIdLabel: 'Report ID',
+            selectCleaningTarget: '🧹 Select cleaning target:',
+            inputNotesPrompt: '📝 Enter notes or comments (or "none").',
+            nextProposalTitle: '📅 Select next proposal:',
+            nextProposalPrompt: 'When do you recommend a return visit?',
+            urgentProposal: 'Urgent',
+            noProposal: 'No proposal',
+            urgentWarningMsg: '⚠️ Urgent response required.',
+            urgentWorkPrompt: 'Select additional recommended work:',
+            proposalRecMsg: 'Recommend a return visit in {label}.',
+            confirmationMsg: '✅ Confirmation:',
+            nextProposalLabel: 'Next Proposal',
+            previewReport: 'Preview Report',
+            sendReportBtn: '✓ Send',
+            retryBtn: 'Retry',
+            previewReady: '✅ Preview confirmed. Ready to send!',
+            reportStartWithStore: '📍 Report for {store}',
+            photosUploadedMsg: '📷 Uploaded {count} photos',
+            photosReceivedMsg: 'Photos received!',
+            reportSendQuestion: 'Send the report with this content?',
+            nextProceed: 'Next →',
+            workOrderNotReady: 'Work order creation is not ready yet.',
+            thanksSimple: 'Great work!',
+            sendReportNotRecommended: 'Send anyway (not recommended)',
+            photoAddedMsg: '📸 Added photo (#{count})',
+            staffLabel: 'Staff',
+            reportSendFailed: 'Failed to send the report',
+
+            // Other
+            errorOccurred: 'An error occurred:',
+            loadingMsg: 'Loading...',
+            none: 'none',
+            minutes: 'min',
+            generating: 'Generating...',
+            selectedStoreFallback: 'Selected store',
+            targetVentilationDuct: 'Ventilation/Duct',
+            targetGreaseTrap: 'Grease trap',
+            targetFloor: 'Floor cleaning',
+            targetKitchen: 'Kitchen equipment',
+            targetAircon: 'Air conditioner',
+            targetOther: 'Other',
+            timing1Month: '1 month',
+            timing2Months: '2 months',
+            timing3Months: '3 months',
+            timing6Months: '6 months',
+            timing1Year: '1 year',
+            workRegular: 'Continue regular cleaning',
+            workParts: 'Consider parts replacement',
+            workExtraCleaning: 'Additional cleaning needed',
+            workEquipmentCheck: 'Recommend equipment inspection',
+            workPestControl: 'Recommend pest control',
+            workNone: 'None'
         }
     };
 
@@ -2414,8 +2909,42 @@
     // Load translations and apply to UI (called when language changes)
     function loadTranslations(lang) {
         console.log('[i18n] Loading translations for:', lang);
-        // Update dynamic UI elements that need translation
-        // This will be called when user logs in with non-Japanese language
+
+        // Translate text content
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            const translation = t(key);
+            if (translation !== key) {
+                // If the element has an icon (i tag), preserve it
+                const icon = el.querySelector('i');
+                if (icon) {
+                    el.innerHTML = icon.outerHTML + ' ' + translation;
+                } else {
+                    el.textContent = translation;
+                }
+            }
+        });
+
+        // Translate placeholders
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            const translation = t(key);
+            if (translation !== key) {
+                el.placeholder = translation;
+            }
+        });
+
+        // Translate titles
+        document.querySelectorAll('[data-i18n-title]').forEach(el => {
+            const key = el.getAttribute('data-i18n-title');
+            const translation = t(key);
+            if (translation !== key) {
+                el.title = translation;
+            }
+        });
+
+        // Update document lang
+        document.documentElement.setAttribute('lang', lang);
     }
 
     function ensureAuthOrRedirect() {
@@ -2450,6 +2979,7 @@
     // Apply saved language on page load
     const savedLanguage = localStorage.getItem('user_language') || 'ja';
     window.currentLanguage = savedLanguage;
+    loadTranslations(savedLanguage);
     document.documentElement.setAttribute('lang', savedLanguage);
 
     // Hide sidebar by default for AI-centric feel
@@ -2470,7 +3000,7 @@
 
         const token = localStorage.getItem('cognito_id_token');
         if (!token) {
-            appendChatMessage('ai', 'おはようございます。ミセサポ管理AIのMISOGIです。セッションを開始するために、まずはログイン情報を入力してください。');
+            appendChatMessage('ai', t('loginPrompt'));
             setTimeout(() => {
                 loginForm.style.display = 'flex';
             }, 800);
@@ -2523,7 +3053,9 @@
                         window.currentAttendanceRecord = latestRecord;
                         let attendanceStatus = 'clock_in';
                         showJobActions('cleaning');
-                        appendChatMessage('ai', `お疲れ様です、${latestRecord.staff_name || 'スタッフ'}さん。${latestRecord.store_name}での業務を継続します。`);
+                        appendChatMessage('ai', t('resumeWorkMsg')
+                            .replace('{name}', latestRecord.staff_name || 'スタッフ')
+                            .replace('{store}', latestRecord.store_name));
                     } else {
                         const startOverlay = document.getElementById('start-overlay');
                         if (startOverlay) startOverlay.classList.remove('hidden');
@@ -2555,12 +3087,12 @@
 
                 if (isOnBreak) {
                     // 休憩中
-                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。休憩中ですね。業務を再開しますか？`);
+                    appendChatMessage('ai', t('resumeBreakMsg').replace('{name}', user.name || 'ユーザー'));
                     handleAiCommands({ ui_commands: [{ type: 'show_break_end' }] });
                 } else if (isClockedIn) {
                     // 出勤済み → 「再開」扱い（出勤ボタンは不要）
                     // cleaning専用ページ: 常にcleaningモードで動作
-                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。清掃モードで業務を継続します。`);
+                    appendChatMessage('ai', t('resumeWorkMsg').replace('{name}', user.name || t('staffLabel')).replace('{store}', latestRecord?.store_name || t('unknownStore')));
                     currentJobType = 'cleaning';
                     localStorage.setItem('current_job_type', 'cleaning');
                     document.body.classList.add('job-cleaning');
@@ -2568,12 +3100,12 @@
                     showJobActions('cleaning');
                 } else {
                     // 未出勤 → 出勤を促す
-                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
+                    appendChatMessage('ai', t('goodMorning').replace('{name}', user.name || 'ユーザー') + ' ' + t('selectTask'));
                     handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
                 }
             } catch (e) {
                 console.error('Failed to check attendance:', e);
-                appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。認証を確認しました。業務を開始される場合はお知らせください。`);
+                appendChatMessage('ai', t('goodMorning').replace('{name}', user.name || 'ユーザー') + ' ' + t('loginPrompt'));
                 handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
             }
         }
@@ -2586,7 +3118,7 @@
         if (!email || !password) return;
 
         const loginBtn = document.querySelector('.login-submit-btn');
-        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 認証中...';
+        loginBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t('loggingIn')}`;
         loginBtn.disabled = true;
 
         try {
@@ -2605,11 +3137,11 @@
                     throw new Error(result.message);
                 }
             } else {
-                throw new Error('認証システムが読み込まれていません');
+                throw new Error(t('noAuthSystem'));
             }
         } catch (err) {
-            alert('ログインに失敗しました: ' + err.message);
-            loginBtn.innerHTML = '認証';
+            alert(t('loginFailed') + ': ' + err.message);
+            loginBtn.innerHTML = t('login');
             loginBtn.disabled = false;
         }
     }
@@ -2655,11 +3187,11 @@
         const token = localStorage.getItem('cognito_id_token');
 
         if (!user.id || !token) {
-            appendChatMessage('ai', 'エラー：ログイン情報が見つかりません。再ログインしてください。');
+            appendChatMessage('ai', t('loginError'));
             return;
         }
 
-        appendChatMessage('user', '出勤します');
+        appendChatMessage('user', t('clockInUser'));
 
         try {
             const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
@@ -2682,22 +3214,22 @@
             });
 
             if (response.ok) {
-                appendChatMessage('ai', `${user.name || 'ユーザー'}様、出勤を記録しました。本日はどの業務を行いますか？`);
+                appendChatMessage('ai', t('clockInSuccess').replace('{name}', user.name || 'ユーザー'));
                 showJobSelection();
-                if (btn) btn.innerHTML = '<i class="fas fa-check"></i> 出勤済み';
+                if (btn) btn.innerHTML = `<i class="fas fa-check"></i> ${t('clockedInStatus')}`;
             } else {
                 const err = await response.json();
                 throw new Error(err.message || 'API Error');
             }
         } catch (err) {
             console.error('Attendance Error:', err);
-            appendChatMessage('ai', 'エラーが発生しました：' + err.message);
+            appendChatMessage('ai', t('errorOccurred') + err.message);
             if (btn) btn.disabled = false;
         }
     }
 
     async function performBreakStart() {
-        if (!confirm('休憩に入りますか？')) return;
+        if (!confirm(t('breakStartConfirm'))) return;
         const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
         const token = localStorage.getItem('cognito_id_token');
         const now = new Date().toISOString();
@@ -2713,7 +3245,7 @@
                 })
             });
             if (response.ok) {
-                appendChatMessage('ai', '休憩を記録しました。ゆっくりお休みください。');
+                appendChatMessage('ai', t('breakStartSuccess'));
                 handleAiResponse({ intent: 'break_start' }); // Trigger visual transition
             }
         } catch (e) { console.error(e); }
@@ -2735,14 +3267,14 @@
                 })
             });
             if (response.ok) {
-                appendChatMessage('ai', 'お帰りなさいませ。業務の再開を記録しました。');
+                appendChatMessage('ai', t('breakEndSuccess'));
                 handleAiResponse({ intent: 'break_end' }); // Trigger visual transition
             }
         } catch (e) { console.error(e); }
     }
 
     async function performClockOut() {
-        if (!confirm('本日の業務を終了し、退勤しますか？')) return;
+        if (!confirm(t('clockOutConfirm'))) return;
         const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
         const token = localStorage.getItem('cognito_id_token');
         const now = new Date().toISOString();
@@ -2758,7 +3290,7 @@
                 })
             });
             if (response.ok) {
-                appendChatMessage('ai', 'お疲れ様でした。退勤を記録しました。また明日もお待ちしております。');
+                appendChatMessage('ai', t('clockOutSuccess'));
                 localStorage.removeItem('current_job_type'); // Clear job type on clock out
                 handleAiResponse({ intent: 'clock_out' }); // Trigger visual transition
             }
@@ -3722,7 +4254,8 @@ ${context}
                 { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'" }
             ],
             cleaning: [
-                { label: 'レポートを作成', action: 'startReportWizard()' }
+                { label: t('cleaningTitle'), action: 'startReportWizard()' },
+                { label: t('scoreDiagnosisLabel'), action: 'startScoreDiagnosis()' }
             ],
             office: [
                 { label: '作業指示書を作成', action: 'startWorkOrderWizard()' }
@@ -4221,9 +4754,7 @@ ${context}
     }
 
     function showReportModeSelection() {
-        appendChatMessage('ai', `📋 **レポート作成**
-
-どのモードで作成しますか？`);
+        appendChatMessage('ai', t('selectReportModeTitle') + '\n\n' + t('selectReportModePrompt'));
 
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
@@ -4234,15 +4765,211 @@ ${context}
                     style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none;
                     padding: 20px; border-radius: 16px; cursor: pointer; text-align: left;
                     display: flex; flex-direction: column; gap: 6px; min-height: 80px;">
-                    <span style="font-size: 1.1rem; font-weight: 700;">🔴 LIVE モード</span>
-                    <span style="font-size: 0.8rem; opacity: 0.9;">作業中にリアルタイムで記録</span>
+                    <span style="font-size: 1.1rem; font-weight: 700;">🔴 ${t('liveMode')}</span>
+                    <span style="font-size: 0.8rem; opacity: 0.9;">${t('liveModeDesc')}</span>
                 </button>
                 <button onclick="selectReportMode('after')"
                     style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none;
                     padding: 20px; border-radius: 16px; cursor: pointer; text-align: left;
                     display: flex; flex-direction: column; gap: 6px; min-height: 80px;">
-                    <span style="font-size: 1.1rem; font-weight: 700;">📝 AFTER モード</span>
-                    <span style="font-size: 0.8rem; opacity: 0.9;">作業終了後に詳細を入力</span>
+                    <span style="font-size: 1.1rem; font-weight: 700;">📝 ${t('afterMode')}</span>
+                    <span style="font-size: 0.8rem; opacity: 0.9;">${t('afterModeDesc')}</span>
+                </button>
+                <button onclick="startScoreDiagnosis()"
+                    style="background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); color: white; border: none;
+                    padding: 20px; border-radius: 16px; cursor: pointer; text-align: left;
+                    display: flex; flex-direction: column; gap: 6px; min-height: 80px;">
+                    <span style="font-size: 1.1rem; font-weight: 700;">🧪 ${t('scoreDiagnosisLabel')}</span>
+                    <span style="font-size: 0.8rem; opacity: 0.9;">${t('scoreDiagnosisDesc')}</span>
+                </button>
+            </div>
+        `;
+    }
+
+    let scoreDiagnosisState = {
+        photo: null
+    };
+
+    function startScoreDiagnosis() {
+        scoreDiagnosisState = { photo: null };
+        appendChatMessage('ai', t('scoreDiagnosisPrompt'));
+        showScoreDiagnosisUI();
+    }
+
+    function showScoreDiagnosisUI() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        const fileName = scoreDiagnosisState.photo ? scoreDiagnosisState.photo.name : '';
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin: 0 auto;">
+                <label style="display: flex; flex-direction: column; align-items: center; justify-content: center;
+                    min-height: 120px; border: 2px dashed rgba(59,130,246,0.5); border-radius: 16px; cursor: pointer;
+                    background: rgba(59,130,246,0.1); transition: all 0.2s; padding: 12px; text-align: center;">
+                    <input type="file" accept="image/*" style="display: none;" onchange="handleScoreDiagnosisPhoto(this)">
+                    <i class="fas fa-camera" style="font-size: 2rem; color: #60a5fa; margin-bottom: 6px;"></i>
+                    <span style="font-size: 0.9rem; color: rgba(255,255,255,0.8);">${t('scoreDiagnosisTitle')}</span>
+                    <span style="font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-top: 4px;">${fileName || t('scoreDiagnosisDesc')}</span>
+                </label>
+                <button onclick="runScoreDiagnosis()"
+                    style="background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; border: none;
+                    padding: 16px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer;">
+                    ${t('scoreDiagnosisAnalyze')}
+                </button>
+                <button onclick="showJobActions('cleaning')"
+                    style="background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                    ${t('back')}
+                </button>
+            </div>
+        `;
+    }
+
+    function handleScoreDiagnosisPhoto(input) {
+        scoreDiagnosisState.photo = input.files?.[0] || null;
+        showScoreDiagnosisUI();
+    }
+
+    async function runScoreDiagnosis() {
+        if (!scoreDiagnosisState.photo) {
+            appendChatMessage('ai', t('scoreDiagnosisNoPhoto'));
+            return;
+        }
+
+        appendChatMessage('ai', `${t('aiChecking')}\n${t('aiStrictDesc')}`);
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (actionContainer) {
+            actionContainer.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 40px;">
+                    <div style="width: 60px; height: 60px; border: 4px solid #0ea5e9; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                    <div style="color: #0ea5e9; font-size: 1rem; font-weight: 600;">${t('aiAnalyzing')}</div>
+                    <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('aiStrictDesc')}</div>
+                </div>
+                <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+            `;
+        }
+
+        try {
+            const result = await analyzeCleaningWithAI(scoreDiagnosisState.photo, null);
+            if (result) {
+                // Save the result as a personal/store insight before displaying
+                await saveScoreDiagnosisResult(result, scoreDiagnosisState.photo);
+                displayScoreDiagnosisResult(result);
+                return;
+            }
+            appendChatMessage('ai', `${t('aiAnalysisFailed')}\n\n${t('aiAnalysisFailedDesc')}`);
+            showScoreDiagnosisUI();
+        } catch (error) {
+            console.error('Score diagnosis error:', error);
+            appendChatMessage('ai', `${t('aiAnalysisFailed')}\n\n${t('aiAnalysisFailedDesc')}`);
+            showScoreDiagnosisUI();
+        }
+    }
+
+    async function saveScoreDiagnosisResult(aiResult, photoFile) {
+        try {
+            const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+            const staffId = user.sub || user.id;
+            const staffName = user.name || t('staffLabel');
+            const storeId = reportWizardState.store?.id || 'diagnosis-only';
+            const storeName = reportWizardState.store?.name || t('selectedStoreFallback');
+
+            // 1. Upload photo first
+            let photoUrl = '';
+            if (photoFile) {
+                const formData = new FormData();
+                formData.append('file', photoFile);
+                formData.append('action', 'upload_photo');
+                formData.append('path', `cleaning/diagnosis/${staffId}/${Date.now()}.jpg`);
+
+                const uploadRes = await fetch(API_BASE, {
+                    method: 'POST',
+                    body: formData
+                });
+                if (uploadRes.ok) {
+                    const uploadResult = await uploadRes.json();
+                    photoUrl = uploadResult.url;
+                }
+            }
+
+            // 2. Prepare diagnosis report data
+            const diagnosisData = {
+                action: 'create_report',
+                report_type: 'diagnosis',
+                staff_id: staffId,
+                staff_name: staffName,
+                store_id: storeId,
+                store_name: storeName,
+                cleaning_date: new Date().toISOString().split('T')[0],
+                ai_score: aiResult.score,
+                ai_rank: aiResult.rank,
+                ai_result: aiResult,
+                photos: photoUrl ? [photoUrl] : [],
+                timestamp: new Date().toISOString()
+            };
+
+            // 3. Save to database
+            const saveRes = await fetch(API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'handle_ai_process',
+                    ai_action: 'save_cleaning_diagnosis',
+                    data: diagnosisData
+                })
+            });
+
+            if (saveRes.ok) {
+                console.log('[Diagnosis] Result saved successfully');
+            }
+        } catch (err) {
+            console.error('[Diagnosis] Failed to save result:', err);
+            // Non-blocking error for simulation, but we'll try to ensure backend handles it
+        }
+    }
+
+    function displayScoreDiagnosisResult(result) {
+        const rankColors = { S: '#a855f7', A: '#10b981', B: '#f59e0b', C: '#ef4444', D: '#dc2626' };
+        const rankColor = rankColors[result.rank] || '#6b7280';
+
+        let detailMessage = `${t('aiScoreTitle')
+            .replace('{score}', result.score)
+            .replace('{rank}', result.rank)}\n\n${result.overall_quality || ''}`;
+
+        if (result.critical_issues && result.critical_issues.length > 0) {
+            detailMessage += `\n\n${t('criticalIssuesLabel')}: ${result.critical_issues.join('、')}`;
+        }
+        if (result.strengths && result.strengths.length > 0) {
+            detailMessage += `\n\n${t('strengthsLabel')}: ${result.strengths.join('、')}`;
+        }
+        if (result.improvements && result.improvements.length > 0) {
+            detailMessage += `\n\n${t('improvementsLabel')}: ${result.improvements.join('、')}`;
+        }
+        if (result.specific_advice) {
+            detailMessage += `\n\n${t('adviseLabel')}: ${result.specific_advice}`;
+        }
+
+        appendChatMessage('ai', detailMessage);
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 320px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6)); border: 3px solid ${rankColor}; border-radius: 16px; padding: 24px; text-align: center;">
+                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">${t('scoreDiagnosisResultTitle')}</div>
+                    <div style="font-size: 3rem; font-weight: 900; color: ${rankColor}; text-shadow: 0 0 30px ${rankColor}80;">${result.score}</div>
+                    <div style="display: inline-block; background: ${rankColor}; color: #fff; font-size: 1.1rem; font-weight: 800; padding: 6px 20px; border-radius: 25px; margin-top: 10px;">${t('rankLabel').replace('{rank}', result.rank)}</div>
+                </div>
+                <button onclick="showScoreDiagnosisUI()"
+                    style="background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; border: none;
+                    padding: 16px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer;">
+                    ${t('retry')}
+                </button>
+                <button onclick="showJobActions('cleaning')"
+                    style="background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                    ${t('back')}
                 </button>
             </div>
         `;
@@ -4250,7 +4977,7 @@ ${context}
 
     function selectReportMode(mode) {
         reportWizardState.mode = mode;
-        appendChatMessage('user', mode === 'live' ? '🔴 LIVE モード' : '📝 AFTER モード');
+        appendChatMessage('user', mode === 'live' ? '🔴 ' + t('liveMode') : '📝 ' + t('afterMode'));
 
         const visualizers = document.querySelectorAll('.visualizer-container');
         const liveIndicator = document.getElementById('live-mode-indicator');
@@ -4262,9 +4989,7 @@ ${context}
             // Show LIVE indicator
             if (liveIndicator) liveIndicator.style.display = 'block';
 
-            appendChatMessage('ai', `🔴 **LIVE モード開始**
-
-清掃する現場を選択してください。`);
+            appendChatMessage('ai', t('liveModeStartMsg') + '\n\n' + t('selectWorksite'));
 
             // Show customer search overlay directly for LIVE mode
             showLiveModeCustomerSelection();
@@ -4275,10 +5000,7 @@ ${context}
             // Hide LIVE indicator
             if (liveIndicator) liveIndicator.style.display = 'none';
 
-            appendChatMessage('ai', `📝 **AFTER モード**
-
-店舗を選択してください。
-スケジュール登録がなくても入力できます。`);
+            appendChatMessage('ai', t('afterModeMsg') + '\n\n' + t('afterModeDesc2'));
             fetchTodaySchedulesWithManualOption();
         }
     }
@@ -4290,23 +5012,23 @@ ${context}
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 350px; margin: 0 auto;">
                 <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
-                    <div style="color: #ef4444; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px;">🔴 LIVE モード</div>
-                    <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">清掃する現場を選択してください</div>
+                    <div style="color: #ef4444; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px;">🔴 ${t('liveMode')}</div>
+                    <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">${t('selectWorksite')}</div>
                 </div>
                 <button onclick="showCustomerSearchOverlay()"
                     style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
                     padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
                     cursor: pointer; min-height: 56px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <i class="fas fa-search"></i> 顧客を検索
+                    <i class="fas fa-search"></i> ${t('searchCustomer')}
                 </button>
                 <button onclick="fetchTodaySchedulesForLive()"
                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                     color: #fff; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 0.9rem;">
-                    📅 本日のスケジュールから選択
+                    📅 ${t('selectFromSchedule')}
                 </button>
                 <button onclick="cancelLiveMode()"
                     style="background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
-                    キャンセル
+                    ${t('cancel')}
                 </button>
             </div>
         `;
@@ -4316,7 +5038,7 @@ ${context}
         const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
         const today = new Date().toISOString().split('T')[0];
 
-        appendChatMessage('ai', 'スケジュールを取得中...');
+        appendChatMessage('ai', t('loadingMsg'));
 
         fetch(`${API_BASE}/schedules?date=${today}`)
             .then(response => response.ok ? response.json() : { schedules: [] })
@@ -4398,7 +5120,7 @@ ${context}
 
         // Show schedules if available
         schedules.slice(0, 4).forEach(schedule => {
-            const storeName = schedule.store_name || '店舗名不明';
+            const storeName = schedule.store_name || t('unknownStore');
             const time = schedule.time_slot || schedule.start_time || '';
             container.insertAdjacentHTML('beforeend', `
                 <button onclick="selectScheduleForReport('${schedule.id}', '${storeName.replace(/'/g, "\\'")}', '${schedule.store_id || ''}')"
@@ -4415,7 +5137,7 @@ ${context}
             <button onclick="showManualStoreInput()"
                 style="background: rgba(59,130,246,0.2); border: 1px dashed rgba(59,130,246,0.5);
                 color: #3b82f6; padding: 14px 16px; border-radius: 12px; cursor: pointer; text-align: center;">
-                ✏️ 店舗名を手入力
+                ${t('manualStoreInput')}
             </button>
         `);
 
@@ -4456,7 +5178,7 @@ ${context}
         btnDiv.style.cssText = 'display: flex; flex-direction: column; gap: 8px; max-width: 300px; margin: 0 auto;';
 
         schedules.slice(0, 5).forEach(schedule => {
-            const storeName = schedule.store_name || '店舗名不明';
+            const storeName = schedule.store_name || t('unknownStore');
             const time = schedule.time_slot || schedule.start_time || '';
             const buttonHtml = `
                 <button class="schedule-btn" onclick="selectScheduleForReport('${schedule.id}', '${storeName.replace(/'/g, "\\'")}', '${schedule.store_id || ''}')"
@@ -4476,12 +5198,12 @@ ${context}
                 style="background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4);
                 color: #10b981; padding: 12px 16px; border-radius: 12px; cursor: pointer;
                 font-size: 0.9rem; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <i class="fas fa-search"></i> 顧客を検索
+                <i class="fas fa-search"></i> ${t('searchCustomer')}
             </button>
         `);
 
         actionContainer.appendChild(btnDiv);
-        appendChatMessage('ai', '本日のスケジュールから選択してください：');
+        appendChatMessage('ai', t('selectFromSchedule') + '：');
     }
 
     // ========================================
@@ -4691,7 +5413,7 @@ ${context}
     }
 
     function showManualStoreInput() {
-        appendChatMessage('ai', '法人を選択してください。');
+        appendChatMessage('ai', t('selectCompany'));
 
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
@@ -4699,18 +5421,18 @@ ${context}
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 350px; margin: 0 auto;">
                 <div style="display: flex; gap: 8px;">
-                    <input type="text" id="company-search-input" placeholder="法人名で検索..."
+                    <input type="text" id="company-search-input" placeholder="${t('searchCompanyPlaceholder')}"
                         style="flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                         color: #fff; padding: 12px 16px; border-radius: 12px; font-size: 1rem;"
                         oninput="searchCompanies(this.value)">
                 </div>
                 <div id="selection-list-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto;">
-                    <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">読み込み中...</div>
+                    <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">${t('loadingMsg')}</div>
                 </div>
                 <button onclick="showTextStoreInput()"
                     style="background: rgba(59,130,246,0.2); border: 1px dashed rgba(59,130,246,0.5);
                     color: #3b82f6; padding: 12px 16px; border-radius: 12px; cursor: pointer; font-size: 0.9rem;">
-                    ✏️ 手入力する
+                    ${t('manualInput')}
                 </button>
             </div>
         `;
@@ -4994,7 +5716,7 @@ ${context}
         if (stores.length === 0) {
             container.innerHTML = `
                 <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">
-                    該当する顧客がありません
+                    ${t('noResults')}
                 </div>
             `;
             return;
@@ -5008,7 +5730,7 @@ ${context}
             // Display: Brand Name (Store Name) - brand is primary, store in parentheses
             const displayName = brandName
                 ? (storeName ? `${brandName}（${storeName}）` : brandName)
-                : storeName || '店舗名不明';
+                : storeName || t('unknownStore');
 
             return `
                 <button onclick="selectStoreFromList('${storeId}', '${storeName.replace(/'/g, "\\'")}', '${brandName.replace(/'/g, "\\'")}')"
@@ -5054,24 +5776,24 @@ ${context}
     }
 
     function showTextStoreInput() {
-        appendChatMessage('ai', '店舗名を入力してください：');
+        appendChatMessage('ai', t('enterStoreNamePrompt'));
 
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin: 0 auto;">
-                <input type="text" id="manual-store-name" placeholder="店舗名..."
+                <input type="text" id="manual-store-name" placeholder="${t('manualStorePlaceholder')}"
                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                     color: #fff; padding: 14px 16px; border-radius: 12px; font-size: 1rem;">
                 <button onclick="submitManualStoreName()"
                     style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
                     padding: 16px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer;">
-                    決定
+                    ${t('decide')}
                 </button>
                 <button onclick="showManualStoreInput()"
                     style="background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
-                    ← 顧客リストに戻る
+                    ${t('backToCustomerList')}
                 </button>
             </div>
         `;
@@ -5084,7 +5806,7 @@ ${context}
         const storeName = input?.value?.trim();
 
         if (!storeName) {
-            appendChatMessage('ai', '店舗名を入力してください。');
+            appendChatMessage('ai', t('enterStoreNamePrompt'));
             return;
         }
 
@@ -5145,11 +5867,9 @@ ${context}
     };
 
     function showLiveWorkStartScreen() {
-        const storeName = reportWizardState.store?.name || '選択した店舗';
-
-        appendChatMessage('ai', `🔴 **${storeName}**
-
-まず、清掃前の現場写真を撮影してください。`);
+        const storeName = reportWizardState.store?.name || t('selectedStoreFallback');
+        const beforePrompt = t('liveBeforePhotoPrompt').replace('{store}', storeName);
+        appendChatMessage('ai', beforePrompt);
 
         // Reset live state
         liveWorkState = {
@@ -5173,7 +5893,7 @@ ${context}
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
-        const storeName = reportWizardState.store?.name || '店舗';
+        const storeName = reportWizardState.store?.name || t('unknownStore');
 
         // Generate thumbnail previews
         const thumbnails = liveWorkState.beforePhotos.map((file, i) => {
@@ -5186,8 +5906,8 @@ ${context}
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 350px; margin: 0 auto; padding: 20px; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 16px;">
                 <div style="text-align: center;">
-                    <div style="color: #fbbf24; font-size: 1rem; font-weight: 600; margin-bottom: 4px;">📷 作業前の写真</div>
-                    <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">現場の状態を記録してください</div>
+                    <div style="color: #fbbf24; font-size: 1rem; font-weight: 600; margin-bottom: 4px;">${t('beforePhotoTitle')}</div>
+                    <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">${t('beforePhotoMsg')}</div>
                 </div>
                 ${liveWorkState.beforePhotos.length > 0 ? `
                 <div id="before-photo-gallery" style="display: flex; gap: 8px; overflow-x: auto; padding: 8px 0;">
@@ -5199,19 +5919,19 @@ ${context}
                     background: rgba(251,191,36,0.1); transition: all 0.2s;">
                     <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="addBeforePhoto(this)">
                     <i class="fas fa-camera" style="font-size: 2rem; color: #fbbf24; margin-bottom: 6px;"></i>
-                    <span style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">タップして撮影</span>
-                    <span id="before-photo-count" style="font-size: 1rem; color: #fbbf24; margin-top: 4px; font-weight: 700;">${liveWorkState.beforePhotos.length}枚</span>
+                    <span style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">${t('tapToTakePhoto')}</span>
+                    <span id="before-photo-count" style="font-size: 1rem; color: #fbbf24; margin-top: 4px; font-weight: 700;">${liveWorkState.beforePhotos.length}${t('photoCountSuffix')}</span>
                 </label>
                 <button onclick="proceedToWorkingPhase()" id="before-next-btn"
                     style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none;
                     padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
                     cursor: pointer; min-height: 56px; opacity: ${liveWorkState.beforePhotos.length > 0 ? '1' : '0.5'};"
                     ${liveWorkState.beforePhotos.length === 0 ? 'disabled' : ''}>
-                    🔴 清掃を開始する
+                    ${t('startCleaning')}
                 </button>
                 <button onclick="cancelLiveMode()"
                     style="background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
-                    キャンセル
+                    ${t('cancel')}
                 </button>
             </div>
         `;
@@ -5226,7 +5946,7 @@ ${context}
         // Re-render UI to show new thumbnail
         showBeforePhotoUI();
 
-        appendChatMessage('ai', `📷 作業前写真 ${liveWorkState.beforePhotos.length}枚目`);
+        appendChatMessage('ai', t('beforePhotoAdded').replace('{count}', liveWorkState.beforePhotos.length));
 
         input.value = '';
     }
@@ -5239,11 +5959,11 @@ ${context}
         liveWorkState.phase = 'working';
         liveWorkState.startTime = new Date();
 
-        const storeName = reportWizardState.store?.name || '店舗';
-        appendChatMessage('ai', `🔴 **清掃開始**
-
-**${storeName}** の清掃作業を開始しました。
-作業が完了したら「清掃完了」を押してください。`);
+        const storeName = reportWizardState.store?.name || t('unknownStore');
+        const workStartMsg = t('liveWorkStartMsg')
+            .replace('{store}', storeName)
+            .replace('{complete}', t('cleaningComplete'));
+        appendChatMessage('ai', workStartMsg);
 
         showWorkingUI();
     }
@@ -5252,12 +5972,12 @@ ${context}
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
-        const storeName = reportWizardState.store?.name || '店舗';
+        const storeName = reportWizardState.store?.name || t('unknownStore');
 
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 350px; margin: 0 auto; padding: 20px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 16px;">
                 <div style="text-align: center;">
-                    <div style="color: #ef4444; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px;">🔴 LIVE 清掃中</div>
+                    <div style="color: #ef4444; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px;">${t('liveCleaning')}</div>
                     <div style="color: #fff; font-size: 1.1rem; font-weight: 700;">${storeName}</div>
                     <div id="live-timer" style="color: rgba(255,255,255,0.8); font-size: 2.5rem; font-family: monospace; margin-top: 12px;">00:00:00</div>
                 </div>
@@ -5265,14 +5985,14 @@ ${context}
                     <button onclick="showAddNoteUI()"
                         style="flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                         color: #fff; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 0.9rem;">
-                        ✏️ メモ追加
+                        ${t('addMemo')}
                     </button>
                 </div>
                 <button onclick="proceedToAfterPhase()"
                     style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
                     padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
                     cursor: pointer; min-height: 56px;">
-                    ✅ 清掃完了
+                    ${t('cleaningComplete')}
                 </button>
             </div>
         `;
@@ -5283,20 +6003,20 @@ ${context}
     }
 
     function showAddNoteUI() {
-        appendChatMessage('ai', 'メモを入力してください。');
+        appendChatMessage('ai', t('enterMemo'));
 
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin: 0 auto;">
-                <textarea id="live-note-input" placeholder="気になった点、特記事項など..."
+                <textarea id="live-note-input" placeholder="${t('notesPlaceholder')}"
                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                     color: #fff; padding: 14px; border-radius: 12px; min-height: 100px; resize: none; font-size: 1rem;">${liveWorkState.notes}</textarea>
                 <button onclick="saveWorkingNote()"
                     style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none;
                     padding: 16px; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer;">
-                    保存して戻る
+                    ${t('saveAndBack')}
                 </button>
             </div>
         `;
@@ -5305,7 +6025,7 @@ ${context}
     function saveWorkingNote() {
         const input = document.getElementById('live-note-input');
         liveWorkState.notes = input?.value || '';
-        appendChatMessage('ai', 'メモを保存しました。');
+        appendChatMessage('ai', t('memoSaved'));
         showWorkingUI();
     }
 
@@ -5322,9 +6042,10 @@ ${context}
         const elapsed = Math.floor((new Date() - liveWorkState.startTime) / 1000);
         const minutes = Math.floor(elapsed / 60);
 
-        appendChatMessage('ai', `✅ **清掃完了** (${minutes}分)
-
-最後に、作業後の写真を撮影してください。`);
+        const donePrompt = t('cleaningDonePrompt')
+            .replace('{minutes}', minutes)
+            .replace('{minutesSuffix}', t('minutes'));
+        appendChatMessage('ai', donePrompt);
 
         showAfterPhotoUI();
     }
@@ -5344,8 +6065,8 @@ ${context}
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 350px; margin: 0 auto; padding: 20px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px;">
                 <div style="text-align: center;">
-                    <div style="color: #10b981; font-size: 1rem; font-weight: 600; margin-bottom: 4px;">📷 作業後の写真</div>
-                    <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">仕上がりを撮影してください</div>
+                    <div style="color: #10b981; font-size: 1rem; font-weight: 600; margin-bottom: 4px;">${t('afterPhotoTitle')}</div>
+                    <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">${t('afterPhotoMsg')}</div>
                 </div>
                 ${liveWorkState.afterPhotos.length > 0 ? `
                 <div id="after-photo-gallery" style="display: flex; gap: 8px; overflow-x: auto; padding: 8px 0;">
@@ -5357,15 +6078,15 @@ ${context}
                     background: rgba(16,185,129,0.1); transition: all 0.2s;">
                     <input type="file" accept="image/*" capture="environment" style="display: none;" onchange="addAfterPhoto(this)">
                     <i class="fas fa-camera" style="font-size: 2rem; color: #10b981; margin-bottom: 6px;"></i>
-                    <span style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">タップして撮影</span>
-                    <span id="after-photo-count" style="font-size: 1rem; color: #10b981; margin-top: 4px; font-weight: 700;">${liveWorkState.afterPhotos.length}枚</span>
+                    <span style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">${t('tapToTakePhoto')}</span>
+                    <span id="after-photo-count" style="font-size: 1rem; color: #10b981; margin-top: 4px; font-weight: 700;">${liveWorkState.afterPhotos.length}${t('photoCountSuffix')}</span>
                 </label>
                 <button onclick="proceedToLiveReview()" id="after-next-btn"
                     style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
                     padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
                     cursor: pointer; min-height: 56px; opacity: ${liveWorkState.afterPhotos.length > 0 ? '1' : '0.5'};"
                     ${liveWorkState.afterPhotos.length === 0 ? 'disabled' : ''}>
-                    📤 レポート確認へ
+                    ${t('toReportConfirmation')}
                 </button>
             </div>
         `;
@@ -5380,7 +6101,7 @@ ${context}
         // Re-render UI to show new thumbnail
         showAfterPhotoUI();
 
-        appendChatMessage('ai', `📷 作業後写真 ${liveWorkState.afterPhotos.length}枚目`);
+        appendChatMessage('ai', t('afterPhotoAdded').replace('{count}', liveWorkState.afterPhotos.length));
 
         input.value = '';
     }
@@ -5454,12 +6175,9 @@ ${context}
     async function proceedToLiveReview() {
         const elapsed = Math.floor((new Date() - liveWorkState.startTime) / 1000);
         const minutes = Math.floor(elapsed / 60);
-        const storeName = reportWizardState.store?.name || '店舗';
-
-        appendChatMessage('ai', `🤖 **AI品質チェック実行中...**
-
-作業前・作業後の写真を比較解析しています。
-厳格な品質基準で評価します。`);
+        const storeName = reportWizardState.store?.name || t('unknownStore');
+        const aiIntro = `${t('aiChecking')}\n\n${t('aiComparing')}\n${t('aiStrict')}`;
+        appendChatMessage('ai', aiIntro);
 
         // Show loading UI
         const actionContainer = document.getElementById('action-buttons-container');
@@ -5467,8 +6185,8 @@ ${context}
             actionContainer.innerHTML = `
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 40px;">
                     <div style="width: 60px; height: 60px; border: 4px solid #ef4444; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-                    <div style="color: #ef4444; font-size: 1rem; font-weight: 600;">AI品質チェック中...</div>
-                    <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">厳格な基準で評価しています</div>
+                    <div style="color: #ef4444; font-size: 1rem; font-weight: 600;">${t('aiAnalyzing')}</div>
+                    <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('aiStrictDesc')}</div>
                 </div>
                 <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
             `;
@@ -5491,16 +6209,12 @@ ${context}
                 displayAIScoreResult(aiScore, minutes);
             } else {
                 // Fallback if AI fails
-                appendChatMessage('ai', `⚠️ **AI解析を完了できませんでした**
-
-レポートは送信可能ですが、品質チェックなしでの提出となります。`);
+                appendChatMessage('ai', `${t('aiAnalysisFailed')}\n\n${t('aiAnalysisFailedDesc')}`);
                 showLiveReportConfirmation(minutes);
             }
         } catch (error) {
             console.error('AI Scoring Error:', error);
-            appendChatMessage('ai', `⚠️ AI解析に失敗しました。
-
-レポート送信は可能ですが、再度写真を撮影することをお勧めします。`);
+            appendChatMessage('ai', `${t('aiAnalysisFailed')}\n\n${t('aiAnalysisFailedDesc')}`);
             showLiveReportConfirmation(minutes);
         }
     }
@@ -5571,43 +6285,43 @@ ${context}
     function displayAIScoreResult(result, workMinutes) {
         const rankColors = { S: '#a855f7', A: '#10b981', B: '#f59e0b', C: '#ef4444', D: '#dc2626' };
         const rankColor = rankColors[result.rank] || '#6b7280';
-        const storeName = reportWizardState.store?.name || '店舗';
+        const storeName = reportWizardState.store?.name || t('unknownStore');
         const isLowScore = result.score < 70 || result.redo_recommended;
         const isCritical = result.score < 50;
 
         // Build detailed message
-        let detailMessage = `🏆 **AI品質スコア: ${result.score}点 (${result.rank}ランク)**
-
-${result.overall_quality}`;
+        let detailMessage = `${t('aiScoreTitle')
+            .replace('{score}', result.score)
+            .replace('{rank}', result.rank)}\n\n${result.overall_quality}`;
 
         if (result.critical_issues && result.critical_issues.length > 0) {
             detailMessage += `
 
-⚠️ **重大な問題点**: ${result.critical_issues.join('、')}`;
+${t('criticalIssuesLabel')}: ${result.critical_issues.join('、')}`;
         }
 
         if (result.strengths && result.strengths.length > 0) {
             detailMessage += `
 
-✅ **良い点**: ${result.strengths.join('、')}`;
+${t('strengthsLabel')}: ${result.strengths.join('、')}`;
         }
 
         if (result.improvements && result.improvements.length > 0) {
             detailMessage += `
 
-📝 **改善すべき点**: ${result.improvements.join('、')}`;
+${t('improvementsLabel')}: ${result.improvements.join('、')}`;
         }
 
         if (result.specific_advice) {
             detailMessage += `
 
-💡 **アドバイス**: ${result.specific_advice}`;
+${t('adviseLabel')}: ${result.specific_advice}`;
         }
 
         if (result.redo_areas && result.redo_areas.length > 0) {
             detailMessage += `
 
-🔄 **やり直し推奨箇所**: ${result.redo_areas.join('、')}`;
+${t('redoAreasLabel')}: ${result.redo_areas.join('、')}`;
         }
 
         appendChatMessage('ai', detailMessage);
@@ -5621,10 +6335,10 @@ ${result.overall_quality}`;
                 border: 1px solid ${isCritical ? 'rgba(220, 38, 38, 0.5)' : 'rgba(245, 158, 11, 0.5)'}; 
                 border-radius: 12px; padding: 14px; text-align: center;">
                 <div style="color: ${isCritical ? '#ef4444' : '#f59e0b'}; font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">
-                    ${isCritical ? '⚠️ 品質基準を満たしていません' : '⚠️ 改善が推奨されます'}
+                    ${isCritical ? t('qualityLow') : t('qualityWarning')}
                 </div>
                 <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">
-                    ${isCritical ? '全面的なやり直しを強くお勧めします' : '一部箇所の再清掃をご検討ください'}
+                    ${isCritical ? t('redoStronglyAdvised') : t('redoPartiallyAdvised')}
                 </div>
             </div>
         ` : '';
@@ -5635,7 +6349,7 @@ ${result.overall_quality}`;
                 style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none;
                 padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
                 cursor: pointer; min-height: 56px;">
-                🔄 再清掃してやり直す
+                ${t('redoAction')}
             </button>
         ` : '';
 
@@ -5643,21 +6357,21 @@ ${result.overall_quality}`;
             <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 350px; margin: 0 auto;">
                 <!-- Score Card -->
                 <div style="background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6)); border: 3px solid ${rankColor}; border-radius: 16px; padding: 24px; text-align: center; ${isLowScore ? 'animation: pulse-warning 2s infinite;' : ''}">
-                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">AI品質スコア</div>
+                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">${t('aiScoreLabel')}</div>
                     <div style="font-size: 3.5rem; font-weight: 900; color: ${rankColor}; text-shadow: 0 0 30px ${rankColor}80;">${result.score}</div>
-                    <div style="display: inline-block; background: ${rankColor}; color: #fff; font-size: 1.3rem; font-weight: 800; padding: 6px 20px; border-radius: 25px; margin-top: 10px;">${result.rank} ランク</div>
+                    <div style="display: inline-block; background: ${rankColor}; color: #fff; font-size: 1.3rem; font-weight: 800; padding: 6px 20px; border-radius: 25px; margin-top: 10px;">${t('rankLabel').replace('{rank}', result.rank)}</div>
                 </div>
 
                 ${warningBanner}
 
                 <!-- Summary -->
                 <div style="background: rgba(255,255,255,0.08); padding: 16px; border-radius: 12px; color: #fff; font-size: 0.9rem;">
-                    <div style="font-weight: 600; margin-bottom: 8px;">📋 レポート内容</div>
-                    <div>店舗: ${storeName}</div>
-                    <div>作業時間: ${workMinutes}分</div>
-                    <div>作業前写真: ${liveWorkState.beforePhotos.length}枚</div>
-                    <div>作業後写真: ${liveWorkState.afterPhotos.length}枚</div>
-                    ${liveWorkState.notes ? `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">メモ: ${liveWorkState.notes}</div>` : ''}
+                    <div style="font-weight: 600; margin-bottom: 8px;">${t('reportContent')}</div>
+                    <div>${t('store')}: ${storeName}</div>
+                    <div>${t('workTime')}: ${workMinutes}${t('minutes')}</div>
+                    <div>${t('beforePhotoCount')}: ${liveWorkState.beforePhotos.length}${t('photoCountSuffix')}</div>
+                    <div>${t('afterPhotoCount')}: ${liveWorkState.afterPhotos.length}${t('photoCountSuffix')}</div>
+                    ${liveWorkState.notes ? `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">${t('memoLabel')}: ${liveWorkState.notes}</div>` : ''}
                 </div>
 
                 <!-- Actions -->
@@ -5666,12 +6380,12 @@ ${result.overall_quality}`;
                     style="background: ${isLowScore ? 'rgba(107, 114, 128, 0.5)' : 'linear-gradient(135deg, #10b981, #059669)'}; color: white; border: none;
                     padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
                     cursor: pointer; min-height: 56px;">
-                    📤 ${isLowScore ? 'このまま送信（非推奨）' : 'レポートを送信'}
+                    📤 ${isLowScore ? t('sendReportNotRecommended') : t('submitReport')}
                 </button>
                 <button onclick="showAddFinalNoteUI()"
                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                     color: #fff; padding: 14px; border-radius: 12px; cursor: pointer;">
-                    ✏️ 備考を編集
+                    ${t('editNotes')}
                 </button>
             </div>
             <style>
@@ -5684,9 +6398,7 @@ ${result.overall_quality}`;
     }
 
     function retryCleaningAfterPhoto() {
-        appendChatMessage('ai', `🔄 **再清掃モード**
-
-指摘された箇所を再清掃してから、もう一度作業後の写真を撮影してください。`);
+        appendChatMessage('ai', `${t('redoRecommended')}\n\n${t('redoRecommendedDesc')}`);
 
         // Clear after photos and go back to after photo UI
         liveWorkState.afterPhotos = [];
@@ -5698,28 +6410,28 @@ ${result.overall_quality}`;
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
-        const storeName = reportWizardState.store?.name || '店舗';
+        const storeName = reportWizardState.store?.name || t('unknownStore');
 
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 320px; margin: 0 auto;">
                 <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; color: #fff; font-size: 0.9rem;">
-                    <div style="font-weight: 600; margin-bottom: 8px;">📋 レポート内容</div>
-                    <div>店舗: ${storeName}</div>
-                    <div>作業時間: ${workMinutes}分</div>
-                    <div>作業前写真: ${liveWorkState.beforePhotos.length}枚</div>
-                    <div>作業後写真: ${liveWorkState.afterPhotos.length}枚</div>
-                    ${liveWorkState.notes ? `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">メモ: ${liveWorkState.notes}</div>` : ''}
+                    <div style="font-weight: 600; margin-bottom: 8px;">${t('reportContent')}</div>
+                    <div>${t('store')}: ${storeName}</div>
+                    <div>${t('workTime')}: ${workMinutes}${t('minutes')}</div>
+                    <div>${t('beforePhotoCount')}: ${liveWorkState.beforePhotos.length}${t('photoCountSuffix')}</div>
+                    <div>${t('afterPhotoCount')}: ${liveWorkState.afterPhotos.length}${t('photoCountSuffix')}</div>
+                    ${liveWorkState.notes ? `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">${t('memoLabel')}: ${liveWorkState.notes}</div>` : ''}
                 </div>
                 <button onclick="submitLiveReport()"
                     style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
                     padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
                     cursor: pointer; min-height: 56px;">
-                    📤 レポートを送信
+                    ${t('submitReport')}
                 </button>
                 <button onclick="showAddFinalNoteUI()"
                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                     color: #fff; padding: 14px; border-radius: 12px; cursor: pointer;">
-                    ✏️ 備考を編集
+                    ${t('editNotes')}
                 </button>
             </div>
         `;
@@ -5731,13 +6443,13 @@ ${result.overall_quality}`;
 
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin: 0 auto;">
-                <textarea id="final-note-input" placeholder="備考・特記事項など..."
+                <textarea id="final-note-input" placeholder="${t('notesPlaceholder')}"
                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                     color: #fff; padding: 14px; border-radius: 12px; min-height: 100px; resize: none; font-size: 1rem;">${liveWorkState.notes}</textarea>
                 <button onclick="saveFinalNote()"
                     style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none;
                     padding: 16px; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer;">
-                    保存
+                    ${t('save')}
                 </button>
             </div>
         `;
@@ -5754,7 +6466,7 @@ ${result.overall_quality}`;
     }
 
     async function submitLiveReport() {
-        appendChatMessage('ai', '📤 レポートを送信中...');
+        appendChatMessage('ai', t('submitting'));
 
         const actionContainer = document.getElementById('action-buttons-container');
         if (actionContainer) actionContainer.innerHTML = '';
@@ -5767,13 +6479,13 @@ ${result.overall_quality}`;
 
         // Build success message with AI score if available
         const aiScore = liveWorkState.aiScore;
-        const scoreText = aiScore ? `\n\n🏆 **AI品質スコア: ${aiScore.score}点 (${aiScore.rank}ランク)**` : '';
+        const scoreText = aiScore
+            ? `\n\n${t('aiScoreTitle').replace('{score}', aiScore.score).replace('{rank}', aiScore.rank)}`
+            : '';
 
         // TODO: Implement actual API call to submit report
         setTimeout(() => {
-            appendChatMessage('ai', `✅ **レポート送信完了**${scoreText}
-
-お疲れ様でした！`);
+            appendChatMessage('ai', `${t('submitSuccess')}${scoreText}\n\n${t('thanksSimple')}`);
 
             // Remove LIVE mode styling
             document.querySelectorAll('.visualizer-container').forEach(v => v.classList.remove('live-mode'));
@@ -5802,7 +6514,7 @@ ${result.overall_quality}`;
 
         liveWorkState = { phase: null, startTime: null, beforePhotos: [], afterPhotos: [], notes: '', isActive: false, timerInterval: null };
 
-        appendChatMessage('ai', 'キャンセルしました。');
+        appendChatMessage('ai', t('cancelMsg'));
         showJobActions('cleaning');
     }
 
@@ -5835,9 +6547,9 @@ ${result.overall_quality}`;
         liveWorkState.photos.push(file);
 
         const countEl = document.getElementById('live-photo-count');
-        if (countEl) countEl.textContent = `${liveWorkState.photos.length}枚`;
+        if (countEl) countEl.textContent = `${liveWorkState.photos.length}${t('photoCountSuffix')}`;
 
-        appendChatMessage('ai', `📸 写真を追加しました (${liveWorkState.photos.length}枚目)`);
+        appendChatMessage('ai', t('photoAddedMsg').replace('{count}', liveWorkState.photos.length));
 
         // Clear input for next photo
         input.value = '';
@@ -5851,18 +6563,18 @@ ${result.overall_quality}`;
 
         const elapsed = Math.floor((new Date() - liveWorkState.startTime) / 1000);
         const minutes = Math.floor(elapsed / 60);
-        const storeName = reportWizardState.store?.name || '店舗';
+        const storeName = reportWizardState.store?.name || t('unknownStore');
 
         // Transfer photos to report state
         reportWizardState.photos.after = liveWorkState.photos;
 
-        appendChatMessage('ai', `✅ **作業完了**
+        appendChatMessage('ai', `✅ **${t('complete')}**
 
 **${storeName}**
-作業時間: ${minutes}分
-撮影枚数: ${liveWorkState.photos.length}枚
+${t('workTime')}: ${minutes}${t('minutes')}
+${t('afterPhotoCount')}: ${liveWorkState.photos.length}${t('photoCountSuffix')}
 
-レポートを送信しますか？`);
+${t('reportSendQuestion')}`);
 
         showLiveReportConfirmation(minutes);
     }
@@ -5871,46 +6583,46 @@ ${result.overall_quality}`;
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
-        const storeName = reportWizardState.store?.name || '店舗';
+        const storeName = reportWizardState.store?.name || t('unknownStore');
 
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 320px; margin: 0 auto;">
                 <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; color: #fff; font-size: 0.9rem;">
-                    <div style="font-weight: 600; margin-bottom: 8px;">📋 レポート内容</div>
-                    <div>店舗: ${storeName}</div>
-                    <div>作業時間: ${workMinutes}分</div>
-                    <div>写真: ${liveWorkState.photos.length}枚</div>
+                    <div style="font-weight: 600; margin-bottom: 8px;">${t('reportContent')}</div>
+                    <div>${t('store')}: ${storeName}</div>
+                    <div>${t('workTime')}: ${workMinutes}${t('minutes')}</div>
+                    <div>${t('afterPhotoCount')}: ${liveWorkState.photos.length}${t('photoCountSuffix')}</div>
                 </div>
                 <button onclick="submitLiveReport()"
                     style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
                     padding: 18px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
                     cursor: pointer; min-height: 56px;">
-                    📤 レポートを送信
+                    ${t('submitReport')}
                 </button>
                 <button onclick="addLiveReportNotes()"
                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                     color: #fff; padding: 14px; border-radius: 12px; cursor: pointer;">
-                    ✏️ 備考を追加
+                    ${t('addNotes')}
                 </button>
             </div>
         `;
     }
 
     function addLiveReportNotes() {
-        appendChatMessage('ai', '備考があれば入力してください。');
+        appendChatMessage('ai', t('inputNotesPrompt'));
 
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin: 0 auto;">
-                <textarea id="live-notes-input" placeholder="備考・特記事項など..."
+                <textarea id="live-notes-input" placeholder="${t('notesPlaceholder')}"
                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                     color: #fff; padding: 14px; border-radius: 12px; min-height: 100px; resize: none; font-size: 1rem;"></textarea>
                 <button onclick="saveLiveNotes()"
                     style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
                     padding: 16px; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer;">
-                    完了
+                    ${t('complete')}
                 </button>
             </div>
         `;
@@ -5927,7 +6639,7 @@ ${result.overall_quality}`;
     }
 
     async function submitLiveReport() {
-        appendChatMessage('ai', '📤 レポートを送信中...');
+        appendChatMessage('ai', t('submitting'));
 
         const actionContainer = document.getElementById('action-buttons-container');
         if (actionContainer) actionContainer.innerHTML = '';
@@ -5935,9 +6647,7 @@ ${result.overall_quality}`;
         // TODO: Implement actual API call to submit report
         // For now, simulate success
         setTimeout(() => {
-            appendChatMessage('ai', `✅ **レポート送信完了**
-
-お疲れ様でした！次の作業もMISOGIにお任せください。`);
+            appendChatMessage('ai', `${t('submitSuccess')}\n\n${t('nextJobMISOGI')}`);
 
             // Remove LIVE mode styling
             const visualizer = document.querySelector('.visualizer-container');
@@ -5963,15 +6673,15 @@ ${result.overall_quality}`;
             if (badge) badge.remove();
         }
 
-        appendChatMessage('ai', 'LIVEモードをキャンセルしました。');
+        appendChatMessage('ai', t('cancelLiveModeMsg'));
         showJobActions('cleaning');
     }
 
 
     function proceedToPhotoUpload() {
-        const storeName = reportWizardState.store?.name || '選択した店舗';
+        const storeName = reportWizardState.store?.name || t('selectedStoreFallback');
 
-        appendChatMessage('ai', `📍 ${storeName} のレポート作成`);
+        appendChatMessage('ai', t('reportStartWithStore').replace('{store}', storeName));
 
         showPhotoUploadUI();
     }
@@ -5997,11 +6707,11 @@ ${result.overall_quality}`;
         actionContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 16px; max-width: 500px; width: 95%; margin: 0 auto; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 16px;">
                 <div style="text-align: center; color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 8px;">
-                    📸 作業前後の写真を選択してください
+                    ${t('photoSelectionTitle')}
                 </div>
                 <div style="display: flex; gap: 12px;">
                     <div style="flex: 1; text-align: center;">
-                        <div style="color: #fbbf24; font-size: 0.9rem; font-weight: 600; margin-bottom: 10px;">📷 作業前</div>
+                        <div style="color: #fbbf24; font-size: 0.9rem; font-weight: 600; margin-bottom: 10px;">${t('beforePhotoTitle')}</div>
                         ${reportWizardState.photos.before.length > 0 ? `
                         <div style="display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; justify-content: center;">
                             ${beforeThumbnails}
@@ -6012,12 +6722,12 @@ ${result.overall_quality}`;
                             background: rgba(251,191,36,0.1); transition: all 0.2s; padding: 12px;">
                             <input type="file" accept="image/*" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'before')">
                             <i class="fas fa-plus" style="font-size: 1.5rem; color: #fbbf24; margin-bottom: 6px;"></i>
-                            <span style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">追加</span>
-                            <span id="before-count" style="font-size: 0.9rem; color: #fbbf24; margin-top: 4px; font-weight: 600;">${reportWizardState.photos.before.length}枚</span>
+                            <span style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">${t('addShort')}</span>
+                            <span id="before-count" style="font-size: 0.9rem; color: #fbbf24; margin-top: 4px; font-weight: 600;">${reportWizardState.photos.before.length}${t('photoCountSuffix')}</span>
                         </label>
                     </div>
                     <div style="flex: 1; text-align: center;">
-                        <div style="color: #10b981; font-size: 0.9rem; font-weight: 600; margin-bottom: 10px;">📷 作業後</div>
+                        <div style="color: #10b981; font-size: 0.9rem; font-weight: 600; margin-bottom: 10px;">${t('afterPhotoTitle')}</div>
                         ${reportWizardState.photos.after.length > 0 ? `
                         <div style="display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; justify-content: center;">
                             ${afterThumbnails}
@@ -6028,8 +6738,8 @@ ${result.overall_quality}`;
                             background: rgba(16,185,129,0.1); transition: all 0.2s; padding: 12px;">
                             <input type="file" accept="image/*" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'after')">
                             <i class="fas fa-plus" style="font-size: 1.5rem; color: #10b981; margin-bottom: 6px;"></i>
-                            <span style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">追加</span>
-                            <span id="after-count" style="font-size: 0.9rem; color: #10b981; margin-top: 4px; font-weight: 600;">${reportWizardState.photos.after.length}枚</span>
+                            <span style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">${t('addShort')}</span>
+                            <span id="after-count" style="font-size: 0.9rem; color: #10b981; margin-top: 4px; font-weight: 600;">${reportWizardState.photos.after.length}${t('photoCountSuffix')}</span>
                         </label>
                     </div>
                 </div>
@@ -6038,7 +6748,7 @@ ${result.overall_quality}`;
                     padding: 16px 24px; border-radius: 25px; font-size: 1rem; font-weight: 600;
                     cursor: pointer; opacity: ${(reportWizardState.photos.before.length > 0 || reportWizardState.photos.after.length > 0) ? '1' : '0.5'}; transition: all 0.2s; min-height: 52px;"
                     ${(reportWizardState.photos.before.length === 0 && reportWizardState.photos.after.length === 0) ? 'disabled' : ''}>
-                    次へ進む →
+                    ${t('nextProceed')}
                 </button>
             </div>
         `;
@@ -6072,8 +6782,8 @@ ${result.overall_quality}`;
         const afterCount = document.getElementById('after-count');
         const nextBtn = document.getElementById('photo-next-btn');
 
-        if (beforeCount) beforeCount.textContent = `${reportWizardState.photos.before.length}枚`;
-        if (afterCount) afterCount.textContent = `${reportWizardState.photos.after.length}枚`;
+        if (beforeCount) beforeCount.textContent = `${reportWizardState.photos.before.length}${t('photoCountSuffix')}`;
+        if (afterCount) afterCount.textContent = `${reportWizardState.photos.after.length}${t('photoCountSuffix')}`;
 
         // Enable next button if at least one photo
         const hasPhotos = reportWizardState.photos.before.length > 0 || reportWizardState.photos.after.length > 0;
@@ -6085,11 +6795,9 @@ ${result.overall_quality}`;
 
     function proceedToReportDetails() {
         const totalPhotos = reportWizardState.photos.before.length + reportWizardState.photos.after.length;
-        appendChatMessage('user', `📷 ${totalPhotos}枚の写真をアップロードしました`);
+        appendChatMessage('user', t('photosUploadedMsg').replace('{count}', totalPhotos));
 
-        appendChatMessage('ai', `写真を受け取りました！
-
-🧹 **清掃対象を選択してください：**`);
+        appendChatMessage('ai', `${t('photosReceivedMsg')}\n\n${t('selectCleaningTarget')}`);
 
         showCleaningTargetSelection();
     }
@@ -6098,7 +6806,14 @@ ${result.overall_quality}`;
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
-        const targets = ['換気扇・ダクト', 'グリストラップ', '床面清掃', '厨房機器', 'エアコン', 'その他'];
+        const targets = [
+            { value: 'ventilation_duct', label: t('targetVentilationDuct') },
+            { value: 'grease_trap', label: t('targetGreaseTrap') },
+            { value: 'floor', label: t('targetFloor') },
+            { value: 'kitchen', label: t('targetKitchen') },
+            { value: 'aircon', label: t('targetAircon') },
+            { value: 'other', label: t('targetOther') }
+        ];
 
         actionContainer.innerHTML = '';
         const btnDiv = document.createElement('div');
@@ -6106,11 +6821,11 @@ ${result.overall_quality}`;
 
         targets.forEach(target => {
             btnDiv.insertAdjacentHTML('beforeend', `
-                <button onclick="selectCleaningTarget('${target}')"
+                <button onclick="selectCleaningTarget('${target.label}')"
                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                     color: #fff; padding: 10px 16px; border-radius: 20px; cursor: pointer;
                     font-size: 0.85rem; transition: all 0.2s;">
-                    ${target}
+                    ${target.label}
                 </button>
             `);
         });
@@ -6122,10 +6837,7 @@ ${result.overall_quality}`;
         reportWizardState.cleaningTarget = target;
         appendChatMessage('user', target);
 
-        appendChatMessage('ai', `${target}ですね。
-
-📝 **備考やコメントがあれば入力してください。**
-（なければ「なし」と入力）`);
+        appendChatMessage('ai', `${target}${t('inputNotesPrompt').replace('📝 ', '\n\n📝 ')}`);
 
         window.reportWizardInputMode = 'notes';
         const inputWrapper = document.getElementById('chat-input-wrapper');
@@ -6136,7 +6848,7 @@ ${result.overall_quality}`;
         const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
         const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
 
-        appendChatMessage('ai', '📤 レポートを送信中...');
+        appendChatMessage('ai', t('submitting'));
 
         // Clear action buttons
         const actionContainer = document.getElementById('action-buttons-container');
@@ -6157,11 +6869,11 @@ ${result.overall_quality}`;
             // Create report
             const reportData = {
                 store_id: reportWizardState.store?.id || 'unknown',
-                store_name: reportWizardState.store?.name || '未設定',
+                store_name: reportWizardState.store?.name || t('unknownStore'),
                 schedule_id: reportWizardState.schedule,
                 cleaning_date: new Date().toISOString().split('T')[0],
                 staff_id: user.sub || user.id,
-                staff_name: user.name || 'スタッフ',
+                staff_name: user.name || t('staffLabel'),
                 work_items: [{
                     item_id: reportWizardState.cleaningTarget.replace(/[・\/]/g, '_'),
                     item_name: reportWizardState.cleaningTarget,
@@ -6182,22 +6894,13 @@ ${result.overall_quality}`;
 
             if (response.ok) {
                 const result = await response.json();
-                appendChatMessage('ai', `✅ **レポートを送信しました！**
-
-📋 レポートID: ${result.report_id || '作成完了'}
-📍 店舗: ${reportWizardState.store?.name}
-🧹 対象: ${reportWizardState.cleaningTarget}
-📷 写真: ${reportWizardState.photos.before.length + reportWizardState.photos.after.length}枚
-
-お疲れ様でした！🎉`);
+                appendChatMessage('ai', `${t('submitFullSuccess')}\n\n${t('reportIdLabel')}: ${result.report_id || t('complete')}\n${t('store')}: ${reportWizardState.store?.name}\n🧹 ${reportWizardState.cleaningTarget}\n📷 ${reportWizardState.photos.before.length + reportWizardState.photos.after.length}${t('photoCountSuffix')}\n\n${t('thanksSimple')}`);
             } else {
-                throw new Error('レポートの送信に失敗しました');
+                throw new Error(t('reportSendFailed'));
             }
         } catch (error) {
             console.error('Report submission error:', error);
-            appendChatMessage('ai', `❌ エラーが発生しました: ${error.message}
-
-もう一度お試しください。`);
+            appendChatMessage('ai', `${t('errorOccurred')} ${error.message}\n\n${t('retry')}`);
         }
 
         // Reset wizard state
@@ -6226,15 +6929,13 @@ ${result.overall_quality}`;
             }
 
             if (window.reportWizardInputMode === 'notes' && text) {
-                reportWizardState.notes = text === 'なし' ? '' : text;
+                reportWizardState.notes = text === t('none') ? '' : text;
                 appendChatMessage('user', text);
                 input.value = '';
                 window.reportWizardInputMode = null;
 
                 // Proceed to next proposal selection
-                appendChatMessage('ai', `📅 **次回提案を選択してください：**
-
-いつ頃の再訪問を推奨しますか？`);
+                appendChatMessage('ai', `${t('nextProposalTitle')}\n\n${t('nextProposalPrompt')}`);
                 showNextProposalTiming();
                 return;
             }
@@ -6249,13 +6950,13 @@ ${result.overall_quality}`;
         if (!actionContainer) return;
 
         const timings = [
-            { value: '1month', label: '1ヶ月後' },
-            { value: '2months', label: '2ヶ月後' },
-            { value: '3months', label: '3ヶ月後' },
-            { value: '6months', label: '6ヶ月後' },
-            { value: '1year', label: '1年後' },
-            { value: 'urgent', label: '緊急対応必要' },
-            { value: 'none', label: '提案なし' }
+            { value: '1month', label: t('timing1Month') },
+            { value: '2months', label: t('timing2Months') },
+            { value: '3months', label: t('timing3Months') },
+            { value: '6months', label: t('timing6Months') },
+            { value: '1year', label: t('timing1Year') },
+            { value: 'urgent', label: t('urgentProposal') },
+            { value: 'none', label: t('noProposal') }
         ];
 
         actionContainer.innerHTML = '';
@@ -6287,14 +6988,10 @@ ${result.overall_quality}`;
             showReportConfirmation();
         } else if (value === 'urgent') {
             // Ask for urgent reason
-            appendChatMessage('ai', `⚠️ 緊急対応が必要ですね。
-
-追加で推奨する作業があれば選択してください：`);
+            appendChatMessage('ai', `${t('urgentWarningMsg')}\n\n${t('urgentWorkPrompt')}`);
             showNextProposalWork();
         } else {
-            appendChatMessage('ai', `${label}での再訪問を推奨しますね。
-
-追加で推奨する作業があれば選択してください：`);
+            appendChatMessage('ai', `${t('proposalRecMsg').replace('{label}', label)}\n\n${t('urgentWorkPrompt')}`);
             showNextProposalWork();
         }
     }
@@ -6304,12 +7001,12 @@ ${result.overall_quality}`;
         if (!actionContainer) return;
 
         const works = [
-            '定期清掃の継続',
-            '部品交換の検討',
-            '追加清掃箇所あり',
-            '設備点検を推奨',
-            '害虫駆除を推奨',
-            '特になし'
+            t('workRegular'),
+            t('workParts'),
+            t('workExtraCleaning'),
+            t('workEquipmentCheck'),
+            t('workPestControl'),
+            t('workNone')
         ];
 
         actionContainer.innerHTML = '';
@@ -6331,7 +7028,7 @@ ${result.overall_quality}`;
     }
 
     function selectNextProposalWork(work) {
-        reportWizardState.nextProposal.work = work === '特になし' ? '' : work;
+        reportWizardState.nextProposal.work = work === t('workNone') ? '' : work;
         appendChatMessage('user', work);
         showReportConfirmation();
     }
@@ -6339,17 +7036,9 @@ ${result.overall_quality}`;
     function showReportConfirmation() {
         const nextProposalText = reportWizardState.nextProposal.timing
             ? `${reportWizardState.nextProposal.timing}${reportWizardState.nextProposal.work ? ' / ' + reportWizardState.nextProposal.work : ''}`
-            : 'なし';
+            : t('none');
 
-        appendChatMessage('ai', `✅ **確認です：**
-
-📍 店舗: ${reportWizardState.store?.name}
-🧹 対象: ${reportWizardState.cleaningTarget}
-📷 写真: 作業前${reportWizardState.photos.before.length}枚 / 作業後${reportWizardState.photos.after.length}枚
-📝 備考: ${reportWizardState.notes || 'なし'}
-📅 次回提案: ${nextProposalText}
-
-この内容でレポートを送信しますか？`);
+        appendChatMessage('ai', `${t('confirmationMsg')}\n\n${t('store')}: ${reportWizardState.store?.name}\n🧹 ${reportWizardState.cleaningTarget}\n📷 ${t('beforePhotoCount')}: ${reportWizardState.photos.before.length}${t('photoCountSuffix')} / ${t('afterPhotoCount')}: ${reportWizardState.photos.after.length}${t('photoCountSuffix')}\n📝 ${t('memoLabel')}: ${reportWizardState.notes || t('none')}\n📅 ${t('nextProposalLabel')}: ${nextProposalText}\n\n${t('reportSendQuestion')}`);
 
         showConfirmButtons();
     }
@@ -6364,18 +7053,18 @@ ${result.overall_quality}`;
                     style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none;
                     padding: 12px 24px; border-radius: 25px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
                     display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-eye"></i> プレビューを確認
+                    <i class="fas fa-eye"></i> ${t('previewReport')}
                 </button>
                 <div style="display: flex; gap: 12px;">
                     <button onclick="submitReport()"
                         style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
                         padding: 14px 32px; border-radius: 25px; font-size: 0.95rem; font-weight: 600; cursor: pointer;">
-                        ✓ 送信する
+                        ${t('sendReportBtn')}
                     </button>
                     <button onclick="startReportWizard()"
                         style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
                         color: white; padding: 14px 24px; border-radius: 25px; font-size: 0.95rem; cursor: pointer;">
-                        やり直す
+                        ${t('retryBtn')}
                     </button>
                 </div>
             </div>
@@ -6403,7 +7092,7 @@ ${result.overall_quality}`;
             if (localStorage.getItem('report_preview_confirmed') === 'true') {
                 clearInterval(checkConfirmed);
                 localStorage.removeItem('report_preview_confirmed');
-                appendChatMessage('ai', '✅ プレビューを確認しました。送信する準備ができています！');
+                appendChatMessage('ai', t('previewReady'));
             }
         }, 500);
 
@@ -6412,6 +7101,6 @@ ${result.overall_quality}`;
     }
 
     function startWorkOrderWizard() {
-        appendChatMessage('ai', '作業指示書作成機能は準備中です。');
+        appendChatMessage('ai', t('workOrderNotReady'));
     }
 </script>

@@ -1,0 +1,1 @@
+{"path": "/workers/W01000", "httpMethod": "PUT", "headers": {"Content-Type": "application/json"}, "body": "{\"salary\": 1500, \"evaluation\": \"S\", \"hire_date\": \"2024-01-01\"}", "requestContext": {"authorizer": {"claims": {"sub": "e7140a58-a0b1-7034-e814-2d47d306a14b"}}}}

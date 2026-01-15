@@ -3225,6 +3225,11 @@ def get_reports(event, headers):
         if status_filter:
             filter_expressions.append(Attr('status').eq(status_filter))
         
+        # レポート種別フィルター (diagnosis, cleaning, daily, etc.)
+        report_type_filter = query_params.get('report_type')
+        if report_type_filter:
+            filter_expressions.append(Attr('report_type').eq(report_type_filter))
+        
         # スケジュールIDフィルター
         schedule_id_filter = query_params.get('schedule_id')
         if schedule_id_filter:
@@ -10494,6 +10499,57 @@ def handle_ai_process(event, headers):
             
             media = {'mime_type': clean_mime, 'data': image_data}
             if not input_text: input_text = "この画像を解析してください。"
+
+        if action == 'save_cleaning_diagnosis':
+            data = body.get('data', {})
+            report_id = f"DIAG_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M')}_{uuid.uuid4().hex[:6]}"
+            now = datetime.now(timezone.utc).isoformat() + 'Z'
+            
+            # Decimal conversion for score
+            score = data.get('ai_score', 0)
+            if isinstance(score, (int, float)):
+                score = Decimal(str(score))
+            
+            # Prepare data for DynamoDB (Reports table)
+            item = {
+                'id': report_id,
+                'report_type': 'diagnosis',
+                'staff_id': data.get('staff_id'),
+                'staff_name': data.get('staff_name'),
+                'store_id': data.get('store_id'),
+                'store_name': data.get('store_name'),
+                'cleaning_date': data.get('cleaning_date'),
+                'ai_score': score,
+                'ai_rank': data.get('ai_rank'),
+                'ai_result': data.get('ai_result'),
+                'photos': data.get('photos', []),
+                'created_at': now,
+                'updated_at': now
+            }
+            
+            # Save to Reports table
+            REPORTS_TABLE.put_item(Item=item)
+            
+            # Also optionally update worker's latest score
+            if data.get('staff_id'):
+                try:
+                    WORKERS_TABLE.update_item(
+                        Key={'id': data.get('staff_id')},
+                        UpdateExpression="SET latest_cleaning_score = :s, latest_cleaning_rank = :r, last_cleaning_at = :t",
+                        ExpressionAttributeValues={
+                            ":s": score,
+                            ":r": data.get('ai_rank'),
+                            ":t": now
+                        }
+                    )
+                except Exception as e:
+                    print(f"Warning: Failed to update worker stats: {str(e)}")
+
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'status': 'success', 'report_id': report_id}, ensure_ascii=False)
+            }
 
         if action == 'analyze_worker':
             worker_id = body.get('id')
