@@ -733,9 +733,63 @@
     z-index: 7001 !important;
 }
 
+/* MISOGI Message (AI Speech Bubble) Positioning */
 .latest-message-container {
-    width: 100% !important;
-    max-width: 800px !important;
-    margin-bottom: 15px !important;
-    text-align: center;
+    position: fixed !important;
+    top: 40% !important;
+    /* Position near center */
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 90% !important;
+    max-width: 600px !important;
+    z-index: 6000 !important;
+    pointer-events: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.latest-message-bubble {
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    border-radius: 24px !important;
+    padding: 20px 30px !important;
+    color: #fff !important;
+    font-size: 1.1rem !important;
+    line-height: 1.6 !important;
+    text-align: center !important;
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.05) !important;
+    pointer-events: auto !important;
+    animation: message-appear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.latest-message-bubble.user {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+@keyframes message-appear {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 768px) {
+    .latest-message-container {
+        top: 45% !important;
+        /* Slightly lower on mobile to clear visualizer */
+        max-width: 90% !important;
+    }
+
+    .latest-message-bubble {
+        padding: 15px 20px !important;
+        font-size: 0.9rem !important;
+    }
 }
