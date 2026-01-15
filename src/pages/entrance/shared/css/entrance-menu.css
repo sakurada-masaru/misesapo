@@ -677,7 +677,8 @@ body {
     }
 
     .header-controls {
-        gap: 6px;
+        gap: 20px;
+        /* Further increased gap to ensure no overlap */
     }
 
     .floating-btn,
@@ -824,12 +825,15 @@ body {
 @media (max-width: 768px) {
     .latest-message-container {
         top: 50% !important;
-        /* Centered on SP as requested */
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        /* Center both horizontally and vertically */
         max-width: 95% !important;
     }
 
     .latest-message-bubble {
-        padding: 15px 22px !important;
-        font-size: 0.95rem !important;
+        padding: 16px 24px !important;
+        font-size: 1rem !important;
+        /* Slightly larger for clarity in center */
     }
 }
