@@ -555,11 +555,18 @@ def copy_assets(outputs: List[str]) -> None:
                     raise
             outputs.append(str(dst_path))
     
+    # Copy logo_144x144.png to public/favicon.ico for browser auto-detection
+    logo_path = ASSETS_DIR / "images" / "logo_144x144.png"
+    if logo_path.exists():
+        favicon_path = PUBLIC / "favicon.ico"
+        try:
+            shutil.copy2(logo_path, favicon_path)
+        except (OSError, IOError):
+            shutil.copy(logo_path, favicon_path)
         outputs.append(str(favicon_path))
 
     # Copy manifest.json and CNAME from root to public
-    root_files = ["manifest.json", "CNAME"]
-    for filename in root_files:
+    for filename in ["manifest.json", "CNAME"]:
         src_file = ROOT / filename
         if src_file.exists():
             dst_file = PUBLIC / filename
