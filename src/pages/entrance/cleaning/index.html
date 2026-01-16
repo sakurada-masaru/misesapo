@@ -1465,6 +1465,24 @@
         pointer-events: auto;
     }
 
+    /* Mobile: Center the AI response overlay */
+    @media (max-width: 768px) {
+        .ai-response-overlay {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) translateY(-20px) !important;
+            width: 90% !important;
+            max-width: 350px !important;
+            min-width: auto !important;
+            z-index: 9500 !important;
+        }
+
+        .ai-response-overlay.visible {
+            transform: translate(-50%, -50%) !important;
+        }
+    }
+
     .ai-response-icon {
         color: var(--accent-color);
         margin-bottom: 8px;
