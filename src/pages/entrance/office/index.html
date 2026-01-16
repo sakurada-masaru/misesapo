@@ -2913,7 +2913,7 @@ ${context}
         },
         office: {
             label: '事務',
-            color: '#8b5cf6',
+            color: '#06b6d4',
             menus: ['mypage', 'customers', 'estimates', 'orders', 'zaiko']
         },
         sales: {
@@ -2947,7 +2947,7 @@ ${context}
     const CHAT_CHANNELS = {
         misesapo: { label: '全体', color: '#ffffff' },
         cleaning: { label: '清掃', color: '#10b981' },
-        office: { label: '事務', color: '#8b5cf6' },
+        office: { label: '事務', color: '#06b6d4' },
         sales: { label: '営業', color: '#f59e0b' },
         hr: { label: '人事', color: '#ec4899' },
         accounting: { label: '経理', color: '#3b82f6' },
@@ -3020,7 +3020,7 @@ ${context}
             office: [
                 { label: '契約', action: 'showContractSubmenu()', color: '#ffffff', textColor: '#1f2937' }, // White for admin (contract between customer & company)
                 { label: '申込書', action: 'openRegistrationFormSelector()', color: '#f97316' }, // Orange - connects to sales
-                { label: '作業指示書を作成', action: 'startWorkOrderWizard()', color: 'var(--accent-color)' }
+                { label: '作業指示書を作成', action: 'startWorkOrderWizard()', color: '#10b981' } // Green (Cleaning color) - send to cleaning
             ],
             hr: [
                 { label: '勤怠確認', action: "location.href='/admin/attendance/errors'", color: 'var(--accent-color)' }
