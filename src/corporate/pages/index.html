@@ -55,6 +55,9 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #FDEDED;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
         }
 
         body.splash-active {
@@ -108,6 +111,7 @@
             margin-bottom: 20px;
         }
 
+        
         .c-top-heading__sub-text {
             font-size: 14px;
             color: #666;
@@ -2189,14 +2193,17 @@
 
         /* フルスクリーン画像セクション（ヒーローセクション） */
         .fullscreen-image-section {
-            width: 100vw;
+            width: 100%;
+            max-width: 100vw;
             height: 100vh;
             min-height: 600px;
             position: relative;
-            overflow: visible;
+            overflow-x: hidden;
+            overflow-y: visible;
             margin: 0 0 -130px 0;
             padding: 0;
             z-index: 1;
+            box-sizing: border-box;
         }
 
         /* ヒーローセクション下部装飾画像 */
@@ -2312,7 +2319,9 @@
             top: 0;
             left: 0;
             width: 100%;
+            max-width: 100%;
             height: 100%;
+            overflow: hidden;
         }
 
         .fullscreen-image {
@@ -2320,6 +2329,7 @@
             top: 0;
             left: 0;
             width: 100%;
+            max-width: 100%;
             height: 100%;
             object-fit: cover;
             object-position: center;
@@ -2930,11 +2940,15 @@
 
         .area_image_box img {
             width: 350px;
-            max-width: 35350px;
             height: auto;
             border-radius: 12px;
             margin: auto;
-            ;
+        }
+
+        @media (max-width: 768px) {
+            .area_image_box img {
+                width: 80%;
+            }
         }
 
         .area-tags {
@@ -3231,15 +3245,19 @@
         @media (max-width: 768px) {
             .about-coverage-content {
                 justify-content: normal;
-                padding-left: 20px;
             }
 
             .about-coverage-content a {
-                width: 45%;
+                width: 44%;
             }
 
             .about-coverage-content img {
                 width: 100%;
+            }
+
+            .event-container img {
+                width: 80% !important;
+                margin: auto;
             }
         }
 
@@ -3663,6 +3681,8 @@
                 <a href="service-plan.html"><img src="/images/service-plan_kv_sp.png"></a>
                 <a href="subsidy.html"><img src="/images/subsidy_kv_sp.webp"></a>
                 <a href="grease-trap-cleaning-guide.html"><img src="/images/grease-trap-cleaning-guide_kv_sp.png"></a>
+                <a href="haccp-cleaning.html"><img src="/images/haccp-cleaning_kv_sp.png"></a>
+                <a href="consulting.html"><img src="/images/consulting_kv_sp.png"></a>
 
             </div>
         </div>
