@@ -3027,7 +3027,8 @@ ${context}
                 { label: '請求処理', action: "location.href='/admin/orders'", color: 'var(--accent-color)' }
             ],
             admin: [
-                { label: '契約', action: 'showContractListOverlay()', color: '#f97316' } // Orange - view contracts created by sales
+                { label: '契約', action: 'showContractListOverlay()', color: '#f97316' }, // Orange - Management of sales contracts
+                { label: '申込書', action: 'showApplicationFormsOverlay()', color: '#f97316' } // Orange - Management of sales applications
             ],
             dev: []
         };
@@ -3052,6 +3053,36 @@ ${context}
         if (actions.length > 0) {
             actionContainer.appendChild(btnDiv);
         }
+    }
+
+    // View application forms (for admin)
+    function showApplicationFormsOverlay() {
+        appendChatMessage('ai', '営業から届いた申込書を確認します。');
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div class="action-bubble-container" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="job-action-btn" onclick="showPlaceholder('申込書一覧')"
+                    style="background: #f97316; border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);">
+                    <i class="fas fa-list"></i> 申込書一覧
+                </button>
+                <button class="job-action-btn" onclick="showPlaceholder('新規申込の承認')"
+                    style="background: #f97316; border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);">
+                    <i class="fas fa-check-double"></i> 申込承認
+                </button>
+            </div>
+            <button onclick="showJobActions('admin')" style="margin-top: 15px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                ← メニューに戻る
+            </button>
+        `;
     }
 
     // View contracts created by sales (for admin)
