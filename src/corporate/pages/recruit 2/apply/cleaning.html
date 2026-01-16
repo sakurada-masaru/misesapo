@@ -1,0 +1,320 @@
+@layout('layouts.base')
+@json('data/meta/recruit_apply_cleaning_title.json', $title)
+@json('data/meta/recruit_apply_cleaning_body_class.json', $body_class)
+
+<!-- 通常ヘッダー -->
+<header class="normal-header visible">
+  <div class="normal-header-inner">
+    <div class="normal-header-logo">
+      <a href="/">
+        <img src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+      </a>
+    </div>
+    <nav class="normal-header-nav">
+      <a href="/">TOP</a>
+      <a href="/recruit.html">求人情報</a>
+      <a href="/recruit/apply/equipment.html">設備メンテナンススタッフ</a>
+      <a href="/recruit/apply/inside-sales.html">インサイドセールス</a>
+      <a href="/recruit/apply/field-sales.html">フィールドセールス</a>
+      <a href="/recruit/privacy.html">採用における個人情報の取り扱いについて</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="recruit-apply-page">
+  <div class="recruit-apply-container">
+    <!-- Header -->
+    <div class="recruit-apply-header">
+      <div class="recruit-breadcrumb">
+        <span>シート記入</span>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span>内容確認</span>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span>応募完了</span>
+      </div>
+    </div>
+
+    <!-- Main Title -->
+    <h1 class="recruit-apply-title">清掃員 募集要項_応募シート</h1>
+
+    <!-- Main Content -->
+    <div class="recruit-apply-content">
+      <!-- Left: Job Details -->
+      <div class="recruit-apply-details">
+        <table class="recruit-details-table">
+          <tr>
+            <th>項目</th>
+            <th>内容</th>
+          </tr>
+          <tr>
+            <td>雇用形態</td>
+            <td>
+              業務委託(個人事業主)<br>
+              パート・アルバイト (希望に応じて) ※正社員登用制度あり
+            </td>
+          </tr>
+          <tr>
+            <td>勤務先</td>
+            <td>東京都中央区日本橋茅場町1-8-1茅場町一丁目</td>
+          </tr>
+          <tr>
+            <td>勤務地(エリア)</td>
+            <td>東京・埼玉</td>
+          </tr>
+          <tr>
+            <td>職種</td>
+            <td>清掃スタッフ (飲食店・小売店などの定期清掃)</td>
+          </tr>
+          <tr>
+            <td>勤務時間</td>
+            <td>
+              昼の部: 8:00~18:00<br>
+              夜の部: 22:00~9:00<br>
+              1現場あたり1~3時間程度/週1~OK<br>
+              直行直帰可
+            </td>
+          </tr>
+          <tr>
+            <td>給与</td>
+            <td>
+              1現場あたり: 8,000円~15,000円 (経験・現場内容による)<br>
+              月収目安: 30万円~100万円 (稼働数による)<br>
+              交通費・ガソリン代支給 (条件あり)
+            </td>
+          </tr>
+          <tr>
+            <td>福利厚生</td>
+            <td>
+              ※雇用形態により異なる<br>
+              未経験でも安心の研修制度 (座学+現場同行)<br>
+              スマホ業務アプリ支給<br>
+              支給物:作業車 清掃用具 清掃着<br>
+              資格取得支援制度 (ビルクリーニング技能士など)<br>
+              各種手当 (社員対象)<br>
+              正社員登用制度あり
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Right: Application Form -->
+      <div class="recruit-apply-form">
+        <h2 class="recruit-form-title">必須項目の記入をお願いします。</h2>
+        <form id="recruit-apply-form" action="/recruit/apply/confirm.html" method="get">
+          <div class="recruit-form-group">
+            <label class="recruit-form-label">
+              お名前
+              <span class="recruit-required-badge">必須</span>
+            </label>
+            <input type="text" name="name" class="recruit-form-input" required />
+          </div>
+          <div class="recruit-form-group">
+            <label class="recruit-form-label">
+              ふりがな
+              <span class="recruit-required-badge">必須</span>
+            </label>
+            <input type="text" name="furigana" class="recruit-form-input" required />
+          </div>
+          <div class="recruit-form-group">
+            <label class="recruit-form-label">
+              電話番号
+              <span class="recruit-required-badge">必須</span>
+            </label>
+            <input type="tel" name="phone" class="recruit-form-input" required />
+          </div>
+          <div class="recruit-form-group">
+            <label class="recruit-form-label">
+              メールアドレス
+            </label>
+            <input type="email" name="email" class="recruit-form-input" />
+          </div>
+          <input type="hidden" name="job_type" value="cleaning" />
+          <button type="submit" class="recruit-form-submit">入力内容の確認</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .recruit-apply-page {
+      background: #ffffff;
+      min-height: 100vh;
+      padding: 40px 24px;
+    }
+    .recruit-apply-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .recruit-apply-header {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .recruit-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .breadcrumb-separator {
+      color: var(--primary);
+    }
+    .recruit-apply-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .recruit-apply-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    /* Job Details Table */
+    .recruit-apply-details {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 24px;
+    }
+    .recruit-details-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .recruit-details-table th,
+    .recruit-details-table td {
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      text-align: left;
+      vertical-align: top;
+    }
+    .recruit-details-table th {
+      background: #ffffff;
+      font-weight: 600;
+      color: #111827;
+      width: 30%;
+    }
+    .recruit-details-table td {
+      background: #ffffff;
+      color: #374151;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+    /* Application Form */
+    .recruit-apply-form {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 32px;
+    }
+    .recruit-form-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 24px;
+    }
+    .recruit-form-group {
+      margin-bottom: 24px;
+    }
+    .recruit-form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    .recruit-required-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .recruit-form-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .recruit-form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .recruit-form-submit {
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+    .recruit-form-submit:hover {
+      background: #ff6b9d;
+      transform: translateY(-2px);
+    }
+    /* Responsive */
+    @media (max-width: 768px) {
+      .recruit-apply-content {
+        grid-template-columns: 1fr;
+      }
+      .recruit-apply-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+    /* コピーライトスタイル */
+    body.page-recruit-apply .site-footer,
+    body.page-recruit-privacy .site-footer {
+      background: #FF679C;
+      color: #ffffff;
+    }
+    body.page-recruit-apply .site-footer p,
+    body.page-recruit-privacy .site-footer p {
+      color: #ffffff;
+    }
+  </style>
+  <link rel="stylesheet" href="/css/header.css">
+  <script>
+    // 求人ページではインクルードヘッダーを削除し、通常ヘッダーを常時表示
+    document.addEventListener('DOMContentLoaded', function() {
+      // インクルードヘッダーを削除
+      const defaultHeader = document.getElementById('default-header-wrapper');
+      if (defaultHeader) {
+        defaultHeader.remove();
+      }
+      const siteHeader = document.querySelector('.site-header');
+      if (siteHeader) {
+        siteHeader.remove();
+      }
+      
+      // 通常ヘッダーを常時表示
+      const normalHeader = document.querySelector('.normal-header');
+      if (normalHeader) {
+        normalHeader.classList.add('visible');
+        // スクロールイベントでクラスを削除しないようにする
+        const originalRemove = normalHeader.classList.remove;
+        normalHeader.classList.remove = function(...args) {
+          if (args[0] !== 'visible') {
+            originalRemove.apply(this, args);
+          }
+        };
+      }
+    });
+  </script>
+  <script src="/js/header.js"></script>
+</main>
+

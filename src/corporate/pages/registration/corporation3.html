@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>登録情報確認（法人・店舗） | ミセサポ</title>
+    @include('partials.head-links')
+  </head>
+  <body class="theme-pink registration bg-white">
+    <main class="container">
+      <div class="text-center reg-logo-block">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" class="reg-logo" />
+        <div class="small caption-strong">新規登録</div>
+      </div>
+      <div class="hr"></div>
+
+      <!-- Steps (common) -->
+      <div class="steps">
+        <div class="step"><div class="dot">1</div><div>会社情報登録</div></div>
+        <div class="step"><div class="dot">2</div><div>店舗情報登録</div></div>
+        <div class="step active"><div class="dot">3</div><div>登録情報確認</div></div>
+      </div>
+
+      @include('partials.registration-confirm-core')
+
+      <div class="actions actions-y-md">
+        <a class="btn btn-outline-primary btn-fixed btn-round" href="/registration/corporation2">修正する</a>
+        <button id="final-submit" class="btn btn-primary btn-fixed btn-round">登録</button>
+      </div>
+    </main>
+
+    
+  </body>
+  </html>

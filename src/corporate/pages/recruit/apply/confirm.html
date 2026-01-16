@@ -1,0 +1,81 @@
+@layout('layouts.base')
+@json('data/meta/recruit_confirm_title.json', $title)
+@json('data/meta/recruit_confirm_body_class.json', $body_class)
+
+<!-- 通常ヘッダー -->
+<header class="normal-header visible">
+  <div class="normal-header-inner">
+    <div class="normal-header-logo">
+      <a href="/">
+        <img src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+      </a>
+    </div>
+    <nav class="normal-header-nav">
+      <a href="/">TOP</a>
+      <a href="/recruit">求人情報</a>
+      <a href="/recruit/privacy">採用における個人情報の取り扱いについて</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="recruit-confirm-page">
+  <div class="recruit-confirm-container">
+    <!-- Header -->
+    <div class="recruit-confirm-header">
+      <div class="recruit-apply-logo">
+        <div class="recruit-logo-square">ミセサポ</div>
+        <div class="recruit-logo-text">RECRUIT</div>
+      </div>
+      <div class="recruit-breadcrumb">
+        <span>シート記入</span>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span class="breadcrumb-current">内容確認</span>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span>応募完了</span>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="recruit-confirm-content">
+      <h1 class="recruit-confirm-title">内容のご確認の上、送信してください。</h1>
+      
+      <div class="recruit-confirm-form">
+        <div class="recruit-confirm-item">
+          <label class="recruit-confirm-label">お名前</label>
+          <div class="recruit-confirm-value" id="confirm-name">-</div>
+        </div>
+        <div class="recruit-confirm-item">
+          <label class="recruit-confirm-label">ふりがな</label>
+          <div class="recruit-confirm-value" id="confirm-furigana">-</div>
+        </div>
+        <div class="recruit-confirm-item">
+          <label class="recruit-confirm-label">電話番号</label>
+          <div class="recruit-confirm-value" id="confirm-phone">-</div>
+        </div>
+        <div class="recruit-confirm-item">
+          <label class="recruit-confirm-label">メールアドレス</label>
+          <div class="recruit-confirm-value" id="confirm-email">-</div>
+        </div>
+      </div>
+
+      <div class="recruit-confirm-actions">
+        <form id="recruit-confirm-form" action="/recruit/apply/complete.html" method="post">
+          <input type="hidden" name="name" id="hidden-name" />
+          <input type="hidden" name="furigana" id="hidden-furigana" />
+          <input type="hidden" name="phone" id="hidden-phone" />
+          <input type="hidden" name="email" id="hidden-email" />
+          <input type="hidden" name="job_type" id="hidden-job-type" />
+          <button type="submit" class="recruit-confirm-submit">送信する</button>
+        </form>
+        <button type="button" class="recruit-confirm-back" onclick="history.back()">戻って修正</button>
+      </div>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="/css/recruit-confirm.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <script src="/js/recruit-apply.js"></script>
+  <script src="/js/recruit-confirm.js"></script>
+  <script src="/js/header.js"></script>
+</main>
+

@@ -1,0 +1,28 @@
+@layout('layouts.base')
+@json('data/meta/signup3_title.json', $title)
+
+<main id="main" class="container max-720">
+      <!-- Logo + caption -->
+      <div class="text-center reg-logo-block">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" class="reg-logo" />
+        <div class="small caption-strong">新規登録</div>
+      </div>
+      <hr class="divider" />
+
+      <!-- Headline -->
+      <section class="signup-head">
+        <h1 class="text-center fw-800 text-gray-900 text-20">認証が完了しました</h1>
+        <p class="small text-center signup-sub">会員登録を続けてください。</p>
+      </section>
+
+      <!-- Options -->
+      <section class="signup-options">
+        <div class="actions gap-12 justify-center">
+          <a class="btn btn-outline-primary btn-fixed btn-round" href="/registration/corporation">法人の方はこちら <span aria-hidden="true">›</span></a>
+        </div>
+        <div class="actions gap-12 justify-center mt-12">
+          <a class="btn btn-outline-primary btn-fixed btn-round" href="/registration/personal">個人の方はこちら <span aria-hidden="true">›</span></a>
+        </div>
+      </section>
+
+    </main>

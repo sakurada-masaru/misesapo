@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>新規登録 — 店舗情報登録（個人） | ミセサポ</title>
+    @include('partials.head-links')
+  </head>
+  <body class="theme-pink registration bg-white">
+    <main class="container">
+      <!-- Logo and caption -->
+      <div class="text-center reg-logo-block">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" class="reg-logo" />
+        <div class="small caption-strong">新規登録</div>
+      </div>
+      <hr class="divider" />
+
+      <!-- Steps -->
+      <div class="steps">
+        <div class="step active"><div class="dot">1</div><div>店舗情報登録</div></div>
+        <div class="step"><div class="dot">2</div><div>登録情報確認</div></div>
+      </div>
+
+      <section class="section-gap-sm">
+        <h2 class="section-title">店舗情報登録（個人）</h2>
+
+        <form class="stack lg" id="stores-form" action="/registration/personal2.html" method="get">
+          @include('partials.registration-store-form')
+
+          <div class="actions actions-gap">
+            <button type="submit" class="btn btn-primary btn-fixed btn-round">登録情報確認へ</button>
+            <a class="btn btn-fixed btn-round btn-ghost-outline" href="/signup3">戻る</a>
+          </div>
+        </form>
+      </section>
+
+      <footer class="text-center small footer-note">© 2025 ミセサポ</footer>
+    </main>
+  </body>
+  </html>

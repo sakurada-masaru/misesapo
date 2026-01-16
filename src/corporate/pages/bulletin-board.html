@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>意見交換掲示板 | ミセサポ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/bulletin-board.css">
+</head>
+<body>
+    <div class="bulletin-board-container">
+        <!-- ヘッダー -->
+        <header class="board-header">
+            <div class="header-content">
+                <h1 class="board-title">
+                    <i class="fas fa-comments"></i>
+                    意見交換掲示板
+                </h1>
+                <p class="board-subtitle">みんなで意見を共有しましょう</p>
+            </div>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="board-main">
+            <!-- 新規投稿フォーム -->
+            <section class="post-form-section">
+                <div class="form-container">
+                    <h2 class="form-title">
+                        <i class="fas fa-edit"></i>
+                        新規投稿
+                    </h2>
+                    <form id="post-form" class="post-form">
+                        <div class="form-group">
+                            <label for="author-name" class="form-label">
+                                <i class="fas fa-user"></i>
+                                お名前
+                            </label>
+                            <input 
+                                type="text" 
+                                id="author-name" 
+                                class="form-input" 
+                                placeholder="お名前を入力してください" 
+                                required
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="post-title" class="form-label">
+                                <i class="fas fa-heading"></i>
+                                タイトル
+                            </label>
+                            <input 
+                                type="text" 
+                                id="post-title" 
+                                class="form-input" 
+                                placeholder="投稿のタイトルを入力してください" 
+                                required
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="post-content" class="form-label">
+                                <i class="fas fa-comment-dots"></i>
+                                内容
+                            </label>
+                            <textarea 
+                                id="post-content" 
+                                class="form-textarea" 
+                                rows="5" 
+                                placeholder="意見や質問を入力してください..." 
+                                required
+                            ></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-paper-plane"></i>
+                            投稿する
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 投稿一覧 -->
+            <section class="posts-section">
+                <div class="posts-header">
+                    <h2 class="posts-title">
+                        <i class="fas fa-list"></i>
+                        投稿一覧
+                    </h2>
+                    <div class="posts-count" id="posts-count">投稿数: 0</div>
+                </div>
+                <div id="posts-container" class="posts-container">
+                    <!-- 投稿がここに動的に追加されます -->
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>まだ投稿がありません</p>
+                        <p class="empty-state-sub">最初の投稿をしてみましょう！</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/js/bulletin-board.js"></script>
+</body>
+</html>
+
