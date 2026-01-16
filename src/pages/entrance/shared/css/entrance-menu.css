@@ -681,11 +681,21 @@ body {
         /* Further increased gap to ensure no overlap */
     }
 
-    .floating-btn,
-    #floating-job-btn {
+    .floating-btn {
         height: 36px;
         padding: 0 10px;
         font-size: 0.75rem;
+    }
+
+    /* Position job button separately on mobile to prevent overlap */
+    #floating-job-btn {
+        position: fixed !important;
+        top: 12px !important;
+        right: 80px !important;
+        bottom: auto !important;
+        padding: 10px 16px !important;
+        font-size: 0.85rem !important;
+        z-index: 9400 !important;
     }
 
     #chat-container {
@@ -702,7 +712,6 @@ body {
     /* Fixed Visualizer for mobile at the top */
     .visualizer-container {
         top: 22% !important;
-        /* Moved up as per user request */
         left: 50% !important;
         transform: translate(-50%, -50%) scale(0.65) !important;
     }
@@ -835,5 +844,22 @@ body {
         padding: 16px 24px !important;
         font-size: 1rem !important;
         /* Slightly larger for clarity in center */
+    }
+
+    /* Cleaning mode AI message overlay - center on mobile */
+    .ai-response-overlay,
+    #ai-response {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 90% !important;
+        max-width: 350px !important;
+        z-index: 9500 !important;
+    }
+
+    .ai-response-overlay.visible,
+    #ai-response.visible {
+        transform: translate(-50%, -50%) !important;
     }
 }
