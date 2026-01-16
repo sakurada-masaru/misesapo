@@ -3011,21 +3011,22 @@ ${context}
 
         const jobActions = {
             sales: [
-                { label: '依頼書を作成', action: 'startRequestWizard()' },
-                { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'" }
+                { label: '依頼書を作成', action: 'startRequestWizard()', color: 'var(--accent-color)' },
+                { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'", color: 'var(--accent-color)' }
             ],
             cleaning: [
-                { label: 'レポートを作成', action: 'startReportWizard()' }
+                { label: 'レポートを作成', action: 'startReportWizard()', color: 'var(--accent-color)' }
             ],
             office: [
-                { label: '登録申込書を送付', action: 'openRegistrationFormSelector()' },
-                { label: '作業指示書を作成', action: 'startWorkOrderWizard()' }
+                { label: '契約', action: 'showContractSubmenu()', color: '#f97316' }, // Orange - shared with sales
+                { label: '登録申込書を送付', action: 'openRegistrationFormSelector()', color: 'var(--accent-color)' },
+                { label: '作業指示書を作成', action: 'startWorkOrderWizard()', color: 'var(--accent-color)' }
             ],
             hr: [
-                { label: '勤怠確認', action: "location.href='/admin/attendance/errors'" }
+                { label: '勤怠確認', action: "location.href='/admin/attendance/errors'", color: 'var(--accent-color)' }
             ],
             accounting: [
-                { label: '請求処理', action: "location.href='/admin/orders'" }
+                { label: '請求処理', action: "location.href='/admin/orders'", color: 'var(--accent-color)' }
             ],
             admin: [],
             dev: []
@@ -3033,12 +3034,14 @@ ${context}
 
         const actions = jobActions[jobKey] || [];
         actions.forEach(btn => {
+            const btnColor = btn.color || 'var(--accent-color)';
+            const glowColor = btn.color && btn.color.startsWith('#') ? btn.color + '66' : 'var(--accent-glow)';
             const buttonHtml = `
                 <button class="job-action-btn" onclick="${btn.action}"
-                    style="background: var(--accent-color); border: none; color: #fff; 
+                    style="background: ${btnColor}; border: none; color: #fff; 
                     padding: 12px 24px; border-radius: 25px; cursor: pointer;
                     font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
-                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    box-shadow: 0 4px 15px ${glowColor};">
                     ${btn.label}
                 </button>
             `;
@@ -3048,6 +3051,40 @@ ${context}
         if (actions.length > 0) {
             actionContainer.appendChild(btnDiv);
         }
+    }
+
+    // Contract submenu - shared with sales mode
+    function showContractSubmenu() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        appendChatMessage('ai', '契約メニューを選択してください。');
+
+        actionContainer.innerHTML = `
+            <div class="action-bubble-container" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="job-action-btn" onclick="startRequestWizard('contract')"
+                    style="background: #f97316; border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);">
+                    <i class="fas fa-plus-circle"></i> 新規契約作成
+                </button>
+                <button class="job-action-btn" onclick="showPlaceholder('既存契約閲覧')"
+                    style="background: #f97316; border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);">
+                    <i class="fas fa-file-contract"></i> 既存契約閲覧
+                </button>
+            </div>
+            <button onclick="showJobActions('office')" style="margin-top: 15px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                ← メニューに戻る
+            </button>
+        `;
+    }
+
+    function showPlaceholder(featureName) {
+        appendChatMessage('ai', `「${featureName}」機能は現在開発中です。もうしばらくお待ちください。`);
     }
 
     function filterSidebar(jobKey) {

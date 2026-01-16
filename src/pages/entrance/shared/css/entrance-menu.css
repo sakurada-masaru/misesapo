@@ -772,14 +772,12 @@ body {
 
 /* Action Buttons / Hotbar adjustments (Global) */
 #action-buttons-container {
-    position: relative !important;
     width: 100% !important;
     display: flex !important;
     flex-wrap: wrap !important;
     gap: 12px !important;
     justify-content: center !important;
     margin-bottom: 35px !important;
-    /* Larger gap to prevent click overlap */
     z-index: 7001 !important;
 }
 
