@@ -3011,33 +3011,38 @@ ${context}
 
         const jobActions = {
             sales: [
-                { label: '依頼書を作成', action: 'startRequestWizard()' },
-                { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'" }
+                { label: '依頼書を作成', action: 'startRequestWizard()', color: 'var(--accent-color)' },
+                { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'", color: 'var(--accent-color)' }
             ],
             cleaning: [
-                { label: 'レポートを作成', action: 'startReportWizard()' }
+                { label: 'レポートを作成', action: 'startReportWizard()', color: 'var(--accent-color)' }
             ],
             office: [
-                { label: '作業指示書を作成', action: 'startWorkOrderWizard()' }
+                { label: '作業指示書を作成', action: 'startWorkOrderWizard()', color: 'var(--accent-color)' }
             ],
             hr: [
-                { label: '勤怠確認', action: "location.href='/admin/attendance/errors'" }
+                { label: '勤怠確認', action: "location.href='/admin/attendance/errors'", color: 'var(--accent-color)' }
             ],
             accounting: [
-                { label: '請求処理', action: "location.href='/admin/orders'" }
+                { label: '請求処理', action: "location.href='/admin/orders'", color: 'var(--accent-color)' }
             ],
-            admin: [],
+            admin: [
+                { label: '契約', action: 'showContractListOverlay()', color: '#f97316' } // Orange - view contracts created by sales
+            ],
             dev: []
         };
 
         const actions = jobActions[jobKey] || [];
         actions.forEach(btn => {
+            const btnColor = btn.color || 'var(--accent-color)';
+            const textColor = btn.textColor || '#fff';
+            const glowColor = btn.color && btn.color.startsWith('#') ? btn.color + '66' : 'var(--accent-glow)';
             const buttonHtml = `
                 <button class="job-action-btn" onclick="${btn.action}"
-                    style="background: var(--accent-color); border: none; color: #fff; 
+                    style="background: ${btnColor}; border: none; color: ${textColor}; 
                     padding: 12px 24px; border-radius: 25px; cursor: pointer;
                     font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
-                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    box-shadow: 0 4px 15px ${glowColor};">
                     ${btn.label}
                 </button>
             `;
@@ -3047,6 +3052,40 @@ ${context}
         if (actions.length > 0) {
             actionContainer.appendChild(btnDiv);
         }
+    }
+
+    // View contracts created by sales (for admin)
+    function showContractListOverlay() {
+        appendChatMessage('ai', '営業が作成した契約を確認します。');
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div class="action-bubble-container" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="job-action-btn" onclick="showPlaceholder('契約一覧')"
+                    style="background: #f97316; border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);">
+                    <i class="fas fa-list"></i> 契約一覧
+                </button>
+                <button class="job-action-btn" onclick="showPlaceholder('承認待ち契約')"
+                    style="background: #f97316; border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);">
+                    <i class="fas fa-hourglass-half"></i> 承認待ち
+                </button>
+            </div>
+            <button onclick="showJobActions('admin')" style="margin-top: 15px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                ← メニューに戻る
+            </button>
+        `;
+    }
+
+    function showPlaceholder(featureName) {
+        appendChatMessage('ai', `「${featureName}」機能は現在開発中です。もうしばらくお待ちください。`);
     }
 
     function filterSidebar(jobKey) {

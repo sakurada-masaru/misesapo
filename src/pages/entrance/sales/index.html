@@ -3436,7 +3436,8 @@ ${context}
         const jobActions = {
             sales: [
                 { label: '顧客', action: 'showCustomerSubmenu()', color: 'var(--accent-color)' },
-                { label: '契約', action: 'showContractSubmenu()', color: '#3b82f6' }, // Blue for office
+                { label: '契約', action: 'showContractSubmenu()', color: '#ffffff', textColor: '#1f2937' }, // White for admin (contract between customer & company)
+                { label: '申込書', action: 'showApplicationFormsOverlay()', color: '#f97316' }, // Orange - view forms created by office
                 { label: '店舗査定', action: 'startStoreAudit()', color: '#10b981' }, // Green for cleaning
                 { label: '予定', action: 'showScheduleOverlay()', color: 'var(--accent-color)' }
             ],
@@ -3459,10 +3460,11 @@ ${context}
         const actions = jobActions[jobKey] || [];
         actions.forEach(btn => {
             const btnColor = btn.color || 'var(--accent-color)';
+            const textColor = btn.textColor || '#fff';
             const glowColor = btn.color && btn.color.startsWith('#') ? btn.color + '66' : 'var(--accent-glow)';
             const buttonHtml = `
                 <button class="job-action-btn" onclick="${btn.action}"
-                    style="background: ${btnColor}; border: none; color: #fff; 
+                    style="background: ${btnColor}; border: none; color: ${textColor}; 
                     padding: 12px 24px; border-radius: 25px; cursor: pointer;
                     font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
                     box-shadow: 0 4px 15px ${glowColor};">
@@ -4972,18 +4974,48 @@ ${context}
         actionContainer.innerHTML = `
             <div class="action-bubble-container" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
                 <button class="job-action-btn" onclick="startRequestWizard('contract')"
-                    style="background: var(--accent-color); border: none; color: #fff; 
+                    style="background: #ffffff; border: none; color: #1f2937; 
                     padding: 12px 24px; border-radius: 25px; cursor: pointer;
                     font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
-                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    box-shadow: 0 4px 15px rgba(255,255,255,0.3);">
                     <i class="fas fa-plus-circle"></i> 新規契約作成
                 </button>
                 <button class="job-action-btn" onclick="showPlaceholder('既存契約閲覧')"
-                    style="background: var(--accent-color); border: none; color: #fff; 
+                    style="background: #ffffff; border: none; color: #1f2937; 
                     padding: 12px 24px; border-radius: 25px; cursor: pointer;
                     font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
-                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    box-shadow: 0 4px 15px rgba(255,255,255,0.3);">
                     <i class="fas fa-file-contract"></i> 既存契約閲覧
+                </button>
+            </div>
+            <button onclick="showJobActions('sales')" style="margin-top: 15px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
+                ← メニューに戻る
+            </button>
+        `;
+    }
+
+    // View application forms created by office
+    function showApplicationFormsOverlay() {
+        appendChatMessage('ai', '事務が作成した申込書を確認します。');
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div class="action-bubble-container" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="job-action-btn" onclick="showPlaceholder('申込書一覧')"
+                    style="background: #f97316; border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);">
+                    <i class="fas fa-list"></i> 申込書一覧
+                </button>
+                <button class="job-action-btn" onclick="showPlaceholder('申込書ステータス確認')"
+                    style="background: #f97316; border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);">
+                    <i class="fas fa-clipboard-check"></i> ステータス確認
                 </button>
             </div>
             <button onclick="showJobActions('sales')" style="margin-top: 15px; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.85rem;">
