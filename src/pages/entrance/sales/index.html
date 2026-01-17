@@ -4996,8 +4996,8 @@ ${context}
 
     // View application forms created by office
     function startApplicationWizard() {
-        appendChatMessage('ai', 'お客様の希望内容を聞き取り、申込書を作成します（Step 1）。必要事項を入力して事務へパスしてください。');
-        showPlaceholder('申込書作成ウィザード');
+        appendChatMessage('ai', 'お客様の希望内容を聞き取り、申込書を作成します（Step 1）。必要事項を入力してください。');
+        startRequestWizard();
     }
 
     function finalizeContract() {
@@ -5612,6 +5612,49 @@ ${context}
                             <button onclick="filterScheduleByDate('all')" class="schedule-filter-btn" data-filter="all" style="flex:1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;">すべて</button>
                         </div>
                     </div>
+                    <div class="customer-selection-body" id="schedule-create-form" style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <div style="font-weight:600; color:#fff; margin-bottom:12px;">ライン対象の予定を作成</div>
+                        <div style="display:grid; gap:10px;">
+                            <div>
+                                <label style="display:block; font-size:0.8rem; color:rgba(255,255,255,0.7); margin-bottom:4px;">日付</label>
+                                <input type="date" id="schedule-create-date" class="form-input" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.2); color:#fff;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.8rem; color:rgba(255,255,255,0.7); margin-bottom:4px;">サービス</label>
+                                <div style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.2); color:#fff;">cleaning</div>
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.8rem; color:rgba(255,255,255,0.7); margin-bottom:4px;">店舗</label>
+                                <select id="schedule-create-store" class="form-select" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.2); color:#fff;">
+                                    <option value="">店舗を選択</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.8rem; color:rgba(255,255,255,0.7); margin-bottom:4px;">担当者</label>
+                                <select id="schedule-create-worker" class="form-select" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.2); color:#fff;">
+                                    <option value="">担当者を選択</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:10px; margin-top:12px;">
+                            <button id="schedule-create-submit" style="flex:1; background: var(--accent-color); border: none; color: #fff; padding: 10px 12px; border-radius: 12px; cursor: pointer; font-size: 0.9rem; font-weight: 600;">作成</button>
+                            <button id="schedule-create-cancel" style="flex:1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 10px 12px; border-radius: 12px; cursor: pointer; font-size: 0.9rem;">キャンセル</button>
+                        </div>
+                    </div>
+                    <div class="customer-selection-body" id="schedule-availability-panel" style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <div style="font-weight:600; color:#fff;">稼働状況</div>
+                            <div style="font-size:0.75rem; color:rgba(255,255,255,0.6);">今日から14日</div>
+                        </div>
+                        <div id="schedule-availability-legend" style="display:flex; gap:10px; font-size:0.75rem; color:rgba(255,255,255,0.6); margin-bottom:8px;">
+                            <span>O open</span>
+                            <span>S scheduled</span>
+                            <span>X closed</span>
+                        </div>
+                        <div id="schedule-availability-matrix" style="overflow:auto; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:10px; background:rgba(255,255,255,0.03);">
+                            <div style="text-align:center; color:rgba(255,255,255,0.5); padding:12px;">読み込み中...</div>
+                        </div>
+                    </div>
                     <div class="customer-selection-body" id="schedule-list">
                         <!-- Schedule items go here -->
                     </div>
@@ -5626,6 +5669,7 @@ ${context}
                 </div>
             `;
             document.body.appendChild(overlay);
+            setupScheduleCreateForm();
         }
 
         scheduleFilterMode = 'today';
@@ -5874,11 +5918,233 @@ ${context}
         return `${month}/${day} (${weekday})`;
     }
 
+    function formatDateISO(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function buildSalesAvailabilityDates() {
+        const today = new Date();
+        return Array.from({ length: 14 }, (_, index) => {
+            const target = new Date(today);
+            target.setDate(today.getDate() + index);
+            return {
+                iso: formatDateISO(target),
+                label: `${target.getMonth() + 1}/${target.getDate()}`
+            };
+        });
+    }
+
+    async function loadSalesAvailabilityMatrix(workers) {
+        const container = document.getElementById('schedule-availability-matrix');
+        if (!container) return;
+
+        const workerIds = (workers || [])
+            .map((worker) => worker.id || worker.worker_id || worker.staff_id)
+            .filter((id) => id);
+
+        if (workerIds.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.5); padding:12px;">担当者が見つかりません</div>';
+            return;
+        }
+
+        const dates = buildSalesAvailabilityDates();
+        const dateFrom = dates[0].iso;
+        const dateTo = dates[dates.length - 1].iso;
+
+        const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        container.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.5); padding:12px;">読み込み中...</div>';
+
+        try {
+            const response = await fetch(`${API_BASE}/sales/availability-matrix?from=${dateFrom}&to=${dateTo}&service=cleaning&worker_ids=${workerIds.join(',')}`, { headers });
+            if (!response.ok) throw new Error('availability_matrix_failed');
+            const data = await response.json();
+            const matrixWorkers = data.workers || [];
+
+            const workerNameMap = new Map();
+            workers.forEach((worker) => {
+                const workerId = worker.id || worker.worker_id || worker.staff_id;
+                const workerName = worker.name || worker.staff_name || worker.full_name || workerId;
+                if (workerId) workerNameMap.set(workerId, workerName || workerId);
+            });
+
+            const statusStyles = {
+                scheduled: { label: 'S', bg: 'rgba(245, 158, 11, 0.25)', color: '#f59e0b' },
+                open: { label: 'O', bg: 'rgba(16, 185, 129, 0.25)', color: '#10b981' },
+                closed: { label: 'X', bg: 'rgba(148, 163, 184, 0.2)', color: '#94a3b8' }
+            };
+
+            let gridHtml = `<div style="display:grid; grid-template-columns: 140px repeat(${dates.length}, minmax(36px, 1fr)); gap: 6px; align-items:center;">`;
+            gridHtml += `<div style="font-size:0.75rem; color:rgba(255,255,255,0.6);">担当者</div>`;
+            dates.forEach((date) => {
+                gridHtml += `<div style="text-align:center; font-size:0.7rem; color:rgba(255,255,255,0.6);">${date.label}</div>`;
+            });
+
+            matrixWorkers.forEach((worker) => {
+                const workerId = worker.worker_id;
+                const workerName = workerNameMap.get(workerId) || workerId;
+                gridHtml += `<div style="font-size:0.8rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${workerName}</div>`;
+                dates.forEach((date) => {
+                    const status = worker.days?.[date.iso] || 'closed';
+                    const style = statusStyles[status] || statusStyles.closed;
+                    gridHtml += `<div style="text-align:center; padding:6px 0; border-radius:8px; background:${style.bg}; color:${style.color}; font-weight:700; font-size:0.75rem;">${style.label}</div>`;
+                });
+            });
+
+            gridHtml += '</div>';
+            container.innerHTML = gridHtml;
+        } catch (error) {
+            console.error('Failed to load availability matrix:', error);
+            container.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.5); padding:12px;">読み込みに失敗しました</div>';
+        }
+    }
+
     function closeScheduleOverlay() {
         const overlay = document.getElementById('schedule-overlay');
         if (overlay) {
             overlay.classList.remove('active');
         }
+    }
+
+    async function setupScheduleCreateForm() {
+        const dateInput = document.getElementById('schedule-create-date');
+        const storeSelect = document.getElementById('schedule-create-store');
+        const workerSelect = document.getElementById('schedule-create-worker');
+        const submitBtn = document.getElementById('schedule-create-submit');
+        const cancelBtn = document.getElementById('schedule-create-cancel');
+
+        if (!dateInput || !storeSelect || !workerSelect || !submitBtn || !cancelBtn) return;
+
+        dateInput.value = new Date().toISOString().split('T')[0];
+
+        const [stores, workers] = await Promise.all([
+            fetchStoresForScheduleForm(),
+            fetchWorkersForScheduleForm()
+        ]);
+
+        storeSelect.innerHTML = '<option value="">店舗を選択</option>';
+        stores.forEach((store) => {
+            const storeId = store.id || store.store_id || store.client_id;
+            const storeName = store.name || store.store_name || store.client_name || '';
+            if (!storeId) return;
+            const option = document.createElement('option');
+            option.value = storeId;
+            option.textContent = storeName || storeId;
+            storeSelect.appendChild(option);
+        });
+
+        workerSelect.innerHTML = '<option value="">担当者を選択</option>';
+        workers.forEach((worker) => {
+            const workerId = worker.id || worker.worker_id || worker.staff_id;
+            const workerName = worker.name || worker.staff_name || worker.full_name || '';
+            if (!workerId) return;
+            const option = document.createElement('option');
+            option.value = workerId;
+            option.textContent = workerName || workerId;
+            workerSelect.appendChild(option);
+        });
+
+        loadSalesAvailabilityMatrix(workers);
+
+        submitBtn.onclick = async () => {
+            const scheduledDate = dateInput.value;
+            const storeId = storeSelect.value;
+            const workerId = workerSelect.value;
+
+            if (!scheduledDate || !storeId || !workerId) {
+                showToast('必須項目を入力してください');
+                return;
+            }
+
+            const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = token;
+
+            try {
+                const response = await fetch(`${API_BASE}/schedules`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        store_id: storeId,
+                        scheduled_date: scheduledDate,
+                        service: 'cleaning',
+                        worker_id: workerId
+                    })
+                });
+
+                if (response.status === 409) {
+                    showToast('同じ予定が既に存在します');
+                    return;
+                }
+
+                if (!response.ok) {
+                    showToast('予定の作成に失敗しました');
+                    return;
+                }
+
+                showToast('予定を作成しました');
+                closeScheduleOverlay();
+            } catch (error) {
+                console.error('Schedule create failed:', error);
+                showToast('予定の作成に失敗しました');
+            }
+        };
+
+        cancelBtn.onclick = () => {
+            closeScheduleOverlay();
+        };
+    }
+
+    async function fetchStoresForScheduleForm() {
+        const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
+        const headers = token ? { 'Authorization': token } : {};
+
+        try {
+            const response = await fetch(`${API_BASE}/stores`, { headers });
+            if (!response.ok) return [];
+            const data = await response.json();
+            return Array.isArray(data) ? data : (data.items || data.stores || []);
+        } catch (error) {
+            console.error('Failed to load stores:', error);
+            return [];
+        }
+    }
+
+    async function fetchWorkersForScheduleForm() {
+        const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
+        const headers = token ? { 'Authorization': token } : {};
+
+        try {
+            const response = await fetch(`${API_BASE}/workers`, { headers });
+            if (!response.ok) return [];
+            const data = await response.json();
+            return Array.isArray(data) ? data : (data.items || data.workers || []);
+        } catch (error) {
+            console.error('Failed to load workers:', error);
+            return [];
+        }
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.position = 'fixed';
+        toast.style.top = '20px';
+        toast.style.right = '20px';
+        toast.style.padding = '12px 16px';
+        toast.style.background = 'rgba(15, 23, 42, 0.9)';
+        toast.style.color = '#fff';
+        toast.style.border = '1px solid rgba(255,255,255,0.2)';
+        toast.style.borderRadius = '10px';
+        toast.style.fontSize = '0.9rem';
+        toast.style.zIndex = '2000000';
+        toast.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
     }
 
     function startRequestWizardFromSchedule(scheduleId) {

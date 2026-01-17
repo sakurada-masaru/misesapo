@@ -2182,6 +2182,74 @@
         color: rgba(255, 255, 255, 0.7);
     }
 
+    .line-availability-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .line-availability-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font-size: 0.9rem;
+    }
+
+    .line-availability-date {
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+
+    .line-availability-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .line-availability-btn {
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .line-availability-btn.is-active {
+        background: linear-gradient(135deg, #10b981, #059669);
+        border-color: rgba(16, 185, 129, 0.8);
+        box-shadow: 0 8px 18px rgba(16, 185, 129, 0.25);
+    }
+
+    .line-toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #fff;
+        background: rgba(16, 185, 129, 0.95);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        transform: translateY(12px);
+        transition: all 0.2s ease;
+        z-index: 1000002;
+    }
+
+    .line-toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
     .main-content > :not(.line-system-panel) {
         display: none !important;
     }
@@ -2290,7 +2358,12 @@
             <button class="line-save-btn" type="button" id="line-save-btn">記録を保存</button>
             <div class="line-status" id="line-status">未記録</div>
         </div>
+        <div class="line-section" id="line-availability-section">
+            <h3>稼働日設定</h3>
+            <div class="line-availability-list" id="line-availability-list"></div>
+        </div>
     </section>
+    <div class="line-toast" id="line-toast" role="status" aria-live="polite"></div>
     <!-- Persistent Visualizer Core -->
     <div class="visualizer-container">
         <div class="circle-text-container" id="circle-text"
@@ -4427,6 +4500,7 @@ ${context}
             startWorkflow();
         }
         EntranceCore.initFadeIn();
+        initAvailabilityPanel();
     });
 
     // Job-specific action buttons
@@ -7298,5 +7372,147 @@ ${t('reportSendQuestion')}`);
 
     function startWorkOrderWizard() {
         appendChatMessage('ai', t('workOrderNotReady'));
+    }
+
+    const availabilityState = {};
+    let availabilityRange = [];
+
+    function formatLocalDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function buildAvailabilityRange(days) {
+        const today = new Date();
+        return Array.from({ length: days }, (_, index) => {
+            const target = new Date(today);
+            target.setDate(today.getDate() + index);
+            return {
+                date: formatLocalDate(target),
+                label: `${target.getMonth() + 1}/${target.getDate()}`
+            };
+        });
+    }
+
+    function showLineToast(message, type = 'success') {
+        const toast = document.getElementById('line-toast');
+        if (!toast) return;
+        toast.textContent = message;
+        toast.style.background = type === 'error' ? 'rgba(239, 68, 68, 0.95)' : 'rgba(16, 185, 129, 0.95)';
+        toast.classList.add('show');
+        if (toast._timer) {
+            clearTimeout(toast._timer);
+        }
+        toast._timer = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+
+    function renderAvailabilityList() {
+        const list = document.getElementById('line-availability-list');
+        if (!list) return;
+        list.innerHTML = '';
+
+        availabilityRange.forEach(entry => {
+            const status = availabilityState[entry.date] || 'closed';
+            const row = document.createElement('div');
+            row.className = 'line-availability-item';
+            row.innerHTML = `
+                <div class="line-availability-date">${entry.label}</div>
+                <div class="line-availability-actions">
+                    <button class="line-availability-btn ${status === 'open' ? 'is-active' : ''}" data-date="${entry.date}" data-status="open">稼働可</button>
+                    <button class="line-availability-btn ${status === 'closed' ? 'is-active' : ''}" data-date="${entry.date}" data-status="closed">休み</button>
+                </div>
+            `;
+            list.appendChild(row);
+        });
+    }
+
+    async function initAvailabilityPanel() {
+        const list = document.getElementById('line-availability-list');
+        if (!list) return;
+
+        const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
+        if (!token) {
+            list.innerHTML = '<div class="line-status">認証が必要です</div>';
+            return;
+        }
+
+        availabilityRange = buildAvailabilityRange(14);
+        const dateFrom = availabilityRange[0]?.date;
+        const dateTo = availabilityRange[availabilityRange.length - 1]?.date;
+        if (!dateFrom || !dateTo) {
+            list.innerHTML = '<div class="line-status">日付の取得に失敗しました</div>';
+            return;
+        }
+
+        const headers = { 'Authorization': `Bearer ${token}` };
+        try {
+            const response = await fetch(`${API_BASE}/workers/me/availability?from=${dateFrom}&to=${dateTo}`, { headers });
+            if (response.ok) {
+                const data = await response.json();
+                (data.items || []).forEach(item => {
+                    if (item.date && item.status) {
+                        availabilityState[item.date] = item.status;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Failed to fetch availability', error);
+        }
+
+        renderAvailabilityList();
+        bindAvailabilityActions();
+    }
+
+    function bindAvailabilityActions() {
+        const list = document.getElementById('line-availability-list');
+        if (!list || list.dataset.bound === 'true') return;
+        list.dataset.bound = 'true';
+
+        list.addEventListener('click', async event => {
+            const button = event.target.closest('.line-availability-btn');
+            if (!button) return;
+
+            const dateValue = button.dataset.date;
+            const statusValue = button.dataset.status;
+            await updateAvailability(dateValue, statusValue);
+        });
+    }
+
+    async function updateAvailability(dateValue, statusValue) {
+        const token = localStorage.getItem('id_token') || localStorage.getItem('cognito_id_token');
+        if (!token) {
+            showLineToast('認証が必要です', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/workers/me/availability`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    date: dateValue,
+                    status: statusValue
+                })
+            });
+
+            if (!response.ok) {
+                showLineToast('保存に失敗しました', 'error');
+                return;
+            }
+
+            availabilityState[dateValue] = statusValue;
+            renderAvailabilityList();
+            showLineToast('稼働日を更新しました');
+        } catch (error) {
+            console.error('Failed to update availability', error);
+            showLineToast('保存に失敗しました', 'error');
+        }
     }
 </script>
