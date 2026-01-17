@@ -782,6 +782,7 @@ NFC_TAGS_TABLE = dynamodb.Table('nfc-tags')
 SCHEDULES_TABLE = dynamodb.Table('schedules')
 ESTIMATES_TABLE = dynamodb.Table('estimates')
 WORKERS_TABLE = dynamodb.Table('workers')
+WORKER_AVAILABILITY_TABLE = dynamodb.Table('worker-availability')
 CLIENTS_TABLE = dynamodb.Table('misesapo-clients')
 BRANDS_TABLE = dynamodb.Table('misesapo-brands')
 STORES_TABLE = dynamodb.Table('misesapo-stores')
@@ -1287,6 +1288,16 @@ def lambda_handler(event, context):
                 return update_schedule(schedule_id, event, headers)
             elif method == 'DELETE':
                 return delete_schedule(schedule_id, headers)
+        elif normalized_path == '/sales/availability-matrix':
+            # 営業向け 稼働可否マトリクス
+            if method == 'GET':
+                return get_sales_availability_matrix(event, headers)
+        elif normalized_path == '/workers/me/availability':
+            # 作業者本人の稼働可否を取得/更新
+            if method == 'GET':
+                return get_worker_availability(event, headers)
+            elif method == 'PUT':
+                return update_worker_availability(event, headers)
         elif normalized_path == '/workers':
             # ユーザー（従業員）一覧の取得・作成
             if method == 'GET':
@@ -4248,10 +4259,53 @@ def create_schedule(event, headers):
         else:
             body_json = json.loads(body.decode('utf-8'))
         
+        # 必須項目の取得
+        scheduled_date = body_json.get('scheduled_date') or body_json.get('date', '')
+        store_id = body_json.get('store_id')
+        worker_id = body_json.get('worker_id')
+        if not scheduled_date or not store_id or not worker_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'store_id, scheduled_date, worker_id are required'}, ensure_ascii=False)
+            }
+
+        # service/status を強制
+        service_value = 'cleaning'
+        status_value = 'scheduled'
+
+        # 稼働可否チェック（レコードなしは closed 扱い）
+        availability = WORKER_AVAILABILITY_TABLE.get_item(
+            Key={'worker_id': worker_id, 'date': scheduled_date}
+        ).get('Item')
+        if not availability or availability.get('status') != 'open':
+            return {
+                'statusCode': 409,
+                'headers': headers,
+                'body': json.dumps({'error': 'worker_unavailable'}, ensure_ascii=False)
+            }
+
+        # 重複チェック
+        try:
+            dup_response = SCHEDULES_TABLE.scan(
+                FilterExpression=(
+                    Attr('store_id').eq(store_id)
+                    & Attr('scheduled_date').eq(scheduled_date)
+                    & Attr('worker_id').eq(worker_id)
+                    & Attr('service').eq(service_value)
+                )
+            )
+            if dup_response.get('Items'):
+                return {
+                    'statusCode': 409,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'duplicate_schedule'}, ensure_ascii=False)
+                }
+        except Exception as e:
+            print(f"Error checking schedule duplication: {str(e)}")
+
         # スケジュールIDを生成（新形式: SCH-YYYYMMDD-NNN）
-        # フロントエンドから送信されるフィールド名に対応（scheduled_date または date）
-        date_str = body_json.get('scheduled_date') or body_json.get('date', '')
-        schedule_id = generate_schedule_id(date_str, SCHEDULES_TABLE)
+        schedule_id = generate_schedule_id(scheduled_date, SCHEDULES_TABLE)
         now = datetime.utcnow().isoformat() + 'Z'
         
         # 条件付き書き込みで重複を防止（最大5回リトライ）
@@ -4302,9 +4356,7 @@ def create_schedule(event, headers):
                 
                 # DynamoDBに保存するアイテムを作成
                 # フロントエンドから送信されるフィールド名に対応
-                scheduled_date = body_json.get('scheduled_date') or body_json.get('date', '')
                 scheduled_time = body_json.get('scheduled_time') or body_json.get('time_slot', '')
-                store_id = body_json.get('store_id') or body_json.get('client_id')
                 
                 schedule_item = {
                     'id': schedule_id,  # 新形式のID（パーティションキー）
@@ -4327,7 +4379,8 @@ def create_schedule(event, headers):
                     'cleaning_items': body_json.get('cleaning_items', []),
                     'work_content': body_json.get('work_content', ''),
                     'notes': body_json.get('notes', ''),
-                    'status': body_json.get('status', 'draft'),  # draft, pending, assigned, in_progress, completed, cancelled
+                    'status': status_value,
+                    'service': service_value
                 }
                 
                 # 営業担当者ID（sales_id）を追加
@@ -4336,10 +4389,8 @@ def create_schedule(event, headers):
                     schedule_item['sales_id'] = sales_id
                 
                 # 清掃員ID（worker_id）を追加
-                worker_id = body_json.get('worker_id')
-                if worker_id:
-                    schedule_item['worker_id'] = worker_id
-                    schedule_item['assigned_to'] = worker_id  # GSI用
+                schedule_item['worker_id'] = worker_id
+                schedule_item['assigned_to'] = worker_id  # GSI用
                 
                 # カルテ情報（survey_data）を追加
                 survey_data = body_json.get('survey_data')
@@ -4409,20 +4460,17 @@ def create_schedule(event, headers):
                 calendar_event_result = {'success': False, 'message': str(e)}
         
         response_body = {
-            'status': 'success',
-            'message': 'スケジュールを作成しました',
-            'schedule_id': schedule_id
+            'id': schedule_id
         }
         
         # 見積もりも作成した場合は、見積もりIDも返す
         if estimate_id:
             response_body['estimate_id'] = estimate_id
-            response_body['message'] = 'スケジュールと見積もりを作成しました'
         
         # Google Calendar連携は廃止（今後は返さない）
         
         return {
-            'statusCode': 200,
+            'statusCode': 201,
             'headers': headers,
             'body': json.dumps(response_body, ensure_ascii=False)
         }
@@ -5259,6 +5307,208 @@ def get_workers(event, headers):
                 'error': '従業員一覧の取得に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
+        }
+
+def get_worker_availability(event, headers):
+    """
+    作業者本人の稼働可否を取得
+    """
+    try:
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        if not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+
+        params = event.get('queryStringParameters') or {}
+        date_from = params.get('from')
+        date_to = params.get('to')
+        if not date_from or not date_to:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'from and to are required'}, ensure_ascii=False)
+            }
+
+        worker_id = user_info.get('uid')
+        response = WORKER_AVAILABILITY_TABLE.query(
+            KeyConditionExpression=Key('worker_id').eq(worker_id) & Key('date').between(date_from, date_to)
+        )
+        items = response.get('Items', [])
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'items': items}, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting worker availability: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to get availability', 'message': str(e)}, ensure_ascii=False)
+        }
+
+def update_worker_availability(event, headers):
+    """
+    作業者本人の稼働可否を更新
+    """
+    try:
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        if not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+
+        date_value = body_json.get('date')
+        status_value = body_json.get('status')
+        if not date_value or status_value not in ['open', 'closed']:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'date and status are required'}, ensure_ascii=False)
+            }
+
+        worker_id = user_info.get('uid')
+        now = datetime.utcnow().isoformat() + 'Z'
+        WORKER_AVAILABILITY_TABLE.put_item(Item={
+            'worker_id': worker_id,
+            'date': date_value,
+            'status': status_value,
+            'updated_at': now
+        })
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'status': 'success'}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error updating worker availability: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to update availability', 'message': str(e)}, ensure_ascii=False)
+        }
+
+def get_sales_availability_matrix(event, headers):
+    """
+    営業向け 稼働可否マトリクス
+    """
+    try:
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        if not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+
+        params = event.get('queryStringParameters') or {}
+        date_from = params.get('from')
+        date_to = params.get('to')
+        worker_ids_raw = params.get('worker_ids')
+        service_value = params.get('service') or 'cleaning'
+        if not date_from or not date_to or not worker_ids_raw:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'from, to, worker_ids are required'}, ensure_ascii=False)
+            }
+
+        worker_ids = [w.strip() for w in worker_ids_raw.split(',') if w.strip()]
+        if not worker_ids:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'worker_ids are required'}, ensure_ascii=False)
+            }
+
+        try:
+            start_date = datetime.strptime(date_from, '%Y-%m-%d').date()
+            end_date = datetime.strptime(date_to, '%Y-%m-%d').date()
+        except ValueError:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'invalid date format'}, ensure_ascii=False)
+            }
+
+        if end_date < start_date:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'invalid date range'}, ensure_ascii=False)
+            }
+
+        date_list = []
+        cursor = start_date
+        while cursor <= end_date:
+            date_list.append(cursor.strftime('%Y-%m-%d'))
+            cursor += timedelta(days=1)
+
+        workers_output = []
+        for worker_id in worker_ids:
+            availability_response = WORKER_AVAILABILITY_TABLE.query(
+                KeyConditionExpression=Key('worker_id').eq(worker_id) & Key('date').between(date_from, date_to)
+            )
+            availability_items = availability_response.get('Items', [])
+            availability_map = {item.get('date'): item.get('status') for item in availability_items if item.get('date')}
+
+            schedule_response = SCHEDULES_TABLE.scan(
+                FilterExpression=(
+                    Attr('worker_id').eq(worker_id)
+                    & Attr('service').eq(service_value)
+                    & Attr('scheduled_date').between(date_from, date_to)
+                )
+            )
+            schedule_items = schedule_response.get('Items', [])
+            scheduled_dates = {item.get('scheduled_date') for item in schedule_items if item.get('scheduled_date')}
+
+            day_status = {}
+            for date_value in date_list:
+                if date_value in scheduled_dates:
+                    day_status[date_value] = 'scheduled'
+                elif availability_map.get(date_value) == 'open':
+                    day_status[date_value] = 'open'
+                else:
+                    day_status[date_value] = 'closed'
+
+            workers_output.append({
+                'worker_id': worker_id,
+                'days': day_status
+            })
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'workers': workers_output}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error getting sales availability matrix: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to get availability matrix', 'message': str(e)}, ensure_ascii=False)
         }
 
 def get_worker_detail(worker_id, headers):
@@ -11664,4 +11914,3 @@ def handle_line_pass(event, headers):
                 'message': str(e)
             }, ensure_ascii=False)
         }
-
