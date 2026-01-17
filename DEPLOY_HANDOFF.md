@@ -13,8 +13,17 @@
 - 必須フィールド: store_id scheduled_date worker_id
 - サーバ強制: service cleaning status scheduled
 - 可用性チェック: worker_id scheduled_date が open 以外なら 409 worker_unavailable
-- 重複条件: store_id scheduled_date worker_id service が一致したら 409
+- 重複条件: store_id scheduled_date worker_id service が一致 かつ status scheduled の場合は 409
 - レスポンス: 201 で id を返す
+
+## API契約 予定辞退
+- 正しいパス: POST /schedules/{schedule_id}/decline
+- 必須ヘッダ: Authorization: Bearer ID_TOKEN, Content-Type application/json
+- 必須フィールド: reason_code
+- reason_code は必須
+- schedules に status declined が保存される
+- エラー条件: schedule_id が存在しない場合は 404, 本人の schedule でない場合は 403, status が scheduled 以外の場合は 409
+- レスポンス: 200 で status success を返す
 
 ## API契約 稼働可否
 - 正しいパス: GET /workers/me/availability?from=YYYY-MM-DD&to=YYYY-MM-DD
@@ -60,6 +69,7 @@
 REPORT_API=REPLACE_WITH_REPORT_API
 REPORT_ID=REPLACE_WITH_REPORT_ID
 ID_TOKEN=REPLACE_WITH_ID_TOKEN
+SCHEDULE_ID=REPLACE_WITH_SCHEDULE_ID
 
 payload_no_reason.json は status approved のみを含むJSON
 payload_with_reason.json は status approved と reason_code OK_STANDARD を含むJSON
@@ -68,12 +78,12 @@ DevTools の request payload を保存して作成する
 ## 手動テスト curl
 ### 1 reason_code 無し 400 を期待
 ```bash
-curl -i -X PUT $REPORT_API/staff/reports/$REPORT_ID -H Content-Type:application/json -H Authorization: Bearer $ID_TOKEN --data-binary @payload_no_reason.json
+curl -i -X PUT $REPORT_API/staff/reports/$REPORT_ID -H "Content-Type: application/json" -H "Authorization: Bearer $ID_TOKEN" --data-binary @payload_no_reason.json
 ```
 
 ### 2 reason_code あり 200 を期待
 ```bash
-curl -i -X PUT $REPORT_API/staff/reports/$REPORT_ID -H Content-Type:application/json -H Authorization: Bearer $ID_TOKEN --data-binary @payload_with_reason.json
+curl -i -X PUT $REPORT_API/staff/reports/$REPORT_ID -H "Content-Type: application/json" -H "Authorization: Bearer $ID_TOKEN" --data-binary @payload_with_reason.json
 ```
 
 ### 3 DynamoDB 確認
@@ -83,27 +93,35 @@ aws dynamodb query --table-name staff-report-approvals --key-condition-expressio
 
 ### 4 予定作成 201 を期待
 ```bash
-curl -i -X POST $REPORT_API/schedules -H Content-Type:application/json -H Authorization: Bearer $ID_TOKEN --data-binary @payload_schedule_create.json
+curl -i -X POST $REPORT_API/schedules -H "Content-Type: application/json" -H "Authorization: Bearer $ID_TOKEN" --data-binary @payload_schedule_create.json
 ```
 
 payload_schedule_create.json は store_id scheduled_date worker_id を含むJSON
+POST /schedules の 201 レスポンスに含まれる id を SCHEDULE_ID として控える
 
 ### 5 稼働可否 取得 200 を期待
 ```bash
-curl -i -G $REPORT_API/workers/me/availability -H Authorization: Bearer $ID_TOKEN --data from=YYYY-MM-DD --data to=YYYY-MM-DD
+curl -i -G $REPORT_API/workers/me/availability -H "Authorization: Bearer $ID_TOKEN" --data from=YYYY-MM-DD --data to=YYYY-MM-DD
 ```
 
 ### 6 稼働可否 更新 200 を期待
 ```bash
-curl -i -X PUT $REPORT_API/workers/me/availability -H Content-Type:application/json -H Authorization: Bearer $ID_TOKEN --data-binary @payload_availability_open.json
+curl -i -X PUT $REPORT_API/workers/me/availability -H "Content-Type: application/json" -H "Authorization: Bearer $ID_TOKEN" --data-binary @payload_availability_open.json
 ```
 
 payload_availability_open.json は date status open を含むJSON
 
 ### 7 営業 稼働状況マトリクス 200 を期待
 ```bash
-curl -i -G $REPORT_API/sales/availability-matrix -H Authorization: Bearer $ID_TOKEN --data from=YYYY-MM-DD --data to=YYYY-MM-DD --data service=cleaning --data worker_ids=W1,W2
+curl -i -G $REPORT_API/sales/availability-matrix -H "Authorization: Bearer $ID_TOKEN" --data from=YYYY-MM-DD --data to=YYYY-MM-DD --data service=cleaning --data worker_ids=W1,W2
 ```
+
+### 8 予定辞退 200 を期待
+```bash
+curl -i -X POST $REPORT_API/schedules/$SCHEDULE_ID/decline -H "Content-Type: application/json" -H "Authorization: Bearer $ID_TOKEN" --data-binary @payload_schedule_decline.json
+```
+
+payload_schedule_decline.json は reason_code DECLINE_UNAVAILABLE を含むJSON
 
 ## DynamoDB確認手順
 前提 PK SK は report_id reviewed_at
@@ -120,3 +138,4 @@ aws dynamodb query --table-name staff-report-approvals --key-condition-expressio
 - RETURN_MISSING_REQUIRED_FIELDS
 - RETURN_NEED_PHOTOS
 - RETURN_SCOPE_MISMATCH
+- DECLINE_UNAVAILABLE

@@ -1279,6 +1279,11 @@ def lambda_handler(event, context):
                     'message': 'Google Calendar integration is disabled (project policy).'
                 }, ensure_ascii=False)
             }
+        elif normalized_path.startswith('/schedules/') and normalized_path.endswith('/decline'):
+            # スケジュール辞退
+            schedule_id = normalized_path.split('/')[2] if len(normalized_path.split('/')) > 2 else ''
+            if method == 'POST':
+                return decline_schedule(schedule_id, event, headers)
         elif normalized_path.startswith('/schedules/'):
             # スケジュール詳細の取得・更新・削除
             schedule_id = normalized_path.split('/')[-1]
@@ -4293,6 +4298,7 @@ def create_schedule(event, headers):
                     & Attr('scheduled_date').eq(scheduled_date)
                     & Attr('worker_id').eq(worker_id)
                     & Attr('service').eq(service_value)
+                    & Attr('status').eq('scheduled')
                 )
             )
             if dup_response.get('Items'):
@@ -4858,6 +4864,95 @@ def update_schedule(schedule_id, event, headers):
                 'error': 'スケジュールの更新に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
+        }
+
+def decline_schedule(schedule_id, event, headers):
+    """
+    スケジュールを辞退
+    """
+    try:
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        if not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+
+        reason_code = body_json.get('reason_code')
+        if not reason_code:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'reason_code is required'}, ensure_ascii=False)
+            }
+
+        if not schedule_id:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'schedule not found'}, ensure_ascii=False)
+            }
+
+        response = SCHEDULES_TABLE.get_item(Key={'id': schedule_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'schedule not found'}, ensure_ascii=False)
+            }
+
+        schedule_item = response['Item']
+        worker_id = schedule_item.get('worker_id') or schedule_item.get('assigned_to')
+        if worker_id != user_info.get('uid'):
+            return {
+                'statusCode': 403,
+                'headers': headers,
+                'body': json.dumps({'error': 'forbidden'}, ensure_ascii=False)
+            }
+
+        if schedule_item.get('status') != 'scheduled':
+            return {
+                'statusCode': 409,
+                'headers': headers,
+                'body': json.dumps({'error': 'invalid_status'}, ensure_ascii=False)
+            }
+
+        now = datetime.utcnow().isoformat() + 'Z'
+        SCHEDULES_TABLE.update_item(
+            Key={'id': schedule_id},
+            UpdateExpression='SET #status = :status, declined_at = :declined_at, decline_reason_code = :reason_code, updated_at = :updated_at',
+            ExpressionAttributeNames={'#status': 'status'},
+            ExpressionAttributeValues={
+                ':status': 'declined',
+                ':declined_at': now,
+                ':reason_code': reason_code,
+                ':updated_at': now
+            }
+        )
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'status': 'success'}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error declining schedule: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to decline schedule', 'message': str(e)}, ensure_ascii=False)
         }
 
 def delete_schedule(schedule_id, headers):
@@ -5479,6 +5574,7 @@ def get_sales_availability_matrix(event, headers):
                     Attr('worker_id').eq(worker_id)
                     & Attr('service').eq(service_value)
                     & Attr('scheduled_date').between(date_from, date_to)
+                    & Attr('status').eq('scheduled')
                 )
             )
             schedule_items = schedule_response.get('Items', [])
