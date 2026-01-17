@@ -2,6 +2,15 @@
 @json('data/meta/entrance_sales_title.json', $title)
 @json('data/meta/entrance_sales_body_class.json', $body_class)
 
+<script>
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('from') === 'entrance') return;
+        const currentPath = window.location.pathname.replace(/\/+$/, '');
+        window.location.replace(`/entrance?next=${encodeURIComponent(currentPath)}`);
+    })();
+</script>
+
 <script src="{{ base_path }}js/entrance-core.js"></script>
 <link rel="stylesheet" href="{{ base_path }}css/entrance-menu.css">
 <script src="{{ base_path }}js/entrance-menu.js"></script>

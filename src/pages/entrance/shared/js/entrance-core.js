@@ -470,7 +470,7 @@ const EntranceCore = {
      * Cinematic Job Transition
      * 1. Hide contents 2. Flicker label 3. Glitch 4. CRT Blackout 5. Redirect
      */
-    performJobTransition(jobKey, basePath = '../') {
+    performJobTransition(jobKey, basePath = '../', targetUrl = '') {
         console.log('[EntranceCore] TRANSITION TRIGGERED:', jobKey);
         const job = this.JOB_TYPES[jobKey];
         if (!job) return;
@@ -561,7 +561,7 @@ const EntranceCore = {
         // --- 5. Transition (4.0s) ---
         setTimeout(() => {
             console.log('[EntranceCore] REDIRECTING NOW');
-            window.location.href = `${basePath}entrance/${jobKey}/`;
+            window.location.href = targetUrl || `${basePath}entrance/${jobKey}/`;
         }, 4000);
     },
 

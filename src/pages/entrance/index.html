@@ -3824,6 +3824,76 @@ ${context}`;
 
     let currentJobType = null;
 
+    const MISOGI_NEXT_MAP = {
+        '/entrance/sales': { jobKey: 'sales', label: '営業へ' },
+        '/entrance/cleaning': { jobKey: 'cleaning', label: '清掃へ' }
+    };
+
+    function normalizeEntrancePath(path) {
+        if (!path) return '';
+        const withoutQuery = path.split('?')[0];
+        return withoutQuery.replace(/\/+$/, '');
+    }
+
+    function getNextFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const rawNext = params.get('next');
+        if (!rawNext) return '';
+        try {
+            const url = new URL(rawNext, window.location.origin);
+            return normalizeEntrancePath(url.pathname);
+        } catch (error) {
+            return normalizeEntrancePath(rawNext);
+        }
+    }
+
+    function buildNextUrl(nextPath) {
+        if (!nextPath) return '';
+        const target = new URL(nextPath, window.location.origin);
+        target.searchParams.set('from', 'entrance');
+        return target.pathname + target.search;
+    }
+
+    function showEntranceContinue(nextPath) {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        const nextConfig = MISOGI_NEXT_MAP[nextPath];
+        if (!nextConfig) {
+            showJobSelection();
+            return;
+        }
+
+        actionContainer.innerHTML = `
+            <div class="action-bubble-container" style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+                <button class="job-action-btn" onclick="proceedToNextFromEntrance()"
+                    style="background: var(--accent-color); border: none; color: #fff;
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    ${nextConfig.label}へ続行
+                </button>
+                <button class="job-action-btn" onclick="showJobSelection()"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff;
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;">
+                    モードを選ぶ
+                </button>
+            </div>
+        `;
+    }
+
+    function proceedToNextFromEntrance() {
+        const nextPath = window._entranceNextPath;
+        const nextConfig = MISOGI_NEXT_MAP[nextPath];
+        if (!nextConfig) {
+            showJobSelection();
+            return;
+        }
+
+        EntranceCore.performJobTransition(nextConfig.jobKey, '{{ base_path }}', buildNextUrl(nextPath));
+    }
+
     function showJobSelection() {
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
@@ -3853,7 +3923,8 @@ ${context}`;
     }
 
     function selectJobType(jobKey) {
-        EntranceCore.performJobTransition(jobKey, '{{ base_path }}');
+        const nextPath = `/entrance/${jobKey}`;
+        EntranceCore.performJobTransition(jobKey, '{{ base_path }}', buildNextUrl(nextPath));
     }
 
     function toggleTheme() {
@@ -4230,6 +4301,14 @@ ${context}`;
 
     document.addEventListener('DOMContentLoaded', () => {
         EntranceCore.initFadeIn();
+        const nextPath = getNextFromUrl();
+        const normalizedCurrent = normalizeEntrancePath(window.location.pathname);
+        if (nextPath && nextPath !== normalizedCurrent && nextPath !== '/entrance' && MISOGI_NEXT_MAP[nextPath]) {
+            window._entranceNextPath = nextPath;
+            showEntranceContinue(nextPath);
+        } else if (nextPath) {
+            showJobSelection();
+        }
 
         // Ensure chat log is hidden initially
         const chatLog = document.getElementById('chat-log-container');
