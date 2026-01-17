@@ -796,6 +796,7 @@ TODOS_TABLE = dynamodb.Table('todos')
 REIMBURSEMENTS_TABLE = dynamodb.Table('misesapo-reimbursements')
 REPORT_IMAGES_TABLE = dynamodb.Table('report-images')
 STORE_AUDITS_TABLE = dynamodb.Table('misesapo-store-audits')
+STAFF_REPORT_APPROVALS_TABLE = dynamodb.Table('staff-report-approvals')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -1405,6 +1406,29 @@ def lambda_handler(event, context):
             audit_id = normalized_path.split('/')[-1]
             if method == 'GET':
                 return get_store_audit_detail(audit_id, headers)
+            else:
+                return {
+                    'statusCode': 405,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                }
+        # ========================================
+        # ライン機能（チケットB）
+        # ========================================
+        elif normalized_path == '/line/status':
+            # ラインステータス取得
+            if method == 'GET':
+                return get_line_status(event, headers)
+            else:
+                return {
+                    'statusCode': 405,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                }
+        elif normalized_path == '/line/pass':
+            # ライン通過処理
+            if method == 'POST':
+                return handle_line_pass(event, headers)
             else:
                 return {
                     'statusCode': 405,
@@ -3442,6 +3466,168 @@ def get_report_detail(report_id, event, headers):
             }, ensure_ascii=False)
         }
 
+def _extract_json_payload(raw_text):
+    if isinstance(raw_text, dict):
+        return raw_text
+    if raw_text is None:
+        return None
+    if not isinstance(raw_text, str):
+        raw_text = str(raw_text)
+    try:
+        return json.loads(raw_text)
+    except Exception:
+        match = re.search(r'\{[\s\S]*\}', raw_text)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except Exception:
+                return None
+    return None
+
+def _validate_sales_schema(action, payload):
+    if not isinstance(payload, dict):
+        return False, 'payload must be an object'
+
+    if action == 'suggest_estimate':
+        required_keys = {'company_name', 'store_name', 'services', 'notes'}
+        allowed_keys = set(required_keys)
+        missing = required_keys - set(payload.keys())
+        if missing:
+            return False, f'missing keys: {", ".join(sorted(missing))}'
+        extra = set(payload.keys()) - allowed_keys
+        if extra:
+            return False, f'extra keys not allowed: {", ".join(sorted(extra))}'
+        if not isinstance(payload.get('company_name'), str):
+            return False, 'company_name must be string'
+        if not isinstance(payload.get('store_name'), str):
+            return False, 'store_name must be string'
+        if not isinstance(payload.get('notes'), str):
+            return False, 'notes must be string'
+        services = payload.get('services')
+        if not isinstance(services, list):
+            return False, 'services must be array'
+        for idx, svc in enumerate(services):
+            if not isinstance(svc, dict):
+                return False, f'services[{idx}] must be object'
+            if set(svc.keys()) != {'name', 'quantity'}:
+                return False, f'services[{idx}] must have name and quantity only'
+            if not isinstance(svc.get('name'), str):
+                return False, f'services[{idx}].name must be string'
+            if not isinstance(svc.get('quantity'), (int, float)):
+                return False, f'services[{idx}].quantity must be number'
+        return True, None
+
+    if action == 'suggest_request_form':
+        required_keys = {'client_name', 'brand_name', 'store_name', 'assessments', 'survey', 'work', 'logistics', 'notes'}
+        allowed_keys = set(required_keys)
+        missing = required_keys - set(payload.keys())
+        if missing:
+            return False, f'missing keys: {", ".join(sorted(missing))}'
+        extra = set(payload.keys()) - allowed_keys
+        if extra:
+            return False, f'extra keys not allowed: {", ".join(sorted(extra))}'
+        if not isinstance(payload.get('client_name'), str):
+            return False, 'client_name must be string'
+        if not isinstance(payload.get('brand_name'), str):
+            return False, 'brand_name must be string'
+        if not isinstance(payload.get('store_name'), str):
+            return False, 'store_name must be string'
+        if not isinstance(payload.get('notes'), str):
+            return False, 'notes must be string'
+
+        assessments = payload.get('assessments')
+        if not isinstance(assessments, dict):
+            return False, 'assessments must be object'
+        for key in ['area1', 'area2', 'area3', 'area4']:
+            area = assessments.get(key)
+            if not isinstance(area, dict):
+                return False, f'assessments.{key} must be object'
+            if set(area.keys()) != {'status', 'note'}:
+                return False, f'assessments.{key} must have status and note only'
+            if area.get('status') not in ['good', 'warn', 'bad']:
+                return False, f'assessments.{key}.status must be good|warn|bad'
+            if not isinstance(area.get('note'), str):
+                return False, f'assessments.{key}.note must be string'
+
+        survey = payload.get('survey')
+        if not isinstance(survey, dict):
+            return False, 'survey must be object'
+        survey_keys = {'issue', 'environment', 'area_sqm', 'notes', 'equipment'}
+        if set(survey.keys()) != survey_keys:
+            return False, 'survey keys must match schema'
+        if not isinstance(survey.get('issue'), str):
+            return False, 'survey.issue must be string'
+        if not isinstance(survey.get('environment'), str):
+            return False, 'survey.environment must be string'
+        if not isinstance(survey.get('area_sqm'), str):
+            return False, 'survey.area_sqm must be string'
+        if not isinstance(survey.get('notes'), str):
+            return False, 'survey.notes must be string'
+        if not isinstance(survey.get('equipment'), list):
+            return False, 'survey.equipment must be array'
+        if not all(isinstance(item, str) for item in survey.get('equipment')):
+            return False, 'survey.equipment items must be string'
+
+        work = payload.get('work')
+        if not isinstance(work, dict):
+            return False, 'work must be object'
+        work_keys = {'date', 'time', 'type', 'items'}
+        if set(work.keys()) != work_keys:
+            return False, 'work keys must match schema'
+        if not isinstance(work.get('date'), str):
+            return False, 'work.date must be string'
+        if not isinstance(work.get('time'), str):
+            return False, 'work.time must be string'
+        if not isinstance(work.get('type'), str):
+            return False, 'work.type must be string'
+        if not isinstance(work.get('items'), list):
+            return False, 'work.items must be array'
+        if not all(isinstance(item, str) for item in work.get('items')):
+            return False, 'work.items items must be string'
+
+        logistics = payload.get('logistics')
+        if not isinstance(logistics, dict):
+            return False, 'logistics must be object'
+        logistics_keys = {'parking', 'key'}
+        if set(logistics.keys()) != logistics_keys:
+            return False, 'logistics keys must match schema'
+        if not isinstance(logistics.get('parking'), str):
+            return False, 'logistics.parking must be string'
+        if not isinstance(logistics.get('key'), str):
+            return False, 'logistics.key must be string'
+
+        return True, None
+
+    return False, 'unsupported action'
+
+def _log_staff_report_approval(report_id, existing_item, user_info, decision, reason_code, reason_text=None, review_comment=None):
+    reviewed_at = datetime.utcnow().isoformat() + 'Z'
+    snapshot_json = json.dumps(existing_item, ensure_ascii=False, sort_keys=True, default=str)
+    snapshot_hash = hashlib.sha256(snapshot_json.encode('utf-8')).hexdigest()
+
+    approval_item = {
+        'approval_id': f"APR_{uuid.uuid4().hex}",
+        'report_id': report_id,
+        'reviewed_at': reviewed_at,
+        'reviewer_id': user_info.get('uid'),
+        'reviewer_name': user_info.get('name'),
+        'reviewer_role': user_info.get('role'),
+        'actor_id': user_info.get('uid'),
+        'created_at': reviewed_at,
+        'decision': decision,
+        'reason_code': reason_code,
+        'report_status_before': existing_item.get('status'),
+        'report_status_after': decision,
+        'reviewed_snapshot_json': snapshot_json,
+        'reviewed_snapshot_hash': snapshot_hash
+    }
+    if reason_text:
+        approval_item['reason_text'] = reason_text
+    if review_comment:
+        approval_item['review_comment'] = review_comment
+
+    STAFF_REPORT_APPROVALS_TABLE.put_item(Item=approval_item)
+
 def update_report(event, headers):
     """
     レポートを更新（管理者のみ）
@@ -3519,6 +3705,36 @@ def update_report(event, headers):
             }
         
         existing_item = items[0]
+        requested_status = body_json.get('status')
+        if requested_status in ['approved', 'rejected', 'revision_requested']:
+            reason_code = body_json.get('reason_code')
+            if not reason_code:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'reason_code is required'}, ensure_ascii=False)
+                }
+            reason_text = body_json.get('reason_text')
+            review_comment = body_json.get('revision_comment')
+            try:
+                _log_staff_report_approval(
+                    report_id,
+                    existing_item,
+                    user_info,
+                    requested_status,
+                    reason_code,
+                    reason_text,
+                    review_comment
+                )
+            except Exception as e:
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': 'approval_log_failed',
+                        'message': str(e)
+                    }, ensure_ascii=False)
+                }
         
         # 写真をS3にアップロード（新しいBase64画像がある場合）
         photo_urls = {}
@@ -3689,6 +3905,42 @@ def update_report_by_id(report_id, event, headers):
             }
         
         existing_item = items[0]
+        requested_status = body_json.get('status')
+        if requested_status in ['approved', 'rejected', 'revision_requested']:
+            if not is_admin:
+                return {
+                    'statusCode': 403,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Forbidden: Admin access required'}, ensure_ascii=False)
+                }
+            reason_code = body_json.get('reason_code')
+            if not reason_code:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'reason_code is required'}, ensure_ascii=False)
+                }
+            reason_text = body_json.get('reason_text')
+            review_comment = body_json.get('revision_comment')
+            try:
+                _log_staff_report_approval(
+                    report_id,
+                    existing_item,
+                    user_info,
+                    requested_status,
+                    reason_code,
+                    reason_text,
+                    review_comment
+                )
+            except Exception as e:
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': 'approval_log_failed',
+                        'message': str(e)
+                    }, ensure_ascii=False)
+                }
         
         # 写真をS3にアップロード（新しいBase64画像がある場合）
         photo_urls = {}
@@ -10666,193 +10918,43 @@ def handle_ai_process(event, headers):
             media = {'mime_type': clean_mime, 'data': image_data}
             if not input_text: input_text = "この画像を解析してください。"
 
-        if action == 'save_cleaning_diagnosis':
-            data = body.get('data', {})
-            report_id = f"DIAG_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M')}_{uuid.uuid4().hex[:6]}"
-            now = datetime.now(timezone.utc).isoformat() + 'Z'
-            
-            # Decimal conversion for score
-            score = data.get('ai_score', 0)
-            if isinstance(score, (int, float)):
-                score = Decimal(str(score))
-            
-            # Prepare data for DynamoDB (Reports table)
-            item = {
-                'id': report_id,
-                'report_type': 'diagnosis',
-                'staff_id': data.get('staff_id'),
-                'staff_name': data.get('staff_name'),
-                'store_id': data.get('store_id'),
-                'store_name': data.get('store_name'),
-                'cleaning_date': data.get('cleaning_date'),
-                'ai_score': score,
-                'ai_rank': data.get('ai_rank'),
-                'ai_result': data.get('ai_result'),
-                'photos': data.get('photos', []),
-                'created_at': now,
-                'updated_at': now
-            }
-            
-            # Save to Reports table
-            REPORTS_TABLE.put_item(Item=item)
-            
-            # Also optionally update worker's latest score
-            if data.get('staff_id'):
-                try:
-                    WORKERS_TABLE.update_item(
-                        Key={'id': data.get('staff_id')},
-                        UpdateExpression="SET latest_cleaning_score = :s, latest_cleaning_rank = :r, last_cleaning_at = :t",
-                        ExpressionAttributeValues={
-                            ":s": score,
-                            ":r": data.get('ai_rank'),
-                            ":t": now
-                        }
-                    )
-                except Exception as e:
-                    print(f"Warning: Failed to update worker stats: {str(e)}")
-
+        allowed_actions = {'suggest_request_form', 'suggest_estimate'}
+        if action not in allowed_actions:
             return {
-                'statusCode': 200,
+                'statusCode': 403,
                 'headers': headers,
-                'body': json.dumps({'status': 'success', 'report_id': report_id}, ensure_ascii=False)
+                'body': json.dumps({
+                    'error': 'action_disabled',
+                    'message': f'Action disabled for line system: {action}'
+                }, ensure_ascii=False)
             }
 
-        if action == 'analyze_worker':
-            worker_id = body.get('id')
-            if not worker_id:
-                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'id (worker_id) is required'})}
-            
-            # 1. 従業員データを取得
-            res = WORKERS_TABLE.get_item(Key={'id': worker_id})
-            if 'Item' not in res:
-                return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Worker not found'})}
-            
-            worker = res['Item']
-            
-            # 2. 分析用コンテキスト構築
-            ctx = f"""
-名前: {worker.get('name', '-')}
-部署: {worker.get('department', '-')}
-担当: {worker.get('job', '-')}
-資格: {worker.get('certifications', '-')}
-スキル: {worker.get('skills', '-')}
-経験年数: {worker.get('experience_years', '-')}
-前職: {worker.get('previous_experience', '-')}
-評価: {worker.get('evaluation', '-')}
-備考: {worker.get('hr_notes', '-')}
-"""
-            sys_inst = """あなたはプロの人材コンサルタントです。
-提供されたデータから強み・適正・アドバイスを抽出し、以下のJSON形式で返してください。
-{
-  "summary": "要約",
-  "suitability": "適正配置",
-  "growth_points": "成長助言",
-  "memo": "管理者メモ"
-}
-必ず日本語のJSONのみを返してください。"""
-
-            # 3. Gemini呼び出し
-            ai_text = call_gemini_api(f"対象者データ:\n{ctx}", sys_inst)
-            
-            try:
-                # 分析結果を保存
-                analysis = json.loads(ai_text)
-                analysis['generated_at'] = datetime.utcnow().isoformat() + 'Z'
-                
-                WORKERS_TABLE.update_item(
-                    Key={'id': worker_id},
-                    UpdateExpression="SET hr_ai_analysis = :v",
-                    ExpressionAttributeValues={":v": analysis}
-                )
-                result = ai_text
-                
-            except Exception as e:
-                print(f"AI Parse/Save Error: {str(e)}")
-                return {'statusCode': 200, 'headers': headers, 'body': json.dumps({'status': 'PARTIAL_SUCCESS', 'response': ai_text, 'save_error': str(e)})}
-            
-        elif action == 'summarize_report':
-            system_instruction = "あなたはプロの清掃管理アドバイザーです。ユーザーの清掃メモから、丁寧な清掃報告書を作成してください。"
-            result = call_gemini_api(f"作成依頼:\n{input_text}", system_instruction, media)
-            
-        elif action == 'assistant_concierge':
-            import datetime
-            jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
-            system_instruction = f"""あなたはMISESAPO AI Systemの『Misogi（ミソギ）』です。
-正式名称は "Misesapo Intelligent System for Operational Guidance & Integration" (M.I.S.O.G.I.) です。
-あなたは「水」のように澄んだ心を持ち、冷静かつ丁寧、効率的に営業担当者をサポートするAI秘書です。
-語りかけに対し自然な日本語で返答し、必ず以下のJSON形式のみで返してください。これ以外のテキストは含めないでください。
-現在時刻: {jst_now}
-フォーマット: {{"reply": "...", "intent": "...", "extracted_data": {{}}}}"""
-            result = call_gemini_api(f"ユーザー: {input_text}", system_instruction, media)
-
-        elif action == 'report_assistant':
-            system_instruction = """あなたは清掃レポート作成支援AIです。
-ユーザーの入力（テキスト/音声/画像）を解析し、レポートに追加すべきセクションを提案します。
-以下のJSONスキーマに従って出力してください。
-{
-  "reply": "ユーザーへの短い応答",
-  "actions": [
-    {
-      "type": "addSection",
-      "sectionType": "cleaning" | "image_before_after" | "image_completed",
-      "data": { "item_name": "項目名", "comments": ["コメント"] }
-    }
-  ]
-}
-"""
-            result = call_gemini_api(f"入力: {input_text}", system_instruction, media)
-            
-        elif action == 'suggest_request_form':
-            system_instruction = "営業報告から清掃依頼書（JSON）を作成してください。"
-            result = call_gemini_api(f"解析対象:\n{input_text}", system_instruction, media)
-
-        elif action == 'admin_concierge':
-            import datetime
-            jst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
-            nav_map = """
-- ダッシュボード: /admin/dashboard
-- スケジュール: /admin/schedules/
-- 顧客管理: /admin/customers/
-- レポート管理: /admin/reports/
-- 業務連絡: /admin/announcements
-"""
-            system_instruction = f"""あなたはMISESAPO管理システムのAI『Misogi（ミソギ）』です。
-エントランスでユーザーを迎え、業務開始をサポートします。
-
-以下のJSON形式のみで応答してください：
-{{
-  "reply": "...", 
-  "intent": "navigate" | "chat", 
-  "target_url": "/path",
-  "ui_commands": [
-    {{ "type": "request_login" }},
-    {{ "type": "show_attendance" }},
-    {{ "type": "show_sidebar" }}
-  ]
-}}
-
-【動作ルール】
-1. ユーザーが未認証（ログイン前）の場合は、挨拶の後に `request_login` コマンドを送ってください。
-2. ログイン完了後、業務開始を希望されたら `show_attendance` コマンドを送り、出勤打刻を促してください。
-3. 出勤完了または業務開始が確定したら、`show_sidebar` コマンドを送り、メニューを表示させてください。
-4. 自然な日本語で、冷静かつ丁寧にサポートしてください。
-
-現在時刻: {jst_now}
-ナビゲーションマップ: {nav_map}
-"""
-            result = call_gemini_api(f"状況: {input_text}", system_instruction, media)
-            
+        if action == 'suggest_request_form':
+            system_instruction = """営業報告から作業依頼書の構造化JSONを抽出してください。
+出力はJSONのみ。余計な文章は書かないこと。"""
+            result_text = call_gemini_api(f"解析対象:\n{input_text}", system_instruction, media)
         else:
+            system_instruction = """営業報告から見積に必要な情報を構造化JSONで抽出してください。
+出力はJSONのみ。余計な文章は書かないこと。"""
+            result_text = call_gemini_api(f"解析対象:\n{input_text}", system_instruction, media)
+
+        payload = _extract_json_payload(result_text)
+        valid, reason = _validate_sales_schema(action, payload)
+        if not valid:
             return {
-                'statusCode': 400,
+                'statusCode': 422,
                 'headers': headers,
-                'body': json.dumps({'error': 'Invalid Action', 'message': f'Unsupported action: {action}'})
+                'body': json.dumps({
+                    'error': 'invalid_ai_output',
+                    'reason': reason,
+                    'raw': result_text
+                }, ensure_ascii=False)
             }
-            
+
         return {
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps({'status': 'success', 'result': result}, ensure_ascii=False)
+            'body': json.dumps({'status': 'success', 'result': payload}, ensure_ascii=False)
         }
     except Exception as e:
         import traceback
@@ -11295,3 +11397,271 @@ def get_store_audit_detail(audit_id, headers):
             'headers': headers,
             'body': json.dumps({'error': str(e)}, ensure_ascii=False)
         }
+
+
+# ============================================================================
+# ライン機能（チケットB）
+# ============================================================================
+
+# LINE_REPORTS_TABLEはstaff-reportsと共用（status: 'in_progress', 'pending_approval', 'passed'で区別）
+
+def get_line_status(event, headers):
+    """
+    当日のラインステータスを取得
+    GET /line/status?worker_id={id}&date={YYYY-MM-DD}
+    
+    Returns:
+        status: 'in_progress' | 'pending_approval' | 'none'
+        report_id: string | null
+    """
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        worker_id = query_params.get('worker_id')
+        date_str = query_params.get('date') or datetime.utcnow().strftime('%Y-%m-%d')
+        
+        if not worker_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'worker_id is required'}, ensure_ascii=False)
+            }
+        
+        # 当日のライン対象レポートを検索
+        response = REPORTS_TABLE.scan(
+            FilterExpression=Attr('staff_id').eq(worker_id) & 
+                           Attr('cleaning_date').eq(date_str) &
+                           Attr('line_mode').eq(True)
+        )
+        
+        items = response.get('Items', [])
+        
+        # 最新のレポートを取得
+        if items:
+            # created_atでソート
+            items.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+            latest = items[0]
+            status = latest.get('status', 'none')
+            
+            # ステータスをマッピング
+            if status == 'in_progress':
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'status': 'in_progress',
+                        'report_id': latest.get('report_id')
+                    }, ensure_ascii=False)
+                }
+            elif status == 'pending_approval':
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'status': 'pending_approval',
+                        'report_id': latest.get('report_id')
+                    }, ensure_ascii=False)
+                }
+        
+        # レポートがないか、完了済み
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'none',
+                'report_id': None
+            }, ensure_ascii=False)
+        }
+        
+    except Exception as e:
+        print(f"Error getting line status: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
+        }
+
+
+def handle_line_pass(event, headers):
+    """
+    ライン通過処理
+    POST /line/pass
+    
+    Request body:
+        process_id: string (工程ID = スケジュールID)
+        worker_id: string
+        check_results: [{item_id: string, passed: bool}]
+        is_exception: bool
+        reason_code: string | null (例外時は必須)
+    
+    Response:
+        status: 'passed' | 'pending_approval'
+        certificate_id: string (通常時のみ)
+        approval_request_id: string (例外時のみ)
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        process_id = body_json.get('process_id')
+        worker_id = body_json.get('worker_id')
+        check_results = body_json.get('check_results', [])
+        is_exception = body_json.get('is_exception', False)
+        reason_code = body_json.get('reason_code')
+        
+        # 必須パラメータチェック
+        if not process_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'process_id is required'}, ensure_ascii=False)
+            }
+        
+        if not worker_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'worker_id is required'}, ensure_ascii=False)
+            }
+        
+        # 例外時はreason_code必須
+        if is_exception and not reason_code:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'reason_code is required for exceptions'}, ensure_ascii=False)
+            }
+        
+        # ========================================
+        # 範囲チェック: 工程の許可リストと照合
+        # ========================================
+        
+        # 1. スケジュール（工程）を取得
+        schedule_response = SCHEDULES_TABLE.get_item(Key={'id': process_id})
+        schedule = schedule_response.get('Item')
+        
+        if not schedule:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'out_of_scope',
+                    'message': '指定された工程が見つかりません',
+                    'invalid_process_id': process_id
+                }, ensure_ascii=False)
+            }
+        
+        # 2. 許可されたitem_idリストを取得
+        cleaning_items = schedule.get('cleaning_items', [])
+        allowed_item_ids = set()
+        for item in cleaning_items:
+            item_id = item.get('item_id') or item.get('id') or item.get('name')
+            if item_id:
+                allowed_item_ids.add(str(item_id))
+        
+        # 3. リクエストのitem_idを検証
+        invalid_items = []
+        for check in check_results:
+            item_id = str(check.get('item_id', ''))
+            if item_id and item_id not in allowed_item_ids:
+                invalid_items.append(item_id)
+        
+        # 1件でも範囲外があれば400
+        if invalid_items:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'out_of_scope',
+                    'message': '指定された項目は工程定義に含まれていません',
+                    'invalid_items': invalid_items
+                }, ensure_ascii=False)
+            }
+        
+        # ========================================
+        # レポート作成
+        # ========================================
+        
+        now = datetime.utcnow().isoformat() + 'Z'
+        today = datetime.utcnow().strftime('%Y-%m-%d')
+        report_id = f"LINE-{uuid.uuid4().hex[:12]}"
+        
+        report_item = {
+            'report_id': report_id,
+            'staff_id': worker_id,
+            'cleaning_date': today,
+            'store_id': schedule.get('store_id', ''),
+            'store_name': schedule.get('store_name', ''),
+            'process_id': process_id,
+            'check_results': check_results,
+            'is_exception': is_exception,
+            'reason_code': reason_code if is_exception else None,
+            'line_mode': True,
+            'created_at': now,
+            'updated_at': now
+        }
+        
+        if is_exception:
+            # 例外: 承認待ち
+            report_item['status'] = 'pending_approval'
+            
+            # スナップショットを保存
+            snapshot_json = json.dumps(report_item, ensure_ascii=False, sort_keys=True, default=str)
+            snapshot_hash = hashlib.sha256(snapshot_json.encode('utf-8')).hexdigest()
+            report_item['snapshot_hash'] = snapshot_hash
+            
+            REPORTS_TABLE.put_item(Item=report_item)
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'status': 'pending_approval',
+                    'approval_request_id': report_id,
+                    'message': '承認待ちです'
+                }, ensure_ascii=False)
+            }
+        else:
+            # 通常: 即時通過・証明生成
+            report_item['status'] = 'passed'
+            
+            # 実施証明IDを生成
+            cert_date = datetime.utcnow().strftime('%Y%m%d')
+            certificate_id = f"CERT-{cert_date}-{uuid.uuid4().hex[:8].upper()}"
+            report_item['certificate_id'] = certificate_id
+            report_item['passed_at'] = now
+            
+            REPORTS_TABLE.put_item(Item=report_item)
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'status': 'passed',
+                    'certificate_id': certificate_id,
+                    'message': '工程を通過しました'
+                }, ensure_ascii=False)
+            }
+        
+    except Exception as e:
+        print(f"Error handling line pass: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '通過処理に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+

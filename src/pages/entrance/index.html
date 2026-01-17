@@ -2620,6 +2620,7 @@
 
 
     const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    const AI_PROCESS_ENABLED = false;
 
     function ensureAuthOrRedirect() {
         // Simple token check
@@ -3448,6 +3449,11 @@
             return;
         }
 
+        if (!AI_PROCESS_ENABLED) {
+            appendChatMessage('ai', 'この画面ではAI誘導は無効です。');
+            return;
+        }
+
         appendChatMessage('user', text);
         textInput.value = '';
 
@@ -4251,6 +4257,7 @@ ${context}`;
                 { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'" }
             ],
             cleaning: [
+                { label: 'ライン開始', action: 'startLineSystem()', primary: true },
                 { label: 'レポートを作成', action: 'startReportWizard()' }
             ],
             office: [
@@ -5241,4 +5248,89 @@ ${context}`;
     function startWorkOrderWizard() {
         appendChatMessage('ai', '作業指示書作成機能は準備中です。');
     }
+
+    // ========================================
+    // ライン開始機能（チケットB）
+    // ========================================
+
+    /**
+     * ラインステータスを取得してボタン状態を更新
+     * @returns {Promise<{status: string, report_id: string|null}>}
+     */
+    async function getLineStatus() {
+        try {
+            const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+            const workerId = user.sub || user.uid;
+            if (!workerId) return { status: 'none', report_id: null };
+
+            const today = new Date().toISOString().split('T')[0];
+            const idToken = localStorage.getItem('cognito_id_token') || '';
+
+            const response = await fetch(`${API_BASE}/line/status?worker_id=${workerId}&date=${today}`, {
+                headers: {
+                    'Authorization': `Bearer ${idToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                console.warn('Line status fetch failed:', response.status);
+                return { status: 'none', report_id: null };
+            }
+
+            return await response.json();
+        } catch (e) {
+            console.warn('Error fetching line status:', e);
+            return { status: 'none', report_id: null };
+        }
+    }
+
+    /**
+     * ラインボタンの表示状態を更新
+     */
+    async function updateLineButtonState() {
+        const lineBtn = document.querySelector('[data-action="startLineSystem"]');
+        if (!lineBtn) return;
+
+        const { status, report_id } = await getLineStatus();
+
+        switch (status) {
+            case 'in_progress':
+                lineBtn.textContent = '進行中';
+                lineBtn.dataset.reportId = report_id;
+                lineBtn.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+                break;
+            case 'pending_approval':
+                lineBtn.textContent = '承認待ち';
+                lineBtn.dataset.reportId = report_id;
+                lineBtn.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
+                lineBtn.disabled = true;
+                break;
+            default:
+                lineBtn.textContent = 'ライン開始';
+                lineBtn.dataset.reportId = '';
+                lineBtn.style.background = 'var(--accent-color)';
+                lineBtn.disabled = false;
+        }
+    }
+
+    /**
+     * ラインシステムを開始
+     */
+    function startLineSystem() {
+        // 遷移先: /line/
+        location.href = '/line/';
+    }
+
+    // ページ読み込み時にライン状態をチェック（cleaningモードの場合）
+    document.addEventListener('DOMContentLoaded', () => {
+        // 既存の初期化処理後にラインボタン状態を更新
+        setTimeout(() => {
+            const currentJob = localStorage.getItem('selected_job') || 'cleaning';
+            if (currentJob === 'cleaning') {
+                updateLineButtonState();
+            }
+        }, 1000);
+    });
+
 </script>
