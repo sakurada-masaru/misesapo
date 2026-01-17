@@ -1,31 +1,60 @@
-# Repository Guidelines
+# misesapo-new: Line System (Report-Line) Rules
 
-## Project Structure & Module Organization
-- Root: `README.md`, `AGENTS.md`, `Dockerfile`, `nginx/default.conf.template`。
-- Public assets: `public/` に静的ページ（`index.html`, `login.html`, `signup.html`, `report.html`, `mypage.html`, `styles.css`）。
-- 現状は静的モック専用。`src/`・`tests/` は未使用（必要になったら追加）。
+## Product definition
+This is NOT a report-writing tool.
+This is a line system where reports are generated automatically as a byproduct of passing steps.
 
-## Build, Test, and Development Commands
-- Local serve (Python): `python3 -m http.server 5173 --directory public`。
-- Local serve (Node): `npx serve public`。
-- Docker (Nginx): `docker build -t misesapo-mock .` → `docker run --rm -p 8080:8080 misesapo-mock`。
-- 現時点でビルド/テストの固定ツールチェーンは未導入。導入時は `README.md` に記載。
+## Non-negotiable principles
+1) Separate Fact / Interpretation / Responsibility (Approval)
+2) Field staff must NOT write narratives, evaluations, or proposals
+3) Normal cases must flow without stopping; only exceptions stop
+4) Every approval must leave an audit log:
+   - who, when, decision, reason_code, and reviewed_snapshot_json + hash
 
-## Coding Style & Naming Conventions
-- HTML/CSS/JS を前提に、簡潔で読みやすいマークアップを維持。
-- インデント: 2 スペース（JS/TS）/ 4 スペース（Python）。HTML/CSS はプロジェクト内で統一。
-- 命名: ファイルは `kebab-case`、JS 変数は `camelCase`。一貫性を優先。
-- 将来的に導入する場合のツール例: ESLint + Prettier（JS/TS）、Stylelint（CSS）。
+## Decision rules (Codex must self-check)
+- If a UI asks the field worker to type sentences -> REJECT
+- If AI output is saved as source of truth -> REJECT
+- If approval does not store reviewed_snapshot_json + hash -> REJECT
+- If a normal case requires manual editing -> REJECT
+- If AI performs evaluation or judgement -> REJECT
 
-## Testing Guidelines
-- 静的モック段階では必須テストなし。動作確認はブラウザでの目視と簡易チェック。
-- フレームワーク実装に移行後は、ユニット/統合テストを別プロジェクトで整備。
+## MVP scope (must be implemented first)
+- Field UI: arrival/start/end (one tap each) + scope checklist + exception flags
+- QA UI: approve / route to exception / return (reason required)
+- Finance UI: pay ok / hold / return (reason required)
+- Auto-generated "Execution Certificate" (fixed template; no evaluative words)
 
-## Commit & Pull Request Guidelines
-- Conventional Commits を推奨: `feat: ...`, `fix: ...`, `chore: ...`, `docs: ...`。
-- PR には概要・意図・スクリーンショット（UI 変更時）・関連 Issue（例: `Closes #123`）を含める。
-- CI 導入時は lint/テスト/ビルドが通ることを前提にマージ。
+## AI usage policy
+Allowed:
+- Formatting / summarizing / template-fill ONLY
+- Structured extraction for Sales (JSON output only)
+Forbidden:
+- Asking field workers guided questions to produce narratives
+- Clean/dirty judgement, sufficiency judgement
+- Auto-generating proposals as free text
+- AI-based approvals (until logs accumulate and explicitly allowed)
 
-## Security & Configuration Tips
-- 秘密情報はコミットしない。必要なら `.env` と `.env.example` を使い分ける（現状は未使用）。
-- 依存の導入は最小限。Docker/Nginx 設定の変更は PR でレビュー。
+## Data as source of truth
+- DB truth is structured fields only.
+- Free text is disabled by default and only allowed for exception notes (short, constrained).
+
+## Engineering rules
+- State transitions must be centralized (single source of truth).
+- Returns should be logged as events (approval log), not only status overwrite.
+- Any approval action must:
+  1) build reviewed_snapshot_json
+  2) compute snapshot hash
+  3) write to approvals table
+  4) then update main record status
+
+## Output / acceptance
+- Field input <= 3 minutes
+- Normal case produces certificate without manual writing
+- Exceptions always go through approval gate
+- Approval logs are usable for payment evidence
+
+## Governance
+- AGENTS.md and docs/spec/* are the top-level rules.
+- Before finalizing any change, complete docs/spec/LINE_CHECKLIST.md.
+- If a request conflicts with these rules, stop and explain the conflict.
+- Any known conflicts in current code must be tracked in docs/spec/TODO_CONFLICTS.md with priority.

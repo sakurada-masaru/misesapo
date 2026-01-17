@@ -74,6 +74,12 @@ export class SubmitManager {
         const brandSelect = document.getElementById('report-brand-search'); // Input not select
         const storeSelect = document.getElementById('report-store-search'); // Input
         const dateInput = document.getElementById('report-date');
+        const arrivalInput = document.getElementById('report-arrival');
+        const startInput = document.getElementById('report-start');
+        const endInput = document.getElementById('report-end');
+        const exceptionFlag = document.getElementById('exception-flag')?.value || 'none';
+        const exceptionReasonCode = document.getElementById('exception-reason-code')?.value || '';
+        const exceptionNote = document.getElementById('exception-note')?.value || '';
         const scheduleSelect = document.getElementById('report-schedule-select');
 
         // Logic to resolve IDs from names needed if inputs are just text
@@ -117,7 +123,13 @@ export class SubmitManager {
             // Also need cleaning items metadata for indexing if backend requires it
             cleaning_items: sectionsArray
                 .filter(s => s.type === 'cleaning')
-                .map(s => s.item_name)
+                .map(s => s.item_name),
+            arrival_time: arrivalInput ? arrivalInput.value : '',
+            cleaning_start_time: startInput ? startInput.value : '',
+            cleaning_end_time: endInput ? endInput.value : '',
+            exception_flag: exceptionFlag,
+            exception_reason_code: exceptionReasonCode,
+            exception_note: exceptionNote
         };
     }
 
@@ -129,5 +141,8 @@ export class SubmitManager {
         if (sections.length === 0) throw new Error('報告セクションがありません。少なくとも1つの項目を追加してください。');
 
         // Check for empty required fields in sections if strict
+        if (data.exception_flag === 'unfinished' && !data.exception_reason_code) {
+            throw new Error('未実施の理由コードを選択してください。');
+        }
     }
 }

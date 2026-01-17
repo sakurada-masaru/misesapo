@@ -840,6 +840,7 @@
     }
 
     const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    const AI_PROCESS_ENABLED = false;
 
     function ensureAuthOrRedirect() {
         // Simple token check
@@ -1076,6 +1077,11 @@
     async function sendTextMessage() {
         const text = textInput.value.trim();
         if (!text) return;
+
+        if (!AI_PROCESS_ENABLED) {
+            appendChatMessage('ai', 'この画面ではAI誘導は無効です。');
+            return;
+        }
         appendChatMessage('user', text);
         textInput.value = '';
 

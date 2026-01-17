@@ -110,6 +110,17 @@
         <!-- 動的に挿入 -->
       </div>
       <div class="modal-footer">
+        <div class="form-group" style="margin-right:auto; min-width: 260px;">
+          <label for="approval-reason-code" class="form-label">理由コード <span class="required">*</span></label>
+          <select id="approval-reason-code" class="form-select">
+            <option value="OK_STANDARD">OK_STANDARD（通常承認）</option>
+            <option value="OK_EXCEPTION_APPROVED">OK_EXCEPTION_APPROVED（例外承認）</option>
+            <option value="NG_POLICY_VIOLATION">NG_POLICY_VIOLATION（ルール違反）</option>
+            <option value="RETURN_MISSING_REQUIRED_FIELDS">RETURN_MISSING_REQUIRED_FIELDS（必須情報不足）</option>
+            <option value="RETURN_NEED_PHOTOS">RETURN_NEED_PHOTOS（写真が必要）</option>
+            <option value="RETURN_SCOPE_MISMATCH">RETURN_SCOPE_MISMATCH（範囲チェック不整合）</option>
+          </select>
+        </div>
         <button type="button" class="btn btn-outline" onclick="document.getElementById('detail-dialog').close()">閉じる</button>
         <button type="button" class="btn btn-warning" id="btn-request-revision">
           <i class="fas fa-undo"></i> 要修正として返す
@@ -785,6 +796,15 @@
       </div>
       <div class="modal-body">
         <p style="margin-bottom: 16px; color: #6b7280;">清掃員に修正を依頼するコメントを入力してください。</p>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label for="revision-reason-code" class="form-label">理由コード <span class="required">*</span></label>
+          <select id="revision-reason-code" class="form-select">
+            <option value="RETURN_MISSING_REQUIRED_FIELDS">RETURN_MISSING_REQUIRED_FIELDS（必須情報不足）</option>
+            <option value="RETURN_NEED_PHOTOS">RETURN_NEED_PHOTOS（写真が必要）</option>
+            <option value="RETURN_SCOPE_MISMATCH">RETURN_SCOPE_MISMATCH（範囲チェック不整合）</option>
+            <option value="NG_POLICY_VIOLATION">NG_POLICY_VIOLATION（ルール違反）</option>
+          </select>
+        </div>
         <div class="form-group">
           <label for="revision-comment" class="form-label">修正コメント <span class="required">*</span></label>
           <textarea id="revision-comment" class="form-textarea" rows="5" placeholder="例：作業前の写真が不足しています。作業前の写真を追加してください。" required></textarea>

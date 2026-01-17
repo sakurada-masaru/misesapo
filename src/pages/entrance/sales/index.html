@@ -3436,9 +3436,9 @@ ${context}
         const jobActions = {
             sales: [
                 { label: '顧客', action: 'showCustomerSubmenu()', color: 'var(--accent-color)' },
-                { label: '契約', action: 'showContractSubmenu()', color: '#ffffff', textColor: '#1f2937' }, // White for admin (contract between customer & company)
-                { label: '申込書', action: 'showApplicationFormsOverlay()', color: '#06b6d4' }, // Cyan (Office color) - view forms created by office
-                { label: '店舗査定', action: 'startStoreAudit()', color: '#10b981' }, // Green for cleaning
+                { label: '申込書を作成', action: 'startApplicationWizard()', color: '#f97316' }, // Step 1: Sales starts
+                { label: '契約を締結', action: 'finalizeContract()', color: '#ffffff', textColor: '#1f2937' }, // Step 3: Sales ends
+                { label: '店舗査定', action: 'startStoreAudit()', color: '#10b981' },
                 { label: '予定', action: 'showScheduleOverlay()', color: 'var(--accent-color)' }
             ],
             cleaning: [
@@ -4995,6 +4995,16 @@ ${context}
     }
 
     // View application forms created by office
+    function startApplicationWizard() {
+        appendChatMessage('ai', 'お客様の希望内容を聞き取り、申込書を作成します（Step 1）。必要事項を入力して事務へパスしてください。');
+        showPlaceholder('申込書作成ウィザード');
+    }
+
+    function finalizeContract() {
+        appendChatMessage('ai', '事務から戻ってきた書類セット（見積・申込・契約）を確認し、お客様からサインを頂戴します（Step 3）。');
+        showPlaceholder('契約締結・サイン受領');
+    }
+
     function showApplicationFormsOverlay() {
         appendChatMessage('ai', '事務が作成した申込書を確認します。');
 

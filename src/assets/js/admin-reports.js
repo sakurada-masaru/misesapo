@@ -697,6 +697,11 @@
     document.getElementById('btn-approve').style.display = status === 'approved' ? 'none' : '';
     document.getElementById('btn-reject').style.display = status === 'approved' ? 'none' : '';
 
+    const reasonSelect = document.getElementById('approval-reason-code');
+    if (reasonSelect) {
+      reasonSelect.value = 'OK_STANDARD';
+    }
+
     document.getElementById('detail-dialog').showModal();
 
     // 再提出フラグをクリア（モーダルを開いた時）
@@ -1335,6 +1340,11 @@
     if (!currentReportId) return;
 
     try {
+      const reasonCode = document.getElementById('approval-reason-code')?.value;
+      if (!reasonCode) {
+        alert('理由コードを選択してください');
+        return;
+      }
       const idToken = await getFirebaseIdToken();
       const response = await fetch(`${REPORT_API}/staff/reports/${currentReportId}`, {
         method: 'PUT',
@@ -1344,6 +1354,7 @@
         },
         body: JSON.stringify({
           status: 'approved',
+          reason_code: reasonCode,
           resubmitted: false  // 再提出フラグをクリア
         })
       });
@@ -1371,6 +1382,11 @@
     if (!currentReportId) return;
 
     try {
+      const reasonCode = document.getElementById('approval-reason-code')?.value;
+      if (!reasonCode) {
+        alert('理由コードを選択してください');
+        return;
+      }
       const idToken = await getFirebaseIdToken();
       const response = await fetch(`${REPORT_API}/staff/reports/${currentReportId}`, {
         method: 'PUT',
@@ -1380,6 +1396,7 @@
         },
         body: JSON.stringify({
           status: 'rejected',
+          reason_code: reasonCode,
           resubmitted: false  // 再提出フラグをクリア
         })
       });
@@ -1406,6 +1423,10 @@
   document.getElementById('btn-request-revision').addEventListener('click', () => {
     if (!currentReportId) return;
     document.getElementById('revision-comment').value = '';
+    const revisionReason = document.getElementById('revision-reason-code');
+    if (revisionReason) {
+      revisionReason.value = 'RETURN_MISSING_REQUIRED_FIELDS';
+    }
     document.getElementById('revision-dialog').showModal();
   });
 
@@ -1414,6 +1435,11 @@
     if (!currentReportId) return;
 
     const comment = document.getElementById('revision-comment').value.trim();
+    const reasonCode = document.getElementById('revision-reason-code')?.value;
+    if (!reasonCode) {
+      alert('理由コードを選択してください');
+      return;
+    }
     if (!comment) {
       alert('修正コメントを入力してください');
       return;
@@ -1429,6 +1455,8 @@
         },
         body: JSON.stringify({
           status: 'revision_requested',
+          reason_code: reasonCode,
+          reason_text: comment,
           revision_comment: comment
         })
       });

@@ -6,6 +6,19 @@
 <link rel="stylesheet" href="/css/staff-report-new.css">
 <link rel="stylesheet" href="/css/report-shared-view.css">
 <link rel="stylesheet" href="/css/report-assistant.css">
+<style>
+  body:not(.exception-mode) #tab-proposal,
+  body:not(.exception-mode) #tab-content-proposal,
+  body:not(.exception-mode) .section-add-icons-area,
+  body:not(.exception-mode) .add-buttons-footer,
+  body:not(.exception-mode) .cleaning-item-insert-actions,
+  body:not(.exception-mode) .section-header-actions,
+  body:not(.exception-mode) .section-select-checkbox,
+  body:not(.exception-mode) #details-btn,
+  body:not(.exception-mode) .details-hint {
+    display: none !important;
+  }
+</style>
 
 <script>
   (function () {
@@ -137,6 +150,19 @@
             </div>
           </div>
         </div>
+        <input type="hidden" id="report-arrival" name="arrival_time">
+        <div class="form-row" style="margin-top: 8px;">
+          <div class="form-group" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <button type="button" class="btn btn-outline" id="btn-arrival" style="min-width: 90px;">到着</button>
+            <button type="button" class="btn btn-outline" id="btn-start" style="min-width: 90px;">開始</button>
+            <button type="button" class="btn btn-outline" id="btn-end" style="min-width: 90px;">終了</button>
+            <div style="font-size:0.85rem; color:#6b7280;">
+              到着: <span id="arrival-display">--:--</span>
+              / 開始: <span id="start-display">--:--</span>
+              / 終了: <span id="end-display">--:--</span>
+            </div>
+          </div>
+        </div>
         <div class="form-row" id="karte-reference-row" style="margin-top: 12px; display: none;">
           <button type="button" class="btn btn-outline btn-block" id="btn-view-karte"
             style="border-color: #ff679c; color: #ff679c;">
@@ -185,6 +211,35 @@
 
   <!-- 新規作成タブ -->
   <div id="tab-content-new" class="tab-content active">
+    <div style="padding: 16px 16px 0;">
+      <div class="form-row two-col">
+        <div class="form-group">
+          <label class="date-time-label" for="exception-flag">例外モード</label>
+          <select id="exception-flag" class="form-select">
+            <option value="none">通常（例外なし）</option>
+            <option value="unfinished">未実施あり</option>
+            <option value="photo_required">写真が必要</option>
+            <option value="proposal_required">追加提案が必要</option>
+          </select>
+        </div>
+        <div class="form-group" id="exception-reason-row" style="display: none;">
+          <label class="date-time-label" for="exception-reason-code">未実施理由コード</label>
+          <select id="exception-reason-code" class="form-select">
+            <option value="">選択してください</option>
+            <option value="UNFINISHED_SCOPE">UNFINISHED_SCOPE</option>
+            <option value="EQUIPMENT_FAILURE">EQUIPMENT_FAILURE</option>
+            <option value="WEATHER">WEATHER</option>
+            <option value="OTHER">OTHER</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" id="exception-details" style="display: none;">
+        <div class="form-group">
+          <label class="date-time-label" for="exception-note">例外メモ（短文）</label>
+          <textarea id="exception-note" class="form-textarea" rows="3" placeholder="例外の要点のみ短く入力"></textarea>
+        </div>
+      </div>
+    </div>
 
     <!-- HACCP Toggle Section -->
     <div style="padding: 16px 16px 0;">
@@ -878,6 +933,71 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const exceptionSelect = document.getElementById('exception-flag');
+    const reasonRow = document.getElementById('exception-reason-row');
+    const reasonSelect = document.getElementById('exception-reason-code');
+    const details = document.getElementById('exception-details');
+    const body = document.body;
+
+    const updateExceptionMode = () => {
+      const flag = exceptionSelect ? exceptionSelect.value : 'none';
+      const isException = flag !== 'none';
+      body.classList.toggle('exception-mode', isException);
+      if (details) details.style.display = isException ? 'block' : 'none';
+      if (reasonRow) reasonRow.style.display = flag === 'unfinished' ? 'block' : 'none';
+      if (flag !== 'unfinished' && reasonSelect) reasonSelect.value = '';
+      if (!isException) {
+        document.getElementById('tab-proposal')?.classList.remove('active');
+        document.getElementById('tab-content-proposal')?.classList.remove('active');
+        document.getElementById('tab-new')?.classList.add('active');
+        document.getElementById('tab-content-new')?.classList.add('active');
+      }
+    };
+
+    if (exceptionSelect) {
+      exceptionSelect.addEventListener('change', updateExceptionMode);
+      updateExceptionMode();
+    }
+
+    const arrivalInput = document.getElementById('report-arrival');
+    const startInput = document.getElementById('report-start');
+    const endInput = document.getElementById('report-end');
+    const arrivalDisplay = document.getElementById('arrival-display');
+    const startDisplay = document.getElementById('start-display');
+    const endDisplay = document.getElementById('end-display');
+
+    const setTime = (input, display) => {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const value = `${hh}:${mm}`;
+      if (input) input.value = value;
+      if (display) display.textContent = value;
+    };
+
+    document.getElementById('btn-arrival')?.addEventListener('click', () => setTime(arrivalInput, arrivalDisplay));
+    document.getElementById('btn-start')?.addEventListener('click', () => setTime(startInput, startDisplay));
+    document.getElementById('btn-end')?.addEventListener('click', () => setTime(endInput, endDisplay));
+
+    if (arrivalInput && arrivalInput.value && arrivalDisplay) arrivalDisplay.textContent = arrivalInput.value;
+    if (startInput && startInput.value && startDisplay) startDisplay.textContent = startInput.value;
+    if (endInput && endInput.value && endDisplay) endDisplay.textContent = endInput.value;
+
+    const submitBtn = document.getElementById('report-submit-btn');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', (e) => {
+        if (exceptionSelect?.value === 'unfinished' && !reasonSelect?.value) {
+          alert('未実施の理由コードを選択してください。');
+          e.preventDefault();
+          e.stopImmediatePropagation();
+        }
+      }, true);
+    }
+  });
+</script>
 
 <script src="/js/report-shared-view.js"></script>
 <script type="module" src="/js/modules/report/index.js"></script>
