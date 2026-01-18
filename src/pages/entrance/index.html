@@ -3825,8 +3825,8 @@ ${context}`;
     let currentJobType = null;
 
     const MISOGI_NEXT_MAP = {
-        '/entrance/sales': { jobKey: 'sales', label: '営業へ' },
-        '/entrance/cleaning': { jobKey: 'cleaning', label: '清掃へ' }
+        '{{ base_path }}entrance/sales': { jobKey: 'sales', label: '営業へ' },
+        '{{ base_path }}entrance/cleaning': { jobKey: 'cleaning', label: '清掃へ' }
     };
 
     function normalizeEntrancePath(path) {
@@ -3923,7 +3923,9 @@ ${context}`;
     }
 
     function selectJobType(jobKey) {
-        const nextPath = `/entrance/${jobKey}`;
+        const nextPath = jobKey === 'cleaning'
+            ? '{{ base_path }}entrance/cleaning'
+            : `{{ base_path }}entrance/${jobKey}`;
         EntranceCore.performJobTransition(jobKey, '{{ base_path }}', buildNextUrl(nextPath));
     }
 
@@ -5397,8 +5399,7 @@ ${context}`;
      * ラインシステムを開始
      */
     function startLineSystem() {
-        // 遷移先: /line/
-        location.href = '/line/';
+        location.href = '{{ base_path }}entrance/cleaning';
     }
 
     // ページ読み込み時にライン状態をチェック（cleaningモードの場合）

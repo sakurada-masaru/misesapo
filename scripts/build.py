@@ -566,7 +566,7 @@ def copy_assets(outputs: List[str]) -> None:
         outputs.append(str(favicon_path))
 
     # Copy manifest.json and CNAME from root to public
-    for filename in ["manifest.json", "CNAME"]:
+    for filename in ["manifest.json", "CNAME", "sw.js"]:
         src_file = ROOT / filename
         if src_file.exists():
             dst_file = PUBLIC / filename
