@@ -265,10 +265,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const PHOTO_REQUIREMENTS = new Map([
-        ['クリーニング', { min: 4, internal: false }],
-        ['床・共用部清掃', { min: 4, internal: false }],
-        ['店舗内簡易清掃', { min: 4, internal: false }],
-        ['窓・ガラス清掃', { min: 4, internal: false }],
+        ['床・共用部清掃', { min: 3, internal: false }],
+        ['店舗内簡易清掃', { min: 3, internal: false }],
+        ['窓・ガラス清掃', { min: 3, internal: false }],
         ['換気扇（外側のみ）', { min: 4, internal: false }],
         ['トイレ清掃', { min: 4, internal: false }],
         ['厨房床清掃', { min: 4, internal: false }],
@@ -292,28 +291,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const computePhotoRequirement = (schedule) => {
-        if (!schedule) return null;
+        const fallback = { min: 3, internal: false, isFallback: true };
+        if (!schedule) return fallback;
         const lines = resolveScheduleLines(schedule);
-        if (lines.length === 0) return null;
+        if (lines.length === 0) return fallback;
 
-        let min = 4; // Default
+        let min = 0;
         let internal = false;
         let matched = 0;
 
         lines.forEach(line => {
-            // Check for specific internal items as per instruction
-            if (line.includes('レンジフード') || line.includes('ダクト') || line.includes('グリストラップ')) {
-                internal = true;
-            }
-
             const requirement = PHOTO_REQUIREMENTS.get(line);
             if (!requirement) return;
             min = Math.max(min, requirement.min);
-            if (requirement.internal) internal = true;
+            internal = internal || requirement.internal;
             matched += 1;
         });
 
-        return { min, internal };
+        if (matched === 0) return fallback;
+        return { min, internal, isFallback: false };
+    };
+
+    const shouldCountPhoto = (photo) => {
+        if (!photo || typeof photo !== 'object') return false;
+        if (photo.status === 'removed') return false;
+        return true;
     };
 
     const countUploadedPhotos = (state) => {
@@ -322,18 +324,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             const imageContents = section.imageContents || [];
             const sectionCount = imageContents.reduce((sum, content) => {
                 const photos = content.photos || {};
-                // Count unique photos across before/after/completed
                 return sum
-                    + (photos.before ? photos.before.length : 0)
-                    + (photos.after ? photos.after.length : 0)
-                    + (photos.completed ? photos.completed.length : 0);
+                    + (photos.before ? photos.before.filter(shouldCountPhoto).length : 0)
+                    + (photos.after ? photos.after.filter(shouldCountPhoto).length : 0)
+                    + (photos.completed ? photos.completed.filter(shouldCountPhoto).length : 0);
             }, 0);
             return total + sectionCount;
         }, 0);
     };
 
     const updatePhotoRequirementUI = (state) => {
-        const requirementSection = document.getElementById('photo-requirements-section');
         const requirementText = document.getElementById('photo-requirement-text');
         const internalNote = document.getElementById('photo-requirement-internal');
         const warningText = document.getElementById('photo-requirement-warning');
@@ -341,27 +341,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!requirementText || !internalNote || !warningText) return;
 
         if (!currentPhotoRequirement) {
-            if (requirementSection) requirementSection.style.display = 'none';
-            return;
+            currentPhotoRequirement = { min: 3, internal: false, isFallback: true };
         }
 
-        if (requirementSection) requirementSection.style.display = 'block';
-        requirementText.textContent = `写真要件: 合計 ${currentPhotoRequirement.min} 枚以上のアップロードが必要です`;
+        if (currentPhotoRequirement.isFallback) {
+            requirementText.textContent = '要件未設定（暫定：最低3枚を推奨）';
+        } else {
+            requirementText.textContent = `写真を${currentPhotoRequirement.min}枚以上`;
+        }
 
-        // Show internal warning if matched strings or marked in requirements
         internalNote.style.display = currentPhotoRequirement.internal ? 'block' : 'none';
 
         const photoCount = countUploadedPhotos(state);
         if (photoCount < currentPhotoRequirement.min) {
-            warningText.textContent = `写真が不足しています（あと ${currentPhotoRequirement.min - photoCount} 枚）`;
+            warningText.textContent = `あと${currentPhotoRequirement.min - photoCount}枚`;
             warningText.style.display = 'block';
-            warningText.style.color = '#dc2626';
-            warningText.style.fontWeight = '700';
         } else {
-            warningText.textContent = `写真要件を満たしています（合計 ${photoCount} 枚）`;
-            warningText.style.display = 'block';
-            warningText.style.color = '#059669';
-            warningText.style.fontWeight = '700';
+            warningText.style.display = 'none';
         }
     };
 

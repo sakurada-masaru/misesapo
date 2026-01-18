@@ -237,6 +237,32 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="decline-modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-ban"></i> 予定辞退</h3>
+        <button class="modal-close" id="decline-modal-close">&times;</button>
+      </div>
+      <div class="report-modal-body">
+        <p class="report-step-text" id="decline-modal-title">この予定を辞退しますか？</p>
+        <div class="form-group">
+          <label for="decline-reason-select">理由コード</label>
+          <select id="decline-reason-select">
+            <option value="">選択してください</option>
+            <option value="DECLINE_UNAVAILABLE">DECLINE_UNAVAILABLE</option>
+          </select>
+        </div>
+        <div class="decline-note" id="decline-modal-note" style="display: none;">直前の辞退は月2回までです</div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="decline-modal-cancel">キャンセル</button>
+          <button type="button" class="btn-submit" id="decline-modal-submit">辞退する</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="schedule-toast" class="schedule-toast" role="status" aria-live="polite"></div>
+
   <nav class="quick-actions-dock" aria-label="クイックアクション">
     <a href="/staff/os/mypage" class="dock-item">
       <i class="fas fa-user"></i>
@@ -1290,6 +1316,11 @@
       color: #065f46;
     }
 
+    .status-declined {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
     .item-actions {
       display: flex;
       gap: 8px;
@@ -1342,9 +1373,70 @@
       transform: translateY(-1px);
     }
 
+    .action-btn.btn-decline {
+      background: #ef4444;
+      color: white;
+    }
+
+    .action-btn.btn-decline:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+    }
+
+    .action-btn.btn-emergency {
+      background: #f97316;
+      color: white;
+    }
+
+    .action-btn.btn-emergency:hover {
+      background: #ea580c;
+      transform: translateY(-1px);
+    }
+
     .action-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+
+    .decline-note,
+    .decline-unavailable {
+      flex-basis: 100%;
+      font-size: 0.8rem;
+      color: #9a3412;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+
+    .decline-unavailable {
+      color: #7c2d12;
+      background: #ffedd5;
+    }
+
+    .schedule-toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: #111827;
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+      z-index: 1200;
+    }
+
+    .schedule-toast.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .schedule-toast.is-error {
+      background: #b91c1c;
     }
 
     @media (max-width: 768px) {
@@ -1388,6 +1480,8 @@
     let listFilterMode = 'today';
     let listFilterDate = null;
     let pendingReportSchedule = null;
+    let pendingDeclineSchedule = null;
+    let pendingDeclineWindow = 'A';
 
     function getScheduleId(schedule) {
       return schedule.id || schedule.schedule_id || schedule.scheduleId;
@@ -1400,6 +1494,66 @@
         headers['Authorization'] = `Bearer ${idToken}`;
       }
       return headers;
+    }
+
+    function getScheduleStart(schedule) {
+      const dateValue = schedule.scheduled_date || schedule.date || '';
+      if (!dateValue) return null;
+      const rawTime = String(schedule.scheduled_time || schedule.time_slot || '').trim();
+      const match = rawTime.match(/(\d{1,2}):(\d{2})/);
+      const hours = match ? String(match[1]).padStart(2, '0') : '00';
+      const minutes = match ? match[2] : '00';
+      return new Date(`${dateValue}T${hours}:${minutes}:00`);
+    }
+
+    function getDeclineWindow(schedule) {
+      const startDate = getScheduleStart(schedule);
+      if (!startDate) return 'C';
+      const diffHours = (startDate.getTime() - Date.now()) / (1000 * 60 * 60);
+      if (diffHours >= 24) return 'A';
+      if (diffHours >= 3) return 'B';
+      return 'C';
+    }
+
+    function getDeclineActions(schedule, isPastMode) {
+      if (isPastMode || schedule.status !== 'scheduled') return '';
+      const windowType = getDeclineWindow(schedule);
+      const scheduleId = getScheduleId(schedule);
+      if (!scheduleId) return '';
+
+      if (windowType === 'A') {
+        return `
+          <button class="action-btn btn-decline" type="button" onclick="openDeclineModal('${scheduleId}', 'A')">
+            <i class="fas fa-ban"></i> 今回は対応できません
+          </button>
+        `;
+      }
+      if (windowType === 'B') {
+        return `
+          <div class="decline-note">直前の辞退は月2回までです</div>
+          <button class="action-btn btn-decline" type="button" onclick="openDeclineModal('${scheduleId}', 'B')">
+            <i class="fas fa-ban"></i> 対応できません（理由必須）
+          </button>
+        `;
+      }
+      return `
+        <div class="decline-unavailable">作業開始直前のため、アプリからの辞退はできません。問題がある場合は営業に連絡してください。</div>
+        <a class="action-btn btn-emergency" href="mailto:sales@misesapo.co.jp">
+          <i class="fas fa-phone"></i> 緊急連絡（営業へ）
+        </a>
+      `;
+    }
+
+    function showScheduleToast(message, type = 'success') {
+      const toast = document.getElementById('schedule-toast');
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.toggle('is-error', type === 'error');
+      toast.classList.add('is-visible');
+      if (toast._timer) clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => {
+        toast.classList.remove('is-visible');
+      }, 2200);
     }
 
     // 現在のユーザー情報を取得
@@ -1441,6 +1595,7 @@
       applyScheduleView(toggle ? toggle.checked : false);
       setupListTabs();
       setupReportCreateModal();
+      setupDeclineModal();
     });
 
     // データ読み込み
@@ -1759,6 +1914,7 @@
         const brandLine = (clientName || brandName)
           ? `<div class="item-brand">${escapeHtml(clientName || '-')} ${brandName ? `/ ${escapeHtml(brandName)}` : ''}</div>`
           : '';
+        const declineActions = getDeclineActions(schedule, false);
         const reportAction = hasReport
           ? `<a href="${reportLink}" class="action-btn btn-report">
               <i class="fas fa-file-alt"></i> レポート確認
@@ -1766,6 +1922,7 @@
           : `<button class="action-btn btn-report" type="button" onclick="openReportCreateModal('${scheduleId || ''}')">
               <i class="fas fa-file-alt"></i> レポート作成
             </button>`;
+        const declineActions = getDeclineActions(schedule, isPastMode);
 
         return `
           <div class="schedule-item status-${statusClass}">
@@ -1809,6 +1966,7 @@
                   <i class="fas fa-file-alt"></i> ${hasReport ? 'レポート確認' : 'レポート作成'}
                 </a>
               ` : ''}
+              ${declineActions}
             </div>
           </div>
         `;
@@ -1905,6 +2063,7 @@
                   <i class="fas fa-file-alt"></i> ${hasReport ? 'レポート確認' : 'レポート作成'}
                 </a>
               ` : ''}
+              ${declineActions}
             </div>
           </div>
         `;
@@ -1944,7 +2103,8 @@
       const labels = {
         'scheduled': '予定',
         'in_progress': '作業中',
-        'completed': '完了'
+        'completed': '完了',
+        'declined': '辞退済み'
       };
       return labels[status] || '予定';
     }
@@ -1995,6 +2155,111 @@
       steps.forEach(section => {
         section.classList.toggle('is-active', section.dataset.step === step);
       });
+    }
+
+    function setupDeclineModal() {
+      const modal = document.getElementById('decline-modal');
+      if (!modal) return;
+      const closeBtn = document.getElementById('decline-modal-close');
+      const cancelBtn = document.getElementById('decline-modal-cancel');
+      const submitBtn = document.getElementById('decline-modal-submit');
+      const reasonSelect = document.getElementById('decline-reason-select');
+
+      const closeModal = () => {
+        modal.style.display = 'none';
+        pendingDeclineSchedule = null;
+        pendingDeclineWindow = 'A';
+        if (reasonSelect) reasonSelect.value = '';
+      };
+
+      closeBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeModal();
+      });
+
+      submitBtn.addEventListener('click', submitDecline);
+    }
+
+    function openDeclineModal(scheduleId, windowType) {
+      const modal = document.getElementById('decline-modal');
+      const note = document.getElementById('decline-modal-note');
+      const title = document.getElementById('decline-modal-title');
+      const reasonSelect = document.getElementById('decline-reason-select');
+      if (!modal) return;
+
+      const target = allSchedules.find(s => String(getScheduleId(s)) === String(scheduleId));
+      if (!target) return;
+
+      pendingDeclineSchedule = target;
+      pendingDeclineWindow = windowType || 'A';
+      if (title) {
+        title.textContent = pendingDeclineWindow === 'B'
+          ? '理由を選択して辞退してください。'
+          : 'この予定を辞退しますか？';
+      }
+      if (note) {
+        note.style.display = pendingDeclineWindow === 'B' ? 'block' : 'none';
+      }
+      if (reasonSelect) {
+        reasonSelect.value = '';
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    async function submitDecline() {
+      if (!pendingDeclineSchedule) return;
+      const reasonSelect = document.getElementById('decline-reason-select');
+      const selectedReason = reasonSelect ? reasonSelect.value : '';
+      if (pendingDeclineWindow === 'B' && !selectedReason) {
+        showScheduleToast('理由を選択してください', 'error');
+        return;
+      }
+
+      const scheduleId = getScheduleId(pendingDeclineSchedule);
+      if (!scheduleId) return;
+      const reasonCode = selectedReason || 'DECLINE_UNAVAILABLE';
+
+      try {
+        const headers = getAuthHeaders();
+        headers['Content-Type'] = 'application/json';
+        const response = await fetch(`${API_BASE}/schedules/${scheduleId}/decline`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ reason_code: reasonCode })
+        });
+
+        if (response.status === 409) {
+          showScheduleToast('この予定は辞退できません', 'error');
+          return;
+        }
+        if (response.status === 403) {
+          showScheduleToast('権限がありません', 'error');
+          return;
+        }
+        if (response.status === 404) {
+          showScheduleToast('予定が見つかりません', 'error');
+          return;
+        }
+        if (!response.ok) {
+          showScheduleToast('辞退に失敗しました', 'error');
+          return;
+        }
+
+        pendingDeclineSchedule.status = 'declined';
+        pendingDeclineSchedule.declined_at = new Date().toISOString();
+        renderScheduleList();
+        renderCalendar();
+        renderCalendarSchedules(new Date().toISOString().split('T')[0]);
+        showScheduleToast('対応不可として営業に共有しました');
+
+        const modal = document.getElementById('decline-modal');
+        if (modal) modal.style.display = 'none';
+      } catch (error) {
+        console.error('Decline schedule error:', error);
+        showScheduleToast('辞退に失敗しました', 'error');
+      }
     }
 
     function openReportCreateModal(scheduleId) {
