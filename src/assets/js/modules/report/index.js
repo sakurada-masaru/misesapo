@@ -160,6 +160,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         submitBtn.addEventListener('click', () => submitManager.handleSubmit());
     }
 
+    stateManager.subscribe((state) => {
+        updatePhotoRequirementUI(state);
+    });
+    updatePhotoRequirementUI(stateManager.state);
+
     // Inject HaccpManager into SectionManager/Renderer indirectly or pass it down?
     // Ideally sectionManager should know about haccpManager or we pass it to renderer.
     // For now, let's attach logic to global window to handle the events from HaccpManager's HTML.
@@ -259,6 +264,107 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
     };
 
+    const PHOTO_REQUIREMENTS = new Map([
+        ['クリーニング', { min: 4, internal: false }],
+        ['床・共用部清掃', { min: 4, internal: false }],
+        ['店舗内簡易清掃', { min: 4, internal: false }],
+        ['窓・ガラス清掃', { min: 4, internal: false }],
+        ['換気扇（外側のみ）', { min: 4, internal: false }],
+        ['トイレ清掃', { min: 4, internal: false }],
+        ['厨房床清掃', { min: 4, internal: false }],
+        ['シンク清掃', { min: 4, internal: false }],
+        ['排気ファン清掃', { min: 5, internal: false }],
+        ['レンジフード清掃', { min: 6, internal: true }],
+        ['ダクト清掃', { min: 6, internal: true }],
+        ['グリストラップ清掃', { min: 6, internal: true }],
+        ['配管高圧洗浄', { min: 5, internal: false }],
+        ['防火シャッター清掃', { min: 5, internal: false }]
+    ]);
+
+    let currentPhotoRequirement = null;
+
+    const resolveScheduleLines = (schedule) => {
+        const items = schedule.cleaning_items || schedule.service_items || (schedule.service_names ? (Array.isArray(schedule.service_names) ? schedule.service_names : [schedule.service_names]) : []) || [];
+        return items
+            .map(item => (typeof item === 'object' ? (item.name || item.item_name || item.title || '') : item))
+            .map(item => String(item || '').trim())
+            .filter(Boolean);
+    };
+
+    const computePhotoRequirement = (schedule) => {
+        if (!schedule) return null;
+        const lines = resolveScheduleLines(schedule);
+        if (lines.length === 0) return null;
+
+        let min = 4; // Default
+        let internal = false;
+        let matched = 0;
+
+        lines.forEach(line => {
+            // Check for specific internal items as per instruction
+            if (line.includes('レンジフード') || line.includes('ダクト') || line.includes('グリストラップ')) {
+                internal = true;
+            }
+
+            const requirement = PHOTO_REQUIREMENTS.get(line);
+            if (!requirement) return;
+            min = Math.max(min, requirement.min);
+            if (requirement.internal) internal = true;
+            matched += 1;
+        });
+
+        return { min, internal };
+    };
+
+    const countUploadedPhotos = (state) => {
+        const sections = state.sections?.new || {};
+        return Object.values(sections).reduce((total, section) => {
+            const imageContents = section.imageContents || [];
+            const sectionCount = imageContents.reduce((sum, content) => {
+                const photos = content.photos || {};
+                // Count unique photos across before/after/completed
+                return sum
+                    + (photos.before ? photos.before.length : 0)
+                    + (photos.after ? photos.after.length : 0)
+                    + (photos.completed ? photos.completed.length : 0);
+            }, 0);
+            return total + sectionCount;
+        }, 0);
+    };
+
+    const updatePhotoRequirementUI = (state) => {
+        const requirementSection = document.getElementById('photo-requirements-section');
+        const requirementText = document.getElementById('photo-requirement-text');
+        const internalNote = document.getElementById('photo-requirement-internal');
+        const warningText = document.getElementById('photo-requirement-warning');
+
+        if (!requirementText || !internalNote || !warningText) return;
+
+        if (!currentPhotoRequirement) {
+            if (requirementSection) requirementSection.style.display = 'none';
+            return;
+        }
+
+        if (requirementSection) requirementSection.style.display = 'block';
+        requirementText.textContent = `写真要件: 合計 ${currentPhotoRequirement.min} 枚以上のアップロードが必要です`;
+
+        // Show internal warning if matched strings or marked in requirements
+        internalNote.style.display = currentPhotoRequirement.internal ? 'block' : 'none';
+
+        const photoCount = countUploadedPhotos(state);
+        if (photoCount < currentPhotoRequirement.min) {
+            warningText.textContent = `写真が不足しています（あと ${currentPhotoRequirement.min - photoCount} 枚）`;
+            warningText.style.display = 'block';
+            warningText.style.color = '#dc2626';
+            warningText.style.fontWeight = '700';
+        } else {
+            warningText.textContent = `写真要件を満たしています（合計 ${photoCount} 枚）`;
+            warningText.style.display = 'block';
+            warningText.style.color = '#059669';
+            warningText.style.fontWeight = '700';
+        }
+    };
+
     // Populate Request Sheet based on selected schedule
     const updateRequestSheet = (schedule) => {
         const container = document.getElementById('request-sheet-content');
@@ -325,6 +431,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const schedule = schedules.find(s => String(s.id) === String(currentScheduleId));
                 if (schedule) {
                     updateRequestSheet(schedule);
+                    currentPhotoRequirement = computePhotoRequirement(schedule);
+                    updatePhotoRequirementUI(stateManager.state);
                     clearInterval(checkSchedule);
                 }
             }
@@ -529,6 +637,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (infoBrand) infoBrand.value = (schedule.store && schedule.store.brand) ? (schedule.store.brand.name || '') : (schedule.brand_name || '');
             if (infoStore) infoStore.value = schedule.store_name || (schedule.store ? schedule.store.name : '') || '';
             if (infoDate) infoDate.value = schedule.date || schedule.scheduled_date || '';
+
+            currentPhotoRequirement = computePhotoRequirement(schedule);
+            updatePhotoRequirementUI(stateManager.state);
         }
     }
 
