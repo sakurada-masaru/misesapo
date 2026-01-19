@@ -1,0 +1,71 @@
+name: Notify to Slack
+
+on:
+  workflow_call:
+    inputs:
+      run_url:
+        required: true
+        type: string
+      build_id:
+        required: true
+        type: string
+      deploy_result:
+        required: true
+        type: string
+      smoke_result:
+        required: true
+        type: string
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    env:
+      SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE }}
+      CLOUD_RUN_REGION: ${{ vars.CLOUD_RUN_REGION }}
+      RUN_URL: ${{ inputs.run_url }}
+      BUILD_ID: ${{ inputs.build_id }}
+    steps:
+      - name: Decide overall status
+        id: decide
+        shell: bash
+        run: |
+          d='${{ inputs.deploy_result }}'; s='${{ inputs.smoke_result }}'
+          if [[ "$d" == "success" && "$s" == "success" ]]; then
+            echo "overall=success" >> "$GITHUB_OUTPUT"
+            echo "emoji=:white_check_mark:" >> "$GITHUB_OUTPUT"
+            echo "title=Deploy & Smoke: SUCCESS" >> "$GITHUB_OUTPUT"
+          else
+            echo "overall=failure" >> "$GITHUB_OUTPUT"
+            echo "emoji=:x:" >> "$GITHUB_OUTPUT"
+            echo "title=Deploy & Smoke: FAILED" >> "$GITHUB_OUTPUT"
+          fi
+          echo "deploy=$d" >> "$GITHUB_OUTPUT"
+          echo "smoke=$s" >> "$GITHUB_OUTPUT"
+
+      - name: Post to Slack (official)
+        uses: slackapi/slack-github-action@v1
+        with:
+          channel-id: ${{ env.SLACK_CHANNEL_ID }}
+          payload: |
+            {
+              "text": "[Cloud Run] ${{ steps.decide.outputs.title }}",
+              "blocks": [
+                { "type": "header", "text": { "type": "plain_text", "text": "${{ steps.decide.outputs.emoji }}  ${{ steps.decide.outputs.title }}", "emoji": true } },
+                { "type": "section", "fields": [
+                  { "type": "mrkdwn", "text": "*Service:*\n${{ env.CLOUD_RUN_SERVICE }}" },
+                  { "type": "mrkdwn", "text": "*Region:*\n${{ env.CLOUD_RUN_REGION }}" },
+                  { "type": "mrkdwn", "text": "*Deploy:*\n${{ steps.decide.outputs.deploy }}" },
+                  { "type": "mrkdwn", "text": "*Smoke:*\n${{ steps.decide.outputs.smoke }}" }
+                ]},
+                { "type": "section", "text": { "type": "mrkdwn", "text": "*App URL:* <${{ env.RUN_URL }}|Open Cloud Run>\n*Workflow:* <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run #${{ github.run_number }}>" } },
+                { "type": "context", "elements": [
+                  { "type": "mrkdwn", "text": "Build: <https://console.cloud.google.com/cloud-build/builds/${{ env.BUILD_ID }}?project=${{ env.GCP_PROJECT_ID }}|${{ env.BUILD_ID }}> · Commit: <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}> by ${{ github.actor }}" }
+                ]}
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
