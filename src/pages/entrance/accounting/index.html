@@ -1,0 +1,4014 @@
+@layout('layouts.admin')
+@json('data/meta/entrance_accounting_title.json', $title)
+@json('data/meta/entrance_accounting_body_class.json', $body_class)
+
+<script src="{{ base_path }}js/entrance-core.js"></script>
+<link rel="stylesheet" href="{{ base_path }}css/entrance-menu.css">
+<script src="{{ base_path }}js/entrance-menu.js"></script>
+
+
+
+<style>
+    /* === CRT Animation Styles === */
+    #job-change-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: transparent !important;
+        z-index: 1000000 !important;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+    }
+
+    #job-change-label {
+        position: absolute;
+        font-family: Inter, sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: 15px;
+        color: #fff !important;
+        z-index: 1000001;
+        opacity: 0;
+        text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+        text-transform: uppercase;
+    }
+
+    .flicker {
+        animation: flicker-text 0.8s ease-in-out forwards !important;
+    }
+
+    @keyframes flicker-text {
+        0% {
+            opacity: 0;
+        }
+
+        10% {
+            opacity: 1;
+        }
+
+        15% {
+            opacity: 0.1;
+        }
+
+        25% {
+            opacity: 1;
+        }
+
+        30% {
+            opacity: 0.2;
+        }
+
+        40% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .flicker-active {
+        animation: flicker-vibe 0.1s infinite !important;
+    }
+
+    @keyframes flicker-vibe {
+
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.8;
+            transform: scale(1.01);
+        }
+    }
+
+    .glitch-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+        background-size: 100% 3px, 3px 100%;
+        opacity: 0;
+        z-index: 999999;
+        pointer-events: none;
+    }
+
+    .glitch-active {
+        animation: scanline-flicker 0.15s infinite;
+        opacity: 1 !important;
+    }
+
+    @keyframes scanline-flicker {
+        0% {
+            opacity: 0.4;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+
+        100% {
+            opacity: 0.4;
+        }
+    }
+
+    .crt-off {
+        animation: crt-turn-off 0.55s cubic-bezier(0.23, 1, 0.32, 1) forwards !important;
+    }
+
+    @keyframes crt-turn-off {
+        0% {
+            transform: scale(1, 1.3);
+            filter: brightness(1);
+            opacity: 1;
+        }
+
+        60% {
+            transform: scale(1.3, 0.001);
+            filter: brightness(10);
+        }
+
+        100% {
+            transform: scale(0, 0.0001);
+            filter: brightness(50);
+            opacity: 0;
+        }
+    }
+
+    body.fade-in-entrance {
+        animation: crt-turn-on 1.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    }
+
+    @keyframes crt-turn-on {
+        0% {
+            transform: scale(1, 0.8);
+            filter: brightness(30);
+            opacity: 0;
+        }
+
+        5% {
+            transform: scale(1.1, 0.5);
+            opacity: 1;
+        }
+
+        10% {
+            transform: scale(1, 1);
+            filter: contrast(0) brightness(0);
+            opacity: 1;
+        }
+
+        100% {
+            transform: scale(1, 1);
+            filter: contrast(1) brightness(1.2) saturate(1.3);
+            opacity: 1;
+        }
+    }
+
+    .transitioning-out {
+        opacity: 0 !important;
+        transform: scale(0.9) !important;
+        filter: blur(20px) !important;
+        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        pointer-events: none !important;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap');
+
+    #default-header-wrapper,
+    #normal-header-wrapper {
+        display: none !important;
+    }
+
+    /* Override Layout Styles for this specific page */
+    .admin-dashboard {
+        background: radial-gradient(circle at center, #0a1128 0%, #000 100%) !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+
+    /* Dark Sidebar Overrides for MISOGI Theme */
+    #admin-sidebar {
+        background-color: transparent !important;
+        border-right: none !important;
+        position: absolute !important;
+        left: 20px !important;
+        top: 0 !important;
+        height: 100% !important;
+        width: 250px !important;
+        z-index: 100 !important;
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* (sidebar styles skipped for brevity, keeping existing) */
+
+    #sidebar-toggle {
+        display: none !important;
+    }
+
+    .main-content {
+        padding: 0 !important;
+        margin-left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);
+        position: absolute !important;
+        /* Changed to absolute to match overlay */
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1;
+        /* Base z-index */
+    }
+
+    /* MISOGI Styles (Scoped) - keep root styles here */
+    :root {
+        --accent-color: #3b82f6;
+        --accent-glow: rgba(59, 130, 246, 0.5);
+    }
+
+    /* Job Type Colors */
+    .job-cleaning {
+        --accent-color: #10b981;
+        --accent-glow: rgba(16, 185, 129, 0.5);
+    }
+
+    .job-office {
+        --accent-color: #3b82f6;
+        --accent-glow: rgba(59, 130, 246, 0.5);
+    }
+
+    .job-sales {
+        --accent-color: #f59e0b;
+        --accent-glow: rgba(245, 158, 11, 0.5);
+    }
+
+    .job-hr {
+        --accent-color: #8b5cf6;
+        --accent-glow: rgba(139, 92, 246, 0.5);
+    }
+
+    .job-accounting {
+        --accent-color: #eab308;
+        --accent-glow: rgba(234, 179, 8, 0.5);
+    }
+
+    .job-admin {
+        --accent-color: #ffffff;
+        --accent-glow: rgba(255, 255, 255, 0.5);
+    }
+
+    .job-dev {
+        --accent-color: #ef4444;
+        --accent-glow: rgba(239, 68, 68, 0.5);
+    }
+
+    /* Job Change Animation Overlay */
+    #job-change-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #000;
+        z-index: 9999;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+    }
+
+    #job-change-label {
+        position: absolute;
+        font-size: 2rem;
+        font-weight: 200;
+        letter-spacing: 8px;
+        color: #fff;
+        z-index: 10001;
+        opacity: 0;
+        text-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    /* Floating Job Indicator Button */
+    #floating-job-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+        padding: 10px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        z-index: 8000;
+        display: none;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 20px var(--accent-glow);
+        backdrop-filter: blur(10px);
+    }
+
+    #floating-job-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px var(--accent-glow);
+        background: rgba(0, 0, 0, 0.9);
+    }
+
+    #floating-job-btn .job-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--accent-color);
+        border-radius: 50%;
+        animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.5;
+            transform: scale(1.2);
+        }
+    }
+
+    /* CRT Blackout Effect */
+    .crt-collapse {
+        animation: crtCollapse 0.5s ease-in forwards;
+    }
+
+    @keyframes crtCollapse {
+        0% {
+            transform: scaleY(1) scaleX(1);
+            filter: brightness(1);
+        }
+
+        50% {
+            transform: scaleY(0.01) scaleX(1);
+            filter: brightness(2);
+        }
+
+        80% {
+            transform: scaleY(0.01) scaleX(0.01);
+            filter: brightness(3);
+        }
+
+        100% {
+            transform: scaleY(0) scaleX(0);
+            filter: brightness(0);
+            opacity: 0;
+        }
+    }
+
+    /* Rapid Ripple */
+    .rapid-ripple {
+        position: absolute;
+        border: 3px solid var(--accent-color);
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: rapidRippleExpand 0.6s ease-out forwards;
+        pointer-events: none;
+    }
+
+    @keyframes rapidRippleExpand {
+        0% {
+            width: 50px;
+            height: 50px;
+            opacity: 1;
+        }
+
+        100% {
+            width: 200vw;
+            height: 200vw;
+            opacity: 0;
+        }
+    }
+
+    /* Blink Animation */
+    @keyframes labelBlink {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.2;
+        }
+    }
+
+    .initial-glow {
+        color: var(--accent-color);
+        font-weight: 700;
+        text-shadow: 0 0 15px var(--accent-glow), 0 0 30px var(--accent-glow);
+        margin-right: -2px;
+    }
+
+    /* Visualizer Core Container */
+    .visualizer-container {
+        width: 500px;
+        height: 500px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 100;
+        pointer-events: none;
+    }
+
+    /* THE LIQUID CORE - The wave itself */
+    .core-circle {
+        width: 100px;
+        height: 100px;
+        background: var(--accent-color);
+        box-shadow:
+            0 0 40px var(--accent-glow),
+            0 0 80px var(--accent-glow),
+            inset 0 0 20px rgba(255, 255, 255, 0.3);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        z-index: 150;
+        /* Absolute centering and liquid animation */
+        animation:
+            liquid-core 6s infinite ease-in-out,
+            core-breathe 4s infinite ease-in-out;
+    }
+
+    /* ROTATING TEXT RING - Rebuilt */
+    .circle-text-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 200px;
+        height: 200px;
+        z-index: 120;
+        opacity: 0.7;
+        /* Spin around the fixed center */
+        animation: misogi-spin 40s linear infinite;
+    }
+
+    .circle-svg {
+        width: 100%;
+        height: 100%;
+    }
+
+    .circle-svg path {
+        fill: none;
+        stroke: none;
+    }
+
+    .circle-svg text {
+        fill: var(--accent-color);
+        font-size: 5.5px;
+        letter-spacing: 0.3px;
+    }
+
+    /* THE RADIATING RIPPLES (Background) */
+    .wave {
+        position: absolute;
+        border: 1px solid var(--accent-color);
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0;
+        z-index: 110;
+    }
+
+    .wave:nth-child(2) {
+        animation: ripple-out 5s infinite 0s;
+    }
+
+    .wave:nth-child(3) {
+        animation: ripple-out 5s infinite 1.6s;
+    }
+
+    .wave:nth-child(4) {
+        animation: ripple-out 5s infinite 3.2s;
+    }
+
+    /* CORE ANIMATIONS */
+    @keyframes liquid-core {
+
+        0%,
+        100% {
+            border-radius: 48% 52% 50% 50% / 50% 50% 52% 48%;
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        33% {
+            border-radius: 52% 48% 50% 50% / 48% 52% 50% 50%;
+            transform: translate(-50%, -50%) rotate(120deg);
+        }
+
+        66% {
+            border-radius: 50% 50% 48% 52% / 52% 48% 50% 50%;
+            transform: translate(-50%, -50%) rotate(240deg);
+        }
+    }
+
+    @keyframes core-breathe {
+
+        0%,
+        100% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0.9;
+        }
+
+        50% {
+            transform: translate(-50%, -50%) scale(1.15);
+            opacity: 1;
+        }
+    }
+
+    @keyframes misogi-spin {
+        from {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        to {
+            transform: translate(-50%, -50%) rotate(360deg);
+        }
+    }
+
+    @keyframes ripple-out {
+        0% {
+            width: 100px;
+            height: 100px;
+            opacity: 0.6;
+        }
+
+        100% {
+            width: 600px;
+            height: 600px;
+            opacity: 0;
+            border-width: 0.5px;
+        }
+    }
+
+    .visualizer-container.active .wave {
+        animation-duration: 1s;
+    }
+
+    .core-circle.active {
+        transform: scale(1.3) !important;
+        filter: blur(2px);
+        background: #fff;
+        box-shadow: 0 0 100px var(--accent-color), 0 0 200px var(--accent-color);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Status Text */
+    .status-text {
+        margin-top: 220px;
+        font-weight: 300;
+        letter-spacing: 2px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        font-family: 'Inter', sans-serif;
+        animation: text-fade 3s infinite alternate;
+    }
+
+    @keyframes text-fade {
+        0% {
+            opacity: 0.4;
+        }
+
+        100% {
+            opacity: 0.8;
+        }
+    }
+
+    /* Rotating Text */
+    .circle-text-container {
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+        z-index: 5;
+        --base-scale: 0.45;
+        transform: scale(var(--base-scale));
+        animation: rotate-circle 30s linear infinite;
+        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        opacity: 0.6;
+    }
+
+    .circle-text-container.active {
+        --base-scale: 1.1;
+        transform: scale(var(--base-scale));
+        animation-play-state: paused;
+        opacity: 1;
+    }
+
+    @keyframes rotate-circle {
+        from {
+            transform: scale(var(--base-scale, 0.45)) rotate(0deg);
+        }
+
+        to {
+            transform: scale(var(--base-scale, 0.45)) rotate(360deg);
+        }
+    }
+
+    #circlePath {
+        fill: none;
+    }
+
+    .circle-svg text {
+        fill: rgba(255, 255, 255, 0.5);
+        font-size: 8.5px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 3.5px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Mode Switcher */
+    .mode-switch-container {
+        position: absolute;
+        /* Relative to main-content */
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 5px;
+        border-radius: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
+        z-index: 1000;
+    }
+
+    .mode-btn {
+        border: none;
+        background: none;
+        color: rgba(255, 255, 255, 0.5);
+        padding: 10px 30px;
+        border-radius: 35px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.4s;
+        white-space: nowrap;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .mode-btn.active {
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent-color), #2563eb);
+        box-shadow: 0 5px 15px var(--accent-glow);
+    }
+
+    /* Chat UI */
+    #chat-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /* Reset padding to center visualizer/buttons correctly */
+        padding: 60px 10% 40px 10%;
+        box-sizing: border-box;
+        background: transparent;
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(20px);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 400;
+        /* Behind core but above background */
+    }
+
+    #chat-container.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    /* FF14-style Chat Log Container */
+    .chat-log-container {
+        position: fixed;
+        left: 32px;
+        bottom: 40px;
+        width: 400px;
+        min-width: 250px;
+        max-width: 600px;
+        z-index: 500;
+    }
+
+    .chat-log-container.dragging {
+        opacity: 0.8;
+        cursor: grabbing;
+    }
+
+    /* Resize handles */
+    .chat-log-resize-handle {
+        position: absolute;
+        background: transparent;
+        z-index: 10;
+    }
+
+    .chat-log-resize-handle.right {
+        top: 0;
+        right: -4px;
+        width: 8px;
+        height: 100%;
+        cursor: ew-resize;
+    }
+
+    .chat-log-resize-handle.top {
+        top: -4px;
+        left: 0;
+        width: 100%;
+        height: 8px;
+        cursor: ns-resize;
+    }
+
+    .chat-log-resize-handle.corner {
+        top: -4px;
+        right: -4px;
+        width: 12px;
+        height: 12px;
+        cursor: nesw-resize;
+    }
+
+    .chat-history {
+        max-height: 180px;
+        overflow-y: auto;
+        padding: 10px 12px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 8px 8px 0 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        transition: height 0.1s ease-out, max-height 0.1s ease-out;
+    }
+
+    .chat-log-line {
+        color: #c8c8c8;
+        word-wrap: break-word;
+    }
+
+    .chat-log-line .sender-misogi {
+        color: #4fc3f7;
+    }
+
+    .chat-log-line .sender-you {
+        color: #81c784;
+    }
+
+    .chat-log-line .sender-system {
+        color: #ffb74d;
+    }
+
+    .chat-log-line .sender-team {
+        color: #ba68c8;
+    }
+
+    /* Chat Log Input Wrapper */
+    .chat-log-input-wrapper {
+        display: flex;
+        align-items: center;
+        padding: 6px 8px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: none;
+        border-bottom: none;
+        gap: 6px;
+    }
+
+    .chat-log-channel-tag {
+        font-size: 0.65rem;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        padding: 2px 6px;
+        border-radius: 4px;
+        cursor: pointer;
+        white-space: nowrap;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.2s;
+    }
+
+    .chat-log-channel-tag:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .chat-log-input-wrapper input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        padding: 6px 10px;
+        color: #fff;
+        font-size: 0.75rem;
+        outline: none;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .chat-log-input-wrapper input:focus {
+        border-color: rgba(186, 104, 200, 0.5);
+    }
+
+    .chat-log-input-wrapper button {
+        background: rgba(186, 104, 200, 0.3);
+        border: none;
+        border-radius: 4px;
+        padding: 6px 10px;
+        color: #ba68c8;
+        cursor: pointer;
+        font-size: 0.7rem;
+    }
+
+    .chat-log-input-wrapper button:hover {
+        background: rgba(186, 104, 200, 0.5);
+    }
+
+    /* Hidden state - only hide log and input, keep buttons */
+    .chat-log-container.hidden .chat-history,
+    .chat-log-container.hidden .chat-log-input-wrapper,
+    .chat-log-container.hidden .chat-log-resize-handle {
+        display: none;
+    }
+
+    .chat-log-container.hidden .chat-log-buttons {
+        border-radius: 8px;
+    }
+
+    /* Chat Log Button Bar */
+    .chat-log-buttons {
+        display: flex;
+        align-items: center;
+        height: 28px;
+        background: rgba(40, 40, 40, 0.95);
+        border-radius: 0 0 8px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: none;
+        padding: 0 4px;
+        gap: 2px;
+    }
+
+    .chat-log-tab {
+        padding: 4px 12px;
+        font-size: 0.7rem;
+        color: #888;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .chat-log-tab:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-log-tab.active {
+        color: #fff;
+        background: rgba(79, 195, 247, 0.3);
+    }
+
+    .chat-log-spacer {
+        flex: 1;
+    }
+
+    .chat-log-icon-btn {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+        color: #888;
+        cursor: pointer;
+        font-size: 0.7rem;
+        transition: all 0.2s;
+    }
+
+    .chat-log-icon-btn:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Chat Log Modal */
+    .chat-log-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .chat-log-modal-content {
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        background: #1a1a1a;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+    }
+
+    .chat-log-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-log-modal-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: #fff;
+    }
+
+    .chat-log-modal-header button {
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .chat-log-modal-header button:hover {
+        color: #fff;
+    }
+
+    .chat-log-modal-body {
+        padding: 16px;
+        max-height: 60vh;
+        overflow-y: auto;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+
+    /* Team Chat Modal */
+    .team-chat-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    }
+
+    .team-chat-container {
+        width: 90%;
+        max-width: 700px;
+        height: 80vh;
+        max-height: 600px;
+        background: #1a1a2e;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .team-chat-header {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .team-chat-tabs {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+
+    .team-chat-tab {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        color: #888;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .team-chat-tab:hover {
+        color: var(--ch-color, #fff);
+        border-color: var(--ch-color, #fff);
+    }
+
+    .team-chat-tab.active {
+        color: var(--ch-color, #fff);
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--ch-color, #fff);
+    }
+
+    .team-chat-close {
+        background: none;
+        border: none;
+        color: #888;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    .team-chat-close:hover {
+        color: #fff;
+    }
+
+    .team-chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.85rem;
+        line-height: 1.8;
+    }
+
+    .team-chat-message {
+        margin-bottom: 4px;
+    }
+
+    .team-chat-time {
+        color: #555;
+        margin-right: 8px;
+    }
+
+    .team-chat-sender {
+        font-weight: 600;
+        margin-right: 8px;
+    }
+
+    .team-chat-text {
+        color: #e2e8f0;
+    }
+
+    .team-chat-empty,
+    .team-chat-loading {
+        color: #666;
+        text-align: center;
+        padding: 40px;
+    }
+
+    .team-chat-input-wrapper {
+        display: flex;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.3);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        gap: 8px;
+    }
+
+    .team-chat-input-wrapper input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px 16px;
+        color: #fff;
+        font-size: 0.9rem;
+        outline: none;
+    }
+
+    .team-chat-input-wrapper input:focus {
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .team-chat-input-wrapper button {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .team-chat-input-wrapper button:hover {
+        transform: scale(1.05);
+    }
+
+    /* Custom scrollbar styling */
+    .chat-history::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .chat-history::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .chat-history::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+    }
+
+    .chat-history::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    .chat-bubble {
+        max-width: 80%;
+        padding: 12px 18px;
+        border-radius: 18px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        font-family: 'Inter', sans-serif;
+        position: relative;
+    }
+
+    .chat-bubble.ai {
+        align-self: flex-end;
+        background: #f0f9ff;
+        color: #0c4a6e;
+        border-bottom-right-radius: 4px;
+        border: 1px solid #bae6fd;
+    }
+
+    .chat-bubble.user {
+        align-self: flex-end;
+        background: #000;
+        color: #fff;
+        border-bottom-right-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Loading/Checking Indicator Style */
+    .checking-indicator {
+        margin-top: 15px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        height: 0;
+        overflow: hidden;
+    }
+
+    .checking-indicator.visible {
+        opacity: 1;
+        height: auto;
+        padding-bottom: 10px;
+    }
+
+    .checking-spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .chat-input-wrapper {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 8px;
+        border-radius: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        max-width: 600px;
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #text-input {
+        flex: 1;
+        background: none;
+        border: none;
+        color: #fff;
+        padding: 8px 15px;
+        outline: none;
+        font-size: 1rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .send-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--accent-color);
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .attach-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.3s;
+    }
+
+    .attach-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+
+    .voice-mode-content {
+        transition: all 0.5s ease;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 300;
+    }
+
+    .voice-mode-content.hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.95);
+        display: none;
+    }
+
+    /* AI Overlay */
+    .ai-response-overlay {
+        position: absolute;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        width: auto;
+        min-width: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 20px;
+        border-radius: 16px;
+        color: #fff;
+        font-size: 1rem;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.4s;
+        z-index: 120;
+    }
+
+    .ai-response-overlay.visible {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+        pointer-events: auto;
+    }
+
+    .ai-response-icon {
+        color: var(--accent-color);
+        margin-bottom: 8px;
+        font-size: 1.2rem;
+    }
+
+    /* Start Button Overlay */
+    #start-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        min-height: 600px;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding-bottom: 40px;
+        z-index: 2000;
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow-y: auto;
+    }
+
+    #start-overlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .start-btn {
+        width: 100px;
+        height: 100px;
+        background: transparent;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        position: relative;
+    }
+
+    .start-btn i {
+        font-size: 2rem;
+        transition: all 0.4s;
+    }
+
+    .start-btn-label {
+        font-size: 0.5rem;
+        margin-top: 8px;
+        letter-spacing: 2px;
+        font-weight: 700;
+        opacity: 0.5;
+        transition: all 0.4s;
+    }
+
+    .start-btn:hover {
+        border-color: var(--accent-color);
+        color: #fff;
+        box-shadow: 0 0 40px var(--accent-glow);
+        transform: scale(1.1);
+    }
+
+    .start-btn:hover i {
+        color: var(--accent-color);
+        text-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .start-btn:hover .start-btn-label {
+        opacity: 1;
+        color: var(--accent-color);
+    }
+
+    .start-btn::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 1px solid var(--accent-color);
+        border-radius: 50%;
+        opacity: 0;
+        transform: scale(1);
+        transition: all 0.6s;
+    }
+
+    .start-btn:hover::after {
+        opacity: 0.5;
+        transform: scale(1.3);
+    }
+
+    /* Conversational Login UI */
+    .login-bubble-container {
+        position: absolute;
+        bottom: 120px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 400px;
+        z-index: 600;
+        display: none;
+        flex-direction: column;
+        gap: 15px;
+        animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translate(-50%, 20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+    }
+
+    .login-input-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .login-input-card input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 12px 15px;
+        color: #fff;
+        outline: none;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .login-input-card input:focus {
+        border-color: var(--accent-color);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .login-submit-btn {
+        background: var(--accent-color);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .login-submit-btn:hover {
+        filter: brightness(1.2);
+        box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    /* Attendance Button UI */
+    .action-bubble-container {
+        align-self: center;
+        margin-top: 10px;
+        display: none;
+    }
+
+    .attendance-btn {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+        border: none;
+        border-radius: 20px;
+        padding: 10px 25px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        transition: all 0.3s;
+    }
+
+    .attendance-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Latest Message Centered Style */
+    .latest-message-container {
+        width: 100%;
+        min-height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 10px 0 20px 0;
+        z-index: 10;
+        pointer-events: none;
+        /* Let text be selectable but pass clicks through if needed */
+    }
+
+    .latest-message-bubble {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        padding: 15px 25px;
+        border-radius: 20px;
+        font-size: 1.1rem;
+        text-align: center;
+        max-width: 80%;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 0.4s ease-out;
+        pointer-events: auto;
+    }
+
+    .latest-message-bubble.ai {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Action Buttons Container Style */
+    .action-buttons-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+        margin-top: auto;
+        padding-top: 60px;
+        z-index: 20;
+    }
+</style>
+
+<main id="main" class="admin-dashboard">
+    @include('partials.admin-sidebar')
+
+    <!-- Job Change Animation Overlay -->
+</main>
+<div id="job-change-overlay">
+    <div id="job-change-label">CHANGE JOB...</div>
+</div>
+
+<div id="start-overlay" style="background: radial-gradient(circle at center, #0a1128 0%, #000 100%);">
+    <div class="logo-section"
+        style="text-align: center; margin-bottom: 30px; animation: fadeIn 1.5s ease-out; position: relative;">
+
+        <div class="logo-main"
+            style="font-size: 3.5rem; font-weight: 300; letter-spacing: 12px; color: #fff; margin-bottom: 15px; position: relative;">
+            <span class="initial-glow">M</span>ISOGI
+        </div>
+        <div class="logo-sub"
+            style="font-size: 0.7rem; color: rgba(255,255,255,0.4); letter-spacing: 4px; line-height: 1.6;">
+            MISESAPO INTELLIGENT SYSTEM FOR<br>OPERATIONAL GUIDANCE & INTERFACE
+        </div>
+    </div>
+    <div class="visualizer-container"
+        style="cursor: default; position: relative; transform: none; top: auto; left: auto; margin-bottom: 40px; display: inline-block;">
+        <div class="circle-text-container"
+            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; animation: misogi-spin 40s linear infinite;">
+            <svg viewBox="0 0 200 200" class="circle-svg" width="200" height="200">
+                <path id="circlePathStart" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
+                <text>
+                    <textPath href="#circlePathStart">
+                        Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
+                    </textPath>
+                </text>
+            </svg>
+        </div>
+        <!-- The Liquid Core -->
+        <div class="core-circle"
+            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: liquid-core 6s infinite ease-in-out, core-breathe 4s infinite ease-in-out;">
+        </div>
+
+        <!-- Ripples -->
+        <div class="wave" style="animation: ripple-out 5s infinite 0s;"></div>
+        <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
+        <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
+    </div>
+    <button class="start-btn" onclick="startWorkflow()" style="margin-top: 40px; position: relative; z-index: 200;">
+        <i class="fas fa-power-off"></i>
+        <div class="start-btn-label">LOGIN</div>
+    </button>
+</div>
+
+<div class="main-content" style="background: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);">
+    <!-- Persistent Visualizer Core -->
+    <div class="visualizer-container">
+        <div class="circle-text-container" id="circle-text"
+            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; animation: misogi-spin 40s linear infinite;">
+            <svg viewBox="0 0 200 200" class="circle-svg" width="200" height="200">
+                <path id="circlePath" d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
+                <text>
+                    <textPath href="#circlePath">
+                        Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
+                    </textPath>
+                </text>
+            </svg>
+        </div>
+        <!-- The Liquid Core -->
+        <div class="core-circle"
+            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: liquid-core 6s infinite ease-in-out, core-breathe 4s infinite ease-in-out;">
+        </div>
+
+        <!-- Ripples -->
+        <div class="wave" style="animation: ripple-out 5s infinite 0s;"></div>
+        <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
+        <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
+    </div>
+
+    <!-- Voice Content -->
+    <div class="voice-mode-content" id="voice-content">
+        <div class="status-text" id="status-text">LISTENING...</div>
+        <div class="ai-response-overlay" id="ai-response">
+            <div class="ai-response-icon"><i class="fas fa-sparkles"></i> MISOGI</div>
+            <div id="ai-message-text"></div>
+        </div>
+    </div>
+
+    <!-- FF14-style Chat Log -->
+    <div class="chat-log-container" id="chat-log-container">
+        <!-- Resize handles -->
+        <div class="chat-log-resize-handle top"></div>
+        <div class="chat-log-resize-handle right"></div>
+        <div class="chat-log-resize-handle corner"></div>
+
+        <div class="chat-history" id="chat-history">
+            <!-- Log lines injected by JS -->
+        </div>
+
+        <!-- Team chat input (for Call/General) -->
+        <div class="chat-log-input-wrapper" id="chat-log-input-wrapper">
+            <div class="chat-log-channel-tag" id="chat-log-current-channel" onclick="openChannelPicker()">Misesapo
+            </div>
+            <input type="text" id="team-chat-inline-input" placeholder="社内チャット（Alt+1~8で切替）..."
+                onkeypress="if(event.key==='Enter') sendInlineTeamMessage()">
+            <button onclick="sendInlineTeamMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+
+        <div class="chat-log-buttons">
+            <button class="chat-log-tab active" data-filter="general"
+                onclick="filterChatLog('general')">General</button>
+            <button class="chat-log-tab" data-filter="event" onclick="filterChatLog('event')">Event</button>
+            <button class="chat-log-tab" data-filter="call" onclick="filterChatLog('call')">Call</button>
+            <div class="chat-log-spacer"></div>
+            <button class="chat-log-icon-btn" onclick="expandChatLog()" title="ログを拡大">
+                <i class="fas fa-plus"></i>
+            </button>
+            <button class="chat-log-icon-btn" onclick="toggleChatLog()" title="ログを非表示">
+                <i class="fas fa-times"></i>
+            </button>
+            <button class="chat-log-icon-btn" onclick="openTeamChat()" title="チャンネル選択">
+                <i class="fas fa-hashtag"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat Content -->
+    <div id="chat-container">
+
+        <!-- New: Latest Message Display (Centered) -->
+        <div id="latest-message-container" class="latest-message-container"></div>
+
+        <!-- New: Action Buttons Container (Centered) -->
+        <div id="action-buttons-container" class="action-buttons-container"></div>
+
+        <!-- Login Bubble -->
+        <div class="login-bubble-container" id="login-form">
+            <div class="login-input-card">
+                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 5px;">ACCOUNT
+                    AUTHENTICATION</div>
+                <input type="email" id="login-email" placeholder="メールアドレス" autocomplete="email">
+                <input type="password" id="login-password" placeholder="パスワード" autocomplete="current-password">
+                <button class="login-submit-btn" onclick="performLogin()">認証</button>
+            </div>
+        </div>
+
+        <div class="chat-input-wrapper">
+            <input type="file" id="image-upload" accept="image/*" style="display: none;"
+                onchange="handleImageSelect(this)">
+            <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
+                <i class="fas fa-camera"></i>
+            </button>
+            <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
+            <button class="send-btn" onclick="sendTextMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mode Switcher -->
+    <div class="mode-switch-container" style="display: none;">
+        <button class="mode-btn" id="btn-voice-mode" onclick="switchMode('voice')">
+            <i class="fas fa-microphone"></i> 音声
+        </button>
+        <button class="mode-btn active" id="btn-chat-mode" onclick="switchMode('chat')">
+            <i class="fas fa-comment-dots"></i> チャット
+        </button>
+    </div>
+</div>
+</div>
+
+<!-- Floating Job Indicator Button -->
+<button id="floating-job-btn" onclick="requestJobChange()">
+    <span class="job-dot"></span>
+    <span id="floating-job-label">-</span>
+</button>
+</main>
+
+<script>
+    // Image Upload Handling
+    function handleImageSelect(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            // For now, just show a message that image is selected.
+            // In a real app, we would upload via API or preview it.
+            appendChatMessage('user', `[画像を選択しました: ${file.name}]<br>(※画像送信機能は準備中です)`);
+            input.value = ''; // Reset
+        }
+    }
+
+
+    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    const AI_PROCESS_ENABLED = false;
+
+    function ensureAuthOrRedirect() {
+        // Simple token check
+        const token = localStorage.getItem('cognito_id_token');
+        if (!token) {
+            // alert("認証が必要です。");
+            return null;
+        }
+        return token;
+    }
+
+    // UI Variables
+    const visualizer = document.querySelector('.visualizer-container');
+    const core = document.querySelector('.core-circle');
+    const circleText = document.getElementById('circle-text');
+    const statusText = document.getElementById('status-text');
+    const responseOverlay = document.getElementById('ai-response');
+    const messageText = document.getElementById('ai-message-text');
+    const voiceContent = document.getElementById('voice-content');
+    const chatContainer = document.getElementById('chat-container');
+    const chatHistory = document.getElementById('chat-history');
+    const textInput = document.getElementById('text-input');
+    const btnVoice = document.getElementById('btn-voice-mode');
+    const btnChat = document.getElementById('btn-chat-mode');
+    const sidebar = document.getElementById('admin-sidebar');
+    const startOverlay = document.getElementById('start-overlay');
+    const loginForm = document.getElementById('login-form');
+
+    let currentMode = 'chat';
+
+    // Hide sidebar by default for AI-centric feel
+    if (sidebar) sidebar.style.display = 'none';
+
+    async function startWorkflow() {
+        const overlay = document.getElementById('start-overlay');
+        if (!overlay) return;
+
+        // Ensure overlay is hidden if we are starting or already started
+        overlay.classList.add('hidden');
+        switchMode('chat');
+
+        // Guard: Prevent re-initialization of attendance logic if already in an active session
+        if (window.currentAttendanceRecord && !window.currentAttendanceRecord.clock_out) {
+            console.log("[GUARD] Already in an active session. UI shown, skipping attendance check.");
+            return;
+        }
+
+
+        const token = localStorage.getItem('cognito_id_token');
+        if (!token) {
+            appendChatMessage('ai', 'おはようございます。ミセサポ管理AIのMISOGIです。セッションを開始するために、まずはログイン情報を入力してください。');
+            setTimeout(() => {
+                loginForm.style.display = 'flex';
+            }, 800);
+        } else {
+            const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+            const staffId = user.id || user.sub;
+
+            // Helper to get JST date string (YYYY-MM-DD)
+            const getJstDateStr = (d) => {
+                const jstDate = new Date(d.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+                const y = jstDate.getFullYear();
+                const m = String(jstDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(jstDate.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dd}`;
+            };
+
+            const todayStr = getJstDateStr(new Date());
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = getJstDateStr(yesterday);
+
+            // console.log(`Checking status for ${staffId}, checking dates: ${todayStr}, ${yesterdayStr}`);
+
+            try {
+                // Fetch recent records (limit 5) instead of specific date filter
+                // This handles cross-day workshifts and timezone mismatches better
+                const response = await fetch(`${API_BASE}/attendance?staff_id=${staffId}&limit=5`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                let isClockedIn = false;
+                let isOnBreak = false;
+                let latestRecord = null;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('[DEBUG] Attendance API response:', data);
+                    const records = Array.isArray(data) ? data : (data.attendance || data.items || []);
+                    console.log('[DEBUG] Attendance records:', records);
+                    console.log('[DEBUG] Checking dates:', todayStr, yesterdayStr);
+
+                    // Improved logic: Find latest record and check if it's still clocked in
+                    const latestRecord = records.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+                    console.log("[DEBUG] Latest record found:", latestRecord);
+
+                    const currentDayStr = new Date().toISOString().split('T')[0];
+                    const isStillIn = latestRecord && !latestRecord.clock_out;
+
+                    if (isStillIn) {
+                        window.currentAttendanceRecord = latestRecord;
+                        let attendanceStatus = 'clock_in';
+                        showJobActions('cleaning');
+                        appendChatMessage('ai', `お疲れ様です、${latestRecord.staff_name || 'スタッフ'}さん。${latestRecord.store_name}での業務を継続します。`);
+                    } else {
+                        const startOverlay = document.getElementById('start-overlay');
+                        if (startOverlay) startOverlay.classList.remove('hidden');
+                    }
+                    // Critical Fallback: If still no record found but there ARE records, 
+                    // check the very latest record regardless of date match of today/yesterday.
+                    // If it's open (no clock_out), treat as clocked in.
+                    if (!latestRecord && records.length > 0) {
+                        if (records[0].clock_in && !records[0].clock_out) {
+                            console.log('[DEBUG] Found open record from another date:', records[0].date);
+                            latestRecord = records[0];
+                        }
+                    }
+
+                    console.log('[DEBUG] Latest record found:', latestRecord);
+                    console.log('[DEBUG] All record dates:', records.map(r => r.date));
+
+                    if (latestRecord && latestRecord.clock_in && !latestRecord.clock_out) {
+                        isClockedIn = true;
+                        console.log('[DEBUG] User is clocked in');
+                        // Determine if user is currently on break
+                        if (latestRecord.break_start && !latestRecord.break_end) {
+                            isOnBreak = true;
+                        }
+                    }
+                } else {
+                    console.log('[DEBUG] Attendance API response not ok:', response.status);
+                }
+
+                if (isOnBreak) {
+                    // 休憩中
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。休憩中ですね。業務を再開しますか？`);
+                    handleAiCommands({ ui_commands: [{ type: 'show_break_end' }] });
+                } else if (isClockedIn) {
+                    // 出勤済み → 「再開」扱い（出勤ボタンは不要）
+                    // accounting専用ページ: 常にaccountingモードで動作
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。経理モードで業務を継続します。`);
+                    currentJobType = 'accounting';
+                    localStorage.setItem('current_job_type', 'accounting');
+                    document.body.classList.add('job-accounting');
+                    filterSidebar('accounting');
+                    showJobActions('accounting');
+                } else {
+                    // 未出勤 → 出勤を促す
+                    appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。業務を開始しますか？`);
+                    handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
+                }
+            } catch (e) {
+                console.error('Failed to check attendance:', e);
+                appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。認証を確認しました。業務を開始される場合はお知らせください。`);
+                handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
+            }
+        }
+    }
+
+    async function performLogin() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        if (!email || !password) return;
+
+        const loginBtn = document.querySelector('.login-submit-btn');
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 認証中...';
+        loginBtn.disabled = true;
+
+        try {
+            // Use existing CognitoAuth if available, or simulate for now
+            if (window.CognitoAuth) {
+                const result = await window.CognitoAuth.login(email, password);
+                if (result.success) {
+                    loginForm.style.display = 'none';
+                    // Re-run workflow to check attendance state
+                    await startWorkflow();
+                } else {
+                    throw new Error(result.message);
+                }
+            } else {
+                throw new Error('認証システムが読み込まれていません');
+            }
+        } catch (err) {
+            alert('ログインに失敗しました: ' + err.message);
+            loginBtn.innerHTML = '認証';
+            loginBtn.disabled = false;
+        }
+    }
+
+    async function performClockIn() {
+        const btn = document.getElementById('active-attendance-btn');
+        if (btn) btn.disabled = true;
+
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const token = localStorage.getItem('cognito_id_token');
+
+        if (!user.id || !token) {
+            appendChatMessage('ai', 'エラー：ログイン情報が見つかりません。再ログインしてください。');
+            return;
+        }
+
+        appendChatMessage('user', '出勤します');
+
+        try {
+            const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
+            const now = new Date().toISOString();
+
+            const sanitizedData = {
+                staff_id: user.id || user.sub,
+                staff_name: user.name || user.username,
+                date: today,
+                clock_in: now
+            };
+
+            const response = await fetch(`${API_BASE}/attendance`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(sanitizedData)
+            });
+
+            if (response.ok) {
+                appendChatMessage('ai', `${user.name || 'ユーザー'}様、出勤を記録しました。本日はどの業務を行いますか？`);
+                showJobSelection();
+                if (btn) btn.innerHTML = '<i class="fas fa-check"></i> 出勤済み';
+            } else {
+                const err = await response.json();
+                throw new Error(err.message || 'API Error');
+            }
+        } catch (err) {
+            console.error('Attendance Error:', err);
+            appendChatMessage('ai', 'エラーが発生しました：' + err.message);
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    async function performBreakStart() {
+        if (!confirm('休憩に入りますか？')) return;
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const token = localStorage.getItem('cognito_id_token');
+        const now = new Date().toISOString();
+
+        try {
+            const response = await fetch(`${API_BASE}/attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    staff_id: user.id || user.sub,
+                    date: new Date().toLocaleDateString('sv-SE'),
+                    break_start: now
+                })
+            });
+            if (response.ok) {
+                appendChatMessage('ai', '休憩を記録しました。ゆっくりお休みください。');
+                handleAiResponse({ intent: 'break_start' }); // Trigger visual transition
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function performBreakEnd() {
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const token = localStorage.getItem('cognito_id_token');
+        const now = new Date().toISOString();
+
+        try {
+            const response = await fetch(`${API_BASE}/attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    staff_id: user.id || user.sub,
+                    date: new Date().toLocaleDateString('sv-SE'),
+                    break_end: now
+                })
+            });
+            if (response.ok) {
+                appendChatMessage('ai', 'お帰りなさいませ。業務の再開を記録しました。');
+                handleAiResponse({ intent: 'break_end' }); // Trigger visual transition
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function performClockOut() {
+        if (!confirm('本日の業務を終了し、退勤しますか？')) return;
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const token = localStorage.getItem('cognito_id_token');
+        const now = new Date().toISOString();
+
+        try {
+            const response = await fetch(`${API_BASE}/attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    staff_id: user.id || user.sub,
+                    date: new Date().toLocaleDateString('sv-SE'),
+                    clock_out: now
+                })
+            });
+            if (response.ok) {
+                appendChatMessage('ai', 'お疲れ様でした。退勤を記録しました。また明日もお待ちしております。');
+                localStorage.removeItem('current_job_type'); // Clear job type on clock out
+                handleAiResponse({ intent: 'clock_out' }); // Trigger visual transition
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function switchMode(mode) {
+        currentMode = mode;
+        if (mode === 'voice') {
+            btnVoice.classList.add('active');
+            btnChat.classList.remove('active');
+            chatContainer.classList.remove('active');
+            voiceContent.classList.remove('hidden');
+            voiceContent.style.display = 'flex';
+            // Adjust visualizer for voice mode
+            visualizer.style.transform = 'translate(-50%, -50%) scale(1)';
+        } else {
+            btnChat.classList.add('active');
+            btnVoice.classList.remove('active');
+            voiceContent.classList.add('hidden');
+            setTimeout(() => { if (currentMode === 'chat') voiceContent.style.display = 'none'; }, 500);
+            chatContainer.classList.add('active');
+            textInput.focus();
+            // Subtly shrink or adjust visualizer for chat mode to not overlap text
+            visualizer.style.transform = 'translate(-50%, -50%) scale(0.8)';
+        }
+    }
+
+    function appendChatMessage(role, text) {
+        // Move any existing latest message to history
+        const latestContainer = document.getElementById('latest-message-container');
+        if (latestContainer && latestContainer.children.length > 0) {
+            const oldMessage = latestContainer.firstElementChild;
+            const oldRole = oldMessage.dataset.role;
+            const oldText = oldMessage.innerHTML;
+
+            const historyBubble = document.createElement('div');
+            historyBubble.className = `chat-bubble ${oldRole}`;
+            historyBubble.innerHTML = oldText;
+            chatHistory.appendChild(historyBubble);
+        }
+
+        // Create new latest message
+        if (!latestContainer) return; // Safety check
+        latestContainer.innerHTML = ''; // Clear previous
+
+        const newBubble = document.createElement('div');
+        newBubble.className = `latest-message-bubble ${role}`;
+        newBubble.dataset.role = role;
+        newBubble.innerHTML = text.replace(/\n/g, '<br>');
+        latestContainer.appendChild(newBubble);
+
+        // Scroll history to bottom just in case
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        // Write to independent log system (type: misogi for AI conversation)
+        const sender = role === 'ai' ? 'misogi' : 'you';
+        writeLog(sender, text.replace(/<[^>]*>/g, '').replace(/\n/g, ' '), 'misogi');
+    }
+
+    // ========================================
+    // Independent Chat Log System (FF14-style)
+    // ========================================
+    const chatLogData = {
+        messages: [],   // All messages with type
+        visible: true,
+        filter: 'general',  // 'general', 'event', 'call'
+        currentChannel: 'misesapo'  // For team chat
+    };
+
+    // type: 'misogi' (MISOGI conversation), 'team' (team chat), 'system' (events)
+    function writeLog(sender, message, type = 'misogi') {
+        const logEntry = {
+            sender: sender,   // 'misogi', 'you', 'system', 'team'
+            message: message,
+            type: type,       // 'misogi', 'team', 'system'
+            time: new Date(),
+            channel: chatLogData.currentChannel
+        };
+
+        chatLogData.messages.push(logEntry);
+        renderChatLog();
+    }
+
+    function renderChatLog() {
+        const logContainer = document.getElementById('chat-history');
+        if (!logContainer) return;
+
+        const filter = chatLogData.filter;
+        let entries = chatLogData.messages;
+
+        // Filter based on tab selection
+        if (filter === 'event') {
+            // Event = MISOGI conversations only
+            entries = entries.filter(e => e.type === 'misogi');
+        } else if (filter === 'call') {
+            // Call = Team chat only
+            entries = entries.filter(e => e.type === 'team');
+        }
+        // General = show all
+
+        // Keep only last 50 entries for performance
+        const recentEntries = entries.slice(-50);
+
+        logContainer.innerHTML = recentEntries.map(entry => {
+            const senderClass = `sender-${entry.sender}`;
+            let senderLabel;
+            if (entry.sender === 'misogi') senderLabel = 'MISOGI';
+            else if (entry.sender === 'you') senderLabel = 'YOU';
+            else if (entry.sender === 'team') senderLabel = entry.senderName || 'TEAM';
+            else senderLabel = 'SYSTEM';
+
+            return `<div class="chat-log-line"><span class="${senderClass}">${senderLabel}>></span> ${entry.message}</div>`;
+        }).join('');
+
+        logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    function filterChatLog(filter) {
+        chatLogData.filter = filter;
+
+        // Update tab active state
+        document.querySelectorAll('.chat-log-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.filter === filter);
+        });
+
+        renderChatLog();
+    }
+
+    function toggleChatLog() {
+        const container = document.getElementById('chat-log-container');
+        if (!container) return;
+
+        chatLogData.visible = !chatLogData.visible;
+        container.classList.toggle('hidden', !chatLogData.visible);
+    }
+
+    function expandChatLog() {
+        // Create modal for full log view
+        const modal = document.createElement('div');
+        modal.className = 'chat-log-modal';
+        modal.innerHTML = `
+            <div class="chat-log-modal-content">
+                <div class="chat-log-modal-header">
+                    <h3>チャットログ</h3>
+                    <button onclick="this.closest('.chat-log-modal').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="chat-log-modal-body">
+                    ${chatLogData.messages.map(entry => { // Changed from chatLogData.all to chatLogData.messages
+            const senderLabel = entry.sender === 'misogi' ? 'MISOGI' :
+                entry.sender === 'you' ? 'YOU' : 'SYSTEM';
+            return `<div class="chat-log-line"><span class="sender-${entry.sender}">${senderLabel}>></span> ${entry.message}</div>`;
+        }).join('')}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    // ========================================
+    // Team Chat System
+    // ========================================
+    const CHAT_API = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod/chat';
+    let teamChatState = {
+        channel: 'misesapo',
+        polling: null,
+        lastTimestamp: null
+    };
+
+    function openTeamChat() {
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+
+        const modal = document.createElement('div');
+        modal.className = 'team-chat-modal';
+        modal.id = 'team-chat-modal';
+        modal.innerHTML = `
+            <div class="team-chat-container">
+                <div class="team-chat-header">
+                    <div class="team-chat-tabs">
+                        ${Object.entries(CHAT_CHANNELS).map(([key, ch]) => `
+                            <button class="team-chat-tab ${key === 'misesapo' ? 'active' : ''}" 
+                                    data-channel="${key}" 
+                                    style="--ch-color: ${ch.color}"
+                                    onclick="switchChatChannel('${key}')">
+                                ${ch.label}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <button class="team-chat-close" onclick="closeTeamChat()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="team-chat-messages" id="team-chat-messages">
+                    <div class="team-chat-loading">読み込み中...</div>
+                </div>
+                <div class="team-chat-input-wrapper">
+                    <input type="text" id="team-chat-input" placeholder="メッセージを入力..." 
+                           onkeypress="if(event.key==='Enter') sendTeamMessage()">
+                    <button onclick="sendTeamMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Start polling
+        loadTeamMessages();
+        teamChatState.polling = setInterval(loadTeamMessages, 5000);
+
+        logEvent('チームチャットを開きました');
+    }
+
+    function closeTeamChat() {
+        const modal = document.getElementById('team-chat-modal');
+        if (modal) modal.remove();
+
+        if (teamChatState.polling) {
+            clearInterval(teamChatState.polling);
+            teamChatState.polling = null;
+        }
+    }
+
+    function switchChatChannel(channel) {
+        teamChatState.channel = channel;
+        chatLogData.currentChannel = channel;
+        teamChatState.lastTimestamp = null;
+
+        // Update tags and labels
+        const chInfo = CHAT_CHANNELS[channel] || { label: 'Unknown', color: '#fff' };
+        const tag = document.getElementById('chat-log-current-channel');
+        if (tag) {
+            tag.textContent = chInfo.label;
+            tag.style.borderColor = chInfo.color;
+            tag.style.color = chInfo.color;
+        }
+
+        const inlineInput = document.getElementById('team-chat-inline-input');
+        if (inlineInput) {
+            inlineInput.style.borderColor = `rgba(${hexToRgb(chInfo.color)}, 0.3)`;
+            inlineInput.placeholder = `${chInfo.label}チャンネルに送信... (Alt+1~8で切替)`;
+        }
+
+        // Update active tab in any open modals
+        document.querySelectorAll('.team-chat-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.channel === channel);
+        });
+
+        loadTeamMessages();
+        renderChatLog();
+    }
+
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ?
+            `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
+    }
+
+    function openChannelPicker() {
+        // Create simple channel picker if not using the full modal
+        const existing = document.getElementById('team-chat-modal');
+        if (existing) return;
+
+        openTeamChat(); // For now use the same modal, but we could make a smaller list
+    }
+
+    // Alt + 1-8 Shortcut Handler
+    document.addEventListener('keydown', (e) => {
+        if (e.altKey && e.key >= '1' && e.key <= '8') {
+            const keys = Object.keys(CHAT_CHANNELS);
+            const index = parseInt(e.key) - 1;
+            if (keys[index]) {
+                e.preventDefault();
+                switchChatChannel(keys[index]);
+                writeLog('system', `チャンネルをルーム [${CHAT_CHANNELS[keys[index]].label}] に切り替えました`, 'system');
+            }
+        }
+    });
+
+    async function loadTeamMessages() {
+        const msgContainer = document.getElementById('team-chat-messages');
+        if (!msgContainer) return;
+
+        try {
+            let url = `${CHAT_API}?channel=${teamChatState.channel}&limit=50`;
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Failed to load messages');
+
+            const data = await response.json();
+            const messages = data.messages || [];
+
+            if (messages.length === 0) {
+                msgContainer.innerHTML = '<div class="team-chat-empty">メッセージはまだありません</div>';
+                return;
+            }
+
+            const channelColor = CHAT_CHANNELS[teamChatState.channel]?.color || '#fff';
+
+            msgContainer.innerHTML = messages.map(msg => {
+                const time = new Date(msg.timestamp).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                return `
+                    <div class="team-chat-message">
+                        <span class="team-chat-time">${time}</span>
+                        <span class="team-chat-sender" style="color: ${channelColor}">${msg.sender_name}</span>
+                        <span class="team-chat-text">${msg.message}</span>
+                    </div>
+                `;
+            }).join('');
+
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+
+            if (messages.length > 0) {
+                teamChatState.lastTimestamp = messages[messages.length - 1].timestamp;
+            }
+        } catch (e) {
+            console.error('Failed to load team messages:', e);
+        }
+    }
+
+    async function sendTeamMessage() {
+        const input = document.getElementById('team-chat-input');
+        if (!input) return;
+
+        const message = input.value.trim();
+        if (!message) return;
+
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+
+        try {
+            const response = await fetch(CHAT_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    channel: teamChatState.channel,
+                    sender_id: user.id || user.sub || 'unknown',
+                    sender_name: user.name || 'Unknown',
+                    message: message
+                })
+            });
+
+            if (response.ok) {
+                input.value = '';
+                loadTeamMessages();
+            }
+        } catch (e) {
+            console.error('Failed to send message:', e);
+        }
+    }
+
+    // Log event actions (button clicks, etc.)
+    function logEvent(message) {
+        writeLog('system', message, 'system');
+    }
+
+    // Send team message from inline input in chat log
+    async function sendInlineTeamMessage() {
+        const input = document.getElementById('team-chat-inline-input');
+        if (!input) return;
+
+        const message = input.value.trim();
+        if (!message) return;
+
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const senderName = user.name || 'Unknown';
+
+        try {
+            const response = await fetch(CHAT_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    channel: chatLogData.currentChannel,
+                    sender_id: user.id || user.sub || 'unknown',
+                    sender_name: senderName,
+                    message: message
+                })
+            });
+
+            if (response.ok) {
+                input.value = '';
+                // Add to local log immediately
+                const logEntry = {
+                    sender: 'team',
+                    senderName: senderName,
+                    message: message,
+                    type: 'team',
+                    time: new Date(),
+                    channel: chatLogData.currentChannel
+                };
+                chatLogData.messages.push(logEntry);
+                renderChatLog();
+            }
+        } catch (e) {
+            console.error('Failed to send inline team message:', e);
+        }
+    }
+
+    // Expose chat functions to window for onclick handlers
+    window.filterChatLog = filterChatLog;
+    window.toggleChatLog = toggleChatLog;
+    window.expandChatLog = expandChatLog;
+    window.openTeamChat = openTeamChat;
+    window.closeTeamChat = closeTeamChat;
+    window.switchChatChannel = switchChatChannel;
+    window.sendTeamMessage = sendTeamMessage;
+    window.sendInlineTeamMessage = sendInlineTeamMessage;
+    window.openChannelPicker = openChannelPicker;
+
+    // ========================================
+    // Chat Log Resize & Drag
+    // ========================================
+    function initChatLogInteractions() {
+        const container = document.getElementById('chat-log-container');
+        const chatHistory = container?.querySelector('.chat-history');
+        if (!container || !chatHistory) return;
+
+        // Load saved position/size
+        const savedState = JSON.parse(localStorage.getItem('chatLogState') || '{}');
+        if (savedState.left) container.style.left = savedState.left;
+        if (savedState.bottom) container.style.bottom = savedState.bottom;
+        if (savedState.width) container.style.width = savedState.width;
+        if (savedState.height) chatHistory.style.maxHeight = savedState.height;
+
+        // Resize handlers
+        const handles = container.querySelectorAll('.chat-log-resize-handle');
+        handles.forEach(handle => {
+            handle.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const isRight = handle.classList.contains('right');
+                const isTop = handle.classList.contains('top');
+                const isCorner = handle.classList.contains('corner');
+
+                const startX = e.clientX;
+                const startY = e.clientY;
+                const startWidth = container.offsetWidth;
+                // Get current maxHeight value, default to 180 if not set
+                const currentMaxHeight = parseInt(getComputedStyle(chatHistory).maxHeight) || 180;
+                const startHeight = currentMaxHeight;
+
+                function onMouseMove(e) {
+                    if (isRight || isCorner) {
+                        const newWidth = Math.max(250, Math.min(600, startWidth + (e.clientX - startX)));
+                        container.style.width = newWidth + 'px';
+                    }
+                    if (isTop || isCorner) {
+                        const deltaY = startY - e.clientY;
+                        const newHeight = Math.max(80, Math.min(400, startHeight + deltaY));
+                        chatHistory.style.maxHeight = newHeight + 'px';
+                        chatHistory.style.height = newHeight + 'px';
+                    }
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    saveChatLogState();
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        });
+
+        // Alt + Drag to move
+        container.addEventListener('mousedown', (e) => {
+            if (!e.altKey) return;
+            if (e.target.closest('button, input')) return;
+
+            e.preventDefault();
+            container.classList.add('dragging');
+
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const startLeft = parseInt(getComputedStyle(container).left);
+            const startBottom = parseInt(getComputedStyle(container).bottom);
+
+            function onMouseMove(e) {
+                const deltaX = e.clientX - startX;
+                const deltaY = startY - e.clientY;
+                container.style.left = Math.max(0, startLeft + deltaX) + 'px';
+                container.style.bottom = Math.max(0, startBottom + deltaY) + 'px';
+            }
+
+            function onMouseUp() {
+                container.classList.remove('dragging');
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                saveChatLogState();
+                writeLog('system', 'チャットログの位置を保存しました', 'event');
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+    }
+
+    function saveChatLogState() {
+        const container = document.getElementById('chat-log-container');
+        const chatHistory = container?.querySelector('.chat-history');
+        if (!container) return;
+
+        const state = {
+            left: container.style.left,
+            bottom: container.style.bottom,
+            width: container.style.width,
+            height: chatHistory?.style.maxHeight || ''
+        };
+        localStorage.setItem('chatLogState', JSON.stringify(state));
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initChatLogInteractions);
+
+    async function sendTextMessage() {
+        const text = textInput.value.trim();
+        if (!text) return;
+
+        // Check if wizard customer search is active - filter instead of send
+        if (window.wizardCustomerSearchActive && requestWizardState && requestWizardState.active && requestWizardState.step === 0) {
+            filterCustomerList(text);
+            return;
+        }
+
+        if (!AI_PROCESS_ENABLED) {
+            appendChatMessage('ai', 'この画面ではAI誘導は無効です。');
+            return;
+        }
+
+        appendChatMessage('user', text);
+        textInput.value = '';
+
+        const token = ensureAuthOrRedirect();
+
+        const loadingBubble = document.createElement('div');
+        loadingBubble.className = 'chat-bubble ai';
+        loadingBubble.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 解析中...';
+        chatHistory.appendChild(loadingBubble);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        // Create dynamic system prompt with context
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        const attendance = window.currentAttendanceRecord;
+        const wizardStep = window.reportWizardState ? window.reportWizardState.step : 'none';
+
+        const currentJob = localStorage.getItem('current_job_type');
+        const jobLabel = currentJob ? (JOB_TYPES[currentJob]?.label || '不明') : '未選択';
+        const isClockedIn = !!currentJob;
+
+        let context = `現在は【${new Date().toLocaleString('ja-JP')}】です。
+ユーザー名: ${user.name || '不明'} 
+部署: ${user.department || '不明'}
+現在の業務モード: ${jobLabel} 
+認証ステータス: ${localStorage.getItem('cognito_id_token') ? 'ログイン済み (認証は完全に完了しており、再ログイン要求は不要です)' : '未ログイン'}
+出勤ステータス: ${attendance ? '出勤中 (' + attendance.store_name + ')' : '未出勤'}
+ウィザード状況: ${window.reportWizardActive ? '清掃レポート作成中 (Step: ' + reportWizardState.step + ')' : '通常モード'}
+`;
+
+        const systemPrompt = `(System: あなたは管理AI『Misogi』です。
+以下のコンテキストを理解し、常に『Misogi』として振る舞ってください。
+
+${context}
+
+【重要指示】
+1. ユーザーは既にログイン・出勤している場合、挨拶のリセットや再度のログイン要求メッセージ、および request_login インテントの出力は「絶対に」行わないでください。
+2. ユーザーが操作に迷わないよう、可能な限り show_options を使って次のアクションをボタンで提示してください。
+3. 業務の文脈を維持し、ユーザーの作業を最小限にする（ボタンをタップするだけで済む）ための返答を心がけてください。)`;
+
+        const textToSend = systemPrompt + text;
+
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            // Try the new admin action first
+            const response = await fetch(`${API_BASE}/ai/process`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ action: 'admin_concierge', text: textToSend })
+            });
+
+            if (!response.ok) {
+                // Return to old action if new one fails (e.g. backend not deployed)
+                console.warn("admin_concierge failed, trying assistant_concierge with forced persona");
+                const fallbackResponse = await fetch(`${API_BASE}/ai/process`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ action: 'assistant_concierge', text: textToSend })
+                });
+                if (!fallbackResponse.ok) throw new Error('API Error');
+                const data = await fallbackResponse.json();
+                await handleAiResponse(data, loadingBubble, text);
+                return;
+            }
+
+            const data = await response.json();
+            await handleAiResponse(data, loadingBubble, text);
+
+        } catch (err) {
+            console.error(err);
+            if (loadingBubble.parentNode) loadingBubble.remove();
+            appendChatMessage('ai', 'エラーが発生しました。');
+        }
+    }
+
+    async function handleAiResponse(data, loadingBubble, userText) {
+        if (loadingBubble.parentNode) loadingBubble.remove();
+
+        let aiResult = data.result;
+        if (typeof aiResult === 'string') {
+            try {
+                const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
+                if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
+            } catch (e) { }
+        }
+
+        let reply = aiResult.reply || aiResult.text || JSON.stringify(aiResult);
+        let intent = aiResult.intent;
+        let targetUrl = aiResult.target_url;
+
+        // --- NEW: UI Command Handling ---
+        handleAiCommands(aiResult);
+
+        // --- Local Fallback Logic (Mock Navigation) ---
+        // If the backend didn't return an intent (e.g. backend code not yet deployed), 
+        // we simulate the navigation intent based on keywords.
+        if (!intent || intent === 'chat') {
+            const map = {
+                '/admin/dashboard': ['ダッシュボード', 'アクティビティ'],
+                '/admin/schedules/': ['スケジュール', 'カレンダー', '予定'],
+                '/admin/customers/': ['顧客', 'お客様'],
+                '/admin/reports/': ['レポート', '報告'],
+                '/admin/estimates/': ['見積', '請求'],
+                '/admin/orders': ['発注', '仕入'],
+                '/admin/partners': ['パートナー', '協力会社'],
+                '/admin/users/': ['ユーザー', '従業員', 'スタッフ'],
+                '/admin/attendance/errors': ['勤怠', '打刻'],
+                '/admin/services/': ['サービス', 'メニュー'],
+                '/admin/analytics/': ['分析', '売上', '統計'],
+                '/admin/images/': ['画像', '写真', 'メディア'],
+                '/admin/zaiko': ['在庫', '棚卸'],
+                '/admin/announcements': ['業務連絡', 'お知らせ', '通知'],
+                '/wiki': ['WIKI', 'マニュアル'],
+                '/admin/sitemap': ['サイトマップ']
+            };
+
+            for (const [url, keywords] of Object.entries(map)) {
+                // Check if user input contains keyword OR if AI mention it and says "move/go"
+                if (keywords.some(k => userText.includes(k))) {
+                    // Force navigate intent
+                    intent = 'navigate';
+                    targetUrl = url;
+                    if (!reply.includes('移動します')) {
+                        reply += `<br><br><i class="fas fa-external-link-alt"></i> ${keywords[0]}へ移動します...`;
+                    }
+                    break;
+                }
+            }
+        }
+
+        appendChatMessage('ai', reply);
+
+        if (intent === 'navigate' && targetUrl) {
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 1200);
+        }
+
+        // Handle Break and Clock-Out UI Logic
+        if (intent === 'break_start') {
+            // "Screensaver" Mode: Center Visualizer, simple status
+            sidebar.style.opacity = '0';
+            setTimeout(() => sidebar.style.display = 'none', 500);
+
+            chatContainer.classList.remove('sidebar-active');
+            chatContainer.style.opacity = '0'; // Hide chat momentarily? Or just clear it.
+
+            // Smooth transition to "Resting" state
+            setTimeout(() => {
+                statusText.textContent = "RESTING... (On Break)";
+                visualizer.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                // Maybe show a simple "Resume Work" button in center or let Chat reappear
+                chatContainer.style.opacity = '1';
+                // Clear history to reduce clutter? Or keep "Have a nice break"?
+                document.getElementById('latest-message-container').innerHTML = '';
+            }, 800);
+        }
+
+        if (intent === 'break_end') {
+            // Return to Work Mode
+            statusText.textContent = "WELCOME BACK";
+            visualizer.style.transform = 'translate(-50%, -50%) scale(0.8)';
+
+            sidebar.style.display = 'flex';
+            setTimeout(() => sidebar.style.opacity = '1', 10);
+            chatContainer.classList.add('sidebar-active');
+        }
+
+        if (intent === 'clock_out') {
+            // Full Reset to Entrance Standby
+            sidebar.style.opacity = '0';
+            setTimeout(() => sidebar.style.display = 'none', 500);
+            chatContainer.style.opacity = '0';
+
+            setTimeout(() => {
+                // Clear Chat
+                chatHistory.innerHTML = '';
+                document.getElementById('latest-message-container').innerHTML = '';
+
+                // Show Start Button again (Reset)
+                statusText.textContent = "See you next time.";
+                visualizer.style.transform = 'translate(-50%, -50%) scale(1)';
+
+                setTimeout(() => {
+                    startOverlay.style.display = 'flex';
+                    setTimeout(() => startOverlay.style.opacity = '1', 50);
+                    statusText.textContent = "READY TO ASSIST";
+                    // Reset state variable if needed
+                    // isClockedIn = false; // Ideally fetch fresh state next time
+                }, 2000);
+            }, 800);
+        }
+    }
+
+    async function handleAiCommands(aiResult) {
+        if (!aiResult.ui_commands) return;
+
+        for (const cmd of aiResult.ui_commands) {
+            switch (cmd.type) {
+                case 'request_login':
+                    const token = localStorage.getItem('cognito_id_token');
+                    if (!token) {
+                        loginForm.style.display = 'flex';
+                    } else {
+                        console.warn("AI requested login, but token already exists. Ignoring reset.");
+                    }
+                    break;
+                case 'show_attendance':
+                    const actionContainer = document.getElementById('action-buttons-container');
+                    if (actionContainer) {
+                        actionContainer.innerHTML = ''; // Clear previous actions
+                        const btnDiv = document.createElement('div');
+                        btnDiv.className = 'action-bubble-container';
+                        btnDiv.style.display = 'block';
+                        btnDiv.innerHTML = `
+                            <button class="attendance-btn" id="active-attendance-btn" onclick="performClockIn()">
+                                <i class="fas fa-sign-in-alt"></i> 出勤する
+                            </button>
+                        `;
+                        actionContainer.appendChild(btnDiv);
+                    }
+                    break;
+                case 'show_options':
+                    if (cmd.options && Array.isArray(cmd.options)) {
+                        const buttons = cmd.options.map((opt, idx) => ({
+                            id: `opt-btn-${idx}`,
+                            label: opt,
+                            icon: 'fas fa-chevron-right',
+                            color: 'rgba(255,255,255,0.1)',
+                            action: `submitQuickReply('${opt.replace(/'/g, "\\'")}')`
+                        }));
+                        renderActionButtons(buttons);
+                    }
+                    break;
+                case 'show_sidebar':
+                    if (sidebar) {
+                        sidebar.style.display = 'flex';
+                        const navItems = sidebar.querySelectorAll('.nav-item');
+                        navItems.forEach((item, index) => {
+                            setTimeout(() => {
+                                item.classList.add('show');
+                            }, index * 100);
+                        });
+                    }
+                    if (chatContainer) chatContainer.classList.add('sidebar-active'); // Adjust padding if needed
+                    break;
+                case 'show_break_start':
+                    renderActionButtons([
+                        { id: 'btn-break-start', label: '休憩に入る', icon: 'fas fa-mug-hot', color: '#3b82f6', action: 'performBreakStart()' }
+                    ]);
+                    break;
+                case 'show_break_end':
+                    renderActionButtons([
+                        { id: 'btn-break-end', label: '業務を再開する', icon: 'fas fa-play', color: '#10b981', action: 'performBreakEnd()' }
+                    ]);
+                    break;
+                case 'show_work_options':
+                    renderActionButtons([
+                        { id: 'btn-break-start', label: '休憩に入る', icon: 'fas fa-mug-hot', color: '#6b7280', action: 'performBreakStart()' },
+                        { id: 'btn-clock-out', label: '退勤する', icon: 'fas fa-sign-out-alt', color: '#ef4444', action: 'performClockOut()' }
+                    ]);
+                    break;
+            }
+        }
+    }
+
+    function submitQuickReply(text) {
+        if (textInput) {
+            textInput.value = text;
+            sendTextMessage();
+        }
+    }
+
+    function renderActionButtons(buttons) {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = ''; // Clear previous
+        const btnDiv = document.createElement('div');
+        btnDiv.className = 'action-bubble-container';
+        btnDiv.style.display = 'flex';
+        btnDiv.style.gap = '8px';
+        btnDiv.style.flexWrap = 'wrap';
+        btnDiv.style.justifyContent = 'center';
+        btnDiv.style.padding = '5px';
+
+        buttons.forEach(btn => {
+            const buttonHtml = `
+                <button class="attendance-btn" id="${btn.id}" onclick="${btn.action}" 
+                        style="background: ${btn.color}; border: 1px solid rgba(255,255,255,0.1); margin: 2px;">
+                    <i class="${btn.icon}"></i> ${btn.label}
+                </button>
+            `;
+            btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
+        });
+        actionContainer.appendChild(btnDiv);
+    }
+
+    // Expose to window
+    window.submitQuickReply = submitQuickReply;
+    window.performClockIn = performClockIn;
+    window.performClockOut = performClockOut;
+    window.performBreakStart = performBreakStart;
+    window.performBreakEnd = performBreakEnd;
+
+    if (textInput) {
+        textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendTextMessage(); });
+    }
+
+    // ====== JOB TYPE SYSTEM ======
+    const JOB_TYPES = {
+        cleaning: {
+            label: '清掃',
+            color: '#10b981',
+            menus: ['mypage', 'schedules', 'reports-new']
+        },
+        office: {
+            label: '事務',
+            color: '#8b5cf6',
+            menus: ['mypage', 'customers', 'estimates', 'orders', 'zaiko']
+        },
+        sales: {
+            label: '営業',
+            color: '#f59e0b',
+            menus: ['mypage', 'schedules', 'customers', 'estimates', 'reports', 'reports-new']
+        },
+        hr: {
+            label: '人事',
+            color: '#ec4899',
+            menus: ['mypage', 'users', 'attendance-errors', 'schedules']
+        },
+        accounting: {
+            label: '経理',
+            color: '#3b82f6',
+            menus: ['mypage', 'orders', 'zaiko', 'estimates']
+        },
+        admin: {
+            label: '管理',
+            color: '#ef4444',
+            menus: 'all'
+        },
+        dev: {
+            label: '開発',
+            color: '#06b6d4',
+            menus: ['mypage', 'dashboard', 'services', 'analytics', 'images']
+        }
+    };
+
+    // Chat channels (includes misesapo for general)
+    const CHAT_CHANNELS = {
+        misesapo: { label: '全体', color: '#ffffff' },
+        cleaning: { label: '清掃', color: '#10b981' },
+        office: { label: '事務', color: '#8b5cf6' },
+        sales: { label: '営業', color: '#f59e0b' },
+        hr: { label: '人事', color: '#ec4899' },
+        accounting: { label: '経理', color: '#3b82f6' },
+        admin: { label: '管理', color: '#ef4444' },
+        dev: { label: '開発', color: '#06b6d4' }
+    };
+
+    // Common menus for all job types (always visible)
+    const COMMON_MENUS = ['mypage', 'announcements', 'wiki', 'job-change'];
+
+    let currentJobType = null;
+
+    function showJobSelection() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = '';
+        const btnDiv = document.createElement('div');
+        btnDiv.className = 'action-bubble-container';
+        btnDiv.style.display = 'flex';
+        btnDiv.style.gap = '8px';
+        btnDiv.style.flexWrap = 'wrap';
+        btnDiv.style.justifyContent = 'center';
+
+        Object.keys(JOB_TYPES).forEach(jobKey => {
+            const job = JOB_TYPES[jobKey];
+            const buttonHtml = `
+                <button class="job-select-btn" onclick="selectJobType('${jobKey}')" 
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
+                    color: #fff; padding: 10px 20px; border-radius: 20px; cursor: pointer;
+                    transition: all 0.3s; font-size: 0.9rem;">
+                    ${job.label}
+                </button>
+            `;
+            btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
+        });
+
+        actionContainer.appendChild(btnDiv);
+    }
+
+
+    // Job-specific action buttons
+    function selectJobType(jobKey) {
+        EntranceCore.performJobTransition(jobKey, "../../");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        EntranceCore.initFadeIn();
+    });
+    function showJobActions(jobKey) {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = '';
+        const btnDiv = document.createElement('div');
+        btnDiv.className = 'action-bubble-container';
+        btnDiv.style.display = 'flex';
+        btnDiv.style.gap = '10px';
+        btnDiv.style.flexWrap = 'wrap';
+        btnDiv.style.justifyContent = 'center';
+
+        const jobActions = {
+            sales: [
+                { label: '依頼書を作成', action: 'startRequestWizard()' },
+                { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'" }
+            ],
+            cleaning: [
+                { label: 'レポートを作成', action: 'startReportWizard()' }
+            ],
+            office: [
+                { label: '作業指示書を作成', action: 'startWorkOrderWizard()' }
+            ],
+            hr: [
+                { label: '勤怠確認', action: "location.href='/admin/attendance/errors'" }
+            ],
+            accounting: [
+                { label: '請求処理', action: "location.href='/admin/orders'" }
+            ],
+            admin: [],
+            dev: []
+        };
+
+        const actions = jobActions[jobKey] || [];
+        actions.forEach(btn => {
+            const buttonHtml = `
+                <button class="job-action-btn" onclick="${btn.action}"
+                    style="background: var(--accent-color); border: none; color: #fff; 
+                    padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                    font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+                    box-shadow: 0 4px 15px var(--accent-glow);">
+                    ${btn.label}
+                </button>
+            `;
+            btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
+        });
+
+        if (actions.length > 0) {
+            actionContainer.appendChild(btnDiv);
+        }
+    }
+
+    function filterSidebar(jobKey) {
+        const job = JOB_TYPES[jobKey];
+        const allowedMenus = job.menus === 'all' ? 'all' : [...COMMON_MENUS, ...job.menus];
+
+        if (sidebar) {
+            sidebar.style.display = 'flex';
+            sidebar.style.opacity = '1';
+            const navItems = sidebar.querySelectorAll('.nav-item');
+
+            navItems.forEach((item, index) => {
+                const page = item.dataset.page;
+
+                if (allowedMenus === 'all' || allowedMenus.includes(page)) {
+                    item.style.display = 'flex';
+                    setTimeout(() => item.classList.add('show'), index * 50);
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Update floating job button
+        const floatingBtn = document.getElementById('floating-job-btn');
+        const floatingLabel = document.getElementById('floating-job-label');
+        if (floatingBtn && floatingLabel) {
+            floatingLabel.textContent = job.label;
+            floatingBtn.style.display = 'flex';
+        }
+
+        if (chatContainer) chatContainer.classList.add('sidebar-active');
+    }
+
+    function requestJobChange() {
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+        appendChatMessage('ai', `${user.name || 'ユーザー'}様、お仕事内容の変更ですね？どの業務を行いますか？`);
+        showJobSelection();
+
+        // Hide sidebar temporarily
+        if (sidebar) {
+            sidebar.style.opacity = '0';
+            setTimeout(() => sidebar.style.display = 'none', 300);
+        }
+        if (chatContainer) chatContainer.classList.remove('sidebar-active');
+    }
+
+    // Toggle Visualizer Simulation
+    let isRecording = false;
+    if (visualizer) {
+        visualizer.addEventListener('click', () => {
+            if (!isRecording) {
+                isRecording = true;
+                statusText.textContent = "LISTENING... (Simulation)";
+                core.classList.add('active');
+                circleText.classList.add('active');
+            } else {
+                isRecording = false;
+                statusText.textContent = "PROCESSING...";
+                core.classList.remove('active');
+                circleText.classList.remove('active');
+                setTimeout(() => { statusText.textContent = "READY TO ASSIST"; }, 1500);
+            }
+        });
+    }
+
+    // ====== REQUEST WIZARD (Sales) ======
+    let requestWizardState = {
+        active: false,
+        step: 0,
+        data: {}
+    };
+
+    const REQUEST_WIZARD_STEPS = [
+        { id: 'customer', question: '顧客名を選択してください', type: 'customer_select' },
+        { id: 'issue', question: '清掃の悩みを教えてください', type: 'text', placeholder: '例：厨房の油汚れが落ちない、臭気が気になる' },
+        { id: 'environment', question: '店内環境について教えてください', type: 'text', placeholder: '例：油煙が強い、湿気が多い、換気が弱い' },
+        { id: 'equipment', question: '清掃が必要な設備を選択してください', type: 'multi_select', options: ['空調', 'ダクト', 'レンジフード', 'グリストラップ', '床', '排水溝', 'トイレ', '窓・ガラス'] },
+        { id: 'plan', question: '依頼プランを選択してください', type: 'single_select', options: ['定期', 'スポット', '未定'] },
+        { id: 'notes', question: '注意事項があれば教えてください', type: 'text', placeholder: '例：薬剤の臭いNG、閉店後のみ作業可' },
+        { id: 'confirm', question: '以上の内容で依頼書を作成しますか？', type: 'confirm' }
+    ];
+
+    function startRequestWizard() {
+        requestWizardState = { active: true, step: 0, data: {} };
+
+        // Hide chat history temporarily
+        if (chatHistory) chatHistory.style.display = 'none';
+
+        appendChatMessage('ai', '依頼書を作成します。');
+        setTimeout(() => {
+            showRequestWizardStep(0);
+        }, 500);
+    }
+
+    function showRequestWizardStep(stepIndex) {
+        if (stepIndex >= REQUEST_WIZARD_STEPS.length) {
+            finishRequestWizard();
+            return;
+        }
+
+        requestWizardState.step = stepIndex;
+        const step = REQUEST_WIZARD_STEPS[stepIndex];
+
+        appendChatMessage('ai', step.question);
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+        actionContainer.innerHTML = '';
+
+        if (step.type === 'customer_select') {
+            renderCustomerSelect(actionContainer);
+        } else if (step.type === 'text') {
+            renderTextInput(actionContainer, step);
+        } else if (step.type === 'multi_select') {
+            renderMultiSelect(actionContainer, step);
+        } else if (step.type === 'single_select') {
+            renderSingleSelect(actionContainer, step);
+        } else if (step.type === 'confirm') {
+            renderConfirm(actionContainer);
+        }
+    }
+
+    async function renderCustomerSelect(container) {
+        // Fetch customers from clients.json
+        try {
+            const response = await fetch('/data/clients.json');
+            const data = await response.json();
+
+            // Get logged-in user's name for filtering
+            const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+            const userName = user.name || '';
+
+            // Filter by sales_rep (if user name matches)
+            let customers = data.clients || [];
+            if (userName) {
+                const namePart = userName.split(' ')[0];
+                customers = customers.filter(c => c.sales_rep && c.sales_rep.includes(namePart));
+            }
+
+            // If no matches, show all (for demo)
+            if (customers.length === 0) customers = data.clients || [];
+
+            // Sort by status priority
+            const statusPriority = { '稼働中': 1, '契約作業中': 2, '商談済': 3, '検討中': 4 };
+            customers.sort((a, b) => (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99));
+
+            // Limit to 50
+            window.wizardCustomers = customers.slice(0, 50);
+        } catch (e) {
+            console.error('Failed to load customers:', e);
+            window.wizardCustomers = [];
+        }
+
+        // Show customer list in chat history area
+        if (chatHistory) {
+            chatHistory.style.display = 'block';
+            chatHistory.innerHTML = `
+                <div id="customer-list-container" style="padding: 10px; height: 100%; overflow-y: auto; text-align: right; margin-left: auto; width: 300px;">
+                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 10px; text-align: center;">
+                        顧客リスト（${window.wizardCustomers.length}件）
+                    </div>
+                    <div id="customer-list" style="display: flex; flex-direction: column; gap: 6px;">
+                        ${renderCustomerListItems(window.wizardCustomers)}
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = `<div style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem;">入力欄で絞り込み</div>`;
+        window.wizardCustomerSearchActive = true;
+    }
+
+    function renderCustomerListItems(customers) {
+        if (!customers || customers.length === 0) {
+            return '<div style="text-align: center; color: rgba(255,255,255,0.4); padding: 20px;">顧客が見つかりません</div>';
+        }
+
+        const statusColors = { '稼働中': '#10b981', '契約作業中': '#f59e0b', '商談済': '#8b5cf6', '検討中': '#3b82f6' };
+
+        return customers.map(c => {
+            const statusColor = statusColors[c.status] || '#6b7280';
+            const store = c.store_name || '';
+            const escName = (c.company_name || '').replace(/'/g, "\\'");
+            const escStore = store.replace(/'/g, "\\'");
+
+            return `
+                <button class="wizard-customer-btn" onclick="selectCustomer('${c.id}', '${escName}', '${escStore}')"
+                    style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); 
+                    color: #fff; padding: 10px 12px; border-radius: 8px; cursor: pointer; text-align: left;
+                    transition: all 0.2s; display: block; width: 100%;">
+                    <div style="font-weight: 600; font-size: 0.8rem;">${c.company_name || ''}</div>
+                    <div style="font-size: 0.7rem; opacity: 0.6;">${c.brand_name || ''} ${store}</div>
+                    <div style="display: flex; align-items: center; gap: 4px; margin-top: 3px;">
+                        <span style="width: 5px; height: 5px; border-radius: 50%; background: ${statusColor};"></span>
+                        <span style="font-size: 0.65rem; color: ${statusColor};">${c.status || '未設定'}</span>
+                    </div>
+                </button>
+            `;
+        }).join('') + `
+            <button onclick="selectNewCustomer()" style="background: transparent; border: 1px dashed rgba(255,255,255,0.2); 
+                color: rgba(255,255,255,0.4); padding: 10px; border-radius: 8px; cursor: pointer;
+                text-align: center; width: 100%; font-size: 0.75rem; margin-top: 5px;">
+                + 新規顧客
+            </button>
+        `;
+    }
+
+    function filterCustomerList(query) {
+        if (!window.wizardCustomerSearchActive || !window.wizardCustomers) return;
+
+        const q = query.toLowerCase();
+        const filtered = window.wizardCustomers.filter(c =>
+            (c.company_name && c.company_name.toLowerCase().includes(q)) ||
+            (c.brand_name && c.brand_name.toLowerCase().includes(q)) ||
+            (c.store_name && c.store_name.toLowerCase().includes(q)) ||
+            (c.contact_person && c.contact_person.toLowerCase().includes(q))
+        );
+
+        const listContainer = document.getElementById('customer-list');
+        if (listContainer) listContainer.innerHTML = renderCustomerListItems(filtered);
+
+        const countEl = document.querySelector('#customer-list-container > div:first-child');
+        if (countEl) countEl.textContent = `顧客リスト（${filtered.length}件）`;
+    }
+
+    // Override sendTextMessage to handle customer search during wizard
+    const originalSendTextMessage = typeof sendTextMessage === 'function' ? sendTextMessage : null;
+    function handleWizardInput(text) {
+        if (window.wizardCustomerSearchActive && requestWizardState.active && requestWizardState.step === 0) {
+            filterCustomerList(text);
+            return true; // Prevent normal send
+        }
+        return false;
+    }
+
+    function renderTextInput(container, step) {
+        const inputDiv = document.createElement('div');
+        inputDiv.style.cssText = 'max-width: 500px; margin: 0 auto;';
+        inputDiv.innerHTML = `
+            <textarea id="wizard-text-input" rows="3" placeholder="${step.placeholder || ''}"
+                style="width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                color: #fff; padding: 12px; border-radius: 12px; resize: none; font-family: inherit;"></textarea>
+            <div style="display: flex; gap: 10px; margin-top: 10px; justify-content: center;">
+                <button onclick="submitWizardText()" style="background: var(--accent-color); border: none; color: #fff;
+                    padding: 10px 24px; border-radius: 20px; cursor: pointer;">次へ</button>
+                <button onclick="skipWizardStep()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3);
+                    color: rgba(255,255,255,0.7); padding: 10px 24px; border-radius: 20px; cursor: pointer;">スキップ</button>
+            </div>
+        `;
+        container.appendChild(inputDiv);
+    }
+
+    function renderMultiSelect(container, step) {
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 500px; margin: 0 auto;';
+
+        step.options.forEach(opt => {
+            btnDiv.innerHTML += `
+                <button class="wizard-multi-btn" data-value="${opt}" onclick="toggleMultiOption(this)"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 10px 16px; border-radius: 20px; cursor: pointer; transition: all 0.3s;">
+                    ${opt}
+                </button>
+            `;
+        });
+
+        const confirmDiv = document.createElement('div');
+        confirmDiv.style.cssText = 'width: 100%; margin-top: 15px; text-align: center;';
+        confirmDiv.innerHTML = `
+            <button onclick="submitMultiSelect()" style="background: var(--accent-color); border: none; color: #fff;
+                padding: 10px 24px; border-radius: 20px; cursor: pointer;">次へ</button>
+        `;
+
+        container.appendChild(btnDiv);
+        container.appendChild(confirmDiv);
+    }
+
+    function renderSingleSelect(container, step) {
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; gap: 10px; justify-content: center;';
+
+        step.options.forEach(opt => {
+            btnDiv.innerHTML += `
+                <button onclick="submitSingleSelect('${opt}')"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 10px 20px; border-radius: 20px; cursor: pointer; transition: all 0.3s;">
+                    ${opt}
+                </button>
+            `;
+        });
+
+        container.appendChild(btnDiv);
+    }
+
+    function renderConfirm(container) {
+        const summary = Object.entries(requestWizardState.data)
+            .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+            .join('<br>');
+
+        const summaryDiv = document.createElement('div');
+        summaryDiv.style.cssText = 'background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; max-width: 500px; margin: 0 auto 15px; text-align: left; color: #fff; font-size: 0.9rem;';
+        summaryDiv.innerHTML = summary || '(データなし)';
+
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; gap: 10px; justify-content: center;';
+        btnDiv.innerHTML = `
+            <button onclick="finishRequestWizard()" style="background: var(--accent-color); border: none; color: #fff;
+                padding: 12px 24px; border-radius: 20px; cursor: pointer; font-weight: 600;">依頼書を作成</button>
+            <button onclick="cancelRequestWizard()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3);
+                color: rgba(255,255,255,0.7); padding: 12px 24px; border-radius: 20px; cursor: pointer;">キャンセル</button>
+        `;
+
+        container.appendChild(summaryDiv);
+        container.appendChild(btnDiv);
+    }
+
+    function selectCustomer(id, name, store) {
+        // Reset customer search mode
+        window.wizardCustomerSearchActive = false;
+
+        requestWizardState.data.customer_id = id;
+        requestWizardState.data.customer_name = name;
+        requestWizardState.data.store_name = store;
+
+        // Clear the customer list from chat history
+        if (chatHistory) {
+            chatHistory.innerHTML = '';
+            chatHistory.style.display = 'none';
+        }
+
+        appendChatMessage('user', `${name} - ${store}`);
+        showRequestWizardStep(requestWizardState.step + 1);
+    }
+
+    function selectNewCustomer() {
+        appendChatMessage('ai', '新規顧客登録は現在準備中です。既存顧客を選択してください。');
+    }
+
+    function submitWizardText() {
+        const input = document.getElementById('wizard-text-input');
+        const value = input ? input.value.trim() : '';
+        const step = REQUEST_WIZARD_STEPS[requestWizardState.step];
+        requestWizardState.data[step.id] = value;
+        if (value) appendChatMessage('user', value);
+        showRequestWizardStep(requestWizardState.step + 1);
+    }
+
+    function skipWizardStep() {
+        showRequestWizardStep(requestWizardState.step + 1);
+    }
+
+    function toggleMultiOption(btn) {
+        btn.classList.toggle('selected');
+        if (btn.classList.contains('selected')) {
+            btn.style.background = 'var(--accent-color)';
+            btn.style.borderColor = 'var(--accent-color)';
+        } else {
+            btn.style.background = 'rgba(255,255,255,0.1)';
+            btn.style.borderColor = 'rgba(255,255,255,0.2)';
+        }
+    }
+
+    function submitMultiSelect() {
+        const selected = Array.from(document.querySelectorAll('.wizard-multi-btn.selected'))
+            .map(btn => btn.dataset.value);
+        const step = REQUEST_WIZARD_STEPS[requestWizardState.step];
+        requestWizardState.data[step.id] = selected;
+        if (selected.length) appendChatMessage('user', selected.join(', '));
+        showRequestWizardStep(requestWizardState.step + 1);
+    }
+
+    function submitSingleSelect(value) {
+        const step = REQUEST_WIZARD_STEPS[requestWizardState.step];
+        requestWizardState.data[step.id] = value;
+        appendChatMessage('user', value);
+        showRequestWizardStep(requestWizardState.step + 1);
+    }
+
+    function finishRequestWizard() {
+        // Create Request Object
+        const requestId = 'REQ-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+        const timestamp = new Date().toLocaleString('ja-JP');
+
+        const requestData = {
+            id: requestId,
+            status: 'submitted', // submitted to admin
+            created_at: timestamp,
+            sales_rep: JSON.parse(localStorage.getItem('cognito_user') || '{}').name || '営業担当',
+            ...requestWizardState.data
+        };
+
+        // Save to LocalStorage (Simulate Backend)
+        const requests = JSON.parse(localStorage.getItem('sales_requests') || '[]');
+        requests.push(requestData);
+        localStorage.setItem('sales_requests', JSON.stringify(requests));
+
+        console.log('Request Saved:', requestData);
+
+        // Show Success Message with Summary Card
+        const summaryHtml = `
+            <div style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; margin-top: 8px; border: 1px solid rgba(255,255,255,0.2);">
+                <div style="font-weight: 700; color: #fff; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">
+                    <i class="fas fa-file-alt"></i> 清掃依頼書 (ID: ${requestId})
+                </div>
+                <div style="font-size: 0.9rem; color: #e0e0e0; display: grid; gap: 4px;">
+                    <div><span style="opacity: 0.7;">顧客:</span> ${requestData.customer_name}</div>
+                    <div><span style="opacity: 0.7;">店舗:</span> ${requestData.store_name}</div>
+                    <div><span style="opacity: 0.7;">設備:</span> ${Array.isArray(requestData.equipment) ? requestData.equipment.join(', ') : '-'}</div>
+                    <div><span style="opacity: 0.7;">プラン:</span> ${requestData.plan}</div>
+                </div>
+                <div style="margin-top: 12px; font-size: 0.85rem; color: var(--accent-color); text-align: right;">
+                    <i class="fas fa-check-circle"></i> 事務へ送信済み
+                </div>
+            </div>
+        `;
+
+        appendChatMessage('ai', '依頼書を作成し、事務へ送信しました。お疲れ様でした！' + summaryHtml);
+
+        // Reset wizard
+        requestWizardState = { active: false, step: 0, data: {} };
+        if (chatHistory) {
+            chatHistory.style.display = 'block';
+            chatHistory.innerHTML = '';
+        }
+
+        // Clear action buttons
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (actionContainer) actionContainer.innerHTML = '';
+
+        // Show job actions again
+        setTimeout(() => showJobActions('sales'), 1000);
+    }
+
+    function cancelRequestWizard() {
+        requestWizardState = { active: false, step: 0, data: {} };
+        if (chatHistory) chatHistory.style.display = 'block';
+        appendChatMessage('ai', '依頼書作成をキャンセルしました。');
+
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (actionContainer) actionContainer.innerHTML = '';
+
+        showJobActions('sales');
+    }
+
+    // Placeholder functions for other wizards
+    // Report Wizard State
+    let reportWizardState = {
+        step: 0,
+        store: null,
+        schedule: null,
+        photos: { before: [], after: [] },
+        cleaningTarget: '',
+        notes: '',
+        nextProposal: { timing: '', work: '' }
+    };
+
+    function startReportWizard() {
+        reportWizardState = { step: 0, store: null, schedule: null, photos: { before: [], after: [] }, cleaningTarget: '', notes: '', nextProposal: { timing: '', work: '' } };
+
+        appendChatMessage('ai', `📋 レポート作成を開始します。
+
+まず、どの店舗のレポートを作成しますか？
+
+本日のスケジュールを取得中...`);
+
+        // Fetch today's schedules
+        fetchTodaySchedules();
+    }
+
+    async function fetchTodaySchedules() {
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+        const today = new Date().toISOString().split('T')[0];
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+
+        try {
+            const response = await fetch(`${API_BASE}/schedules?date=${today}`);
+            if (response.ok) {
+                const data = await response.json();
+                const schedules = Array.isArray(data) ? data : (data.schedules || data.items || []);
+
+                if (schedules.length > 0) {
+                    showScheduleSelection(schedules);
+                } else {
+                    showManualStoreInput();
+                }
+            } else {
+                showManualStoreInput();
+            }
+        } catch (error) {
+            console.error('Error fetching schedules:', error);
+            showManualStoreInput();
+        }
+    }
+
+    function showScheduleSelection(schedules) {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = '';
+        const btnDiv = document.createElement('div');
+        btnDiv.className = 'action-bubble-container';
+        btnDiv.style.cssText = 'display: flex; flex-direction: column; gap: 8px; max-width: 300px; margin: 0 auto;';
+
+        schedules.slice(0, 5).forEach(schedule => {
+            const storeName = schedule.store_name || '店舗名不明';
+            const time = schedule.time_slot || schedule.start_time || '';
+            const buttonHtml = `
+                <button class="schedule-btn" onclick="selectScheduleForReport('${schedule.id}', '${storeName.replace(/'/g, "\\'")}', '${schedule.store_id || ''}')"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
+                    color: #fff; padding: 12px 16px; border-radius: 12px; cursor: pointer;
+                    text-align: left; transition: all 0.2s;">
+                    <div style="font-weight: 600;">${storeName}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.7;">${time}</div>
+                </button>
+            `;
+            btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
+        });
+
+        // Add manual input option
+        btnDiv.insertAdjacentHTML('beforeend', `
+            <button onclick="showManualStoreInput()" 
+                style="background: transparent; border: 1px dashed rgba(255,255,255,0.3);
+                color: rgba(255,255,255,0.6); padding: 10px; border-radius: 12px; cursor: pointer;
+                font-size: 0.85rem; margin-top: 8px;">
+                + 手動で店舗を入力
+            </button>
+        `);
+
+        actionContainer.appendChild(btnDiv);
+        appendChatMessage('ai', '本日のスケジュールから選択してください：');
+    }
+
+    function showManualStoreInput() {
+        appendChatMessage('ai', '店舗名を入力してください（例：渋谷店）');
+        window.reportWizardInputMode = 'store';
+        // Enable text input mode
+        const inputWrapper = document.getElementById('chat-input-wrapper');
+        if (inputWrapper) inputWrapper.style.display = 'flex';
+    }
+
+    function selectScheduleForReport(scheduleId, storeName, storeId) {
+        reportWizardState.schedule = scheduleId;
+        reportWizardState.store = { id: storeId, name: storeName };
+
+        appendChatMessage('user', storeName);
+        proceedToPhotoUpload();
+    }
+
+    function proceedToPhotoUpload() {
+        const storeName = reportWizardState.store?.name || '選択した店舗';
+
+        appendChatMessage('ai', `📍 ${storeName} のレポート作成`);
+
+        showPhotoUploadUI();
+    }
+
+    function showPhotoUploadUI() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 16px; max-width: 500px; width: 90%; margin: 0 auto; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 16px;">
+                <div style="display: flex; gap: 16px;">
+                    <div style="flex: 1; text-align: center;">
+                        <div style="color: #fbbf24; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">作業前</div>
+                        <label style="display: flex; flex-direction: column; align-items: center; justify-content: center;
+                            height: 120px; border: 2px dashed rgba(251,191,36,0.5); border-radius: 12px; cursor: pointer;
+                            background: rgba(251,191,36,0.1); transition: all 0.2s;">
+                            <input type="file" accept="image/*" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'before')">
+                            <i class="fas fa-camera" style="font-size: 1.8rem; color: #fbbf24;"></i>
+                            <span id="before-count" style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px;">0枚</span>
+                        </label>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div style="color: #10b981; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">作業後</div>
+                        <label style="display: flex; flex-direction: column; align-items: center; justify-content: center;
+                            height: 120px; border: 2px dashed rgba(16,185,129,0.5); border-radius: 12px; cursor: pointer;
+                            background: rgba(16,185,129,0.1); transition: all 0.2s;">
+                            <input type="file" accept="image/*" multiple style="display: none;" onchange="handleReportPhotoUpload(this, 'after')">
+                            <i class="fas fa-camera" style="font-size: 1.8rem; color: #10b981;"></i>
+                            <span id="after-count" style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px;">0枚</span>
+                        </label>
+                    </div>
+                </div>
+                <button onclick="proceedToReportDetails()" id="photo-next-btn"
+                    style="background: linear-gradient(135deg, #ec4899, #db2777); color: white; border: none;
+                    padding: 14px 24px; border-radius: 25px; font-size: 0.95rem; font-weight: 600;
+                    cursor: pointer; opacity: 0.5; transition: all 0.2s;" disabled>
+                    次へ進む →
+                </button>
+            </div>
+        `;
+    }
+
+    function handleReportPhotoUpload(input, type) {
+        const files = Array.from(input.files);
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                reportWizardState.photos[type].push({
+                    dataUrl: e.target.result,
+                    file: file,
+                    name: file.name
+                });
+                updatePhotoCount();
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function updatePhotoCount() {
+        const beforeCount = document.getElementById('before-count');
+        const afterCount = document.getElementById('after-count');
+        const nextBtn = document.getElementById('photo-next-btn');
+
+        if (beforeCount) beforeCount.textContent = `${reportWizardState.photos.before.length}枚`;
+        if (afterCount) afterCount.textContent = `${reportWizardState.photos.after.length}枚`;
+
+        // Enable next button if at least one photo
+        const hasPhotos = reportWizardState.photos.before.length > 0 || reportWizardState.photos.after.length > 0;
+        if (nextBtn) {
+            nextBtn.disabled = !hasPhotos;
+            nextBtn.style.opacity = hasPhotos ? '1' : '0.5';
+        }
+    }
+
+    function proceedToReportDetails() {
+        const totalPhotos = reportWizardState.photos.before.length + reportWizardState.photos.after.length;
+        appendChatMessage('user', `📷 ${totalPhotos}枚の写真をアップロードしました`);
+
+        appendChatMessage('ai', `写真を受け取りました！
+
+🧹 **清掃対象を選択してください：**`);
+
+        showCleaningTargetSelection();
+    }
+
+    function showCleaningTargetSelection() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        const targets = ['換気扇・ダクト', 'グリストラップ', '床面清掃', '厨房機器', 'エアコン', 'その他'];
+
+        actionContainer.innerHTML = '';
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;';
+
+        targets.forEach(target => {
+            btnDiv.insertAdjacentHTML('beforeend', `
+                <button onclick="selectCleaningTarget('${target}')"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 10px 16px; border-radius: 20px; cursor: pointer;
+                    font-size: 0.85rem; transition: all 0.2s;">
+                    ${target}
+                </button>
+            `);
+        });
+
+        actionContainer.appendChild(btnDiv);
+    }
+
+    function selectCleaningTarget(target) {
+        reportWizardState.cleaningTarget = target;
+        appendChatMessage('user', target);
+
+        appendChatMessage('ai', `${target}ですね。
+
+📝 **備考やコメントがあれば入力してください。**
+（なければ「なし」と入力）`);
+
+        window.reportWizardInputMode = 'notes';
+        const inputWrapper = document.getElementById('chat-input-wrapper');
+        if (inputWrapper) inputWrapper.style.display = 'flex';
+    }
+
+    async function submitReport() {
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+
+        appendChatMessage('ai', '📤 レポートを送信中...');
+
+        // Clear action buttons
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (actionContainer) actionContainer.innerHTML = '';
+
+        try {
+            // Upload photos to S3 first
+            const photoUrls = { before: [], after: [] };
+
+            for (const photo of reportWizardState.photos.before) {
+                // For MVP, use dataUrl directly (in production, upload to S3)
+                photoUrls.before.push(photo.dataUrl);
+            }
+            for (const photo of reportWizardState.photos.after) {
+                photoUrls.after.push(photo.dataUrl);
+            }
+
+            // Create report
+            const reportData = {
+                store_id: reportWizardState.store?.id || 'unknown',
+                store_name: reportWizardState.store?.name || '未設定',
+                schedule_id: reportWizardState.schedule,
+                cleaning_date: new Date().toISOString().split('T')[0],
+                staff_id: user.sub || user.id,
+                staff_name: user.name || 'スタッフ',
+                work_items: [{
+                    item_id: reportWizardState.cleaningTarget.replace(/[・\/]/g, '_'),
+                    item_name: reportWizardState.cleaningTarget,
+                    photos: photoUrls,
+                    work_content: reportWizardState.notes
+                }],
+                next_proposal: {
+                    timing: reportWizardState.nextProposal.timing || '',
+                    work: reportWizardState.nextProposal.work || ''
+                }
+            };
+
+            const response = await fetch(`${API_BASE}/staff/reports`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(reportData)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                appendChatMessage('ai', `✅ **レポートを送信しました！**
+
+📋 レポートID: ${result.report_id || '作成完了'}
+📍 店舗: ${reportWizardState.store?.name}
+🧹 対象: ${reportWizardState.cleaningTarget}
+📷 写真: ${reportWizardState.photos.before.length + reportWizardState.photos.after.length}枚
+
+お疲れ様でした！🎉`);
+            } else {
+                throw new Error('レポートの送信に失敗しました');
+            }
+        } catch (error) {
+            console.error('Report submission error:', error);
+            appendChatMessage('ai', `❌ エラーが発生しました: ${error.message}
+
+もう一度お試しください。`);
+        }
+
+        // Reset wizard state
+        reportWizardState = { step: 0, store: null, schedule: null, photos: { before: [], after: [] }, cleaningTarget: '', notes: '' };
+        window.reportWizardInputMode = null;
+
+        // Show job actions again after a delay
+        setTimeout(() => showJobActions('cleaning'), 2000);
+    }
+
+    // Hook into text input for report wizard
+    if (!window._reportWizardHooked) {
+        window._reportWizardHooked = true;
+        const _origSendTextMessage = window.sendTextMessage;
+        window.sendTextMessage = function () {
+            const input = document.getElementById('chat-input');
+            const text = input?.value?.trim();
+
+            if (window.reportWizardInputMode === 'store' && text) {
+                reportWizardState.store = { id: 'manual', name: text };
+                appendChatMessage('user', text);
+                input.value = '';
+                window.reportWizardInputMode = null;
+                proceedToPhotoUpload();
+                return;
+            }
+
+            if (window.reportWizardInputMode === 'notes' && text) {
+                reportWizardState.notes = text === 'なし' ? '' : text;
+                appendChatMessage('user', text);
+                input.value = '';
+                window.reportWizardInputMode = null;
+
+                // Proceed to next proposal selection
+                appendChatMessage('ai', `📅 **次回提案を選択してください：**
+
+いつ頃の再訪問を推奨しますか？`);
+                showNextProposalTiming();
+                return;
+            }
+
+            // Default behavior
+            if (_origSendTextMessage) _origSendTextMessage();
+        };
+    }
+
+    function showNextProposalTiming() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        const timings = [
+            { value: '1month', label: '1ヶ月後' },
+            { value: '2months', label: '2ヶ月後' },
+            { value: '3months', label: '3ヶ月後' },
+            { value: '6months', label: '6ヶ月後' },
+            { value: '1year', label: '1年後' },
+            { value: 'urgent', label: '緊急対応必要' },
+            { value: 'none', label: '提案なし' }
+        ];
+
+        actionContainer.innerHTML = '';
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 350px; margin: 0 auto;';
+
+        timings.forEach(t => {
+            const bgColor = t.value === 'urgent' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)';
+            const borderColor = t.value === 'urgent' ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.2)';
+            btnDiv.insertAdjacentHTML('beforeend', `
+                <button onclick="selectNextProposalTiming('${t.value}', '${t.label}')"
+                    style="background: ${bgColor}; border: 1px solid ${borderColor};
+                    color: #fff; padding: 10px 16px; border-radius: 20px; cursor: pointer;
+                    font-size: 0.85rem; transition: all 0.2s;">
+                    ${t.label}
+                </button>
+            `);
+        });
+
+        actionContainer.appendChild(btnDiv);
+    }
+
+    function selectNextProposalTiming(value, label) {
+        reportWizardState.nextProposal.timing = label;
+        appendChatMessage('user', label);
+
+        if (value === 'none') {
+            // Skip work suggestion, go to confirmation
+            showReportConfirmation();
+        } else if (value === 'urgent') {
+            // Ask for urgent reason
+            appendChatMessage('ai', `⚠️ 緊急対応が必要ですね。
+
+追加で推奨する作業があれば選択してください：`);
+            showNextProposalWork();
+        } else {
+            appendChatMessage('ai', `${label}での再訪問を推奨しますね。
+
+追加で推奨する作業があれば選択してください：`);
+            showNextProposalWork();
+        }
+    }
+
+    function showNextProposalWork() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        const works = [
+            '定期清掃の継続',
+            '部品交換の検討',
+            '追加清掃箇所あり',
+            '設備点検を推奨',
+            '害虫駆除を推奨',
+            '特になし'
+        ];
+
+        actionContainer.innerHTML = '';
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 350px; margin: 0 auto;';
+
+        works.forEach(work => {
+            btnDiv.insertAdjacentHTML('beforeend', `
+                <button onclick="selectNextProposalWork('${work}')"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                    color: #fff; padding: 10px 16px; border-radius: 20px; cursor: pointer;
+                    font-size: 0.85rem; transition: all 0.2s;">
+                    ${work}
+                </button>
+            `);
+        });
+
+        actionContainer.appendChild(btnDiv);
+    }
+
+    function selectNextProposalWork(work) {
+        reportWizardState.nextProposal.work = work === '特になし' ? '' : work;
+        appendChatMessage('user', work);
+        showReportConfirmation();
+    }
+
+    function showReportConfirmation() {
+        const nextProposalText = reportWizardState.nextProposal.timing
+            ? `${reportWizardState.nextProposal.timing}${reportWizardState.nextProposal.work ? ' / ' + reportWizardState.nextProposal.work : ''}`
+            : 'なし';
+
+        appendChatMessage('ai', `✅ **確認です：**
+
+📍 店舗: ${reportWizardState.store?.name}
+🧹 対象: ${reportWizardState.cleaningTarget}
+📷 写真: 作業前${reportWizardState.photos.before.length}枚 / 作業後${reportWizardState.photos.after.length}枚
+📝 備考: ${reportWizardState.notes || 'なし'}
+📅 次回提案: ${nextProposalText}
+
+この内容でレポートを送信しますか？`);
+
+        showConfirmButtons();
+    }
+
+    function showConfirmButtons() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
+                <button onclick="openReportPreview()"
+                    style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none;
+                    padding: 12px 24px; border-radius: 25px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+                    display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-eye"></i> プレビューを確認
+                </button>
+                <div style="display: flex; gap: 12px;">
+                    <button onclick="submitReport()"
+                        style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;
+                        padding: 14px 32px; border-radius: 25px; font-size: 0.95rem; font-weight: 600; cursor: pointer;">
+                        ✓ 送信する
+                    </button>
+                    <button onclick="startReportWizard()"
+                        style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
+                        color: white; padding: 14px 24px; border-radius: 25px; font-size: 0.95rem; cursor: pointer;">
+                        やり直す
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function openReportPreview() {
+        // Save preview data to localStorage
+        const previewData = {
+            store: reportWizardState.store,
+            cleaningTarget: reportWizardState.cleaningTarget,
+            photos: reportWizardState.photos,
+            notes: reportWizardState.notes,
+            nextProposal: reportWizardState.nextProposal
+        };
+        localStorage.setItem('report_preview_data', JSON.stringify(previewData));
+        localStorage.removeItem('report_preview_confirmed');
+
+        // Open preview window
+        const previewWindow = window.open('/reports/preview', 'reportPreview',
+            'width=450,height=750,left=100,top=100,scrollbars=yes');
+
+        // Check if preview was confirmed
+        const checkConfirmed = setInterval(() => {
+            if (localStorage.getItem('report_preview_confirmed') === 'true') {
+                clearInterval(checkConfirmed);
+                localStorage.removeItem('report_preview_confirmed');
+                appendChatMessage('ai', '✅ プレビューを確認しました。送信する準備ができています！');
+            }
+        }, 500);
+
+        // Stop checking after 60 seconds
+        setTimeout(() => clearInterval(checkConfirmed), 60000);
+    }
+
+    function startWorkOrderWizard() {
+        appendChatMessage('ai', '作業指示書作成機能は準備中です。');
+    }
+</script>

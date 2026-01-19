@@ -1,0 +1,863 @@
+/* Layout Structure */
+:root {
+    --entrance-header-height: 80px;
+    --entrance-footer-height: 100px;
+}
+
+/* Force Hide ANY Layout / Sidebar / Legacy Elements globally for Entrance */
+#admin-sidebar,
+.admin-sidebar,
+#sidebar-toggle,
+.sidebar-toggle,
+.navbar,
+.navbar-toggler,
+.admin-sidebar-toggle,
+.breadcrumb,
+#normal-header-wrapper,
+#default-header-wrapper,
+aside,
+.sidebar,
+#attendance-status-tag,
+/* Added */
+.attendance-status-tag,
+/* Added */
+#entrance-menu-btn,
+/* Added */
+.entrance-menu-btn,
+/* Added */
+#mobile-menu-button,
+/* Added */
+.mobile-nav-btn,
+/* Added */
+[class*="status-tag"],
+/* Added generic */
+[id*="status-tag"]
+
+/* Added generic */
+    {
+    display: none !important;
+}
+
+/* Ensure main-content takes full width without sidebar */
+.main-content,
+.admin-dashboard,
+body {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    left: 0 !important;
+}
+
+.entrance-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--entrance-header-height);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 25px;
+    z-index: 9500 !important;
+    /* Above everything */
+    pointer-events: none;
+    background: none !important;
+}
+
+/* Header Control Buttons */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    /* Increased gap */
+    pointer-events: auto;
+    max-width: 95%;
+}
+
+/* Content Area Adjustment (Safe Area) */
+.main-content {
+    padding-top: var(--entrance-header-height) !important;
+    padding-bottom: var(--entrance-footer-height) !important;
+    box-sizing: border-box;
+    min-height: 100vh;
+}
+
+/* Floating Controls (Legacy support - will move to header) */
+.floating-controls {
+    display: none;
+    /* Use header instead */
+}
+
+.floating-btn,
+#floating-job-btn {
+    width: auto;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 16px;
+    transition: all 0.3s;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    white-space: nowrap;
+}
+
+.floating-btn i {
+    font-size: 1.1rem;
+}
+
+.floating-btn:hover,
+#floating-job-btn:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-2px);
+}
+
+/* Redefine specific job button appearance when in header */
+#floating-job-btn.header-job-btn {
+    padding: 0 18px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}
+
+#floating-job-btn .job-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-color, #10b981);
+    box-shadow: 0 0 10px var(--accent-glow, rgba(16, 185, 129, 0.5));
+}
+
+/* Chat Toggle Button - positioned separately */
+#chat-toggle-btn {
+    position: fixed;
+    bottom: 100px;
+    left: 20px;
+    z-index: 999;
+}
+
+/* ===================================
+   Main Menu Overlay
+   ================================== */
+#entrance-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(20px);
+    z-index: 9999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+#entrance-menu-overlay.visible {
+    display: flex;
+}
+
+.entrance-menu-close {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.entrance-menu-close:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+}
+
+.entrance-menu-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+}
+
+.entrance-menu-item a,
+.entrance-menu-item button {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    cursor: pointer;
+    min-width: 280px;
+    justify-content: flex-start;
+}
+
+.entrance-menu-item a:hover,
+.entrance-menu-item button:hover {
+    background: var(--accent-color, #10b981);
+    border-color: var(--accent-color, #10b981);
+    transform: translateX(10px);
+}
+
+.entrance-menu-item i {
+    font-size: 1.5rem;
+    width: 30px;
+}
+
+/* ===================================
+   Settings Panel (inside menu overlay)
+   ================================== */
+.settings-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.settings-header h2 {
+    color: #fff;
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.settings-back-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.settings-back-btn:hover {
+    background: var(--accent-color, #10b981);
+    border-color: var(--accent-color, #10b981);
+}
+
+.settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 300px;
+}
+
+.settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 25px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+}
+
+.settings-label {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.settings-label i {
+    font-size: 1.3rem;
+    opacity: 0.8;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    width: 56px;
+    height: 30px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: 0.4s;
+    border-radius: 30px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked+.toggle-slider {
+    background-color: var(--accent-color, #10b981);
+}
+
+.toggle-switch input:checked+.toggle-slider:before {
+    transform: translateX(26px);
+}
+
+/* Settings Select */
+.settings-select {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.settings-select option {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+/* ===================================
+   Feature Overlay Styles (TODO / Daily Report)
+   ================================== */
+.feature-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(20px);
+    z-index: 10000;
+    display: none;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.feature-overlay.visible {
+    display: flex;
+}
+
+.feature-overlay-content {
+    width: 100%;
+    max-width: 500px;
+    margin-top: 40px;
+}
+
+.feature-overlay-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.feature-overlay-header h2 {
+    flex: 1;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.feature-overlay-back,
+.feature-overlay-add {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.feature-overlay-back:hover {
+    background: var(--accent-color, #10b981);
+}
+
+.feature-overlay-add:hover {
+    background: #10b981;
+}
+
+.feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.feature-loading {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 40px;
+}
+
+.feature-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.feature-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-color, #10b981);
+}
+
+.feature-item.completed {
+    opacity: 0.5;
+}
+
+.feature-item-title {
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.feature-item.completed .feature-item-title {
+    text-decoration: line-through;
+}
+
+.feature-item-meta {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+}
+
+.feature-item-checkbox {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.feature-item-checkbox.checked {
+    background: #10b981;
+    border-color: #10b981;
+}
+
+.feature-form {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.feature-input,
+.feature-textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #fff;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.feature-input::placeholder,
+.feature-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.feature-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.feature-form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.feature-btn-cancel,
+.feature-btn-submit,
+.feature-btn-ai {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.feature-btn-cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.feature-btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.feature-btn-submit {
+    background: var(--accent-color, #10b981);
+    color: #fff;
+}
+
+.feature-btn-submit:hover {
+    filter: brightness(1.2);
+}
+
+.feature-btn-ai {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    color: #fff;
+}
+
+.feature-btn-ai:hover {
+    filter: brightness(1.2);
+}
+
+.feature-empty {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 40px 20px;
+}
+
+.feature-empty i {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    display: block;
+}
+
+/* Filter Tabs */
+.feature-filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.feature-filter-btn {
+    flex: 1;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.feature-filter-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.feature-filter-btn.active {
+    background: var(--accent-color, #10b981);
+    border-color: var(--accent-color, #10b981);
+    color: #fff;
+}
+
+/* ===================================
+   Floating Job Button
+   ================================== */
+#floating-job-btn {
+    position: fixed;
+    top: 20px;
+    right: 78px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 24px;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+}
+
+#floating-job-btn:hover {
+    background: var(--accent-color, #10b981);
+    border-color: var(--accent-color, #10b981);
+}
+
+#floating-job-btn .job-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-color, #10b981);
+}
+
+/* ===================================
+   Responsive Adjustments
+   ================================== */
+@media (max-width: 768px) {
+
+    /* Hide Chat Log (History) on mobile for all modes */
+    #chat-log-container,
+    .chat-log-container,
+    .chat-history,
+    #chat-history,
+    #chat-toggle-btn,
+    .chat-toggle-btn {
+        display: none !important;
+    }
+
+    /* Force hide any white nav/legacy buttons on mobile */
+    #sidebar-toggle,
+    .sidebar-toggle,
+    .navbar-toggler,
+    .admin-sidebar-toggle,
+    .breadcrumb,
+    #normal-header-wrapper {
+        display: none !important;
+    }
+
+    .entrance-header {
+        padding: 0 15px;
+        height: 60px;
+    }
+
+    .header-controls {
+        gap: 20px;
+        /* Further increased gap to ensure no overlap */
+    }
+
+    .floating-btn {
+        height: 36px;
+        padding: 0 10px;
+        font-size: 0.75rem;
+    }
+
+    /* Position job button separately on mobile to prevent overlap */
+    #floating-job-btn {
+        position: fixed !important;
+        top: 12px !important;
+        right: 80px !important;
+        bottom: auto !important;
+        padding: 10px 16px !important;
+        font-size: 0.85rem !important;
+        z-index: 9400 !important;
+    }
+
+    #chat-container {
+        width: 95% !important;
+        bottom: 15px !important;
+        padding: 0 !important;
+    }
+
+    .chat-input-wrapper {
+        border-radius: 30px !important;
+        padding: 5px 12px !important;
+    }
+
+    /* Fixed Visualizer for mobile at the top */
+    .visualizer-container {
+        top: 22% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) scale(0.65) !important;
+    }
+
+    .status-text {
+        margin-top: 180px !important;
+    }
+
+    /* Standardize Action Buttons inside chat container on mobile */
+    #action-buttons-container {
+        margin-bottom: 8px !important;
+        gap: 6px !important;
+    }
+}
+
+/* Fixed Footer for Message Input (Global) */
+#chat-container {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+    max-width: 800px !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 15px !important;
+    background: transparent !important;
+    z-index: 7000 !important;
+    pointer-events: auto !important;
+}
+
+.chat-input-wrapper {
+    width: 100% !important;
+    max-width: 800px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(25px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    padding: 8px 18px !important;
+}
+
+#text-input {
+    flex: 1 !important;
+    background: transparent !important;
+    border: none !important;
+    color: #fff !important;
+    padding: 12px 15px !important;
+    font-size: 1rem !important;
+    outline: none !important;
+}
+
+/* Action Buttons / Hotbar adjustments (Global) */
+#action-buttons-container {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    justify-content: center !important;
+    margin-bottom: 35px !important;
+    z-index: 7001 !important;
+}
+
+/* Message positioning and styling */
+.latest-message-container {
+    position: fixed !important;
+    top: 18% !important;
+    /* Unified top position */
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+    max-width: 700px !important;
+    z-index: 9600 !important;
+    pointer-events: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.latest-message-bubble {
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(25px) !important;
+    border: 1px solid rgba(59, 130, 246, 0.4) !important;
+    border-radius: 20px !important;
+    padding: 18px 28px !important;
+    color: #fff !important;
+    font-size: 1.1rem !important;
+    line-height: 1.6 !important;
+    text-align: center !important;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.2) !important;
+    pointer-events: auto !important;
+    animation: message-appear 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.latest-message-bubble.user {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+@keyframes message-appear {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 768px) {
+    .latest-message-container {
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        /* Center both horizontally and vertically */
+        max-width: 95% !important;
+    }
+
+    .latest-message-bubble {
+        padding: 16px 24px !important;
+        font-size: 1rem !important;
+        /* Slightly larger for clarity in center */
+    }
+
+    /* Cleaning mode AI message overlay - center on mobile */
+    .ai-response-overlay,
+    #ai-response {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 90% !important;
+        max-width: 350px !important;
+        z-index: 9500 !important;
+    }
+
+    .ai-response-overlay.visible,
+    #ai-response.visible {
+        transform: translate(-50%, -50%) !important;
+    }
+}
