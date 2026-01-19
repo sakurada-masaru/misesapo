@@ -134,6 +134,14 @@
     }
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .misesapo-mega-menu.ishikawa-style .mega-menu-item {
+        opacity: 1;
+        transform: none;
+        animation: none;
+    }
+}
+
 .misesapo-mega-menu.ishikawa-style .mega-menu-link {
     display: flex;
     align-items: center;
