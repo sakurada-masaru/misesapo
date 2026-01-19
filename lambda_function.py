@@ -13,6 +13,14 @@ from datetime import datetime, timedelta, timezone
 from boto3.dynamodb.conditions import Key, Attr
 from pydantic import ValidationError
 
+ATTENDANCE_STAFF_DATE_INDEX = 'staff_id-date-index'
+
+class DependencyNotReadyError(Exception):
+    def __init__(self, missing_index, missing_table=None):
+        super().__init__(missing_index)
+        self.missing_index = missing_index
+        self.missing_table = missing_table
+
 from misogi_flags import (
     build_report_flag_pk,
     can_list,
@@ -913,9 +921,11 @@ def lambda_handler(event, context):
         normalized_path = normalized_path[5:]  # '/dev/' を除去
     elif normalized_path.startswith('/stage/'):
         normalized_path = normalized_path[7:]  # '/stage/' を除去
-    # 先頭にスラッシュがない場合は追加
+    # 先頭にスラッシュがない場合は追加、再度末尾のスラッシュを除去して耐性を持たせる
     if normalized_path and not normalized_path.startswith('/'):
         normalized_path = '/' + normalized_path
+    if normalized_path and len(normalized_path) > 1:
+        normalized_path = normalized_path.rstrip('/')
     
     try:
         # パスに応じて処理を分岐
@@ -1154,6 +1164,10 @@ def lambda_handler(event, context):
             error_id = normalized_path.split('/')[-2]
             if method == 'PUT':
                 return resolve_attendance_error(error_id, headers)
+        elif normalized_path.startswith('/admin/attendance/users/') and normalized_path.endswith('/detail'):
+            worker_id = normalized_path.split('/')[-2]
+            if method == 'GET':
+                return get_admin_attendance_user_detail(event, headers, worker_id)
         elif normalized_path == '/admin/attendance/board':
             # 勤怠司令塔ボード
             if method == 'GET':
@@ -8121,7 +8135,7 @@ def get_admin_attendance_board(event, headers):
     """
     user_info = _get_user_info_from_event(event)
     role = (user_info or {}).get('role')
-    if role not in ['human_resources', 'hr']:
+    if role not in ['human_resources', 'hr', 'admin', 'operation', 'general_affairs']:
         return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'}, ensure_ascii=False)}
 
     query_params = event.get('queryStringParameters') or {}
@@ -8257,6 +8271,154 @@ def get_admin_attendance_board(event, headers):
             'kpis': kpis,
             'board': board_rows,
             'queue': queue
+        }, ensure_ascii=False, default=str)
+    }
+
+
+def _to_jst_iso(value):
+    if not value or not isinstance(value, str):
+        return value
+    try:
+        text = value.strip()
+        if text.endswith('Z'):
+            text = text.replace('Z', '+00:00')
+        dt = datetime.fromisoformat(text)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        jst = dt.astimezone(timezone(timedelta(hours=9)))
+        return jst.isoformat()
+    except Exception:
+        return value
+
+
+def _normalize_breaks(breaks):
+    if not isinstance(breaks, list):
+        return []
+    normalized = []
+    for b in breaks:
+        if not isinstance(b, dict):
+            continue
+        normalized.append({
+            'start': _to_jst_iso(b.get('start')),
+            'end': _to_jst_iso(b.get('end'))
+        })
+    return normalized
+
+
+def _query_by_staff_date(table, staff_id, date_from, date_to):
+    if not staff_id or not date_from or not date_to:
+        return []
+    indexes = table.meta.client.describe_table(TableName=table.name).get('Table', {}).get('GlobalSecondaryIndexes', [])
+    index_meta = {idx.get('IndexName'): idx for idx in indexes}
+    index = index_meta.get(ATTENDANCE_STAFF_DATE_INDEX)
+    if not index or index.get('IndexStatus') != 'ACTIVE':
+        raise DependencyNotReadyError(ATTENDANCE_STAFF_DATE_INDEX, table.name)
+    response = table.query(
+        IndexName=ATTENDANCE_STAFF_DATE_INDEX,
+        KeyConditionExpression=Key('staff_id').eq(staff_id) & Key('date').between(date_from, date_to)
+    )
+    return response.get('Items', [])
+
+
+def get_admin_attendance_user_detail(event, headers, worker_id):
+    "個人別勤怠詳細（read-only）"
+    user_info = _get_user_info_from_event(event)
+    role = (user_info or {}).get('role')
+    if role not in ['human_resources', 'hr', 'admin', 'operation', 'general_affairs']:
+        return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'}, ensure_ascii=False)}
+
+    query_params = event.get('queryStringParameters') or {}
+    date_from = query_params.get('from')
+    date_to = query_params.get('to')
+    if not date_from or not date_to:
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({'error': 'from and to are required'}, ensure_ascii=False)
+        }
+
+    try:
+        attendance_items = _query_by_staff_date(ATTENDANCE_TABLE, worker_id, date_from, date_to)
+        request_items = _query_by_staff_date(ATTENDANCE_REQUESTS_TABLE, worker_id, date_from, date_to)
+        error_items = _query_by_staff_date(ATTENDANCE_ERRORS_TABLE, worker_id, date_from, date_to)
+    except DependencyNotReadyError as e:
+        body = {
+            'result': 'dependency_not_ready',
+            'missing_index': e.missing_index
+        }
+        if e.missing_table:
+            body['missing_table'] = e.missing_table
+        return {
+            'statusCode': 503,
+            'headers': headers,
+            'body': json.dumps(body, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error fetching attendance detail: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'attendance_query_failed'}, ensure_ascii=False)
+        }
+
+    requests_by_date = {}
+    for req in request_items:
+        date_key = req.get('date')
+        if date_key:
+            requests_by_date.setdefault(date_key, []).append({
+                'request_id': req.get('id'),
+                'type': req.get('type'),
+                'status': req.get('status'),
+                'reason_code': req.get('reason_code')
+            })
+
+    errors_by_date = {}
+    for err in error_items:
+        date_key = err.get('date')
+        if date_key:
+            errors_by_date.setdefault(date_key, []).append({
+                'error_id': err.get('id'),
+                'type': err.get('type'),
+                'status': err.get('status')
+            })
+
+    days = []
+    for item in attendance_items:
+        date_key = item.get('date')
+        if not date_key:
+            continue
+        days.append({
+            'date': date_key,
+            'fixed': {
+                'clock_in': _to_jst_iso(item.get('fixed_clock_in')),
+                'clock_out': _to_jst_iso(item.get('fixed_clock_out')),
+                'breaks': _normalize_breaks(item.get('fixed_breaks')),
+                'total_minutes': item.get('fixed_total_minutes'),
+                'status': item.get('fixed_status'),
+                'reason_code': item.get('fixed_reason_code')
+            },
+            'raw': {
+                'clock_in': _to_jst_iso(item.get('clock_in')),
+                'clock_out': _to_jst_iso(item.get('clock_out')),
+                'breaks': _normalize_breaks(item.get('breaks'))
+            },
+            'requests': requests_by_date.get(date_key, []),
+            'errors': errors_by_date.get(date_key, [])
+        })
+
+    days.sort(key=lambda d: d.get('date'))
+
+    result = 'ok' if days else 'no_data'
+    return {
+        'statusCode': 200,
+        'headers': headers,
+        'body': json.dumps({
+            'worker_id': worker_id,
+            'from': date_from,
+            'to': date_to,
+            'timezone': 'Asia/Tokyo',
+            'result': result,
+            'days': days
         }, ensure_ascii=False, default=str)
     }
 
