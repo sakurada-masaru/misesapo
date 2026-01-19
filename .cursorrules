@@ -1,0 +1,72 @@
+# Cursor Rules for MISESAPO Project
+
+## 🎯 Project Overview
+
+This project follows **MDCS (Misesapo Deductive Classification System)** as its core development philosophy.
+
+**Core Philosophy**: "Not a system that never fails, but a system that can fail safely"
+
+## 📐 MDCS Core Principles
+
+### 1. Syllogism (Ensuring Accuracy of Premises)
+- Verify the accuracy of premises
+- Ensure consistency across classification methods
+- **Logic Structure**: If element A belongs to group B (A ∈ B) and element A belongs to group C (A ∈ C), then group B and group C represent the same conceptual group (B ≡ C)
+
+### 2. Deduction (Expansion from Premises to Conclusions)
+- Derive conclusions from premises
+- Expand logically from base systems to individual systems
+
+### 3. Expanding Philosophy (Deductive Expansion)
+- Start from the base and gradually expand
+- Use deductive expansion, not inductive convergence
+
+## 🏗️ System Architecture
+
+### 3-Layer Classification
+
+1. **Customer Interface System**: Public site + User management
+2. **Business Operations System**: Sales tools + Staff utility tools
+3. **Management & Control System**: Internal management system
+
+### Development Phases
+
+1. Phase 1: Infrastructure (Auth, Database, API)
+2. Phase 2: Business Operations (Staff tools)
+3. Phase 3: Business Operations (Sales tools)
+4. Phase 4: Customer Interface
+5. Phase 5: Management & Control
+
+## 🔑 Development Guidelines
+
+### When Adding New Features
+
+1. **Ensure Premises (Syllogism)**
+   - Verify that the same element belongs to the same group across all classification methods
+   - Ensure consistency between classification methods
+
+2. **Deductive Expansion (Deduction)**
+   - Expand logically from base systems
+   - Build step by step based on premises
+
+3. **Expanding Philosophy (Deductive Expansion)**
+   - Expand from small base to large system step by step
+   - Use deductive expansion, not inductive convergence
+
+4. **"System that can fail safely"**
+   - Limit the impact of failures
+   - Make recovery from failures easy
+
+## 📚 Key Documents
+
+- [AI Quick Start Guide](./docs/AI_QUICK_START.md) - For AI models to understand the project
+- [MDCS Core Philosophy](./docs/MDCS_CORE_PHILOSOPHY.md) - Core development philosophy
+- [System Categorization](./docs/SYSTEM_CATEGORIZATION.md) - Detailed classification system
+
+## 💡 Important Notes
+
+- Always maintain logical consistency
+- Build step by step from the base
+- Use deductive expansion, not inductive convergence
+- Design for failure recovery, not failure prevention
+
