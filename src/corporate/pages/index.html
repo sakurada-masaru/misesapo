@@ -1448,7 +1448,7 @@
         .service-section-title {
             position: relative;
             text-align: center;
-            padding: 50px 0 20px;
+            padding: 50px 0 ;
             pointer-events: none;
             z-index: 10;
             background-color: #FDEDED;
@@ -3229,6 +3229,7 @@
 
         .about-coverage-swiper .swiper-wrapper {
             align-items: stretch;
+            transition-timing-function: linear;
         }
 
         .about-coverage-swiper .swiper-slide {
@@ -3255,6 +3256,10 @@
             box-shadow: 0 12px 24px rgba(255, 103, 156, 0.2);
         }
 
+        .about-coverage-prev,
+        .about-coverage-next {
+            display: none;
+        }
 
 
         .about-coverage-more {
@@ -5104,6 +5109,11 @@
                 spaceBetween: 20,
                 grabCursor: true,
                 loop: true,
+                autoplay: {
+                    delay: 0,
+                    disableOnInteraction: false
+                },
+                speed: 6000,
                 pagination: {
                     el: '.about-coverage-pagination',
                     clickable: true
