@@ -8,6 +8,12 @@ import { HaccpManager } from './ui/haccp-manager.js';
 import { SubmitManager } from './ui/submit-manager.js';
 import { AutoSaveManager } from './ui/auto-save-manager.js';
 import { ReportAssistant } from './assistant.js';
+import {
+    PHOTO_REQUIREMENTS,
+    resolveScheduleLines,
+    computePhotoRequirement,
+    countUploadedPhotos
+} from './photo-logic.js';
 
 console.log('[Report Module] Initializing...');
 
@@ -264,122 +270,86 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
     };
 
-    const PHOTO_REQUIREMENTS = new Map([
-        ['床・共用部清掃', { min: 3, internal: false }],
-        ['店舗内簡易清掃', { min: 3, internal: false }],
-        ['窓・ガラス清掃', { min: 3, internal: false }],
-        ['換気扇（外側のみ）', { min: 4, internal: false }],
-        ['トイレ清掃', { min: 4, internal: false }],
-        ['厨房床清掃', { min: 4, internal: false }],
-        ['シンク清掃', { min: 4, internal: false }],
-        ['排気ファン清掃', { min: 5, internal: false }],
-        ['レンジフード清掃', { min: 6, internal: true }],
-        ['ダクト清掃', { min: 6, internal: true }],
-        ['グリストラップ清掃', { min: 6, internal: true }],
-        ['配管高圧洗浄', { min: 5, internal: false }],
-        ['防火シャッター清掃', { min: 5, internal: false }]
-    ]);
 
     let currentPhotoRequirement = null;
 
-    const resolveScheduleLines = (schedule) => {
-        const items = schedule.cleaning_items || schedule.service_items || (schedule.service_names ? (Array.isArray(schedule.service_names) ? schedule.service_names : [schedule.service_names]) : []) || [];
-        return items
-            .map(item => (typeof item === 'object' ? (item.name || item.item_name || item.title || '') : item))
-            .map(item => String(item || '').trim())
-            .filter(Boolean);
-    };
-
-    const computePhotoRequirement = (schedule) => {
-        const fallback = { min: 3, internal: false, isFallback: true };
-        if (!schedule) return fallback;
-        const lines = resolveScheduleLines(schedule);
-        if (lines.length === 0) return fallback;
-
-        let min = 0;
-        let internal = false;
-        let matched = 0;
-
-        lines.forEach(line => {
-            const requirement = PHOTO_REQUIREMENTS.get(line);
-            if (!requirement) return;
-            min = Math.max(min, requirement.min);
-            internal = internal || requirement.internal;
-            matched += 1;
-        });
-
-        if (matched === 0) return fallback;
-        return { min, internal, isFallback: false };
-    };
-
-    const shouldCountPhoto = (photo) => {
-        if (!photo || typeof photo !== 'object') return false;
-        if (photo.status === 'removed') return false;
-        return true;
-    };
-
-    const countUploadedPhotos = (state) => {
-        const sections = state.sections?.new || {};
-        return Object.values(sections).reduce((total, section) => {
-            const imageContents = section.imageContents || [];
-            const sectionCount = imageContents.reduce((sum, content) => {
-                const photos = content.photos || {};
-                return sum
-                    + (photos.before ? photos.before.filter(shouldCountPhoto).length : 0)
-                    + (photos.after ? photos.after.filter(shouldCountPhoto).length : 0)
-                    + (photos.completed ? photos.completed.filter(shouldCountPhoto).length : 0);
-            }, 0);
-            return total + sectionCount;
-        }, 0);
-    };
-
-    const updatePhotoRequirementUI = (state) => {
+    function updatePhotoRequirementUI(state) {
+        const reqSection = document.getElementById('photo-requirements-section');
         const requirementText = document.getElementById('photo-requirement-text');
         const internalNote = document.getElementById('photo-requirement-internal');
         const warningText = document.getElementById('photo-requirement-warning');
 
         if (!requirementText || !internalNote || !warningText) return;
 
-        if (!currentPhotoRequirement) {
-            currentPhotoRequirement = { min: 3, internal: false, isFallback: true };
+        // Recalculate requirement based on current sections + schedule
+        const currentSections = state.sections?.[state.activeTab] || {};
+        const sectionItems = Object.values(currentSections).map(s => s.item_name).filter(Boolean);
+
+        let scheduleItems = [];
+        if (window.osCurrentSchedule) {
+            scheduleItems = resolveScheduleLines(window.osCurrentSchedule);
         }
+
+        const allItems = [...new Set([...scheduleItems, ...sectionItems])];
+        currentPhotoRequirement = computePhotoRequirement(allItems);
+
+        if (!currentPhotoRequirement || allItems.length === 0) {
+            if (reqSection) reqSection.style.display = 'none';
+            return;
+        }
+
+        if (reqSection) reqSection.style.display = 'block';
 
         if (currentPhotoRequirement.isFallback) {
             requirementText.textContent = '要件未設定（暫定：最低3枚を推奨）';
+            requirementText.style.color = '#6b7280';
         } else {
             requirementText.textContent = `写真を${currentPhotoRequirement.min}枚以上`;
+            requirementText.style.color = '#111827';
         }
 
-        internalNote.style.display = currentPhotoRequirement.internal ? 'block' : 'none';
+        // Internal check display
+        if (currentPhotoRequirement.internal) {
+            internalNote.style.display = 'block';
+            internalNote.style.color = '#b45309';
+            internalNote.style.fontWeight = 'bold';
+            internalNote.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 内部写真が必要です';
+        } else {
+            internalNote.style.display = 'none';
+        }
 
         const photoCount = countUploadedPhotos(state);
         if (photoCount < currentPhotoRequirement.min) {
             warningText.textContent = `あと${currentPhotoRequirement.min - photoCount}枚`;
             warningText.style.display = 'block';
+            warningText.style.color = '#dc2626';
+            warningText.style.fontWeight = 'bold';
+            warningText.style.fontSize = '1.1rem';
         } else {
-            warningText.style.display = 'none';
+            warningText.textContent = '✓ 必要枚数を満たしています';
+            warningText.style.display = 'block';
+            warningText.style.color = '#059669';
+            warningText.style.fontWeight = 'normal';
+            warningText.style.fontSize = '0.9rem';
         }
-    };
+    }
 
     // Populate Request Sheet based on selected schedule
     const updateRequestSheet = (schedule) => {
         const container = document.getElementById('request-sheet-content');
         if (!container || !schedule) return;
 
-        const cleaningItems = schedule.cleaning_items || schedule.service_items || (schedule.service_names ? (Array.isArray(schedule.service_names) ? schedule.service_names : [schedule.service_names]) : []) || [];
+        window.osCurrentSchedule = schedule; // Save for requirements calculation
+
+        const cleaningItems = resolveScheduleLines(schedule);
         const address = schedule.address || (schedule.store ? schedule.store.address : '') || '住所未設定';
         const clientName = schedule.client_name || (schedule.client ? schedule.client.name : '') || '';
 
-        // Mock data or real data if available
-        // Sales module saves 'notes' -> 'notes'. 'precautions' is not explicitly saved yet, so we fallback or check if it's added later.
         const notes = schedule.notes || '特になし';
-
-        // Caution: 'precautions' might not exist in sales data yet. 
-        // We can display store-level info if we had it, or just use notes if precautions is missing.
         const precautions = schedule.precautions || schedule.store?.precautions || '特になし';
 
         const itemsHtml = cleaningItems.length > 0
-            ? cleaningItems.map(item => `<li style="margin-bottom:4px;">${typeof item === 'object' ? (item.name || item.item_name) : item}</li>`).join('')
+            ? cleaningItems.map(item => `<li style="margin-bottom:4px;">${item}</li>`).join('')
             : '<li>指定なし</li>';
 
         container.innerHTML = `
@@ -403,7 +373,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             
             ${renderHaccpInfo(schedule)}
-
+ 
              <div style="margin-bottom: 12px;">
                 <strong style="display:block; color:#ec4899; font-size:0.85rem; margin-bottom:4px;">注意事項 (入館ルール等)</strong>
                 <div style="color:#111827; white-space: pre-wrap; background:white; padding:8px; border:1px solid #fce7f3; border-radius:4px;">${precautions}</div>
@@ -412,29 +382,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // Hook into schedule loading
-    const originalLoadSchedules = window.loadSchedules; // Assuming this function exists or we find where it is called
-    // Since loadSchedules is likely inside DOMContentLoaded or called by it, we act on 'schedule_id' detection
-
     // Check if we have a selected schedule on load
     const currentScheduleId = urlParams.get('schedule_id');
     if (currentScheduleId) {
         // Wait for apiService to fetch schedules, then find and update
         const checkSchedule = setInterval(() => {
-            // Check global variable OR state manager OR if loadSchedules has populated the select dropdown
             const schedules = window.osAllSchedules || (stateManager.state.schedules) || [];
 
             if (schedules.length > 0) {
                 const schedule = schedules.find(s => String(s.id) === String(currentScheduleId));
                 if (schedule) {
                     updateRequestSheet(schedule);
-                    currentPhotoRequirement = computePhotoRequirement(schedule);
                     updatePhotoRequirementUI(stateManager.state);
                     clearInterval(checkSchedule);
                 }
             }
-        }, 300); // Check every 300ms
+        }, 300);
         setTimeout(() => clearInterval(checkSchedule), 15000); // 15s timeout
     }
+
     window.handleDeleteSectionComment = (sectionId, idx) => {
         if (!confirm('コメントを削除しますか？')) return;
         const currentTab = stateManager.state.activeTab;
@@ -634,7 +600,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (infoStore) infoStore.value = schedule.store_name || (schedule.store ? schedule.store.name : '') || '';
             if (infoDate) infoDate.value = schedule.date || schedule.scheduled_date || '';
 
-            currentPhotoRequirement = computePhotoRequirement(schedule);
             updatePhotoRequirementUI(stateManager.state);
         }
     }

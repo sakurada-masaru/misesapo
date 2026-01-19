@@ -1582,6 +1582,7 @@
 
           renderTimecard();
           renderMonthlySummary();
+          renderPage(); // Re-render summary with updated attendanceRequests
         } catch (error) {
           console.error('Error loading timecard:', error);
           monthlyAttendance = [];
