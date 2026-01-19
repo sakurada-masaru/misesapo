@@ -11,6 +11,17 @@ import html
 from decimal import Decimal
 from datetime import datetime, timedelta, timezone
 from boto3.dynamodb.conditions import Key, Attr
+from pydantic import ValidationError
+
+from misogi_flags import (
+    build_report_flag_pk,
+    can_list,
+    can_patch,
+    can_suggest,
+    has_disallowed_patch_fields,
+    is_same_unit,
+)
+from misogi_schemas import PatchFlagRequest, SuggestFlagRequest
 
 # Google Calendar API用のインポート（オプション）
 # 注意: Lambda Layerまたはrequirements.txtにgoogle-api-python-clientを追加する必要があります
@@ -798,6 +809,7 @@ REIMBURSEMENTS_TABLE = dynamodb.Table('misesapo-reimbursements')
 REPORT_IMAGES_TABLE = dynamodb.Table('report-images')
 STORE_AUDITS_TABLE = dynamodb.Table('misesapo-store-audits')
 STAFF_REPORT_APPROVALS_TABLE = dynamodb.Table('staff-report-approvals')
+REPORT_FLAGS_TABLE = dynamodb.Table('report-flags-v2')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -985,6 +997,40 @@ def lambda_handler(event, context):
                 return update_report_by_id(report_id, event, headers)
             elif method == 'DELETE':
                 return delete_report(report_id, event, headers)
+        elif normalized_path.startswith('/reports/'):
+            parts = normalized_path.split('/')
+            if len(parts) >= 4 and parts[3] == 'flags':
+                report_id = parts[2]
+                if len(parts) == 5 and parts[4] == 'suggest':
+                    if method == 'POST':
+                        return handle_report_flags_suggest(report_id, event, headers)
+                    return {
+                        'statusCode': 405,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                    }
+                if len(parts) == 4:
+                    if method == 'GET':
+                        return handle_report_flags_list(report_id, event, headers)
+                    return {
+                        'statusCode': 405,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                    }
+                if len(parts) == 5:
+                    flag_id = parts[4]
+                    if method == 'PATCH':
+                        return handle_report_flags_patch(report_id, flag_id, event, headers)
+                    return {
+                        'statusCode': 405,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                    }
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'Not found'}, ensure_ascii=False)
+            }
         elif normalized_path.startswith('/public/reports/'):
             # 公開レポート関連（認証不要）
             parts = normalized_path.split('/')
@@ -1108,6 +1154,10 @@ def lambda_handler(event, context):
             error_id = normalized_path.split('/')[-2]
             if method == 'PUT':
                 return resolve_attendance_error(error_id, headers)
+        elif normalized_path == '/admin/attendance/board':
+            # 勤怠司令塔ボード
+            if method == 'GET':
+                return get_admin_attendance_board(event, headers)
         elif normalized_path == '/attendance/requests':
             # 出退勤修正申請の取得・作成
             if method == 'GET':
@@ -2286,6 +2336,8 @@ def verify_firebase_token(id_token):
             elif 'staff' in groups or 'STAFF' in groups:
                 role = 'cleaning'
         
+        unit_id = payload.get('custom:unit_id') or payload.get('unit_id') or payload.get('tenant_id')
+
         # デフォルトロール
         if not role:
             role = 'cleaning'
@@ -2296,6 +2348,7 @@ def verify_firebase_token(id_token):
             'email': email,
             'name': name,
             'role': role,
+            'unit_id': unit_id,
             'verified': True  # Cognitoトークンがデコードできた場合は認証済みとみなす
         }
     except Exception as e:
@@ -2308,6 +2361,142 @@ def check_admin_permission(user_info):
     管理者権限をチェック
     """
     return user_info.get('role') == 'admin'
+
+
+def _get_user_info_from_event(event):
+    auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+    id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+    if not id_token:
+        return None
+    return verify_firebase_token(id_token)
+
+def _resolve_unit_id(user_info):
+    unit_id = None
+    if user_info:
+        unit_id = user_info.get('unit_id') or user_info.get('custom:unit_id')
+    return unit_id or 'unit_internal'
+
+def handle_report_flags_suggest(report_id, event, headers):
+    user_info = _get_user_info_from_event(event)
+    if not user_info:
+        return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)}
+
+    role = user_info.get('role')
+    if not can_suggest(role):
+        return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'}, ensure_ascii=False)}
+
+    try:
+        body_json = json.loads(event.get('body') or '{}')
+    except json.JSONDecodeError:
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'Invalid JSON'}, ensure_ascii=False)}
+
+    try:
+        payload = SuggestFlagRequest(**body_json)
+    except ValidationError as exc:
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'Validation error', 'details': exc.errors()}, ensure_ascii=False)}
+
+    now = datetime.utcnow().isoformat() + 'Z'
+    unit_id = _resolve_unit_id(user_info)
+    flag_id = str(uuid.uuid4())
+    pk = build_report_flag_pk(unit_id, report_id)
+    item = {
+        'pk': pk,
+        'sk': flag_id,
+        'unit_id': unit_id,
+        'report_id': report_id,
+        'flag_id': flag_id,
+        'type': payload.type,
+        'origin': payload.origin.value,
+        'severity': payload.severity,
+        'evidence': payload.evidence,
+        'decision': None,
+        'tags': payload.tags or [],
+        'state': 'open',
+        'created_at': now,
+        'updated_at': now
+    }
+
+    REPORT_FLAGS_TABLE.put_item(Item=item)
+    return {'statusCode': 201, 'headers': headers, 'body': json.dumps(item, ensure_ascii=False)}
+
+def handle_report_flags_list(report_id, event, headers):
+    user_info = _get_user_info_from_event(event)
+    if not user_info:
+        return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)}
+
+    role = user_info.get('role')
+    if not can_list(role):
+        return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'}, ensure_ascii=False)}
+
+    query_params = event.get('queryStringParameters') or {}
+    filter_state = query_params.get('state')
+    filter_type = query_params.get('type')
+    filter_origin = query_params.get('origin')
+
+    unit_id = _resolve_unit_id(user_info)
+    pk = build_report_flag_pk(unit_id, report_id)
+    response = REPORT_FLAGS_TABLE.query(
+        KeyConditionExpression=Key('pk').eq(pk)
+    )
+    items = response.get('Items', [])
+
+    if filter_state:
+        items = [item for item in items if item.get('state') == filter_state]
+    if filter_type:
+        items = [item for item in items if item.get('type') == filter_type]
+    if filter_origin:
+        items = [item for item in items if item.get('origin') == filter_origin]
+
+    return {'statusCode': 200, 'headers': headers, 'body': json.dumps(items, ensure_ascii=False)}
+
+def handle_report_flags_patch(report_id, flag_id, event, headers):
+    user_info = _get_user_info_from_event(event)
+    if not user_info:
+        return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)}
+
+    role = user_info.get('role')
+    if not can_patch(role):
+        return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'}, ensure_ascii=False)}
+
+    try:
+        body_json = json.loads(event.get('body') or '{}')
+    except json.JSONDecodeError:
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'Invalid JSON'}, ensure_ascii=False)}
+
+    if has_disallowed_patch_fields(body_json):
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'Only state and decision can be updated'}, ensure_ascii=False)}
+
+    try:
+        payload = PatchFlagRequest(**body_json)
+    except ValidationError as exc:
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'Validation error', 'details': exc.errors()}, ensure_ascii=False)}
+
+    unit_id = _resolve_unit_id(user_info)
+    pk = build_report_flag_pk(unit_id, report_id)
+    existing = REPORT_FLAGS_TABLE.get_item(Key={'pk': pk, 'sk': flag_id}).get('Item')
+    if not existing:
+        return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Not found'}, ensure_ascii=False)}
+    if not is_same_unit(unit_id, existing.get('unit_id')):
+        return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'}, ensure_ascii=False)}
+
+    now = datetime.utcnow().isoformat() + 'Z'
+    update_expr_parts = ['#state = :state', 'updated_at = :updated_at']
+    expr_attr_names = {'#state': 'state'}
+    expr_attr_values = {':state': payload.state.value, ':updated_at': now}
+
+    if payload.decision is not None:
+        update_expr_parts.append('decision = :decision')
+        expr_attr_values[':decision'] = payload.decision.dict()
+
+    REPORT_FLAGS_TABLE.update_item(
+        Key={'pk': pk, 'sk': flag_id},
+        UpdateExpression='SET ' + ', '.join(update_expr_parts),
+        ExpressionAttributeNames=expr_attr_names,
+        ExpressionAttributeValues=expr_attr_values
+    )
+
+    updated = REPORT_FLAGS_TABLE.get_item(Key={'pk': pk, 'sk': flag_id}).get('Item')
+    return {'statusCode': 200, 'headers': headers, 'body': json.dumps(updated, ensure_ascii=False)}
 
 def convert_to_s3_url(path):
     """
@@ -7925,6 +8114,151 @@ def delete_attendance_request(request_id, headers):
                 'message': str(e)
             }, ensure_ascii=False)
         }
+
+def get_admin_attendance_board(event, headers):
+    """
+    勤怠司令塔ボード用データを合成して返す
+    """
+    user_info = _get_user_info_from_event(event)
+    role = (user_info or {}).get('role')
+    if role not in ['human_resources', 'hr']:
+        return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'}, ensure_ascii=False)}
+
+    query_params = event.get('queryStringParameters') or {}
+    date = query_params.get('date')
+    if not date:
+        date = (datetime.now(timezone.utc) + timedelta(hours=9)).strftime('%Y-%m-%d')
+
+    attendance_items = []
+    request_items = []
+    error_items = []
+    workers = []
+
+    try:
+        attendance_response = ATTENDANCE_TABLE.scan(
+            FilterExpression=Attr('date').eq(date)
+        )
+        attendance_items = attendance_response.get('Items', [])
+    except Exception as e:
+        print(f"Error fetching attendance for board: {str(e)}")
+
+    try:
+        request_response = ATTENDANCE_REQUESTS_TABLE.scan(
+            FilterExpression=Attr('date').eq(date)
+        )
+        request_items = request_response.get('Items', [])
+    except Exception as e:
+        print(f"Error fetching attendance requests for board: {str(e)}")
+
+    try:
+        error_response = ATTENDANCE_ERRORS_TABLE.scan()
+        error_items = [item for item in error_response.get('Items', []) if not item.get('resolved', False)]
+    except Exception as e:
+        print(f"Error fetching attendance errors for board: {str(e)}")
+
+    try:
+        workers_response = WORKERS_TABLE.scan()
+        workers = workers_response.get('Items', [])
+    except Exception as e:
+        print(f"Error fetching workers for board: {str(e)}")
+
+    attendance_map = {item.get('staff_id'): item for item in attendance_items if item.get('staff_id')}
+    request_by_staff = {}
+    pending_requests = []
+    for req in request_items:
+        staff_id = req.get('staff_id')
+        if staff_id:
+            request_by_staff.setdefault(staff_id, []).append(req)
+        if req.get('status') == 'pending':
+            pending_requests.append(req)
+
+    error_by_staff = {}
+    for err in error_items:
+        staff_id = err.get('staff_id')
+        if staff_id:
+            error_by_staff.setdefault(staff_id, []).append(err)
+
+    board_rows = []
+    missing_clock_count = 0
+    unconfirmed_count = 0
+
+    for worker in workers:
+        staff_id = worker.get('id')
+        staff_name = worker.get('name') or worker.get('display_name') or staff_id
+        attendance = attendance_map.get(staff_id)
+        requests = request_by_staff.get(staff_id, [])
+        errors = error_by_staff.get(staff_id, [])
+
+        raw_clock_in = attendance.get('clock_in') if attendance else None
+        raw_clock_out = attendance.get('clock_out') if attendance else None
+        fixed_clock_in = attendance.get('fixed_clock_in') if attendance else None
+        fixed_clock_out = attendance.get('fixed_clock_out') if attendance else None
+
+        raw_status = attendance.get('status') if attendance else 'absent'
+        fixed_status = attendance.get('fixed_status') if attendance else None
+
+        missing_clock = attendance is None or not raw_clock_in
+        if missing_clock:
+            missing_clock_count += 1
+
+        if attendance and (fixed_clock_in is None and fixed_clock_out is None):
+            unconfirmed_count += 1
+
+        board_rows.append({
+            'attendance_id': attendance.get('id') if attendance else None,
+            'staff_id': staff_id,
+            'staff_name': staff_name,
+            'role': worker.get('role'),
+            'raw': {
+                'clock_in': raw_clock_in,
+                'clock_out': raw_clock_out,
+                'status': raw_status,
+                'break_time': attendance.get('break_time') if attendance else None
+            },
+            'fixed': {
+                'clock_in': fixed_clock_in,
+                'clock_out': fixed_clock_out,
+                'status': fixed_status,
+                'break_time': attendance.get('fixed_break_time') if attendance else None
+            },
+            'requests_count': len(requests),
+            'errors_count': len(errors),
+            'has_missing_clock': missing_clock
+        })
+
+    queue = []
+    for req in pending_requests:
+        queue.append({
+            'request_id': req.get('id'),
+            'attendance_id': req.get('attendance_id'),
+            'staff_id': req.get('staff_id'),
+            'staff_name': req.get('staff_name'),
+            'date': req.get('date'),
+            'reason': req.get('reason', ''),
+            'current_clock_in': req.get('current_clock_in'),
+            'current_clock_out': req.get('current_clock_out'),
+            'requested_clock_in': req.get('requested_clock_in'),
+            'requested_clock_out': req.get('requested_clock_out'),
+            'status': req.get('status')
+        })
+
+    kpis = {
+        'pending_requests': len(pending_requests),
+        'unconfirmed': unconfirmed_count,
+        'unresolved_errors': len(error_items),
+        'missing_clock_suspect': missing_clock_count
+    }
+
+    return {
+        'statusCode': 200,
+        'headers': headers,
+        'body': json.dumps({
+            'date': date,
+            'kpis': kpis,
+            'board': board_rows,
+            'queue': queue
+        }, ensure_ascii=False, default=str)
+    }
 
 def get_attendance_detail(attendance_id, headers):
     """

@@ -4,6 +4,7 @@
 
 <script src="{{ base_path }}js/entrance-core.js"></script>
 <link rel="stylesheet" href="{{ base_path }}css/entrance-menu.css">
+<link rel="stylesheet" href="{{ base_path }}css/hr-attendance-dashboard.css">
 <script src="{{ base_path }}js/entrance-menu.js"></script>
 
 
@@ -1650,6 +1651,49 @@
         <div class="wave" style="animation: ripple-out 5s infinite 1.6s;"></div>
         <div class="wave" style="animation: ripple-out 5s infinite 3.2s;"></div>
     </div>
+
+    <section id="hr-attendance-dashboard" class="hr-attendance-dashboard">
+        <header class="hr-dashboard-header">
+            <h1>人事モード：勤怠管理システム</h1>
+            <div class="hr-dashboard-date">
+                <input type="date" id="hr-board-date">
+                <button id="hr-board-refresh">更新</button>
+            </div>
+        </header>
+
+        <section class="hr-kpi-grid">
+            <div class="kpi-card" id="kpi-pending">承認待ち: <span>--</span></div>
+            <div class="kpi-card" id="kpi-unfixed">未確定: <span>--</span></div>
+            <div class="kpi-card" id="kpi-errors">エラー未解決: <span>--</span></div>
+            <div class="kpi-card" id="kpi-missing">未打刻疑い: <span>--</span></div>
+        </section>
+
+        <section class="hr-board">
+            <h2>今日の勤怠ボード（全員）</h2>
+            <table id="attendance-table">
+                <thead>
+                    <tr>
+                        <th>従業員</th>
+                        <th>raw 出勤</th>
+                        <th>raw 退勤</th>
+                        <th>fixed 出勤</th>
+                        <th>fixed 退勤</th>
+                        <th>状態</th>
+                        <th>申請</th>
+                        <th>エラー</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div class="hr-empty" id="hr-board-empty">データがありません</div>
+        </section>
+
+        <section class="hr-queue">
+            <h2>申請キュー</h2>
+            <div id="hr-queue-list"></div>
+            <div class="hr-empty" id="hr-queue-empty">申請はありません</div>
+        </section>
+    </section>
 
     <!-- Voice Content -->
     <div class="voice-mode-content" id="voice-content">
@@ -4012,3 +4056,4 @@ ${context}
         appendChatMessage('ai', '作業指示書作成機能は準備中です。');
     }
 </script>
+<script src="{{ base_path }}js/hr-attendance-dashboard.js"></script>
