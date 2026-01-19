@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>案件マーケット | Misesapo</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/js/auth.js"></script>
+    <style>
+        /* Scope only to this page if needed, or use generic classes */
+        .job-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+
+        .job-card:active {
+            transform: scale(0.98);
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .job-date {
+            font-weight: 600;
+            color: #3b82f6;
+            background: #eff6ff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .job-store {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .job-address {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .job-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .job-tag {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .filters {
+            position: sticky;
+            top: 60px;
+            /* Below nav */
+            background: #f8fafc;
+            padding: 12px 16px;
+            z-index: 10;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+        }
+
+        .filter-chip {
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            color: #64748b;
+        }
+
+        .filter-chip.active {
+            background: #3b82f6;
+            color: #fff;
+            border-color: #3b82f6;
+        }
+
+        /* Modal Tweaks */
+        .job-detail-dialog {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 90%;
+            width: 500px;
+            padding: 0;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .job-detail-dialog::backdrop {
+            background: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50">
+    <!-- Header -->
+    <nav class="navbar fixed-top">
+        <div class="nav-container">
+            <a href="/staff/os/mypage.html" class="nav-brand">
+                <i class="fas fa-arrow-left"></i> 戻る
+            </a>
+            <span class="nav-title">案件マーケット</span>
+            <div class="nav-actions">
+                <!-- Optional Actions -->
+            </div>
+        </div>
+    </nav>
+
+    <div style="height: 60px;"></div>
+
+    <!-- Filters -->
+    <div class="filters">
+        <div class="filter-chip active">すべて</div>
+        <div class="filter-chip">今週</div>
+        <div class="filter-chip">来週</div>
+        <div class="filter-chip">エリア別</div>
+    </div>
+
+    <main class="main-content" style="padding: 16px;">
+        <div id="job-list">
+            <div style="text-align:center; padding: 40px; color:#94a3b8;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i><br><br>
+                案件を探しています...
+            </div>
+        </div>
+    </main>
+
+    <!-- Job Detail & Catch Modal -->
+    <dialog id="job-detail-dialog" class="job-detail-dialog">
+        <div class="dialog-header"
+            style="padding: 16px; border-bottom: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:1.1rem;">案件詳細</h3>
+            <button onclick="document.getElementById('job-detail-dialog').close()"
+                style="border:none; background:none; font-size:1.2rem; color:#64748b;"><i
+                    class="fas fa-times"></i></button>
+        </div>
+        <div class="dialog-body" style="padding: 20px; overflow-y: auto; flex: 1;">
+            <!-- Dynamic Content -->
+            <h2 id="modal-store-name" style="margin-top:0;">店舗名</h2>
+
+            <div class="info-group">
+                <label style="color:#64748b; font-size:0.8rem;">日時</label>
+                <div id="modal-datetime" style="font-weight:600; margin-bottom:12px;"></div>
+            </div>
+
+            <div class="info-group">
+                <label style="color:#64748b; font-size:0.8rem;">住所</label>
+                <div id="modal-address" style="margin-bottom:12px;"></div>
+                <a id="modal-map-link" href="#" target="_blank" style="font-size:0.85rem; color:#3b82f6;"><i
+                        class="fas fa-map-marker-alt"></i> 地図を開く</a>
+            </div>
+
+            <div style="margin: 16px 0; border-top:1px solid #f1f5f9;"></div>
+
+            <div class="info-group">
+                <label style="color:#64748b; font-size:0.8rem;">清掃内容</label>
+                <div id="modal-items" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;"></div>
+            </div>
+
+            <div class="info-group" style="margin-top:12px;">
+                <label style="color:#64748b; font-size:0.8rem;">特記事項</label>
+                <div id="modal-notes" style="background:#f8fafc; padding:8px; border-radius:4px; font-size:0.9rem;">
+                </div>
+            </div>
+
+            <div style="margin: 16px 0; border-top:1px solid #f1f5f9;"></div>
+
+            <!-- Karte Summary -->
+            <div class="info-group">
+                <label style="color:#64748b; font-size:0.8rem;">カルテ情報（抜粋）</label>
+                <div style="font-size:0.85rem; color:#475569;">
+                    <div><strong>鍵の場所:</strong> <span id="modal-key-location">-</span></div>
+                    <div><strong>駐車場の有無:</strong> <span id="modal-parking">-</span></div>
+                </div>
+            </div>
+
+        </div>
+        <div class="dialog-actions" style="padding: 16px; border-top: 1px solid #e2e8f0; background:#f8fafc;">
+            <button id="catch-btn" class="btn btn-primary w-100"
+                style="width:100%; padding: 12px; font-weight:bold; font-size:1rem;">
+                この案件を受託する
+            </button>
+        </div>
+    </dialog>
+
+    <script src="/js/data-utils.js"></script>
+    <script src="/js/os-available-jobs.js"></script>
+</body>
+
+</html>

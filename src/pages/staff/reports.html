@@ -1,0 +1,686 @@
+@layout('layouts.base')
+@json('data/meta/staff_reports_title.json', $title)
+@json('data/meta/staff_reports_body_class.json', $body_class)
+
+<link rel="stylesheet" href="/css/admin-sidebar.css">
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/js/cognito_config.js"></script>
+<script src="/js/cognito_auth.js"></script>
+<script src="/js/client_auth.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+
+<!-- モバイルメニューボタン -->
+<div class="mobile-menu-area">
+<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+  <i class="fas fa-bars"></i>
+</button>
+</div>
+
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/staff/mypage" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <!-- ロール表示 -->
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">清掃員</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/admin/dashboard" class="nav-item nav-item-admin" data-page="dashboard" data-role-required="admin,operation,general_affairs" style="display: none;">
+      <i class="fas fa-tachometer-alt"></i>
+      <span class="nav-label">管理ダッシュボード</span>
+    </a>
+    <div class="nav-divider" data-role-required="admin,operation,general_affairs" style="display: none;"></div>
+    <a href="/staff/mypage" class="nav-item" data-page="mypage">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <a href="/staff/attendance-history" class="nav-item" data-page="attendance-history">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">出勤履歴</span>
+    </a>
+    <a href="/staff/daily-reports" class="nav-item" data-page="daily-reports">
+      <i class="fas fa-edit"></i>
+      <span class="nav-label">日報</span>
+    </a>
+    <a href="/staff/schedule" class="nav-item" data-page="schedule">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/staff/work-history" class="nav-item" data-page="work-history">
+      <i class="fas fa-clipboard-list"></i>
+      <span class="nav-label">作業履歴</span>
+    </a>
+    <a href="/staff/reports/new" class="nav-item active" data-page="reports">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">レポート</span>
+    </a>
+    <a href="/wiki" class="nav-item" data-page="wiki">
+      <i class="fas fa-book-open"></i>
+      <span class="nav-label">WIKI</span>
+    </a>
+    <a href="/cleaning-manual" class="nav-item" data-page="cleaning-manual">
+      <i class="fas fa-book"></i>
+      <span class="nav-label">清掃マニュアル</span>
+    </a>
+    <a href="/staff/announcements" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">業務連絡</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/staff/mypage/settings" class="nav-item" data-page="settings">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">設定</span>
+    </a>
+    <a href="/signin" class="nav-item" data-page="signin">
+      <i class="fas fa-sign-in-alt"></i>
+      <span class="nav-label">ログイン</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="staffLogout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+    
+    <!-- マイページ編集用ボタン -->
+    <div class="nav-divider"></div>
+    <div class="sidebar-mypage-actions">
+    </div>
+  </nav>
+
+  <!-- トグルボタン -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<main id="main" class="container staff-reports">
+  <!-- パンくずリスト -->
+  <nav class="breadcrumb" aria-label="パンくずリスト">
+    <ol class="breadcrumb-list">
+      <li class="breadcrumb-item"><a href="/staff/mypage">マイページ</a></li>
+      <li class="breadcrumb-item" aria-current="page">レポート一覧</li>
+    </ol>
+  </nav>
+  
+  <div class="page-header">
+    <a href="/staff/mypage" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">レポート一覧</h1>
+  </div>
+
+  <div class="filter-tabs">
+    <button class="tab-btn active" data-filter="all">全て</button>
+    <button class="tab-btn" data-filter="pending">未提出</button>
+    <button class="tab-btn" data-filter="submitted">提出済み</button>
+    <button class="tab-btn" data-filter="approved">承認済み</button>
+  </div>
+
+  <div class="reports-list">
+    <!-- Report 1 - 未提出（緊急） -->
+    <div class="report-card urgent" data-status="pending">
+      <div class="report-header">
+        <div class="report-date">
+          <span class="date-label">2025年3月28日</span>
+          <span class="time-label">10:30</span>
+        </div>
+        <span class="status-badge status-pending">未提出</span>
+      </div>
+      <div class="report-content">
+        <div class="report-location">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>神楽坂店</span>
+        </div>
+        <div class="report-tasks">
+          <span class="task-tag">レンジフード洗浄</span>
+          <span class="task-tag">グリストラップ清掃</span>
+        </div>
+        <div class="report-deadline">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>提出期限: 2025年3月29日 18:00</span>
+        </div>
+      </div>
+      <div class="report-actions">
+        <a href="/staff/reports/new?assignment=1" class="btn btn-primary btn-block">
+          <i class="fas fa-file-upload"></i>
+          レポート作成
+        </a>
+      </div>
+    </div>
+
+    <!-- Report 2 - 未提出 -->
+    <div class="report-card" data-status="pending">
+      <div class="report-header">
+        <div class="report-date">
+          <span class="date-label">2025年3月27日</span>
+          <span class="time-label">14:00</span>
+        </div>
+        <span class="status-badge status-pending">未提出</span>
+      </div>
+      <div class="report-content">
+        <div class="report-location">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>大塚店</span>
+        </div>
+        <div class="report-tasks">
+          <span class="task-tag">通常清掃</span>
+        </div>
+        <div class="report-deadline">
+          <i class="fas fa-clock"></i>
+          <span>提出期限: 2025年3月30日 18:00</span>
+        </div>
+      </div>
+      <div class="report-actions">
+        <a href="/staff/reports/new?assignment=2" class="btn btn-primary btn-block">
+          <i class="fas fa-file-upload"></i>
+          レポート作成
+        </a>
+      </div>
+    </div>
+
+    <!-- Report 3 - 提出済み -->
+    <div class="report-card" data-status="submitted">
+      <div class="report-header">
+        <div class="report-date">
+          <span class="date-label">2025年3月25日</span>
+          <span class="time-label">09:00</span>
+        </div>
+        <span class="status-badge status-submitted">提出済み</span>
+      </div>
+      <div class="report-content">
+        <div class="report-location">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>新宿店</span>
+        </div>
+        <div class="report-tasks">
+          <span class="task-tag">エアコン分解洗浄</span>
+          <span class="task-tag">床清掃</span>
+        </div>
+        <div class="report-submitted-info">
+          <i class="fas fa-check-circle"></i>
+          <span>提出日時: 2025年3月25日 12:30</span>
+        </div>
+      </div>
+      <div class="report-actions">
+        <a href="/reports/report-001" class="btn btn-outline btn-block">
+          <i class="fas fa-eye"></i>
+          レポートを見る
+        </a>
+      </div>
+    </div>
+
+    <!-- Report 4 - 承認済み -->
+    <div class="report-card" data-status="approved">
+      <div class="report-header">
+        <div class="report-date">
+          <span class="date-label">2025年3月20日</span>
+          <span class="time-label">10:00</span>
+        </div>
+        <span class="status-badge status-approved">承認済み</span>
+      </div>
+      <div class="report-content">
+        <div class="report-location">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>高円寺店</span>
+        </div>
+        <div class="report-tasks">
+          <span class="task-tag">厨房清掃</span>
+          <span class="task-tag">換気扇洗浄</span>
+        </div>
+        <div class="report-approved-info">
+          <i class="fas fa-check-double"></i>
+          <span>承認日時: 2025年3月21日 09:15</span>
+        </div>
+      </div>
+      <div class="report-actions">
+        <a href="/reports/report-002" class="btn btn-outline btn-block">
+          <i class="fas fa-eye"></i>
+          レポートを見る
+        </a>
+      </div>
+    </div>
+
+    <!-- Report 5 - 承認済み -->
+    <div class="report-card" data-status="approved">
+      <div class="report-header">
+        <div class="report-date">
+          <span class="date-label">2025年3月15日</span>
+          <span class="time-label">13:00</span>
+        </div>
+        <span class="status-badge status-approved">承認済み</span>
+      </div>
+      <div class="report-content">
+        <div class="report-location">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>日本橋茅場町店</span>
+        </div>
+        <div class="report-tasks">
+          <span class="task-tag">定期清掃</span>
+        </div>
+        <div class="report-approved-info">
+          <i class="fas fa-check-double"></i>
+          <span>承認日時: 2025年3月16日 10:00</span>
+        </div>
+      </div>
+      <div class="report-actions">
+        <a href="/reports/report-003" class="btn btn-outline btn-block">
+          <i class="fas fa-eye"></i>
+          レポートを見る
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .staff-reports {
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      padding-bottom: 100px;
+      background: #f9fafb;
+      min-height: 100vh;
+    }
+
+    .breadcrumb {
+      margin-bottom: 16px;
+    }
+
+    .breadcrumb-list {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.875rem;
+    }
+
+    .breadcrumb-item a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .breadcrumb-item:not(:last-child)::after {
+      content: '/';
+      margin-left: 8px;
+      color: #9ca3af;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: #ffffff;
+      border-radius: 12px;
+      color: #374151;
+      text-decoration: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .tab-btn {
+      padding: 8px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 20px;
+      background: #ffffff;
+      color: #6b7280;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .reports-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .report-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border-left: 4px solid #e5e7eb;
+      transition: all 0.2s;
+    }
+
+    .report-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .report-card.urgent {
+      border-left-color: #ef4444;
+      background: #fef2f2;
+    }
+
+    .report-card[data-status="pending"] {
+      border-left-color: #f59e0b;
+    }
+
+    .report-card[data-status="submitted"] {
+      border-left-color: #3b82f6;
+    }
+
+    .report-card[data-status="approved"] {
+      border-left-color: #10b981;
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .report-date {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .date-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .time-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-submitted {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .status-approved {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .report-content {
+      margin-bottom: 16px;
+    }
+
+    .report-location {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+
+    .report-location i {
+      color: var(--primary);
+    }
+
+    .report-tasks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .task-tag {
+      padding: 4px 10px;
+      background: #f3f4f6;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: #374151;
+    }
+
+    .report-deadline,
+    .report-submitted-info,
+    .report-approved-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+    }
+
+    .report-deadline {
+      color: #dc2626;
+    }
+
+    .report-deadline i {
+      color: #dc2626;
+    }
+
+    .report-submitted-info {
+      color: #2563eb;
+    }
+
+    .report-submitted-info i {
+      color: #2563eb;
+    }
+
+    .report-approved-info {
+      color: #059669;
+    }
+
+    .report-approved-info i {
+      color: #059669;
+    }
+
+    .report-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: #ffffff;
+      border: 2px solid #e5e7eb;
+      color: #374151;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* ダークモード */
+    body.dark-mode .staff-reports {
+      background: #111827;
+    }
+
+    body.dark-mode .page-title {
+      color: #f9fafb;
+    }
+
+    body.dark-mode .back-btn {
+      background: #1f2937;
+      color: #f9fafb;
+    }
+
+    body.dark-mode .tab-btn {
+      background: #1f2937;
+      border-color: #374151;
+      color: #9ca3af;
+    }
+
+    body.dark-mode .tab-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    body.dark-mode .report-card {
+      background: #1f2937;
+    }
+
+    body.dark-mode .report-card.urgent {
+      background: #7f1d1d;
+    }
+
+    body.dark-mode .date-label {
+      color: #f9fafb;
+    }
+
+    body.dark-mode .time-label {
+      color: #9ca3af;
+    }
+
+    body.dark-mode .report-location {
+      color: #f9fafb;
+    }
+
+    body.dark-mode .task-tag {
+      background: #374151;
+      color: #d1d5db;
+    }
+
+    body.dark-mode .btn-outline {
+      background: #374151;
+      border-color: #4b5563;
+      color: #f9fafb;
+    }
+
+    @media (max-width: 768px) {
+      .staff-reports {
+        padding: 12px;
+        padding-bottom: 100px;
+      }
+
+      .page-title {
+        font-size: 1.25rem;
+      }
+
+      .report-card {
+        padding: 16px;
+      }
+    }
+  </style>
+
+  <script>
+    // フィルタータブの制御
+    (function() {
+      const tabs = document.querySelectorAll('.tab-btn');
+      const cards = document.querySelectorAll('.report-card');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          // アクティブタブの切り替え
+          tabs.forEach(t => t.classList.remove('active'));
+          this.classList.add('active');
+
+          const filter = this.getAttribute('data-filter');
+
+          // カードのフィルタリング
+          cards.forEach(card => {
+            const status = card.getAttribute('data-status');
+            if (filter === 'all' || status === filter) {
+              card.style.display = 'block';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      });
+    })();
+
+    // ダークモードの適用
+    (function() {
+      const savedTheme = localStorage.getItem('staff-theme-mode') || 'light';
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+      }
+    })();
+  </script>
+</main>
+

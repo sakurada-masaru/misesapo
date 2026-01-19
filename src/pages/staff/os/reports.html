@@ -1,0 +1,361 @@
+@layout('layouts.base')
+@json('data/meta/staff_reports_title.json', $title)
+@json('data/meta/staff_reports_body_class.json', $body_class)
+
+<link rel="stylesheet" href="/css/admin-sidebar.css">
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/js/cognito_config.js"></script>
+<script src="/js/cognito_auth.js"></script>
+<script src="/js/client_auth.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+
+<!-- モバイルメニューボタン -->
+<div class="mobile-menu-area">
+  <button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+    <i class="fas fa-bars"></i>
+  </button>
+</div>
+
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/staff/os/mypage" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <!-- ロール表示 -->
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">清掃員</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/admin/dashboard" class="nav-item nav-item-admin" data-page="dashboard"
+      data-role-required="admin,operation,general_affairs" style="display: none;">
+      <i class="fas fa-tachometer-alt"></i>
+      <span class="nav-label">管理ダッシュボード</span>
+    </a>
+    <div class="nav-divider" data-role-required="admin,operation,general_affairs" style="display: none;"></div>
+    <a href="/staff/os/mypage" class="nav-item" data-page="mypage">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <a href="/staff/attendance-history" class="nav-item" data-page="attendance-history">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">出勤履歴</span>
+    </a>
+    <a href="/staff/daily-reports" class="nav-item" data-page="daily-reports">
+      <i class="fas fa-edit"></i>
+      <span class="nav-label">日報</span>
+    </a>
+    <a href="/staff/os/schedule" class="nav-item" data-page="schedule">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/staff/work-history" class="nav-item" data-page="work-history">
+      <i class="fas fa-clipboard-list"></i>
+      <span class="nav-label">作業履歴</span>
+    </a>
+    <a href="/staff/os/reports" class="nav-item active" data-page="reports">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">レポート一覧</span>
+    </a>
+    <a href="/wiki" class="nav-item" data-page="wiki">
+      <i class="fas fa-book-open"></i>
+      <span class="nav-label">WIKI</span>
+    </a>
+    <a href="/cleaning-manual" class="nav-item" data-page="cleaning-manual">
+      <i class="fas fa-book"></i>
+      <span class="nav-label">清掃マニュアル</span>
+    </a>
+    <a href="/staff/announcements" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">業務連絡</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/staff/os/mypage/settings" class="nav-item" data-page="settings">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">設定</span>
+    </a>
+    <a href="/signin" class="nav-item" data-page="signin">
+      <i class="fas fa-sign-in-alt"></i>
+      <span class="nav-label">ログイン</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="staffLogout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+
+    <!-- マイページ編集用ボタン -->
+    <div class="nav-divider"></div>
+    <div class="sidebar-mypage-actions">
+    </div>
+  </nav>
+
+  <!-- トグルボタン -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<script>
+  (function () {
+    const isOsUser = () => {
+      const candidates = ['cognito_user', 'misesapo_auth'];
+      for (const key of candidates) {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+          const parsed = JSON.parse(raw);
+          const user = parsed.user || parsed;
+          const department = String(user.department || '').toLowerCase();
+          if (department.includes('os')) {
+            return true;
+          }
+        } catch (error) {
+          console.warn('[OS Page] Failed to parse user:', error);
+        }
+      }
+      return false;
+    };
+
+    if (!isOsUser()) {
+      window.location.replace('/staff/mypage');
+    }
+  })();
+</script>
+
+<style>
+  #main {}
+</style>
+
+
+<main id="main" class="container staff-reports">
+  <!-- パンくずリスト -->
+  <nav class="breadcrumb" aria-label="パンくずリスト">
+    <ol class="breadcrumb-list">
+      <li class="breadcrumb-item"><a href="/staff/os/mypage">マイページ</a></li>
+      <li class="breadcrumb-item" aria-current="page">レポート一覧</li>
+    </ol>
+  </nav>
+
+  <div class="page-header">
+    <a href="/staff/os/mypage" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">レポート一覧</h1>
+  </div>
+
+  <div class="filter-tabs">
+    <button class="tab-btn active" data-filter="all">全て</button>
+    <button class="tab-btn" data-filter="pending">未提出</button>
+    <button class="tab-btn" data-filter="submitted">提出済み</button>
+    <button class="tab-btn" data-filter="approved">承認済み</button>
+  </div>
+
+  <div class="reports-list" id="reports-list-content">
+    <div class="empty-state">読み込み中...</div>
+  </div>
+
+  <style>
+    /* 追加のスタイル */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #6b7280;
+      background: #ffffff;
+      border-radius: 16px;
+      grid-column: 1 / -1;
+    }
+
+    .status-badge.status-completed {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .report-card.has-report {
+      border-left-color: #10b981;
+    }
+  </style>
+
+  <script src="/js/data-utils.js"></script>
+  <script>
+    (async function () {
+      const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+      const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+      let currentUser = null;
+      let allSchedules = [];
+      let allReports = [];
+
+      async function init() {
+        try {
+          currentUser = getCurrentUserFromStorage();
+          if (!currentUser) return;
+
+          const idToken = await getCognitoIdToken();
+          const headers = { 'Authorization': `Bearer ${idToken}` };
+
+          // スケジュールとレポートを並列で取得
+          const [schedulesRes, reportsRes] = await Promise.all([
+            fetch(`${API_BASE}/schedules`, { headers }),
+            fetch(`${REPORT_API}/reports`, { headers })
+          ]);
+
+          if (schedulesRes.ok) {
+            const data = await schedulesRes.json();
+            allSchedules = Array.isArray(data) ? data : (data.items || data.schedules || []);
+          }
+
+          if (reportsRes.ok) {
+            const data = await reportsRes.json();
+            allReports = Array.isArray(data) ? data : (data.items || data.reports || []);
+          }
+
+          renderReports('all');
+          setupFilters();
+        } catch (error) {
+          console.error('[Reports] Init failed:', error);
+          document.getElementById('reports-list-content').innerHTML = '<div class="empty-state">データの読み込みに失敗しました</div>';
+        }
+      }
+
+      function getCurrentUserFromStorage() {
+        try {
+          const raw = localStorage.getItem('cognito_user') || localStorage.getItem('misesapo_auth');
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          return parsed.user || parsed;
+        } catch (e) { return null; }
+      }
+
+      async function getCognitoIdToken() {
+        // 既存のグローバル関数 or このツール内で解決
+        if (window.Auth && window.Auth.getIdToken) return await window.Auth.getIdToken();
+        const session = localStorage.getItem('cognito_session');
+        if (session) {
+          try {
+            const parsed = JSON.parse(session);
+            return parsed.idToken?.jwtToken || parsed;
+          } catch (e) { }
+        }
+        return null;
+      }
+
+      function renderReports(filter) {
+        const container = document.getElementById('reports-list-content');
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+
+        // 過去のスケジュール、または本日以前のスケジュールをフィルタリング
+        const pastSchedules = allSchedules.filter(s => {
+          const sDate = s.scheduled_date || s.date;
+          // OSスタッフ本人に割り当てられたもの、または共有のもの
+          const workerId = s.worker_id || s.assigned_to || s.staff_id;
+          const isMyTask = !workerId || (window.DataUtils && window.DataUtils.IdUtils && window.DataUtils.IdUtils.isSame(workerId, currentUser.id)) || String(workerId) === String(currentUser.id);
+
+          if (!isMyTask) return false;
+          return sDate <= todayStr;
+        }).sort((a, b) => {
+          const dA = a.scheduled_date || a.date || '';
+          const dB = b.scheduled_date || b.date || '';
+          return dB.localeCompare(dA); // 降順（新しい順）
+        });
+
+        let filtered = pastSchedules.map(s => {
+          const report = allReports.find(r => (r.schedule_id || r.scheduleId) === s.id);
+          return { schedule: s, report: report };
+        });
+
+        if (filter === 'pending') {
+          filtered = filtered.filter(f => !f.report);
+        } else if (filter === 'submitted' || filter === 'approved') {
+          filtered = filtered.filter(f => f.report);
+        }
+
+        if (filtered.length === 0) {
+          container.innerHTML = `<div class="empty-state">条件に一致する案件はありません</div>`;
+          return;
+        }
+
+        container.innerHTML = filtered.map(f => {
+          const s = f.schedule;
+          const r = f.report;
+          const sDate = s.scheduled_date || s.date;
+          const sTime = s.scheduled_time || s.time || '00:00';
+          const brandName = s.brand_name || '';
+          const storeName = s.store_name || s.client_name || '-';
+          const displayName = brandName ? `${brandName} / ${storeName}` : storeName;
+
+          const statusLabel = r ? '提出済み' : 'レポート未作成';
+          const statusClass = r ? 'status-submitted' : 'status-pending';
+          const cardClass = r ? 'has-report' : 'urgent';
+
+          return `
+            <div class="report-card ${cardClass}" data-status="${r ? 'submitted' : 'pending'}">
+              <div class="report-header">
+                <div class="report-date">
+                  <span class="date-label">${sDate}</span>
+                  <span class="time-label">${sTime}</span>
+                </div>
+                <span class="status-badge ${statusClass}">${statusLabel}</span>
+              </div>
+              <div class="report-content">
+                <div class="report-location">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span>${displayName}</span>
+                </div>
+                <div class="report-tasks">
+                  <span class="task-tag">${s.service_name || s.category || '通常作業'}</span>
+                </div>
+                ${r ? `
+                  <div class="report-submitted-info">
+                    <i class="fas fa-check-circle"></i>
+                    <span>提出済み</span>
+                  </div>
+                ` : `
+                  <div class="report-deadline">
+                    <i class="fas fa-clock"></i>
+                    <span>レポートの作成をお願いします</span>
+                  </div>
+                `}
+              </div>
+              <div class="report-actions">
+                ${r ? `
+                  <a href="/staff/os/reports/view?report_id=${r.id}" class="btn btn-outline btn-block">
+                    <i class="fas fa-eye"></i>
+                    レポートを見る
+                  </a>
+                ` : `
+                  <a href="/staff/os/reports/new?schedule_id=${s.id}" class="btn btn-primary btn-block">
+                    <i class="fas fa-file-upload"></i>
+                    レポート作成
+                  </a>
+                `}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function setupFilters() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+          tab.addEventListener('click', function () {
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            renderReports(this.getAttribute('data-filter'));
+          });
+        });
+      }
+
+      init();
+    })();
+  </script>
+</main>

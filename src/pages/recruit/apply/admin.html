@@ -1,0 +1,191 @@
+@layout('layouts.base')
+@json('data/meta/recruit_title.json', $title)
+@json('data/meta/recruit_body_class.json', $body_class)
+
+<header class="normal-header visible">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+            </a>
+        </div>
+        <nav class="normal-header-nav">
+            <a href="/">TOP</a>
+            <a href="/recruit.html#about">ABOUT</a>
+            <a href="/recruit.html#work">WORK</a>
+            <a href="/recruit.html#job">JOB</a>
+            <a href="/recruit.html#faq">よくある質問</a>
+            <a href="/recruit/privacy.html">プライバシー＆ポリシー</a>
+        </nav>
+    </div>
+</header>
+
+<div class="recruit-page">
+    <!-- Splash Screen -->
+    <div id="recruit-splash" class="recruit-splash">
+        <img src="/images/recruitlogo.png" alt="ミセサポ求人" class="recruit-splash-logo" />
+    </div>
+
+    <div class="recruit-breadcrumb-wrapper scroll-fade-in" style="padding-top: 100px;">
+        <div class="recruit-breadcrumb">
+            <div class="recruit-breadcrumb-inner">
+                <a href="/">TOP</a>
+                <span>></span>
+                <a href="/recruit.html">求人情報</a>
+                <span>></span>
+                <span class="current">経理・事務</span>
+            </div>
+        </div>
+    </div>
+
+    <section class="recruit-job-detail scroll-fade-in">
+        <div class="recruit-job-detail-container">
+            <div class="recruit-job-detail-header">
+                <p class="job-detail-company">株式会社ミセサポ</p>
+                <h2 class="job-detail-title">【経理・事務】未経験歓迎／賞与年2回／全国の店舗の営繕管理を一つのプラットフォームで繋ぐサービスベンダー◎</h2>
+                <p class="job-detail-meta">事務 / 正社員</p>
+                <div class="job-detail-actions">
+                    <a href="#entry-form" class="job-detail-primary">応募する</a>
+                    <a href="#" class="job-detail-secondary">お気に入りに登録</a>
+                </div>
+            </div>
+
+            <div class="job-detail-section">
+                <h3>PRコメント</h3>
+                <p class="job-detail-lead">
+                    【ミセサポのメリット】ミセサポは、お店のメイン以外の仕事を全て丸投げできるサービスです。お店側は任せたい内容や来て欲しい日時を設定するだけで、プロワーカーを簡単に呼ぶことができます。</p>
+                <ul class="job-detail-list">
+                    <li>急成長スタートアップ：2025年5月時点で黒字化を達成（純利益約240万円）、売上も右肩上がりで拡大中。</li>
+                    <li>社会貢献性の高さ：飲食店の衛生水準を改善し、オーナーの負担軽減に直結するサービス。</li>
+                    <li>IT×現場力：清掃レポートや設備管理をデジタル化し、現場作業も効率化。ITリテラシーの向上が可能。</li>
+                    <li>成長機会：店舗数・サービス範囲ともに拡大期。企画提案や業務改善など、新しい挑戦が歓迎される環境。</li>
+                    <li>チーム文化：少人数精鋭で、現場とバックオフィスが連携しやすいフラットな組織体制。</li>
+                </ul>
+            </div>
+
+            <div class="job-detail-section">
+                <h3>ミセサポサービス概要</h3>
+                <p>飲食店向けに厨房設備・空調・害虫駆除・床洗浄など多岐にわたる清掃・メンテナンスをワンストップで提供するプラットフォームです。従来は複数業者への個別依頼が必要だった清掃業務を集約し、市場価格の約1/3〜2/3のコストで実現します。店舗ごとに設備データを登録し、劣化度や清掃履歴を一元管理。必要に応じて交換・修繕のアラートを自動通知するシステムも備えています。
+                </p>
+                <p>プランは、毎月異なる箇所を提案・清掃する「丸投げプラン（月5万円〜）」と、特定箇所を定期メンテナンスする「固定プラン（要見積）」を用意。施工後には詳細なレポートを提供し、経理処理も一本化できる点が強みです。
+                </p>
+            </div>
+
+            <div class="job-detail-section">
+                <h3>仕事内容</h3>
+                <ul class="job-detail-list">
+                    <li>営業のスタッフから上がってきた内容を資料にまとめる</li>
+                    <li>清掃員との連携</li>
+                    <li>顧客との日程調整</li>
+                    <li>現場のレポーティング</li>
+                    <li>現場視察</li>
+                    <li>営業成果管理をする</li>
+                    <li>営業のスタッフのスケジュール管理</li>
+                </ul>
+            </div>
+
+            <div class="job-detail-section">
+                <h3>募集要項</h3>
+                <dl class="job-detail-grid">
+                    <dt>職種</dt>
+                    <dd>経理・事務</dd>
+                    <dt>雇用形態</dt>
+                    <dd>正社員</dd>
+                    <dt>給与</dt>
+                    <dd>年収 4,000,000円 ～ 4,800,000円</dd>
+                    <dt>給与詳細</dt>
+                    <dd>
+                        <ul class="job-detail-sublist">
+                            <li>賞与：年2回</li>
+                            <li>昇給：年1回</li>
+                            <li>試用期間：正社員登用前3ヶ月（労働条件の変更：無）</li>
+                            <li>店舗の清掃件数が増えれば増えるほど、給与が増えていく報酬設計になっております。</li>
+                            <li>1日にこなせる店舗数を増やすために移動時間、作業時間の短縮を目指しましょう。</li>
+                            <li style="color:#e11d48; font-weight:bold;">【特記事項】全商簿記/日商簿記 1級保有：実務レベルで昇給あり</li>
+                            <li style="color:#e11d48; font-weight:bold;">【特記事項】税理士/会計士の資格保有：資格手当あり</li>
+                        </ul>
+                    </dd>
+                    <dt>待遇</dt>
+                    <dd>交通費支給、健康診断、家族手当、社会保険完備、資格取得制度、退職金制度、受動喫煙対策「屋内禁煙」</dd>
+                    <dt>勤務時間</dt>
+                    <dd>09:00~18:00</dd>
+                    <dt>休日・休暇</dt>
+                    <dd>週休2日（土日以外）</dd>
+                    <dt>勤務地</dt>
+                    <dd>東京都 中央区日本橋茅場町1-8-1</dd>
+                    <dt>企業名・施設名</dt>
+                    <dd>株式会社ミセサポ</dd>
+                    <dt>情報引用元</dt>
+                    <dd>記載なし</dd>
+                    <dt>最終更新日</dt>
+                    <dd>2025年12月16日</dd>
+                </dl>
+            </div>
+
+            <div class="job-detail-section">
+                <h3>応募資格</h3>
+                <div class="job-detail-qualifications">
+                    <div class="job-detail-qualification">
+                        <h4>基本的なPCスキル</h4>
+                        <ul class="job-detail-list">
+                            <li>Word・Excel・メールソフトの実務経験</li>
+                            <li>特に Excel（関数・表計算・VLOOKUP など）を業務で使った経験</li>
+                        </ul>
+                    </div>
+                    <div class="job-detail-qualification">
+                        <h4>ビジネスコミュニケーション能力</h4>
+                        <ul class="job-detail-list">
+                            <li>電話やメールでの顧客・業者対応経験</li>
+                            <li>ビジネスマナー（敬語・報告連絡相談の習慣）</li>
+                        </ul>
+                    </div>
+                    <div class="job-detail-qualification">
+                        <h4>事務処理能力・正確性</h4>
+                        <ul class="job-detail-list">
+                            <li>見積書・請求書作成や受発注管理の経験</li>
+                            <li>数字の確認や入力の正確性に自信があること</li>
+                        </ul>
+                    </div>
+                    <div class="job-detail-qualification">
+                        <h4>スケジュール管理力</h4>
+                        <ul class="job-detail-list">
+                            <li>複数案件の進行管理や、スケジュール調整の実務経験</li>
+                        </ul>
+                    </div>
+                    <div class="job-detail-qualification">
+                        <h4>人物要件</h4>
+                        <ul class="job-detail-list">
+                            <li>柔軟で前向きな姿勢（現場とのやり取りで調整力が必要）</li>
+                            <li>スタートアップ環境で成長意欲があること</li>
+                        </ul>
+                    </div>
+                    <div class="job-detail-qualification">
+                        <h4>歓迎要件</h4>
+                        <ul class="job-detail-list">
+                            <li>清掃業界・飲食業界での事務経験</li>
+                            <li>GoogleスプレッドシートやSlack等のクラウドツール利用経験</li>
+                            <li>経理・請求業務（仕訳・入金確認など）の経験</li>
+                            <li>全商簿記/日商簿記 1級保有（実務レベルで昇給あり）</li>
+                            <li>税理士/会計士の資格保有（資格手当あり）</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entry Form Placeholder -->
+            <div id="entry-form"
+                style="margin-top:60px; padding:40px; background:#f9fafb; text-align:center; border-radius:8px;">
+                <h3 style="margin-bottom:20px;">応募フォーム</h3>
+                <p style="margin-bottom:20px;">下記ボタンよりメールにて、履歴書・職務経歴書を添付の上ご応募ください。</p>
+                <a href="mailto:recruit@misesapo.co.jp?subject=経理・事務への応募" class="job-card-button"
+                    style="display:inline-block; padding:12px 30px; font-size:1.1rem; text-decoration:none;">メールで応募する</a>
+            </div>
+
+        </div>
+    </section>
+
+    <link rel="stylesheet" href="/css/recruit.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <script src="/js/recruit.js"></script>
+    <script src="/js/header.js"></script>
+</div>

@@ -1,0 +1,180 @@
+<div id="stores-container" class="stack lg">
+  <!-- store block will be inserted here -->
+</div>
+
+<div class="add-row add-store-wrap">
+  <button type="button" id="add-store" class="btn-add-store">＋店舗を追加する</button>
+  <span class="add-store-note">※登録後も追加できます。</span>
+</div>
+
+<script>
+  (function(){
+    function storeBlockTemplate(idx){
+      return `
+        <div class="store-block" data-index="${idx}">
+
+          <div>
+            <label class="label" for="store_name_${idx}">店舗名 <span class="pill pill-required">必須</span></label>
+            <input class="input" id="store_name_${idx}" name="stores[${idx}][store-name]" placeholder="店名・電話番号を入力すると、ぐるなびの情報をもとに他の項目が自動入力されます。" />
+          </div>
+
+          <div>
+            <label class="label" for="store_kana_${idx}">店舗カナ <span class="pill pill-required">必須</span></label>
+            <input class="input" id="store_kana_${idx}" name="stores[${idx}][store-kana]" />
+          </div>
+
+          <div>
+            <label class="label" for="phone_${idx}">電話番号 <span class="pill pill-required">必須</span></label>
+            <input class="input" id="phone_${idx}" name="stores[${idx}][phone]" type="tel" />
+          </div>
+
+          <div>
+            <label class="label" for="contact_${idx}">担当者名</label>
+            <input class="input" id="contact_${idx}" name="stores[${idx}][contact-person]" />
+          </div>
+
+          <div>
+            <label class="label" for="gm_${idx}">統括管理責任者</label>
+            <input class="input" id="gm_${idx}" name="stores[${idx}][general-manager]" />
+          </div>
+
+          <div>
+            <label class="label" for="hyg_${idx}">衛生管理責任者</label>
+            <input class="input" id="hyg_${idx}" name="stores[${idx}][hygiene-manager]" />
+          </div>
+
+          <div>
+            <label class="label" for="fire_${idx}">防火管理責任者</label>
+            <input class="input" id="fire_${idx}" name="stores[${idx}][fire-manager]" />
+          </div>
+
+          <div>
+            <label class="label" for="food_${idx}">食品衛生責任者</label>
+            <input class="input" id="food_${idx}" name="stores[${idx}][food-sanitation-manager]" />
+          </div>
+
+          <div>
+            <label class="label">郵便番号 <span class="pill pill-required">必須</span></label>
+            <div class="postal">
+              <input class="input" id="zip1_${idx}" name="stores[${idx}][postal-code1]" placeholder="123" />
+              <span>-</span>
+              <input class="input" id="zip2_${idx}" name="stores[${idx}][postal-code2]" placeholder="4567" />
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="addr_${idx}">住所 <span class="pill pill-required">必須</span></label>
+            <input class="input" id="addr_${idx}" name="stores[${idx}][address]" />
+          </div>
+
+          <div>
+            <label class="label" for="bld_${idx}">建物名</label>
+            <input class="input" id="bld_${idx}" name="stores[${idx}][building-name]" />
+          </div>
+
+          <div>
+            <label class="label" for="email_${idx}">店舗メール</label>
+            <input class="input" id="email_${idx}" name="stores[${idx}][store-email]" type="email" />
+          </div>
+
+          <div>
+            <label class="label" for="hours_${idx}">営業時間</label>
+            <input class="input" id="hours_${idx}" name="stores[${idx}][business-hours]" placeholder="例：11:00〜22:00" />
+          </div>
+
+          <div>
+            <label class="label" for="holidays_${idx}">定休日</label>
+            <input class="input" id="holidays_${idx}" name="stores[${idx}][holidays]" placeholder="例：水曜" />
+          </div>
+
+          <div>
+            <label class="label" for="clean_${idx}">清掃可能時間</label>
+            <input class="input" id="clean_${idx}" name="stores[${idx}][cleaning-time]" placeholder="例：23:00〜翌4:00" />
+          </div>
+
+          <div>
+            <label class="label" for="category_${idx}">業態</label>
+            <input class="input" id="category_${idx}" name="stores[${idx}][business-category]" placeholder="例：焼肉・居酒屋・カフェ等" />
+          </div>
+
+          <div>
+            <label class="label" for="build_age_${idx}">建物の築年数</label>
+            <input class="input" id="build_age_${idx}" name="stores[${idx}][building-age]" placeholder="例：10年" />
+          </div>
+
+          <div>
+            <label class="label" for="years_${idx}">現店舗の営業年数 <span class="pill pill-required">必須</span></label>
+            <input class="input" id="years_${idx}" name="stores[${idx}][business-years]" placeholder="例：5年" />
+            <p class="note">※新規・改装・リニューアルなどになるものをご入力してください。</p>
+          </div>
+
+          <div>
+            <label class="label" for="size_${idx}">店舗の広さ</label>
+            <input class="input" id="size_${idx}" name="stores[${idx}][store-size]" />
+            <p class="note">席数・坪数・平米数など目安になるものを入力してください。</p>
+          </div>
+
+          <div>
+            <label class="label" for="ceil_${idx}">天井の高さ</label>
+            <input class="input" id="ceil_${idx}" name="stores[${idx}][ceiling-height]" placeholder="例：2.8M" />
+            <p class="note">※わからない場合はおおよそで大丈夫です。<br />※エアコン洗浄やダクト清掃をご利用の場合はご記入ください。</p>
+          </div>
+
+          <div>
+            <label class="label">清掃備品(例:エアコンパネルやフィルター)を丸ごと浸け置きできるサイズのシンクはございますか？</label>
+            <div class="radios">
+              <label class="choice-row"><input class="radio" type="radio" name="stores[${idx}][sink-available]" value="yes" /> <span>はい</span></label>
+              <label class="choice-row"><input class="radio" type="radio" name="stores[${idx}][sink-available]" value="no" /> <span>いいえ</span></label>
+            </div>
+          </div>
+
+          <div>
+            <label class="label">駐車場 <span class="pill pill-required">必須</span></label>
+            <p class="note">店舗に駐車場はございますか？または店舗の近くに駐車は可能でしょうか？</p>
+            <div class="radios">
+              <label class="choice-row"><input class="radio" type="radio" name="stores[${idx}][parking]" value="yes" /> <span>はい</span></label>
+              <label class="choice-row"><input class="radio" type="radio" name="stores[${idx}][parking]" value="no" /> <span>いいえ</span></label>
+            </div>
+          </div>
+
+          <div>
+            <label class="label">鍵の受け渡し <span class="pill pill-required">必須</span></label>
+            <div class="radios">
+              <label class="choice-row"><input class="radio" type="radio" name="stores[${idx}][key-handover]" value="keybox" /> <span>キーボックス</span></label>
+              <label class="choice-row"><input class="radio" type="radio" name="stores[${idx}][key-handover]" value="deposit" /> <span>鍵預かり</span></label>
+              <label class="choice-row"><input class="radio" type="radio" name="stores[${idx}][key-handover]" value="present" /> <span>立ち合い</span></label>
+            </div>
+            <label class="label" for="key_detail_${idx}" style="margin-top:6px;">詳細（任意）</label>
+            <input class="input" id="key_detail_${idx}" name="stores[${idx}][key-details]" placeholder="キーボックスの場所・暗証番号など" />
+          </div>
+
+          <div>
+            <label class="label">ミセサポからの通知を希望しますか？ <span class="pill pill-required">必須</span></label>
+            <div class="radios">
+              <label class="choice-row"><input class="radio" type="radio" name="stores[${idx}][notifications]" value="yes" /> <span>はい</span></label>
+              <label class="choice-row"><input class="radio" type="radio" name="stores[${idx}][notifications]" value="no" /> <span>いいえ</span></label>
+            </div>
+          </div>
+
+          <div>
+            <label class="label">メールマガジンを希望しますか？ <span class="pill pill-required">必須</span></label>
+            <div class="radios">
+              <label class="choice-row"><input class="radio" type="radio" name="stores[${idx}][newsletter]" value="yes" /> <span>はい</span></label>
+              <label class="choice-row"><input class="radio" type="radio" name="stores[${idx}][newsletter]" value="no" /> <span>いいえ</span></label>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    const container = document.getElementById('stores-container');
+    const addBtn = document.getElementById('add-store');
+    let count = 0;
+    function addStore(){
+      count += 1;
+      container.insertAdjacentHTML('beforeend', storeBlockTemplate(count));
+    }
+    if (addBtn) addBtn.addEventListener('click', addStore);
+    // insert first block initially
+    addStore();
+  })();
+</script>

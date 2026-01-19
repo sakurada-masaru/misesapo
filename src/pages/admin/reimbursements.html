@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <title>立て替え精算管理 | ミセサポ 管理</title>
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/css/admin-common.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="/css/admin-sidebar.css">
+    <link rel="stylesheet" href="/css/admin-reimbursements.css">
+
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+    <script src="/js/cognito_config.js"></script>
+    <script src="/js/cognito_auth.js"></script>
+    <script src="/js/admin-sidebar.js"></script>
+    <script src="/js/admin-reimbursements.js" defer></script>
+</head>
+
+<body class="admin-page theme-blue">
+    <div class="admin-layout">
+        <aside class="sidebar" id="admin-sidebar">
+            <!-- Sidebar content -->
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1>立て替え精算管理</h1>
+                    <p class="text-muted">スタッフからの経費精算申請を承認・管理します。</p>
+                </div>
+            </header>
+
+            <div class="admin-container">
+                <!-- フィルタリングエリア -->
+                <div class="card filter-card">
+                    <div class="filter-group">
+                        <div class="filter-item">
+                            <label>ステータス</label>
+                            <select id="status-filter">
+                                <option value="all">すべて</option>
+                                <option value="pending" selected>未処理 (申請中)</option>
+                                <option value="approved">承認済み</option>
+                                <option value="paid">精算完了</option>
+                                <option value="rejected">否認/差し戻し</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>スタッフ名</label>
+                            <input type="text" id="staff-name-search" placeholder="名前で検索..." />
+                        </div>
+                        <button class="btn btn-primary" id="apply-filters">
+                            <i class="fas fa-search"></i> 検索
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 申請一覧テーブル -->
+                <div class="card table-card">
+                    <div class="table-container">
+                        <table class="admin-table" id="reimbursements-table">
+                            <thead>
+                                <tr>
+                                    <th>申請日</th>
+                                    <th>利用日</th>
+                                    <th>スタッフ</th>
+                                    <th>項目</th>
+                                    <th>金額</th>
+                                    <th>カテゴリ</th>
+                                    <th>ステータス</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reimbursements-tbody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 詳細・編集モーダル -->
+    <div class="modal-backdrop" id="detail-modal">
+        <div class="modal">
+            <header class="modal-header">
+                <h2>申請詳細</h2>
+                <button class="modal-close"><i class="fas fa-times"></i></button>
+            </header>
+            <div class="modal-body" id="modal-content">
+                <!-- JSで動的に生成 -->
+            </div>
+            <footer class="modal-footer">
+                <div id="action-buttons">
+                    <button class="btn btn-outline" id="btn-reject">差し戻し/否認</button>
+                    <button class="btn btn-primary" id="btn-approve">承認する</button>
+                    <button class="btn btn-success" id="btn-mark-paid" style="display: none;">精算完了にする</button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+</body>
+
+</html>

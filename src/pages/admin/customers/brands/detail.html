@@ -1,0 +1,1042 @@
+@layout('layouts.base')
+@json('data/meta/admin_clients_title.json', $title)
+@json('data/meta/admin_clients_body_class.json', $body_class)
+
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
+<main id="main" class="brand-detail-page">
+  <div class="container">
+    <!-- ヘッダー -->
+    <div class="page-header">
+      <div class="header-left">
+        <a href="javascript:history.back()" class="back-link">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="header-title">
+          <div class="breadcrumb" id="breadcrumb">
+            <a href="#" class="client-link" id="client-link">-</a>
+            <i class="fas fa-chevron-right"></i>
+            <span class="brand-name">-</span>
+          </div>
+          <h1 id="brand-name">読み込み中...</h1>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="status-badge" id="brand-status">ブランド</span>
+        <button class="btn btn-secondary" onclick="editBrand()">
+          <i class="fas fa-edit"></i> 編集
+        </button>
+      </div>
+    </div>
+
+    <!-- 関連ページへのリンク -->
+    <div class="hierarchy-links" id="hierarchy-links">
+      <a href="#" class="hierarchy-link-btn client-btn" id="client-btn">
+        <i class="fas fa-building"></i>
+        <div class="link-content">
+          <span class="link-label">法人情報</span>
+          <span class="link-name" id="client-btn-name">-</span>
+        </div>
+      </a>
+      <div class="hierarchy-link-btn stores-btn" id="stores-link-btn">
+        <i class="fas fa-store"></i>
+        <div class="link-content">
+          <span class="link-label">店舗数</span>
+          <span class="link-name" id="stores-link-count">0 店舗</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- タブナビゲーション -->
+    <div class="tab-cards">
+      <div class="tab-card active" data-tab="info" onclick="switchTab('info')">
+        <span class="tab-label">ブランド情報</span>
+      </div>
+      <div class="tab-card" data-tab="stores" onclick="switchTab('stores')">
+        <span class="tab-label">店舗一覧</span>
+        <span class="tab-badge" id="stores-badge">0</span>
+      </div>
+    </div>
+
+    <!-- 2カラムレイアウト -->
+    <div class="main-layout">
+      <!-- 左カラム -->
+      <div class="left-column">
+        
+        <!-- ブランド情報セクション -->
+        <div class="section-card">
+          <div class="section-header" onclick="toggleSection('brand-info')">
+            <div class="section-title">
+              <span class="section-dot"></span>
+              ブランド情報確認/変更
+            </div>
+            <i class="fas fa-chevron-down section-toggle" id="toggle-brand-info"></i>
+          </div>
+          <div class="section-body" id="section-brand-info">
+            <div class="info-list" id="brand-info-list">
+              <!-- 動的に挿入 -->
+            </div>
+            <div class="section-actions">
+              <button class="btn-outline" onclick="editBrand()">修正する</button>
+              <button class="btn-link" onclick="toggleSection('brand-info')">∧ 閉じる</button>
+            </div>
+          </div>
+        </div>
+
+            <!-- 営業メモセクション（管理者・営業のみ） -->
+        <div class="section-card admin-only" data-permission="brand_notes">
+          <div class="section-header" onclick="toggleSection('sales-notes')">
+            <div class="section-title">
+              <span class="section-dot warning"></span>
+              営業メモ
+            </div>
+            <i class="fas fa-chevron-down section-toggle" id="toggle-sales-notes"></i>
+          </div>
+          <div class="section-body collapsed" id="section-sales-notes">
+            <div class="notes-box">
+              <label>メモ</label>
+              <div class="notes-content" id="notes-content">-</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 右カラム -->
+      <div class="right-column">
+        
+        <!-- 店舗一覧 -->
+        <div class="list-card" id="stores-panel">
+          <div class="list-header">
+            <h3>店舗一覧</h3>
+            <button class="btn btn-sm btn-primary" onclick="addStore()">
+              <i class="fas fa-plus"></i> 追加
+            </button>
+          </div>
+          <div class="store-list" id="store-list">
+            <div class="loading">読み込み中...</div>
+          </div>
+        </div>
+
+        <!-- 統計サマリー -->
+        <div class="stats-card">
+          <h3>統計</h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="stat-stores">0</div>
+              <div class="stat-label">店舗数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="stat-active">0</div>
+              <div class="stat-label">稼働中</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="stat-schedules">0</div>
+              <div class="stat-label">総清掃回数</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  
+  <!-- 編集モーダル -->
+  <div class="edit-modal" id="edit-modal" style="display:none;">
+    <div class="modal-overlay" onclick="closeEditModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>ブランド情報編集</h2>
+        <button class="modal-close" onclick="closeEditModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>ブランド名 <span class="required">*</span></label>
+            <input type="text" id="edit-name" placeholder="ブランド名">
+          </div>
+          <div class="form-group">
+            <label>ブランド名カナ</label>
+            <input type="text" id="edit-name-kana" placeholder="ブランドメイカナ">
+          </div>
+          <div class="form-group">
+            <label>業態</label>
+            <input type="text" id="edit-category" placeholder="居酒屋">
+          </div>
+          <div class="form-group">
+            <label>電話番号</label>
+            <input type="tel" id="edit-phone" placeholder="03-1234-5678">
+          </div>
+          <div class="form-group">
+            <label>メールアドレス</label>
+            <input type="email" id="edit-email" placeholder="brand@example.com">
+          </div>
+          <div class="form-group full">
+            <label>Webサイト</label>
+            <input type="url" id="edit-website" placeholder="https://example.com">
+          </div>
+          <div class="form-group full">
+            <label>説明</label>
+            <textarea id="edit-description" rows="3" placeholder="ブランドの説明"></textarea>
+          </div>
+          <div class="form-group full">
+            <label>備考</label>
+            <textarea id="edit-notes" rows="3" placeholder="備考"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditModal()">キャンセル</button>
+        <button class="btn btn-primary" id="save-btn" onclick="saveBrand()">保存</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<style>
+  .brand-detail-page {
+    background: #f8f8f8;
+    min-height: 100vh;
+    padding: 24px 0;
+  }
+  .container {
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  
+  /* ヘッダー */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .back-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #fff;
+    border-radius: 8px;
+    color: #374151;
+    text-decoration: none;
+  }
+  .back-link:hover { background: var(--primary); color: #fff; }
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 4px;
+  }
+  .breadcrumb i { font-size: 0.6rem; }
+  .breadcrumb a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover { text-decoration: underline; }
+  
+  /* 関連ページへのリンク */
+  .hierarchy-links {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .hierarchy-link-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px 24px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    flex: 1;
+    max-width: 300px;
+  }
+  .hierarchy-link-btn:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .hierarchy-link-btn i {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+  }
+  .hierarchy-link-btn.client-btn i {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+  .hierarchy-link-btn.stores-btn i {
+    background: #d1fae5;
+    color: #059669;
+  }
+  .link-content {
+    display: flex;
+    flex-direction: column;
+  }
+  .link-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+  .link-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827;
+    margin-top: 2px;
+  }
+  
+  .header-title h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .status-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #fce7f3;
+    color: #9d174d;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-secondary { background: #fff; color: #374151; border: 1px solid #e5e7eb; }
+  .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+  /* タブカード */
+  .tab-cards {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .tab-card {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+  }
+  .tab-card:hover { border-color: var(--primary); }
+  .tab-card.active { border-color: var(--primary); }
+  .tab-label { font-weight: 600; color: #374151; }
+  .tab-badge {
+    background: var(--primary);
+    color: #fff;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  /* 2カラムレイアウト */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+  }
+  @media (max-width: 1024px) {
+    .main-layout { grid-template-columns: 1fr; }
+  }
+
+  /* セクションカード */
+  .section-card {
+    background: #fff;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #111827;
+  }
+  .section-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--primary);
+    border-radius: 50%;
+  }
+  .section-dot.warning { background: #f59e0b; }
+  .section-toggle {
+    color: #9ca3af;
+    transition: transform 0.2s;
+  }
+  .section-body {
+    padding: 20px;
+  }
+  .section-body.collapsed { display: none; }
+  .section-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .btn-outline {
+    padding: 10px 32px;
+    border: 2px solid var(--primary);
+    background: #fff;
+    color: var(--primary);
+    border-radius: 24px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  /* 情報リスト */
+  .info-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .info-row {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-row label {
+    width: 140px;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+  .info-row span {
+    flex: 1;
+    font-size: 0.95rem;
+    color: #111827;
+  }
+
+  /* 営業メモ */
+  .notes-box {
+    margin-top: 16px;
+  }
+  .notes-box label {
+    font-size: 0.85rem;
+    color: #6b7280;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .notes-content {
+    background: #f9fafb;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #374151;
+    white-space: pre-wrap;
+  }
+
+  /* リストカード */
+  .list-card, .stats-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .list-header h3, .stats-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    color: #111827;
+  }
+
+  /* 店舗リスト */
+  .store-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .store-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .store-item:hover {
+    background: #f3f4f6;
+    transform: translateX(4px);
+  }
+  .store-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #10b981, #34d399);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.2rem;
+  }
+  .store-info { flex: 1; }
+  .store-name { font-weight: 600; color: #111827; }
+  .store-address { font-size: 0.85rem; color: #6b7280; }
+  .store-status {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .store-status.active { background: #d1fae5; color: #065f46; }
+  .store-status.pending { background: #fef3c7; color: #92400e; }
+  .store-arrow { color: #9ca3af; }
+
+  /* 統計グリッド */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .stat-item {
+    text-align: center;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 10px;
+  }
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .stat-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 24px;
+    color: #9ca3af;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 24px;
+    color: #9ca3af;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 768px) {
+    .page-header { flex-direction: column; gap: 16px; }
+    .tab-cards { flex-direction: column; }
+    .stats-grid { grid-template-columns: 1fr; }
+  }
+  
+  /* 編集モーダル */
+  .edit-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+  }
+  .modal-content {
+    position: relative;
+    background: #fff;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, var(--primary) 0%, #f472b6 100%);
+  }
+  .modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #fff;
+    font-weight: 700;
+  }
+  .modal-close {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .modal-close:hover {
+    background: rgba(255,255,255,0.3);
+  }
+  .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .form-group.full {
+    grid-column: 1 / -1;
+  }
+  .form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+  }
+  .form-group label .required {
+    color: #ef4444;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  @media (max-width: 600px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+    .modal-content {
+      width: 95%;
+      max-height: 95vh;
+    }
+  }
+</style>
+
+<script>
+(function() {
+  const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+  
+  let brandData = null;
+  let clientData = null;
+  let allStores = [];
+  let allSchedules = [];
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const brandId = urlParams.get('id');
+
+  if (!brandId) {
+    document.getElementById('brand-name').textContent = 'ブランドが指定されていません';
+    return;
+  }
+
+  document.addEventListener('DOMContentLoaded', loadAllData);
+
+  async function loadAllData() {
+    try {
+      const [clientsRes, brandsRes, storesRes, schedulesRes] = await Promise.all([
+        fetch(`${API_BASE}/clients`).catch(() => ({ ok: false })),
+        fetch(`${API_BASE}/brands`).catch(() => ({ ok: false })),
+        fetch(`${API_BASE}/stores`).catch(() => ({ ok: false })),
+        fetch(`${API_BASE}/schedules`).catch(() => ({ ok: false }))
+      ]);
+
+      let clients = [];
+      let brands = [];
+      let stores = [];
+      let schedules = [];
+      
+      if (clientsRes.ok) {
+        const clientsData = await clientsRes.json();
+        clients = Array.isArray(clientsData) ? clientsData : (clientsData.items || clientsData.clients || []);
+      } else {
+        console.warn('Failed to load clients');
+      }
+      
+      if (brandsRes.ok) {
+        const brandsData = await brandsRes.json();
+        brands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
+      } else {
+        console.warn('Failed to load brands');
+      }
+      
+      if (storesRes.ok) {
+        const storesData = await storesRes.json();
+        stores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+      } else {
+        console.warn('Failed to load stores');
+      }
+      
+      if (schedulesRes.ok) {
+        const schedulesData = await schedulesRes.json();
+        schedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+      } else {
+        console.warn('Failed to load schedules');
+      }
+
+      // EntityFinderを使用してID形式の違いに対応
+      if (window.DataUtils?.EntityFinder?.findBrand) {
+        brandData = window.DataUtils.EntityFinder.findBrand(brands, brandId);
+      } else {
+        brandData = brands.find(b => String(b.id) === String(brandId));
+      }
+      if (!brandData) {
+        document.getElementById('brand-name').textContent = 'ブランドが見つかりません';
+        return;
+      }
+
+      // 親企業を取得（EntityFinderを使用）
+      if (window.DataUtils?.EntityFinder?.findClient) {
+        clientData = window.DataUtils.EntityFinder.findClient(clients, brandData.client_id);
+      } else {
+        clientData = clients.find(c => String(c.id) === String(brandData.client_id) || String(c.id) === String(brandData.client_id));
+      }
+      
+      // このブランドに属する店舗（IdUtils.isSameを使用）
+      if (window.DataUtils?.IdUtils?.isSame) {
+        allStores = stores.filter(s => window.DataUtils.IdUtils.isSame(s.brand_id, brandId));
+      } else {
+        allStores = stores.filter(s => String(s.brand_id) === String(brandId));
+      }
+      
+      // この店舗のスケジュール（IdUtils.isSameを使用）
+      const storeIds = allStores.map(s => String(s.id));
+      if (window.DataUtils?.IdUtils?.isSame) {
+        allSchedules = schedules.filter(s => storeIds.some(sid => window.DataUtils.IdUtils.isSame(s.store_id, sid)));
+      } else {
+        allSchedules = schedules.filter(s => storeIds.includes(String(s.store_id)));
+      }
+
+      renderAll();
+
+    } catch (error) {
+      console.error('Failed to load data:', error);
+      document.getElementById('brand-name').textContent = '読み込みに失敗しました';
+    }
+  }
+
+  function renderAll() {
+    renderHeader();
+    renderBrandInfo();
+    renderStores();
+    renderStats();
+    updateBadges();
+    
+    // ロール別の権限を適用
+    if (window.RolePermissions) {
+      window.RolePermissions.applyPermissions();
+    }
+  }
+
+  function renderHeader() {
+    document.getElementById('brand-name').textContent = brandData.name || '名称未設定';
+    
+    // パンくずリスト
+    const breadcrumb = document.getElementById('breadcrumb');
+    const clientLink = document.getElementById('client-link');
+    const clientBtn = document.getElementById('client-btn');
+    const clientBtnName = document.getElementById('client-btn-name');
+    
+    if (clientData) {
+      clientLink.textContent = clientData.name;
+      clientLink.href = `/admin/customers/clients/detail.html?id=${clientData.id}`;
+      
+      // リンクボタン
+      clientBtn.href = `/admin/customers/clients/detail.html?id=${clientData.id}`;
+      clientBtnName.textContent = clientData.name;
+      clientBtn.style.display = 'flex';
+    } else {
+      clientLink.textContent = '(企業未設定)';
+      clientLink.href = '#';
+      clientBtn.style.display = 'none';
+    }
+    breadcrumb.querySelector('.brand-name').textContent = brandData.name || '';
+  }
+
+  function renderBrandInfo() {
+    const infoFields = [
+      { label: 'ブランド名', value: brandData.name },
+      { label: 'ブランド名カナ', value: brandData.name_kana },
+      { label: '親企業', value: clientData?.name },
+      { label: '業態', value: brandData.category || brandData.business_type },
+      { label: '電話番号', value: brandData.phone },
+      { label: 'メールアドレス', value: brandData.email },
+      { label: 'Webサイト', value: brandData.website },
+      { label: '説明', value: brandData.description },
+    ];
+
+    const container = document.getElementById('brand-info-list');
+    container.innerHTML = infoFields
+      .filter(f => f.value)
+      .map(f => `
+        <div class="info-row">
+          <label>${f.label}</label>
+          <span>${escapeHtml(String(f.value))}</span>
+        </div>
+      `).join('');
+
+    // 営業メモ
+    document.getElementById('notes-content').textContent = brandData.notes || '-';
+  }
+
+  function renderStores() {
+    const container = document.getElementById('store-list');
+    
+    if (allStores.length === 0) {
+      container.innerHTML = '<div class="empty-state">店舗がありません</div>';
+      return;
+    }
+
+    container.innerHTML = allStores.map(store => {
+      const address = [store.pref, store.city].filter(Boolean).join('');
+      const statusLabel = store.status === 'active' ? '稼働中' : '休止中';
+      const statusClass = store.status === 'active' ? 'active' : 'pending';
+      
+      return `
+        <div class="store-item" onclick="viewStore('${store.id}')">
+          <div class="store-icon"><i class="fas fa-map-marker-alt"></i></div>
+          <div class="store-info">
+            <div class="store-name">${escapeHtml(store.name || '名称未設定')}</div>
+            <div class="store-address">${escapeHtml(address) || '住所未設定'}</div>
+          </div>
+          <span class="store-status ${statusClass}">${statusLabel}</span>
+          <div class="store-arrow"><i class="fas fa-chevron-right"></i></div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderStats() {
+    const activeCount = allStores.filter(s => s.status === 'active').length;
+    document.getElementById('stat-stores').textContent = allStores.length;
+    document.getElementById('stat-active').textContent = activeCount;
+    document.getElementById('stat-schedules').textContent = allSchedules.length;
+    
+    // リンクカードの更新
+    document.getElementById('stores-link-count').textContent = `${allStores.length} 店舗`;
+  }
+
+  function updateBadges() {
+    document.getElementById('stores-badge').textContent = allStores.length;
+  }
+  
+  // 店舗リンクカードのクリック
+  document.getElementById('stores-link-btn').addEventListener('click', () => {
+    switchTab('stores');
+  });
+
+  // タブ切り替え
+  window.switchTab = function(tabName) {
+    document.querySelectorAll('.tab-card').forEach(card => {
+      card.classList.toggle('active', card.dataset.tab === tabName);
+    });
+  };
+
+  // セクション開閉
+  window.toggleSection = function(sectionId) {
+    const body = document.getElementById('section-' + sectionId);
+    const toggle = document.getElementById('toggle-' + sectionId);
+    body.classList.toggle('collapsed');
+    if (toggle) {
+      toggle.style.transform = body.classList.contains('collapsed') ? 'rotate(0deg)' : 'rotate(180deg)';
+    }
+  };
+
+  window.viewStore = function(storeId) {
+    window.location.href = `/admin/customers/stores/detail.html?id=${storeId}`;
+  };
+
+  window.editBrand = function() {
+    openEditModal();
+  };
+  
+  function openEditModal() {
+    const modal = document.getElementById('edit-modal');
+    if (!modal) return;
+    
+    document.getElementById('edit-name').value = brandData.name || '';
+    document.getElementById('edit-name-kana').value = brandData.name_kana || '';
+    document.getElementById('edit-category').value = brandData.category || brandData.business_type || '';
+    document.getElementById('edit-phone').value = brandData.phone || '';
+    document.getElementById('edit-email').value = brandData.email || '';
+    document.getElementById('edit-website').value = brandData.website || '';
+    document.getElementById('edit-description').value = brandData.description || '';
+    document.getElementById('edit-notes').value = brandData.notes || '';
+    
+    modal.style.display = 'flex';
+  }
+  
+  window.closeEditModal = function() {
+    document.getElementById('edit-modal').style.display = 'none';
+  };
+  
+  window.saveBrand = async function() {
+    const saveBtn = document.getElementById('save-btn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = '保存中...';
+    
+    try {
+      const updatedData = {
+        ...brandData,
+        name: document.getElementById('edit-name').value,
+        name_kana: document.getElementById('edit-name-kana').value,
+        category: document.getElementById('edit-category').value,
+        phone: document.getElementById('edit-phone').value,
+        email: document.getElementById('edit-email').value,
+        website: document.getElementById('edit-website').value,
+        description: document.getElementById('edit-description').value,
+        notes: document.getElementById('edit-notes').value,
+        updated_at: new Date().toISOString()
+      };
+      
+      const response = await fetch(`${API_BASE}/brands/${brandId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
+      });
+      
+      if (!response.ok) throw new Error('保存に失敗しました');
+      
+      brandData = updatedData;
+      renderHeader();
+      renderBrandInfo();
+      closeEditModal();
+      
+      alert('保存しました');
+    } catch (error) {
+      console.error('Save error:', error);
+      alert('保存に失敗しました: ' + error.message);
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '保存';
+    }
+  };
+
+  window.addStore = function() {
+    alert('店舗追加機能は準備中です');
+  };
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+})();
+</script>

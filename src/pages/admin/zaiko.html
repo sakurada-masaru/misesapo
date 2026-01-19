@@ -1,0 +1,283 @@
+@layout('layouts.admin')
+@json('data/meta/admin_zaiko_title.json', $title)
+@json('data/meta/admin_zaiko_body_class.json', $body_class)
+
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
+<link rel="stylesheet" href="/css/zaiko.css" />
+
+<main id="main" class="admin-zaiko">
+  @include('partials.admin-sidebar')
+  
+  <!-- メインコンテンツ -->
+  <div class="main-content">
+    <!-- トップバー -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>在庫管理</h1>
+      </div>
+      <div class="topbar-right">
+        <button type="button" class="btn btn-outline" id="btn-help" style="margin-right: 8px;">
+          <i class="fas fa-question-circle"></i> 使い方
+        </button>
+        <button type="button" class="btn btn-primary" id="btn-new-item">
+          <i class="fas fa-plus"></i> 商品登録
+        </button>
+        <button type="button" class="btn btn-outline" id="btn-show-qrcodes">
+          <i class="fas fa-qrcode"></i> QRコード一覧
+        </button>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <div class="zaiko-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2 style="margin: 0;">📦 現在の在庫一覧</h2>
+          <div id="loading-spinner" style="display: none;">
+            <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+          </div>
+        </div>
+        <div class="inventory-grid" id="inventory-grid">
+          <!-- カードが動的に追加される -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 商品詳細モーダル -->
+  <dialog id="product-detail-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-product-name">商品詳細</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('product-detail-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>    
+      <div class="modal-body">
+        <div class="product-detail-info">
+          <div class="detail-item">
+            <span class="detail-label">商品ID:</span>
+            <span class="detail-value" id="modal-product-id">-</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">商品名:</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="detail-value" id="modal-product-name-text">-</span>
+              <button type="button" id="btn-edit-name" class="btn-edit-name" style="background: none; border: none; color: #3b82f6; cursor: pointer; padding: 4px 8px; font-size: 0.875rem;">
+                <i class="fas fa-edit"></i> 編集
+              </button>
+            </div>
+            <div id="edit-name-form" style="display: none; margin-top: 8px;">
+              <input type="text" id="edit-name-input" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95rem;">
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button type="button" id="btn-save-name" class="btn btn-primary" style="padding: 6px 16px; font-size: 0.875rem;">保存</button>
+                <button type="button" id="btn-cancel-edit-name" class="btn btn-outline" style="padding: 6px 16px; font-size: 0.875rem;">キャンセル</button>
+              </div>
+            </div>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">現在の在庫数:</span>
+            <span class="detail-value" id="modal-product-stock">-</span>
+          </div>
+            </div>
+            
+        <!-- 最後の入出庫情報 -->
+        <div class="last-transaction-section" style="margin-top: 20px; padding: 16px; background: #f9fafb; border-radius: 12px;">
+          <h4 style="margin: 0 0 12px 0; font-size: 0.9rem; color: #6b7280;">最終更新</h4>
+          <div id="last-transaction-info" style="font-size: 0.95rem; color: #374151;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>最終入庫:</span>
+              <span id="last-in-info" style="font-weight: 600;">-</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>最終出庫:</span>
+              <span id="last-out-info" style="font-weight: 600;">-</span>
+            </div>
+          </div>
+            </div>
+
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+            
+        <div class="product-qrcode-section" style="text-align: center; padding: 20px 0;">
+          <h4 style="margin-bottom: 16px; font-size: 1rem; color: #374151;">QRコード</h4>
+          <div id="modal-product-qrcode" style="display: inline-block;"></div>
+        </div>
+
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+
+        <div class="modal-transaction-area">
+          <h4>在庫更新</h4>
+          <div class="mode-buttons">
+            <button id="modal-mode-in" class="active">入庫</button>
+            <button id="modal-mode-out" class="inactive">出庫</button>
+          </div>
+          <div class="input-group">
+            <label for="modal-quantity">数量</label>
+            <input type="number" id="modal-quantity" value="1" min="1" required>
+          </div>
+          <button id="modal-process-button" class="btn-process">在庫更新を実行</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('product-detail-dialog').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 商品登録モーダル -->
+  <dialog id="new-item-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>商品登録</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('new-item-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+          <label for="new-product-id">商品ID <span style="color: red;">*</span> <span style="font-size: 0.85rem; color: #6b7280;">（自動生成）</span></label>
+          <input type="text" id="new-product-id" placeholder="例: P011" required readonly style="background-color: #f3f4f6; cursor: not-allowed;">
+        </div>
+        <div class="input-group">
+          <label for="new-product-name">商品名 <span style="color: red;">*</span></label>
+          <input type="text" id="new-product-name" placeholder="例: 商品K（掃除用具）" required>
+        </div>
+        <div class="input-group">
+          <label for="new-product-stock">初期在庫数</label>
+          <input type="number" id="new-product-stock" value="0" min="0" required>
+        </div>
+        <div class="input-group">
+          <label for="new-product-min-stock">最小在庫数</label>
+          <input type="number" id="new-product-min-stock" value="50" min="0" required>
+        </div>
+        <div class="input-group">
+          <label for="new-product-safe-stock">安全在庫数</label>
+          <input type="number" id="new-product-safe-stock" value="100" min="0" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('new-item-dialog').close()">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="btn-create-item">登録</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 使い方ヘルプモーダル -->
+  <dialog id="help-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>在庫管理の使い方</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('help-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <div class="help-content">
+          <h4 style="margin-top: 0; color: #111827;">📦 在庫管理の基本操作</h4>
+          
+          <div class="help-section">
+            <h5>1. 在庫カードの見方</h5>
+            <ul>
+              <li><strong>緑色</strong>: 在庫が安全な状態（安全在庫数以上）</li>
+              <li><strong>黄色</strong>: 在庫が少なくなってきた状態（最小在庫数以上、安全在庫数未満）</li>
+              <li><strong>赤色</strong>: 在庫が不足している状態（最小在庫数未満）</li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h5>2. 商品詳細の確認</h5>
+            <p>在庫カードをクリックすると、以下の情報が表示されます：</p>
+            <ul>
+              <li>商品ID、商品名、現在の在庫数</li>
+              <li>最終入庫・出庫者の名前と日時</li>
+              <li>QRコード（清掃員がスキャンして使用）</li>
+              <li>在庫更新機能（入庫・出庫）</li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h5>3. 在庫の更新（入庫・出庫）</h5>
+            <ol>
+              <li>在庫カードをクリックして商品詳細を開く</li>
+              <li>「入庫」または「出庫」ボタンを選択</li>
+              <li>数量を入力</li>
+              <li>「在庫更新を実行」ボタンをクリック</li>
+            </ol>
+          </div>
+
+          <div class="help-section">
+            <h5>4. 商品の登録</h5>
+            <ol>
+              <li>右上の「商品登録」ボタンをクリック</li>
+              <li>商品名、初期在庫数、最小在庫数、安全在庫数を入力</li>
+              <li>商品IDは自動生成されます</li>
+              <li>「登録」ボタンをクリック</li>
+            </ol>
+          </div>
+
+          <div class="help-section">
+            <h5>5. QRコードの使い方</h5>
+            <ul>
+              <li>商品詳細モーダル内にQRコードが表示されます</li>
+              <li>このQRコードを清掃員がスマホでスキャンすると、在庫管理画面が開きます</li>
+              <li>清掃員はQRコードをスキャンして、入庫・出庫操作を行います</li>
+              <li>「QRコード一覧」ボタンから、全商品のQRコードを一覧表示できます</li>
+            </ul>
+          </div>
+
+          <div class="help-section">
+            <h5>6. 清掃員の操作フロー</h5>
+            <ol>
+              <li>スマホでQRコードをスキャン</li>
+              <li>商品情報が表示される（認証不要）</li>
+              <li>数量を入力して「入庫」または「出庫」ボタンをクリック</li>
+              <li>ログイン画面が表示される（初回のみ）</li>
+              <li>@misesapo.co.jp のアカウントでログイン</li>
+              <li>処理が完了すると、在庫数が更新されます</li>
+            </ol>
+          </div>
+
+          <div class="help-section">
+            <h5>💡 便利な機能</h5>
+            <ul>
+              <li><strong>最終更新情報</strong>: 誰が最後に入庫・出庫したかが分かります</li>
+              <li><strong>色分け表示</strong>: 在庫状況が一目で分かります</li>
+              <li><strong>履歴管理</strong>: すべての入出庫履歴が記録されます（3ヶ月間保存）</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('help-dialog').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- QRコード一覧モーダル -->
+  <dialog id="qrcode-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>QRコード一覧</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('qrcode-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="qrcode-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; padding: 16px;">
+          <!-- QRコードが動的に追加される -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('qrcode-dialog').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
+</main>
+
+<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+<script src="/js/zaiko.js"></script>

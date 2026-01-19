@@ -1,0 +1,554 @@
+@layout('layouts.base')
+@json('data/meta/admin_users_sales_title.json', $title)
+@json('data/meta/admin_users_sales_body_class.json', $body_class)
+@json('data/clients.json', clients_data)
+
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
+<main id="main" class="container admin-users-sales">
+  <div class="page-header">
+    <a href="/admin/users/" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">コンシェルジュ一覧（ユーザーID管理）</h1>
+    <a href="/admin/users/sales/new" class="btn btn-primary">
+      <i class="fas fa-plus"></i> 新規コンシェルジュ登録
+    </a>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="名前、メールアドレスで検索..." class="search-input" id="sales-search" />
+    </div>
+    <div class="filter-options">
+      <select class="filter-select" id="status-filter">
+        <option value="">すべてのステータス</option>
+        <option value="active">有効</option>
+        <option value="inactive">無効</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-label">総営業マン数</span>
+      <span class="stat-value" id="total-count">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">有効</span>
+      <span class="stat-value" id="active-count">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">総担当顧客数</span>
+      <span class="stat-value" id="total-clients-count">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">稼働中顧客数</span>
+      <span class="stat-value" id="active-clients-count">0</span>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>名前</th>
+          <th>メールアドレス</th>
+          <th>電話番号</th>
+          <th>役職</th>
+          <th>担当顧客数</th>
+          <th>稼働中顧客数</th>
+          <th>ステータス</th>
+          <th>雇用日</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="sales-table-body">
+        <!-- Sales will be rendered by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <button class="pagination-btn" id="prev-page" disabled>
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <span class="pagination-info" id="pagination-info">1 / 1</span>
+    <button class="pagination-btn" id="next-page">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <script type="application/json" id="clients-data">
+    @jsonvar $clients_data
+  </script>
+
+  <script type="application/json" id="sales-data">
+    {
+      "sales": [
+        {
+          "id": "sales-001",
+          "name": "沖智弘",
+          "email": "oki.tomohiro@example.com",
+          "phone": "",
+          "status": "active",
+          "hired_date": "2025年5月27日",
+          "registered_date": "2025-05-27",
+          "position": "営業（東京本社　営業部長）"
+        },
+        {
+          "id": "sales-002",
+          "name": "生井　剛",
+          "email": "namai.tsuyoshi@example.com",
+          "phone": "",
+          "status": "active",
+          "hired_date": "2025/08/10",
+          "registered_date": "2025-08-10",
+          "position": "営業（営繕管理部　課長）"
+        },
+        {
+          "id": "sales-003",
+          "name": "平　鋭未",
+          "email": "taira.eimi@example.com",
+          "phone": "",
+          "status": "active",
+          "hired_date": "2025/08/10",
+          "registered_date": "2025-08-10",
+          "position": "営業（経営コンサルタント　次長）"
+        },
+        {
+          "id": "sales-004",
+          "name": "梅岡アレサンドレユウジ",
+          "email": "umeoka.alessandro@example.com",
+          "phone": "",
+          "status": "active",
+          "hired_date": "2025年6月1日",
+          "registered_date": "2025-06-01",
+          "position": "FS営業,清掃員"
+        },
+        {
+          "id": "sales-005",
+          "name": "正田 和輝",
+          "email": "masada@example.com",
+          "phone": "",
+          "status": "active",
+          "hired_date": "",
+          "registered_date": "2025-01-10",
+          "position": "営業"
+        },
+        {
+          "id": "sales-006",
+          "name": "佐藤 大志",
+          "email": "sato.taishi@example.com",
+          "phone": "",
+          "status": "active",
+          "hired_date": "",
+          "registered_date": "2025-02-01",
+          "position": "営業"
+        },
+        {
+          "id": "sales-007",
+          "name": "林 大貴",
+          "email": "hayashi.daiki@example.com",
+          "phone": "",
+          "status": "active",
+          "hired_date": "",
+          "registered_date": "2025-01-25",
+          "position": "営業"
+        }
+      ]
+    }
+  </script>
+
+  <style>
+    .admin-users-sales {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f9fafb;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+      flex-wrap: wrap;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #6b7280;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      flex: 1;
+    }
+    .filter-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 300px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-box i {
+      position: absolute;
+      left: 12px;
+      color: #6b7280;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px 12px 12px 40px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .filter-options {
+      display: flex;
+      gap: 12px;
+    }
+    .filter-select {
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: #ffffff;
+      min-width: 150px;
+    }
+    .stats-bar {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .table-container {
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow-x: auto;
+    }
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .users-table thead {
+      background: #f9fafb;
+    }
+    .users-table th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.875rem;
+      border-bottom: 2px solid #e5e7eb;
+      white-space: nowrap;
+    }
+    .users-table td {
+      padding: 16px;
+      border-bottom: 1px solid #f3f4f6;
+      color: #111827;
+      font-size: 0.95rem;
+    }
+    .users-table tbody tr:hover {
+      background: #f9fafb;
+    }
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-inactive {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: 4px;
+      text-decoration: none;
+    }
+    .btn-icon:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .pagination-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pagination-btn:hover:not(:disabled) {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .pagination-info {
+      font-size: 0.95rem;
+      color: #6b7280;
+    }
+    @media (max-width: 768px) {
+      .admin-users-sales {
+        padding: 16px;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .filter-bar {
+        flex-direction: column;
+      }
+      .search-box {
+        min-width: 100%;
+      }
+      .stats-bar {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .users-table {
+        font-size: 0.875rem;
+      }
+      .users-table th,
+      .users-table td {
+        padding: 12px 8px;
+      }
+    }
+  </style>
+
+  <script>
+    // Load and render sales
+    (function() {
+      const salesDataEl = document.getElementById('sales-data');
+      const clientsDataEl = document.getElementById('clients-data');
+      const tableBody = document.getElementById('sales-table-body');
+      const searchInput = document.getElementById('sales-search');
+      const statusFilter = document.getElementById('status-filter');
+      
+      if (!salesDataEl || !tableBody) return;
+      
+      const salesData = JSON.parse(salesDataEl.textContent);
+      const sales = salesData.sales || [];
+      
+      // Calculate client counts for each sales rep
+      let clientsBySalesRep = {};
+      if (clientsDataEl) {
+        const clientsData = JSON.parse(clientsDataEl.textContent);
+        const clients = clientsData.clients || [];
+        
+        clients.forEach(client => {
+          const salesRep = client.sales_rep || '';
+          if (salesRep) {
+            if (!clientsBySalesRep[salesRep]) {
+              clientsBySalesRep[salesRep] = { total: 0, active: 0 };
+            }
+            clientsBySalesRep[salesRep].total++;
+            if (client.status === '稼働中') {
+              clientsBySalesRep[salesRep].active++;
+            }
+          }
+        });
+      }
+      
+      let currentPage = 1;
+      const itemsPerPage = 20;
+      let filteredSales = [...sales];
+      
+      // Update stats
+      function updateStats() {
+        const total = sales.length;
+        const active = sales.filter(s => s.status === 'active').length;
+        const totalClients = Object.values(clientsBySalesRep).reduce((sum, counts) => sum + counts.total, 0);
+        const activeClients = Object.values(clientsBySalesRep).reduce((sum, counts) => sum + counts.active, 0);
+        
+        document.getElementById('total-count').textContent = total;
+        document.getElementById('active-count').textContent = active;
+        document.getElementById('total-clients-count').textContent = totalClients;
+        document.getElementById('active-clients-count').textContent = activeClients;
+      }
+      
+      // Render sales
+      function renderSales() {
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageSales = filteredSales.slice(start, end);
+        
+        tableBody.innerHTML = pageSales.map((member, index) => {
+          const rowNum = start + index + 1;
+          const status = member.status || '';
+          const statusClass = status ? `status-${status}` : '';
+          const statusText = {
+            'active': '有効',
+            'inactive': '無効'
+          }[status] || status;
+          
+          // Get client counts for this sales rep
+          const clientCounts = clientsBySalesRep[member.name] || { total: 0, active: 0 };
+          
+          return `
+            <tr>
+              <td>${rowNum}</td>
+              <td>${member.name || ''}</td>
+              <td>${member.email || ''}</td>
+              <td>${member.phone || '-'}</td>
+              <td>${member.position || ''}</td>
+              <td>${clientCounts.total}件</td>
+              <td>${clientCounts.active}件</td>
+              <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+              <td>${member.hired_date || member.registered_date || '-'}</td>
+              <td>
+                <a href="/admin/users/sales/${member.id}" class="btn-icon" title="詳細">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="/admin/users/sales/${member.id}/edit" class="btn-icon" title="編集">
+                  <i class="fas fa-edit"></i>
+                </a>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        
+        // Update pagination
+        const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
+        document.getElementById('pagination-info').textContent = `${currentPage} / ${totalPages || 1}`;
+        document.getElementById('prev-page').disabled = currentPage === 1;
+        document.getElementById('next-page').disabled = currentPage >= totalPages;
+      }
+      
+      // Filter sales
+      function filterSales() {
+        const searchQuery = searchInput.value.toLowerCase().trim();
+        const statusValue = statusFilter.value;
+        
+        filteredSales = sales.filter(member => {
+          let match = true;
+          
+          if (searchQuery) {
+            const searchText = `${member.name || ''} ${member.email || ''}`.toLowerCase();
+            match = match && searchText.includes(searchQuery);
+          }
+          
+          if (statusValue) {
+            match = match && (member.status === statusValue);
+          }
+          
+          return match;
+        });
+        
+        currentPage = 1;
+        renderSales();
+      }
+      
+      // Event listeners
+      searchInput.addEventListener('input', filterSales);
+      statusFilter.addEventListener('change', filterSales);
+      
+      document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderSales();
+        }
+      });
+      
+      document.getElementById('next-page').addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderSales();
+        }
+      });
+      
+      // Initial render
+      updateStats();
+      renderSales();
+    })();
+  </script>
+</main>
+

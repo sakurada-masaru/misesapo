@@ -1,0 +1,914 @@
+@layout('layouts.base')
+@json('data/meta/admin_services_title.json', $page_title)
+@json('data/meta/admin_services_body_class.json', $body_class)
+
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
+<main id="main" class="container admin-services-review">
+  <div class="page-header">
+    <h1 class="page-title">
+      <i class="fas fa-code-branch"></i>
+      変更内容レビュー（開発者専用）
+    </h1>
+    <div class="header-actions">
+      <button type="button" class="btn btn-outline btn-sm" id="btn-refresh">
+        <i class="fas fa-sync-alt"></i> 更新
+      </button>
+      <a href="/admin/services/" class="btn btn-outline btn-sm">
+        <i class="fas fa-arrow-left"></i> サービス管理に戻る
+      </a>
+    </div>
+  </div>
+
+  <!-- メインコンテンツ（AWS Cognito認証済みの従業員がアクセス） -->
+  <div class="review-content" id="review-content">
+    <!-- 変更状況サマリー -->
+    <div class="status-summary" id="status-summary">
+      <div class="status-card">
+        <i class="fas fa-info-circle"></i>
+        <div class="status-text">
+          <strong>変更状況を確認中...</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- 変更内容一覧 -->
+    <div class="changes-section" id="changes-section" style="display: none;">
+      <h2 class="section-title">
+        <i class="fas fa-list"></i>
+        変更内容
+      </h2>
+      <div class="changes-list" id="changes-list"></div>
+    </div>
+
+    <!-- 操作パネル -->
+    <div class="action-panel" id="action-panel" style="display: none;">
+      <h2 class="section-title">
+        <i class="fas fa-tools"></i>
+        操作
+      </h2>
+      <div class="action-buttons">
+        <button type="button" class="btn btn-outline" id="btn-pull-from-github">
+          <i class="fas fa-download"></i> GitHubから最新データを取得
+        </button>
+        <button type="button" class="btn btn-outline btn-danger" id="btn-discard-changes">
+          <i class="fas fa-undo"></i> ローカルの変更を破棄
+        </button>
+        <button type="button" class="btn btn-primary" id="btn-commit-and-push">
+          <i class="fas fa-cloud-upload-alt"></i> Gitにコミット・プッシュ
+        </button>
+      </div>
+    </div>
+
+    <!-- Git状態表示 -->
+    <div class="git-status" id="git-status" style="display: none;">
+      <h2 class="section-title">
+        <i class="fas fa-code-branch"></i>
+        Git状態
+      </h2>
+      <div class="git-info" id="git-info"></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // 認証はAWS Cognitoで行われているため、パスワード認証は不要
+      // 従業員は全員ログインアカウントを持っているため、直接コンテンツを表示
+      
+      // 変更内容の読み込み
+      async function loadChanges() {
+        const statusSummary = document.getElementById('status-summary');
+        const changesSection = document.getElementById('changes-section');
+        const actionPanel = document.getElementById('action-panel');
+        const changesList = document.getElementById('changes-list');
+        
+        try {
+          // まずAPIエンドポイントを試す（ローカル環境の場合）
+          let data = { hasChanges: false, changes: [] };
+          try {
+            const apiResponse = await fetch('/api/pending-changes');
+            if (apiResponse.ok) {
+              data = await apiResponse.json();
+            } else {
+              throw new Error('API not available');
+            }
+          } catch (apiError) {
+            // APIが利用できない場合（GitHub Pagesなど）、静的ファイルを読み込む
+            try {
+              const staticResponse = await fetch('/data/browser_changes.json');
+              if (staticResponse.ok) {
+                const browserChanges = await staticResponse.json();
+                // 静的ファイルから変更データを構築
+                if (browserChanges && browserChanges.length > 0) {
+                  // 現在のサービスデータを読み込む（変更内容の詳細を取得するため）
+                  const servicesResponse = await fetch('/data/service_items.json');
+                  const services = servicesResponse.ok ? await servicesResponse.json() : [];
+                  
+                  // HEADのサービスデータを読み込む（変更前の値を取得するため）
+                  // GitHub PagesではHEADデータは取得できないので、空配列とする
+                  const headServices = [];
+                  
+                  // ブラウザ経由の変更を処理
+                  const changes = [];
+                  for (const changeLog of browserChanges) {
+                    const serviceId = changeLog.serviceId;
+                    const changeType = changeLog.type; // 'created' or 'modified'
+                    const serviceName = changeLog.serviceName || `サービスID ${serviceId}`;
+                    const timestamp = changeLog.timestamp || '不明';
+                    
+                    // 現在のサービスデータを取得
+                    const service = services.find(s => s.id === serviceId);
+                    if (!service) continue;
+                    
+                    // 変更内容の詳細を取得（簡易版）
+                    const changedFields = [];
+                    if (changeType === 'created') {
+                      // 新規作成の場合、すべてのフィールドを表示
+                      const importantFields = ['title', 'category', 'price', 'image', 'description', 'problems', 'solution'];
+                      for (const field of importantFields) {
+                        const value = service[field];
+                        if (value !== undefined && value !== '' && value !== [] && value !== null) {
+                          changedFields.push({
+                            field: field,
+                            fieldName: getFieldName(field),
+                            oldValue: null,
+                            newValue: formatFieldValue(field, value)
+                          });
+                        }
+                      }
+                    } else {
+                      // 編集の場合、変更されたフィールドのみを表示（簡易版）
+                      // GitHub PagesではHEADデータが取得できないため、すべてのフィールドを表示
+                      const importantFields = ['title', 'category', 'price', 'image', 'description', 'problems', 'solution'];
+                      for (const field of importantFields) {
+                        const value = service[field];
+                        if (value !== undefined && value !== '' && value !== [] && value !== null) {
+                          changedFields.push({
+                            field: field,
+                            fieldName: getFieldName(field),
+                            oldValue: '(変更前の値は取得できません)',
+                            newValue: formatFieldValue(field, value)
+                          });
+                        }
+                      }
+                    }
+                    
+                    changes.push({
+                      serviceId: serviceId,
+                      serviceName: serviceName,
+                      type: changeType,
+                      timestamp: timestamp,
+                      changedFields: changedFields
+                    });
+                  }
+                  
+                  data = {
+                    hasChanges: changes.length > 0,
+                    changes: changes
+                  };
+                }
+              }
+            } catch (staticError) {
+              console.warn('Failed to load browser changes:', staticError);
+              data = { hasChanges: false, changes: [] };
+            }
+          }
+          
+          // フィールド名とフォーマット関数（簡易版）
+          function getFieldName(field) {
+            const fieldNames = {
+              'title': 'サービス名',
+              'category': 'カテゴリー',
+              'price': '価格',
+              'image': 'サービスメイン画像',
+              'description': '説明',
+              'problems': '問題点',
+              'solution': '解決策'
+            };
+            return fieldNames[field] || field;
+          }
+          
+          function formatFieldValue(field, value) {
+            if (value === null || value === undefined) return '(未設定)';
+            if (value === '') return '(空)';
+            if (Array.isArray(value) && value.length === 0) return '(空の配列)';
+            
+            if (field === 'problems' && Array.isArray(value)) {
+              return `${value.length}項目: ${value.slice(0, 3).join(', ')}${value.length > 3 ? '...' : ''}`;
+            }
+            if (typeof value === 'string' && value.length > 50) {
+              return value.substring(0, 50) + '...';
+            }
+            
+            return String(value);
+          }
+          
+          if (data.hasChanges && data.changes && data.changes.length > 0) {
+            statusSummary.innerHTML = `
+              <div class="status-card status-warning">
+                <i class="fas fa-exclamation-circle"></i>
+                <div class="status-text">
+                  <strong>${data.changes.length}件の未反映の変更があります</strong>
+                  <p>変更内容を確認してから、コミット・プッシュしてください。</p>
+                </div>
+              </div>
+            `;
+            
+            changesSection.style.display = 'block';
+            actionPanel.style.display = 'block';
+            
+            // 変更内容を表示
+            changesList.innerHTML = data.changes.map((change, idx) => {
+              const serviceName = change.serviceName || `サービスID ${change.serviceId}`;
+              const changeType = change.type === 'created' ? '新規作成' : '編集';
+              const icon = change.type === 'created' ? 'plus-circle' : 'edit';
+              const link = `/admin/services/${change.serviceId}.html`;
+              const changedFields = change.changedFields || [];
+              
+              // 変更されたフィールドの詳細を表示
+              const fieldsHtml = changedFields.length > 0 ? changedFields.map(field => {
+                if (change.type === 'created') {
+                  // 新規作成の場合
+                  return `
+                    <div class="field-change">
+                      <span class="field-name">${field.fieldName}:</span>
+                      <span class="field-value new">${escapeHtml(field.newValue)}</span>
+                    </div>
+                  `;
+                } else {
+                  // 編集の場合
+                  return `
+                    <div class="field-change">
+                      <span class="field-name">${field.fieldName}:</span>
+                      <div class="field-diff">
+                        <div class="field-old">
+                          <span class="diff-label">変更前:</span>
+                          <span class="field-value old">${escapeHtml(field.oldValue)}</span>
+                        </div>
+                        <div class="field-new">
+                          <span class="diff-label">変更後:</span>
+                          <span class="field-value new">${escapeHtml(field.newValue)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }
+              }).join('') : '<p class="no-changes">変更内容の詳細を取得できませんでした</p>';
+              
+              return `
+                <div class="change-item" data-change-idx="${idx}">
+                  <div class="change-header">
+                    <i class="fas fa-${icon}"></i>
+                    <div class="change-details">
+                      <a href="${link}" target="_blank" class="change-link">
+                        <strong>${serviceName}</strong>
+                      </a>
+                      <span class="change-type">${changeType}</span>
+                      <span class="change-time">${change.timestamp}</span>
+                    </div>
+                    <button type="button" class="btn-toggle-details" data-target="${idx}">
+                      <i class="fas fa-chevron-down"></i>
+                    </button>
+                  </div>
+                  <div class="change-fields-details" id="change-details-${idx}" style="display: none;">
+                    <div class="fields-list">
+                      ${fieldsHtml}
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+            
+            // 詳細表示/非表示のトグル
+            changesList.querySelectorAll('.btn-toggle-details').forEach(btn => {
+              btn.addEventListener('click', function() {
+                const targetId = this.dataset.target;
+                const details = document.getElementById(`change-details-${targetId}`);
+                const icon = this.querySelector('i');
+                
+                if (details.style.display === 'none') {
+                  details.style.display = 'block';
+                  icon.classList.remove('fa-chevron-down');
+                  icon.classList.add('fa-chevron-up');
+                } else {
+                  details.style.display = 'none';
+                  icon.classList.remove('fa-chevron-up');
+                  icon.classList.add('fa-chevron-down');
+                }
+              });
+            });
+            
+            // HTMLエスケープ関数
+            function escapeHtml(text) {
+              const div = document.createElement('div');
+              div.textContent = text;
+              return div.innerHTML;
+            }
+          } else {
+            statusSummary.innerHTML = `
+              <div class="status-card status-success">
+                <i class="fas fa-check-circle"></i>
+                <div class="status-text">
+                  <strong>未反映の変更はありません</strong>
+                  <p>すべての変更がGitHubに反映されています。</p>
+                </div>
+              </div>
+            `;
+            changesSection.style.display = 'none';
+            actionPanel.style.display = 'block';
+          }
+          
+          // Git状態を取得
+          loadGitStatus();
+        } catch (err) {
+          statusSummary.innerHTML = `
+            <div class="status-card status-error">
+              <i class="fas fa-exclamation-triangle"></i>
+              <div class="status-text">
+                <strong>エラーが発生しました</strong>
+                <p>${err.message}</p>
+              </div>
+            </div>
+          `;
+        }
+      }
+      
+      // Git状態の読み込み
+      async function loadGitStatus() {
+        const gitStatus = document.getElementById('git-status');
+        const gitInfo = document.getElementById('git-info');
+        
+        try {
+          // Git状態を取得（簡易版）
+          gitStatus.style.display = 'block';
+          gitInfo.innerHTML = '<p>Git状態を確認中...</p>';
+          
+          // 実際のGit状態取得はサーバー側で実装が必要
+          gitInfo.innerHTML = `
+            <div class="git-status-item">
+              <i class="fas fa-code-branch"></i>
+              <span>ブランチ: main</span>
+            </div>
+            <div class="git-status-item">
+              <i class="fas fa-info-circle"></i>
+              <span>詳細なGit状態はサーバー側で確認してください</span>
+            </div>
+          `;
+        } catch (err) {
+          gitInfo.innerHTML = `<p class="error">Git状態の取得に失敗しました: ${err.message}</p>`;
+        }
+      }
+      
+      // 更新ボタン
+      const btnRefresh = document.getElementById('btn-refresh');
+      if (btnRefresh) {
+        btnRefresh.addEventListener('click', function() {
+          loadChanges();
+        });
+      }
+      
+      // GitHubから最新データを取得
+      const btnPull = document.getElementById('btn-pull-from-github');
+      if (btnPull) {
+        btnPull.addEventListener('click', async function() {
+          if (!confirm('GitHubから最新データを取得しますか？\nローカルの変更が上書きされる可能性があります。')) {
+            return;
+          }
+          
+          btnPull.disabled = true;
+          btnPull.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 取得中...';
+          
+          try {
+            const response = await fetch('/api/pull', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+              alert('GitHubから最新データを取得しました。\nページを再読み込みします。');
+              window.location.reload();
+            } else {
+              alert(`エラー: ${data.message}`);
+              btnPull.disabled = false;
+              btnPull.innerHTML = '<i class="fas fa-download"></i> GitHubから最新データを取得';
+            }
+          } catch (err) {
+            alert(`エラーが発生しました: ${err.message}`);
+            btnPull.disabled = false;
+            btnPull.innerHTML = '<i class="fas fa-download"></i> GitHubから最新データを取得';
+          }
+        });
+      }
+      
+      // ローカルの変更を破棄
+      const btnDiscard = document.getElementById('btn-discard-changes');
+      if (btnDiscard) {
+        btnDiscard.addEventListener('click', async function() {
+          if (!confirm('ローカルの変更を破棄しますか？\nこの操作は取り消せません。')) {
+            return;
+          }
+          
+          if (!confirm('本当に変更を破棄しますか？')) {
+            return;
+          }
+          
+          btnDiscard.disabled = true;
+          btnDiscard.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 破棄中...';
+          
+          try {
+            const response = await fetch('/api/discard-changes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+              alert('ローカルの変更を破棄しました。\nページを再読み込みします。');
+              window.location.reload();
+            } else {
+              alert(`エラー: ${data.message}`);
+              btnDiscard.disabled = false;
+              btnDiscard.innerHTML = '<i class="fas fa-undo"></i> ローカルの変更を破棄';
+            }
+          } catch (err) {
+            alert(`エラーが発生しました: ${err.message}`);
+            btnDiscard.disabled = false;
+            btnDiscard.innerHTML = '<i class="fas fa-undo"></i> ローカルの変更を破棄';
+          }
+        });
+      }
+      
+      // Gitにコミット・プッシュ
+      const btnCommitPush = document.getElementById('btn-commit-and-push');
+      if (btnCommitPush) {
+        btnCommitPush.addEventListener('click', async function() {
+          if (!confirm('変更をGitHubにコミット・プッシュしますか？\n数分後にGitHub Pagesに反映されます。')) {
+            return;
+          }
+          
+          btnCommitPush.disabled = true;
+          btnCommitPush.innerHTML = '<i class="fas fa-spinner fa-spin"></i> プッシュ中...';
+          
+          try {
+            const response = await fetch('/api/commit-and-push', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+              alert('GitHubにプッシュしました。\n数分後にGitHub Pagesに反映されます。\nページを再読み込みします。');
+              window.location.reload();
+            } else if (data.status === 'info') {
+              alert(data.message);
+              btnCommitPush.disabled = false;
+              btnCommitPush.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Gitにコミット・プッシュ';
+            } else {
+              alert(`エラー: ${data.message}`);
+              btnCommitPush.disabled = false;
+              btnCommitPush.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Gitにコミット・プッシュ';
+            }
+          } catch (err) {
+            alert(`エラーが発生しました: ${err.message}`);
+            btnCommitPush.disabled = false;
+            btnCommitPush.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Gitにコミット・プッシュ';
+          }
+        });
+      }
+      
+      // ページ読み込み時に変更内容を読み込む
+      loadChanges();
+    })();
+  </script>
+
+  <style>
+    .admin-services-review {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    /* 認証フォーム */
+    .auth-form {
+      max-width: 400px;
+      margin: 80px auto;
+    }
+    
+    .auth-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .auth-card h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 8px 0;
+    }
+    
+    .auth-description {
+      color: #6b7280;
+      margin: 0 0 24px 0;
+      font-size: 0.875rem;
+    }
+    
+    .auth-error {
+      color: #dc2626;
+      font-size: 0.875rem;
+      margin-top: 16px;
+      padding: 12px;
+      background: #fee2e2;
+      border-radius: 4px;
+    }
+    
+    /* ステータスサマリー */
+    .status-summary {
+      margin-bottom: 32px;
+    }
+    
+    .status-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+    
+    .status-card i {
+      font-size: 1.5rem;
+      margin-top: 2px;
+    }
+    
+    .status-card.status-warning {
+      background: #fef3c7;
+      border-color: #fbbf24;
+    }
+    
+    .status-card.status-warning i {
+      color: #f59e0b;
+    }
+    
+    .status-card.status-success {
+      background: #d1fae5;
+      border-color: #10b981;
+    }
+    
+    .status-card.status-success i {
+      color: #10b981;
+    }
+    
+    .status-card.status-error {
+      background: #fee2e2;
+      border-color: #f87171;
+    }
+    
+    .status-card.status-error i {
+      color: #dc2626;
+    }
+    
+    .status-text {
+      flex: 1;
+    }
+    
+    .status-text strong {
+      display: block;
+      font-size: 1.125rem;
+      margin-bottom: 4px;
+      color: #111827;
+    }
+    
+    .status-text p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    
+    /* セクション */
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .changes-section,
+    .action-panel,
+    .git-status {
+      margin-bottom: 32px;
+    }
+    
+    /* 変更内容リスト */
+    .changes-list {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .change-item {
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .change-item:last-child {
+      border-bottom: none;
+    }
+    
+    .change-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .change-header:hover {
+      background-color: #f9fafb;
+    }
+    
+    .change-item i {
+      font-size: 1.25rem;
+      color: #6b7280;
+    }
+    
+    .change-details {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .change-link {
+      color: #111827;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    .change-link:hover {
+      color: #3b82f6;
+      text-decoration: underline;
+    }
+    
+    .change-type {
+      padding: 4px 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    
+    .change-time {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    
+    .btn-toggle-details {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    
+    .btn-toggle-details:hover {
+      background-color: #e5e7eb;
+    }
+    
+    .change-fields-details {
+      padding: 16px;
+      padding-top: 0;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+    }
+    
+    .fields-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .field-change {
+      padding: 12px;
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .field-name {
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+      display: block;
+    }
+    
+    .field-value {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+    
+    .field-value.old {
+      background: #fee2e2;
+      color: #991b1b;
+      text-decoration: line-through;
+    }
+    
+    .field-value.new {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .field-diff {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .field-old,
+    .field-new {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    
+    .diff-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 500;
+      min-width: 60px;
+    }
+    
+    .no-changes {
+      color: #6b7280;
+      font-size: 0.875rem;
+      font-style: italic;
+      margin: 0;
+    }
+    
+    /* 操作ボタン */
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    /* Git状態 */
+    .git-info {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    
+    .git-status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      color: #6b7280;
+    }
+    
+    .git-status-item i {
+      color: #3b82f6;
+    }
+    
+    /* ボタン */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      color: #374151;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    
+    .btn:hover:not(:disabled) {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn-primary {
+      background: #3b82f6;
+      color: #fff;
+      border-color: #3b82f6;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+    
+    .btn-outline {
+      background: #fff;
+      color: #374151;
+      border-color: #d1d5db;
+    }
+    
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fca5a5;
+    }
+    
+    .btn-danger:hover:not(:disabled) {
+      background: #fecaca;
+      color: #7f1d1d;
+    }
+    
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8125rem;
+    }
+    
+    .btn-block {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    /* フォーム */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+  </style>
+</main>
+

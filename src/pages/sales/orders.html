@@ -1,0 +1,327 @@
+@layout('layouts.base')
+@json('data/meta/sales_orders_title.json', $title)
+@json('data/meta/sales_orders_body_class.json', $body_class)
+
+<main id="main" class="container sales-orders">
+  <div class="page-header">
+    <a href="/sales/dashboard" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">発注管理</h1>
+  </div>
+
+  <div class="filter-tabs">
+    <button class="tab-btn active" data-filter="all">全て</button>
+    <button class="tab-btn" data-filter="pending">承認待ち</button>
+    <button class="tab-btn" data-filter="processing">処理中</button>
+    <button class="tab-btn" data-filter="completed">完了</button>
+    <button class="tab-btn" data-filter="cancelled">キャンセル</button>
+  </div>
+
+  <div class="orders-list">
+    <!-- Order 1 -->
+    <div class="order-card" data-status="pending">
+      <div class="order-header">
+        <div class="order-info">
+          <div class="order-id">ORD-2025-001</div>
+          <div class="order-client">株式会社 Dart Ace</div>
+          <div class="order-store">日本橋茅場町店</div>
+        </div>
+        <span class="status-badge status-pending">承認待ち</span>
+      </div>
+      <div class="order-content">
+        <div class="order-details">
+          <div class="detail-item">
+            <i class="fas fa-calendar"></i>
+            <span>発注日: 2025年3月20日</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-yen-sign"></i>
+            <span>発注金額: ¥55,000</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-tasks"></i>
+            <span>レンジフード洗浄、グリストラップ清掃</span>
+          </div>
+        </div>
+      </div>
+      <div class="order-actions">
+        <a href="/sales/orders/ORD-2025-001" class="btn btn-outline btn-sm">詳細</a>
+        <button class="btn btn-primary btn-sm">承認</button>
+      </div>
+    </div>
+
+    <!-- Order 2 -->
+    <div class="order-card" data-status="processing">
+      <div class="order-header">
+        <div class="order-info">
+          <div class="order-id">ORD-2025-002</div>
+          <div class="order-client">アクティブソース</div>
+          <div class="order-store">十三店</div>
+        </div>
+        <span class="status-badge status-processing">処理中</span>
+      </div>
+      <div class="order-content">
+        <div class="order-details">
+          <div class="detail-item">
+            <i class="fas fa-calendar"></i>
+            <span>発注日: 2025年3月18日</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-yen-sign"></i>
+            <span>発注金額: ¥120,000</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-tasks"></i>
+            <span>エアコン分解洗浄、床清掃</span>
+          </div>
+        </div>
+      </div>
+      <div class="order-actions">
+        <a href="/sales/orders/ORD-2025-002" class="btn btn-outline btn-sm">詳細</a>
+        <a href="/reports/1" class="btn btn-outline btn-sm">レポート</a>
+      </div>
+    </div>
+
+    <!-- Order 3 -->
+    <div class="order-card" data-status="completed">
+      <div class="order-header">
+        <div class="order-info">
+          <div class="order-id">ORD-2025-003</div>
+          <div class="order-client">株式会社 SSG</div>
+          <div class="order-store">新宿東口店</div>
+        </div>
+        <span class="status-badge status-completed">完了</span>
+      </div>
+      <div class="order-content">
+        <div class="order-details">
+          <div class="detail-item">
+            <i class="fas fa-calendar"></i>
+            <span>発注日: 2025年3月15日</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-check-circle"></i>
+            <span>完了日: 2025年3月19日</span>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-yen-sign"></i>
+            <span>発注金額: ¥75,000</span>
+          </div>
+        </div>
+      </div>
+      <div class="order-actions">
+        <a href="/sales/orders/ORD-2025-003" class="btn btn-outline btn-sm">詳細</a>
+        <a href="/reports/2" class="btn btn-outline btn-sm">レポート</a>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .sales-orders {
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 8px;
+    }
+    .tab-btn {
+      padding: 8px 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #6b7280;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+    .orders-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .order-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .order-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .order-id {
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+    .order-client {
+      font-weight: 600;
+      color: #111827;
+      font-size: 1rem;
+      margin-bottom: 2px;
+    }
+    .order-store {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+    .status-pending {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .status-processing {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-completed {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-cancelled {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    .order-content {
+      margin-bottom: 16px;
+    }
+    .order-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .detail-item i {
+      color: var(--primary);
+      width: 16px;
+    }
+    .order-actions {
+      display: flex;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid #f3f4f6;
+      flex-wrap: wrap;
+    }
+    .order-actions .btn {
+      flex: 1;
+      min-width: 100px;
+    }
+    @media (max-width: 768px) {
+      .sales-orders {
+        padding: 12px;
+      }
+      .order-card {
+        padding: 12px;
+      }
+      .order-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .order-actions {
+        flex-direction: column;
+      }
+      .order-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+  <script>
+    // Filter functionality
+    (function() {
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const orderCards = document.querySelectorAll('.order-card');
+      
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          const filter = btn.dataset.filter;
+          
+          orderCards.forEach(card => {
+            if (filter === 'all') {
+              card.style.display = 'block';
+            } else {
+              const status = card.dataset.status;
+              card.style.display = (status === filter) ? 'block' : 'none';
+            }
+          });
+        });
+      });
+    })();
+  </script>
+</main>
+

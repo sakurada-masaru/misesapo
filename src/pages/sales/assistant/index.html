@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M.I.S.O.G.I. System | Misesapo</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/sales-assistant.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Gemini Live Style Override */
+        :root {
+            --bg-dark: #1e1e1e;
+            --bubble-ai: #e7f1ff;
+            --bubble-user: #f0f0f0;
+            --input-bg: #f5f5f5;
+        }
+
+        body {
+            background-color: #fff;
+            /* Clean white/light base */
+        }
+
+        .assistant-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .menu-trigger {
+            font-size: 1.2rem;
+            color: #444;
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .misogi-icon {
+            width: 32px;
+            height: 32px;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .misogi-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Side Menu Styles */
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100%;
+            background: #111;
+            z-index: 200;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            padding-top: 60px;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .side-menu.open {
+            transform: translateX(0);
+        }
+
+        .menu-item {
+            display: block;
+            padding: 16px 25px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .menu-item i {
+            width: 24px;
+            margin-right: 10px;
+            text-align: center;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 150;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Chat Timeline */
+        .chat-timeline {
+            padding-top: 100px;
+            /* Increased space for header */
+            padding-bottom: 140px;
+            /* Space for input */
+            background: #fff;
+        }
+
+        .chat-message .bubble {
+            border-radius: 20px;
+            padding: 14px 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-width: 85%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-message.ai .bubble {
+            background: var(--bubble-ai);
+            color: #0c4a6e;
+            border-top-left-radius: 4px;
+        }
+
+        .chat-message.user .bubble {
+            background: var(--bubble-user);
+            /* Light graey */
+            color: #333;
+            border-top-right-radius: 4px;
+        }
+
+        /* Input Area - Floats at bottom */
+        .input-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 16px 30px 16px;
+            /* Optimized for mobile bottom bar */
+            background: #fff;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            box-sizing: border-box;
+            /* Prevent padding from exceeding 100% width */
+        }
+
+        .text-input-wrapper {
+            width: 100%;
+            max-width: 600px;
+            background: #f0f4f9;
+            /* Gemini-like light gray */
+            border-radius: 32px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 56px;
+            box-sizing: border-box;
+            transition: background 0.2s;
+        }
+
+        .text-input-wrapper:focus-within {
+            background: #e9eef6;
+            /* Slightly darker on focus */
+        }
+
+        .chat-input {
+            flex: 1;
+            min-width: 0;
+            /* Crucial for flex item shrinking */
+            border: none;
+            background: none;
+            padding: 0 8px;
+            /* Add breathing room */
+            outline: none;
+            font-size: 1rem;
+            color: #1f1f1f;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #444746;
+            transition: background 0.2s;
+            flex-shrink: 0;
+            /* Prevent buttons from squishing */
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .send-btn {
+            color: #0b57d0;
+            /* Google Blue */
+        }
+
+        .mic-btn {
+            color: #444746;
+        }
+
+        .mic-btn.active {
+            color: #db2c2c;
+            /* Recording Red */
+            animation: pulse-mic 1.5s infinite;
+        }
+
+        @keyframes pulse-mic {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Suggestions - Horizontal Scroll */
+        .suggestions {
+            position: fixed;
+            bottom: 100px;
+            /* Above input */
+            left: 0;
+            width: 100%;
+            display: flex;
+            gap: 10px;
+            padding: 10px 20px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            /* Hide scrollbar */
+        }
+
+        .suggestions::-webkit-scrollbar {
+            display: none;
+        }
+
+        .suggestion-chip {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #444;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .suggestion-chip:active {
+            background: #f1f5f9;
+            transform: scale(0.98);
+        }
+
+        /* Preview Container */
+        .preview-container {
+            position: fixed;
+            bottom: 80px;
+            /* Above input bar */
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 90;
+            display: none;
+            /* Hidden by default */
+        }
+
+        .preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-item img,
+        .preview-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-close {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+        }
+    </style>
+
+<body>
+
+    <!-- Header -->
+    <!-- Header -->
+    <header class="assistant-header">
+        <button class="btn-icon menu-trigger" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="assistant-title">
+            <!-- MISOGI Icon: Drop with Sparkle -->
+            <div class="misogi-icon">
+                <img src="/images/misogi-logo-icon.svg" alt="Misogi Logo">
+            </div>
+            <span>M.I.S.O.G.I.</span>
+        </div>
+        <button class="btn-icon" onclick="location.href='/sales/'"
+            style="background:none; border:none; color:#64748b; font-size:1.2rem;" aria-label="エントランスに戻る">
+            <i class="fas fa-times"></i>
+        </button>
+    </header>
+
+    <!-- Side Menu -->
+    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+    <nav class="side-menu" id="side-menu">
+        <a href="/sales/dashboard" class="menu-item"><i class="fas fa-chart-pie"></i> ダッシュボード</a>
+        <a href="/sales/schedules" class="menu-item"><i class="fas fa-calendar-alt"></i> スケジュール</a>
+        <a href="/sales/assistant/" class="menu-item active"><i class="fas fa-microphone"></i> M.I.S.O.G.I. (Full)</a>
+        <a href="/sales/mypage" class="menu-item"><i class="fas fa-user"></i> マイページ</a>
+        <div style="margin-top: 40px; padding: 0 30px; font-size: 0.8rem; color: rgba(255,255,255,0.3);">
+            M.I.S.O.G.I. System<br>v1.0.0
+        </div>
+    </nav>
+
+    <!-- Chat Timeline -->
+    <div class="chat-timeline" id="chat-timeline">
+        <!-- Intro Message -->
+        <div class="chat-message ai">
+            <div class="avatar ai"><img src="/images/misogi-logo-icon.svg" alt="Misogi Avatar"></div>
+            <div class="bubble">
+                お疲れ様です。M.I.S.O.G.I.（ミソギ）です。<br>
+                業務サポート、スケジュール調整、情報統合など、何かお手伝いできることはありますか？
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Visualization Overlay (Hidden initially) -->
+    <div class="voice-visualizer" id="voice-visualizer">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <span style="font-size:0.8rem; color:#666; margin-left:8px;">聞いています...</span>
+    </div>
+
+    <!-- Suggestions -->
+    <div class="suggestions" id="suggestions">
+        <div class="suggestion-chip" onclick="setInput('A店の定期清掃の依頼書を作って')">A店の依頼書作成</div>
+        <div class="suggestion-chip" onclick="setInput('明日のスケジュールを教えて')">明日の予定</div>
+        <div class="suggestion-chip" onclick="setInput('日報の作成を手伝って')">日報作成</div>
+    </div>
+
+    <!-- Input Area -->
+    <!-- Image/Video Preview -->
+    <div class="preview-container" id="preview-container">
+        <!-- Previews will be injected here -->
+    </div>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="file-input" accept="image/*,video/*" style="display: none;">
+
+    <!-- Gemini Live Style Input Area -->
+    <div class="input-area">
+        <div class="text-input-wrapper">
+            <button class="action-btn" id="attach-btn" style="color: #444746;">
+                <i class="fas fa-plus"></i>
+            </button>
+            <input type="text" class="chat-input" id="chat-input" placeholder="Misogiに話しかける..." autocomplete="off">
+            <button class="action-btn send-btn" id="send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+            <button class="action-btn mic-btn" id="mic-btn">
+                <i class="fas fa-microphone"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod/staff';
+
+        // Toggle Side Menu
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            const overlay = document.getElementById('overlay');
+            menu.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        // Auth Logic
+        function isTokenExpired(token) {
+            if (!token) return true;
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return (payload.exp || 0) <= Math.floor(Date.now() / 1000) + 30;
+            } catch (e) { return true; }
+        }
+
+        function ensureAuthOrRedirect() {
+            const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
+            if (!token || isTokenExpired(token)) {
+                window.location.href = `/staff/signin.html?redirect=${encodeURIComponent(window.location.pathname)}`;
+                return null;
+            }
+            return token;
+        }
+
+        // Mockup Logic
+        const chatTimeline = document.getElementById('chat-timeline');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const micBtn = document.getElementById('mic-btn');
+        const attachBtn = document.getElementById('attach-btn');
+        const fileInput = document.getElementById('file-input');
+        const previewContainer = document.getElementById('preview-container');
+        const visualizer = document.getElementById('voice-visualizer');
+
+        function appendMessage(role, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-message ${role}`;
+
+            let content = '';
+            if (role === 'ai') {
+                content = `
+                    <div class="avatar ai"><img src="/images/misogi-logo-icon.svg" alt="Misogi Avatar"></div>
+                    <div class="bubble">${text}</div>
+                `;
+            } else {
+                content = `
+                    <div class="bubble">${text}</div>
+                `;
+            }
+            msgDiv.innerHTML = content;
+            chatTimeline.appendChild(msgDiv);
+            chatTimeline.scrollTop = chatTimeline.scrollHeight;
+        }
+
+        function setInput(text) {
+            chatInput.value = text;
+            chatInput.focus();
+        }
+
+        // File Attachment Logic
+        attachBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewContainer.style.display = 'flex';
+                const isVideo = file.type.startsWith('video');
+
+                const previewHtml = `
+                    <div class="preview-item">
+                        ${isVideo ? `<video src="${e.target.result}"></video>` : `<img src="${e.target.result}">`}
+                        <button class="preview-close" onclick="clearPreview()">✕</button>
+                    </div>
+                `;
+                previewContainer.innerHTML = previewHtml;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        window.clearPreview = function () {
+            fileInput.value = '';
+            previewContainer.innerHTML = '';
+            previewContainer.style.display = 'none';
+        }
+
+        // Helper to convert File to Base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        // Send Logic (Text & Image)
+        sendBtn.addEventListener('click', async () => {
+            const text = chatInput.value.trim();
+            const hasFile = fileInput.files.length > 0;
+
+            if (!text && !hasFile) return;
+
+            const token = ensureAuthOrRedirect();
+            if (!token) return;
+
+            // Handle UI updates
+            let mediaHtml = '';
+            let imageBase64 = null;
+            let imageMime = null;
+
+            if (hasFile) {
+                const file = fileInput.files[0];
+                const previewMedia = previewContainer.querySelector('img, video');
+
+                try {
+                    imageBase64 = await fileToBase64(file);
+                    imageMime = file.type;
+                } catch (e) {
+                    console.error("File read error", e);
+                }
+
+                if (previewMedia) {
+                    const tag = previewMedia.tagName.toLowerCase();
+                    const src = previewMedia.src;
+                    mediaHtml = `<br><div style="margin-top:8px; border-radius:12px; overflow:hidden; max-width:200px;">
+                        <${tag} src="${src}" style="width:100%; display:block;" controls></${tag}>
+                    </div>`;
+                }
+                clearPreview();
+            }
+
+            // Show User Message
+            appendMessage('user', text + mediaHtml);
+            chatInput.value = '';
+            document.getElementById('suggestions').style.display = 'none';
+
+            // Show Loading
+            const loadingDiv = toggleLoading(true);
+
+            // Send to Backend
+            try {
+                const body = {
+                    action: 'assistant_concierge',
+                    text: text
+                };
+                if (imageBase64) {
+                    body.image = imageBase64;
+                    body.image_mime = imageMime;
+                }
+
+                const response = await fetch(`${API_BASE}/ai/process`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) throw new Error('API Error');
+                const data = await response.json();
+
+                // Parse Result
+                let aiResult = data.result;
+                if (typeof aiResult === 'string') {
+                    try {
+                        const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
+                    } catch (e) { }
+                }
+
+                toggleLoading(false, loadingDiv);
+                appendMessage('ai', aiResult.reply || aiResult);
+
+            } catch (err) {
+                console.error(err);
+                toggleLoading(false, loadingDiv);
+                appendMessage('ai', '申し訳ありません。エラーが発生しました。');
+            }
+        });
+
+        function toggleLoading(show, element) {
+            if (show) {
+                const aiDiv = document.createElement('div');
+                aiDiv.className = 'chat-message ai';
+                aiDiv.innerHTML = `
+                    <div class="avatar ai"><img src="/images/misogi-logo-icon.svg" alt="Misogi Avatar"></div>
+                    <div class="bubble"><i class="fas fa-spinner fa-spin"></i> 考え中...</div>
+                `;
+                chatTimeline.appendChild(aiDiv);
+                chatTimeline.scrollTop = chatTimeline.scrollHeight;
+                return aiDiv;
+            } else {
+                if (element) element.remove();
+            }
+        }
+
+        // Mic Interaction (Real)
+        let isRecording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+
+        micBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                // Start Recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data.size > 0) audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); // Chrome default
+                        // Send logic
+                        const token = ensureAuthOrRedirect();
+                        if (!token) return;
+
+                        // Show User Message (Voice placeholder)
+                        appendMessage('user', '（音声データ送信中...）');
+                        const loadingDiv = toggleLoading(true);
+
+                        try {
+                            const base64Audio = await blobToBase64(audioBlob);
+                            const response = await fetch(`${API_BASE}/ai/process`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    action: 'assistant_concierge',
+                                    audio: base64Audio,
+                                    mime_type: 'audio/webm' // Adjust if needed
+                                })
+                            });
+
+                            if (!response.ok) throw new Error('API Error');
+                            const data = await response.json();
+
+                            // Parse
+                            let aiResult = data.result;
+                            if (typeof aiResult === 'string') {
+                                try {
+                                    const jsonMatch = aiResult.match(/\{[\s\S]*\}/);
+                                    if (jsonMatch) aiResult = JSON.parse(jsonMatch[0]);
+                                } catch (e) { }
+                            }
+
+                            toggleLoading(false, loadingDiv);
+                            appendMessage('ai', aiResult.reply || aiResult);
+
+                        } catch (e) {
+                            console.error(e);
+                            toggleLoading(false, loadingDiv);
+                            appendMessage('ai', '音声認識に失敗しました。');
+                        }
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    visualizer.classList.add('active');
+                    micBtn.classList.add('active'); // active class handles red/pulse
+                } catch (e) {
+                    console.error("Mic Access Error", e);
+                    alert("マイクへのアクセスが許可されていません。");
+                }
+            } else {
+                // Stop Recording
+                isRecording = false;
+                visualizer.classList.remove('active');
+                micBtn.classList.remove('active');
+                if (mediaRecorder) mediaRecorder.stop();
+            }
+        });
+
+        // Enter key to send
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendBtn.click();
+        });
+
+    </script>
+</body>
+
+</html>

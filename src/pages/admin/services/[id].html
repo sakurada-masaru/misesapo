@@ -1,0 +1,574 @@
+@layout('layouts.base')
+@json('data/meta/admin_services_title.json', $page_title)
+@json('data/meta/admin_services_body_class.json', $body_class)
+
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
+<!-- AWS Services API -->
+<script src="/js/aws-services-api.js"></script>
+
+<main id="main" class="container admin-service-detail" data-service-id="{{ id }}">
+  <div class="page-header">
+    <a href="/admin/services/" class="back-link">
+      <i class="fas fa-arrow-left"></i> サービス一覧に戻る
+    </a>
+    <h1 class="page-title">{{ title }}</h1>
+  </div>
+
+  <div class="service-detail-card">
+    <div class="service-hero-image">
+      <img id="service-hero-img" src="/{{ image }}" alt="{{ title }}" />
+    </div>
+    <div class="service-detail-card-content">
+      <div class="service-detail-header">
+        <div class="service-info">
+          <h2 class="service-name">{{ title }}</h2>
+          <div class="service-meta">
+            <span class="service-category">{{ category }}</span>
+            <span class="service-id">サービスID: {{ id }}</span>
+          </div>
+        </div>
+        <div class="service-price-section">
+          <div class="service-price-large">{{ price }}</div>
+          <p class="price-note">表示価格は目安です。状況により金額が変動する可能性があります。</p>
+        </div>
+      </div>
+
+      <div class="service-detail-content">
+      <section class="detail-section">
+        <h3 class="section-title">サービス説明</h3>
+        <p class="section-content">{{ description }}</p>
+      </section>
+
+      <section class="detail-section">
+        <h3 class="section-title">問題点</h3>
+        <ul class="problems-list">
+          @foreach $problems
+          <li>{{ value }}</li>
+          @endforeach
+        </ul>
+      </section>
+
+      <section class="detail-section">
+        <h3 class="section-title">解決策・サービス内容</h3>
+        <p class="section-content solution-text">{{ solution }}</p>
+      </section>
+
+      <!-- モーダル表示内容 -->
+      <section class="detail-section" id="modal-sections-section" style="display: none;">
+        <h3 class="section-title">モーダル表示内容（セクション一覧）</h3>
+        <div id="modal-sections-content" class="modal-content-display"></div>
+      </section>
+    </div>
+
+      <div class="service-detail-actions">
+        <a href="/admin/services/" class="btn btn-outline">
+          <i class="fas fa-arrow-left"></i> 一覧に戻る
+        </a>
+        <button class="btn btn-primary" id="preview-modal-btn">
+          <i class="fas fa-eye"></i> モーダルをプレビュー
+        </button>
+        <a href="/admin/services/{{ id }}/edit" class="btn btn-primary">
+          <i class="fas fa-edit"></i> 編集
+        </a>
+        <button class="btn btn-danger" onclick="deleteService(parseInt(document.getElementById('main').dataset.serviceId))">
+          <i class="fas fa-trash"></i> 削除
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+@include('partials.service_item_modal')
+@include('partials.details_modal')
+@include('partials.order_modal')
+@include('partials.cart_added_modal')
+
+  <script>
+    // Load service data and render modal content
+    (function() {
+      async function loadServiceData() {
+        try {
+          const serviceId = parseInt(document.getElementById('main').dataset.serviceId || '0');
+          
+          if (!window.AWSServicesAPI) {
+            console.warn('[AdminServiceDetail] AWS Services API not loaded');
+            return;
+          }
+          
+          const service = await window.AWSServicesAPI.getService(serviceId);
+          
+          if (service) {
+            // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            let sections = service.sections || [];
+            if (!sections.length && (service.forms || service.details)) {
+              // formsとdetailsを統合してsectionsに変換
+              sections = [];
+              if (service.forms && service.forms.length > 0) {
+                sections = sections.concat(service.forms);
+              }
+              if (service.details && service.details.length > 0) {
+                sections = sections.concat(service.details);
+              }
+            }
+            
+            // Render sections
+            if (sections.length > 0) {
+              renderModalContent('modal-sections-content', sections);
+              document.getElementById('modal-sections-section').style.display = 'block';
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load service data:', error);
+        }
+      }
+      
+      function renderModalContent(containerId, sections) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        sections.forEach((sec, idx) => {
+          const sectionDiv = document.createElement('div');
+          sectionDiv.className = 'modal-section';
+          
+          const title = document.createElement('h4');
+          title.className = 'modal-section-title';
+          title.textContent = sec['section-title'] || `セクション ${idx + 1}`;
+          sectionDiv.appendChild(title);
+          
+          const type = (sec['section-type'] || 'radio-text').toLowerCase();
+          const items = sec['section-items'] || [];
+          
+          if (type === 'textarea') {
+            const textareaInfo = document.createElement('div');
+            textareaInfo.className = 'modal-textarea-info';
+            textareaInfo.innerHTML = `
+              <p><strong>プレースホルダー:</strong> ${sec.placeholder || 'なし'}</p>
+              <p><strong>最大文字数:</strong> ${sec.maxLength || '制限なし'}</p>
+              <p><strong>キー:</strong> ${sec.key || 'なし'}</p>
+            `;
+            sectionDiv.appendChild(textareaInfo);
+          } else if (items.length > 0) {
+            const itemsList = document.createElement('ul');
+            itemsList.className = 'modal-items-list';
+            
+            items.forEach(item => {
+              const li = document.createElement('li');
+              li.className = 'modal-item';
+              
+              if (typeof item === 'string') {
+                li.textContent = item;
+              } else {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'modal-item-content';
+                
+                if (item['img-url'] || item.img) {
+                  const img = document.createElement('img');
+                  img.src = '/' + (item['img-url'] || item.img);
+                  img.alt = item.text || '';
+                  img.className = 'modal-item-image';
+                  img.onerror = function() { this.style.display = 'none'; };
+                  itemDiv.appendChild(img);
+                }
+                
+                const text = document.createElement('span');
+                text.textContent = item.text || item;
+                itemDiv.appendChild(text);
+                
+                if (item.countable) {
+                  const countInfo = document.createElement('span');
+                  countInfo.className = 'modal-item-count';
+                  countInfo.textContent = `（数量入力: ${item.unit || ''}）`;
+                  itemDiv.appendChild(countInfo);
+                }
+                
+                li.appendChild(itemDiv);
+              }
+              
+              itemsList.appendChild(li);
+            });
+            
+            sectionDiv.appendChild(itemsList);
+          }
+          
+          if (sec.required !== undefined) {
+            const requiredBadge = document.createElement('span');
+            requiredBadge.className = 'modal-required-badge';
+            requiredBadge.textContent = sec.required ? '必須' : '任意';
+            title.appendChild(requiredBadge);
+          }
+          
+          container.appendChild(sectionDiv);
+        });
+      }
+      
+      loadServiceData();
+    })();
+    
+    // Modal preview functionality
+    (function() {
+      const previewBtn = document.getElementById('preview-modal-btn');
+      if (previewBtn) {
+        previewBtn.addEventListener('click', async function() {
+          try {
+            const serviceId = parseInt(document.getElementById('main').dataset.serviceId || '0');
+            
+            if (!window.AWSServicesAPI) {
+              throw new Error('AWS Services APIが読み込まれていません。');
+            }
+            
+            const service = await window.AWSServicesAPI.getService(serviceId);
+            
+            if (service) {
+              if (window.ModalManager) {
+                window.ModalManager.open('service-modal', service);
+              } else if (window.openModal) {
+                window.openModal(service);
+              } else {
+                alert('モーダル機能が利用できません。app.js または modal_manager.js が読み込まれているか確認してください。');
+              }
+            } else {
+              alert('サービスデータが見つかりませんでした。');
+            }
+          } catch (error) {
+            console.error('Failed to load service data:', error);
+            alert('サービスデータの読み込みに失敗しました: ' + error.message);
+          }
+        });
+      }
+    })();
+    
+    // Image fallback handling
+    (function() {
+      const heroImg = document.getElementById('service-hero-img');
+      if (heroImg) {
+        const defaultImg = '/images/service-300x200.svg';
+        
+        // Check if current image is empty or invalid
+        if (!heroImg.src || heroImg.src.endsWith('/') || heroImg.src.includes('undefined')) {
+          heroImg.src = defaultImg;
+        }
+        
+        // Handle image load error
+        heroImg.addEventListener('error', function() {
+          if (this.src !== defaultImg) {
+            this.src = defaultImg;
+          }
+        });
+      }
+      
+    })();
+    
+    // Edit and delete functions (placeholder)
+    window.editService = function(id) {
+      // TODO: Implement edit functionality
+      alert(`サービスID ${id} の編集機能は実装予定です。`);
+    };
+
+    window.deleteService = async function(id) {
+      if (!confirm(`サービスID ${id} を削除してもよろしいですか？\n\nこの操作は取り消せません。`)) {
+        return;
+      }
+      
+      try {
+        if (!window.AWSServicesAPI) {
+          throw new Error('AWS Services APIが読み込まれていません。');
+        }
+        
+        await window.AWSServicesAPI.deleteService(id);
+        alert(`サービスID ${id} を削除しました。`);
+        // 一覧ページにリダイレクト
+        window.location.href = '/admin/services/';
+      } catch (error) {
+        console.error('Delete service error:', error);
+        alert('削除エラー: ' + error.message);
+      }
+    };
+  </script>
+
+  <style>
+    .admin-service-detail {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f9fafb;
+    }
+    .page-header {
+      margin-bottom: 24px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #6b7280;
+      text-decoration: none;
+      font-size: 0.875rem;
+      margin-bottom: 12px;
+      transition: color 0.2s;
+    }
+    .back-link:hover {
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .service-detail-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    
+    .service-hero-image {
+      width: 100%;
+      height: 400px;
+      overflow: hidden;
+      background: #f9fafb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0;
+    }
+    
+    .service-hero-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .service-detail-card-content {
+      padding: 32px;
+    }
+    .service-detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .service-name {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 12px 0;
+    }
+    .service-meta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .service-category {
+      display: inline-block;
+      padding: 6px 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .service-id {
+      font-size: 0.875rem;
+      color: #9ca3af;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .service-price-section {
+      text-align: right;
+    }
+    .service-price-large {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .price-note {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin: 0;
+      line-height: 1.4;
+    }
+    .service-detail-content {
+      margin-bottom: 32px;
+    }
+    .detail-section {
+      margin-bottom: 32px;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .section-content {
+      font-size: 0.95rem;
+      color: #374151;
+      line-height: 1.8;
+      margin: 0;
+    }
+    .solution-text {
+      padding: 16px;
+      background: #d1fae5;
+      border-radius: 8px;
+      border-left: 4px solid #059669;
+      color: #065f46;
+      font-weight: 500;
+    }
+    .problems-list {
+      margin: 0;
+      padding-left: 24px;
+    }
+    .problems-list li {
+      font-size: 0.95rem;
+      color: #374151;
+      line-height: 1.8;
+      margin-bottom: 8px;
+    }
+    .service-image {
+      margin-top: 16px;
+    }
+    .service-image img {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-content-display {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 24px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-section {
+      margin-bottom: 24px;
+      padding: 20px;
+      border: 2px solid #fce7f3;
+      border-radius: 8px;
+      background: #fef7ff;
+    }
+    .modal-section:last-child {
+      margin-bottom: 0;
+    }
+    .modal-section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .modal-required-badge {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      background: #fee2e2;
+      color: #991b1b;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .modal-items-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .modal-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-item-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .modal-item-image {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-item-count {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-left: auto;
+    }
+    .modal-textarea-info {
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .modal-textarea-info p {
+      margin: 8px 0;
+      font-size: 0.875rem;
+      color: #374151;
+    }
+    .service-detail-actions {
+      display: flex;
+      gap: 12px;
+      padding-top: 24px;
+      border-top: 2px solid #e5e7eb;
+      flex-wrap: wrap;
+    }
+    .service-detail-actions .btn {
+      flex: 1;
+      min-width: 120px;
+    }
+    .btn-danger {
+      background: #dc2626;
+      color: #ffffff;
+      border: 1px solid #dc2626;
+    }
+    .btn-danger:hover {
+      background: #b91c1c;
+      border-color: #b91c1c;
+    }
+    @media (max-width: 768px) {
+      .admin-service-detail {
+        padding: 16px;
+      }
+      .service-detail-card-content {
+        padding: 20px;
+      }
+      
+      .service-hero-image {
+        height: 250px;
+      }
+      .service-detail-header {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .service-price-section {
+        text-align: left;
+      }
+      .service-price-large {
+        font-size: 1.5rem;
+      }
+      .service-detail-actions {
+        flex-direction: column;
+      }
+      .service-detail-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</main>
+

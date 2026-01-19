@@ -1,0 +1,1357 @@
+:root {
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 64px;
+  --topbar-height: 64px;
+}
+
+.admin-users-v2 {
+  display: flex;
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-role .role-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: #e0e7ff;
+  color: #3730a3;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.nav-label {
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+}
+
+.nav-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 8px 12px;
+}
+
+/* メインコンテンツ */
+.main-content {
+  margin-left: var(--sidebar-width);
+  padding: 24px;
+  background: #f9fafb;
+  width: calc(100% - var(--sidebar-width));
+  max-width: none;
+  box-sizing: border-box;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+.sidebar.collapsed~.main-content {
+  margin-left: var(--sidebar-width-collapsed);
+  padding: 24px;
+  background: #f9fafb;
+  width: calc(100% - var(--sidebar-width-collapsed));
+  max-width: none;
+  box-sizing: border-box;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+
+  transition: margin-left 0.3s ease;
+}
+
+/* トップバー */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.topbar-left h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-users {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  min-height: auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.back-link {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  color: #64748b;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* 統計 */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-mini {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.stat-mini-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+}
+
+.stat-mini-icon.blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.stat-mini-icon.orange {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.stat-mini-icon.green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.stat-mini-icon.teal {
+  background: #ccfbf1;
+  color: #0d9488;
+}
+
+.stat-mini-icon.indigo {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.stat-mini-icon.purple {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+.stat-mini-icon.pink {
+  background: #fce7f3;
+  color: #db2777;
+}
+
+.stat-mini-icon.gray {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.stat-mini-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.stat-mini-label {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* フィルター */
+.filter-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 250px;
+  position: relative;
+}
+
+.search-box i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 12px 12px 42px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.filter-options {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-select {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  background: #fff;
+  min-width: 140px;
+}
+
+/* クイックフィルタータグ */
+.filter-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+
+.filter-tag {
+  padding: 6px 14px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.filter-tag:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.filter-tag.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.filter-tag-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-right: 4px;
+  user-select: none;
+}
+
+.filter-tag-separator {
+  width: 1px;
+  height: 16px;
+  background: #e2e8f0;
+  margin: 0 12px;
+}
+
+/* 組織構造レイアウト */
+.organization-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 24px 0;
+}
+
+.office-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.office-section.front-office {
+  border-left: 4px solid #3b82f6;
+  /* 青 */
+}
+
+.office-section.middle-office {
+  border-left: 4px solid #f59e0b;
+  /* オレンジ */
+}
+
+.office-section.back-office {
+  border-left: 4px solid #10b981;
+  /* 緑 */
+}
+
+.office-section.board-of-directors {
+  border-left: 4px solid #8b5cf6;
+  /* 紫 */
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-title i {
+  font-size: 1.25rem;
+}
+
+.departments-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.department-group {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  background: #f9fafb;
+}
+
+.department-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.user-count {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+/* ビュー切り替えボタン */
+.view-toggle-group {
+  display: flex;
+  gap: 4px;
+  margin-right: 12px;
+}
+
+.view-toggle-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.view-toggle-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.view-toggle-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* カードスタイル */
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* カードビュー非表示 */
+.organization-layout.list-view .department-group {
+  display: none;
+}
+
+/* リストスタイル */
+.users-list {
+  display: none;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.users-list.active {
+  display: block;
+}
+
+.users-list table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-list thead {
+  background: #f8fafc;
+}
+
+.users-list th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.users-list td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.users-list tbody tr {
+  transition: background 0.2s ease;
+}
+
+.users-list tbody tr:hover {
+  background: #f8fafc;
+}
+
+.users-list .user-list-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.users-list .user-list-name .user-avatar-large {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+
+.users-list .user-list-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.users-list .user-list-name-text {
+  font-weight: 500;
+  color: #1e293b;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.users-list .user-list-name-text:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.users-list .user-list-id {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.users-list .user-list-email,
+.users-list .user-list-phone {
+  color: #64748b;
+}
+
+.users-list .user-list-jobs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.users-list .user-list-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.users-list .user-list-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.users-list .user-list-actions .btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.users-list .user-list-actions .btn-icon:hover {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+.users-list .user-list-actions .btn-icon.delete:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+/* カードビュー非表示 */
+.users-grid.card-view-hidden {
+  display: none;
+}
+
+.user-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.user-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.user-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.user-avatar-large {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.user-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-card-info .user-name {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.user-card-info .user-name a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.user-card-info .user-name a:hover {
+  color: #3b82f6;
+}
+
+.user-id {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-family: monospace;
+}
+
+.user-card-body {
+  flex: 1;
+  margin-bottom: 12px;
+}
+
+.user-detail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.user-detail i {
+  width: 16px;
+  color: #9ca3af;
+}
+
+.user-card-footer {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.attendance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.attendance-badge i {
+  font-size: 0.7rem;
+}
+
+.attendance-badge.attendance-working {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.attendance-badge.attendance-completed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.attendance-badge.attendance-absent {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.job-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.job-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.user-card-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.user-card-actions .btn-icon {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.user-card-actions .btn-icon:hover {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+.user-card-actions .btn-icon.delete:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.no-departments {
+  text-align: center;
+  color: #9ca3af;
+  padding: 24px;
+  font-size: 0.875rem;
+}
+
+.loading-cell {
+  text-align: center;
+  padding: 48px !important;
+  color: #94a3b8;
+}
+
+/* テーブル表示（後方互換性のため残す） */
+.table-container {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: none;
+  /* 新しいレイアウトでは非表示 */
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #64748b;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.users-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.users-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.user-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.user-name-link {
+  color: #1e293b;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.user-name-link:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.role-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.role-admin {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.role-none {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.role-sales {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.role-office {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.role-staff {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.role-developer {
+  background: #f0f9ff;
+  color: #0c4a6e;
+}
+
+.role-designer {
+  background: #fce7f3;
+  color: #9f1239;
+}
+
+.role-general-affairs {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.role-operation {
+  background: #ddd6fe;
+  color: #5b21b6;
+}
+
+.role-contractor {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.role-accounting {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.role-human-resources {
+  background: #fce7f3;
+  color: #831843;
+}
+
+.role-master {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.role-other {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-active {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-inactive {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.action-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.action-btn.delete:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* ページネーション */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.pagination button {
+  padding: 8px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.pagination button.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ダイアログ */
+.user-dialog,
+.delete-dialog {
+  border: none;
+  border-radius: 16px;
+  padding: 0;
+  max-width: 500px;
+  width: 90vw;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.user-dialog::backdrop,
+.delete-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.dialog-content {
+  padding: 28px;
+  position: relative;
+}
+
+.dialog-content.dialog-sm {
+  text-align: center;
+}
+
+.dialog-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.dialog-content h3 {
+  font-size: 1.25rem;
+  margin: 0 0 24px;
+  color: #1e293b;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field.half {
+  flex: 0 0 calc(50% - 8px);
+}
+
+.form-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.form-field input,
+.form-field select {
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 4px 0 0;
+}
+
+.form-status {
+  margin: 12px 0;
+  font-size: 0.875rem;
+}
+
+.form-status.error {
+  color: #ef4444;
+}
+
+.form-status.success {
+  color: #16a34a;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+/* 出退勤管理セクション */
+.attendance-sections {
+  display: none;
+  /* 出退勤管理セクションは非表示（組織構造レイアウトのみ表示） */
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.attendance-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.attendance-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.attendance-section-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attendance-section-header h2 i {
+  color: var(--primary);
+}
+
+.attendance-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.attendance-count {
+  font-size: 0.875rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.attendance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.attendance-item {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.attendance-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-item.clocked-in {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
+.attendance-item-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.attendance-item-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #ff6b9d);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.attendance-item.clocked-in .attendance-item-avatar {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.attendance-item-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.attendance-item-name {
+  font-weight: 700;
+  color: #111827;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.attendance-item-time {
+  font-size: 0.875rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.attendance-item-time.clocked-in {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.attendance-item-time i {
+  font-size: 0.75rem;
+}
+
+.attendance-button {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-button.clock-in {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #fff;
+}
+
+.attendance-button.clock-in:hover {
+  background: linear-gradient(135deg, #15803d, #16a34a);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+  transform: translateY(-2px);
+}
+
+.attendance-button.clock-out {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: #fff;
+}
+
+.attendance-button.clock-out:hover {
+  background: linear-gradient(135deg, #b91c1c, #dc2626);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  transform: translateY(-2px);
+}
+
+.attendance-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.attendance-button i {
+  font-size: 1.25rem;
+}
+
+.attendance-status-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.attendance-status-badge.working {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.attendance-status-badge.off-duty {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .admin-users {
+    padding: 16px;
+  }
+
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filter-bar {
+    flex-direction: column;
+  }
+
+  .filter-options {
+    flex-wrap: wrap;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
+  .form-field.half {
+    flex: 1;
+  }
+
+  .attendance-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-item {
+    padding: 16px;
+  }
+
+  .attendance-item-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1.1rem;
+  }
+
+  .attendance-button {
+    padding: 14px;
+    font-size: 1rem;
+  }
+}

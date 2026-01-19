@@ -1,0 +1,389 @@
+@layout('layouts.base')
+@json('data/meta/sales_clients_edit_title.json', $title)
+@json('data/meta/sales_clients_edit_body_class.json', $body_class)
+<script src="/js/client_auth.js"></script>
+
+<main id="main" class="container sales-clients-edit">
+  <div class="page-header">
+    <a href="/sales/clients/{{ id }}" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">顧客情報編集</h1>
+  </div>
+
+  <form id="client-form" class="client-form">
+    <input type="hidden" name="id" value="{{ id }}" />
+    
+    <!-- 基本情報 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-building"></i>
+        基本情報
+      </h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label class="form-label">会社名 <span class="required">必須</span></label>
+          <input type="text" class="form-input" name="company_name" value="{{ company_name }}" placeholder="例: 株式会社 Dart Ace" required />
+          <p class="form-hint">会社名を入力してください</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">会社名カナ</label>
+          <input type="text" class="form-input" name="company_name_kana" value="{{ company_name_kana }}" placeholder="例: カブシキガイシャ ダート エース" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">ブランド名</label>
+          <input type="text" class="form-input" name="brand_name" value="{{ brand_name }}" placeholder="例: A's ダーツバー(Darts Bar A's )" />
+        </div>
+        <div class="form-group full-width">
+          <label class="form-label">店舗名 <span class="required">必須</span></label>
+          <input type="text" class="form-input" name="store_name" value="{{ store_name }}" placeholder="例: 日本橋茅場町店" required />
+          <p class="form-hint">店舗名を入力してください</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">店舗数</label>
+          <input type="number" class="form-input" name="store_count" value="{{ store_count }}" placeholder="例: 3" min="0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">ステータス <span class="required">必須</span></label>
+          <select class="form-select" name="status" id="status-select" required>
+            <option value="">選択してください</option>
+            <option value="稼働中">稼働中</option>
+            <option value="休止">休止</option>
+            <option value="契約終了">契約終了</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 担当者情報 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-user"></i>
+        担当者情報
+      </h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">担当者名</label>
+          <input type="text" class="form-input" name="contact_person" value="{{ contact_person }}" placeholder="例: 永井研行" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">メールアドレス <span class="required">必須</span></label>
+          <input type="email" class="form-input" name="email" value="{{ email }}" placeholder="例: info@dart-ace.com" required />
+          <p class="form-hint">連絡先メールアドレスを入力してください</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">営業担当</label>
+          <input type="text" class="form-input" name="sales_rep" value="{{ sales_rep }}" placeholder="例: 正田和輝" readonly />
+          <p class="form-hint">現在ログイン中の営業担当が自動設定されます</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 清掃情報 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-calendar-alt"></i>
+        清掃情報
+      </h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">次回清掃日時</label>
+          <input type="datetime-local" class="form-input" name="next_date" id="next_date" />
+          <p class="form-hint">次回の清掃予定日時を入力してください</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">清掃頻度</label>
+          <select class="form-select" name="cleaning_frequency" id="cleaning-frequency-select">
+            <option value="">選択してください</option>
+            <option value="毎日清掃">毎日清掃</option>
+            <option value="毎週清掃">毎週清掃</option>
+            <option value="毎月清掃">毎月清掃</option>
+            <option value="隔月清掃">隔月清掃</option>
+            <option value="四半期清掃">四半期清掃</option>
+            <option value="年1回清掃">年1回清掃</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- その他情報 -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-link"></i>
+        その他情報
+      </h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label class="form-label">URL</label>
+          <input type="url" class="form-input" name="url" value="{{ url }}" placeholder="例: https://x.gd/AkFdE" />
+          <p class="form-hint">関連するURLがあれば入力してください</p>
+        </div>
+        <div class="form-group full-width">
+          <label class="form-label">メモ</label>
+          <textarea class="form-textarea" name="notes" rows="4" placeholder="顧客に関するメモや注意事項を入力してください">{{ notes }}</textarea>
+          <p class="form-hint">顧客に関する特記事項やメモを入力してください</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- フォームアクション -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" onclick="window.location.href='/sales/clients/{{ id }}'">
+        <i class="fas fa-times"></i>
+        キャンセル
+      </button>
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i>
+        更新する
+      </button>
+    </div>
+  </form>
+
+  <style>
+    .sales-clients-edit {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f9fafb;
+      min-height: 100vh;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #6b7280;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .client-form {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .form-section {
+      margin-bottom: 32px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .form-section:last-of-type {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 24px 0;
+    }
+    .section-title i {
+      color: var(--primary);
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .required {
+      color: #ef4444;
+      font-size: 0.75rem;
+      margin-left: 4px;
+    }
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .form-input[readonly] {
+      background: #f9fafb;
+      cursor: not-allowed;
+    }
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    .form-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid #f3f4f6;
+    }
+    .form-actions .btn {
+      min-width: 140px;
+    }
+    @media (max-width: 768px) {
+      .sales-clients-edit {
+        padding: 16px;
+      }
+      .client-form {
+        padding: 24px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-actions {
+        flex-direction: column-reverse;
+      }
+      .form-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+
+  <script>
+    // Form submission functionality
+    (function() {
+      const form = document.getElementById('client-form');
+      const nextDateInput = document.getElementById('next_date');
+      const statusSelect = document.getElementById('status-select');
+      const cleaningFrequencySelect = document.getElementById('cleaning-frequency-select');
+      
+      // Set initial values from template context
+      const status = '{{ status }}';
+      const cleaningFrequency = '{{ cleaning_frequency }}';
+      
+      if (status && statusSelect) {
+        statusSelect.value = status;
+      }
+      
+      if (cleaningFrequency && cleaningFrequencySelect) {
+        cleaningFrequencySelect.value = cleaningFrequency;
+      }
+      
+      // Convert display date format to datetime-local format
+      function convertDisplayDateToLocal(dateString) {
+        if (!dateString) return '';
+        // Format: "2025年3月19日 13:00"
+        const match = dateString.match(/(\d{4})年(\d{1,2})月(\d{1,2})日\s+(\d{1,2}):(\d{1,2})/);
+        if (!match) return '';
+        
+        const year = match[1];
+        const month = String(match[2]).padStart(2, '0');
+        const day = String(match[3]).padStart(2, '0');
+        const hours = String(match[4]).padStart(2, '0');
+        const minutes = String(match[5]).padStart(2, '0');
+        
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
+      
+      // Set initial next_date value if it exists
+      const nextDateDisplay = '{{ next_date }}';
+      if (nextDateDisplay && nextDateInput) {
+        const localDate = convertDisplayDateToLocal(nextDateDisplay);
+        if (localDate) {
+          nextDateInput.value = localDate;
+        }
+      }
+      
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          // Get form data
+          const formData = new FormData(form);
+          const clientData = {
+            id: formData.get('id'),
+            company_name: formData.get('company_name'),
+            company_name_kana: formData.get('company_name_kana'),
+            brand_name: formData.get('brand_name'),
+            store_name: formData.get('store_name'),
+            contact_person: formData.get('contact_person'),
+            email: formData.get('email'),
+            sales_rep: formData.get('sales_rep'),
+            store_count: formData.get('store_count') || '',
+            status: formData.get('status'),
+            next_date: formData.get('next_date') ? formatDateForDisplay(formData.get('next_date')) : '',
+            cleaning_frequency: formData.get('cleaning_frequency') || '',
+            url: formData.get('url') || '',
+            notes: formData.get('notes') || ''
+          };
+          
+          // TODO: Implement actual submission to backend
+          console.log('Client data:', clientData);
+          
+          // Show success message
+          alert('顧客情報を更新しました。\n（現在はモックです。実際のバックエンド連携は実装予定です。）');
+          
+          // Redirect to client detail page
+          const clientId = formData.get('id');
+          window.location.href = `/sales/clients/${clientId}`;
+        });
+      }
+
+      // Helper function to format datetime-local to display format
+      function formatDateForDisplay(dateTimeString) {
+        if (!dateTimeString) return '';
+        const date = new Date(dateTimeString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}年${month}月${day}日 ${hours}:${minutes}`;
+      }
+    })();
+  </script>
+</main>
+

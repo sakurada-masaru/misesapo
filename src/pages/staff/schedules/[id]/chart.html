@@ -1,0 +1,142 @@
+@layout('layouts.base')
+@json('data/meta/staff_schedule_chart_title.json', $title)
+@json('data/meta/staff_schedule_chart_body_class.json', $body_class)
+
+<link rel="stylesheet" href="/css/staff-schedule-chart.css" />
+<script src="/js/data_utils.js"></script>
+
+<main id="main" class="container staff-schedule-chart">
+  <div class="page-header">
+    <a href="/staff/schedule" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">清掃カルテ</h1>
+  </div>
+
+  <!-- 基本情報セクション -->
+  <section class="chart-section" id="basic-info-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="fas fa-info-circle"></i>
+        基本情報
+      </h2>
+    </div>
+    <div class="section-content">
+      <div class="info-card">
+        <div class="info-row">
+          <span class="info-label">店舗名</span>
+          <span class="info-value" id="store-name">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">ブランド名</span>
+          <span class="info-value" id="brand-name">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">法人名</span>
+          <span class="info-value" id="client-name">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">住所</span>
+          <span class="info-value" id="store-address">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">電話番号</span>
+          <span class="info-value" id="store-phone">-</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 設備セクション -->
+  <section class="chart-section" id="equipment-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="fas fa-tools"></i>
+        設備
+      </h2>
+      <button type="button" class="section-toggle" aria-label="セクションを開閉">
+        <i class="fas fa-chevron-down"></i>
+      </button>
+    </div>
+    <div class="section-content">
+      <div class="equipment-list" id="equipment-list">
+        <div class="empty-state">設備情報がありません</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- サービス内容セクション -->
+  <section class="chart-section" id="services-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="fas fa-list-check"></i>
+        サービス内容
+      </h2>
+      <button type="button" class="section-toggle" aria-label="セクションを開閉">
+        <i class="fas fa-chevron-down"></i>
+      </button>
+    </div>
+    <div class="section-content">
+      <div class="services-list" id="services-list">
+        <div class="empty-state">サービス情報がありません</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 消耗品セクション -->
+  <section class="chart-section" id="consumables-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="fas fa-box"></i>
+        使用消耗品
+      </h2>
+      <button type="button" class="section-toggle" aria-label="セクションを開閉">
+        <i class="fas fa-chevron-down"></i>
+      </button>
+    </div>
+    <div class="section-content">
+      <div class="consumables-list" id="consumables-list">
+        <div class="empty-state">消耗品情報がありません</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 清掃担当者履歴セクション -->
+  <section class="chart-section" id="staff-history-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="fas fa-users"></i>
+        清掃担当者履歴
+      </h2>
+      <button type="button" class="section-toggle" aria-label="セクションを開閉">
+        <i class="fas fa-chevron-down"></i>
+      </button>
+    </div>
+    <div class="section-content">
+      <div class="staff-history-list" id="staff-history-list">
+        <div class="empty-state">担当者履歴がありません</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- メモセクション -->
+  <section class="chart-section" id="notes-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="fas fa-sticky-note"></i>
+        メモ・特記事項
+      </h2>
+      <button type="button" class="section-toggle" aria-label="セクションを開閉">
+        <i class="fas fa-chevron-down"></i>
+      </button>
+    </div>
+    <div class="section-content">
+      <div class="notes-content" id="notes-content">
+        <div class="empty-state">特記事項はありません</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="/js/staff-schedule-chart.js"></script>
+

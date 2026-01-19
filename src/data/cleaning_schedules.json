@@ -1,0 +1,57 @@
+{
+  "schedules": [
+    {
+      "id": 1,
+      "date": "2025-06-17",
+      "time_slot": "23:00-07:00",
+      "order_type": "regular",
+      "detail": {
+        "status": "completed",
+        "status_text": "この日の清掃は完了しています。",
+        "date_text": "2025年6月17日(火)",
+        "items": [
+          {
+            "name": "グリストラップ",
+            "notes": ["マニフェスト発行なし", "床置き型"],
+            "quantity": 2,
+            "unit": null
+          },
+          {
+            "name": "ゴミ回収",
+            "notes": ["不用品/粗大ゴミ"],
+            "quantity": null,
+            "unit": null
+          },
+          {
+            "name": "トイレ洗浄",
+            "notes": ["分解洗浄あり"],
+            "quantity": 2,
+            "unit": null
+          },
+          {
+            "name": "床清掃",
+            "notes": ["床ポリッシャー洗浄/キッチン"],
+            "quantity": null,
+            "unit": null
+          }
+        ],
+        "report_id": 1,
+        "report_url": "/reports/1.html"
+      }
+    },
+    {
+      "id": 2,
+      "date": "2025-11-13",
+      "time_slot": "13:00-16:00",
+      "order_type": "spot",
+      "detail": {}
+    },
+    {
+      "id": 3,
+      "date": "2025-11-20",
+      "time_slot": "17:00-19:00",
+      "order_type": "regular",
+      "detail": {}
+    }
+  ]
+}

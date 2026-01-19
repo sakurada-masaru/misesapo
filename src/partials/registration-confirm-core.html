@@ -1,0 +1,78 @@
+<p class="warn">内容に間違いがないかご確認ください。</p>
+
+<section id="confirm" class="stack lg confirm-section"></section>
+
+<script>
+  (function(){
+    const params = new URLSearchParams(location.search);
+    const out = document.getElementById('confirm');
+
+    // group all stores[*] by index
+    const storeMap = new Map();
+    for (const [k,v] of params.entries()){
+      const m = k.match(/^stores\[(\d+)\]\[(.+)\]$/);
+      if (!m) continue;
+      const idx = m[1];
+      const field = m[2];
+      if (!storeMap.has(idx)) storeMap.set(idx, {});
+      storeMap.get(idx)[field] = v;
+    }
+
+    function locked(label, text){
+      const ph = text && String(text).trim() ? String(text) : '—';
+      return `<div class="group">`+
+               `<label class="label">${label}</label>`+
+               `<input class="input input-locked" placeholder="${ph.replace(/"/g,'&quot;')}" disabled />`+
+             `</div>`;
+    }
+
+    let html = '';
+    storeMap.forEach((s, idx) => {
+      html += `<h3 class=\"section-title\" style=\"margin:8px 0 6px;\">店舗 ${idx}</h3>`;
+      html += locked('店舗名', s['store-name']);
+      html += locked('店舗カナ', s['store-kana']);
+      html += locked('電話番号', s['phone']);
+      html += locked('担当者名', s['contact-person']);
+      html += locked('統括管理責任者', s['general-manager']);
+      html += locked('衛生管理責任者', s['hygiene-manager']);
+      html += locked('防火管理責任者', s['fire-manager']);
+      html += locked('食品衛生責任者', s['food-sanitation-manager']);
+      html += locked('郵便番号', ((s['postal-code1']||'') + (s['postal-code2']? '-' + s['postal-code2'] : '')).trim());
+      html += locked('住所', s['address']);
+      html += locked('建物名', s['building-name']);
+      html += locked('店舗メール', s['store-email']);
+      html += locked('営業時間', s['business-hours']);
+      html += locked('定休日', s['holidays']);
+      html += locked('清掃可能時間', s['cleaning-time']);
+      html += locked('業態', s['business-category']);
+      html += locked('築年数', s['building-age']);
+      html += locked('営業年数', s['business-years']);
+      html += locked('店舗の広さ', s['store-size']);
+      html += locked('天井の高さ', s['ceiling-height']);
+      html += locked('シンク有無', s['sink-available']);
+      html += locked('駐車場', s['parking']);
+      html += locked('鍵の受け渡し', s['key-handover']);
+      html += locked('鍵の詳細', s['key-details']);
+      html += locked('通知', s['notifications']);
+      html += locked('メールマガジン', s['newsletter']);
+      html += `<div class=\"hr\"></div>`;
+    });
+
+    if (html === '') html = '<p class="small">店舗データが見つかりませんでした。</p>';
+    out.innerHTML = html;
+
+    function bindFinalSubmit(){
+      const btn = document.getElementById('final-submit');
+      if (!btn) return;
+      btn.addEventListener('click', function(){
+        // 実装時はPOST送信。モックでは完了ページに遷移。
+        location.href = '/registration/complete.html';
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bindFinalSubmit);
+    } else {
+      bindFinalSubmit();
+    }
+  })();
+</script>

@@ -1,0 +1,282 @@
+@layout('layouts.admin')
+@json('data/meta/admin_users_title.json', $title)
+@json('data/meta/admin_users_body_class.json', $body_class)
+
+<style>
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
+<link rel="stylesheet" href="/css/admin-users.css" />
+
+<main id="main" class="admin-users-v2">
+  @include('partials.admin-sidebar')
+  <!-- メインコンテンツ -->
+  <div class="main-content">
+    <!-- トップバー -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>ユーザー管理</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-outline btn-sm" id="refresh-btn" style="margin-right: 12px;"
+          onclick="window.location.reload()">
+          <i class="fas fa-sync-alt"></i> 更新
+        </button>
+        <div class="view-toggle-group">
+          <button class="btn btn-icon view-toggle-btn active" id="view-toggle-card" title="カード表示" data-view="card">
+            <i class="fas fa-th"></i>
+          </button>
+          <button class="btn btn-icon view-toggle-btn" id="view-toggle-list" title="リスト表示" data-view="list">
+            <i class="fas fa-list"></i>
+          </button>
+        </div>
+        <button class="btn btn-primary" id="add-user-btn">
+          <i class="fas fa-plus"></i> 新規ユーザー登録
+        </button>
+      </div>
+    </header>
+
+    <!-- 統計カード -->
+    <div class="stats-row">
+      <div class="stat-mini">
+        <div class="stat-mini-icon blue"><i class="fas fa-users"></i></div>
+        <div class="stat-mini-body">
+          <div class="stat-mini-value" id="stat-total">-</div>
+          <div class="stat-mini-label">総ユーザー</div>
+        </div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon green"><i class="fas fa-sign-in-alt"></i></div>
+        <div class="stat-mini-body">
+          <div class="stat-mini-value" id="stat-clocked-in">-</div>
+          <div class="stat-mini-label">出勤中</div>
+        </div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon orange"><i class="fas fa-sign-out-alt"></i></div>
+        <div class="stat-mini-body">
+          <div class="stat-mini-value" id="stat-clocked-out">-</div>
+          <div class="stat-mini-label">本日退勤済</div>
+        </div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon purple"><i class="fas fa-file-alt"></i></div>
+        <div class="stat-mini-body">
+          <div class="stat-mini-value" id="stat-reports">-</div>
+          <div class="stat-mini-label">日報提出済</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- フィルター -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="search-input" placeholder="名前、メールで検索..." class="search-input" />
+      </div>
+      <div class="filter-options">
+        <select class="filter-select" id="role-filter">
+          <option value="">すべてのロール</option>
+          <option value="admin">管理者</option>
+          <option value="staff">一般</option>
+        </select>
+        <select class="filter-select" id="department-filter">
+          <option value="">すべての部署</option>
+          <!-- 部署フィルターはJavaScriptで動的に生成されます -->
+        </select>
+        <select class="filter-select" id="status-filter">
+          <option value="">すべてのステータス</option>
+          <option value="active">有効</option>
+          <option value="inactive">無効</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" id="reset-filters">
+          <i class="fas fa-undo"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-tags-row" id="filter-tags-row">
+      <div class="filter-tag active" data-type="all">全て</div>
+
+      <div class="filter-tag-separator"></div>
+      <span class="filter-tag-label">部署：</span>
+      <div class="filter-tag" data-type="dept" data-value="本部">本部</div>
+      <div class="filter-tag" data-type="dept" data-value="営業部">営業部</div>
+      <div class="filter-tag" data-type="dept" data-value="財務経理部">財務経理部</div>
+      <div class="filter-tag" data-type="dept" data-value="開発">開発</div>
+      <div class="filter-tag" data-type="dept" data-value="人事部">人事</div>
+
+      <div class="filter-tag-separator"></div>
+      <span class="filter-tag-label">出退勤：</span>
+      <div class="filter-tag" data-type="attendance" data-value="working">出勤</div>
+      <div class="filter-tag" data-type="attendance" data-value="off">退勤</div>
+
+      <div class="filter-tag-separator"></div>
+      <span class="filter-tag-label">日報：</span>
+      <div class="filter-tag" data-type="report" data-value="submitted">提出</div>
+      <div class="filter-tag" data-type="report" data-value="missing">未提出</div>
+    </div>
+
+    <!-- 組織構造レイアウト（部署ベース） -->
+    <div class="organization-layout" id="organization-layout">
+      <div class="loading-cell" id="loading-users">
+        <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+      </div>
+
+      <!-- 部署ごとのコンテナ（動的に生成されます） -->
+      <div class="departments-container" id="departments-container">
+        <!-- 部署が動的に追加されます -->
+      </div>
+    </div>
+
+    <!-- 新規/編集モーダル -->
+    <dialog id="user-dialog" class="user-dialog">
+      <div class="dialog-content">
+        <button type="button" class="dialog-close" onclick="document.getElementById('user-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+        <h3 id="dialog-title">新規ユーザー登録</h3>
+        <form id="user-form" method="dialog">
+          <input type="hidden" id="user-id" name="id">
+          <div class="form-row">
+            <div class="form-field">
+              <label for="user-name">名前 <span class="required">*</span></label>
+              <input type="text" id="user-name" name="name" required placeholder="例: 山田太郎">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field half">
+              <label for="user-email">メールアドレス <span class="required">*</span></label>
+              <input type="email" id="user-email" name="email" required placeholder="yamada.taro@example.com">
+              <small class="form-hint">現状は個人メールアドレスも使用可能です（将来的には企業用メールアドレスへの移行を推奨）</small>
+            </div>
+            <div class="form-field half">
+              <label for="user-phone">電話番号</label>
+              <input type="tel" id="user-phone" name="phone" placeholder="090-1234-5678">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field half">
+              <label for="user-role">ロール <span class="required">*</span></label>
+              <select id="user-role" name="role" required>
+                <option value="">選択してください</option>
+                <option value="admin">管理者</option>
+                <option value="headquarters">本部</option>
+                <option value="staff">なし</option>
+              </select>
+              <small class="form-hint">管理ダッシュボードへのアクセス権限を表します</small>
+            </div>
+            <div class="form-field half">
+              <label for="user-department">部署</label>
+              <select id="user-department" name="department">
+                <option value="">選択してください</option>
+                <option value="運営本部">運営本部</option>
+                <option value="組織運営本部">組織運営本部</option>
+                <option value="経営管理本部">経営管理本部</option>
+                <option value="営業部">営業部</option>
+                <option value="開発部">開発部</option>
+                <option value="人事部">人事部</option>
+                <option value="財務経理部">財務経理部</option>
+                <option value="総務部">総務部</option>
+                <option value="清掃事業部">清掃事業部</option>
+              </select>
+              <small class="form-hint">ユーザー管理ページでカテゴリ分けするために使用します</small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field full">
+              <label for="user-job">担当業務</label>
+              <input type="text" id="user-job" name="job" placeholder="例: FS営業・清掃、システム開発・プログラミング">
+              <small class="form-hint">ユーザーカードに表示されるバッジ（ステータス）です。複数の業務は「・」で区切ってください</small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field half">
+              <label for="user-status">ステータス</label>
+              <select id="user-status" name="status">
+                <option value="active">有効</option>
+                <option value="inactive">無効</option>
+              </select>
+            </div>
+            <div class="form-field half">
+              <label for="user-language">言語 / Language</label>
+              <select id="user-language" name="language">
+                <option value="ja">日本語</option>
+                <option value="pt">Português (ポルトガル語)</option>
+                <option value="en">English (英語)</option>
+              </select>
+              <small class="form-hint">アプリの表示言語を設定します</small>
+            </div>
+          </div>
+          <div class="form-row" id="password-row">
+            <div class="form-field">
+              <label for="user-password">パスワード <span class="required" id="password-required">*</span></label>
+              <input type="password" id="user-password" name="password" placeholder="8文字以上">
+              <p class="form-hint">編集時は空欄で変更なし</p>
+            </div>
+          </div>
+          <div class="form-status" id="form-status"></div>
+          <div class="dialog-actions">
+            <button type="button" class="btn btn-secondary"
+              onclick="document.getElementById('user-dialog').close()">キャンセル</button>
+            <button type="submit" class="btn btn-primary" id="submit-btn">保存</button>
+          </div>
+        </form>
+      </div>
+  </div>
+  </dialog>
+
+  <!-- 日報詳細モーダル -->
+  <dialog id="daily-report-dialog" class="user-dialog">
+    <div class="dialog-content">
+      <button type="button" class="dialog-close" onclick="document.getElementById('daily-report-dialog').close()">
+        <i class="fas fa-times"></i>
+      </button>
+      <h3 id="daily-report-title">日報詳細</h3>
+      <div id="daily-report-details" class="daily-report-content">
+        <!-- JSで内容が挿入されます -->
+        <p>読み込み中...</p>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary"
+          onclick="document.getElementById('daily-report-dialog').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 削除確認 -->
+  <dialog id="delete-dialog" class="delete-dialog">
+    <div class="dialog-content dialog-sm">
+      <h3>削除確認</h3>
+      <p>このユーザーを削除しますか？<br>この操作は取り消せません。</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary"
+          onclick="document.getElementById('delete-dialog').close()">キャンセル</button>
+        <button type="button" class="btn btn-danger" id="confirm-delete">削除</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 一括ロール割り当て確認 -->
+  <dialog id="bulk-role-dialog" class="delete-dialog">
+    <div class="dialog-content dialog-sm">
+      <h3>一括ロール割り当て</h3>
+      <p id="bulk-role-message">選択したユーザーを<span id="bulk-role-name"></span>に設定しますか？</p>
+      <div id="bulk-role-users-list"
+        style="max-height: 200px; overflow-y: auto; margin: 16px 0; padding: 12px; background: #f9fafb; border-radius: 8px;">
+        <!-- ユーザーリストがここに表示されます -->
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary"
+          onclick="document.getElementById('bulk-role-dialog').close()">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="confirm-bulk-role">設定する</button>
+      </div>
+    </div>
+  </dialog>
+  </div>
+</main>
+
+<script src="/js/admin-users.js"></script>

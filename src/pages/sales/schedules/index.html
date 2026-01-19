@@ -1,0 +1,1066 @@
+@layout('layouts.base')
+@json('data/meta/sales_schedules_title.json', $title)
+@json('data/meta/sales_schedules_body_class.json', $body_class)
+
+<link rel="stylesheet" href="/css/sales-schedules.css" />
+<link rel="stylesheet" href="/css/sales-clients.css" />
+<link rel="stylesheet" href="/css/staff-mypage-inline.css" />
+<script src="/js/data_utils.js"></script>
+<script src="/js/aws-services-api.js"></script>
+<style>
+  .page-title-block {
+    display: flex;
+    margin: 12px 0 10px;
+  }
+
+  /* Modal Form Styles Override */
+  .schedule-dialog .dialog-content {
+    max-width: 800px;
+    width: 95%;
+    max-height: 90vh;
+    max-height: 90dvh;
+    /* Mobile friendly */
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    /* Ensure rounded corners */
+  }
+
+  .schedule-dialog h3 {
+    padding: 12px 16px;
+    margin: 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 1.1rem;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 10;
+    flex-shrink: 0;
+    /* Prevent shrinking */
+  }
+
+  .schedule-dialog form {
+    padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+    -webkit-overflow-scrolling: touch;
+    /* iOS smooth scrolling */
+    overscroll-behavior: contain;
+    /* Prevent body scroll chaining */
+  }
+
+  .dialog-actions {
+    padding: 12px 16px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+  }
+
+  #calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: #e2e8f0;
+    border: 1px solid #e2e8f0;
+  }
+
+  .calendar-day {
+    background: #fff;
+    min-height: 100px;
+    padding: 4px;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .calendar-day.empty {
+    background: #f8fafc;
+    cursor: default;
+  }
+
+  .hierarchy-section {
+    margin-bottom: 20px;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .hierarchy-header {
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+  }
+
+  .request-basic-info-section {
+    background: #fff;
+    border: 2px solid #ff679c;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 20px;
+  }
+
+  .intake-category {
+    margin-bottom: 16px;
+    background: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .intake-category-title {
+    font-weight: 600;
+    color: #334155;
+    border-bottom: 2px solid #cbd5e1;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+  }
+
+  /* Filter Pills */
+  .filter-pill {
+    cursor: pointer;
+  }
+
+  .filter-pill input {
+    display: none;
+  }
+
+  .filter-pill span {
+    display: inline-block;
+    padding: 6px 12px;
+    background: #f1f5f9;
+    color: #64748b;
+    border-radius: 999px;
+    font-size: 0.85rem;
+  }
+
+  /* Refactored Modal Styles */
+  .modal-dialog-refactored {
+    width: 95%;
+    max-width: 800px;
+    height: 90vh;
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    background: white;
+  }
+
+  .modal-dialog-refactored::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .schedule-label.label-draft {
+    /* Gray */
+    border-color: #e5e7eb;
+    background: #f3f4f6;
+    color: #4b5563;
+  }
+
+  /* --- Mobile Optimization --- */
+  @media (max-width: 600px) {
+
+    /* Make modal fullscreen on mobile */
+    .schedule-dialog .dialog-content,
+    .modal-dialog-refactored {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      border-radius: 0 !important;
+      margin: 0;
+    }
+
+    /* Stack AI Buttons & Make them bigger */
+    .ai-assistant-section .d-flex.gap-2 {
+      flex-direction: column;
+    }
+
+    .ai-assistant-section button {
+      width: 100%;
+      padding: 12px !important;
+      font-size: 1rem !important;
+      /* Easy to tap */
+      margin-bottom: 8px;
+    }
+
+    /* Improve Form Inputs for Touch */
+    input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    select,
+    textarea {
+      font-size: 16px !important;
+      /* Prevent iOS Zoom */
+      padding: 10px !important;
+    }
+
+    /* Adjust Modal Header/Body Padding */
+    .modal-header,
+    .modal-body-scroll {
+      padding: 12px !important;
+    }
+
+    /* Hide less critical columns in tables if needed (not applicable here directly but good practice) */
+  }
+</style>
+
+<main id="main" class="container sales-schedules" style="padding-bottom: 80px; margin-bottom: 80px;">
+  <div class="page-header">
+    <div class="header-actions">
+      <!-- Default View is List now -->
+      <button type="button" class="btn-icon" id="view-toggle" title="カレンダー表示">
+        <i class="fas fa-calendar"></i>
+      </button>
+      <button type="button" class="btn btn-primary btn-sm" id="add-schedule-btn">
+        <i class="fas fa-plus"></i> 新規依頼書作成
+      </button>
+    </div>
+  </div>
+
+  <!-- 新規案件アラート -->
+  <div class="new-project-alert hidden" id="draft-alert">
+    <div class="new-project-alert-icon">
+      <i class="fas fa-clock"></i>
+    </div>
+    <div class="new-project-alert-content">
+      <div class="new-project-alert-title">未アサインの依頼書</div>
+      <div class="new-project-alert-text" id="draft-alert-text">担当者未定の依頼書が<span id="draft-count">0</span>件あります。</div>
+    </div>
+    <button class="new-project-alert-btn" onclick="filterNewProjects()">
+      <i class="fas fa-list"></i> 確認する
+    </button>
+  </div>
+
+  <div class="page-title-block">
+    <button class="client-tab active" type="button" aria-label="依頼書管理">
+      <i class="fas fa-file-invoice"></i>
+      <span>依頼書管理 (案件リスト)</span>
+    </button>
+  </div>
+
+  <!-- フィルター -->
+  <div class="filter-section">
+    <div class="action-bar" style="justify-content: flex-start; gap: 16px;">
+      <div class="filter-group">
+        <label><i class="fas fa-filter"></i> ステータス</label>
+        <select id="status-filter" onchange="filterAndRender()"
+          style="border:1px solid #e5e7eb; border-radius:8px; padding:6px 10px;">
+          <option value="">すべて</option>
+          <option value="draft">未確定（下書き）</option>
+          <option value="scheduled">確定済み</option>
+          <option value="in_progress">作業中</option>
+          <option value="completed">完了</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label><i class="fas fa-calendar-alt"></i> 年月/期間</label>
+        <select id="date-range-filter" onchange="filterAndRender()"
+          style="border:1px solid #e5e7eb; border-radius:8px; padding:6px 10px;">
+          <option value="future" selected>今後の予定</option>
+          <option value="past">過去の履歴</option>
+          <option value="all">すべて表示</option>
+        </select>
+      </div>
+      <!-- Hidden Worker/Store filters can be managed here too if needed -->
+    </div>
+  </div>
+
+  <!-- リスト表示 (Default Hidden) -->
+  <div class="schedule-list-view" id="list-view" style="display:none;">
+    <div class="schedule-card-list" id="schedule-card-list">
+      <div class="loading-state">
+        <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+      </div>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- カレンダー表示 (Default Visible) -->
+  <div class="schedule-calendar-view" id="calendar-view">
+    <div class="calendar-header">
+      <button type="button" class="btn btn-icon" id="prev-month">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <h2 id="calendar-month">2025年11月</h2>
+      <button type="button" class="btn btn-icon" id="next-month">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+    <div class="calendar-weekdays">
+      <div class="calendar-day-header sun">日</div>
+      <div class="calendar-day-header">月</div>
+      <div class="calendar-day-header">火</div>
+      <div class="calendar-day-header">水</div>
+      <div class="calendar-day-header">木</div>
+      <div class="calendar-day-header">金</div>
+      <div class="calendar-day-header sat">土</div>
+    </div>
+    <div class="calendar-grid" id="calendar-days"></div>
+    <div id="print-layout-container" style="display:none;"></div>
+  </div>
+</main>
+
+<!-- クイックアクションドック -->
+<nav class="quick-actions-dock" aria-label="クイックアクション">
+  <a href="/sales/mypage" class="dock-item">
+    <i class="fas fa-chart-line"></i>
+    <span>アクティビティ</span>
+  </a>
+  <a href="/sales/dashboard" class="dock-item">
+    <i class="fas fa-user-plus"></i>
+    <span>顧客</span>
+  </a>
+  <a href="/sales/schedules" class="dock-item is-active">
+    <i class="fas fa-file-invoice"></i>
+    <span>依頼書作成</span>
+  </a>
+  <!-- 日次依頼一覧モーダル -->
+  <dialog id="daily-schedule-dialog" class="schedule-dialog">
+    <div class="dialog-content">
+      <h3>
+        <span id="daily-dialog-date"></span> の依頼一覧
+        <button type="button" class="close-btn" onclick="document.getElementById('daily-schedule-dialog').close()"
+          style="float:right; border:none; background:none; font-size:1.2rem; cursor:pointer;">&times;</button>
+      </h3>
+      <div id="daily-schedule-list" style="padding:16px; overflow-y:auto; flex:1;">
+        <!-- Schedules will be rendered here -->
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary"
+          onclick="document.getElementById('daily-schedule-dialog').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
+  <dialog id="print-preview-dialog"
+    style="border:none;border-radius:12px;padding:0;width:95%;max-width:900px;height:90vh;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="display:flex;flex-direction:column;height:100%;">
+      <div
+        style="padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;background:#fff;">
+        <h3 style="margin:0;font-size:1.1rem;font-weight:600;color:#333;">依頼書プレビュー</h3>
+        <button onclick="document.getElementById('print-preview-dialog').close()"
+          style="border:none;background:none;font-size:1.5rem;cursor:pointer;color:#666;line-height:1;">&times;</button>
+      </div>
+      <!-- Iframe Container -->
+      <div style="flex:1;background:#525659;padding:0;overflow:hidden;position:relative;">
+        <iframe id="print-preview-frame" style="width:100%;height:100%;border:none;display:block;"></iframe>
+      </div>
+      <div
+        style="padding:16px;display:flex;justify-content:flex-end;gap:12px;border-top:1px solid #eee;background:#fff;">
+        <button class="btn btn-secondary" onclick="document.getElementById('print-preview-dialog').close()">閉じる</button>
+        <button class="btn btn-primary" onclick="document.getElementById('print-preview-frame').contentWindow.print()">
+          <i class="fas fa-print"></i> 印刷する
+        </button>
+      </div>
+    </div>
+  </dialog>
+  <dialog id="schedule-dialog" class="modal-dialog-refactored">
+    <div class="modal-content-refactored" style="height:100%; display:flex; flex-direction:column; background:#fff;">
+      <div class="modal-header"
+        style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+        <h5 class="modal-title" id="dialog-title" style="margin:0; font-weight:bold;">依頼書作成</h5>
+        <button type="button" class="btn-close" onclick="document.getElementById('schedule-dialog').close()"
+          style="background:none; border:none; font-size:1.5rem;">&times;</button>
+      </div>
+
+      <form id="schedule-form" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+        <input type="hidden" id="schedule-id">
+        <input type="hidden" id="schedule-store"> <!-- Holds Store ID -->
+
+        <div class="modal-body-scroll" style="flex:1; overflow-y:auto; padding:20px; background:#f8fafc;">
+
+          <!-- AI Assistant for Request Form -->
+          <div class="step-section ai-assistant-section"
+            style="border: 2px solid #ebf4ff; background: #f0f7ff; margin-bottom: 24px; padding: 15px; border-radius: 8px;">
+            <div class="step-header">
+              <span class="step-badge" style="background: #2563eb;">AI</span>
+              <span class="step-title" style="color: #2563eb;">AI依頼書アシスタント（自動入力）</span>
+            </div>
+            <div class="step-content">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="form-label small">打合せメモ / ヒアリング内容をここに貼り付けてください</label>
+                <textarea class="form-control form-control-sm" id="ai-request-memo" rows="3"
+                  placeholder="例：サクラカフェの田中さんと商談。キッチンの換気扇と床の定期清掃を月1回で希望。厨房は油汚れが強い。来月10日の午前中で調整。"></textarea>
+              </div>
+              <div class="d-flex gap-2" style="margin-bottom: 12px;">
+                <button type="button" class="btn btn-primary btn-sm" id="ai-request-suggest-btn"
+                  style="background: #2563eb; border: none; flex: 1;">
+                  <i class="fas fa-magic"></i> メモから自動入力
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-sm" id="ai-voice-record-btn"
+                  style="border: 1px solid #2563eb; color: #2563eb; flex: 1;">
+                  <i class="fas fa-microphone"></i> 音声で録音・解析
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" id="ai-voice-stop-btn"
+                  style="display: none; flex: 1;">
+                  <i class="fas fa-stop"></i> 録音停止（解析へ）
+                </button>
+              </div>
+
+              <div id="ai-voice-status"
+                style="display: none; margin-bottom: 12px; padding: 10px; background: #fee2e2; border-radius: 6px; border: 1px solid #fecaca; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px; color: #dc2626; font-weight: bold;">
+                  <span class="recording-dot"></span>
+                  録音中... <span id="ai-voice-timer">00:00</span>
+                </div>
+                <div class="voice-wave">
+                  <span></span><span></span><span></span><span></span><span></span>
+                </div>
+              </div>
+
+              <div id="ai-request-status"
+                style="display: none; margin-top: 8px; font-size: 0.8rem; color: #1e40af; align-items: center; gap: 6px;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span id="ai-status-text">AIが依頼書の内容を解析中...</span>
+              </div>
+
+              <style>
+                .recording-dot {
+                  width: 10px;
+                  height: 10px;
+                  background: #dc2626;
+                  border-radius: 50%;
+                  display: inline-block;
+                  animation: blink 1s infinite;
+                }
+
+                @keyframes blink {
+                  0% {
+                    opacity: 1;
+                  }
+
+                  50% {
+                    opacity: 0.3;
+                  }
+
+                  100% {
+                    opacity: 1;
+                  }
+                }
+
+                .voice-wave {
+                  display: flex;
+                  align-items: center;
+                  gap: 3px;
+                }
+
+                .voice-wave span {
+                  width: 3px;
+                  height: 15px;
+                  background: #dc2626;
+                  border-radius: 3px;
+                  animation: wave 1.2s infinite ease-in-out;
+                }
+
+                .voice-wave span:nth-child(2) {
+                  animation-delay: 0.1s;
+                }
+
+                .voice-wave span:nth-child(3) {
+                  animation-delay: 0.2s;
+                }
+
+                .voice-wave span:nth-child(4) {
+                  animation-delay: 0.3s;
+                }
+
+                .voice-wave span:nth-child(5) {
+                  animation-delay: 0.4s;
+                }
+
+                @keyframes wave {
+
+                  0%,
+                  100% {
+                    height: 5px;
+                  }
+
+                  50% {
+                    height: 15px;
+                  }
+                }
+              </style>
+            </div>
+          </div>
+
+
+          <!-- STEP 1: Customer Selection -->
+          <div class="step-section">
+            <div class="step-header">
+              <span class="step-badge">Step 1</span>
+              <span class="step-title">顧客選択（基本情報）</span>
+            </div>
+            <div class="step-content">
+              <div class="row g-2" style="display:flex; flex-wrap:wrap; gap:10px;">
+                <div class="col-md-4" style="flex:1; min-width:200px;">
+                  <label class="form-label small">法人名 <span style="color:red; font-size:0.7em;">必須</span></label>
+                  <select id="modal-select-client" class="form-select form-select-sm" required
+                    style="width:100%; padding:6px; border-radius:4px; border:1px solid #ccc;">
+                    <option value="">ロード中...</option>
+                  </select>
+                </div>
+                <div class="col-md-4" style="flex:1; min-width:200px;">
+                  <label class="form-label small">ブランド名</label>
+                  <select id="modal-select-brand" class="form-select form-select-sm" disabled required
+                    style="width:100%; padding:6px; border-radius:4px; border:1px solid #ccc;">
+                    <option value="">先に法人を選択</option>
+                  </select>
+                </div>
+                <div class="col-md-4" style="flex:1; min-width:200px;">
+                  <label class="form-label small">店舗名</label>
+                  <select id="modal-select-store" class="form-select form-select-sm" disabled required
+                    style="width:100%; padding:6px; border-radius:4px; border:1px solid #ccc;">
+                    <option value="">先にブランドを選択</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Selected Store Info Display -->
+              <div id="modal-store-info-display" class="mt-3 p-2 bg-light border rounded"
+                style="display:none; margin-top:10px; padding:10px; background:#f1f5f9; border-radius:6px;">
+                <div class="d-flex align-items-center text-muted small" style="font-size:0.9rem; color:#64748b;">
+                  <i class="fas fa-map-marker-alt me-2"></i> <span id="modal-display-address">-</span>
+                  <span class="mx-2" style="margin:0 10px;">|</span>
+                  <i class="fas fa-phone me-2"></i> <span id="modal-display-phone">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2: Detail Info (HACCP & Karte) -->
+          <div class="step-section">
+            <div class="step-header">
+              <span class="step-badge">Step 2</span>
+              <span class="step-title">詳細情報登録（HACCP・カルテ）</span>
+            </div>
+            <div class="step-content">
+              <!-- GUIDELINE ACCORDION -->
+              <details class="mb-3" style="border:1px solid #bfdbfe; border-radius:6px; background:#eff6ff;">
+                <summary style="padding:10px; cursor:pointer; font-weight:bold; color:#1d4ed8;">【参考】ミセサポ清掃基本原則・基準ガイド
+                </summary>
+                <div class="p-3 bg-white small"
+                  style="border-top:1px solid #bfdbfe; max-height:300px; overflow-y:auto; line-height:1.6;">
+                  <strong>■ ミセサポ清掃基本原則</strong><br>
+                  見た目の清潔さだけでなく、食品衛生上の危害要因を除去することを目的とする。<br>
+                  清掃は「洗浄 → 消毒 → 乾燥」を原則とする。清掃結果は必ず記録し、検証可能な状態を保つ。<br>
+                  HACCPの工程管理を阻害しない清掃を徹底する。<br><br>
+
+                  <strong>■ エリア別清掃基準</strong><br>
+                  <span style="color:#0369a1;font-weight:bold;">4-1. 調理エリア（厨房）</span><br>
+                  対象：床・壁・天井、調理台、排水溝、グリストラップ周辺<br>
+                  基準：油脂、食品残渣、粉塵の完全除去。水分の残留がない状態を維持。<br><br>
+
+                  <span style="color:#0369a1;font-weight:bold;">4-2. 厨房機器・設備</span><br>
+                  対象：冷蔵・冷凍庫、加熱調理機器、製氷機<br>
+                  留意点：温度管理機能を損なわない。分解可能部位は分解洗浄。内部残留防止。<br><br>
+
+                  <span style="color:#0369a1;font-weight:bold;">4-3. 手洗い設備・トイレ</span><br>
+                  基準：便器、床、ドアノブ、蛇口の洗浄・消毒。石けん・消毒剤補充。<br><br>
+
+                  <span style="color:#0369a1;font-weight:bold;">4-4. ねずみ・昆虫対策</span><br>
+                  重点箇所：排水溝、隙間、水溜まり。IPMの一環として位置付ける。<br><br>
+
+                  <strong>■ 清掃頻度基準</strong><br>
+                  日常清掃（毎日）、定期清掃（月1回以上）、分解・重点清掃（四半期〜年1回）
+                </div>
+              </details>
+
+              <!-- HACCP -->
+              <h6 class="section-sub-title"
+                style="font-weight:bold; color:#555; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:10px;">
+                <i class="fas fa-check-square"></i> HACCP衛生管理チェック
+              </h6>
+              <div class="mb-3">
+                <label class="form-label small text-muted"
+                  style="display:block; margin-bottom:5px;">重点管理項目（実施事項）</label>
+                <div class="d-flex flex-wrap gap-2" style="display:flex; flex-wrap:wrap; gap:10px;">
+                  <label class="checkbox-inline"><input type="checkbox" name="haccp_instruction[]" value="手洗い・身だしなみ">
+                    手洗い</label>
+                  <label class="checkbox-inline"><input type="checkbox" name="haccp_instruction[]" value="器具洗浄・殺菌">
+                    器具洗浄</label>
+                  <label class="checkbox-inline"><input type="checkbox" name="haccp_instruction[]" value="食材管理（温度）">
+                    食材管理</label>
+                  <label class="checkbox-inline"><input type="checkbox" name="haccp_instruction[]" value="交差汚染防止">
+                    交差汚染</label>
+                  <label class="checkbox-inline"><input type="checkbox" name="haccp_instruction[]" value="清掃・消毒記録">
+                    記録確認</label>
+                </div>
+              </div>
+              <div class="mb-3" style="margin-top:10px;">
+                <label class="form-label small text-muted">衛生管理特記事項</label>
+                <textarea class="form-control form-control-sm" id="modal-haccp-notes" rows="2"
+                  placeholder="例：保健所からの指導事項など" style="width:100%; border-radius:4px; border:1px solid #ccc;"></textarea>
+              </div>
+
+              <div style="margin:20px 0; border-bottom:1px dashed #ddd;"></div>
+
+              <!-- Pre-Assessment (New) -->
+              <h6 class="section-sub-title"
+                style="font-weight:bold; color:#555; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:10px;">
+                <i class="fas fa-search-location"></i> エリア別現地調査（アセスメント）
+              </h6>
+
+              <!-- 1. Cooking Area -->
+              <div class="assessment-row mb-2" style="background:#f8fafc; padding:8px; border-radius:4px;">
+                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
+                  <span class="small fw-bold text-primary">4-1. 調理エリア（厨房）</span>
+                  <div class="assessment-radios">
+                    <label class="me-2 text-success small"><input type="radio" name="assess_area1" value="good">
+                      良好</label>
+                    <label class="me-2 text-warning small"><input type="radio" name="assess_area1" value="warn">
+                      要注意</label>
+                    <label class="text-danger small"><input type="radio" name="assess_area1" value="bad"> 不良</label>
+                  </div>
+                </div>
+                <input type="text" id="assess-note-area1" class="form-control form-control-sm"
+                  placeholder="状態詳細（油脂、残渣など）">
+              </div>
+
+              <!-- 2. Equipment -->
+              <div class="assessment-row mb-2" style="background:#f8fafc; padding:8px; border-radius:4px;">
+                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
+                  <span class="small fw-bold text-primary">4-2. 厨房機器・設備</span>
+                  <div class="assessment-radios">
+                    <label class="me-2 text-success small"><input type="radio" name="assess_area2" value="good">
+                      良好</label>
+                    <label class="me-2 text-warning small"><input type="radio" name="assess_area2" value="warn">
+                      要注意</label>
+                    <label class="text-danger small"><input type="radio" name="assess_area2" value="bad"> 不良</label>
+                  </div>
+                </div>
+                <input type="text" id="assess-note-area2" class="form-control form-control-sm"
+                  placeholder="状態詳細（温度管理、内部汚れなど）">
+              </div>
+
+              <!-- 3. Toilet/Handwash -->
+              <div class="assessment-row mb-2" style="background:#f8fafc; padding:8px; border-radius:4px;">
+                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
+                  <span class="small fw-bold text-primary">4-3. 手洗い設備・トイレ</span>
+                  <div class="assessment-radios">
+                    <label class="me-2 text-success small"><input type="radio" name="assess_area3" value="good">
+                      良好</label>
+                    <label class="me-2 text-warning small"><input type="radio" name="assess_area3" value="warn">
+                      要注意</label>
+                    <label class="text-danger small"><input type="radio" name="assess_area3" value="bad"> 不良</label>
+                  </div>
+                </div>
+                <input type="text" id="assess-note-area3" class="form-control form-control-sm"
+                  placeholder="状態詳細（補充状況、汚れなど）">
+              </div>
+
+              <!-- 4. IPM -->
+              <div class="assessment-row mb-2" style="background:#f8fafc; padding:8px; border-radius:4px;">
+                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
+                  <span class="small fw-bold text-primary">4-4. ねずみ・昆虫対策</span>
+                  <div class="assessment-radios">
+                    <label class="me-2 text-success small"><input type="radio" name="assess_area4" value="good">
+                      良好</label>
+                    <label class="me-2 text-warning small"><input type="radio" name="assess_area4" value="warn">
+                      要注意</label>
+                    <label class="text-danger small"><input type="radio" name="assess_area4" value="bad"> 不良</label>
+                  </div>
+                </div>
+                <input type="text" id="assess-note-area4" class="form-control form-control-sm"
+                  placeholder="状態詳細（隙間、水溜まりなど）">
+              </div>
+
+              <div style="margin:20px 0; border-bottom:1px dashed #ddd;"></div>
+
+              <!-- KARTE (Summarized) -->
+              <h6 class="section-sub-title"
+                style="font-weight:bold; color:#555; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:10px;">
+                <i class="fas fa-file-medical-alt"></i> 店舗カルテ情報
+              </h6>
+              <div class="row g-2" style="display:flex; flex-wrap:wrap; gap:10px;">
+                <div class="col-md-6" style="flex:1; min-width:200px;">
+                  <label class="form-label small">店舗環境</label>
+                  <select class="form-select form-select-sm" id="survey-environment"
+                    style="width:100%; padding:6px; border:1px solid #ccc;">
+                    <option value="">選択してください</option>
+                    <option value="路面店">路面店</option>
+                    <option value="ビルイン">ビルイン</option>
+                    <option value="フードコート">フードコート</option>
+                  </select>
+                </div>
+                <div class="col-md-6" style="flex:1; min-width:200px;">
+                  <label class="form-label small">現状の課題</label>
+                  <input type="text" class="form-control form-control-sm" id="survey-issue" placeholder="例：床の汚れ"
+                    style="width:100%; padding:6px; border:1px solid #ccc;">
+                </div>
+
+                <!-- Basic Specs -->
+                <div style="width:100%; display:flex; gap:10px; margin-top:5px;">
+                  <div style="flex:1;"><label class="small">平米数</label><input type="text" id="survey-area-sqm"
+                      style="width:100%; padding:4px;"></div>
+                  <div style="flex:1;"><label class="small">天井高</label><input type="text" id="survey-ceiling-height"
+                      style="width:100%; padding:4px;"></div>
+                  <div style="flex:1;"><label class="small">入口数</label><input type="text" id="survey-entrances"
+                      style="width:100%; padding:4px;"></div>
+                </div>
+
+                <!-- Details Toggle -->
+                <div class="col-12 mt-2" style="width:100%;">
+                  <details style="background:#fff; border:1px solid #eee; padding:5px; border-radius:4px;">
+                    <summary class="small text-primary cursor-pointer" style="cursor:pointer; font-weight:bold;">
+                      詳細設備・材質情報を開く</summary>
+                    <div class="card card-body bg-light mt-2 p-2" style="margin-top:10px; padding:10px;">
+                      <div class="row g-2" style="display:flex; flex-wrap:wrap; gap:10px;">
+                        <div style="flex:1;"><label class="small">鍵</label><input type="text" id="survey-key-location"
+                            style="width:100%;"></div>
+                        <div style="flex:1;"><label class="small">ブレーカー</label><input type="text"
+                            id="survey-breaker-location" style="width:100%;"></div>
+                        <div style="flex:1;"><label class="small">トイレ数</label><input type="number"
+                            id="survey-toilet-count" style="width:100%;"></div>
+                        <div style="width:100%;"><label class="small">壁材</label><input type="text"
+                            id="survey-wall-material" style="width:100%;"></div>
+                        <div style="width:100%;"><label class="small">床材</label><input type="text"
+                            id="survey-floor-material" style="width:100%;"></div>
+
+                        <div class="col-12 mt-2" style="width:100%;">
+                          <div class="small">設備チェック</div>
+                          <div id="survey-equipment" class="d-flex flex-wrap gap-2 mt-1"
+                            style="display:flex; gap:10px;">
+                            <label><input type="checkbox" value="ダクト"> ダクト</label>
+                            <label><input type="checkbox" value="グリストラップ"> グリスト</label>
+                            <label><input type="checkbox" value="エアコン"> エアコン</label>
+                            <label><input type="checkbox" value="フライヤー"> フライヤー</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+                <div style="width:100%; margin-top:5px;">
+                  <label class="small">重点箇所・備考</label>
+                  <textarea id="survey-notes" rows="1" style="width:100%; padding:4px;"></textarea>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- STEP 3: Request Detail -->
+          <div class="step-section">
+            <div class="step-header">
+              <span class="step-badge">Step 3</span>
+              <span class="step-title">作業依頼内容（案件化）</span>
+            </div>
+            <div class="step-content">
+              <div class="row g-2" style="display:flex; flex-wrap:wrap; gap:10px;">
+
+                <!-- Basic Schedule -->
+                <div style="display:flex; gap:10px; width:100%; flex-wrap:wrap;">
+                  <div class="col-md-4" style="flex:1; min-width:150px;">
+                    <label class="form-label small">実施日 <span style="color:red;">必須</span></label>
+                    <input type="date" class="form-control form-control-sm" id="schedule-date" required
+                      style="width:100%; padding:6px;">
+                  </div>
+                  <div class="col-md-4" style="flex:1; min-width:150px;">
+                    <label class="form-label small">時間帯</label>
+                    <input type="text" list="time-options" class="form-control form-control-sm" id="schedule-time"
+                      placeholder="例: 09:00 - 12:00" style="width:100%; padding:6px;">
+                    <datalist id="time-options">
+                      <option value="09:00 - 12:00">
+                      <option value="13:00 - 16:00">
+                      <option value="14:00 - 17:00">
+                      <option value="22:00 - 02:00">
+                    </datalist>
+                  </div>
+                  <div class="col-md-4" style="flex:1; min-width:150px;">
+                    <label class="form-label small">作業種別</label>
+                    <select id="schedule-work-type" class="form-select form-select-sm"
+                      style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                      <option value="periodic">定期清掃</option>
+                      <option value="spot">臨時（スポット）</option>
+                      <option value="special">特別清掃</option>
+                      <option value="other">その他</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Periodic Settings Block -->
+                <div id="periodic-settings"
+                  style="width:100%; display:none; background:#f0f9ff; padding:12px; border-radius:6px; margin-top:10px; border:1px solid #bae6fd;">
+                  <h6 class="small fw-bold text-primary mb-2" style="margin-top:0;"><i class="fas fa-sync-alt"></i>
+                    定期繰り返しの設定</h6>
+                  <div class="row g-2" style="display:flex; flex-wrap:wrap; gap:10px;">
+                    <div class="col-md-3" style="flex:1; min-width:120px;">
+                      <label class="form-label small">頻度</label>
+                      <select id="periodic-frequency" class="form-select form-select-sm"
+                        style="width:100%; padding:6px; border-radius:4px; border:1px solid #ccc;">
+                        <option value="weekly">毎週</option>
+                        <option value="biweekly">隔週</option>
+                        <option value="monthly">毎月</option>
+                      </select>
+                    </div>
+                    <div class="col-md-5" id="periodic-weekday-group" style="flex:2; min-width:200px;">
+                      <label class="form-label small">曜日指定</label>
+                      <div class="d-flex gap-2 bg-white px-2 py-1 rounded border"
+                        style="display:flex; gap:8px; background:white; padding:8px; border-radius:4px; border:1px solid #ccc; flex-wrap:wrap;">
+                        <label class="small mb-0" style="margin-right:4px;"><input type="checkbox" name="periodic_wday"
+                            value="1"> 月</label>
+                        <label class="small mb-0" style="margin-right:4px;"><input type="checkbox" name="periodic_wday"
+                            value="2"> 火</label>
+                        <label class="small mb-0" style="margin-right:4px;"><input type="checkbox" name="periodic_wday"
+                            value="3"> 水</label>
+                        <label class="small mb-0" style="margin-right:4px;"><input type="checkbox" name="periodic_wday"
+                            value="4"> 木</label>
+                        <label class="small mb-0" style="margin-right:4px;"><input type="checkbox" name="periodic_wday"
+                            value="5"> 金</label>
+                        <label class="small mb-0" style="margin-right:4px;"><input type="checkbox" name="periodic_wday"
+                            value="6"> 土</label>
+                        <label class="small mb-0"><input type="checkbox" name="periodic_wday" value="0"> 日</label>
+                      </div>
+                    </div>
+                    <div class="col-md-4" style="flex:1; min-width:150px;">
+                      <label class="form-label small">終了日（期間）</label>
+                      <input type="date" id="periodic-end-date" class="form-control form-control-sm"
+                        style="width:100%; padding:6px;">
+                      <div class="form-text" style="font-size:0.75rem; color:#666; margin-top:2px;">未指定時は1年後まで作成</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Logistics -->
+                <div style="width:100%; margin-top:8px;">
+                  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:200px;">
+                      <label class="form-label small">駐車位置指示</label>
+                      <input type="text" class="form-control form-control-sm" id="schedule-parking"
+                        placeholder="例：店舗裏口Aスペース" style="width:100%; padding:6px;">
+                    </div>
+                    <div style="flex:1; min-width:200px;">
+                      <label class="form-label small">鍵の受け渡し</label>
+                      <input type="text" class="form-control form-control-sm" id="schedule-key-info"
+                        placeholder="例：キーボックス(No.1234)" style="width:100%; padding:6px;">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Attendance -->
+                <div style="width:100%; margin-top:8px; display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap;">
+                  <div style="flex-shrink:0;">
+                    <label class="form-label small d-block">立会いの有無</label>
+                    <div style="display:flex; gap:10px;">
+                      <label><input type="radio" name="attendance_required" value="none" checked> 無し</label>
+                      <label><input type="radio" name="attendance_required" value="start"> 開始時</label>
+                      <label><input type="radio" name="attendance_required" value="end"> 終了時</label>
+                      <label><input type="radio" name="attendance_required" value="full"> 常時</label>
+                    </div>
+                  </div>
+                  <div style="flex:1; min-width:200px;">
+                    <label class="form-label small">立会い担当者・連絡先</label>
+                    <input type="text" class="form-control form-control-sm" id="schedule-attendance-notes"
+                      placeholder="例: 店長 090-xxxx-xxxx" style="width:100%; padding:6px;">
+                  </div>
+                </div>
+
+                <div class="col-12" style="width:100%; margin-top:15px;">
+                  <label class="form-label small" style="font-weight:bold; color:#FF679C;">清掃実施項目（チェックリスト）</label>
+                  <div class="cleaning-checklist-container"
+                    style="background:#fff; border:1px solid #ffcae0; border-radius:6px; padding:15px;">
+
+                    <!-- Category 1 -->
+                    <div class="checklist-category mb-2">
+                      <h6 class="small text-muted border-bottom pb-1 mb-2">【排水・油脂管理】</h6>
+                      <div class="d-flex flex-wrap gap-2">
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="グリストラップ清掃">
+                          1. グリストラップ清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]"
+                            value="U字溝・グレーチング清掃"> 2. U字溝・グレーチング清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="配管高圧洗浄"> 3.
+                          配管高圧洗浄</label>
+                      </div>
+                    </div>
+
+                    <!-- Category 2 -->
+                    <div class="checklist-category mb-2">
+                      <h6 class="small text-muted border-bottom pb-1 mb-2">【換気・排気設備】</h6>
+                      <div class="d-flex flex-wrap gap-2">
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="レンジフード洗浄">
+                          4. レンジフード洗浄</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="ダクト洗浄"> 5.
+                          ダクト洗浄</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="防火シャッター清掃">
+                          6. 防火シャッター清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="換気扇洗浄"> 7.
+                          換気扇洗浄</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="排気ファン清掃">
+                          8. 排気ファン清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]"
+                            value="排気ファンベルト交換・調整"> 9. 排気ファンベルト交換・調整</label>
+                      </div>
+                    </div>
+
+                    <!-- Category 3 -->
+                    <div class="checklist-category mb-2">
+                      <h6 class="small text-muted border-bottom pb-1 mb-2">【厨房・調理関連設備】</h6>
+                      <div class="d-flex flex-wrap gap-2">
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="厨房機器洗浄">
+                          10. 厨房機器洗浄</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="壁清掃（厨房）">
+                          11. 壁清掃（厨房）</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="シンク洗浄"> 12.
+                          シンク洗浄</label>
+                      </div>
+                    </div>
+
+                    <!-- Category 4 -->
+                    <div class="checklist-category mb-2">
+                      <h6 class="small text-muted border-bottom pb-1 mb-2">【空調設備】</h6>
+                      <div class="d-flex flex-wrap gap-2">
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]"
+                            value="エアコンフィルター洗浄"> 13. エアコンフィルター洗浄</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="エアコン分解洗浄">
+                          14. エアコン分解洗浄</label>
+                      </div>
+                    </div>
+
+                    <!-- Category 5 -->
+                    <div class="checklist-category mb-2">
+                      <h6 class="small text-muted border-bottom pb-1 mb-2">【床・フロア】</h6>
+                      <div class="d-flex flex-wrap gap-2">
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="床清掃"> 15.
+                          床清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="フローリング清掃">
+                          16. フローリング清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="タイル清掃"> 17.
+                          タイル清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="カーペット清掃">
+                          18. カーペット清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="ワックスがけ">
+                          19. ワックスがけ</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="コーティング処理">
+                          20. コーティング処理</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="床面除菌"> 21.
+                          床面除菌</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="床面保護"> 22.
+                          床面保護</label>
+                      </div>
+                    </div>
+
+                    <!-- Category 6 -->
+                    <div class="checklist-category mb-0">
+                      <h6 class="small text-muted border-bottom pb-1 mb-2">【共用部・その他】</h6>
+                      <div class="d-flex flex-wrap gap-2">
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="窓清掃"> 23.
+                          窓清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="ドア清掃"> 24.
+                          ドア清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="照明器具清掃">
+                          25. 照明器具清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="換気口清掃"> 26.
+                          換気口清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="トイレ清掃"> 27.
+                          トイレ清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="手洗い場清掃">
+                          28. 手洗い場清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="鏡清掃"> 29.
+                          鏡清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="壁面清掃"> 30.
+                          壁面清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="天井清掃"> 31.
+                          天井清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="エレベーター清掃">
+                          32. エレベーター清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="階段清掃"> 33.
+                          階段清掃</label>
+                        <label class="checkbox-chip"><input type="checkbox" name="work_items_check[]" value="ゴミ箱清掃"> 34.
+                          ゴミ箱清掃</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Keep Search for flexibility -->
+                <div class="col-12 mt-2" style="width:100%;">
+                  <details>
+                    <summary class="small text-muted" style="cursor:pointer;">その他の作業を追加（検索）</summary>
+                    <div class="search-box-wrapper mt-2" style="position:relative;">
+                      <input type="text" class="form-control form-control-sm" id="cleaning-items-search"
+                        placeholder="項目名を入力..." style="width:100%; padding:6px;">
+                      <div id="cleaning-items-results" class="search-results-dropdown"
+                        style="display:none; position:absolute; top:100%; background:white; z-index:10;"></div>
+                    </div>
+                    <div id="cleaning-items-selected" class="mt-2"></div>
+                  </details>
+                </div>
+
+                <div class="col-12" style="width:100%;">
+                  <label class="form-label small">特記事項・注意事項</label>
+                  <textarea class="form-control form-control-sm" id="schedule-notes" rows="3"
+                    placeholder="清掃員への申し送り事項など、詳細を記述してください" style="width:100%; padding:6px;"></textarea>
+                </div>
+
+                <div style="width:100%; margin:20px 0; border-bottom:1px dashed #ddd;"></div>
+
+                <div style="display:flex; gap:10px; width:100%; flex-wrap:wrap;">
+                  <div class="col-md-6" style="flex:1; min-width:200px;">
+                    <label class="form-label small">担当清掃員 (OS)</label>
+                    <div style="position:relative;">
+                      <input type="text" class="form-control form-control-sm" id="worker-search-input"
+                        placeholder="氏名で検索..." style="width:100%; padding:6px;">
+                      <div id="worker-search-results" class="search-results-dropdown"
+                        style="display:none; position:absolute; top:100%; background:white; border:1px solid #ccc; width:100%; z-index:10;">
+                      </div>
+                    </div>
+                    <div id="selected-workers-container" class="mt-2"></div>
+                  </div>
+
+                  <div class="col-md-6" style="flex:1; min-width:200px;">
+                    <label class="form-label small">担当営業</label>
+                    <select id="schedule-sales" class="form-select form-select-sm" style="width:100%; padding:6px;">
+                      <option value="">（自動設定）</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer d-flex justify-content-between"
+          style="padding:15px; border-top:1px solid #eee; background:#fff;">
+          <div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="print-request-btn" style="display:none;">
+              <i class="fas fa-print"></i> プレビュー
+            </button>
+            <span id="form-status" class="form-status ms-2"></span>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm"
+              onclick="document.getElementById('schedule-dialog').close()">キャンセル</button>
+            <button type="submit" class="btn btn-success btn-sm" id="save-btn"
+              style="background:#10b981; color:white; border:none; padding:6px 16px;">
+              <i class="fas fa-save"></i> 依頼書を作成（保存）
+            </button>
+            <button type="button" class="btn btn-warning btn-sm" id="edit-btn" style="display:none;">編集する</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- 削除確認ダイアログ -->
+  <dialog id="delete-dialog" class="delete-dialog">
+    <div class="dialog-content dialog-sm">
+      <h3>削除確認</h3>
+      <p id="delete-message">この依頼書を削除しますか？</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary"
+          onclick="document.getElementById('delete-dialog').close()">キャンセル</button>
+        <button type="button" class="btn btn-danger" id="confirm-delete">削除</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="/js/aws-s3-upload.js"></script>
+  <script src="/js/sales-schedules.js?v=20250106_2215"></script>

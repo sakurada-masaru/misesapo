@@ -1,0 +1,877 @@
+@layout('layouts.base')
+@json('data/meta/sales_client_detail_title.json', $title)
+@json('data/meta/sales_client_detail_body_class.json', $body_class)
+<script src="/js/client_auth.js"></script>
+<script src="/js/data_utils.js"></script>
+
+<main id="main" class="container sales-client-detail">
+  <div class="page-header">
+    <a href="/sales/clients/index.html" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">顧客詳細</h1>
+    <a href="/sales/clients/index.html" class="btn btn-outline btn-sm" id="client-edit-link">
+      <i class="fas fa-edit"></i> 編集
+    </a>
+  </div>
+
+  <div class="detail-layout">
+    <div class="detail-main">
+      <!-- Client Info Card -->
+      <div class="info-card">
+        <div class="card-header">
+      <div class="client-main-info">
+        <div class="client-badges">
+          <span class="client-badge" id="client-company-badge">-</span>
+          <span class="client-badge" id="client-brand-badge">-</span>
+        </div>
+        <h2 class="client-store-title" id="client-store">-</h2>
+      </div>
+      <span class="status-badge" id="client-status">-</span>
+    </div>
+
+        <div class="info-grid">
+          <div class="info-section">
+            <h3 class="section-title">
+              <i class="fas fa-building"></i>
+              基本情報
+            </h3>
+            <div class="info-item">
+              <span class="info-label">電話番号</span>
+              <span class="info-value" id="client-phone">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">住所</span>
+              <span class="info-value" id="client-address">-</span>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <h3 class="section-title">
+              <i class="fas fa-user"></i>
+              担当者情報
+            </h3>
+            <div class="info-item">
+              <span class="info-label">担当者名</span>
+              <span class="info-value" id="client-contact-person">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">メールアドレス</span>
+              <span class="info-value">
+                <a href="#" id="client-email">-</a>
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">営業担当</span>
+              <span class="info-value" id="client-sales-rep">-</span>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <h3 class="section-title">
+              <i class="fas fa-calendar-alt"></i>
+              清掃情報
+            </h3>
+            <div class="info-item">
+              <span class="info-label">前回清掃日時</span>
+              <span class="info-value" id="client-next-date">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">清掃頻度</span>
+              <span class="info-value" id="client-cleaning-frequency">-</span>
+            </div>
+          </div>
+
+          <div class="info-section full-width" id="url-section" style="display: none;">
+            <h3 class="section-title">
+              <i class="fas fa-link"></i>
+              関連リンク
+            </h3>
+            <div class="info-item">
+              <span class="info-label">URL</span>
+              <span class="info-value">
+                <a href="#" target="_blank" rel="noopener noreferrer" id="client-url">
+                  <span id="client-url-text">-</span>
+                  <i class="fas fa-external-link-alt"></i>
+                </a>
+              </span>
+            </div>
+          </div>
+
+          <div class="info-section full-width" id="notes-section" style="display: none;">
+            <h3 class="section-title">
+              <i class="fas fa-sticky-note"></i>
+              メモ
+            </h3>
+            <div class="info-memo" id="client-notes">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kartere-hint" aria-live="polite">
+        <span>↓下部に入力した内容はカルテに自動反映されます。↓</span>
+      </div>
+
+      <!-- Onsite Survey Report (Interview Sheet) -->
+      <div class="info-card report-card">
+        <div class="card-header">
+          <div class="card-title-block">
+            <h2 class="card-title">
+              <i class="fas fa-clipboard-list"></i>
+              現地調査レポート（問診票）
+            </h2>
+          </div>
+          <span class="status-chip status-draft" id="karte-status">カルテ未作成</span>
+        </div>
+        <div class="report-history" id="karte-history" style="display: none;">
+          <label for="karte-history-select">履歴</label>
+          <select id="karte-history-select"></select>
+        </div>
+        <div class="info-grid">
+          <div class="info-section">
+            <h3 class="section-title">
+              <i class="fas fa-notes-medical"></i>
+              問診（営業入力）
+            </h3>
+            <div class="intake-category">
+              <div class="intake-category-title">
+                <i class="fas fa-clipboard-check"></i> 基本ヒアリング
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">清掃の悩み</span>
+                <textarea class="form-field" id="survey-issue" rows="2" placeholder="例：厨房の油汚れが落ちない、臭気が気になる"></textarea>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">店内環境</span>
+                <textarea class="form-field" id="survey-environment" rows="2" placeholder="例：油煙が強い、湿気が多い、換気が弱い"></textarea>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">稼働人数</span>
+                <div class="form-row">
+                  <select class="form-field" id="survey-staff-normal">
+                    <option value="">最小人数を選択</option>
+                    <option value="1名">1名</option>
+                    <option value="2〜5名">2〜5名</option>
+                    <option value="6〜10名">6〜10名</option>
+                    <option value="11名以上">11名以上</option>
+                  </select>
+                  <select class="form-field" id="survey-staff-peak">
+                    <option value="">最大人数を選択</option>
+                    <option value="1名">1名</option>
+                    <option value="2〜5名">2〜5名</option>
+                    <option value="6〜10名">6〜10名</option>
+                    <option value="11名以上">11名以上</option>
+                  </select>
+                </div>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">稼働時間</span>
+                <input class="form-field" id="survey-hours" type="text" placeholder="例：11:00〜23:30（定休：月）">
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">通常清掃の頻度</span>
+                <input class="form-field" id="survey-cleaning-frequency" type="text" placeholder="例：毎日（閉店後に30分）">
+              </div>
+            </div>
+            <div class="intake-category">
+              <div class="intake-category-title">
+                <i class="fas fa-store"></i> 店舗仕様
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">店舗仕様（現地確認）</span>
+                <div class="compact-fields">
+                  <label class="compact-field">
+                    <span>スタッフルーム</span>
+                    <select class="form-field" id="survey-staff-room">
+                      <option value="">選択してください</option>
+                      <option value="有">有</option>
+                      <option value="無">無</option>
+                    </select>
+                  </label>
+                  <label class="compact-field">
+                    <span>平米数</span>
+                    <input class="form-field" id="survey-area-sqm" type="text" placeholder="例：120 ㎡">
+                  </label>
+                  <label class="compact-field">
+                    <span>畳数</span>
+                    <input class="form-field" id="survey-area-tatami" type="text" placeholder="例：72 畳">
+                  </label>
+                  <label class="compact-field">
+                    <span>出入口</span>
+                    <input class="form-field" id="survey-entrances" type="text" placeholder="例：正面1/裏口1">
+                  </label>
+                  <label class="compact-field">
+                    <span>天井高さ</span>
+                    <input class="form-field" id="survey-ceiling-height" type="text" placeholder="例：2.6 m">
+                  </label>
+                  <label class="compact-field">
+                    <span>ブレーカー</span>
+                    <input class="form-field" id="survey-breaker-location" type="text" placeholder="例：厨房奥">
+                  </label>
+                  <label class="compact-field">
+                    <span>鍵の位置</span>
+                    <input class="form-field" id="survey-key-location" type="text" placeholder="例：受付右棚">
+                  </label>
+                </div>
+                <div class="survey-upload-row">
+                  <div class="survey-upload">
+                    <span class="survey-upload-label">ブレーカー位置の写真</span>
+                    <label class="btn-upload-stock">
+                      <input type="file" id="survey-breaker-photo" accept="image/*" style="display:none;">
+                      <i class="fas fa-cloud-upload-alt"></i>
+                      <span>画像を追加</span>
+                    </label>
+                    <input type="hidden" id="survey-breaker-photo-url">
+                    <div class="survey-upload-preview" id="survey-breaker-photo-preview"></div>
+                  </div>
+                  <div class="survey-upload">
+                    <span class="survey-upload-label">鍵の置き場の写真</span>
+                    <label class="btn-upload-stock">
+                      <input type="file" id="survey-key-photo" accept="image/*" style="display:none;">
+                      <i class="fas fa-cloud-upload-alt"></i>
+                      <span>画像を追加</span>
+                    </label>
+                    <input type="hidden" id="survey-key-photo-url">
+                    <div class="survey-upload-preview" id="survey-key-photo-preview"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="intake-category">
+              <div class="intake-category-title">
+                <i class="fas fa-cogs"></i> 設備・内装
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">設備・内装</span>
+                <div class="compact-fields">
+                  <label class="compact-field">
+                    <span>壁の材質</span>
+                    <input class="form-field" id="survey-wall-material" type="text" placeholder="例：タイル">
+                  </label>
+                  <label class="compact-field">
+                    <span>床の材質</span>
+                    <input class="form-field" id="survey-floor-material" type="text" placeholder="例：塩ビ">
+                  </label>
+                  <label class="compact-field">
+                    <span>アンペア数</span>
+                    <input class="form-field" id="survey-electrical-amps" type="text" placeholder="例：60 A">
+                  </label>
+                  <label class="compact-field">
+                    <span>トイレ数</span>
+                    <input class="form-field" id="survey-toilet-count" type="text" placeholder="例：2 基">
+                  </label>
+                  <label class="compact-field">
+                    <span>空調の数</span>
+                    <input class="form-field" id="survey-aircon-count" type="text" placeholder="例：3 台">
+                  </label>
+                </div>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">客席（設備補足）</span>
+                <div class="checkbox-group">
+                  <label class="checkbox-chip">
+                    <input type="checkbox" id="survey-seat-counter" value="counter">
+                    <span>カウンター席</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" id="survey-seat-box" value="box">
+                    <span>ボックス席</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" id="survey-seat-zashiki" value="zashiki">
+                    <span>座敷</span>
+                  </label>
+                </div>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">設備情報（必須）</span>
+                <div class="checkbox-group" id="survey-equipment">
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="aircon">
+                    <span>空調</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="duct">
+                    <span>ダクト</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="hood">
+                    <span>レンジフード</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="grease_trap">
+                    <span>グリストラップ</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="floor">
+                    <span>床</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="drain">
+                    <span>排水溝</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="toilet">
+                    <span>トイレ</span>
+                  </label>
+                  <label class="checkbox-chip">
+                    <input type="checkbox" value="window">
+                    <span>窓・ガラス</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="intake-category">
+              <div class="intake-category-title">
+                <i class="fas fa-exclamation-circle"></i> 注意事項・計画
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">空調設備の状態</span>
+                <textarea class="form-field" id="survey-aircon" rows="2" placeholder="例：台数3、1台異音、フィルター目詰まり"></textarea>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">厨房設備の状態</span>
+                <textarea class="form-field" id="survey-kitchen" rows="2" placeholder="例：レンジフード油固着、ダクト詰まり傾向"></textarea>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">特に気になる場所</span>
+                <textarea class="form-field" id="survey-hotspots" rows="2" placeholder="例：ダクト、床排水溝、グリスト"></textarea>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">注意事項</span>
+                <textarea class="form-field" id="survey-notes" rows="2" placeholder="例：薬剤の臭いNG、閉店後のみ作業可"></textarea>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">最終清掃日</span>
+                <input class="form-field" id="survey-last-clean" type="date">
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">依頼プラン</span>
+                <select class="form-field" id="survey-plan">
+                  <option value="">選択してください</option>
+                  <option value="regular">定期</option>
+                  <option value="spot">スポット</option>
+                  <option value="undecided">未定</option>
+                </select>
+              </div>
+              <div class="info-item form-item">
+                <span class="info-label">衛生状態自己評価</span>
+                <select class="form-field" id="survey-self-rating">
+                  <option value="">選択してください</option>
+                  <option value="1">1（不衛生）</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5（普通）</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10（非常に衛生的）</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="info-section">
+            <h3 class="section-title">
+              <i class="fas fa-link"></i>
+              連携情報
+            </h3>
+            <div class="info-item">
+              <span class="info-label">カルテ反映</span>
+              <span class="info-value">未反映</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">レポートリンク</span>
+              <span class="info-value">-</span>
+            </div>
+          </div>
+        </div>
+        <div class="report-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="onsite-survey-edit" style="display:none;">
+            <i class="fas fa-edit"></i> 編集する
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" id="onsite-survey-save">
+            <i class="fas fa-pen"></i> 問診票を入力
+          </button>
+          <span class="report-hint">入力内容は保存時にカルテへ反映されます。</span>
+        </div>
+      </div>
+    </div>
+
+    <aside class="detail-side">
+      <!-- Quick Actions -->
+      <div class="actions-section">
+        <h3 class="section-title">クイックアクション</h3>
+        <div class="action-buttons">
+          <a href="#" class="action-btn" id="client-kart-link">
+            <i class="fas fa-clipboard-list"></i>
+            <span>清掃カルテ</span>
+          </a>
+          <a href="#" class="action-btn" id="client-estimate-link">
+            <i class="fas fa-file-invoice"></i>
+            <span>見積もり作成</span>
+          </a>
+          <a href="#" class="action-btn" id="client-orders-link">
+            <i class="fas fa-shopping-cart"></i>
+            <span>発注履歴</span>
+          </a>
+          <a href="#" class="action-btn" id="client-email-link" style="display: none;">
+            <i class="fas fa-envelope"></i>
+            <span>メール送信</span>
+          </a>
+          <a href="#" target="_blank" class="action-btn" id="client-url-link" style="display: none;">
+            <i class="fas fa-external-link-alt"></i>
+            <span>URL確認</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="nav-section">
+        <a href="/sales/clients/index.html" class="btn btn-outline btn-block">
+          <i class="fas fa-list"></i> 顧客一覧に戻る
+        </a>
+      </div>
+    </aside>
+  </div>
+
+  <style>
+    .sales-client-detail {
+      max-width: 100%;
+      margin: 0;
+      padding: 18px 24px 32px;
+      background: radial-gradient(circle at top, #ffffff 0%, #f5f4f8 55%, #eef2f8 100%);
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+      flex-wrap: wrap;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ff4f9a;
+      margin: 0;
+      flex: 1;
+    }
+    .detail-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(280px, 1fr);
+      gap: 18px;
+    }
+    .info-card {
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 18px 30px -28px rgba(15, 23, 42, 0.35);
+      margin-bottom: 18px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+    }
+    .client-main-info {
+      flex: 1;
+    }
+    .client-store-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 4px 0;
+    }
+    .client-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .client-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #ffe3f0;
+      color: #ff4f9a;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .status-badge {
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-left: 16px;
+    }
+    .status-稼働中 {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-休止 {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-契約終了 {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .info-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .intake-category {
+      border: 1px dashed rgba(255, 79, 154, 0.35);
+      border-radius: 14px;
+      padding: 14px;
+      background: #ffffff;
+    }
+    .intake-category + .intake-category {
+      margin-top: 12px;
+    }
+    .intake-category-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ff4f9a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .info-section.full-width {
+      grid-column: 1 / -1;
+    }
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ff4f9a;
+      margin: 0 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .info-item {
+      display: grid;
+      grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.2fr);
+      align-items: start;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px dashed rgba(203, 213, 225, 0.8);
+    }
+    .form-item {
+      grid-template-columns: minmax(120px, 0.9fr) minmax(0, 2fr);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .form-field {
+      width: 100%;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      color: #0f172a;
+      background: #ffffff;
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+      resize: vertical;
+    }
+    .form-field:focus {
+      outline: none;
+      border-color: #ff4f9a;
+      box-shadow: 0 0 0 3px rgba(255, 79, 154, 0.15);
+    }
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .checkbox-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      background: #ffffff;
+      font-size: 0.75rem;
+      color: #0f172a;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .checkbox-chip input {
+      width: 14px;
+      height: 14px;
+      accent-color: #ff4f9a;
+    }
+    .survey-upload-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .survey-upload {
+      border: 1px dashed rgba(255, 79, 154, 0.4);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(255, 79, 154, 0.05);
+    }
+    .survey-upload-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #ff4f9a;
+      margin-bottom: 8px;
+    }
+    .survey-upload-input {
+      width: 100%;
+      font-size: 0.85rem;
+    }
+    .survey-upload-preview {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .survey-upload-preview img {
+      width: 100%;
+      max-width: 140px;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      object-fit: cover;
+    }
+    .compact-fields {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .compact-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 120px;
+      flex: 1 1 140px;
+    }
+    .compact-field span {
+      font-size: 0.72rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .info-label {
+      font-size: 0.8rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .info-value {
+      font-size: 0.85rem;
+      color: #111827;
+      text-align: left;
+      word-break: break-word;
+    }
+    .info-memo {
+      padding: 14px;
+      background: #f8fafc;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #374151;
+      line-height: 1.6;
+    }
+    .actions-section {
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+      position: sticky;
+      top: 18px;
+    }
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: 10px;
+      color: #374151;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .action-btn:hover {
+      background: #ffffff;
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+    .nav-section {
+      margin-top: 0;
+    }
+    .report-card .card-header {
+      align-items: center;
+    }
+    .card-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 0;
+      color: #ff4f9a;
+    }
+    .kartere-hint {
+      display: flex;
+      justify-content: center;
+      margin: 6px 0 12px;
+    }
+    .kartere-hint span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 79, 154, 0.12);
+      color: #ff4f9a;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      animation: hintFloat 2.8s ease-in-out infinite;
+      text-align: center;
+    }
+    @keyframes hintFloat {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-6px);
+      }
+    }
+    .status-chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .status-draft {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+    .status-complete {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .report-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(203, 213, 225, 0.8);
+      flex-wrap: wrap;
+    }
+    .report-history {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 6px 0 10px;
+    }
+    .report-history label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 600;
+    }
+    .report-history select {
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      color: #0f172a;
+      background: #ffffff;
+    }
+    .report-hint {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    @media (max-width: 768px) {
+      .sales-client-detail {
+        padding: 16px;
+      }
+      .detail-layout {
+        grid-template-columns: 1fr;
+      }
+      .detail-side {
+        position: static;
+      }
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .action-buttons {
+        grid-template-columns: 1fr;
+      }
+      .info-item {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 420px) {
+      .compact-field {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</main>
+
+<script src="/js/aws-s3-upload.js"></script>
+<script src="/js/sales-client-detail.js"></script>
