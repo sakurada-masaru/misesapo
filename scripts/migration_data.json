@@ -1,0 +1,2772 @@
+{
+  "clients": [
+    {
+      "id": "CL001",
+      "name": "株式会社エデュケーション",
+      "type": "company",
+      "brands": {
+        "モンキーツリー": "BR001"
+      }
+    },
+    {
+      "id": "CL002",
+      "name": "アクティブソース",
+      "type": "company",
+      "brands": {
+        "晩杯屋": "BR002"
+      }
+    },
+    {
+      "id": "CL003",
+      "name": "（個人店舗）",
+      "type": "individual",
+      "brands": {
+        "株式会社CatchBall 横浜 ようさい": "BR003",
+        "株式会社フォーシーズ_クアアイナ": "BR004",
+        "0秒レモンサワーときわ亭池袋西口店": "BR005",
+        "カイロライン 国分寺整体院": "BR007",
+        "発酵デリカッセン新宿高島屋": "BR008",
+        "元気ダイニング 大衆焼肉酒場こがね": "BR011",
+        "スモールズ ゴールデン街": "BR013",
+        "株式会社デイジイ": "BR014",
+        "H": "BR016",
+        "立呑み焼きとん大黒": "BR017",
+        "株式会社オン・ザ・プラネット": "BR018",
+        "株式会社CatchBall　ラム肉専門店隣のロッヂ": "BR019",
+        "韓美膳ららぽーと横浜店": "BR021",
+        "株式会社オン・ザ・プラネット　魚無双トオダ": "BR022",
+        "デイジイ西新宿店": "BR023",
+        "スモールズ オイスター&珍味 bar 不夜城": "BR024",
+        "株式会社GRAST 手作りの味噌らーめん 味噌樽": "BR028",
+        "株式会社GOSSO_0秒レモンサワー渋谷店": "BR029",
+        "とんかつさくら 茅場町": "BR030",
+        "蕎麦前　山都": "BR031",
+        "銀座竹の庵5丁目本店": "BR032",
+        "株式会社オン・ザ・プラネット　魚焼男 弐": "BR033",
+        "練習用店舗": "BR035",
+        "餃子楼　工場": "BR036",
+        "株式会社スモールズ\\tディストピアBar KARMA　カルマ": "BR037",
+        "月島 inu to hito": "BR038",
+        "火鍋": "BR039",
+        "The mark grand hotel": "BR041",
+        "デイジイ": "BR042",
+        "長谷川さん宅": "BR043",
+        "株式会社GRAST": "BR044",
+        "新橋バーラウンジ御殿": "BR045",
+        "片山鶏肉店": "BR046",
+        "株式会社オン・ザ・プラネット　新燻男ニューイブシオ": "BR047",
+        "株式会社スモールズ\\tBar \\nANIME HOLIC アニメホリック goldengai": "BR048",
+        "串焼こがね越谷": "BR049",
+        "いのこ平和台店": "BR050",
+        "株式会社フォーシーズ": "BR051",
+        "ニーハオ大森店": "BR052",
+        "Mahaloh Import Shop": "BR055",
+        "油そば雷神": "BR056",
+        "株式会社ダイニングエッジ": "BR057",
+        "武蔵野アブラ学会": "BR058",
+        "Forever High Quality": "BR060",
+        "餃子楼": "BR061",
+        "ラゾーナ川崎": "BR064",
+        "株式会社ダイニング富士屋本店 富士屋本店 日本橋浜町": "BR065",
+        "肉の関山": "BR066",
+        "麺処いのこ": "BR067",
+        "ニクアザブ": "BR068",
+        "トランザム": "BR069",
+        "立呑み焼きとん大黒サンロード蒲田店": "BR071",
+        "テスト": "BR072",
+        "焼肉 松の屋": "BR073",
+        "ゴーゴーカレー 新宿東口駅前スタジアム": "BR075",
+        "株式会社オン・ザ・プラネット　新魚焼男ニューサカナヤキオ": "BR076",
+        "メティウスフーズ": "BR077",
+        "更科天狐": "BR078",
+        "株式会社オン・ザ・プラネット　焼肉男マンモス": "BR079",
+        "ケーエスエムサポート合同会社  ゴーゴーカレー新宿東口駅前店スタジアム": "BR080",
+        "おすすめ屋": "BR081",
+        "株式会社スモールズ\\tJapanese Bar　アニメホリック 猪鹿蝶 Carma": "BR083",
+        "ニーハオ蒲田": "BR084",
+        "生ラムかんな": "BR085",
+        "株式会社GOSSO": "BR086",
+        "S BAR": "BR087",
+        "ニーハオ渋谷店": "BR088",
+        "ニーハオ蒲田　別館": "BR089",
+        "板前寿司": "BR090",
+        "大衆寿司酒場": "BR091",
+        "スオーノ": "BR094",
+        "炭火焼きホルモン": "BR096",
+        "ニーハオ蒲田　工場": "BR097",
+        "株式会社友進中華食堂一番館 東陽町": "BR098",
+        "大衆寿司酒場 こがね": "BR099",
+        "大勝軒まるいち": "BR102",
+        "並木橋 なかむら": "BR103",
+        "マッシモッタヴィオ": "BR104",
+        "中華食堂": "BR105",
+        "東京レストランホールディングス株式会社 ラグジュアリーカラオケ マンシーズトウキョウ": "BR106",
+        "立呑": "BR107",
+        "株式会社オン・ザ・プラネット　ホルモンのマンモス": "BR108",
+        "天孝": "BR111",
+        "ニーハオ大井町店": "BR112",
+        "富士屋本店サクラステージ": "BR113",
+        "株式会社馬力": "BR114",
+        "アトミック　bar": "BR115",
+        "株式会社ロイヤルストレートフラッシュ　丸鶏るいすけ": "BR116",
+        "貝出汁中華そば 竹祥": "BR117",
+        "立呑み魚椿": "BR118",
+        "リストランティアーノ ルベロ": "BR119",
+        "カラオケパセラ": "BR121",
+        "家庭料理居酒屋": "BR122",
+        "ニーハオ神田店": "BR123",
+        "株式会社ドリームダブルコーポレーション": "BR124",
+        "株式会社馬力 高円寺": "BR127",
+        "ダーツバーエース日本橋茅場町店": "BR129",
+        "株式会社スモールズ\\tBar 灯鏡 tokyo 歌舞伎町レッドのれん街": "BR130",
+        "株式会社オン・ザ・プラネット　燻男（いぶしお）": "BR131",
+        "ホルモン屋だん新橋店": "BR132",
+        "株式会社": "BR133",
+        "株式会社JCC": "BR134",
+        "天婦羅 天孝(てんこう)": "BR135",
+        "株式会社とくやまホールディングス": "BR136",
+        "株式会社クラウンセンス　鮨ひのもと": "BR138",
+        "スモールズ　オイスター&珍味 bar 不夜城": "BR140",
+        "ホルモン屋だん": "BR141",
+        "CRAFTCHEESEMARKET\\t渋谷店": "BR142"
+      }
+    },
+    {
+      "id": "CL004",
+      "name": "ダイキチシステム㈱",
+      "type": "company",
+      "brands": {
+        "やきとり大吉": "BR006"
+      }
+    },
+    {
+      "id": "CL005",
+      "name": "ダーツバーA's",
+      "type": "company",
+      "brands": {
+        "ダーツバーエース": "BR009",
+        "Darts": "BR025",
+        "ダーツバーエース水道橋店": "BR110"
+      }
+    },
+    {
+      "id": "CL006",
+      "name": "株式会社 SSG",
+      "type": "company",
+      "brands": {
+        "上海料理 佳樹園": "BR010"
+      }
+    },
+    {
+      "id": "CL007",
+      "name": "株式会社クラフトマスタージャパン",
+      "type": "company",
+      "brands": {
+        "鮨 輝らく": "BR012"
+      }
+    },
+    {
+      "id": "CL008",
+      "name": "株式会社がっと",
+      "type": "company",
+      "brands": {
+        "ワイン食堂がっと渋谷円山町店": "BR015"
+      }
+    },
+    {
+      "id": "CL009",
+      "name": "KUSABI オフィス",
+      "type": "company",
+      "brands": {
+        "KUSABI": "BR020"
+      }
+    },
+    {
+      "id": "CL010",
+      "name": "BAR　FD",
+      "type": "company",
+      "brands": {
+        "エフディ": "BR026"
+      }
+    },
+    {
+      "id": "CL011",
+      "name": "株式会社価値作り研究所",
+      "type": "company",
+      "brands": {
+        "ステーキロッヂ": "BR027",
+        "ステーキロッヂ渋谷道玄坂店": "BR109"
+      }
+    },
+    {
+      "id": "CL012",
+      "name": "FAST OYSTERS",
+      "type": "company",
+      "brands": {
+        "ファストオイスターズ神楽坂店": "BR034"
+      }
+    },
+    {
+      "id": "CL013",
+      "name": "デニーロ 神田店",
+      "type": "company",
+      "brands": {
+        "デニーロ": "BR040"
+      }
+    },
+    {
+      "id": "CL014",
+      "name": "炭火焼きホルモン　まんてん",
+      "type": "company",
+      "brands": {
+        "炭火焼きホルモン": "BR053",
+        "炭火焼きホルモンまんてん中野店": "BR062"
+      }
+    },
+    {
+      "id": "CL015",
+      "name": "ラフェス",
+      "type": "company",
+      "brands": {
+        "ラフェス": "BR054"
+      }
+    },
+    {
+      "id": "CL016",
+      "name": "株式会社マッスルボディメイク",
+      "type": "company",
+      "brands": {
+        "マッスルボディメイク": "BR059"
+      }
+    },
+    {
+      "id": "CL017",
+      "name": "有限会社タカネット",
+      "type": "company",
+      "brands": {
+        "ロケ弁エージェント": "BR063"
+      }
+    },
+    {
+      "id": "CL018",
+      "name": "麺と肴　担々麺 ペン坊",
+      "type": "company",
+      "brands": {
+        "麺と肴 担々麺ペン坊": "BR070"
+      }
+    },
+    {
+      "id": "CL019",
+      "name": "でですけ サイゴンキッチン",
+      "type": "company",
+      "brands": {
+        "でですけ サイゴンキッチン": "BR074"
+      }
+    },
+    {
+      "id": "CL020",
+      "name": "株式会社INGS",
+      "type": "company",
+      "brands": {
+        "コナ": "BR082"
+      }
+    },
+    {
+      "id": "CL021",
+      "name": "アークワークス",
+      "type": "company",
+      "brands": {
+        "ルポ": "BR092"
+      }
+    },
+    {
+      "id": "CL022",
+      "name": "株式会社ストラク",
+      "type": "company",
+      "brands": {
+        "焼肉商店": "BR093"
+      }
+    },
+    {
+      "id": "CL023",
+      "name": "株式会社フードアンドパートナーズ",
+      "type": "company",
+      "brands": {
+        "コウジアンドコー": "BR095"
+      }
+    },
+    {
+      "id": "CL024",
+      "name": "合同会社FOOD GROOVE JAPAN",
+      "type": "company",
+      "brands": {
+        "米と魚さかなさま": "BR100"
+      }
+    },
+    {
+      "id": "CL025",
+      "name": "株式会社ZANGIRI",
+      "type": "company",
+      "brands": {
+        "ザンギリ ネクスト": "BR101"
+      }
+    },
+    {
+      "id": "CL026",
+      "name": "株式会社FELICE",
+      "type": "company",
+      "brands": {
+        "宮崎辛麺　辛麺屋一輪": "BR120"
+      }
+    },
+    {
+      "id": "CL027",
+      "name": "株式会社名店館",
+      "type": "company",
+      "brands": {
+        "エヴォルテ": "BR125",
+        "ビストロ エヴォルテ": "BR128"
+      }
+    },
+    {
+      "id": "CL028",
+      "name": "炉端居酒屋 中野製作所 まんてん別館",
+      "type": "company",
+      "brands": {
+        "炉端居酒屋 中野製作所": "BR126"
+      }
+    },
+    {
+      "id": "CL029",
+      "name": "株式会社しゃぶ庵",
+      "type": "company",
+      "brands": {
+        "独楽": "BR137"
+      }
+    },
+    {
+      "id": "CL030",
+      "name": "合同会社SKTC",
+      "type": "company",
+      "brands": {
+        "アフロディーテ": "BR139"
+      }
+    }
+  ],
+  "brands": [
+    {
+      "id": "BR001",
+      "name": "モンキーツリー",
+      "client_id": "CL001",
+      "client_name": "株式会社エデュケーション"
+    },
+    {
+      "id": "BR002",
+      "name": "晩杯屋",
+      "client_id": "CL002",
+      "client_name": "アクティブソース"
+    },
+    {
+      "id": "BR003",
+      "name": "株式会社CatchBall 横浜 ようさい",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR004",
+      "name": "株式会社フォーシーズ_クアアイナ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR005",
+      "name": "0秒レモンサワーときわ亭池袋西口店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR006",
+      "name": "やきとり大吉",
+      "client_id": "CL004",
+      "client_name": "ダイキチシステム㈱"
+    },
+    {
+      "id": "BR007",
+      "name": "カイロライン 国分寺整体院",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR008",
+      "name": "発酵デリカッセン新宿高島屋",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR009",
+      "name": "ダーツバーエース",
+      "client_id": "CL005",
+      "client_name": "ダーツバーA's"
+    },
+    {
+      "id": "BR010",
+      "name": "上海料理 佳樹園",
+      "client_id": "CL006",
+      "client_name": "株式会社 SSG"
+    },
+    {
+      "id": "BR011",
+      "name": "元気ダイニング 大衆焼肉酒場こがね",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR012",
+      "name": "鮨 輝らく",
+      "client_id": "CL007",
+      "client_name": "株式会社クラフトマスタージャパン"
+    },
+    {
+      "id": "BR013",
+      "name": "スモールズ ゴールデン街",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR014",
+      "name": "株式会社デイジイ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR015",
+      "name": "ワイン食堂がっと渋谷円山町店",
+      "client_id": "CL008",
+      "client_name": "株式会社がっと"
+    },
+    {
+      "id": "BR016",
+      "name": "H",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR017",
+      "name": "立呑み焼きとん大黒",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR018",
+      "name": "株式会社オン・ザ・プラネット",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR019",
+      "name": "株式会社CatchBall　ラム肉専門店隣のロッヂ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR020",
+      "name": "KUSABI",
+      "client_id": "CL009",
+      "client_name": "KUSABI オフィス"
+    },
+    {
+      "id": "BR021",
+      "name": "韓美膳ららぽーと横浜店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR022",
+      "name": "株式会社オン・ザ・プラネット　魚無双トオダ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR023",
+      "name": "デイジイ西新宿店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR024",
+      "name": "スモールズ オイスター&珍味 bar 不夜城",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR025",
+      "name": "Darts",
+      "client_id": "CL005",
+      "client_name": "ダーツバーA's"
+    },
+    {
+      "id": "BR026",
+      "name": "エフディ",
+      "client_id": "CL010",
+      "client_name": "BAR　FD"
+    },
+    {
+      "id": "BR027",
+      "name": "ステーキロッヂ",
+      "client_id": "CL011",
+      "client_name": "株式会社価値作り研究所"
+    },
+    {
+      "id": "BR028",
+      "name": "株式会社GRAST 手作りの味噌らーめん 味噌樽",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR029",
+      "name": "株式会社GOSSO_0秒レモンサワー渋谷店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR030",
+      "name": "とんかつさくら 茅場町",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR031",
+      "name": "蕎麦前　山都",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR032",
+      "name": "銀座竹の庵5丁目本店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR033",
+      "name": "株式会社オン・ザ・プラネット　魚焼男 弐",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR034",
+      "name": "ファストオイスターズ神楽坂店",
+      "client_id": "CL012",
+      "client_name": "FAST OYSTERS"
+    },
+    {
+      "id": "BR035",
+      "name": "練習用店舗",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR036",
+      "name": "餃子楼　工場",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR037",
+      "name": "株式会社スモールズ\\tディストピアBar KARMA　カルマ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR038",
+      "name": "月島 inu to hito",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR039",
+      "name": "火鍋",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR040",
+      "name": "デニーロ",
+      "client_id": "CL013",
+      "client_name": "デニーロ 神田店"
+    },
+    {
+      "id": "BR041",
+      "name": "The mark grand hotel",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR042",
+      "name": "デイジイ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR043",
+      "name": "長谷川さん宅",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR044",
+      "name": "株式会社GRAST",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR045",
+      "name": "新橋バーラウンジ御殿",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR046",
+      "name": "片山鶏肉店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR047",
+      "name": "株式会社オン・ザ・プラネット　新燻男ニューイブシオ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR048",
+      "name": "株式会社スモールズ\\tBar \\nANIME HOLIC アニメホリック goldengai",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR049",
+      "name": "串焼こがね越谷",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR050",
+      "name": "いのこ平和台店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR051",
+      "name": "株式会社フォーシーズ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR052",
+      "name": "ニーハオ大森店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR053",
+      "name": "炭火焼きホルモン",
+      "client_id": "CL014",
+      "client_name": "炭火焼きホルモン　まんてん"
+    },
+    {
+      "id": "BR054",
+      "name": "ラフェス",
+      "client_id": "CL015",
+      "client_name": "ラフェス"
+    },
+    {
+      "id": "BR055",
+      "name": "Mahaloh Import Shop",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR056",
+      "name": "油そば雷神",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR057",
+      "name": "株式会社ダイニングエッジ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR058",
+      "name": "武蔵野アブラ学会",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR059",
+      "name": "マッスルボディメイク",
+      "client_id": "CL016",
+      "client_name": "株式会社マッスルボディメイク"
+    },
+    {
+      "id": "BR060",
+      "name": "Forever High Quality",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR061",
+      "name": "餃子楼",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR062",
+      "name": "炭火焼きホルモンまんてん中野店",
+      "client_id": "CL014",
+      "client_name": "炭火焼きホルモン　まんてん"
+    },
+    {
+      "id": "BR063",
+      "name": "ロケ弁エージェント",
+      "client_id": "CL017",
+      "client_name": "有限会社タカネット"
+    },
+    {
+      "id": "BR064",
+      "name": "ラゾーナ川崎",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR065",
+      "name": "株式会社ダイニング富士屋本店 富士屋本店 日本橋浜町",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR066",
+      "name": "肉の関山",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR067",
+      "name": "麺処いのこ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR068",
+      "name": "ニクアザブ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR069",
+      "name": "トランザム",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR070",
+      "name": "麺と肴 担々麺ペン坊",
+      "client_id": "CL018",
+      "client_name": "麺と肴　担々麺 ペン坊"
+    },
+    {
+      "id": "BR071",
+      "name": "立呑み焼きとん大黒サンロード蒲田店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR072",
+      "name": "テスト",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR073",
+      "name": "焼肉 松の屋",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR074",
+      "name": "でですけ サイゴンキッチン",
+      "client_id": "CL019",
+      "client_name": "でですけ サイゴンキッチン"
+    },
+    {
+      "id": "BR075",
+      "name": "ゴーゴーカレー 新宿東口駅前スタジアム",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR076",
+      "name": "株式会社オン・ザ・プラネット　新魚焼男ニューサカナヤキオ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR077",
+      "name": "メティウスフーズ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR078",
+      "name": "更科天狐",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR079",
+      "name": "株式会社オン・ザ・プラネット　焼肉男マンモス",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR080",
+      "name": "ケーエスエムサポート合同会社  ゴーゴーカレー新宿東口駅前店スタジアム",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR081",
+      "name": "おすすめ屋",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR082",
+      "name": "コナ",
+      "client_id": "CL020",
+      "client_name": "株式会社INGS"
+    },
+    {
+      "id": "BR083",
+      "name": "株式会社スモールズ\\tJapanese Bar　アニメホリック 猪鹿蝶 Carma",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR084",
+      "name": "ニーハオ蒲田",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR085",
+      "name": "生ラムかんな",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR086",
+      "name": "株式会社GOSSO",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR087",
+      "name": "S BAR",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR088",
+      "name": "ニーハオ渋谷店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR089",
+      "name": "ニーハオ蒲田　別館",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR090",
+      "name": "板前寿司",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR091",
+      "name": "大衆寿司酒場",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR092",
+      "name": "ルポ",
+      "client_id": "CL021",
+      "client_name": "アークワークス"
+    },
+    {
+      "id": "BR093",
+      "name": "焼肉商店",
+      "client_id": "CL022",
+      "client_name": "株式会社ストラク"
+    },
+    {
+      "id": "BR094",
+      "name": "スオーノ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR095",
+      "name": "コウジアンドコー",
+      "client_id": "CL023",
+      "client_name": "株式会社フードアンドパートナーズ"
+    },
+    {
+      "id": "BR096",
+      "name": "炭火焼きホルモン",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR097",
+      "name": "ニーハオ蒲田　工場",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR098",
+      "name": "株式会社友進中華食堂一番館 東陽町",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR099",
+      "name": "大衆寿司酒場 こがね",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR100",
+      "name": "米と魚さかなさま",
+      "client_id": "CL024",
+      "client_name": "合同会社FOOD GROOVE JAPAN"
+    },
+    {
+      "id": "BR101",
+      "name": "ザンギリ ネクスト",
+      "client_id": "CL025",
+      "client_name": "株式会社ZANGIRI"
+    },
+    {
+      "id": "BR102",
+      "name": "大勝軒まるいち",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR103",
+      "name": "並木橋 なかむら",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR104",
+      "name": "マッシモッタヴィオ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR105",
+      "name": "中華食堂",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR106",
+      "name": "東京レストランホールディングス株式会社 ラグジュアリーカラオケ マンシーズトウキョウ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR107",
+      "name": "立呑",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR108",
+      "name": "株式会社オン・ザ・プラネット　ホルモンのマンモス",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR109",
+      "name": "ステーキロッヂ渋谷道玄坂店",
+      "client_id": "CL011",
+      "client_name": "株式会社価値作り研究所"
+    },
+    {
+      "id": "BR110",
+      "name": "ダーツバーエース水道橋店",
+      "client_id": "CL005",
+      "client_name": "ダーツバーA's"
+    },
+    {
+      "id": "BR111",
+      "name": "天孝",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR112",
+      "name": "ニーハオ大井町店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR113",
+      "name": "富士屋本店サクラステージ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR114",
+      "name": "株式会社馬力",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR115",
+      "name": "アトミック　bar",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR116",
+      "name": "株式会社ロイヤルストレートフラッシュ　丸鶏るいすけ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR117",
+      "name": "貝出汁中華そば 竹祥",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR118",
+      "name": "立呑み魚椿",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR119",
+      "name": "リストランティアーノ ルベロ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR120",
+      "name": "宮崎辛麺　辛麺屋一輪",
+      "client_id": "CL026",
+      "client_name": "株式会社FELICE"
+    },
+    {
+      "id": "BR121",
+      "name": "カラオケパセラ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR122",
+      "name": "家庭料理居酒屋",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR123",
+      "name": "ニーハオ神田店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR124",
+      "name": "株式会社ドリームダブルコーポレーション",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR125",
+      "name": "エヴォルテ",
+      "client_id": "CL027",
+      "client_name": "株式会社名店館"
+    },
+    {
+      "id": "BR126",
+      "name": "炉端居酒屋 中野製作所",
+      "client_id": "CL028",
+      "client_name": "炉端居酒屋 中野製作所 まんてん別館"
+    },
+    {
+      "id": "BR127",
+      "name": "株式会社馬力 高円寺",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR128",
+      "name": "ビストロ エヴォルテ",
+      "client_id": "CL027",
+      "client_name": "株式会社名店館"
+    },
+    {
+      "id": "BR129",
+      "name": "ダーツバーエース日本橋茅場町店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR130",
+      "name": "株式会社スモールズ\\tBar 灯鏡 tokyo 歌舞伎町レッドのれん街",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR131",
+      "name": "株式会社オン・ザ・プラネット　燻男（いぶしお）",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR132",
+      "name": "ホルモン屋だん新橋店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR133",
+      "name": "株式会社",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR134",
+      "name": "株式会社JCC",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR135",
+      "name": "天婦羅 天孝(てんこう)",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR136",
+      "name": "株式会社とくやまホールディングス",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR137",
+      "name": "独楽",
+      "client_id": "CL029",
+      "client_name": "株式会社しゃぶ庵"
+    },
+    {
+      "id": "BR138",
+      "name": "株式会社クラウンセンス　鮨ひのもと",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR139",
+      "name": "アフロディーテ",
+      "client_id": "CL030",
+      "client_name": "合同会社SKTC"
+    },
+    {
+      "id": "BR140",
+      "name": "スモールズ　オイスター&珍味 bar 不夜城",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR141",
+      "name": "ホルモン屋だん",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    },
+    {
+      "id": "BR142",
+      "name": "CRAFTCHEESEMARKET\\t渋谷店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）"
+    }
+  ],
+  "store_updates": [
+    {
+      "store_id": "99",
+      "store_name": "モンキーツリー",
+      "client_id": "CL001",
+      "client_name": "株式会社エデュケーション",
+      "brand_id": "BR001",
+      "brand_name": "モンキーツリー"
+    },
+    {
+      "store_id": "63",
+      "store_name": "晩杯屋 大井町店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "141",
+      "store_name": "株式会社CatchBall 横浜 ようさい",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR003",
+      "brand_name": "株式会社CatchBall 横浜 ようさい"
+    },
+    {
+      "store_id": "207",
+      "store_name": "株式会社フォーシーズ_クアアイナ 青山本店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR004",
+      "brand_name": "株式会社フォーシーズ_クアアイナ"
+    },
+    {
+      "store_id": "195",
+      "store_name": "0秒レモンサワーときわ亭池袋西口店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR005",
+      "brand_name": "0秒レモンサワーときわ亭池袋西口店"
+    },
+    {
+      "store_id": "92",
+      "store_name": "やきとり大吉 桜ヶ丘店",
+      "client_id": "CL004",
+      "client_name": "ダイキチシステム㈱",
+      "brand_id": "BR006",
+      "brand_name": "やきとり大吉"
+    },
+    {
+      "store_id": "120",
+      "store_name": "カイロライン 国分寺整体院",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR007",
+      "brand_name": "カイロライン 国分寺整体院"
+    },
+    {
+      "store_id": "168",
+      "store_name": "発酵デリカッセン新宿高島屋",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR008",
+      "brand_name": "発酵デリカッセン新宿高島屋"
+    },
+    {
+      "store_id": "64",
+      "store_name": "晩杯屋 五反田東口店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "103",
+      "store_name": "ダーツバーエース 大塚店",
+      "client_id": "CL005",
+      "client_name": "ダーツバーA's",
+      "brand_id": "BR009",
+      "brand_name": "ダーツバーエース"
+    },
+    {
+      "store_id": "102",
+      "store_name": "上海料理 佳樹園",
+      "client_id": "CL006",
+      "client_name": "株式会社 SSG",
+      "brand_id": "BR010",
+      "brand_name": "上海料理 佳樹園"
+    },
+    {
+      "store_id": "204",
+      "store_name": "元気ダイニング 大衆焼肉酒場こがね",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR011",
+      "brand_name": "元気ダイニング 大衆焼肉酒場こがね"
+    },
+    {
+      "store_id": "36",
+      "store_name": "鮨 輝らく",
+      "client_id": "CL007",
+      "client_name": "株式会社クラフトマスタージャパン",
+      "brand_id": "BR012",
+      "brand_name": "鮨 輝らく"
+    },
+    {
+      "store_id": "49",
+      "store_name": "晩杯屋 天王寺店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "167",
+      "store_name": "スモールズ ゴールデン街",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR013",
+      "brand_name": "スモールズ ゴールデン街"
+    },
+    {
+      "store_id": "147",
+      "store_name": "株式会社デイジイ　川口市役所店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR014",
+      "brand_name": "株式会社デイジイ"
+    },
+    {
+      "store_id": "33",
+      "store_name": "ワイン食堂がっと渋谷円山町店",
+      "client_id": "CL008",
+      "client_name": "株式会社がっと",
+      "brand_id": "BR015",
+      "brand_name": "ワイン食堂がっと渋谷円山町店"
+    },
+    {
+      "store_id": "186",
+      "store_name": "H VIEW株式会社 立川酒場 魚丸 南口店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR016",
+      "brand_name": "H"
+    },
+    {
+      "store_id": "22",
+      "store_name": "立呑み焼きとん大黒 蒲田店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR017",
+      "brand_name": "立呑み焼きとん大黒"
+    },
+    {
+      "store_id": "172",
+      "store_name": "株式会社オン・ザ・プラネット　魚焼男新橋本店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR018",
+      "brand_name": "株式会社オン・ザ・プラネット"
+    },
+    {
+      "store_id": "139",
+      "store_name": "株式会社CatchBall　ラム肉専門店隣のロッヂ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR019",
+      "brand_name": "株式会社CatchBall　ラム肉専門店隣のロッヂ"
+    },
+    {
+      "store_id": "18",
+      "store_name": "KUSABI アクセラオフィス",
+      "client_id": "CL009",
+      "client_name": "KUSABI オフィス",
+      "brand_id": "BR020",
+      "brand_name": "KUSABI"
+    },
+    {
+      "store_id": "50",
+      "store_name": "晩杯屋 阪神尼崎店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "191",
+      "store_name": "韓美膳ららぽーと横浜店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR021",
+      "brand_name": "韓美膳ららぽーと横浜店"
+    },
+    {
+      "store_id": "174",
+      "store_name": "株式会社オン・ザ・プラネット　魚無双トオダ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR022",
+      "brand_name": "株式会社オン・ザ・プラネット　魚無双トオダ"
+    },
+    {
+      "store_id": "109",
+      "store_name": "デイジイ西新宿店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR023",
+      "brand_name": "デイジイ西新宿店"
+    },
+    {
+      "store_id": "156",
+      "store_name": "スモールズ オイスター&珍味 bar 不夜城",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR024",
+      "brand_name": "スモールズ オイスター&珍味 bar 不夜城"
+    },
+    {
+      "store_id": "16",
+      "store_name": "Darts Bar A's 神楽坂店",
+      "client_id": "CL005",
+      "client_name": "ダーツバーA's",
+      "brand_id": "BR025",
+      "brand_name": "Darts"
+    },
+    {
+      "store_id": "40",
+      "store_name": "エフディ",
+      "client_id": "CL010",
+      "client_name": "BAR　FD",
+      "brand_id": "BR026",
+      "brand_name": "エフディ"
+    },
+    {
+      "store_id": "90",
+      "store_name": "ステーキロッヂ ヨドバシ秋葉原店",
+      "client_id": "CL011",
+      "client_name": "株式会社価値作り研究所",
+      "brand_id": "BR027",
+      "brand_name": "ステーキロッヂ"
+    },
+    {
+      "store_id": "135",
+      "store_name": "株式会社GRAST 手作りの味噌らーめん 味噌樽",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR028",
+      "brand_name": "株式会社GRAST 手作りの味噌らーめん 味噌樽"
+    },
+    {
+      "store_id": "104",
+      "store_name": "株式会社GOSSO_0秒レモンサワー渋谷店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR029",
+      "brand_name": "株式会社GOSSO_0秒レモンサワー渋谷店"
+    },
+    {
+      "store_id": "121",
+      "store_name": "とんかつさくら 茅場町",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR030",
+      "brand_name": "とんかつさくら 茅場町"
+    },
+    {
+      "store_id": "198",
+      "store_name": "蕎麦前　山都",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR031",
+      "brand_name": "蕎麦前　山都"
+    },
+    {
+      "store_id": "54",
+      "store_name": "晩杯屋 町田本店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "189",
+      "store_name": "銀座竹の庵5丁目本店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR032",
+      "brand_name": "銀座竹の庵5丁目本店"
+    },
+    {
+      "store_id": "79",
+      "store_name": "晩杯屋 十条店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "66",
+      "store_name": "晩杯屋 武蔵小山駅前店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "170",
+      "store_name": "株式会社オン・ザ・プラネット　魚焼男 弐",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR033",
+      "brand_name": "株式会社オン・ザ・プラネット　魚焼男 弐"
+    },
+    {
+      "store_id": "108",
+      "store_name": "ファストオイスターズ神楽坂店",
+      "client_id": "CL012",
+      "client_name": "FAST OYSTERS",
+      "brand_id": "BR034",
+      "brand_name": "ファストオイスターズ神楽坂店"
+    },
+    {
+      "store_id": "194",
+      "store_name": "練習用店舗",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR035",
+      "brand_name": "練習用店舗"
+    },
+    {
+      "store_id": "115",
+      "store_name": "餃子楼　工場",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR036",
+      "brand_name": "餃子楼　工場"
+    },
+    {
+      "store_id": "131",
+      "store_name": "株式会社スモールズ\\tディストピアBar KARMA　カルマ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR037",
+      "brand_name": "株式会社スモールズ\\tディストピアBar KARMA　カルマ"
+    },
+    {
+      "store_id": "48",
+      "store_name": "晩杯屋 大阪駅前第三ビル店　＆　大阪駅前第四ビル店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "142",
+      "store_name": "月島 inu to hito",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR038",
+      "brand_name": "月島 inu to hito"
+    },
+    {
+      "store_id": "118",
+      "store_name": "火鍋 小肥羊 銀座店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR039",
+      "brand_name": "火鍋"
+    },
+    {
+      "store_id": "59",
+      "store_name": "晩杯屋 下北沢店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "106",
+      "store_name": "デニーロ 神田店",
+      "client_id": "CL013",
+      "client_name": "デニーロ 神田店",
+      "brand_id": "BR040",
+      "brand_name": "デニーロ"
+    },
+    {
+      "store_id": "169",
+      "store_name": "The mark grand hotel",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR041",
+      "brand_name": "The mark grand hotel"
+    },
+    {
+      "store_id": "110",
+      "store_name": "デイジイ 麹町店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR042",
+      "brand_name": "デイジイ"
+    },
+    {
+      "store_id": "202",
+      "store_name": "長谷川さん宅",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR043",
+      "brand_name": "長谷川さん宅"
+    },
+    {
+      "store_id": "136",
+      "store_name": "株式会社GRAST  北海道らーめん みそ熊 北千住店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR044",
+      "brand_name": "株式会社GRAST"
+    },
+    {
+      "store_id": "116",
+      "store_name": "新橋バーラウンジ御殿",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR045",
+      "brand_name": "新橋バーラウンジ御殿"
+    },
+    {
+      "store_id": "31",
+      "store_name": "片山鶏肉店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR046",
+      "brand_name": "片山鶏肉店"
+    },
+    {
+      "store_id": "180",
+      "store_name": "株式会社オン・ザ・プラネット　新燻男ニューイブシオ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR047",
+      "brand_name": "株式会社オン・ザ・プラネット　新燻男ニューイブシオ"
+    },
+    {
+      "store_id": "133",
+      "store_name": "株式会社スモールズ\\tBar \\nANIME HOLIC アニメホリック goldengai",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR048",
+      "brand_name": "株式会社スモールズ\\tBar \\nANIME HOLIC アニメホリック goldengai"
+    },
+    {
+      "store_id": "80",
+      "store_name": "晩杯屋 門前仲町店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "187",
+      "store_name": "串焼こがね越谷",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR049",
+      "brand_name": "串焼こがね越谷"
+    },
+    {
+      "store_id": "155",
+      "store_name": "いのこ平和台店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR050",
+      "brand_name": "いのこ平和台店"
+    },
+    {
+      "store_id": "206",
+      "store_name": "株式会社フォーシーズ クアアイナ 渋谷店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR051",
+      "brand_name": "株式会社フォーシーズ"
+    },
+    {
+      "store_id": "62",
+      "store_name": "晩杯屋 武蔵小山本店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "151",
+      "store_name": "ニーハオ大森店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR052",
+      "brand_name": "ニーハオ大森店"
+    },
+    {
+      "store_id": "105",
+      "store_name": "炭火焼きホルモン まんてん中目黒店",
+      "client_id": "CL014",
+      "client_name": "炭火焼きホルモン　まんてん",
+      "brand_id": "BR053",
+      "brand_name": "炭火焼きホルモン"
+    },
+    {
+      "store_id": "87",
+      "store_name": "晩杯屋 綾瀬店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "75",
+      "store_name": "晩杯屋 飯田橋東口店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "76",
+      "store_name": "晩杯屋 大塚南口店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "97",
+      "store_name": "ラフェス 神田小川町店",
+      "client_id": "CL015",
+      "client_name": "ラフェス",
+      "brand_id": "BR054",
+      "brand_name": "ラフェス"
+    },
+    {
+      "store_id": "84",
+      "store_name": "晩杯屋 御徒町店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "60",
+      "store_name": "晩杯屋 高円寺純情店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "143",
+      "store_name": "Mahaloh Import Shop",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR055",
+      "brand_name": "Mahaloh Import Shop"
+    },
+    {
+      "store_id": "117",
+      "store_name": "油そば雷神 市川店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR056",
+      "brand_name": "油そば雷神"
+    },
+    {
+      "store_id": "144",
+      "store_name": "株式会社ダイニングエッジ　楽が気　新橋本店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR057",
+      "brand_name": "株式会社ダイニングエッジ"
+    },
+    {
+      "store_id": "148",
+      "store_name": "武蔵野アブラ学会　代々木店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR058",
+      "brand_name": "武蔵野アブラ学会"
+    },
+    {
+      "store_id": "61",
+      "store_name": "晩杯屋 荻窪北口店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "38",
+      "store_name": "マッスルボディメイク",
+      "client_id": "CL016",
+      "client_name": "株式会社マッスルボディメイク",
+      "brand_id": "BR059",
+      "brand_name": "マッスルボディメイク"
+    },
+    {
+      "store_id": "28",
+      "store_name": "Forever High Quality",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR060",
+      "brand_name": "Forever High Quality"
+    },
+    {
+      "store_id": "89",
+      "store_name": "晩杯屋 西葛西店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "114",
+      "store_name": "餃子楼 三軒茶屋店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR061",
+      "brand_name": "餃子楼"
+    },
+    {
+      "store_id": "94",
+      "store_name": "炭火焼きホルモンまんてん中野店",
+      "client_id": "CL014",
+      "client_name": "炭火焼きホルモン　まんてん",
+      "brand_id": "BR062",
+      "brand_name": "炭火焼きホルモンまんてん中野店"
+    },
+    {
+      "store_id": "98",
+      "store_name": "ロケ弁エージェント",
+      "client_id": "CL017",
+      "client_name": "有限会社タカネット",
+      "brand_id": "BR063",
+      "brand_name": "ロケ弁エージェント"
+    },
+    {
+      "store_id": "192",
+      "store_name": "ラゾーナ川崎",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR064",
+      "brand_name": "ラゾーナ川崎"
+    },
+    {
+      "store_id": "53",
+      "store_name": "晩杯屋 桜木町店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "130",
+      "store_name": "株式会社ダイニング富士屋本店 富士屋本店 日本橋浜町",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR065",
+      "brand_name": "株式会社ダイニング富士屋本店 富士屋本店 日本橋浜町"
+    },
+    {
+      "store_id": "208",
+      "store_name": "肉の関山",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR066",
+      "brand_name": "肉の関山"
+    },
+    {
+      "store_id": "82",
+      "store_name": "晩杯屋 両国店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "137",
+      "store_name": "麺処いのこ　赤塚店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR067",
+      "brand_name": "麺処いのこ"
+    },
+    {
+      "store_id": "113",
+      "store_name": "ニクアザブ　西麻布店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR068",
+      "brand_name": "ニクアザブ"
+    },
+    {
+      "store_id": "30",
+      "store_name": "トランザム",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR069",
+      "brand_name": "トランザム"
+    },
+    {
+      "store_id": "35",
+      "store_name": "麺と肴 担々麺ペン坊",
+      "client_id": "CL018",
+      "client_name": "麺と肴　担々麺 ペン坊",
+      "brand_id": "BR070",
+      "brand_name": "麺と肴 担々麺ペン坊"
+    },
+    {
+      "store_id": "52",
+      "store_name": "晩杯屋 鶴見西口店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "24",
+      "store_name": "立呑み焼きとん大黒サンロード蒲田店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR071",
+      "brand_name": "立呑み焼きとん大黒サンロード蒲田店"
+    },
+    {
+      "store_id": "212",
+      "store_name": "テスト",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR072",
+      "brand_name": "テスト"
+    },
+    {
+      "store_id": "145",
+      "store_name": "焼肉 松の屋",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR073",
+      "brand_name": "焼肉 松の屋"
+    },
+    {
+      "store_id": "107",
+      "store_name": "でですけ サイゴンキッチン",
+      "client_id": "CL019",
+      "client_name": "でですけ サイゴンキッチン",
+      "brand_id": "BR074",
+      "brand_name": "でですけ サイゴンキッチン"
+    },
+    {
+      "store_id": "146",
+      "store_name": "ゴーゴーカレー 新宿東口駅前スタジアム",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR075",
+      "brand_name": "ゴーゴーカレー 新宿東口駅前スタジアム"
+    },
+    {
+      "store_id": "179",
+      "store_name": "株式会社オン・ザ・プラネット　新魚焼男ニューサカナヤキオ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR076",
+      "brand_name": "株式会社オン・ザ・プラネット　新魚焼男ニューサカナヤキオ"
+    },
+    {
+      "store_id": "171",
+      "store_name": "株式会社オン・ザ・プラネット　魚豪商 コダマ新橋店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR018",
+      "brand_name": "株式会社オン・ザ・プラネット"
+    },
+    {
+      "store_id": "201",
+      "store_name": "メティウスフーズ ピッツェリア ドォーロ 新橋店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR077",
+      "brand_name": "メティウスフーズ"
+    },
+    {
+      "store_id": "77",
+      "store_name": "晩杯屋 巣鴨北口店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "91",
+      "store_name": "更科天狐",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR078",
+      "brand_name": "更科天狐"
+    },
+    {
+      "store_id": "81",
+      "store_name": "晩杯屋 亀戸東口店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "88",
+      "store_name": "晩杯屋 亀有北口店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "173",
+      "store_name": "株式会社オン・ザ・プラネット　焼肉男マンモス",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR079",
+      "brand_name": "株式会社オン・ザ・プラネット　焼肉男マンモス"
+    },
+    {
+      "store_id": "140",
+      "store_name": "ケーエスエムサポート合同会社  ゴーゴーカレー新宿東口駅前店スタジアム",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR080",
+      "brand_name": "ケーエスエムサポート合同会社  ゴーゴーカレー新宿東口駅前店スタジアム"
+    },
+    {
+      "store_id": "27",
+      "store_name": "おすすめ屋 新宿西口店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR081",
+      "brand_name": "おすすめ屋"
+    },
+    {
+      "store_id": "96",
+      "store_name": "コナ 千葉駅前店",
+      "client_id": "CL020",
+      "client_name": "株式会社INGS",
+      "brand_id": "BR082",
+      "brand_name": "コナ"
+    },
+    {
+      "store_id": "132",
+      "store_name": "株式会社スモールズ\\tJapanese Bar　アニメホリック 猪鹿蝶 Carma",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR083",
+      "brand_name": "株式会社スモールズ\\tJapanese Bar　アニメホリック 猪鹿蝶 Carma"
+    },
+    {
+      "store_id": "152",
+      "store_name": "ニーハオ蒲田 本店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR084",
+      "brand_name": "ニーハオ蒲田"
+    },
+    {
+      "store_id": "126",
+      "store_name": "生ラムかんな　新橋総本店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR085",
+      "brand_name": "生ラムかんな"
+    },
+    {
+      "store_id": "128",
+      "store_name": "株式会社GOSSO CRAFTCHEESEMARKET 渋谷店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR086",
+      "brand_name": "株式会社GOSSO"
+    },
+    {
+      "store_id": "71",
+      "store_name": "晩杯屋 新橋SL広場店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "163",
+      "store_name": "S BAR",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR087",
+      "brand_name": "S BAR"
+    },
+    {
+      "store_id": "165",
+      "store_name": "ニーハオ渋谷店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR088",
+      "brand_name": "ニーハオ渋谷店"
+    },
+    {
+      "store_id": "153",
+      "store_name": "ニーハオ蒲田　別館",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR089",
+      "brand_name": "ニーハオ蒲田　別館"
+    },
+    {
+      "store_id": "119",
+      "store_name": "板前寿司 愛宕店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR090",
+      "brand_name": "板前寿司"
+    },
+    {
+      "store_id": "175",
+      "store_name": "株式会社オン・ザ・プラネット　魚豪商コダマ錦糸町店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR018",
+      "brand_name": "株式会社オン・ザ・プラネット"
+    },
+    {
+      "store_id": "200",
+      "store_name": "大衆寿司酒場　こがね商店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR091",
+      "brand_name": "大衆寿司酒場"
+    },
+    {
+      "store_id": "44",
+      "store_name": "ルポ",
+      "client_id": "CL021",
+      "client_name": "アークワークス",
+      "brand_id": "BR092",
+      "brand_name": "ルポ"
+    },
+    {
+      "store_id": "95",
+      "store_name": "焼肉商店 浦島屋 津田沼店",
+      "client_id": "CL022",
+      "client_name": "株式会社ストラク",
+      "brand_id": "BR093",
+      "brand_name": "焼肉商店"
+    },
+    {
+      "store_id": "32",
+      "store_name": "スオーノ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR094",
+      "brand_name": "スオーノ"
+    },
+    {
+      "store_id": "41",
+      "store_name": "コウジアンドコー",
+      "client_id": "CL023",
+      "client_name": "株式会社フードアンドパートナーズ",
+      "brand_id": "BR095",
+      "brand_name": "コウジアンドコー"
+    },
+    {
+      "store_id": "51",
+      "store_name": "晩杯屋 川崎店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "205",
+      "store_name": "株式会社フォーシーズ クアアイナ 五反田店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR051",
+      "brand_name": "株式会社フォーシーズ"
+    },
+    {
+      "store_id": "100",
+      "store_name": "炭火焼きホルモン まんてん代々木店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR096",
+      "brand_name": "炭火焼きホルモン"
+    },
+    {
+      "store_id": "78",
+      "store_name": "晩杯屋 池袋東口店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "154",
+      "store_name": "ニーハオ蒲田　工場",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR097",
+      "brand_name": "ニーハオ蒲田　工場"
+    },
+    {
+      "store_id": "176",
+      "store_name": "株式会社オン・ザ・プラネット　魚豪商コダマ大井町店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR018",
+      "brand_name": "株式会社オン・ザ・プラネット"
+    },
+    {
+      "store_id": "199",
+      "store_name": "株式会社友進中華食堂一番館 東陽町",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR098",
+      "brand_name": "株式会社友進中華食堂一番館 東陽町"
+    },
+    {
+      "store_id": "83",
+      "store_name": "晩杯屋 鶯谷店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "68",
+      "store_name": "晩杯屋 新中野店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "188",
+      "store_name": "大衆寿司酒場 こがね",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR099",
+      "brand_name": "大衆寿司酒場 こがね"
+    },
+    {
+      "store_id": "65",
+      "store_name": "晩杯屋 中延店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "34",
+      "store_name": "米と魚さかなさま",
+      "client_id": "CL024",
+      "client_name": "合同会社FOOD GROOVE JAPAN",
+      "brand_id": "BR100",
+      "brand_name": "米と魚さかなさま"
+    },
+    {
+      "store_id": "101",
+      "store_name": "ザンギリ ネクスト",
+      "client_id": "CL025",
+      "client_name": "株式会社ZANGIRI",
+      "brand_id": "BR101",
+      "brand_name": "ザンギリ ネクスト"
+    },
+    {
+      "store_id": "23",
+      "store_name": "立呑み焼きとん大黒 蒲田東口店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR017",
+      "brand_name": "立呑み焼きとん大黒"
+    },
+    {
+      "store_id": "157",
+      "store_name": "大勝軒まるいち 新宿東南口店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR102",
+      "brand_name": "大勝軒まるいち"
+    },
+    {
+      "store_id": "193",
+      "store_name": "並木橋 なかむら",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR103",
+      "brand_name": "並木橋 なかむら"
+    },
+    {
+      "store_id": "111",
+      "store_name": "マッシモッタヴィオ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR104",
+      "brand_name": "マッシモッタヴィオ"
+    },
+    {
+      "store_id": "209",
+      "store_name": "中華食堂 一番館 新小岩店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR105",
+      "brand_name": "中華食堂"
+    },
+    {
+      "store_id": "182",
+      "store_name": "東京レストランホールディングス株式会社 ラグジュアリーカラオケ マンシーズトウキョウ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR106",
+      "brand_name": "東京レストランホールディングス株式会社 ラグジュアリーカラオケ マンシーズトウキョウ"
+    },
+    {
+      "store_id": "159",
+      "store_name": "立呑 富士屋本店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR107",
+      "brand_name": "立呑"
+    },
+    {
+      "store_id": "178",
+      "store_name": "株式会社オン・ザ・プラネット　ホルモンのマンモス",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR108",
+      "brand_name": "株式会社オン・ザ・プラネット　ホルモンのマンモス"
+    },
+    {
+      "store_id": "46",
+      "store_name": "ステーキロッヂ渋谷道玄坂店",
+      "client_id": "CL011",
+      "client_name": "株式会社価値作り研究所",
+      "brand_id": "BR109",
+      "brand_name": "ステーキロッヂ渋谷道玄坂店"
+    },
+    {
+      "store_id": "19",
+      "store_name": "ダーツバーエース水道橋店",
+      "client_id": "CL005",
+      "client_name": "ダーツバーA's",
+      "brand_id": "BR110",
+      "brand_name": "ダーツバーエース水道橋店"
+    },
+    {
+      "store_id": "112",
+      "store_name": "天孝",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR111",
+      "brand_name": "天孝"
+    },
+    {
+      "store_id": "150",
+      "store_name": "ニーハオ大井町店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR112",
+      "brand_name": "ニーハオ大井町店"
+    },
+    {
+      "store_id": "210",
+      "store_name": "富士屋本店サクラステージ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR113",
+      "brand_name": "富士屋本店サクラステージ"
+    },
+    {
+      "store_id": "158",
+      "store_name": "株式会社馬力 神田店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR114",
+      "brand_name": "株式会社馬力"
+    },
+    {
+      "store_id": "55",
+      "store_name": "晩杯屋 中板橋店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "184",
+      "store_name": "アトミック　bar",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR115",
+      "brand_name": "アトミック　bar"
+    },
+    {
+      "store_id": "211",
+      "store_name": "メティウスフーズ ピッツァリア ドゥオーロ 麹町店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR077",
+      "brand_name": "メティウスフーズ"
+    },
+    {
+      "store_id": "56",
+      "store_name": "晩杯屋 大森東口本店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "203",
+      "store_name": "株式会社GRAST 北海道らーめん みそ熊　王子店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR044",
+      "brand_name": "株式会社GRAST"
+    },
+    {
+      "store_id": "70",
+      "store_name": "晩杯屋 東中野店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "190",
+      "store_name": "株式会社ロイヤルストレートフラッシュ　丸鶏るいすけ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR116",
+      "brand_name": "株式会社ロイヤルストレートフラッシュ　丸鶏るいすけ"
+    },
+    {
+      "store_id": "85",
+      "store_name": "晩杯屋 北関東ふるさと編ファンデス上野店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "69",
+      "store_name": "晩杯屋 野方店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "164",
+      "store_name": "貝出汁中華そば 竹祥",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR117",
+      "brand_name": "貝出汁中華そば 竹祥"
+    },
+    {
+      "store_id": "20",
+      "store_name": "立呑み魚椿 蒲田店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR118",
+      "brand_name": "立呑み魚椿"
+    },
+    {
+      "store_id": "39",
+      "store_name": "リストランティアーノ ルベロ",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR119",
+      "brand_name": "リストランティアーノ ルベロ"
+    },
+    {
+      "store_id": "45",
+      "store_name": "宮崎辛麺　辛麺屋一輪",
+      "client_id": "CL026",
+      "client_name": "株式会社FELICE",
+      "brand_id": "BR120",
+      "brand_name": "宮崎辛麺　辛麺屋一輪"
+    },
+    {
+      "store_id": "123",
+      "store_name": "カラオケパセラ　上野駅前店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR121",
+      "brand_name": "カラオケパセラ"
+    },
+    {
+      "store_id": "124",
+      "store_name": "家庭料理居酒屋 焼肉Yakitaro　水道橋店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR122",
+      "brand_name": "家庭料理居酒屋"
+    },
+    {
+      "store_id": "161",
+      "store_name": "ニーハオ神田店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR123",
+      "brand_name": "ニーハオ神田店"
+    },
+    {
+      "store_id": "181",
+      "store_name": "株式会社ドリームダブルコーポレーション",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR124",
+      "brand_name": "株式会社ドリームダブルコーポレーション"
+    },
+    {
+      "store_id": "74",
+      "store_name": "晩杯屋 新宿東口店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "37",
+      "store_name": "エヴォルテ",
+      "client_id": "CL027",
+      "client_name": "株式会社名店館",
+      "brand_id": "BR125",
+      "brand_name": "エヴォルテ"
+    },
+    {
+      "store_id": "93",
+      "store_name": "炉端居酒屋 中野製作所",
+      "client_id": "CL028",
+      "client_name": "炉端居酒屋 中野製作所 まんてん別館",
+      "brand_id": "BR126",
+      "brand_name": "炉端居酒屋 中野製作所"
+    },
+    {
+      "store_id": "160",
+      "store_name": "株式会社馬力 高円寺",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR127",
+      "brand_name": "株式会社馬力 高円寺"
+    },
+    {
+      "store_id": "29",
+      "store_name": "ビストロ エヴォルテ",
+      "client_id": "CL027",
+      "client_name": "株式会社名店館",
+      "brand_id": "BR128",
+      "brand_name": "ビストロ エヴォルテ"
+    },
+    {
+      "store_id": "86",
+      "store_name": "晩杯屋 京成町屋店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "21",
+      "store_name": "立呑み魚椿 蒲田東口店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR118",
+      "brand_name": "立呑み魚椿"
+    },
+    {
+      "store_id": "25",
+      "store_name": "ダーツバーエース日本橋茅場町店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR129",
+      "brand_name": "ダーツバーエース日本橋茅場町店"
+    },
+    {
+      "store_id": "134",
+      "store_name": "株式会社スモールズ\\tBar 灯鏡 tokyo 歌舞伎町レッドのれん街",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR130",
+      "brand_name": "株式会社スモールズ\\tBar 灯鏡 tokyo 歌舞伎町レッドのれん街"
+    },
+    {
+      "store_id": "177",
+      "store_name": "株式会社オン・ザ・プラネット　燻男（いぶしお）",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR131",
+      "brand_name": "株式会社オン・ザ・プラネット　燻男（いぶしお）"
+    },
+    {
+      "store_id": "125",
+      "store_name": "ホルモン屋だん新橋店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR132",
+      "brand_name": "ホルモン屋だん新橋店"
+    },
+    {
+      "store_id": "185",
+      "store_name": "株式会社　珍來総本店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR133",
+      "brand_name": "株式会社"
+    },
+    {
+      "store_id": "17",
+      "store_name": "Darts Bar A's 高円寺店",
+      "client_id": "CL005",
+      "client_name": "ダーツバーA's",
+      "brand_id": "BR025",
+      "brand_name": "Darts"
+    },
+    {
+      "store_id": "67",
+      "store_name": "晩杯屋 中目黒目黒川RS店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "57",
+      "store_name": "晩杯屋 蒲田西口店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "47",
+      "store_name": "晩杯屋 十三店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "196",
+      "store_name": "メティウスフーズ　PASTA of LIFE　新宿店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR077",
+      "brand_name": "メティウスフーズ"
+    },
+    {
+      "store_id": "197",
+      "store_name": "株式会社JCC 泡盛と沖縄地料理 龍泉ラゾーナ川崎店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR134",
+      "brand_name": "株式会社JCC"
+    },
+    {
+      "store_id": "149",
+      "store_name": "天婦羅 天孝(てんこう)",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR135",
+      "brand_name": "天婦羅 天孝(てんこう)"
+    },
+    {
+      "store_id": "166",
+      "store_name": "株式会社とくやまホールディングス　分とく山本店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR136",
+      "brand_name": "株式会社とくやまホールディングス"
+    },
+    {
+      "store_id": "42",
+      "store_name": "独楽",
+      "client_id": "CL029",
+      "client_name": "株式会社しゃぶ庵",
+      "brand_id": "BR137",
+      "brand_name": "独楽"
+    },
+    {
+      "store_id": "183",
+      "store_name": "株式会社クラウンセンス　鮨ひのもと",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR138",
+      "brand_name": "株式会社クラウンセンス　鮨ひのもと"
+    },
+    {
+      "store_id": "43",
+      "store_name": "アフロディーテ",
+      "client_id": "CL030",
+      "client_name": "合同会社SKTC",
+      "brand_id": "BR139",
+      "brand_name": "アフロディーテ"
+    },
+    {
+      "store_id": "72",
+      "store_name": "晩杯屋 田町店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "122",
+      "store_name": "スモールズ　オイスター&珍味 bar 不夜城",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR140",
+      "brand_name": "スモールズ　オイスター&珍味 bar 不夜城"
+    },
+    {
+      "store_id": "162",
+      "store_name": "株式会社馬力　新橋店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR114",
+      "brand_name": "株式会社馬力"
+    },
+    {
+      "store_id": "73",
+      "store_name": "晩杯屋 新宿思い出横丁店",
+      "client_id": "CL002",
+      "client_name": "アクティブソース",
+      "brand_id": "BR002",
+      "brand_name": "晩杯屋"
+    },
+    {
+      "store_id": "127",
+      "store_name": "ホルモン屋だん 3号店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR141",
+      "brand_name": "ホルモン屋だん"
+    },
+    {
+      "store_id": "129",
+      "store_name": "CRAFTCHEESEMARKET\\t渋谷店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR142",
+      "brand_name": "CRAFTCHEESEMARKET\\t渋谷店"
+    },
+    {
+      "store_id": "138",
+      "store_name": "株式会社GOSSO 0秒レモンサワー 仙台ホルモン焼肉酒場 ときわ亭 横浜西口店",
+      "client_id": "CL003",
+      "client_name": "（個人店舗）",
+      "brand_id": "BR086",
+      "brand_name": "株式会社GOSSO"
+    }
+  ]
+}

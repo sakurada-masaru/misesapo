@@ -1,0 +1,38 @@
+#!/bin/bash
+
+echo "=========================================="
+echo "Lambda関数のデプロイ確認"
+echo "=========================================="
+echo ""
+
+echo "現在のエラー: 'get_reports' is not defined"
+echo ""
+echo "これは、Lambda関数に最新のコードがデプロイされていない可能性があります。"
+echo ""
+
+echo "【確認手順】"
+echo "1. AWS Lambdaコンソールを開く"
+echo "   https://console.aws.amazon.com/lambda/"
+echo ""
+echo "2. Lambda関数を選択"
+echo ""
+echo "3. 「コード」タブを開く"
+echo ""
+echo "4. 以下の関数が含まれているか確認："
+echo "   - get_reports"
+echo "   - create_report"
+echo "   - get_report_detail"
+echo "   - update_report"
+echo "   - delete_report"
+echo ""
+echo "5. 関数が含まれていない場合："
+echo "   - ローカルの lambda_function.py の内容をコピー"
+echo "   - Lambda関数のコードエディタに貼り付け"
+echo "   - 「Deploy」ボタンをクリック"
+echo ""
+
+echo "【デプロイ後の確認】"
+echo "デプロイ後、再度テストを実行してください："
+echo "  ./test-api.sh"
+echo ""
+
