@@ -1428,7 +1428,7 @@
 
     <script>
       const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-    const AI_PROCESS_ENABLED = false;
+      const AI_PROCESS_ENABLED = false;
       let currentUser = null;
       let attendanceRecords = {};
       let currentMonth = new Date().getMonth();
@@ -1851,18 +1851,32 @@
         document.getElementById('hr-address').textContent = user.address || '-';
 
         // 給与・評価
-        if (user.salary !== null && user.salary !== undefined && user.salary !== '') {
-          const salaryFormatted = new Intl.NumberFormat('ja-JP').format(user.salary);
-          document.getElementById('hr-salary').textContent = `¥${salaryFormatted}`;
-        } else {
-          document.getElementById('hr-salary').textContent = '-';
+        const hrSalaryEl = document.getElementById('hr-salary');
+        const hrSalaryTypeEl = document.getElementById('hr-salary-type');
+        const hrEvaluationEl = document.getElementById('hr-evaluation');
+        const hrNotesEl = document.getElementById('hr-notes');
+
+        if (hrSalaryEl) {
+          if (user.salary !== null && user.salary !== undefined && user.salary !== '') {
+            const salaryFormatted = new Intl.NumberFormat('ja-JP').format(user.salary);
+            hrSalaryEl.textContent = `¥${salaryFormatted}`;
+          } else {
+            hrSalaryEl.textContent = '-';
+          }
         }
+
         const salaryTypes = { 'hourly': '時給', 'monthly': '月給', 'annual': '年俸' };
-        document.getElementById('hr-salary-type').textContent = salaryTypes[user.salary_type] || user.salary_type || '-';
+        if (hrSalaryTypeEl) {
+          hrSalaryTypeEl.textContent = salaryTypes[user.salary_type] || user.salary_type || '-';
+        }
 
         const evalLabels = { 'S': '⭐ S評価', 'A': '🌟 A評価', 'B': '✨ B評価', 'C': '📋 C評価', 'D': '📝 D評価' };
-        document.getElementById('hr-evaluation').textContent = evalLabels[user.evaluation] || user.evaluation || '-';
-        document.getElementById('hr-notes').textContent = user.hr_notes || '-';
+        if (hrEvaluationEl) {
+          hrEvaluationEl.textContent = evalLabels[user.evaluation] || user.evaluation || '-';
+        }
+        if (hrNotesEl) {
+          hrNotesEl.textContent = user.hr_notes || '-';
+        }
 
         // 清掃スキル最新情報の表示
         const rankColors = { S: '#a855f7', A: '#10b981', B: '#f59e0b', C: '#ef4444', D: '#dc2626' };
