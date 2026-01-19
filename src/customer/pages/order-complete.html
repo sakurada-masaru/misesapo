@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>発注が完了しました | ミセサポ</title>
+    @include('partials.head-links')
+  </head>
+  <body class="theme-pink bg-white">
+    @include('partials.header')
+
+    <main class="container section-gap-lg" style="max-width: 100%;">
+      <h1 class="page-title" style="text-align:center;">発注が完了しました</h1>
+      <section class="card" style="text-align:center;">
+        <p class="strong" style="font-size:16px;">ご発注ありがとうございます。</p>
+        <p class="muted" style="margin-top:8px;">担当者より日程確定のご連絡を差し上げます。</p>
+
+        <div class="actions" style="margin-top:24px;">
+          <a class="btn btn-primary btn-round" href="/mypage">マイページへ</a>
+          <a class="btn btn-round" href="/report">レポートを見る</a>
+          <a class="btn btn-round" href="/">トップへ戻る</a>
+        </div>
+      </section>
+    </main>
+
+    @include('partials.footer')
+  </body>
+  </html>
+

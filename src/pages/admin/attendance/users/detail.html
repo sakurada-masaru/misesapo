@@ -1,0 +1,237 @@
+@layout('layouts.admin')
+@json('data/meta/admin_attendance_user_detail_title.json', $title)
+@json('data/meta/admin_attendance_user_detail_body_class.json', $body_class)
+
+<main id="main" class="admin-attendance-user-detail">
+  @include('partials.admin-sidebar')
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>個人別勤怠詳細（確認用）</h1>
+      </div>
+    </header>
+
+    <section class="filter-section">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>社員ID</label>
+          <input type="text" id="employee-id" placeholder="社員ID" class="filter-input" />
+        </div>
+        <div class="filter-group">
+          <label>日付（開始）</label>
+          <input type="date" id="date-from" class="filter-input" />
+        </div>
+        <div class="filter-group">
+          <label>日付（終了）</label>
+          <input type="date" id="date-to" class="filter-input" />
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" id="load-detail">表示</button>
+      </div>
+    </section>
+
+    <section class="detail-summary" id="detail-summary">
+      <div class="summary-item">社員ID: <span id="summary-employee">-</span></div>
+      <div class="summary-item">期間: <span id="summary-range">-</span></div>
+      <div class="summary-item">タイムゾーン: JST</div>
+    </section>
+
+    <section id="detail-empty" class="empty-state" style="display:none;">
+      <p>No attendance data for the selected period.</p>
+    </section>
+
+    <section id="detail-days"></section>
+  </div>
+
+  <style>
+    .admin-attendance-user-detail {
+      display: flex;
+      min-height: 100vh;
+      background: #f9fafb;
+    }
+    .main-content {
+      flex: 1;
+      padding: 24px;
+    }
+    .topbar {
+      margin-bottom: 16px;
+    }
+    .filter-section {
+      background: #fff;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 16px;
+    }
+    .filter-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .filter-input {
+      min-width: 160px;
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+    }
+    .detail-summary {
+      display: flex;
+      gap: 24px;
+      padding: 12px 0;
+      color: #374151;
+      font-size: 0.95rem;
+    }
+    .day-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .day-header {
+      padding: 12px 16px;
+      background: #f3f4f6;
+      font-weight: 600;
+    }
+    .section {
+      padding: 12px 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .section-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .kv {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 6px 16px;
+      font-size: 0.95rem;
+    }
+    .empty-state {
+      background: #fff;
+      border: 1px dashed #d1d5db;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      color: #6b7280;
+    }
+  </style>
+
+  <script>
+    (() => {
+      const API_BASE = window.API_BASE || localStorage.getItem('api_base') || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+      const token = localStorage.getItem('cognito_id_token');
+
+      const employeeInput = document.getElementById('employee-id');
+      const fromInput = document.getElementById('date-from');
+      const toInput = document.getElementById('date-to');
+      const loadBtn = document.getElementById('load-detail');
+      const daysContainer = document.getElementById('detail-days');
+      const emptyState = document.getElementById('detail-empty');
+      const summaryEmployee = document.getElementById('summary-employee');
+      const summaryRange = document.getElementById('summary-range');
+
+      function setSummary(employeeId, from, to) {
+        summaryEmployee.textContent = employeeId || '-';
+        summaryRange.textContent = from && to ? `${from}〜${to}` : '-';
+      }
+
+      function renderFixed(fixed) {
+        const hasFixed = fixed && (fixed.clock_in || fixed.clock_out || (fixed.breaks && fixed.breaks.length) || fixed.total_minutes || fixed.status || fixed.reason_code);
+        if (!hasFixed) {
+          return '<div>Fixed attendance not set</div>';
+        }
+        return `
+          <div class="kv">
+            <div>Clock in</div><div>${fixed.clock_in || '-'}</div>
+            <div>Clock out</div><div>${fixed.clock_out || '-'}</div>
+            <div>Breaks</div><div>${(fixed.breaks || []).map(b => `${b.start || '-'} - ${b.end || '-'}`).join('<br>') || '-'}</div>
+            <div>Total minutes</div><div>${fixed.total_minutes ?? '-'}</div>
+            <div>Status</div><div>${fixed.status || '-'}</div>
+            <div>Reason code</div><div>${fixed.reason_code || '-'}</div>
+          </div>
+        `;
+      }
+
+      function renderRaw(raw) {
+        return `
+          <div class="kv">
+            <div>Clock in</div><div>${raw?.clock_in || '-'}</div>
+            <div>Clock out</div><div>${raw?.clock_out || '-'}</div>
+            <div>Breaks</div><div>${(raw?.breaks || []).map(b => `${b.start || '-'} - ${b.end || '-'}`).join('<br>') || '-'}</div>
+          </div>
+        `;
+      }
+
+      function renderRequests(requests) {
+        if (!requests || requests.length === 0) return '<div>-</div>';
+        return requests.map(r => `<div>${r.type || '-'} / ${r.status || '-'} / ${r.reason_code || '-'}</div>`).join('');
+      }
+
+      function renderErrors(errors) {
+        if (!errors || errors.length === 0) return '<div>-</div>';
+        return errors.map(e => `<div>${e.type || '-'} / ${e.status || '-'}</div>`).join('');
+      }
+
+      function renderDays(days) {
+        daysContainer.innerHTML = '';
+        if (!days || days.length === 0) {
+          emptyState.style.display = 'block';
+          return;
+        }
+        emptyState.style.display = 'none';
+        days.forEach(day => {
+          const card = document.createElement('div');
+          card.className = 'day-card';
+          card.innerHTML = `
+            <div class="day-header">${day.date}</div>
+            <div class="section">
+              <div class="section-title">Fixed attendance</div>
+              ${renderFixed(day.fixed)}
+            </div>
+            <div class="section">
+              <div class="section-title">Raw (reference only)</div>
+              ${renderRaw(day.raw)}
+            </div>
+            <div class="section">
+              <div class="section-title">Requests</div>
+              ${renderRequests(day.requests)}
+            </div>
+            <div class="section">
+              <div class="section-title">Errors</div>
+              ${renderErrors(day.errors)}
+            </div>
+          `;
+          daysContainer.appendChild(card);
+        });
+      }
+
+      async function loadDetail() {
+        const employeeId = employeeInput.value.trim();
+        const from = fromInput.value;
+        const to = toInput.value;
+        setSummary(employeeId, from, to);
+        if (!employeeId || !from || !to) return;
+        const url = `${API_BASE}/admin/attendance/users/${encodeURIComponent(employeeId)}/detail?from=${from}&to=${to}`;
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json();
+        renderDays(data.days || []);
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('worker_id')) employeeInput.value = params.get('worker_id');
+      if (params.get('from')) fromInput.value = params.get('from');
+      if (params.get('to')) toInput.value = params.get('to');
+      if (employeeInput.value && fromInput.value && toInput.value) {
+        loadDetail();
+      }
+
+      loadBtn.addEventListener('click', loadDetail);
+    })();
+  </script>
+</main>

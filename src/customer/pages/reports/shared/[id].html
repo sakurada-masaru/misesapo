@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="{{ base_path }}">
+    <title>レポート閲覧 | ミセサポ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/report-shared-form.css">
+</head>
+<body>
+    <div class="shared-report-container">
+        <div class="form-header">
+            <div class="form-header-content">
+                <h1>レポート閲覧</h1>
+                <p>以下の情報をご入力ください</p>
+            </div>
+        </div>
+        <div class="form-card">
+
+            <form id="viewer-info-form">
+                <div class="privacy-notice">
+                    <strong>個人情報の取り扱いについて</strong><br>
+                    ご入力いただいた情報は、レポート閲覧およびサービス改善のために使用いたします。<br>
+                    詳細は<a href="/privacy-policy" target="_blank">プライバシーポリシー</a>をご確認ください。
+                </div>
+
+                <!-- 必須項目 -->
+                <div class="form-section">
+                    <div class="form-row">
+                        <div>
+                            <label class="form-label required" for="last-name">姓</label>
+                            <input type="text" id="last-name" name="last_name" class="form-input" required>
+                            <div class="error-message" id="last-name-error"></div>
+                        </div>
+                        <div>
+                            <label class="form-label required" for="first-name">名</label>
+                            <input type="text" id="first-name" name="first_name" class="form-input" required>
+                            <div class="error-message" id="first-name-error"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label required" for="email">メールアドレス</label>
+                    <input type="email" id="email" name="email" class="form-input" required>
+                    <div class="error-message" id="email-error"></div>
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label required" for="phone">電話番号</label>
+                    <input type="tel" id="phone" name="phone" class="form-input" placeholder="090-1234-5678" required>
+                    <div class="error-message" id="phone-error"></div>
+                </div>
+
+                <!-- 任意項目 -->
+                <div class="form-section">
+                    <label class="form-label" for="company">会社名・店舗名</label>
+                    <input type="text" id="company" name="company" class="form-input">
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label" for="postal-code">郵便番号</label>
+                    <input type="text" id="postal-code" name="postal_code" class="form-input" placeholder="123-4567">
+                </div>
+
+                <div class="form-section">
+                    <div class="form-row-address">
+                        <div>
+                            <label class="form-label" for="prefecture">都道府県</label>
+                            <input type="text" id="prefecture" name="prefecture" class="form-input" placeholder="東京都">
+                        </div>
+                        <div>
+                            <label class="form-label" for="address">市区町村・番地</label>
+                            <input type="text" id="address" name="address" class="form-input" placeholder="中央区日本橋1-1-1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label" for="building">建物名</label>
+                    <input type="text" id="building" name="building" class="form-input" placeholder="○○ビル3F">
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label" for="message">ご意見・ご要望</label>
+                    <textarea id="message" name="message" class="form-textarea" placeholder="ご意見・ご要望がございましたらご記入ください"></textarea>
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label" for="service-interest">今後のサービス利用意向</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="interest-yes" name="service_interest" value="yes">
+                            <label for="interest-yes">利用したい</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="interest-maybe" name="service_interest" value="maybe">
+                            <label for="interest-maybe">検討したい</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="interest-no" name="service_interest" value="no">
+                            <label for="interest-no">現時点では不要</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label class="form-label" for="contact-method">希望連絡方法</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="contact-email" name="contact_method" value="email">
+                            <label for="contact-email">メール</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="contact-phone" name="contact_method" value="phone">
+                            <label for="contact-phone">電話</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="contact-both" name="contact_method" value="both">
+                            <label for="contact-both">どちらでも可</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-button" id="submit-btn">
+                    レポートを閲覧する
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/report-shared-form.js"></script>
+</body>
+</html>
+

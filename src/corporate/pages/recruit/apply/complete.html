@@ -1,0 +1,60 @@
+@layout('layouts.base')
+@json('data/meta/recruit_complete_title.json', $title)
+@json('data/meta/recruit_complete_body_class.json', $body_class)
+
+<!-- 通常ヘッダー -->
+<header class="normal-header visible">
+  <div class="normal-header-inner">
+    <div class="normal-header-logo">
+      <a href="/">
+        <img src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+      </a>
+    </div>
+    <nav class="normal-header-nav">
+      <a href="/">TOP</a>
+      <a href="/recruit">求人情報</a>
+      <a href="/recruit/privacy">採用における個人情報の取り扱いについて</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="recruit-complete-page">
+  <div class="recruit-complete-container">
+    <!-- Header -->
+    <div class="recruit-complete-header">
+      <div class="recruit-apply-logo">
+        <div class="recruit-logo-square">ミセサポ</div>
+        <div class="recruit-logo-text">RECRUIT</div>
+      </div>
+      <div class="recruit-breadcrumb">
+        <span>シート記入</span>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span>内容確認</span>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span class="breadcrumb-current">応募完了</span>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="recruit-complete-content">
+      <h1 class="recruit-complete-title">送信が完了しました。</h1>
+      <p class="recruit-complete-message">ご応募いただきありがとうございます。</p>
+      
+      <div class="recruit-complete-info">
+        <p>採用担当が確認次第、順次ご連絡を差し上げます。早ければ当日中、遅くとも5営業日以内にご連絡いたします。</p>
+        <p>ご連絡まで今しばらくお待ちください。</p>
+        <p>また、一週間以上連絡がない場合はお手数ですがメールでお問い合わせください。</p>
+        <p>ミセサポー同お会いできるのを楽しみにしております。</p>
+        <p>メールアドレス: <a href="mailto:info@misesapo.app">info@misesapo.app</a></p>
+      </div>
+
+      <a href="/recruit" class="recruit-complete-button">TOPへ戻る</a>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="/css/recruit-complete.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <script src="/js/recruit-apply.js"></script>
+  <script src="/js/header.js"></script>
+</main>
+

@@ -2707,7 +2707,7 @@ ${context}
                 '/admin/orders': ['発注', '仕入'],
                 '/admin/partners': ['パートナー', '協力会社'],
                 '/admin/users/': ['ユーザー', '従業員', 'スタッフ'],
-                '/admin/attendance/board': ['勤怠', '打刻'],
+                '/admin/attendance/errors': ['勤怠', '打刻'],
                 '/admin/services/': ['サービス', 'メニュー'],
                 '/admin/analytics/': ['分析', '売上', '統計'],
                 '/admin/images/': ['画像', '写真', 'メディア'],
@@ -3021,7 +3021,7 @@ ${context}
                 { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'", color: 'var(--accent-color)' }
             ],
             cleaning: [
-                { label: '本日のラインを開く', action: "location.href='/entrance/cleaning/confirm?from=entrance'", color: 'var(--accent-color)' },
+                { label: '本日のラインを開く', action: "location.href='/entrance/cleaning/confirm/?from=entrance'", color: 'var(--accent-color)' },
                 { label: 'エントランスに戻る', action: "location.href='/entrance'", color: 'rgba(255,255,255,0.1)', textColor: '#fff' }
             ],
             office: [
@@ -3030,7 +3030,7 @@ ${context}
                 { label: '作業指示書を作成', action: 'startWorkOrderWizard()', color: '#10b981' }
             ],
             hr: [
-                { label: '勤怠確認', action: "location.href='/admin/attendance/board'", color: 'var(--accent-color)' }
+                { label: '勤怠確認', action: "location.href='/admin/attendance/errors'", color: 'var(--accent-color)' }
             ],
             accounting: [
                 { label: '請求処理', action: "location.href='/admin/orders'", color: 'var(--accent-color)' }

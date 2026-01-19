@@ -1,0 +1,204 @@
+@layout('layouts.base')
+@json('data/meta/dashboard_title.json', $title)
+@json('data/meta/dashboard_body_class.json', $body_class)
+
+<link rel="stylesheet" href="/css/admin-sidebar.css">
+<link rel="stylesheet" href="/assets/css/customer-dashboard.css">
+<link rel="stylesheet" href="/css/admin-karte.css">
+
+<style>
+    /* カスタマーポータル専用の調整 */
+    #default-header-wrapper,
+    #normal-header-wrapper {
+        display: none !important;
+    }
+
+    .karte-shell {
+        background: var(--customer-bg);
+    }
+
+    .karte-sidebar {
+        background: var(--customer-sidebar-bg);
+        border-right: 1px solid var(--glass-border);
+    }
+
+    .panel-card {
+        background: var(--customer-surface);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        border-radius: 20px;
+    }
+
+    /* AI おすすめ提案用スタイル */
+    .ai-suggestion-box {
+        margin-top: 24px;
+        padding: 20px;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        color: white;
+        border-radius: 20px;
+        border-left: 6px solid var(--primary);
+        display: none;
+        /* JSで表示 */
+    }
+
+    .ai-suggestion-box h4 {
+        color: var(--primary);
+        margin: 0 0 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+    <div class="sidebar-header">
+        <a href="/customer/dashboard" class="logo-link">
+            <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+            <span class="logo-text">ミセサポ</span>
+        </a>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="/customer/dashboard" class="nav-item" data-page="dashboard">
+            <i class="fas fa-th-large"></i>
+            <span class="nav-label">ダッシュボード</span>
+        </a>
+        <a href="/customer/karte" class="nav-item active" data-page="karte">
+            <i class="fas fa-heartbeat"></i>
+            <span class="nav-label">店舗カルテ</span>
+        </a>
+        <a href="/customer/reports" class="nav-item" data-page="reports">
+            <i class="fas fa-file-alt"></i>
+            <span class="nav-label">清掃レポート</span>
+        </a>
+        <div class="nav-divider"></div>
+        <a href="/customer/ai-advisor" class="nav-item nav-item-ai" data-page="ai-advisor">
+            <i class="fas fa-robot"></i>
+            <span class="nav-label">AIアドバイザー</span>
+        </a>
+        <div class="nav-divider"></div>
+        <a href="/customer/settings" class="nav-item" data-page="settings">
+            <i class="fas fa-cog"></i>
+            <span class="nav-label">設定</span>
+        </a>
+        <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="nav-label">ログアウト</span>
+        </button>
+    </nav>
+
+    <button class="sidebar-toggle" id="sidebar-toggle">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+</aside>
+
+<main id="main" class="karte-shell main-content">
+    <aside class="karte-sidebar">
+        <a href="/customer/dashboard" class="karte-back">
+            <i class="fas fa-chevron-left"></i>
+            <span>ダッシュボードに戻る</span>
+        </a>
+
+        <div class="karte-profile">
+            <div class="profile-photo" id="karte-photo"></div>
+            <p class="profile-label">店舗カルテ</p>
+            <h1 class="profile-title" id="store-name">-</h1>
+            <p class="profile-meta" id="store-type">-</p>
+        </div>
+
+        <div class="karte-info">
+            <div class="info-row">
+                <span class="info-label">住所</span>
+                <span class="info-value" id="store-address">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">責任者</span>
+                <span class="info-value" id="store-manager">-</span>
+            </div>
+        </div>
+
+        <div class="karte-sidebar-foot">
+            <div class="status-pill" id="karte-status-pill">診断中</div>
+            <button class="ghost-btn" id="karte-refresh">
+                <i class="fas fa-sync-alt"></i>
+                <span>更新</span>
+            </button>
+        </div>
+    </aside>
+
+    <section class="karte-main">
+        <header class="karte-header">
+            <div>
+                <p class="header-kicker">Store Health Timeline</p>
+                <h2 class="header-title">店舗メンテナンス履歴</h2>
+                <p class="header-sub" id="karte-subtitle">最新の清掃レポートと診断結果を時系列で表示します。</p>
+            </div>
+        </header>
+
+        <div class="karte-timeline" id="karte-timeline"></div>
+    </section>
+
+    <aside class="karte-panel">
+        <!-- Cleanliness Score -->
+        <div class="panel-card">
+            <div class="panel-head">
+                <h3>清潔度メーター</h3>
+                <span class="panel-tag">Score</span>
+            </div>
+            <div class="meter">
+                <div class="meter-track">
+                    <div class="meter-bar" id="cleanliness-bar"></div>
+                </div>
+                <div class="meter-score">
+                    <span id="cleanliness-score">-</span>
+                    <small>/ 100</small>
+                </div>
+            </div>
+            <p class="panel-note" id="cleanliness-note">読み込み中...</p>
+        </div>
+
+        <!-- AI Suggestion Box (Next Proposal) -->
+        <div class="ai-suggestion-box" id="ai-next-proposal">
+            <h4><i class="fas fa-magic"></i> AI からの次回提案</h4>
+            <p id="ai-proposal-text">レポートの分析結果に基づき、最適なメンテナンスプランを準備しています。</p>
+            <button class="btn btn-ai-primary btn-sm" id="btn-request-proposal"
+                style="margin-top: 12px; width: 100%;">見積もりを依頼する</button>
+        </div>
+
+        <!-- Equipment Status -->
+        <div class="panel-card">
+            <div class="panel-head">
+                <h3>設備ステータス</h3>
+                <span class="panel-tag">Vitals</span>
+            </div>
+            <div class="status-list" id="equipment-status-list"></div>
+        </div>
+
+        <!-- AI Advisor Summary -->
+        <div class="panel-card">
+            <div class="panel-head">
+                <h3>プロのアドバイス</h3>
+                <span class="panel-tag">AI Summary</span>
+            </div>
+            <div class="note-stack" id="staff-notes"></div>
+        </div>
+    </aside>
+</main>
+
+<script src="/js/admin-sidebar.js"></script>
+<script src="/js/admin-karte.js"></script>
+<script>
+    // カスタマー専用：次回提案プロトタイプの表示ロジック
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            const box = document.getElementById('ai-next-proposal');
+            const text = document.getElementById('ai-proposal-text');
+            if (box) {
+                box.style.display = 'block';
+                text.textContent = '前回のレンジフード清掃から3ヶ月が経過しました。油汚れによる排気効率低下の兆候が見られます。次回の訪問時に「深部洗浄オプション」の実施をお勧めします。';
+            }
+        }, 2000);
+    });
+</script>

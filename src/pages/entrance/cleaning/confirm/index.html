@@ -1,0 +1,288 @@
+@layout('layouts.admin')
+@json('data/meta/admin_dashboard_title.json', $title)
+
+<style>
+  /* Prevent standard admin headers/wrappers */
+  #default-header-wrapper,
+  #normal-header-wrapper {
+    display: none !important;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: radial-gradient(circle at center, #0a1128 0%, #000 100%) !important;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+  }
+
+  .confirm-container {
+    width: 100%;
+    max-width: 500px;
+    padding: 40px 20px;
+    animation: fadeIn 0.8s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .header-section {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .header-section h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #10b981;
+    text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    margin-bottom: 8px;
+  }
+
+  .header-section p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.95rem;
+  }
+
+  .schedule-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .schedule-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .schedule-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .schedule-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .schedule-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #10b981;
+  }
+
+  .schedule-time {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #10b981;
+    min-width: 60px;
+  }
+
+  .schedule-details {
+    flex: 1;
+  }
+
+  .store-name {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .store-info {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .btn-open {
+    background: none;
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    color: #10b981;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+
+  .btn-open:hover {
+    background: #10b981;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+  }
+
+  .actions-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .btn-back {
+    width: 100%;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .btn-back:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .loading-spinner {
+    text-align: center;
+    padding: 40px;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .empty-message {
+    text-align: center;
+    padding: 40px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.9rem;
+  }
+</style>
+
+<div class="confirm-container">
+  <div class="header-section">
+    <h1>CLEANING MODE</h1>
+    <p>本日の作業予定を確認してください</p>
+  </div>
+
+  <div class="schedule-card">
+    <div class="schedule-header">
+      <h2><i class="fas fa-calendar-day"></i> 本日の予定</h2>
+      <span id="current-date-label" style="font-size: 0.85rem; color: rgba(255,255,255,0.4);"></span>
+    </div>
+
+    <div id="schedule-list" class="schedule-list">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <p style="margin-top:10px;">予定を取得中...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-section">
+    <button class="btn-back" onclick="goBack()">
+      <i class="fas fa-arrow-left"></i> 戻る
+    </button>
+  </div>
+</div>
+
+<script src="{{ base_path }}js/entrance-core.js"></script>
+<script>
+  const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+  async function loadSchedules() {
+    const listContainer = document.getElementById('schedule-list');
+    const user = EntranceCore.getUser();
+    const token = EntranceCore.getToken();
+
+    if (!user || !user.id || !token) {
+      listContainer.innerHTML = '<div class="empty-message">ログインが必要です</div>';
+      return;
+    }
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('current-date-label').textContent = today.replace(/-/g, '/');
+
+      // Get all schedules and filter for today and this worker
+      // Note: In a real app we would want the API to filter by worker_id and date
+      const response = await fetch(`${API_BASE}/schedules`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch');
+
+      const schedules = await response.json();
+      const myTodaySchedules = schedules.filter(s =>
+        s.scheduled_date === today &&
+        (String(s.worker_id) === String(user.id) || String(s.worker_id) === String(user.sub))
+      );
+
+      if (myTodaySchedules.length === 0) {
+        listContainer.innerHTML = '<div class="empty-message">本日の予定はありません</div>';
+        return;
+      }
+
+      // Sort by time
+      myTodaySchedules.sort((a, b) => (a.scheduled_time || '').localeCompare(b.scheduled_time || ''));
+
+      listContainer.innerHTML = myTodaySchedules.map(s => `
+                <div class="schedule-item">
+                    <div class="schedule-time">${s.scheduled_time || '--:--'}</div>
+                    <div class="schedule-details">
+                        <div class="store-name">${s.store_name || '名称未設定'}</div>
+                        <div class="store-info">${s.service_name || '清掃'}</div>
+                    </div>
+                    <button class="btn-open" onclick="startReport('${s.id}')">
+                        このラインを開く
+                    </button>
+                </div>
+            `).join('');
+
+    } catch (err) {
+      console.error('Schedule Load Error:', err);
+      listContainer.innerHTML = '<div class="empty-message">予定の取得に失敗しました</div>';
+    }
+  }
+
+  function startReport(scheduleId) {
+    location.href = `{{ base_path }}staff/os/reports/new?schedule=${scheduleId}`;
+  }
+
+  function goBack() {
+    location.href = '{{ base_path }}entrance';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadSchedules();
+  });
+</script>

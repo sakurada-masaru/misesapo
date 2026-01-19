@@ -1,0 +1,222 @@
+@layout('layouts.base')
+@json('data/meta/greeting_title.json', $title)
+@json('data/meta/greeting_body_class.json', $body_class)
+
+<main id="main" class="greeting-page">
+    <!-- パンくずリスト -->
+    <nav class="breadcrumb" aria-label="パンくずリスト">
+        <div class="breadcrumb-inner">
+            <a href="/">TOP</a>
+            <span>></span>
+            <span class="current">代表あいさつ</span>
+        </div>
+    </nav>
+
+    <!-- ヒーローセクション -->
+    <section class="greeting-hero">
+        <h1>代表あいさつ</h1>
+        <p>ミセサポの想いとビジョン</p>
+    </section>
+
+    <!-- メインコンテンツ -->
+    <div class="container">
+        <section class="greeting-content-section">
+            <div class="greeting-main">
+                <div class="greeting-image">
+                    <img src="/images-admin/hero-image001.png" alt="代表取締役 山田太郎">
+                </div>
+                <div class="greeting-text">
+                    <h2>代表取締役 山田太郎</h2>
+                    <div class="greeting-message">
+                        <p>
+                            ミセサポは、店舗の清掃・メンテナンスを通じて、お客様のビジネスをサポートすることを使命としております。
+                        </p>
+                        <p>
+                            プロフェッショナルな技術と丁寧なサービスで、常に清潔で快適な環境を提供いたします。
+                        </p>
+                        <p>
+                            お客様の成功が私たちの喜びです。今後ともよろしくお願いいたします。
+                        </p>
+                    </div>
+                    <div class="greeting-signature">
+                        <p class="signature-name">代表取締役</p>
+                        <p class="signature-name">山田太郎</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <style>
+        .greeting-page {
+            background: #FDEDED;
+            min-height: 100vh;
+            padding-top: 100px;
+        }
+
+        .breadcrumb {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breadcrumb-inner {
+            display: inline-block;
+            padding-bottom: 8px;
+        }
+
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: #FF679C;
+        }
+
+        .breadcrumb span {
+            margin: 0 8px;
+            color: #999;
+        }
+
+        .breadcrumb .current {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .greeting-hero {
+            background: linear-gradient(135deg, #FF679C 0%, #FF008C 100%);
+            color: #fff;
+            padding: 60px 24px;
+            text-align: center;
+        }
+
+        .greeting-hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 0.1em;
+        }
+
+        .greeting-hero p {
+            font-size: 18px;
+            opacity: 0.95;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+
+        .greeting-content-section {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 60px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .greeting-main {
+            display: flex;
+            gap: 60px;
+            align-items: flex-start;
+        }
+
+        .greeting-image {
+            flex: 0 0 400px;
+        }
+
+        .greeting-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
+        .greeting-text {
+            flex: 1;
+        }
+
+        .greeting-text h2 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #FF679C;
+        }
+
+        .greeting-message {
+            line-height: 2.2;
+            margin-bottom: 40px;
+        }
+
+        .greeting-message p {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 24px;
+        }
+
+        .greeting-signature {
+            text-align: right;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .signature-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin: 5px 0;
+        }
+
+        @media (max-width: 768px) {
+            .greeting-hero {
+                padding: 40px 16px;
+            }
+
+            .greeting-hero h1 {
+                font-size: 32px;
+            }
+
+            .greeting-hero p {
+                font-size: 16px;
+            }
+
+            .container {
+                padding: 40px 16px;
+            }
+
+            .greeting-content-section {
+                padding: 30px 20px;
+            }
+
+            .greeting-main {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .greeting-image {
+                flex: 1;
+            }
+
+            .greeting-text h2 {
+                font-size: 28px;
+            }
+
+            .greeting-message p {
+                font-size: 16px;
+            }
+
+            .greeting-signature {
+                text-align: left;
+                margin-top: 40px;
+            }
+        }
+    </style>
+</main>
+

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ミセサポ</title>
+
+        <!--GoogleFonts(Noto Sans JP)-->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+        <!--GoogleFonts(Noto Sans JP) end-->
+        <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+        <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+        <link rel="stylesheet" href="/css/style.css">
+        <link rel="stylesheet" href="/css/contact.css">
+    </head>
+
+    <body>
+        <header>
+            <div class="header-flex wrapper">
+                <h1 class="header-logo">
+                    <a href="/"><img src="/images/header-logo.jpg" alt="ミセサポ"></a>
+                </h1>
+                <button class="btn"><span></span><span></span><span></span></button>
+                <nav id="g-nav">
+                    <div id="g-nav-list">
+                        <ul>
+                            <li><a href="/#about">ミセサポとは</a></li>
+                            <li><a href="/#service">対応可能サービス</a></li>
+                            <li><a href="/#reason">選ばれる理由</a></li>
+                            <li><a href="/#use">ご利用イメージ</a></li>
+                            <li><a href="/#customer">既存顧客一覧</a></li>
+                            <li><a href="/#voice">お客様の声</a></li>
+                            <li><a href="#">お問い合わせ</a></li>
+                            <li><a href="/#order-form" class="order-button">発注はこちら</a></li>
+                            <li><a href="#" class="login-button">ログイン</a></li>
+
+                            <li class="g-nav-orderBox wrapper">
+                                <div class="g-nav-orderBox-title">＼まずは無料で相談してみませんか？／</div>
+                                <a class="gradient-link tel-link" href="tel:070-3332-3939"><span class="tel-icon"></span>070-3332-3939</a>
+                                <a class="gradient-link web-link" href="/#order-form">Webでのお申し込みはこちら</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            <!--キービジュアル-->
+            <div class="key-visual">
+                <div class="contact-kv-flex">
+                    <div class="contact-kv-title">
+                        <h2 class="h2-title">お問い合わせ</h2>
+                        <p>発注をしようかどうか迷っている方も、まずはお気軽にお問い合わせください！</p>
+                        <span>※後日、弊社よりご連絡差し上げます。</span>
+                    </div>
+                    <img src="/images/kv-contact-image.png" alt="">
+                </div>
+            </div>
+            <!--キービジュアル end-->
+
+            <!--お問い合わせフォーム-->
+            <section id="order-form" class="section-box">
+                <div class="article-margin wrapper">
+                    <form class="order-form-box" method="post" action="">
+                        <label class="label-title" for="shop-name">店舗名<span class="required-span">必須</span></label>
+                            <input type="text" id="shop-name">
+                        <label class="label-title" for="shop-url">店舗URL<span class="any-span">任意</span></label>
+                            <input type="text" id="shop-url">
+                        <label class="label-title" for="your-name">お名前<span class="required-span">必須</span></label>
+                            <input type="text" id="your-name">
+                        <label class="label-title" for="tel">お電話番号<span class="required-span">必須</span></label>
+                            <input type="tel" id="tel">
+                        <label class="label-title" for="email">メールアドレス<span class="any-span">任意</span></label>
+                            <div class="attention">※入力頂いたメールアドレスが、登録IDとなります。</div>
+                            <input type="email" id="email">
+                        <label class="label-title" for="comment">お問い合わせ内容<span class="any-span">任意</span></label>
+                        <textarea></textarea>
+                        <div class="attention">※後日、弊社よりご連絡差し上げます。</div>
+                        <div class="submit-button"><input type="submit" value="送信する"></div>
+                        <div class="form-illust"><img src="/images/form-illust.png" alt="2人の従業員のイラスト"></div>
+                    </form>
+                </div>
+            </section>
+            <!--発注フォーム end-->
+        </main>
+
+        <footer id="footer">
+            <section class="footer-flex section-box wrapper">
+                <img src="/images/footer-logo.jpg" alt="ミセサポ">
+                <table class="footer-info">
+                    <tr>
+                        <th>運営会社</th>
+                        <td>株式会社ミセサポ</td>
+                    </tr>
+                     <tr>
+                        <th>代表取締役</th>
+                        <td>正田和輝</td>
+                    </tr>
+                     <tr>
+                        <th>住所</th>
+                        <td>〒103-0025 東京都中央区日本橋茅場町1-8-1　茅場町一丁目平和ビル7F</td>
+                    </tr>
+                     <tr>
+                        <th>電話番号</th>
+                        <td><a class="footer-tel-link" href="tel:070-3332-3939">070-3332-3939</a></td>
+                    </tr>
+                </table>
+            </section>
+            <div class="footer-bottom">&#169;2025 ミセサポ</div>
+        </footer>
+
+        <div class="pagetop"><a href="#"><img src="/images/topbtn.png" alt="TOPへ戻る"></a></div>
+        <script src="/js/swiper-bundle.min.js"></script>
+        <script src="/js/script.js"></script>
+    </body>
+</html>

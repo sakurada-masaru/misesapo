@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>問い合わせ | ミセサポ</title>
+    @include('partials.head-links')
+  </head>
+  <body class="theme-pink page-mypage">
+    @include('partials.header')
+    <main class="container">
+      <!-- Breadcrumbs -->
+      <nav class="breadcrumb" aria-label="breadcrumb">
+        <a href="/mypage">マイページ</a>
+        <span class="sep">›</span>
+        <span aria-current="page">問い合わせ</span>
+      </nav>
+
+      <h1 class="page-title">問い合わせ</h1>
+
+      <section class="section contact-section">
+        <div class="card contact-form">
+          <div class="contact-info">
+            <p>お問い合わせには1営業日以内に返信いたします。<br />お急ぎの場合はお電話にてお問い合わせください。</p>
+            <div class="contact-phone"><i class="fa-solid fa-phone" aria-hidden="true"></i>070-3332-3939</div>
+          </div>
+
+          <form id="inquiry-form" action="/inquiry/complete.html" method="get">
+            <div class="form-group">
+              <label class="label" for="store-name">店舗名 <span class="pill pill-required">必須</span></label>
+              <input class="input" id="store-name" name="store-name" value="Darts Bar A's 神楽坂店" />
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="contact-person">担当者 <span class="pill pill-required">必須</span></label>
+              <input class="input" id="contact-person" name="contact-person" value="山田 太郎" />
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="phone">電話番号</label>
+              <input class="input" id="phone" name="phone" value="000-0000-0000" />
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="email">メールアドレス <span class="pill pill-required">必須</span></label>
+              <input class="input" id="email" name="email" type="email" value="info@dart-ace.com" />
+              <p class="form-note">※メールでの返信希望の方は入力してください。</p>
+            </div>
+
+            <div class="form-group">
+              <label class="label" for="inquiry">お問い合わせ内容 <span class="pill pill-required">必須</span></label>
+              <textarea class="textarea" id="inquiry" name="inquiry" rows="6"></textarea>
+            </div>
+          </form>
+        </div>
+
+        <div class="page-actions">
+          <button type="submit" form="inquiry-form" class="btn btn-primary btn-round btn-lg btn-block">送信する</button>
+          <a class="btn btn-outline-primary btn-round btn-lg mt-12" href="/mypage">マイページへ戻る</a>
+        </div>
+      </section>
+    </main>
+    @include('partials.footer')
+  <script src="/js/client_auth.js"></script>
+  </body>
+</html>

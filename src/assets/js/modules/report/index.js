@@ -273,11 +273,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let currentPhotoRequirement = null;
 
-<<<<<<< HEAD
     function updatePhotoRequirementUI(state) {
-=======
-    const updatePhotoRequirementUI = (state) => {
->>>>>>> df02f3c1 (feat: Add cleaning confirmation page and update navigation flow)
         const reqSection = document.getElementById('photo-requirements-section');
         const requirementText = document.getElementById('photo-requirement-text');
         const internalNote = document.getElementById('photo-requirement-internal');

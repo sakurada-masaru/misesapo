@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="{{ base_path }}">
+    <title>清掃レポート | ミセサポ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/report-shared-view.css">
+</head>
+<body>
+    <div class="shared-report-container">
+        <div class="loading" id="loading">読み込み中...</div>
+        <div id="report-content" style="display: none;">
+            <div class="report-header" id="report-header">
+                <div class="report-header-logo">
+                    <img src="/images/header-logo.jpg" alt="ミセサポ">
+                </div>
+                <div class="report-header-content">
+                    <div class="report-brand" id="report-brand"></div>
+                    <div class="report-date" id="report-date"></div>
+                    <div class="report-store" id="report-store"></div>
+                    <div class="report-staff" id="report-staff"></div>
+                </div>
+            </div>
+            
+            <!-- タブナビゲーション -->
+            <div class="report-tabs">
+                <button class="tab-btn active" data-tab="report" id="tab-report">
+                    <i class="fas fa-file-alt"></i>
+                    <span>レポート</span>
+                </button>
+                <button class="tab-btn" data-tab="proposal" id="tab-proposal">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>次回ご提案</span>
+                </button>
+            </div>
+            
+            <!-- レポートタブ -->
+            <div class="tab-content active" id="tab-content-report">
+            <div class="items-list-bar">
+                <div class="items-list">
+                    <span class="items-list-label">実施清掃項目</span>
+                    <div class="items-list-items" id="cleaning-items"></div>
+                </div>
+            </div>
+            
+            <div class="report-main" id="report-main">
+                <!-- 清掃項目が動的に追加される -->
+                </div>
+            </div>
+            
+            <!-- 次回ご提案タブ -->
+            <div class="tab-content" id="tab-content-proposal" style="display: none;">
+                <div class="proposal-loading" id="proposal-loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>読み込み中...</p>
+                </div>
+                <div class="proposal-empty" id="proposal-empty" style="display: none;">
+                    <i class="fas fa-lightbulb"></i>
+                    <p>次回ご提案はありません</p>
+                </div>
+                <div class="items-list-bar" id="proposal-items-bar" style="display: none;">
+                    <div class="items-list">
+                        <span class="items-list-label">ご提案項目</span>
+                        <div class="items-list-items" id="proposal-cleaning-items"></div>
+                    </div>
+                </div>
+                <div class="report-main" id="proposal-report-main" style="display: none;">
+                    <!-- 次回ご提案の内容が動的に追加される -->
+                </div>
+            </div>
+
+            <!-- レポート承認セクション -->
+            <div id="approval-section" class="approval-section">
+                <h3 class="approval-title">お客様へ、レポート確認後のお願い</h3>
+                <div class="approval-message">
+                    <p>この度は弊社に清掃のご依頼を頂き、誠にありがとうございました。上記レポート内容につきまして、ご意見、ご不明点等ございましたら、お手数ではございますが、弊社担当者にお問い合わせください。また、今回のご依頼につきましてはお客様の『承認』をもちまして『清掃完了』とさせていただきます。お手数ではございますが、レポートのご確認がお済みになられましたら、下記『レポート承認』ボタンを押していただきますようお願い申し上げます。</p>
+                </div>
+                <div class="approval-button-wrapper">
+                    <button id="approval-button" type="button" class="approval-button">
+                        レポート承認
+                    </button>
+                </div>
+                
+                <!-- サンクス画像 -->
+                <div class="thanks-image-wrapper">
+                    <img src="/images-material/thanks4.png" alt="ありがとうございます" class="thanks-image">
+                </div>
+            </div>
+        </div>
+        <div id="error-message" class="error-message" style="display: none;"></div>
+    </div>
+
+    <script src="/js/report-shared-view.js"></script>
+</body>
+</html>
+

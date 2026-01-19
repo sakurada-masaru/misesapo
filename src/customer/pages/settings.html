@@ -1,0 +1,75 @@
+@layout('layouts.base')
+@json('data/meta/dashboard_title.json', $title)
+@json('data/meta/dashboard_body_class.json', $body_class)
+
+<link rel="stylesheet" href="/assets/css/customer-dashboard.css">
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+    <div class="sidebar-header">
+        <a href="/customer/dashboard" class="logo-link">
+            <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+            <span class="logo-text">ミセサポ</span>
+        </a>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="/customer/dashboard" class="nav-item" data-page="dashboard">
+            <i class="fas fa-th-large"></i>
+            <span class="nav-label">ダッシュボード</span>
+        </a>
+        <a href="/customer/karte" class="nav-item" data-page="karte">
+            <i class="fas fa-heartbeat"></i>
+            <span class="nav-label">店舗カルテ</span>
+        </a>
+        <a href="/customer/reports" class="nav-item" data-page="reports">
+            <i class="fas fa-file-alt"></i>
+            <span class="nav-label">清掃レポート</span>
+        </a>
+        <a href="/customer/documents" class="nav-item" data-page="documents">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <span class="nav-label">見積・契約</span>
+        </a>
+        <a href="/customer/schedule" class="nav-item" data-page="schedule">
+            <i class="fas fa-calendar-alt"></i>
+            <span class="nav-label">スケジュール</span>
+        </a>
+        <a href="/customer/requests" class="nav-item" data-page="requests">
+            <i class="fas fa-paper-plane"></i>
+            <span class="nav-label">要望・相談</span>
+        </a>
+        <div class="nav-divider"></div>
+        <a href="/customer/ai-advisor" class="nav-item nav-item-ai" data-page="ai-advisor">
+            <i class="fas fa-robot"></i>
+            <span class="nav-label">AIアドバイザー</span>
+        </a>
+        <div class="nav-divider"></div>
+        <a href="/customer/settings" class="nav-item active" data-page="settings">
+            <i class="fas fa-cog"></i>
+            <span class="nav-label">設定</span>
+        </a>
+        <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="nav-label">ログアウト</span>
+        </button>
+    </nav>
+
+    <button class="sidebar-toggle" id="sidebar-toggle">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+</aside>
+
+<main id="main" class="container main-content customer-dashboard">
+    <header class="dashboard-header">
+        <div class="welcome-section">
+            <h1 class="welcome-text">アカウント設定</h1>
+            <p class="welcome-subtext">通知設定やプロファイル情報の変更が可能です。</p>
+        </div>
+    </header>
+
+    <section class="dashboard-section">
+        <p>設定機能は現在準備中です。プロファイル情報の更新は事務局までお問い合わせください。</p>
+    </section>
+</main>
+
+<script src="/js/admin-sidebar.js"></script>

@@ -1,0 +1,200 @@
+@layout('layouts.base')
+@json('data/meta/cart_title.json', $title)
+@json('data/meta/cart_body_class.json', $body_class)
+
+<!-- Main -->
+<main id="main" class="container section-gap-lg">
+      <h1 class="page-title">カート</h1>
+
+      @json('data/cart_items.json', $cart_items)
+      @json('data/service_items.json', $service_items)
+
+      <!-- カート一覧（テーブル） -->
+      <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>清掃内容</th>
+            <th style="width: 120px; text-align:center;">数量</th>
+            <th style="width: 160px; text-align:right;">価格</th>
+            <th style="width: 200px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach $cart_items
+          <tr>
+            <td>
+              <div class="strong item-title">{{ title }}</div>
+              <div class="small muted item-details">{{ details }}</div>
+            </td>
+            <td class="item-qty" style="text-align:center;">{{ qty }}</td>
+            <td class="item-price" style="text-align:right;">{{ price }}</td>
+            <td>
+              <div class="stack">
+                <button class="btn btn-ghost-outline btn-sm btn-round open-delete-modal"
+                        data-name="{{ title }}"
+                        data-details="{{ details }}"
+                        data-qty="{{ qty }}"
+                        data-image="/images/service-300x200.svg">削除</button>
+                <button class="btn btn-ghost-outline btn-sm btn-round open-edit-modal" data-service-id="{{ service_item_id }}">変更する</button>
+              </div>
+            </td>
+          </tr>
+          @endforeach
+        </tbody>
+      </table>
+      </div>
+
+      <!-- フッター操作／合計 -->
+      <div class="grid cols-2 section-gap-lg">
+        <div>
+          <a class="btn btn-outline-primary btn-round" href="/">清掃を追加する</a>
+        </div>
+        <div>
+          <div class="row end items-baseline stack-on-sm gap-24">
+            <div class="text-right">
+              <div class="small muted">所要時間</div>
+              <div class="strong" style="font-size: 20px;">3<span class="small muted" style="margin-left:6px;">時間</span></div>
+            </div>
+            <div class="text-right">
+              <div class="small muted">小計</div>
+              <div class="price-strong">¥150,750</div>
+            </div>
+          </div>
+          <div class="actions justify-end mt-16">
+            <a class="btn btn-primary btn-round btn-fixed" href="/checkout">発注手続きへ進む</a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modals reused from index -->
+    @include('partials.service_item_modal')
+    @include('partials.details_modal')
+    @include('partials.order_modal')
+    @include('partials.cart_added_modal')
+
+    <!-- 削除確認モーダル -->
+    <div id="cart-delete-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="cart-delete-title">
+      <div class="modal-dialog">
+        <button id="close-cart-delete" class="modal-close close-pink" aria-label="閉じる">
+          <i class="fas fa-times"></i>
+        </button>
+        <h2 id="cart-delete-title" class="modal-title p-24 px-32 m-0">この項目を削除しますか？</h2>
+        <div class="modal-body">
+          <div class="stack justify-center text-center">
+            <img id="cart-delete-image" src="/images/service-300x200.svg" alt="サービス画像" class="avatar-round" />
+            <div>
+              <h3 id="cart-delete-name" style="margin:0; font-weight:700;">項目名</h3>
+              <div id="cart-delete-details" class="small muted">詳細</div>
+            </div>
+          </div>
+
+          <div id="delete-actions" class="actions mt-24">
+            <button id="confirm-delete" class="btn btn-primary btn-fixed btn-round">はい</button>
+            <button id="cancel-delete" class="btn btn-fixed btn-round">いいえ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Expose service items for shared app.js
+      window.SERVICE_ITEMS = @jsonvar $service_items;
+      (function () {
+        function $(sel, root) { return (root || document).querySelector(sel); }
+        function $all(sel, root) { return Array.from((root || document).querySelectorAll(sel)); }
+
+        const modal = $('#cart-delete-modal');
+        if (!modal) return;
+        const img = $('#cart-delete-image', modal);
+        const nameEl = $('#cart-delete-name', modal);
+        const detailsEl = $('#cart-delete-details', modal);
+        const titleEl = $('#cart-delete-title', modal);
+        const actionsEl = $('#delete-actions', modal);
+        let pendingTarget = null; // row slated for deletion (demo)
+
+        function open(data, targetRow) {
+          pendingTarget = targetRow || null;
+          if (img) img.src = data.image || '/images/service-300x200.svg';
+          if (nameEl) nameEl.textContent = data.name || '';
+          if (detailsEl) detailsEl.innerHTML = data.details || '';
+          modal.classList.remove('hidden');
+          modal.classList.add('open');
+          document.body.style.overflow = 'hidden';
+        }
+        function close() {
+          modal.classList.add('hidden');
+          modal.classList.remove('open');
+          document.body.style.overflow = '';
+          pendingTarget = null;
+        }
+
+        // Bind open buttons
+        $all('.open-delete-modal').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tr = btn.closest('tr');
+            const name = btn.getAttribute('data-name') || (tr?.querySelector('.item-title')?.textContent || '');
+            const base = btn.getAttribute('data-details') || (tr?.querySelector('.item-details')?.textContent || '');
+            const qty = btn.getAttribute('data-qty') || (tr?.querySelector('.item-qty')?.textContent || '');
+            const image = btn.getAttribute('data-image') || '/images/service-300x200.svg';
+            const details = base + (qty && qty !== '-' ? '<br>数量: ' + qty : '');
+            open({ name, details, image }, tr);
+          });
+        });
+
+        // Close handlers
+        const x = $('#close-cart-delete', modal);
+        const cancel = $('#cancel-delete', modal);
+        if (x) x.addEventListener('click', close);
+        if (cancel) cancel.addEventListener('click', close);
+        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+
+        // Confirm (demo: just remove row visually)
+        const confirmBtn = $('#confirm-delete', modal);
+        if (confirmBtn) confirmBtn.addEventListener('click', () => {
+          if (pendingTarget && pendingTarget.parentElement) {
+            pendingTarget.parentElement.removeChild(pendingTarget);
+          }
+          // Keep modal open; update title and actions to a single "back" button.
+          if (titleEl) titleEl.textContent = '削除しました';
+          if (actionsEl) {
+            actionsEl.innerHTML = '<button id="back-to-cart" class="btn btn-primary btn-fixed btn-round">カートへ戻る</button>';
+            const backBtn = $('#back-to-cart', modal);
+            if (backBtn) backBtn.addEventListener('click', close);
+          }
+        });
+
+        // Edit handler: open details modal for the matched service item
+        $all('.open-edit-modal').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const id = btn.getAttribute('data-service-id');
+            if (id && window.Misesapo && typeof window.Misesapo.openDetailsFor === 'function') {
+              window.Misesapo.openDetailsFor(id);
+              // After opening, switch CTA label to "変更を反映" and override handler locally
+              window.requestAnimationFrame(() => {
+                const details = document.getElementById('details-modal');
+                if (!details) return;
+                const apply = details.querySelector('#add-to-cart-btn');
+                if (!apply) return;
+                const clone = apply.cloneNode(true);
+                clone.id = 'add-to-cart-btn';
+                clone.textContent = '変更を反映';
+                clone.addEventListener('click', (ev) => {
+                  ev.preventDefault();
+                  // Close details modal without showing cart-added modal
+                  details.classList.remove('open');
+                  details.classList.add('hidden');
+                  document.body.style.overflow = '';
+                });
+                apply.replaceWith(clone);
+              });
+            }
+          });
+        });
+      })();
+    </script>
+    <script src="/app.js"></script>

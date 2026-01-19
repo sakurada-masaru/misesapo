@@ -1,0 +1,528 @@
+@layout('layouts.base')
+@json('data/meta/signin_title.json', $title)
+@json('data/meta/signin_meta.json', $meta)
+<style>
+:root{--bg:#ffffff;}
+
+/* ログイン画面を画面中央に配置 */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  padding: 24px 16px;
+}
+
+@media (max-width: 767.98px) {
+  #main {
+    padding: 16px;
+  }
+  
+  /* SP版：ヘッダーを非表示 */
+  .normal-header {
+    display: none !important;
+  }
+}
+
+/* SP版：左下メニューボタン */
+.fixed-menu-button {
+  display: none;
+  position: fixed;
+  bottom: 100px;
+  left: 20px;
+  width: 70px;
+  height: 70px;
+  z-index: 999998;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+@media (max-width: 767.98px) {
+  .fixed-menu-button {
+    display: block !important;
+  }
+}
+
+.fixed-menu-button:hover {
+  transform: scale(1.1);
+}
+
+.fixed-menu-button__circle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #FF008C;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(255, 0, 140, 0.4);
+}
+
+.fixed-menu-button__circle::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.fixed-menu-button__text {
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* SP版：メニューパネル */
+.sp-menu-panel {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 85vw;
+  max-width: 400px;
+  height: 100vh;
+  background: #ffffff;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+  z-index: 999997;
+  transition: right 0.3s ease;
+  overflow-y: auto;
+  padding: 80px 24px 32px;
+}
+
+.sp-menu-panel.open {
+  right: 0;
+  display: block;
+}
+
+.sp-menu-panel-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999996;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sp-menu-panel-overlay.open {
+  display: block;
+  opacity: 1;
+}
+
+.sp-menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sp-menu-item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.sp-menu-item:last-child {
+  border-bottom: none;
+}
+
+.sp-menu-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  color: #333;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.sp-menu-link:hover {
+  color: #FF008C;
+}
+
+.sp-menu-arrow {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.sp-menu-item.active .sp-menu-arrow {
+  transform: rotate(180deg);
+}
+
+.sp-menu-submenu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.sp-menu-item.active .sp-menu-submenu {
+  max-height: 2000px;
+}
+
+.sp-menu-submenu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  padding-left: 16px;
+}
+
+.sp-menu-item-login {
+  margin-top: 16px;
+  border-top: 2px solid #e5e5e5;
+  border-bottom: none;
+}
+
+.sp-menu-link-login {
+  background-color: #FF679C;
+  color: #fff !important;
+  padding: 14px 20px;
+  border-radius: 8px;
+  justify-content: center;
+  text-align: center;
+  margin: 8px 0;
+}
+
+.sp-menu-link-login:hover {
+  background-color: #E35687;
+  color: #fff !important;
+}
+
+.sp-menu-submenu-item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.sp-menu-submenu-link {
+  display: block;
+  padding: 12px 0;
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.sp-menu-submenu-link:hover {
+  color: #FF008C;
+}
+</style>
+
+<main id="main" class="container max-720">
+      <div class="text-center mt-24 mb-8">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" class="h-48" />
+        <h2 class="fw-700 text-20 text-gray-900 mt-16">お客様ログイン</h2>
+      </div>
+      <hr class="divider" />
+
+      <section class="card p-24">
+        <p class="small text-center mb-16">
+          メールアドレスとパスワードを入力してログインしてください。
+        </p>
+
+        <form id="login-form" action="#" method="post" class="stack lg mt-8">
+          <div>
+            <label for="email" class="label">
+              メールアドレス
+              <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+            </label>
+            <input type="email" id="email" name="email" class="input" placeholder="name@example.com" autocomplete="username" required />
+          </div>
+
+          <div>
+            <label for="password" class="label">
+              パスワード
+              <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+            </label>
+            <div class="field">
+              <input type="password" id="password" name="password" class="input" autocomplete="current-password" required />
+              <button type="button" class="toggle-visibility" aria-label="パスワードを表示" onclick="togglePasswordVisibility('password')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="login-error" class="error-message" style="display: none; padding: 12px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; color: #991b1b; margin-bottom: 16px;"></div>
+
+          <div>
+            <button type="submit" class="btn btn-primary btn-round btn-full btn-lg fw-700">ログイン</button>
+          </div>
+        </form>
+
+        <p class="small text-center mt-16">
+          パスワードをお忘れの方は <a href="/reset-password" style="color: var(--primary); font-weight: 600;">こちら</a><br />
+          確認メールが届かない方は <a href="#" id="resend-verification-link" style="color: var(--primary); font-weight: 600;">確認メールを再送信</a>
+        </p>
+      </section>
+
+      <p class="small text-center" style="margin: 16px 0 24px;">
+        アカウントをお持ちでない方は
+        <a href="/signup" style="color: var(--primary); font-weight: 600;">新規登録</a>
+      </p>
+    </main>
+
+    <!-- SP版：左下メニューボタン -->
+    <div class="fixed-menu-button" id="fixed-menu-button">
+        <div class="fixed-menu-button__circle">
+            <div class="fixed-menu-button__text">メニュー</div>
+        </div>
+    </div>
+
+    <!-- SP版：メニューパネルオーバーレイ -->
+    <div class="sp-menu-panel-overlay" id="sp-menu-panel-overlay"></div>
+
+    <!-- SP版：メニューパネル -->
+    <div class="sp-menu-panel" id="sp-menu-panel">
+        <ul class="sp-menu-list">
+            <li class="sp-menu-item">
+                <a href="/" class="sp-menu-link">TOP</a>
+            </li>
+            <li class="sp-menu-item">
+                <a href="/service" class="sp-menu-link">対応可能サービス</a>
+            </li>
+            <li class="sp-menu-item">
+                <a href="/lp#voice" class="sp-menu-link">お客様の声</a>
+            </li>
+            <li class="sp-menu-item">
+                <a href="/customers-support-desk" class="sp-menu-link">カスタマーズサポート</a>
+            </li>
+            <li class="sp-menu-item">
+                <a href="/index#news" class="sp-menu-link">お知らせ</a>
+            </li>
+            <li class="sp-menu-item">
+                <a href="/privacy-policy" class="sp-menu-link">規約＆ポリシー</a>
+            </li>
+            <li class="sp-menu-item sp-menu-item-login">
+                <a href="/signin" class="sp-menu-link sp-menu-link-login">ログイン</a>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+      function togglePasswordVisibility(id) {
+        const input = document.getElementById(id);
+        const icon = input && input.parentElement && input.parentElement.querySelector('i');
+        if (!input || !icon) return;
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.classList.remove('fa-eye');
+          icon.classList.add('fa-eye-slash');
+        } else {
+          input.type = 'password';
+          icon.classList.remove('fa-eye-slash');
+          icon.classList.add('fa-eye');
+        }
+      }
+      
+      // ログインフォーム処理
+      (function() {
+        const loginForm = document.getElementById('login-form');
+        const errorDiv = document.getElementById('login-error');
+        
+        if (loginForm) {
+          loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email) {
+              errorDiv.textContent = 'メールアドレスを入力してください';
+              errorDiv.style.display = 'block';
+              return;
+            }
+            
+            if (!password) {
+              errorDiv.textContent = 'パスワードを入力してください';
+              errorDiv.style.display = 'block';
+              return;
+            }
+            
+            // ログインボタンを無効化
+            const submitButton = loginForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+              submitButton.disabled = true;
+              submitButton.textContent = 'ログイン中...';
+            }
+            
+            try {
+              // 認証処理（API呼び出し）
+              const result = await window.Auth.login(email, password);
+              
+              if (result.success) {
+                errorDiv.style.display = 'none';
+                
+                // リダイレクト先を取得
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirect = urlParams.get('redirect');
+                
+                if (redirect) {
+                  window.location.href = decodeURIComponent(redirect);
+                } else {
+                  // ロールごとのデフォルトページにリダイレクト（部署情報も考慮）
+                  const defaultPage = window.Auth.getDefaultPageForRole(result.user);
+                  const basePath = document.querySelector('base')?.getAttribute('href') || '/';
+                  
+                  // ベースパスを考慮したパス解決
+                  let redirectPath = defaultPage;
+                  if (basePath !== '/' && !defaultPage.startsWith('http')) {
+                    if (defaultPage.startsWith('/')) {
+                      redirectPath = basePath.slice(0, -1) + defaultPage;
+                    } else {
+                      redirectPath = basePath + defaultPage;
+                    }
+                  }
+                  
+                  window.location.href = redirectPath;
+                }
+              } else {
+                // エラーメッセージを表示
+                const errorMessage = result.message || 'ログインに失敗しました';
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
+                
+                // ログインボタンを再有効化
+                if (submitButton) {
+                  submitButton.disabled = false;
+                  submitButton.textContent = 'ログイン';
+                }
+              }
+            } catch (error) {
+              console.error('ログインエラー:', error);
+              errorDiv.textContent = 'ログイン処理でエラーが発生しました。ページを再読み込みしてください。';
+              errorDiv.style.display = 'block';
+              
+              // ログインボタンを再有効化
+              if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'ログイン';
+              }
+            }
+          });
+        }
+        
+        // 既にログイン済みの場合はリダイレクト
+        if (window.Auth && window.Auth.checkAuth()) {
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirect = urlParams.get('redirect');
+          
+          if (redirect) {
+            window.location.href = decodeURIComponent(redirect);
+          } else {
+            // 現在のロールに応じたデフォルトページにリダイレクト
+            const currentRole = window.Auth.getCurrentRole();
+            const defaultPage = window.Auth.getDefaultPageForRole(currentRole);
+            const basePath = document.querySelector('base')?.getAttribute('href') || '/';
+            
+            // ベースパスを考慮したパス解決
+            let redirectPath = defaultPage;
+            if (basePath !== '/' && !defaultPage.startsWith('http')) {
+              if (defaultPage.startsWith('/')) {
+                redirectPath = basePath.slice(0, -1) + defaultPage;
+              } else {
+                redirectPath = basePath + defaultPage;
+              }
+            }
+            
+            window.location.href = redirectPath;
+          }
+        }
+        
+        // メール確認の再送信リンク
+        const resendLink = document.getElementById('resend-verification-link');
+        if (resendLink) {
+          resendLink.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            // メールアドレスを入力してもらう
+            const email = prompt('メールアドレスを入力してください:');
+            if (!email) {
+              return;
+            }
+            
+            // Cognito認証でメール確認の再送信
+            if (window.Auth && window.Auth.resendEmailVerification) {
+              try {
+                const result = await window.Auth.resendEmailVerification();
+                if (result.success) {
+                  alert(result.message);
+                } else {
+                  alert(result.message || 'メール確認の再送信に失敗しました。');
+                }
+              } catch (error) {
+                console.error('メール確認の再送信エラー:', error);
+                alert('メール確認の再送信に失敗しました。');
+              }
+            } else {
+              alert('メール確認の再送信には、ログインが必要です。\n\nログイン後、マイページからメール確認の再送信を行ってください。');
+            }
+          });
+        }
+      })();
+      
+      // SP版：メニューボタンとメニューパネルの制御
+      (function() {
+        const menuButton = document.getElementById('fixed-menu-button');
+        const menuPanel = document.getElementById('sp-menu-panel');
+        const menuOverlay = document.getElementById('sp-menu-panel-overlay');
+        
+        if (!menuButton || !menuPanel || !menuOverlay) return;
+        
+        // メニューの開閉
+        function toggleMenu() {
+          const isOpen = menuPanel.classList.contains('open');
+          if (isOpen) {
+            closeMenu();
+          } else {
+            openMenu();
+          }
+        }
+        
+        function openMenu() {
+          menuPanel.classList.add('open');
+          menuOverlay.classList.add('open');
+          document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMenu() {
+          menuPanel.classList.remove('open');
+          menuOverlay.classList.remove('open');
+          document.body.style.overflow = '';
+          // サブメニューも閉じる
+          document.querySelectorAll('.sp-menu-item.active').forEach(item => {
+            item.classList.remove('active');
+          });
+        }
+        
+        // メニューボタンクリック
+        menuButton.addEventListener('click', toggleMenu);
+        
+        // オーバーレイクリックで閉じる
+        menuOverlay.addEventListener('click', closeMenu);
+        
+        // サブメニューの開閉
+        document.querySelectorAll('.sp-menu-item-has-submenu > .sp-menu-link').forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const item = this.parentElement;
+            item.classList.toggle('active');
+          });
+        });
+      })();
+    </script>

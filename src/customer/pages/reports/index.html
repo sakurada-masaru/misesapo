@@ -1,0 +1,526 @@
+@layout('layouts.base')
+@json('data/meta/customer_reports_title.json', $title)
+@json('data/meta/customer_reports_body_class.json', $body_class)
+<link rel="stylesheet" href="/assets/css/admin-sidebar.css">
+<script src="/assets/js/auth.js"></script>
+<script src="/js/client_auth.js"></script>
+<script src="/assets/js/admin-sidebar.js"></script>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+    <div class="sidebar-header">
+        <a href="/mypage" class="logo-link">
+            <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+            <span class="logo-text">ミセサポ</span>
+        </a>
+    </div>
+
+    <div class="sidebar-role">
+        <span class="role-badge" id="sidebar-role-badge">顧客</span>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="/mypage" class="nav-item" data-page="mypage">
+            <i class="fas fa-user-circle"></i>
+            <span class="nav-label">マイページ</span>
+        </a>
+        <a href="/reports" class="nav-item active" data-page="reports">
+            <i class="fas fa-file-alt"></i>
+            <span class="nav-label">レポート</span>
+        </a>
+        <a href="/schedule" class="nav-item" data-page="schedule">
+            <i class="fas fa-calendar-alt"></i>
+            <span class="nav-label">スケジュール</span>
+        </a>
+        <a href="/karte" class="nav-item" data-page="karte">
+            <i class="fas fa-notes-medical"></i>
+            <span class="nav-label">カルテ</span>
+        </a>
+        <div class="nav-divider"></div>
+        <a href="/mypage/info" class="nav-item" data-page="info">
+            <i class="fas fa-building"></i>
+            <span class="nav-label">オーナー情報</span>
+        </a>
+        <a href="/mypage/settings" class="nav-item" data-page="settings">
+            <i class="fas fa-sliders-h"></i>
+            <span class="nav-label">アカウント設定</span>
+        </a>
+        <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="nav-label">ログアウト</span>
+        </button>
+    </nav>
+
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+</aside>
+
+<style>
+    .reports-page {
+        padding: 24px;
+    }
+
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-title i {
+        color: #ec4899;
+    }
+
+    .haccp-badge {
+        background: #10b981;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .filters {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .filter-select {
+        padding: 8px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        background: white;
+        color: #1e293b;
+        cursor: pointer;
+    }
+
+    .reports-grid {
+        display: grid;
+        gap: 16px;
+    }
+
+    .report-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .report-card:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .report-card-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #334155 100%);
+        color: white;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .report-date {
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .report-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .report-status.completed {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .report-status.pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .report-card-body {
+        padding: 20px;
+    }
+
+    .report-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .report-info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .report-info-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .report-info-value {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .report-photos {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .report-photo-thumb {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid #e2e8f0;
+    }
+
+    .report-card-footer {
+        padding: 12px 20px;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .report-target {
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+
+    .report-target i {
+        color: #ec4899;
+        margin-right: 6px;
+    }
+
+    .btn-view {
+        padding: 8px 16px;
+        background: #ec4899;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .btn-view:hover {
+        background: #db2777;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 24px;
+        color: #64748b;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #cbd5e1;
+        margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+        font-size: 1.25rem;
+        color: #475569;
+        margin: 0 0 8px;
+    }
+
+    .empty-state p {
+        margin: 0;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 60px 24px;
+        color: #64748b;
+    }
+
+    @media (max-width: 768px) {
+        .reports-page {
+            padding: 16px;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<main id="main" class="container main-content">
+    <div class="reports-page">
+        <!-- ヘッダー -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-file-alt"></i>
+                清掃レポート
+                <span class="haccp-badge">HACCP準拠</span>
+            </h1>
+            <div class="filters">
+                <select class="filter-select" id="filter-store">
+                    <option value="">すべての店舗</option>
+                </select>
+                <select class="filter-select" id="filter-year">
+                    <option value="">すべての年</option>
+                    <option value="2026">2026年</option>
+                    <option value="2025">2025年</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ローディング -->
+        <div class="loading" id="loading">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 12px;"></i>
+            <p>レポートを読み込んでいます...</p>
+        </div>
+
+        <!-- レポート一覧 -->
+        <div class="reports-grid" id="reports-grid" style="display: none;"></div>
+
+        <!-- 空の状態 -->
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <i class="fas fa-file-alt"></i>
+            <h3>レポートがありません</h3>
+            <p>清掃完了後にレポートがこちらに表示されます。</p>
+        </div>
+    </div>
+</main>
+
+<script>
+    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    let currentClientId = null;
+    let allReports = [];
+
+    // 認証情報からクライアントIDを取得
+    async function getClientId() {
+        const authData = window.Auth?.getAuthData?.();
+        if (!authData || !authData.user) {
+            window.location.href = '/signin.html';
+            return null;
+        }
+
+        // クライアント情報を取得
+        const userId = authData.user.id;
+        if (userId) {
+            try {
+                const response = await fetch(`${API_BASE}/clients/${userId}`);
+                if (response.ok) {
+                    const client = await response.json();
+                    return client.id || userId;
+                }
+            } catch (e) {
+                console.error('Error fetching client:', e);
+            }
+        }
+
+        return userId;
+    }
+
+    // レポート一覧を取得
+    async function loadReports() {
+        const loadingEl = document.getElementById('loading');
+        const gridEl = document.getElementById('reports-grid');
+        const emptyEl = document.getElementById('empty-state');
+
+        try {
+            currentClientId = await getClientId();
+            if (!currentClientId) return;
+
+            // customer-reports テーブルから取得
+            const response = await fetch(`${API_BASE}/customer-reports?client_id=${encodeURIComponent(currentClientId)}`);
+
+            if (response.ok) {
+                const data = await response.json();
+                allReports = Array.isArray(data) ? data : (data.items || data.reports || []);
+            } else {
+                // フォールバック: 既存のレポートAPIを使用
+                console.log('Falling back to legacy reports API');
+                allReports = [];
+            }
+
+            loadingEl.style.display = 'none';
+
+            if (allReports.length === 0) {
+                emptyEl.style.display = 'block';
+                gridEl.style.display = 'none';
+            } else {
+                emptyEl.style.display = 'none';
+                gridEl.style.display = 'grid';
+                renderReports(allReports);
+                populateStoreFilter(allReports);
+            }
+        } catch (error) {
+            console.error('Error loading reports:', error);
+            loadingEl.style.display = 'none';
+            emptyEl.style.display = 'block';
+        }
+    }
+
+    // レポートを描画
+    function renderReports(reports) {
+        const gridEl = document.getElementById('reports-grid');
+
+        // 日付順でソート（新しい順）
+        const sorted = [...reports].sort((a, b) => {
+            const dateA = new Date(a.date || a.cleaning_date || 0);
+            const dateB = new Date(b.date || b.cleaning_date || 0);
+            return dateB - dateA;
+        });
+
+        gridEl.innerHTML = sorted.map(report => {
+            const date = report.date || report.cleaning_date || '';
+            const formattedDate = date ? new Date(date).toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }) : '日付不明';
+
+            const storeName = report.store_name || '店舗名未設定';
+            const brandName = report.brand_name || '';
+            const workerName = report.worker_name || '作業者未設定';
+            const target = report.cleaning_target || report.target || '清掃項目未設定';
+            const status = report.status === 'completed' ? 'completed' : 'completed';
+            const statusLabel = '完了';
+
+            // サムネイル写真
+            const photos = report.photos || {};
+            const beforeImg = photos.before || photos.before_url || '';
+            const afterImg = photos.after || photos.after_url || '';
+
+            return `
+        <div class="report-card" onclick="viewReport('${report.id}')">
+          <div class="report-card-header">
+            <span class="report-date">${formattedDate}</span>
+            <span class="report-status ${status}">${statusLabel}</span>
+          </div>
+          <div class="report-card-body">
+            <div class="report-info">
+              <div class="report-info-item">
+                <span class="report-info-label">店舗</span>
+                <span class="report-info-value">${storeName}</span>
+              </div>
+              <div class="report-info-item">
+                <span class="report-info-label">ブランド</span>
+                <span class="report-info-value">${brandName || '-'}</span>
+              </div>
+              <div class="report-info-item">
+                <span class="report-info-label">作業者</span>
+                <span class="report-info-value">${workerName}</span>
+              </div>
+            </div>
+            ${(beforeImg || afterImg) ? `
+              <div class="report-photos">
+                ${beforeImg ? `<img src="${beforeImg}" alt="Before" class="report-photo-thumb">` : ''}
+                ${afterImg ? `<img src="${afterImg}" alt="After" class="report-photo-thumb">` : ''}
+              </div>
+            ` : ''}
+          </div>
+          <div class="report-card-footer">
+            <span class="report-target">
+              <i class="fas fa-broom"></i>
+              ${target}
+            </span>
+            <button class="btn-view">
+              <i class="fas fa-eye"></i>
+              詳細を見る
+            </button>
+          </div>
+        </div>
+      `;
+        }).join('');
+    }
+
+    // 店舗フィルターを設定
+    function populateStoreFilter(reports) {
+        const filterEl = document.getElementById('filter-store');
+        const stores = [...new Set(reports.map(r => r.store_name).filter(Boolean))];
+
+        stores.forEach(store => {
+            const option = document.createElement('option');
+            option.value = store;
+            option.textContent = store;
+            filterEl.appendChild(option);
+        });
+    }
+
+    // フィルター適用
+    function applyFilters() {
+        const storeFilter = document.getElementById('filter-store').value;
+        const yearFilter = document.getElementById('filter-year').value;
+
+        let filtered = allReports;
+
+        if (storeFilter) {
+            filtered = filtered.filter(r => r.store_name === storeFilter);
+        }
+
+        if (yearFilter) {
+            filtered = filtered.filter(r => {
+                const date = r.date || r.cleaning_date || '';
+                return date.startsWith(yearFilter);
+            });
+        }
+
+        const gridEl = document.getElementById('reports-grid');
+        const emptyEl = document.getElementById('empty-state');
+
+        if (filtered.length === 0) {
+            gridEl.style.display = 'none';
+            emptyEl.style.display = 'block';
+        } else {
+            gridEl.style.display = 'grid';
+            emptyEl.style.display = 'none';
+            renderReports(filtered);
+        }
+    }
+
+    // レポート詳細を表示
+    function viewReport(reportId) {
+        window.location.href = `/reports/${reportId}`;
+    }
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', () => {
+        loadReports();
+
+        document.getElementById('filter-store').addEventListener('change', applyFilters);
+        document.getElementById('filter-year').addEventListener('change', applyFilters);
+    });
+</script>

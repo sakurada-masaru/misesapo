@@ -1,0 +1,44 @@
+@layout('layouts.base')
+@json('data/meta/checkout_title.json', $title)
+
+<main id="main" class="container section-gap-lg">
+      <h1 class="page-title">発注手続き</h1>
+
+      <section class="card">
+        <h2 class="section-title">支払い方法</h2>
+        <div class="radio-group">
+          <label class="radio-label"><input type="radio" name="payment" checked /><span class="radio-custom"></span><span>クレジットカード</span></label>
+          <label class="radio-label"><input type="radio" name="payment" /><span class="radio-custom"></span><span>請求書払い</span></label>
+          <label class="radio-label"><input type="radio" name="payment" /><span class="radio-custom"></span><span>口座振替</span></label>
+        </div>
+      </section>
+
+      <section class="card section-gap-sm">
+        <h2 class="section-title">訪問日時</h2>
+        <div class="form-row">
+          <div>
+            <label class="label" for="visit-date">訪問日</label>
+            <input id="visit-date" class="input" type="date" />
+          </div>
+          <div>
+            <label class="label" for="visit-time">訪問時間帯</label>
+            <select id="visit-time" class="select">
+              <option value="">選択してください</option>
+              <option>午前（9:00〜12:00）</option>
+              <option>午後（13:00〜17:00）</option>
+              <option>夕方（17:00〜19:00）</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid cols-2 section-gap-lg">
+        <div>
+          <a class="btn btn-round" href="/cart">カートへ戻る</a>
+        </div>
+        <div class="actions justify-end">
+          <a class="btn btn-primary btn-round btn-fixed" href="/order-confirm">確認へ進む</a>
+        </div>
+      </div>
+    </main>
+

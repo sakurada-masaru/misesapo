@@ -1,0 +1,5039 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ミセサポ | 店舗清掃・設備メンテナンスサービス</title>
+    <meta name="description"
+        content="店舗の清掃・メンテナンスをプロフェッショナルにサポート。定期清掃、スポット対応、設備保守を一元管理。写真付きレポートで安心の清掃サービス。厨房設備、空調設備、フロア清掃まで幅広く対応。">
+    <meta name="keywords" content="店舗清掃,清掃サービス,設備メンテナンス,定期清掃,スポット清掃,厨房清掃,空調清掃,フロア清掃,グリストラップ,ダクト清掃,ミセサポ">
+    <meta name="author" content="株式会社ミセサポ">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://misesapo.co.jp/">
+    <meta property="og:title" content="ミセサポ | 店舗清掃・設備メンテナンスサービス">
+    <meta property="og:description" content="店舗の清掃・メンテナンスをプロフェッショナルにサポート。定期清掃、スポット対応、設備保守を一元管理。写真付きレポートで安心の清掃サービス。">
+    <meta property="og:image" content="https://misesapo.co.jp/images/logo_144x144.png">
+    <meta property="og:site_name" content="ミセサポ">
+    <meta property="og:locale" content="ja_JP">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://misesapo.co.jp/">
+    <meta name="twitter:title" content="ミセサポ | 店舗清掃・設備メンテナンスサービス">
+    <meta name="twitter:description" content="店舗の清掃・メンテナンスをプロフェッショナルにサポート。定期清掃、スポット対応、設備保守を一元管理。写真付きレポートで安心の清掃サービス。">
+    <meta name="twitter:image" content="https://misesapo.co.jp/images/logo_144x144.png">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://misesapo.co.jp/">
+
+    <script>
+        // baseタグは使用しない（すべてのパスを絶対URLで解決する）
+        // baseタグがあると、絶対URLも相対パスとして解釈される可能性があるため
+    </script>
+    <!--GoogleFonts(Noto Sans JP)-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <!--GoogleFonts(Noto Sans JP) end-->
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #FDEDED;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        body.splash-active {
+            overflow: hidden !important;
+        }
+
+        body.splash-inactive {
+            overflow: auto;
+        }
+
+        /* コンテンツ */
+        .content {
+            padding-top: 200px;
+            min-height: 200vh;
+        }
+
+        .section {
+            padding: 100px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .section p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+        }
+
+        /* コンセプトセクション */
+        .c-top-concept {
+            width: 100%;
+            position: relative;
+            margin: 100px 0;
+        }
+
+        .c-top-concept__container {
+            position: relative;
+            width: 100%;
+            padding: 40px 0;
+            z-index: 1;
+        }
+
+        .c-top-heading {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        
+        .c-top-heading__sub-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .c-top-heading__text {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .c-top-concept__text-area {
+            max-width: 520px;
+            width: 100%;
+            margin: 40px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .c-top-concept__heading {
+            font-size: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        .c-top-concept__text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #666;
+        }
+
+        /* お知らせセクション */
+        .news-section-wrapper {
+            position: absolute;
+            top: 160px;
+            right: 50px;
+            z-index: 9998;
+            width: auto;
+            padding: 0;
+            margin: 0;
+        }
+
+        .news-section {
+            width: 340px;
+            max-width: 500px;
+            margin: 0;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        .news-section__title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #FF679C;
+            margin-bottom: 14px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 103, 156, 0.2);
+        }
+
+        .news-section__list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .news-section__item {
+            margin-bottom: 14px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .news-section__item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .news-section__item:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .news-section__item:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .news-section__item:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .news-section__date {
+            font-size: 10px;
+            color: #999;
+            margin-bottom: 3px;
+            display: block;
+        }
+
+        .news-section__text {
+            font-size: 12px;
+            color: #333;
+            line-height: 1.5;
+            display: block;
+            transition: color 0.3s ease;
+        }
+
+        .news-section__item:hover .news-section__text {
+            color: #FF679C;
+        }
+
+        .news-section__new {
+            display: inline-block;
+            background: #FF679C;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        /* Temporarily hide news section */
+        .news-section-wrapper {
+            display: none !important;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .news-section-wrapper {
+                top: 90px;
+                right: 20px;
+            }
+
+            .news-section {
+                width: 280px;
+                padding: 18px;
+            }
+
+            .news-section__title {
+                font-size: 12px;
+            }
+
+            .news-section__text {
+                font-size: 12px;
+            }
+        }
+
+        /* 固定ボタン */
+        .fixed-order-button {
+            position: fixed;
+            bottom: 50px;
+            right: 50px;
+            width: 150px;
+            height: 150px;
+            z-index: 10000;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            display: none;
+        }
+
+        /* SP版：左下メニューボタン */
+        .fixed-menu-button {
+            display: none;
+            position: fixed;
+            bottom: 50px;
+            left: 50px;
+            width: 150px;
+            height: 150px;
+            z-index: 999998;
+            /* スプラッシュスクリーン（999999）より下、他の要素より上 */
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .fixed-menu-button:hover {
+            transform: scale(1.1);
+        }
+
+        .fixed-menu-button__circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #FF008C;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(255, 0, 140, 0.4);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .fixed-menu-button * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .fixed-menu-button__circle::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .fixed-menu-button__text {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* SP版：メニューパネル */
+        .sp-menu-panel {
+            display: none;
+            position: fixed;
+            top: -100%;
+            right: 0;
+            width: 85vw;
+            max-width: 400px;
+            height: 100vh;
+            background: #FF6BA6;
+            box-shadow: none;
+            border-left: 4px solid rgba(255, 255, 255, 0.5);
+            z-index: 999997;
+            /* スプラッシュスクリーンより下、メニューボタンより上 */
+            transition: top 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            overflow-y: auto;
+            padding: 80px 24px 32px;
+        }
+
+        .sp-menu-panel.open {
+            top: 0;
+            opacity: 1;
+        }
+
+        .sp-menu-panel.closing {
+            top: -100%;
+            opacity: 0;
+        }
+
+        .sp-menu-panel-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.5);
+            z-index: 999996;
+            /* メニューパネルより下 */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sp-menu-panel-overlay.open {
+            display: block;
+            opacity: 1;
+        }
+
+        /* 白の円形拡大アニメーション */
+        .menu-ripple-overlay {
+            position: fixed;
+            width: 100px;
+            height: 100px;
+            background: #ffffff;
+            z-index: 999995;
+            border-radius: 50%;
+            transform: scale(0);
+            pointer-events: none;
+            opacity: 0;
+            display: none;
+        }
+
+        .menu-ripple-overlay.animating {
+            opacity: 0.9;
+            display: block;
+            animation: rippleExpand 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .menu-ripple-overlay.collapsing {
+            opacity: 0.9;
+            display: block;
+            animation: rippleSlideUp 0.3s ease forwards;
+        }
+
+        @keyframes rippleExpand {
+            0% {
+                transform: scale(0);
+                opacity: 0.9;
+            }
+
+            100% {
+                transform: scale(25);
+                opacity: 0.9;
+            }
+        }
+
+        @keyframes rippleSlideUp {
+            0% {
+                transform: translateY(0) scale(25);
+                opacity: 0.9;
+            }
+
+            100% {
+                transform: translateY(-100vh) scale(25);
+                opacity: 0;
+            }
+        }
+
+        .sp-menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sp-menu-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .sp-menu-panel.open .sp-menu-item {
+            animation: menuItemFadeIn 0.3s ease forwards;
+        }
+
+        .sp-menu-panel.closing .sp-menu-item {
+            animation: menuItemFadeOut 0.3s ease forwards;
+        }
+
+        @keyframes menuItemFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes menuItemFadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        /* 各メニュー項目に時間差を設定（開く時：上から順） */
+        .sp-menu-panel.open .sp-menu-item:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .sp-menu-panel.open .sp-menu-item:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .sp-menu-panel.open .sp-menu-item:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .sp-menu-panel.open .sp-menu-item:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .sp-menu-panel.open .sp-menu-item:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        .sp-menu-panel.open .sp-menu-item:nth-child(6) {
+            animation-delay: 0.3s;
+        }
+
+        .sp-menu-panel.open .sp-menu-item:nth-child(7) {
+            animation-delay: 0.35s;
+        }
+
+        .sp-menu-panel.open .sp-menu-item:nth-child(8) {
+            animation-delay: 0.4s;
+        }
+
+        .sp-menu-panel.open .sp-menu-item:nth-child(9) {
+            animation-delay: 0.45s;
+        }
+
+        .sp-menu-panel.open .sp-menu-item:nth-child(10) {
+            animation-delay: 0.5s;
+        }
+
+        .sp-menu-panel.open .sp-menu-item:nth-child(11) {
+            animation-delay: 0.55s;
+        }
+
+        .sp-menu-panel.open .sp-menu-item:nth-child(12) {
+            animation-delay: 0.6s;
+        }
+
+        /* 各メニュー項目に時間差を設定（閉じる時：下から順、逆順） */
+        .sp-menu-panel.closing .sp-menu-item:nth-last-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .sp-menu-panel.closing .sp-menu-item:nth-last-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .sp-menu-panel.closing .sp-menu-item:nth-last-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .sp-menu-panel.closing .sp-menu-item:nth-last-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .sp-menu-panel.closing .sp-menu-item:nth-last-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        .sp-menu-panel.closing .sp-menu-item:nth-last-child(6) {
+            animation-delay: 0.3s;
+        }
+
+        .sp-menu-panel.closing .sp-menu-item:nth-last-child(7) {
+            animation-delay: 0.35s;
+        }
+
+        .sp-menu-panel.closing .sp-menu-item:nth-last-child(8) {
+            animation-delay: 0.4s;
+        }
+
+        .sp-menu-panel.closing .sp-menu-item:nth-last-child(9) {
+            animation-delay: 0.45s;
+        }
+
+        .sp-menu-panel.closing .sp-menu-item:nth-last-child(10) {
+            animation-delay: 0.5s;
+        }
+
+        .sp-menu-panel.closing .sp-menu-item:nth-last-child(11) {
+            animation-delay: 0.55s;
+        }
+
+        .sp-menu-panel.closing .sp-menu-item:nth-last-child(12) {
+            animation-delay: 0.6s;
+        }
+
+        .sp-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .sp-menu-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .sp-menu-link:hover {
+            color: #ffffff;
+            opacity: 0.8;
+        }
+
+        .sp-menu-arrow {
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .sp-menu-item.active .sp-menu-arrow {
+            transform: rotate(180deg);
+        }
+
+        .sp-menu-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .sp-menu-item.active .sp-menu-submenu {
+            max-height: 2000px;
+        }
+
+        .sp-menu-submenu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            padding-left: 16px;
+        }
+
+        .sp-menu-item-login {
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
+            border-bottom: none;
+        }
+
+        .sp-menu-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sp-menu-list {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .sp-menu-link-login {
+            background-color: #ffffff;
+            color: #FF679C !important;
+            padding: 14px 20px;
+            border-radius: 8px;
+            justify-content: center;
+            text-align: center;
+            margin: 8px 0;
+            border: 2px solid #FF679C;
+        }
+
+        .sp-menu-link-login:hover {
+            background-color: #FF679C;
+            color: #ffffff !important;
+        }
+
+        .sp-menu-submenu-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sp-menu-submenu-link {
+            display: block;
+            padding: 12px 0;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .sp-menu-submenu-link:hover {
+            color: #ffffff;
+            opacity: 1;
+        }
+
+        .fixed-order-button:hover {
+            transform: scale(1.1);
+        }
+
+        .fixed-order-button__circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #FF008C;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(255, 0, 140, 0.4);
+        }
+
+        .fixed-order-button__circle::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .fixed-order-button__text {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* 円形テキスト */
+        .fixed-order-button__rotating-text {
+            position: absolute;
+            width: 190px;
+            height: 190px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: rotate-text 20s infinite linear;
+        }
+
+        .fixed-order-button__rotating-text svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .fixed-order-button__rotating-text text {
+            fill: #FF008C;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: Arial, sans-serif;
+        }
+
+        @keyframes rotate-text {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        /* 固定バナー */
+        .fixed-banner {
+            position: absolute;
+            top: 300px;
+            right: 50px;
+            z-index: 10003;
+            width: 250px;
+            max-width: 340px;
+            height: auto;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .fixed-banner:hover {
+            transform: translateY(-5px) scale(1.05);
+        }
+
+        .fixed-banner img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        .fixed-banner:hover img {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            transform: scale(1.02);
+        }
+
+        @media (max-width: 768px) {
+            .fixed-banner {
+                display: none;
+            }
+
+            .news-section-wrapper {
+                display: none;
+            }
+
+
+            .cosmetic-header,
+            .normal-header {
+                background-position: 0 -65px !important;
+                display: none;
+            }
+
+            .normal-header.visible {
+                display: none;
+            }
+
+            .cosmetic-header-inner {
+                top: -20px;
+                left: -41px;
+
+            }
+
+            .cosmetic-header-logo,
+            .normal-header-logo {
+                display: none;
+            }
+
+            /* SP版：メニューパネルを表示 */
+            .sp-menu-panel {
+                display: block;
+            }
+
+            .hero-headings-sp {
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+                margin: 0 auto 16px;
+                width: 100%;
+                pointer-events: none;
+                z-index: 2000;
+            }
+
+            .hero-headings-sp .hero-heading {
+                opacity: 0;
+                transform: translateY(24px) scale(0.94);
+                animation: spHeroLabelIntro 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 0s forwards,
+                    spHeroLabelFloat 4s ease-in-out 0.9s infinite;
+                animation-delay: 0s, 0.9s;
+            }
+
+            .hero-headings-sp .hero-heading:nth-child(2) {
+                animation-delay: 0.2s, 1.1s;
+            }
+
+            .hero-headings-sp .hero-heading img {
+                width: auto;
+                height: 180px;
+                max-height: 40vh;
+                max-width: 60vw;
+            }
+
+            /* SP版専用：水平方向ラベルアニメーション（マスクの上に表示） */
+            .hero-labels-horizontal-sp {
+                display: flex !important;
+                /* 確実に表示 */
+                flex-direction: row;
+                align-items: center;
+                gap: 12px;
+                position: absolute;
+                left: 60px;
+                /* 100pxから40px左にずらした */
+                top: 200px;
+                z-index: 70;
+                /* マスク（z-index: 60）より上に表示 */
+                pointer-events: none;
+                width: auto;
+            }
+
+            .hero-labels-horizontal-sp .hero-label-item {
+                opacity: 0;
+                transform: translateY(20px) scale(0.9);
+                animation: spLabelHorizontalFadeIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+                    spLabelHorizontalFloat 3.5s ease-in-out 1s infinite;
+            }
+
+            .hero-labels-horizontal-sp .hero-label-item:nth-child(1) {
+                animation-delay: 0s, 1s;
+            }
+
+            .hero-labels-horizontal-sp .hero-label-item:nth-child(2) {
+                animation-delay: 0.3s, 1.3s;
+            }
+
+            .hero-labels-horizontal-sp .hero-label-item img {
+                width: auto;
+                height: 300px;
+                max-height: 300px;
+                max-width: 45vw;
+                filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25)) drop-shadow(0 0 15px rgba(255, 103, 156, 0.35));
+            }
+
+            .fullscreen-image-section {
+                padding-top: 0;
+                z-index: -1 !important;
+            }
+
+            .sp-hero-stage {
+                width: min(430px, 90vw);
+                margin: 0 auto;
+                position: relative;
+                height: auto;
+                /* 高さは自動（画像の高さに合わせる） */
+            }
+
+            .fullscreen-image-wrapper {
+                position: static !important;
+                width: 100%;
+                height: auto;
+                margin: 0 auto;
+                overflow: hidden;
+            }
+
+            .fullscreen-image-wrapper .fullscreen-image {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+                opacity: 0;
+                transition: opacity 2s ease-in-out;
+            }
+
+            .fullscreen-image-wrapper .fullscreen-image:first-child {
+                opacity: 1;
+            }
+
+            .fullscreen-image-wrapper .fullscreen-image.active {
+                opacity: 1;
+            }
+
+            .hero-mask {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                margin-top: 0;
+                z-index: 60;
+            }
+
+            .hero-carousel-sp {
+                display: none !important;
+                /* SP版では非表示 */
+                visibility: hidden !important;
+                height: 0 !important;
+                overflow: hidden !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* SP版：サービスカルーセル関連を非表示 */
+            .service-section-title {
+                display: none !important;
+            }
+
+            .misesapo-flow-wrapper {
+                display: none !important;
+            }
+
+            .swipe-hint {
+                display: none !important;
+            }
+
+            .misesapo-category-buttons {
+                display: none !important;
+            }
+
+            .service-carousel {
+                display: none !important;
+            }
+
+            .hero-carousel-track {
+                display: flex;
+                gap: 12px;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                /* Firefox */
+                -ms-overflow-style: none;
+                /* IE/Edge */
+                padding: 0 20px;
+                scroll-behavior: smooth;
+            }
+
+            .hero-carousel-track::-webkit-scrollbar {
+                display: none;
+                /* Chrome/Safari */
+            }
+
+            .hero-carousel-track img {
+                width: 80px;
+                height: 80px;
+                flex-shrink: 0;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                scroll-snap-align: center;
+                object-fit: cover;
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+
+            .hero-carousel-track img:active {
+                transform: scale(0.95);
+            }
+
+            /* カルーセルインディケーター */
+            .hero-carousel-indicators {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 8px;
+                margin-top: 20px;
+                padding: 0 20px;
+            }
+
+            .hero-carousel-indicator {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.5);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+            }
+
+            .hero-carousel-indicator.active {
+                width: 24px;
+                height: 8px;
+                border-radius: 4px;
+                background: #FF008C;
+                border-color: #FF008C;
+            }
+
+            .fullscreen-image-wrapper {
+                height: auto;
+            }
+
+            /* SP版：ヒーローセクション下部装飾画像 */
+            .hero-union-image {
+                display: none;
+                height: auto;
+                z-index: 10000;
+            }
+
+            .hero-union-image .union-image {
+                width: 100%;
+                height: auto;
+                max-height: 263px;
+            }
+
+            /* SP版：発注ボタンのサイズを80pxに */
+            .fixed-order-button {
+                width: 80px;
+                height: 80px;
+                bottom: 30px;
+                right: 65px;
+            }
+
+            .fixed-order-button__text {
+                font-size: 10px;
+            }
+
+            .fixed-order-button__rotating-text {
+                width: 100px;
+                height: 100px;
+            }
+
+            .fixed-order-button__rotating-text text {
+                font-size: 8px;
+            }
+
+            /* SP版：左下メニューボタンを表示 */
+            .fixed-menu-button {
+                display: block;
+                width: 80px;
+                height: 80px;
+                bottom: 30px;
+                left: 5px;
+            }
+
+            .fixed-menu-button__text {
+                font-size: 10px;
+            }
+        }
+
+        /* ヒーローセクション見出し */
+        .hero-headings {
+            position: absolute;
+            left: 15%;
+            top: calc(40% + 150px);
+            transform: translate(calc(-50% - 50px + 80px), -50%);
+            flex-direction: row;
+            align-items: center;
+            gap: 20px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .hero-headings-sp {
+            display: none;
+        }
+
+        /* SP版専用：水平方向ラベルアニメーション（PC版では非表示） */
+        .hero-labels-horizontal-sp {
+            display: none;
+        }
+
+        .sp-hero-stage {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .hero-heading {
+            opacity: 0;
+            animation: heroHeadingFadeIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            margin-bottom: 25px;
+        }
+
+        .hero-heading:nth-child(1) {
+            animation-delay: 0.3s;
+        }
+
+        .hero-heading:nth-child(2) {
+            animation-delay: 0.6s;
+        }
+
+        .hero-heading img {
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 20px rgba(255, 103, 156, 0.4));
+            transition: transform 0.3s ease, filter 0.3s ease;
+            animation: heroHeadingFloat 3s ease-in-out infinite;
+        }
+
+        .hero-heading:nth-child(1) img {
+            animation-delay: 1.5s;
+        }
+
+        .hero-heading:nth-child(2) img {
+            animation-delay: 1.8s;
+        }
+
+        .hero-heading:hover img {
+            transform: scale(1.1) translateY(-8px);
+            filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 30px rgba(255, 103, 156, 0.6));
+            animation-play-state: paused;
+        }
+
+        @keyframes heroHeadingFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(80px) scale(0.7) rotate(-5deg);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: translateY(-10px) scale(1.05) rotate(2deg);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes heroHeadingFloat {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            25% {
+                transform: translateY(-5px) rotate(1deg);
+            }
+
+            50% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            75% {
+                transform: translateY(5px) rotate(-1deg);
+            }
+        }
+
+        @keyframes spHeroLabelIntro {
+            0% {
+                opacity: 0;
+                transform: translateY(24px) scale(0.92);
+            }
+
+            60% {
+                opacity: 1;
+                transform: translateY(-6px) scale(1.03);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes spHeroLabelFloat {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-6px) scale(1.01);
+            }
+        }
+
+        /* SP版専用：水平方向ラベルアニメーション */
+        @keyframes spLabelHorizontalFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.9);
+            }
+
+            60% {
+                opacity: 0.9;
+                transform: translateY(-5px) scale(1.02);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes spLabelHorizontalFloat {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-8px) scale(1.02);
+            }
+        }
+
+        /* レスポンシブ対応 - タブレット（768px〜1024px） */
+        @media (min-width: 769px) and (max-width: 1024px) {
+
+            /* ヒーローセクション */
+            .hero-headings {
+                top: calc(40% + 30px);
+                transform: translate(calc(-50% - 30px), -50%);
+                gap: 15px;
+                width: 250px;
+            }
+
+            .hero-heading {
+                height: 70px;
+                margin-bottom: 0px !important;
+            }
+
+            .hero-headings .hero-heading img {
+                height: 120px;
+            }
+
+            /* 固定バナー - タブレット用に縮小 */
+            .fixed-banner {
+                top: 280px;
+                right: 20px;
+                width: 200px;
+                max-width: 200px;
+            }
+
+            /* ニュースセクション - タブレット用に縮小 */
+            .news-section-wrapper {
+                top: 60px;
+                right: 20px;
+                width: 220px;
+            }
+
+            .news-section-wrapper .news-section {
+                padding: 12px;
+            }
+
+            .news-section-wrapper .news-section h3 {
+                font-size: 12px;
+                margin-bottom: 8px;
+            }
+
+            .news-section-wrapper .news-list li {
+                padding: 6px 0;
+                font-size: 11px;
+            }
+
+            .news-section-wrapper .news-date {
+                font-size: 10px;
+            }
+
+            /* サービスセクション */
+            .service-sections .container {
+                padding: 0 20px;
+            }
+
+            .service-sections-title {
+                font-size: 24px;
+            }
+
+            /* プランカード */
+            .plan-cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+
+            .plan-card {
+                padding: 16px 12px;
+            }
+
+            .plan-card__period {
+                font-size: 24px;
+            }
+
+            /* サービスセクションアイテム */
+            .service-section-item__content {
+                padding: 30px 20px;
+            }
+
+            .service-section-item__title {
+                font-size: 28px;
+            }
+
+            .service-section-item__features {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            /* ご利用イメージ - 3カラム2段 */
+            .use-grid,
+            .service-sections .use-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 16px;
+            }
+
+            .use-grid .use-item,
+            .service-sections .use-grid .use-item {
+                padding: 16px;
+            }
+
+            .use-grid .use-item h4 {
+                font-size: 14px;
+            }
+
+            .use-grid .use-item p {
+                font-size: 11px;
+            }
+
+            .use-grid .use-item img {
+                max-height: 120px;
+            }
+
+            /* お客様の声 */
+            .voice-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+
+            /* FAQ */
+            .faq-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* メガメニュー調整 */
+            .mega-menu-submenu-inner {
+                flex-wrap: wrap;
+            }
+
+            .mega-menu-column {
+                min-width: 150px;
+            }
+
+            /* フッター */
+            .footer-content {
+                flex-direction: column;
+                gap: 24px;
+            }
+        }
+
+        /* レスポンシブ対応 - スマートフォン */
+        @media (max-width: 768px) {
+            .hero-headings {
+                width: 230px;
+                left: 110px !important;
+            }
+
+            .hero-headings-sp {
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .hero-headings-sp .hero-heading img {
+                max-width: 200px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-headings-sp .hero-heading img {
+                max-width: 150px;
+            }
+        }
+
+        /* Swiper.jsカルーセル */
+        .misesapo-flow-wrapper {
+            position: relative;
+            width: 100%;
+            margin-top: 0;
+            padding: 0 0 40px;
+            z-index: 100;
+            background: transparent;
+        }
+
+        .misesapo-flow-wrapper .misesapo-category-image {
+            display: none;
+        }
+
+        /* 対応サービス一覧タイトル（ヒーローセクションとカルーセルの間） */
+        .service-section-title {
+            position: relative;
+            text-align: center;
+            padding: 50px 0 20px;
+            pointer-events: none;
+            z-index: 10;
+            background-color: #FDEDED;
+        }
+
+        .service-section-title img {
+            width: auto;
+            height: 40px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .misesapo-flow-wrapper .misesapo-category-buttons {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 100px;
+            pointer-events: auto;
+        }
+
+        .misesapo-flow-wrapper .misesapo-category-btn {
+            pointer-events: auto;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border: 3px solid var(--primary, #FF679C);
+            background: rgba(255, 103, 156, 0.1);
+            color: var(--primary, #FF679C);
+            cursor: pointer;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(255, 103, 156, 0.2);
+        }
+
+        .misesapo-flow-wrapper .misesapo-category-btn:hover {
+            background: var(--primary, #FF679C);
+            border-color: var(--primary-600, #E53888);
+            color: #fff;
+            box-shadow: 0 4px 8px rgba(255, 103, 156, 0.3);
+        }
+
+        .misesapo-flow-wrapper .misesapo-category-btn.active {
+            background: var(--primary-600, #E53888);
+            border-color: var(--primary-600, #E53888);
+            color: #fff;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(227, 86, 135, 0.4);
+        }
+
+        .carousel {
+            position: relative;
+            overflow-x: clip;
+            padding: 0;
+        }
+
+        .swipe-hint {
+            position: absolute;
+            top: calc(50% - 160px);
+            transform: translateY(-50%);
+            z-index: 1000;
+            pointer-events: none;
+            color: #FF008C;
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .swipe-hint-center {
+            right: 120px;
+            transform: translateY(-50%);
+        }
+
+        .swipe-hint p {
+            margin: 0;
+            padding: 0;
+            animation: swipeHintText 3s infinite ease-in-out;
+            line-height: 1.2;
+            white-space: nowrap;
+            transform: rotate(5deg);
+        }
+
+        .swipe-arch {
+            width: 200px;
+            height: 60px;
+            position: relative;
+            transform: rotate(7deg) translateY(-4px);
+        }
+
+        .swipe-arch svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .swipe-circle-arch {
+            filter: drop-shadow(0 2px 4px rgba(255, 0, 140, 0.3));
+        }
+
+        @keyframes swipeHintText {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .service-carousel {
+            padding: 0;
+            overflow: visible;
+        }
+
+        .service-carousel .swiper-slide {
+            width: 400px;
+            background: transparent;
+        }
+
+        .service-carousel .single {
+            position: relative;
+            user-select: none;
+            box-shadow: none;
+            overflow: visible;
+            border-radius: 8px;
+            background: transparent;
+        }
+
+        .service-carousel .single a {
+            display: block;
+            pointer-events: auto;
+            width: 100%;
+            height: 100%;
+        }
+
+        .service-carousel .single img {
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            object-fit: cover;
+            aspect-ratio: 4 / 3;
+            border-radius: 8px;
+            display: block;
+            box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
+        }
+
+        /* サービスセクション */
+        .service-sections {
+            width: 100%;
+            margin: 80px 0;
+            padding: 0;
+        }
+
+        .service-sections-title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 60px;
+        }
+
+        .service-sections-header {
+            text-align: center;
+            margin-bottom: clamp(2.4rem, 4vw, 4.8rem);
+        }
+
+        .service-sections-header .section-tag-label {
+            justify-content: center;
+        }
+
+        /* サービススライダー（グローバル設定に基づく） */
+        .service-sections .container {
+            background: transparent;
+            /* キャンバス上にあるコンテナの背景はなし */
+            width: 100%;
+            max-width: 100%;
+            min-width: 100%;
+            margin: 0;
+            padding: 0 24px;
+            /* PC版: 左右24px（グローバル設定に基づく） */
+            box-sizing: border-box;
+            overflow-x: hidden;
+            /* 横方向のはみ出しを防ぐ */
+        }
+
+        /* container内のすべての要素がはみ出さないようにする */
+        .service-sections .container * {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* スライダー（コンテナ内で完結） */
+        .service-sections .slider-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .service-sections .slider-wrapper {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            width: 100%;
+        }
+
+        /* セクション（スライド）はコンテナ内に1つ表示、コンテナを飛び越えない */
+        .service-sections .slider-slide.section {
+            min-width: 100%;
+            max-width: 100%;
+            width: 100%;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            gap: 24px;
+            align-items: center;
+            padding: 16px;
+            /* セクション内パディング16px（グローバル設定） */
+            margin: 0;
+            background: #f5f5f5;
+            /* 薄いグレーの背景 */
+        }
+
+        /* 代表者挨拶セクション（スライドなし） */
+        .service-sections .greeting-section {
+            width: 100%;
+            max-width: 100%;
+            min-width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row-reverse;
+            /* 右に画像、左にテキスト */
+            gap: 24px;
+            align-items: center;
+            padding: 16px;
+            /* セクション内パディング16px（グローバル設定） */
+            margin: 0;
+            background: #f5f5f5;
+            /* 薄いグレーの背景 */
+        }
+
+        /* セクション内の画像（左側） */
+        .service-sections .section-content-image {
+            flex: 0 0 calc(50% - 12px);
+            /* gapの半分を引く: 50% - (24px / 2) */
+            max-width: calc(50% - 12px);
+            width: calc(50% - 12px);
+            height: auto;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        /* セクション内のテキスト（右側） */
+        .service-sections .section-content-text {
+            flex: 0 0 calc(50% - 12px);
+            /* gapの半分を引く: 50% - (24px / 2) */
+            max-width: calc(50% - 12px);
+            width: calc(50% - 12px);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .service-sections .section-content-text h2 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            margin: 0;
+            text-align: left;
+        }
+
+        .service-sections .section-content-text p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+            margin: 0;
+            text-align: left;
+        }
+
+        .service-slide-link {
+            display: inline-block;
+            padding: 14px 40px;
+            background: #FF679C;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            align-self: flex-start;
+            margin-top: 8px;
+        }
+
+        .service-slide-link:hover {
+            background: #E53888;
+        }
+
+        .service-sections .slider-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .service-sections .slider-btn {
+            background: var(--primary, #FF679C);
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .service-sections .slider-btn:hover {
+            background: var(--primary-600, #E53888);
+        }
+
+        .service-sections .slider-btn:disabled {
+            background: var(--muted, #d1d5db);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .service-sections .slider-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .service-sections .slider-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border, #d1d5db);
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            transition: background 0.3s ease;
+        }
+
+        .service-sections .slider-indicator.active {
+            background: var(--primary, #FF679C);
+        }
+
+        @media (max-width: 768px) {
+            .service-sections .container {
+                padding: 0 16px;
+                /* SP版: 左右16px（グローバル設定に基づく） */
+                overflow-x: hidden;
+                /* 横方向のはみ出しを防ぐ */
+            }
+
+            /* container内のすべての要素がはみ出さないようにする */
+            .service-sections .container * {
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .service-sections .slider-slide.section {
+                flex-direction: column;
+                padding: 16px;
+                /* SP版: セクション内パディング16px */
+            }
+
+            .service-sections .section-content-image {
+                flex: 0;
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .service-sections .section-content-text {
+                flex: 0 0 100%;
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .service-sections .section-content-text h2 {
+                font-size: 28px;
+                text-align: center;
+            }
+
+            .service-sections .section-content-text p {
+                font-size: 14px;
+                text-align: center;
+            }
+
+            .service-slide-link {
+                align-self: center;
+            }
+
+            .service-sections .greeting-section {
+                flex-direction: column;
+            }
+
+            .service-sections .use-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ご利用イメージセクション */
+        .service-sections .use-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 24px;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .service-sections .use-article {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .service-section-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            min-height: 500px;
+            margin-bottom: 100px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .service-section-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .service-section-item:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .service-section-item__content {
+            flex: 1;
+            padding: 60px 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .service-section-item__title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 24px;
+        }
+
+        .service-section-item__description {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+            margin-bottom: 32px;
+        }
+
+        .service-section-item__features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 32px 0;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px 20px;
+        }
+
+        .service-section-item__features li {
+            font-size: 15px;
+            color: #666;
+            padding: 10px 0;
+            padding-left: 28px;
+            position: relative;
+        }
+
+        .service-section-item__features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #FF679C;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .service-section-item__link {
+            display: inline-block;
+            padding: 14px 40px;
+            background: #FF679C;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            width: fit-content;
+        }
+
+        .service-section-item__link:hover {
+            background: #E53888;
+        }
+
+        .service-section-item__image {
+            flex: 1;
+            height: 500px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .service-section-item__image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .service-section-item:first-of-type .service-section-item__image {
+            flex: 0.6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .service-section-item:first-of-type .service-section-item__content {
+            flex: 0.4;
+        }
+
+        .service-section-item:first-of-type .service-section-item__image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .service-section-item:nth-child(4) .service-section-item__image {
+            flex: 0.6 !important;
+            height: 600px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .service-section-item:nth-child(4) .service-section-item__content {
+            flex: 0.4 !important;
+        }
+
+        .service-section-item:nth-child(4) .service-section-item__image img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+        }
+
+        /* プランカードセクション */
+        .plan-cards-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 100px;
+        }
+
+        .service-section-item__content .plan-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .plan-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-top: 60px;
+        }
+
+        .plan-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 30px 20px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .service-section-item__content .plan-card {
+            padding: 20px 15px;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+            border-color: #FF679C;
+        }
+
+        .plan-card__period {
+            font-size: 32px;
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .plan-card__period-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .plan-card__description {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 1024px) {
+            .plan-cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .service-section-item {
+                flex-direction: column !important;
+                min-height: auto;
+            }
+
+            .service-section-item__content {
+                padding: 40px 20px;
+            }
+
+            .service-section-item__title {
+                font-size: 28px;
+            }
+
+            .service-section-item__image {
+                height: 300px;
+            }
+
+            .service-section-item__features {
+                grid-template-columns: 1fr;
+            }
+
+            .service-sections-title {
+                font-size: 24px;
+                margin-bottom: 40px;
+            }
+
+            .plan-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .service-section-item__content .plan-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .plan-card {
+                padding: 24px 16px;
+            }
+
+            .service-section-item__content .plan-card {
+                padding: 16px 12px;
+            }
+
+            .plan-card__period {
+                font-size: 24px;
+            }
+
+            .service-section-item__content .plan-card__period {
+                font-size: 20px;
+            }
+
+            /* SP版：定期清掃セクションの画像とカードの位置を入れ替え */
+            .service-section-item:first-of-type {
+                flex-direction: column !important;
+            }
+
+            .service-section-item:first-of-type .service-section-item__image {
+                order: -1;
+                width: 100%;
+                height: auto;
+                max-height: 400px;
+            }
+
+            .service-section-item:first-of-type .service-section-item__content {
+                order: 1;
+            }
+
+            .service-section-item:first-of-type .service-section-item__image img {
+                width: 100%;
+                height: auto;
+                object-fit: contain;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .plan-cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .service-section-item__content .plan-cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* SP版：定期清掃セクションのカードは2段グリッドのまま */
+            .service-section-item:first-of-type .service-section-item__content .plan-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .service-section-item:first-of-type .service-section-item__content .plan-card {
+                padding: 12px 8px;
+            }
+
+            .service-section-item:first-of-type .service-section-item__content .plan-card__period {
+                font-size: 18px;
+            }
+
+            .service-section-item:first-of-type .service-section-item__content .plan-card__period-label {
+                font-size: 11px;
+            }
+
+            .service-section-item:first-of-type .service-section-item__content .plan-card__description {
+                font-size: 11px;
+            }
+        }
+
+        .service-carousel .service-caption {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.4;
+            padding: 0 10px;
+            background: transparent;
+        }
+
+        /* フルスクリーン画像セクション（ヒーローセクション） */
+        .fullscreen-image-section {
+            width: 100%;
+            max-width: 100vw;
+            height: 100vh;
+            min-height: 600px;
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: visible;
+            margin: 0 0 -130px 0;
+            padding: 0;
+            z-index: 1;
+            box-sizing: border-box;
+        }
+
+        /* ヒーローセクション下部装飾画像 */
+        .hero-union-image {
+            position: absolute;
+            bottom: -50px;
+            left: 0;
+            width: 100%;
+            height: 263px;
+            margin-top: 100px;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        .hero-union-image .union-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center bottom;
+            display: block;
+        }
+
+
+
+        /* スクロールヒント（左側、縦書き） */
+        .hero_scroll_down {
+            position: fixed;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            width: 50px;
+            z-index: 99999;
+            color: #FF008C;
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            height: auto;
+            font-weight: 500;
+            gap: 25px;
+        }
+
+        .scroll-line {
+            position: relative;
+            width: 1px;
+            height: 80px;
+            background: rgba(255, 0, 140, 0.5);
+            margin: 0;
+            margin-top: 2px;
+        }
+
+        .scroll-circle {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: #FF008C;
+            border-radius: 50%;
+            animation: scroll-circle-move 3s infinite ease-in-out;
+        }
+
+        .hero_scroll_down p {
+            margin: 0;
+            padding: 0;
+            animation: scroll-down 3s infinite ease-in-out;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+        }
+
+        @keyframes scroll-down {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            50% {
+                opacity: 0.3;
+                transform: translateY(15px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scroll-circle-move {
+            0% {
+                top: 0;
+                opacity: 1;
+            }
+
+            50% {
+                top: calc(100% - 6px);
+                opacity: 0.5;
+            }
+
+            100% {
+                top: 0;
+                opacity: 1;
+            }
+        }
+
+        .fullscreen-image-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .fullscreen-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+            opacity: 0;
+            animation: fullscreenFade 24s infinite, kenBurnsZoom 24s infinite;
+            transition: opacity 2s ease-in-out;
+            z-index: 1;
+        }
+
+        /* 1枚目：0-8秒表示（最初から表示） */
+        .fullscreen-image-1 {
+            animation-delay: 0s;
+            opacity: 1;
+        }
+
+        /* 2枚目：8-16秒表示 */
+        .fullscreen-image-2 {
+            animation-delay: 8s;
+        }
+
+        /* 3枚目：16-24秒表示 */
+        .fullscreen-image-3 {
+            animation-delay: 16s;
+        }
+
+        /* ディゾルブ（フェードイン・フェードアウト）アニメーション */
+        @keyframes fullscreenFade {
+            0% {
+                opacity: 0;
+            }
+
+            4% {
+                opacity: 1;
+            }
+
+            30% {
+                opacity: 1;
+            }
+
+            34% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* ケンボーナス効果（ズームイン） */
+        @keyframes kenBurnsZoom {
+            0% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.1);
+            }
+        }
+
+        /* マスク画像 */
+        .hero-mask {
+            position: relative;
+            width: 100%;
+            height: auto;
+            z-index: 50;
+            pointer-events: none;
+            display: none;
+            /* PC版では非表示 */
+        }
+
+        .hero-mask-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .hero-carousel-sp {
+            display: none;
+        }
+
+        /* こんなお悩みありませんか？セクション */
+        .problem-bg {
+            background: transparent;
+            position: relative;
+            padding: 6rem 1rem 5.8rem 1rem;
+            z-index: 100;
+        }
+
+        .problem-box {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .problem-h2 {
+            color: #E53888;
+            padding-bottom: 1rem;
+            margin: 0;
+            font-weight: bold;
+            text-align: left;
+            font-size: min(4.5vw, 20px);
+            position: relative;
+        }
+
+        .border-line {
+            position: relative;
+        }
+
+        .border-line::after {
+            position: absolute;
+            content: "";
+            display: inline-block;
+            width: 0;
+            height: 1rem;
+            background: #F7A8C4;
+            left: 0;
+            bottom: 0;
+            transform-origin: left top;
+        }
+
+        .problem-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 4rem 0 0;
+            width: 100%;
+        }
+
+        .problem-box ul li {
+            padding: 1.5rem 0;
+            border-bottom: 1px dotted #000;
+            font-weight: bold;
+            font-size: min(3vw, 12px);
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .problem-box ul li:last-child {
+            border-bottom: none;
+            padding: 1.5rem 0 0 0;
+        }
+
+        .problem-icon {
+            display: block;
+            width: 2rem;
+            height: 2rem;
+            position: relative;
+            margin-right: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .problem-icon::before {
+            position: absolute;
+            content: "";
+            display: block;
+            width: 2rem;
+            height: 2rem;
+            background: url('/images-material/problem-icon.svg') no-repeat center center / cover;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+
+        .problem-box img {
+            margin: 3rem auto 0;
+            width: min(95%, 330px);
+            display: block;
+        }
+
+        .fadeUp {
+            opacity: 0;
+        }
+
+        @media screen and (min-width: 768px) {
+            .problem-box {
+                width: min(90%, 89.6rem);
+            }
+
+            .problem-box ul li {
+                font-size: 1.8rem;
+            }
+
+            .problem-h2 {
+                font-size: 3.5rem;
+            }
+        }
+
+
+        .gradient-link {
+            display: block;
+            font-weight: 600 !important;
+            padding: 1rem;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #E53888 0%, #F7A8C4 100%);
+            color: #fff !important;
+            margin: 0 auto 1rem;
+            text-align: center;
+            position: relative;
+            transition: opacity 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(229, 56, 136, 0.4);
+        }
+
+        .gradient-link:hover {
+            opacity: 0.8;
+        }
+
+        .gradient-link.web-link {
+            margin: 0 auto;
+        }
+
+        .tel-link {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff !important;
+            text-decoration: none !important;
+        }
+
+        .tel-icon {
+            display: inline-block;
+            background: url('/images-material/tel-icon-white.svg') no-repeat center center / cover;
+            width: 1.4rem;
+            height: 1.4rem;
+            margin-right: 1rem;
+        }
+
+        .g-nav-orderBox-title {
+            font-size: min(4.6vw, 1.8rem);
+            text-align: center;
+            color: #E53888;
+            font-weight: bold;
+            margin: 0 auto 2rem;
+        }
+
+        @media screen and (min-width: 768px) {
+
+            .gradient-link {
+                margin: 0 auto;
+                padding: 2rem;
+            }
+
+            .tel-icon {
+                width: 2rem;
+                height: 2rem;
+            }
+        }
+
+        /* スプラッシュスクリーン（最優先で表示） */
+        .splash-screen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: #ffffff !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            z-index: 999999 !important;
+            opacity: 1 !important;
+            transition: opacity 0.8s ease-out;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .splash-screen.fade-out {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .splash-screen.hidden {
+            display: none !important;
+        }
+
+        .splash-logo {
+            width: auto;
+            height: auto;
+            max-width: 300px;
+            max-height: 300px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* イベント＆キャンペーン強化セクション */
+        .section-tag-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            color: #FF679C;
+            text-transform: uppercase;
+        }
+
+        .section-tag-label::before {
+            content: '';
+            display: block;
+            width: 32px;
+            height: 2px;
+            background: #FF679C;
+        }
+
+        .faq-section .wrapper {
+            max-width: 100%;
+            width: 100%;
+            padding: 0 clamp(16px, 4vw, 48px);
+            margin: 0 auto;
+        }
+
+        .flyer-downloads {
+            margin-top: 2rem;
+            display: grid;
+            gap: 1.2rem;
+        }
+
+        @media (min-width: 640px) {
+            .flyer-downloads {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        .flyer-card {
+            background: #fff;
+            border: 1px solid rgba(22, 39, 53, 0.1);
+            border-radius: 16px;
+            padding: 1.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            min-height: 150px;
+        }
+
+        .flyer-tag {
+            font-size: 1.1rem;
+            letter-spacing: 0.08em;
+            color: #FF679C;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .flyer-card h4 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: #162735;
+        }
+
+        .flyer-card p {
+            color: #555;
+            font-size: 1.3rem;
+            line-height: 1.6;
+        }
+
+        .flyer-link {
+            margin-top: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.8rem 1.4rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 0, 140, 0.3);
+            color: #FF008C;
+            font-weight: 600;
+            font-size: 1.3rem;
+            transition: var(--normal-transition);
+        }
+
+        .flyer-link:hover {
+            background: rgba(255, 0, 140, 0.08);
+        }
+
+        /* FAQセクション */
+        .faq-section {
+            background: #FEF3F7;
+        }
+
+        .faq-head {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .faq-head h2 {
+            font-size: clamp(2.2rem, 4vw, 3.2rem);
+            margin: 1rem 0;
+            color: #162735;
+        }
+
+        .faq-head p {
+            color: #555;
+            font-size: 1.4rem;
+            line-height: 1.8;
+        }
+
+        .faq-list {
+            display: grid;
+            gap: 1.6rem;
+        }
+
+        @media (min-width: 960px) {
+            .faq-list {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        .faq-item {
+            background: #fff;
+            border-radius: 18px;
+            padding: 2.4rem;
+            border-left: 4px solid #FF679C;
+            box-shadow: 0 20px 35px rgba(255, 0, 140, 0.08);
+        }
+
+        .faq-question {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            color: #162735;
+        }
+
+        .faq-answer {
+            color: #555;
+            line-height: 1.8;
+            font-size: 1.4rem;
+        }
+
+        .faq-cta {
+            text-align: center;
+            margin-top: 2.8rem;
+        }
+
+        .faq-cta .gradient-link {
+            width: min(320px, 100%);
+        }
+
+        /* 追加セクション（導入事例・対応エリア） */
+        .case-study-section,
+        .area-coverage-section {
+            background: #fff;
+        }
+
+        .case-study-section .wrapper,
+        .area-coverage-section .wrapper {
+            max-width: 100%;
+            width: 100%;
+            padding: 0 clamp(16px, 4vw, 48px);
+            margin: 0 auto;
+        }
+
+        .case-study-grid {
+            display: grid;
+            gap: clamp(1.6rem, 2vw, 2.8rem);
+            width: 100%;
+        }
+
+        @media (min-width: 960px) {
+            .case-study-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        .case-card {
+            border-radius: 20px;
+            border: 1px solid rgba(22, 39, 53, 0.08);
+            box-shadow: 0 20px 40px rgba(15, 15, 15, 0.06);
+            padding: clamp(1.6rem, 2.2vw, 2.8rem);
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            height: 100%;
+        }
+
+        .case-card h3 {
+            font-size: 1.6rem;
+            color: #162735;
+            margin: 0;
+        }
+
+        .case-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 1.3rem;
+            color: #FF679C;
+            font-weight: 600;
+        }
+
+        .case-results {
+            display: grid;
+            gap: 0.8rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            font-size: 1.3rem;
+            color: #555;
+        }
+
+        .case-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-weight: 600;
+            color: #162735;
+            font-size: 1.3rem;
+        }
+
+        .case-stat::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #FF679C;
+        }
+
+        .case-link {
+            margin-top: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.8rem 1.4rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 0, 140, 0.25);
+            color: #FF008C;
+            font-weight: 600;
+            transition: var(--normal-transition);
+        }
+
+        .case-link:hover {
+            background: rgba(255, 0, 140, 0.08);
+        }
+
+
+        .area-coverage-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            align-items: stretch;
+        }
+
+        @media (min-width: 960px) {
+            .area-coverage-content {
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 3rem;
+            }
+        }
+
+        .area-map {
+            flex: 1;
+            min-height: 260px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(15, 15, 15, 0.08);
+        }
+
+        .area-map img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .area-list {
+            flex: 1;
+            background: #fff;
+            border-radius: 20px;
+            border: 1px solid rgba(22, 39, 53, 0.08);
+            padding: clamp(1.6rem, 2.4vw, 3.2rem);
+            box-shadow: 0 15px 30px rgba(15, 15, 15, 0.05);
+            font-size: 16px;
+        }
+
+        .area-content-wrapper {
+            display: block;
+        }
+
+        @media (min-width: 768px) {
+            .area-content-wrapper {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 2rem;
+            }
+        }
+
+        .area_text_box {
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .area_image_box {
+            flex: 0 0 auto;
+        }
+
+        .area_image_box img {
+            width: 350px;
+            height: auto;
+            border-radius: 12px;
+            margin: auto;
+        }
+
+        @media (max-width: 768px) {
+            .area_image_box img {
+                width: 80%;
+            }
+        }
+
+        .area-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .area-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.4rem 1rem;
+            border-radius: 999px;
+            background: rgba(255, 103, 156, 0.12);
+            color: #FF679C;
+            font-weight: 600;
+        }
+
+        .area-description {
+            margin-top: 1.2rem;
+            line-height: 1.8;
+            color: #555;
+        }
+
+
+        @media screen and (max-width: 768px) {
+            .service-sections-header {
+                background-color: #FDEDED !important;
+                padding-top: 30px !important;
+            }
+
+            .container .use-grid {
+                grid-template-columns: 1fr !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .container .use-article {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* use-box の右側が切れる問題を修正 */
+            .container .use-box {
+                overflow: visible !important;
+                box-sizing: border-box !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            .container .use-box p {
+                width: auto !important;
+                max-width: 100% !important;
+                padding-right: 1.6rem !important;
+                padding-left: 1.6rem !important;
+                box-sizing: border-box !important;
+            }
+
+            .container .use-image-box {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin-right: 0 !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
+            }
+
+            .container .use-box img {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                aspect-ratio: auto !important;
+                object-fit: cover !important;
+                box-sizing: border-box !important;
+            }
+
+            .hero_scroll_down {
+                display: none !important;
+            }
+        }
+
+        .cosmetic-header {
+            background-image: url('/images/cosmetic-header.svg') !important;
+            background-position: 0 -10px;
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .cosmetic-header {
+                height: 160px;
+                background-size: 100% 145px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .cosmetic-header2 {
+                background-image: url('/images/cosmetic-header_sp.svg') !important;
+            }
+        }
+
+        /* 769px以上でのmega-menu-listの装飾 */
+        @media (min-width: 769px) {
+
+            /* cosmetic-headerをページ上部に寄せ、画面幅いっぱいに広げる */
+            .cosmetic-header {
+                top: 0;
+                min-height: 100px;
+            }
+
+            /* cosmetic-header-innerを画面幅いっぱいに広げ、一体感を持たせる */
+            .cosmetic-header .cosmetic-header-inner {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                border-bottom: 1px solid rgba(255, 103, 156, 0.2);
+                transform: translateY(0);
+                top: 0;
+                height: auto;
+                padding: 0px 40px;
+            }
+
+            /* cosmetic-header-logoとcosmetic-header-navを横並びで配置 */
+            .cosmetic-header .cosmetic-header-logo {
+                position: static;
+                flex: 0 0 auto;
+                margin-right: 30px;
+            }
+
+            .cosmetic-header .cosmetic-header-nav {
+                position: static;
+                flex: 1 1 auto;
+                margin: 0;
+                top: 0;
+                display: flex;
+                align-items: center;
+            }
+
+            /* cosmetic-header-rightも一体感を持たせる */
+            .cosmetic-header .cosmetic-header-right {
+                position: static;
+                flex: 0 0 auto;
+                margin-left: 20px;
+            }
+
+            .cosmetic-header .mega-menu-list {
+                padding: 0;
+                background: transparent;
+                backdrop-filter: none;
+                box-shadow: none;
+                border: none;
+            }
+
+            .cosmetic-header .mega-menu-item {
+                margin: 0 4px;
+            }
+
+            .cosmetic-header .mega-menu-link {
+                padding: 10px 20px;
+                border-radius: 0;
+                transition: all 0.3s ease;
+                background: rgba(255, 255, 255, 0.95);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                color: #333;
+                font-weight: 500;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+                white-space: nowrap;
+            }
+
+            .cosmetic-header .mega-menu-link:hover {
+                background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+                color: #fff;
+                border-color: #FF679C;
+                box-shadow: 0 4px 8px rgba(255, 103, 156, 0.3);
+            }
+
+            .cosmetic-header .mega-menu-link:active {
+                box-shadow: 0 2px 4px rgba(255, 103, 156, 0.2);
+            }
+
+            .cosmetic-header .mega-menu-arrow {
+                color: inherit;
+                transition: transform 0.3s ease;
+            }
+
+            .cosmetic-header .mega-menu-link:hover .mega-menu-arrow {
+                transform: rotate(180deg);
+                color: #fff;
+            }
+
+            .cosmetic-header .mega-menu-link:hover .mega-menu-text {
+                color: #fff;
+            }
+
+            /* タブレットサイズ（769px〜1024px）での調整 */
+            @media (min-width: 769px) and (max-width: 1024px) {
+                .cosmetic-header .cosmetic-header-inner {
+                    padding: 0px 20px;
+                }
+
+                .cosmetic-header .cosmetic-header-logo {
+                    margin-right: 20px;
+                }
+
+                .cosmetic-header .cosmetic-header-right {
+                    margin-left: 15px;
+                }
+
+                .cosmetic-header .mega-menu-list {
+                    padding: 0;
+                }
+
+                .cosmetic-header .mega-menu-item {
+                    margin: 0 2px;
+                }
+
+                .cosmetic-header .mega-menu-link {
+                    padding: 8px 14px;
+                    font-size: 12px;
+                    border-radius: 0;
+                }
+            }
+        }
+
+        .misesapo-mega-menu.ishikawa-style .mega-menu-text::before {
+            content: none;
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .misesapo-mega-menu.ishikawa-style .mega-menu-link {
+                padding: 0 5px;
+                font-size: 13px;
+                font-weight: bold !important;
+            }
+        }
+
+        .misesapo-mega-menu.ishikawa-style .mega-menu-list {
+            height: 50px;
+            margin: 0 10px;
+        }
+
+        .misesapo-mega-menu.ishikawa-style .mega-menu-text {
+            font-weight: bold;
+        }
+
+        header {
+            padding: 0px;
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .normal-header {
+                height: 80px;
+            }
+        }
+
+        .normal-header-nav a {
+            padding: 0px 10px;
+        }
+
+        .swiper-wrapper {
+            background: #FDEDED;
+        }
+
+        .about-coverage-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .about-coverage-content a {
+            display: block;
+            width: 30%;
+            margin: 10px;
+        }
+
+        .about-coverage-content img {
+            width: 100%;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .about-coverage-content {
+                justify-content: normal;
+            }
+
+            .about-coverage-content a {
+                width: 44%;
+            }
+
+            .about-coverage-content img {
+                width: 100%;
+            }
+
+            .event-container img {
+                width: 80% !important;
+                margin: auto;
+            }
+        }
+
+        .event-container {
+            margin: auto;
+            width: fit-content;
+        }
+
+        .event-container img {
+            width: 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- スプラッシュスクリーン（最上部に配置） -->
+    <div class="splash-screen" id="splash-screen">
+        <img id="splash-logo-img" src="" alt="ミセサポ" class="splash-logo" />
+    </div>
+    <script>
+        // スプラッシュスクリーンの制御（最優先で実行）
+        (function () {
+            // 簡易版resolvePath関数を先に定義（絶対URLを返す）
+            function resolveLogoPath(path) {
+                if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                    return path;
+                }
+
+                var hostname = window.location.hostname;
+                var isLocalDev = hostname === 'localhost' ||
+                    hostname === '127.0.0.1' ||
+                    hostname === '';
+
+                // カスタムドメインの場合もローカルと同じ扱い
+                var isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+
+                if (isLocalDev || isCustomDomain) {
+                    return path.startsWith('/') ? path : '/' + path;
+                }
+
+                // GitHub Pagesでは/misesapo/を追加
+                var resolvedPath;
+                if (path.startsWith('/misesapo/')) {
+                    resolvedPath = path;
+                } else if (path.startsWith('/')) {
+                    resolvedPath = '/misesapo' + path;
+                } else {
+                    resolvedPath = '/misesapo/' + path;
+                }
+
+                return resolvedPath;
+            }
+
+            var splash = document.getElementById('splash-screen');
+            var logoImg = document.getElementById('splash-logo-img');
+
+            // ロゴパスを設定
+            if (logoImg) {
+                logoImg.src = resolveLogoPath('/images-material/logo_144x144.png');
+            }
+
+            // PC/SPの判定（768px未満をモバイルとする）
+            var isMobile = window.innerWidth < 768;
+
+            // PCの場合はスプラッシュスクリーンを即座に非表示
+            if (!isMobile) {
+                if (splash) {
+                    splash.style.display = 'none';
+                    splash.classList.add('hidden');
+                }
+            } else {
+                // SP: スプラッシュを表示
+                if (splash) {
+                    splash.style.display = 'flex';
+                    splash.style.opacity = '1';
+                }
+                document.body.classList.add('splash-active');
+
+                // 2秒後にフェードアウト開始
+                setTimeout(function () {
+                    if (splash) {
+                        splash.classList.add('fade-out');
+                        // フェードアウト完了後に非表示
+                        setTimeout(function () {
+                            splash.classList.add('hidden');
+                            document.body.classList.remove('splash-active');
+                            document.body.classList.add('splash-inactive');
+                            splash.remove();
+                        }, 800);
+                    }
+                }, 2000);
+            }
+        })();
+    </script>
+
+    <!-- ヒーローセクション見出し -->
+    <div class="hero-headings">
+        <div class="hero-heading">
+            <img src="/images/label01.svg" alt="店舗の清掃はミセサポへ！">
+        </div>
+        <div class="hero-heading">
+            <img src="/images/label02.svg" alt="清掃も設備もまとめて管理！">
+        </div>
+        <div class="hero-heading">
+            <img src="/images/label03.svg" alt="清掃も設備もまとめて管理！">
+        </div>
+    </div>
+
+
+    <!-- フルスクリーン画像セクション（ヒーローセクション） -->
+    <section class="fullscreen-image-section">
+        <div class="sp-hero-stage">
+            <div class="fullscreen-image-wrapper">
+                <img src="/images-admin/hero-image001.png" data-desktop-src="/images-admin/hero-image001.png"
+                    data-sp-src="/images-admin/hero-slide-01-sp.png" alt="ミセサポ"
+                    class="fullscreen-image fullscreen-image-1">
+                <img src="/images-admin/hero-image002.png" data-desktop-src="/images-admin/hero-image002.png"
+                    data-sp-src="/images-admin/hero-slide-02-sp.png" alt="ミセサポ"
+                    class="fullscreen-image fullscreen-image-2">
+                <img src="/images-admin/hero-image003.png" data-desktop-src="/images-admin/hero-image003.png"
+                    data-sp-src="/images-admin/hero-slide-03-sp.png" alt="ミセサポ"
+                    class="fullscreen-image fullscreen-image-3">
+            </div>
+            <!-- マスク画像 -->
+            <div class="hero-mask">
+                <img src="/images/mask01.svg" alt="" class="hero-mask-image" data-desktop-src="/images/mask01.svg"
+                    data-sp-src="/images-admin/mask-sp.png">
+            </div>
+
+        </div>
+        <!-- お知らせセクション -->
+        <div class="news-section-wrapper" id="news">
+            <div class="news-section">
+                <h3 class="news-section__title">ミセサポからのお知らせ</h3>
+                <ul class="news-section__list" id="news-list">
+                    <!-- お知らせはJavaScriptで動的に追加されます -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- 固定バナー -->
+        <div class="fixed-banner">
+            <img src="/images-admin/banner-pickup-sp.png" alt="求人バナー">
+        </div>
+
+        <div class="hero-carousel-sp">
+            <div class="hero-carousel-track" id="hero-carousel-track">
+                <img src="/images-admin/hero-slide-01-sp.png" alt="清掃スタッフ" loading="lazy">
+                <img src="/images-admin/hero-slide-02-sp.png" alt="作業の様子" loading="lazy">
+                <img src="/images-admin/hero-slide-03-sp.png" alt="笑顔のスタッフ" loading="lazy">
+            </div>
+            <div class="hero-carousel-indicators" id="hero-carousel-indicators">
+                <!-- インディケーターはJavaScriptで動的に生成 -->
+            </div>
+        </div>
+        <!-- スクロールヒント（左側、縦書き） -->
+        <div class="hero_scroll_down">
+            <p>↑ SCROLL ↓</p>
+            <div class="scroll-line">
+                <div class="scroll-circle"></div>
+            </div>
+        </div>
+        <!-- ヒーローセクション下部装飾画像 -->
+
+    </section>
+
+    <!-- 対応サービス一覧タイトル -->
+    <div class="service-section-title">
+        <img src="/images-admin/対応サービス一覧.svg" alt="対応サービス一覧">
+    </div>
+
+    <!-- サービス画像流れアニメーション -->
+    <div class="misesapo-flow-wrapper">
+        <div class="carousel">
+            <div class="swipe-hint swipe-hint-center">
+                <p>← SWIPE →</p>
+                <div class="swipe-arch">
+                    <svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+                        <path id="arch-path-center" d="M 10 50 Q 100 45, 190 50" stroke="rgba(255, 0, 140, 0.5)"
+                            stroke-width="1" fill="none" />
+                        <circle class="swipe-circle-arch" r="6" fill="#FF008C">
+                            <animateMotion dur="3s" repeatCount="indefinite" calcMode="linear" keyPoints="0;1;0"
+                                keyTimes="0;0.5;1">
+                                <mpath href="#arch-path-center" />
+                            </animateMotion>
+                        </circle>
+                    </svg>
+                </div>
+            </div>
+            <div class="swiper service-carousel">
+                <div class="swiper-wrapper" id="service-carousel-wrapper">
+                    <!-- 画像カードはJavaScriptで動的に生成 -->
+                </div>
+            </div>
+        </div>
+        <div class="misesapo-category-buttons">
+            <button class="misesapo-category-btn active" data-category="heating">1. 厨房設備</button>
+            <button class="misesapo-category-btn" data-category="aircon-floor">2. 空調設備・フロア</button>
+            <button class="misesapo-category-btn" data-category="other">3. その他</button>
+        </div>
+    </div>
+
+    <!-- イベント・キャンペーン -->
+    <section id="use" class="service-sections use-sections">
+        <div class="service-sections-header">
+            <p class="section-tag-label">EVENT
+            </p>
+            <h2 class="service-sections-title">イベント</h2>
+        </div>
+        <div class="event-container">
+            <a href="/event/2026_yakiniku.html"><img src="/images/2026_yakiniku.png" alt="2026年焼肉ビジネスフェア出店！"></a>
+        </div>
+        </div>
+    </section>
+    <!-- イベント・キャンペーン end -->
+
+
+    <!-- ご利用イメージ -->
+    <section id="use" class="service-sections use-sections">
+        <div class="service-sections-header">
+            <p class="section-tag-label">Flow
+            </p>
+            <h2 class="service-sections-title">ご利用イメージ</h2>
+        </div>
+        <div class="container">
+            <div class="use-grid">
+                <article class="use-article opacityIn">
+                    <div class="step-number">STEP<span>01</span></div>
+                    <h3 class="use-title">お問い合わせ・現地調査</h3>
+                    <div class="use-box">
+                        <div class="use-image-box"><img src="/images/use01.jpg" alt="お問い合わせ・現地調査"></div>
+                        <p>お問い合わせ内容をヒアリング後、専門スタッフが店舗を訪問します。店舗設備や清掃頻度等をチェックし、最適な清掃プランをご提案致します。</p>
+                    </div>
+                </article>
+                <article class="use-article opacityIn">
+                    <div class="step-number">STEP<span>02</span></div>
+                    <h3 class="use-title">お見積・ご契約</h3>
+                    <div class="use-box">
+                        <div class="use-image-box"><img src="/images/use02.jpg" alt="お見積・ご契約"></div>
+                        <p>清掃プランに合意後、契約書を締結します。作業レポート用IDや鍵の管理方法（預かり・キーボックス等）も、この段階で決定致します。</p>
+                    </div>
+                </article>
+                <article class="use-article opacityIn">
+                    <div class="step-number">STEP<span>03</span></div>
+                    <h3 class="use-title">プロによる清掃実施</h3>
+                    <div class="use-box">
+                        <div class="use-image-box"><img src="/images/use03.jpg" alt="プロによる清掃実施"></div>
+                        <p>弊社が依頼した専門スタッフが来店し、事前に合意した清掃プランに基づいて、清掃作業を行います。</p>
+                    </div>
+                </article>
+                <article class="use-article opacityIn">
+                    <div class="step-number">STEP<span>04</span></div>
+                    <h3 class="use-title">レポートで安心管理</h3>
+                    <div class="use-box">
+                        <div class="use-image-box"><img src="/images/use04.jpeg" alt="レポートで安心管理"></div>
+                        <p>清掃後は、専門スタッフが作業内容一覧や写真等のレポートを、弊社システムで送信します。清掃前と清掃後の違いを明確に識別することができます。</p>
+                    </div>
+                </article>
+                <article class="use-article opacityIn">
+                    <div class="step-number">STEP<span>05</span></div>
+                    <h3 class="use-title">毎月の清掃や、設備管理を一元サポート</h3>
+                    <div class="use-box">
+                        <div class="use-image-box"><img src="/images/use05.jpeg" alt="毎月の清掃や、設備管理を一元サポート"></div>
+                        <p>翌月以降も、弊社から最適な清掃提案が届くため、継続的に衛生環境を維持できます。</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <!-- ご利用イメージ end -->
+
+    <!-- FAQ セクション -->
+    <section id="faq" class="section-box faq-section">
+        <div class="wrapper">
+            <div class="faq-head">
+                <p class="section-tag-label">FAQ</p>
+                <h2>よくあるご質問</h2>
+                <p>イベント会場や LP で多くいただく質問をピックアップしました。詳細はカスタマーズサポートで随時アップデートします。</p>
+            </div>
+            <div class="faq-list">
+                <article class="faq-item">
+                    <h3 class="faq-question">Q. イベントで相談した内容はどのくらいで見積もりが届きますか？</h3>
+                    <p class="faq-answer">最短で翌営業日に概算をご案内します。LP でもご紹介している通り、STEP01 の現地調査が完了していれば 72 時間以内に詳細プランを提出できます。
+                    </p>
+                </article>
+                <article class="faq-item">
+                    <h3 class="faq-question">Q. 定期清掃とスポット依頼をまとめて発注できますか？</h3>
+                    <p class="faq-answer">はい。ミセサポでは定期契約とスポット対応を同じ担当窓口で受け付け、5S 活動やスタッフ教育まで一括でご提案しています。</p>
+                </article>
+                <article class="faq-item">
+                    <h3 class="faq-question">Q. チラシや資料の原本を追加で送ってもらえますか？</h3>
+                    <p class="faq-answer">PDF ダウンロードのほか、郵送希望も承ります。フォームから「資料希望」と記載いただければ、最新セットをお送りします。</p>
+                </article>
+                <article class="faq-item">
+                    <h3 class="faq-question">Q. 複数店舗それぞれでキャンペーン価格を適用できますか？</h3>
+                    <p class="faq-answer">対象期間内であれば適用可能です。アカウント毎にマイページを発行し、レポートを店舗単位で確認できるように設定します。</p>
+                </article>
+            </div>
+            <div class="faq-cta">
+                <a class="gradient-link web-link" href="/customers-support-desk">FAQをもっと見る</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- キャンペーンセクション -->
+    <section class="service-sections campaign-sections">
+        <div class="service-sections-header">
+            <p class="section-tag-label">Campaign</p>
+            <h2 class="service-sections-title">キャンペーン</h2>
+        </div>
+
+        <!-- サービススライダーコンテナ -->
+        <div class="container">
+            <!-- スライダー（コンテナ内で完結） -->
+            <div class="slider-container">
+                <div class="slider-wrapper" id="serviceSliderWrapper">
+                    <!-- スライド1: 定期清掃（セクション） -->
+                    <section class="slider-slide section">
+                        <img src="/images-admin/teikiseisounaramisesapo.png" alt="お店のまるっと清掃なら定期清掃のミセサポ"
+                            class="section-content-image">
+                        <div class="section-content-text">
+                            <h2 class="service-slide-title">定期清掃</h2>
+                            <p class="service-slide-description">
+                                店舗の清潔を保つ為の定期清掃サービス。<br>
+                                定期的なメンテナンスで常に清潔な環境を維持します。
+                            </p>
+                            <a href="/teikiseisou" class="service-slide-link">詳細を見る</a>
+                        </div>
+                    </section>
+
+                    <!-- スライド2: 害虫・害獣駆除（セクション） -->
+                    <section class="slider-slide section">
+                        <img src="/images-admin/gaichukujonara.png" alt="害虫・害獣駆除" class="section-content-image">
+                        <div class="section-content-text">
+                            <h2 class="service-slide-title">害虫・害獣駆除</h2>
+                            <p class="service-slide-description">
+                                専門業者との連携による外注サービス。<br>
+                                ネズミや害虫の駆除など、清掃以外の業務もサポートします。
+                            </p>
+                            <a href="/service" class="service-slide-link">詳細を見る</a>
+                        </div>
+                    </section>
+
+                    <!-- スライド3: エアコン分解掃除（セクション） -->
+                    <section class="slider-slide section">
+                        <img src="/images-admin/teikiseisounaramisesapo.png" alt="エアコン分解掃除"
+                            class="section-content-image">
+                        <div class="section-content-text">
+                            <h2 class="service-slide-title">エアコン分解掃除</h2>
+                            <p class="service-slide-description">
+                                エアコンの内部まで徹底的に清掃する専門サービス。<br>
+                                分解洗浄により、エアコンの性能を最大限に引き出します。
+                            </p>
+                            <a href="/service" class="service-slide-link">詳細を見る</a>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- スライダーコントロール -->
+                <div class="slider-controls">
+                    <button class="slider-btn" id="servicePrevBtn">← 前へ</button>
+                    <button class="slider-btn" id="serviceNextBtn">次へ →</button>
+                </div>
+
+                <!-- スライダーインジケーター -->
+                <div class="slider-indicators" id="serviceSliderIndicators">
+                    <button class="slider-indicator active" data-slide="0"></button>
+                    <button class="slider-indicator" data-slide="1"></button>
+                    <button class="slider-indicator" data-slide="2"></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- 対応エリアセクション -->
+    <section id="area" class="section-box area-coverage-section">
+        <div class="wrapper">
+            <div class="service-sections-header">
+                <p class="section-tag-label">Area</p>
+                <h2 class="service-sections-title">対応エリア＆サポート拠点</h2>
+            </div>
+            <div class="area-coverage-content">
+                <div class="area-list">
+                    <h3>首都圏を中心に展開中</h3>
+                    <div class="area-content-wrapper">
+                        <div class="area_text_box">
+                            <p class="area-description">東京 23 区・神奈川・千葉・埼玉の店舗清掃に即応。パートナーネットワークを活用し、現地スタッフによる定期巡回が可能です。
+                            </p>
+                            <div class="area-tags">
+                                <span class="area-tag">東京</span>
+                                <span class="area-tag">神奈川</span>
+                                <span class="area-tag">千葉</span>
+                                <span class="area-tag">埼玉</span>
+                            </div>
+                            <p class="area-description">対応エリア拡大中！お問い合わせください。</p>
+                        </div>
+                        <div class="area_image_box">
+                            <a href="/area-info.html"><img src="/images/area-info_kv.png" alt="対応エリア"></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ミセサポとはセクション -->
+    <section id="about" class="section-box about-coverage-section">
+        <div class="wrapper">
+            <div class="service-sections-header">
+                <p class="section-tag-label">about</p>
+                <h2 class="service-sections-title">ミセサポとは？</h2>
+            </div>
+            <div class="about-coverage-content">
+                <a href="nighttime.html"><img src="/images/nighttime_kv_sp.webp"></a>
+                <a href="quotation.html"><img src="/images/quotation_kv_sp.webp"></a>
+                <a href="chuo-ward.html"><img src="/images/chuo-word_kv_sp.webp"></a>
+                <a href="cleaning-cost.html"><img src="/images/cleaning-cost_kv_sp.png"></a>
+                <a href="regular-cleaning.html"><img src="/images/regular-cleaning_kv_sp.webp"></a>
+                <a href="service-plan.html"><img src="/images/service-plan_kv_sp.png"></a>
+                <a href="subsidy.html"><img src="/images/subsidy_kv_sp.webp"></a>
+                <a href="grease-trap-cleaning-guide.html"><img src="/images/grease-trap-cleaning-guide_kv_sp.png"></a>
+                <a href="haccp-cleaning.html"><img src="/images/haccp-cleaning_kv_sp.png"></a>
+                <a href="consulting.html"><img src="/images/consulting_kv_sp.png"></a>
+
+            </div>
+        </div>
+    </section>
+
+
+    <!-- フッター -->
+    <footer class="site-footer">
+        <div class="footer-copyright">
+            © 2025 ミセサポ | 株式会社ミセサポ
+        </div>
+    </footer>
+
+    <style>
+        .site-footer {
+            background: #FF679C;
+            color: #fff;
+            padding: 30px 20px;
+            text-align: center;
+            margin-top: 0;
+        }
+
+        .footer-copyright {
+            font-size: 14px;
+            letter-spacing: 0.05em;
+        }
+
+        @media (max-width: 768px) {
+            .site-footer {
+                padding: 20px 15px;
+            }
+
+            .footer-copyright {
+                font-size: 12px;
+            }
+        }
+
+        .cosmetic-header-logo {
+            position: static;
+        }
+    </style>
+
+    <!-- 化粧ヘッダー -->
+    <header class="cosmetic-header">
+        <div class="cosmetic-header-inner">
+            <div class="cosmetic-header-logo">
+                <div class="cosmetic-logo">
+                    <a href="/">
+                        <img id="cosmetic-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+                            onerror="this.style.display='none'">
+                    </a>
+                </div>
+            </div>
+
+            <div class="cosmetic-header-nav">
+                <nav class="cosmetic-nav misesapo-mega-menu ishikawa-style">
+                    <ul class="mega-menu-list">
+                        <li class="mega-menu-item">
+                            <a href="#about" class="mega-menu-link">
+                                <span class="mega-menu-text">ミセサポとは？</span>
+                            </a>
+                        </li>
+                        <li class="mega-menu-item mega-menu-has-submenu">
+                            <a href="/service" class="mega-menu-link">
+                                <span class="mega-menu-text">対応可能サービス</span>
+                                <span class="mega-menu-arrow">▼</span>
+                            </a>
+                            <div class="mega-menu-submenu">
+                                <div class="mega-menu-submenu-inner">
+                                    <div class="mega-menu-column">
+                                        <h3 class="mega-menu-column-title">清掃サービス</h3>
+                                        <ul class="mega-menu-column-list">
+                                            <li><a href="/service#cleaning"><span>すべての清掃サービス</span></a></li>
+                                            <li><a href="/service#gristrap"><span>グリストラップ清掃</span></a></li>
+                                            <li><a href="/service#duct"><span>ダクト清掃</span></a></li>
+                                            <li><a href="/service#rangehood"><span>レンジフード清掃</span></a></li>
+                                            <li><a href="/service#ventilation"><span>換気扇清掃</span></a></li>
+                                            <li><a href="/service#floor"><span>床清掃</span></a></li>
+                                        </ul>
+                                    </div>
+                                    <div class="mega-menu-column">
+                                        <h3 class="mega-menu-column-title">メンテナンス</h3>
+                                        <ul class="mega-menu-column-list">
+                                            <li><a href="/service#maintenance"><span>すべてのメンテナンス</span></a></li>
+                                            <li><a href="/service#filter"><span>フィルター交換</span></a></li>
+                                            <li><a href="/service#aircon"><span>エアコンフィルター</span></a></li>
+                                            <li><a href="/service#pest"><span>害虫駆除</span></a></li>
+                                            <li><a href="/service#inspection"><span>定期点検</span></a></li>
+                                        </ul>
+                                    </div>
+                                    <div class="mega-menu-column">
+                                        <h3 class="mega-menu-column-title">その他サービス</h3>
+                                        <ul class="mega-menu-column-list">
+                                            <li><a href="/service#other"><span>その他のサービス</span></a></li>
+                                            <li><a href="/service#consultation"><span>無料相談</span></a></li>
+                                            <li><a href="/service#plan"><span>プラン・料金</span></a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="mega-menu-item mega-menu-has-submenu">
+                            <a href="/voice" class="mega-menu-link">
+                                <span class="mega-menu-text">お客様の声</span>
+                                <span class="mega-menu-arrow">▼</span>
+                            </a>
+                            <div class="mega-menu-submenu">
+                                <div class="mega-menu-submenu-inner">
+                                    <div class="mega-menu-column">
+                                        <h3 class="mega-menu-column-title">お客様の声</h3>
+                                        <ul class="mega-menu-column-list">
+                                            <li><a href="/voice"><span>すべてのお客様の声</span></a></li>
+                                            <li><a href="/voice#restaurant"><span>レストラン・飲食店</span></a></li>
+                                            <li><a href="/voice#bar"><span>バー・居酒屋</span></a></li>
+                                            <li><a href="/voice#cafe"><span>カフェ・喫茶店</span></a></li>
+                                            <li><a href="/voice#reason"><span>ミセサポが選ばれる理由</span></a></li>
+                                        </ul>
+                                    </div>
+                                    <div class="mega-menu-column">
+                                        <h3 class="mega-menu-column-title">導入実績</h3>
+                                        <ul class="mega-menu-column-list">
+                                            <li><a href="/customers"><span>導入店舗一覧</span></a></li>
+                                            <li><a href="/lp#case-study"><span>導入事例</span></a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="mega-menu-item">
+                            <a href="/customers-support-desk" class="mega-menu-link">
+                                <span class="mega-menu-text">カスタマーズサポート</span>
+                            </a>
+                        </li>
+                        <li class="mega-menu-item mega-menu-has-submenu">
+                            <a href="/about" class="mega-menu-link">
+                                <span class="mega-menu-text">企業情報</span>
+                                <span class="mega-menu-arrow">▼</span>
+                            </a>
+                            <div class="mega-menu-submenu">
+                                <div class="mega-menu-submenu-inner">
+                                    <div class="mega-menu-column">
+                                        <h3 class="mega-menu-column-title">企業情報</h3>
+                                        <ul class="mega-menu-column-list">
+                                            <li><a href="/about"><span>会社概要</span></a></li>
+                                            <li><a href="/greeting"><span>代表あいさつ</span></a></li>
+                                            <li><a href="/about#philosophy"><span>企業理念</span></a></li>
+                                            <li><a href="/partner"><span>パートナーシップ</span></a></li>
+                                        </ul>
+                                    </div>
+                                    <div class="mega-menu-column">
+                                        <h3 class="mega-menu-column-title">求人情報</h3>
+                                        <ul class="mega-menu-column-list">
+                                            <li><a href="/recruit"><span>採用トップ</span></a></li>
+                                            <li><a href="/recruit/apply/cleaning"><span>清掃スタッフ</span></a></li>
+                                            <li><a href="/recruit/apply/equipment"><span>設備メンテナンススタッフ</span></a></li>
+                                            <li><a href="/recruit/apply/inside-sales"><span>インサイドセールス</span></a></li>
+                                            <li><a href="/recruit/apply/field-sales"><span>フィールドセールス</span></a></li>
+                                            <li><a href="/recruit/privacy"><span>採用における個人情報の取り扱いについて</span></a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="mega-menu-item">
+                            <a href="/announcements" class="mega-menu-link">
+                                <span class="mega-menu-text">お知らせ</span>
+                            </a>
+                        </li>
+                        <li class="mega-menu-item mega-menu-has-submenu">
+                            <a href="javascript:void(0);" class="mega-menu-link">
+                                <span class="mega-menu-text">規約とポリシー</span>
+                                <span class="mega-menu-arrow">▼</span>
+                            </a>
+                            <div class="mega-menu-submenu">
+                                <div class="mega-menu-submenu-inner">
+                                    <div class="mega-menu-column">
+                                        <h3 class="mega-menu-column-title">規約とポリシー</h3>
+                                        <ul class="mega-menu-column-list">
+                                            <li><a href="/privacy-policy"><span>個人情報保護方針</span></a></li>
+                                            <li><a href="/tokushoho"><span>特定商取引法に基づく表記</span></a></li>
+                                            <li><a href="/workplace-policy"><span>職場環境改善に向けた方針</span></a></li>
+                                            <li><a href="/security-policy"><span>情報セキュリティ基本方針</span></a></li>
+                                            <li><a href="/antisocial-declaration"><span>反社会的勢力排除宣言</span></a></li>
+                                            <li><a href="/service-terms"><span>サービス利用規約</span></a></li>
+                                            <li><a href="javascript:void(0);"><span>ウェブサイト・アプリ利用規約</span></a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="cosmetic-header-right">
+                <div class="cosmetic-user-menu">
+                    <div class="cosmetic-user-dropdown" id="cosmetic-user-dropdown" style="display: none;">
+                        <a href="/mypage" class="cosmetic-user-menu-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            マイページ
+                        </a>
+                        <a href="/order" class="cosmetic-user-menu-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <path d="M16 10a4 4 0 0 1-8 0"></path>
+                            </svg>
+                            発注履歴
+                        </a>
+                        <a href="/settings" class="cosmetic-user-menu-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"></path>
+                            </svg>
+                            設定
+                        </a>
+                        <hr class="cosmetic-user-menu-divider">
+                        <a href="/signin" class="cosmetic-user-menu-item cosmetic-user-menu-logout">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            ログアウト
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- 通常ヘッダー -->
+    <header class="normal-header">
+        <div class="normal-header-inner">
+            <div class="normal-header-logo">
+                <a href="/">
+                    <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+                        onerror="this.style.display='none'">
+                </a>
+            </div>
+            <nav class="normal-header-nav">
+                <a href="/">TOP</a>
+                <a href="/service">対応可能サービス</a>
+                <a href="/voice">お客様の声</a>
+                <a href="/customers-support-desk">カスタマーズサポート</a>
+                <a href="/about">企業情報</a>
+                <a href="/announcements">お知らせ</a>
+                <a href="/privacy-policy">規約＆ポリシー</a>
+            </nav>
+            <div class="normal-header-actions">
+                <a href="/signin" class="normal-header-login">ログイン</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 固定ボタン（ログイン） -->
+    <a href="/signin" class="fixed-order-button" style="text-decoration: none;">
+        <div class="fixed-order-button__rotating-text">
+            <svg viewBox="0 0 190 190">
+                <defs>
+                    <path id="circle-path" d="M 95, 95 m -85, 0 a 85,85 0 1,1 170,0 a 85,85 0 1,1 -170,0" />
+                </defs>
+                <text>
+                    <textPath href="#circle-path" startOffset="0%">
+                        Welcome to Misesapo! Click here to login. For any questions, please contact us!
+                    </textPath>
+                </text>
+            </svg>
+        </div>
+        <div class="fixed-order-button__circle">
+            <div class="fixed-order-button__text">ログインは<br>こちら</div>
+        </div>
+    </a>
+
+    <!-- SP版：左下メニューボタン -->
+    <div class="fixed-menu-button" id="fixed-menu-button">
+        <div class="fixed-menu-button__circle">
+            <div class="fixed-menu-button__text">メニュー</div>
+        </div>
+    </div>
+
+    <!-- SP版：メニューパネルオーバーレイ -->
+    <div class="sp-menu-panel-overlay" id="sp-menu-panel-overlay"></div>
+
+    <!-- SP版：メニューパネル -->
+    <div class="sp-menu-panel" id="sp-menu-panel">
+        <ul class="sp-menu-list">
+            <li class="sp-menu-item">
+                <a href="/lp" class="sp-menu-link">TOP</a>
+            </li>
+            <li class="sp-menu-item sp-menu-item-has-submenu">
+                <a href="javascript:void(0);" class="sp-menu-link">
+                    <span>対応可能サービス</span>
+                    <span class="sp-menu-arrow">▼</span>
+                </a>
+                <div class="sp-menu-submenu">
+                    <ul class="sp-menu-submenu-list">
+                        <li class="sp-menu-submenu-item"><a href="/service" class="sp-menu-submenu-link">すべてのサービス</a>
+                        </li>
+                        <li class="sp-menu-submenu-item"><a href="/service#cleaning"
+                                class="sp-menu-submenu-link">清掃サービス</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service#gristrap"
+                                class="sp-menu-submenu-link">グリストラップ清掃</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service#duct" class="sp-menu-submenu-link">ダクト清掃</a>
+                        </li>
+                        <li class="sp-menu-submenu-item"><a href="/service#rangehood"
+                                class="sp-menu-submenu-link">レンジフード清掃</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service#ventilation"
+                                class="sp-menu-submenu-link">換気扇清掃</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service#floor" class="sp-menu-submenu-link">床清掃</a>
+                        </li>
+                        <li class="sp-menu-submenu-item"><a href="/service#maintenance"
+                                class="sp-menu-submenu-link">メンテナンス</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service#filter"
+                                class="sp-menu-submenu-link">フィルター交換</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service#aircon"
+                                class="sp-menu-submenu-link">エアコンフィルター</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service#pest" class="sp-menu-submenu-link">害虫駆除</a>
+                        </li>
+                        <li class="sp-menu-submenu-item"><a href="/service#inspection"
+                                class="sp-menu-submenu-link">定期点検</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="sp-menu-item sp-menu-item-has-submenu">
+                <a href="javascript:void(0);" class="sp-menu-link">
+                    <span>お客様の声</span>
+                    <span class="sp-menu-arrow">▼</span>
+                </a>
+                <div class="sp-menu-submenu">
+                    <ul class="sp-menu-submenu-list">
+                        <li class="sp-menu-submenu-item"><a href="/voice" class="sp-menu-submenu-link">すべてのお客様の声</a>
+                        </li>
+                        <li class="sp-menu-submenu-item"><a href="/voice#restaurant"
+                                class="sp-menu-submenu-link">レストラン・飲食店</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/voice#bar" class="sp-menu-submenu-link">バー・居酒屋</a>
+                        </li>
+                        <li class="sp-menu-submenu-item"><a href="/voice#cafe" class="sp-menu-submenu-link">カフェ・喫茶店</a>
+                        </li>
+                        <li class="sp-menu-submenu-item"><a href="/voice#reason"
+                                class="sp-menu-submenu-link">ミセサポが選ばれる理由</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/customers" class="sp-menu-submenu-link">導入店舗一覧</a>
+                        </li>
+                        <li class="sp-menu-submenu-item"><a href="/lp#case-study" class="sp-menu-submenu-link">導入事例</a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="sp-menu-item">
+                <a href="/customers-support-desk" class="sp-menu-link">カスタマーズサポート</a>
+            </li>
+            <li class="sp-menu-item sp-menu-item-has-submenu">
+                <a href="javascript:void(0);" class="sp-menu-link">
+                    <span>企業情報</span>
+                    <span class="sp-menu-arrow">▼</span>
+                </a>
+                <div class="sp-menu-submenu">
+                    <ul class="sp-menu-submenu-list">
+                        <li class="sp-menu-submenu-item"><a href="/about" class="sp-menu-submenu-link">会社概要</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/greeting" class="sp-menu-submenu-link">代表あいさつ</a>
+                        </li>
+                        <li class="sp-menu-submenu-item"><a href="/about#philosophy"
+                                class="sp-menu-submenu-link">企業理念</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/partner" class="sp-menu-submenu-link">パートナーシップ</a>
+                        </li>
+                        <li class="sp-menu-submenu-item"><a href="/recruit" class="sp-menu-submenu-link">求人情報</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="sp-menu-item">
+                <a href="/announcements" class="sp-menu-link">お知らせ</a>
+            </li>
+            <li class="sp-menu-item sp-menu-item-has-submenu">
+                <a href="javascript:void(0);" class="sp-menu-link">
+                    <span>規約とポリシー</span>
+                    <span class="sp-menu-arrow">▼</span>
+                </a>
+                <div class="sp-menu-submenu">
+                    <ul class="sp-menu-submenu-list">
+                        <li class="sp-menu-submenu-item"><a href="/privacy-policy"
+                                class="sp-menu-submenu-link">個人情報保護方針</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/tokushoho"
+                                class="sp-menu-submenu-link">特定商取引法に基づく表記</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/workplace-policy"
+                                class="sp-menu-submenu-link">職場環境改善に向けた方針</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/security-policy"
+                                class="sp-menu-submenu-link">情報セキュリティ基本方針</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/antisocial-declaration"
+                                class="sp-menu-submenu-link">反社会的勢力排除宣言</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service-terms"
+                                class="sp-menu-submenu-link">サービス利用規約</a></li>
+                        <li class="sp-menu-submenu-item"><a href="javascript:void(0);"
+                                class="sp-menu-submenu-link">ウェブサイト・アプリ利用規約</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="sp-menu-item sp-menu-item-login">
+                <a href="/signin" class="sp-menu-link sp-menu-link-login">ログイン</a>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        // マスク画像の高さに合わせてヒーローセクションと画像の高さを設定
+        function setHeroSectionHeight() {
+            const maskImage = document.querySelector('.hero-mask-image');
+            const heroSection = document.querySelector('.fullscreen-image-section');
+            const imageWrapper = document.querySelector('.fullscreen-image-wrapper');
+
+            // PC版の場合
+            if (window.innerWidth > 768) {
+                if (heroSection && imageWrapper) {
+                    // PC版ではビューポートの高さを使用
+                    const viewportHeight = window.innerHeight;
+                    heroSection.style.height = viewportHeight + 'px';
+                    imageWrapper.style.height = viewportHeight + 'px';
+                }
+            } else {
+                // SP版の場合：マスク画像の高さを使用
+                if (maskImage && heroSection && imageWrapper) {
+                    // マスク画像の高さを取得
+                    const maskHeight = maskImage.offsetHeight;
+
+                    // ヒーローセクションの高さをマスク画像の高さ-5pxに設定（画像のはみ出し対策）
+                    heroSection.style.height = (maskHeight - 5) + 'px';
+                    // 画像ラッパーの高さはマスク画像の高さに設定
+                    imageWrapper.style.height = maskHeight + 'px';
+                }
+            }
+        }
+
+        // ページ読み込み時とリサイズ時に実行
+        window.addEventListener('load', setHeroSectionHeight);
+        window.addEventListener('resize', setHeroSectionHeight);
+
+        // 画像読み込み完了時にも実行（画像が遅延読み込みされる場合に対応）
+        const maskImage = document.querySelector('.hero-mask-image');
+        if (maskImage) {
+            if (maskImage.complete) {
+                setHeroSectionHeight();
+            } else {
+                maskImage.addEventListener('load', setHeroSectionHeight);
+            }
+        }
+
+        // SP版：背景画像のディゾルブ切り替え
+        (function () {
+            if (window.innerWidth > 768) return; // PC版では実行しない
+
+            const images = document.querySelectorAll('.fullscreen-image-wrapper .fullscreen-image');
+            if (images.length === 0) return;
+
+            let currentIndex = 0;
+
+            // 最初の画像をアクティブに
+            images[0].classList.add('active');
+
+            // 画像を順番に切り替え
+            function switchImage() {
+                // 現在の画像からactiveクラスを削除
+                images[currentIndex].classList.remove('active');
+
+                // 次の画像のインデックスを計算
+                currentIndex = (currentIndex + 1) % images.length;
+
+                // 次の画像にactiveクラスを追加
+                images[currentIndex].classList.add('active');
+            }
+
+            // 3秒ごとに画像を切り替え
+            setInterval(switchImage, 3000);
+        })();
+
+        // SP版：ヒーローカルーセルの自動スクロールとインディケーター
+        (function () {
+            if (window.innerWidth > 768) return; // PC版では実行しない
+
+            const track = document.getElementById('hero-carousel-track');
+            const indicatorsContainer = document.getElementById('hero-carousel-indicators');
+
+            if (!track || !indicatorsContainer) return;
+
+            const images = track.querySelectorAll('img');
+            if (images.length === 0) return;
+
+            let currentIndex = 0;
+            let autoScrollInterval = null;
+            let isUserScrolling = false;
+            let scrollTimeout = null;
+
+            // インディケーターを生成
+            images.forEach((_, index) => {
+                const indicator = document.createElement('div');
+                indicator.className = 'hero-carousel-indicator';
+                if (index === 0) indicator.classList.add('active');
+                indicator.addEventListener('click', () => {
+                    scrollToIndex(index);
+                });
+                indicatorsContainer.appendChild(indicator);
+            });
+
+            const indicators = indicatorsContainer.querySelectorAll('.hero-carousel-indicator');
+
+            // 指定されたインデックスにスクロール
+            function scrollToIndex(index) {
+                if (index < 0 || index >= images.length) return;
+
+                currentIndex = index;
+                const image = images[index];
+                const imageLeft = image.offsetLeft;
+                const imageWidth = image.offsetWidth;
+                const trackWidth = track.offsetWidth;
+                const scrollLeft = imageLeft - (trackWidth / 2) + (imageWidth / 2);
+
+                track.scrollTo({
+                    left: scrollLeft,
+                    behavior: 'smooth'
+                });
+
+                updateIndicators();
+            }
+
+            // インディケーターを更新
+            function updateIndicators() {
+                indicators.forEach((indicator, index) => {
+                    if (index === currentIndex) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            }
+
+            // 現在のインデックスを計算
+            function updateCurrentIndex() {
+                const trackScrollLeft = track.scrollLeft;
+                const trackWidth = track.offsetWidth;
+
+                let closestIndex = 0;
+                let closestDistance = Infinity;
+
+                images.forEach((image, index) => {
+                    const imageLeft = image.offsetLeft;
+                    const imageWidth = image.offsetWidth;
+                    const imageCenter = imageLeft + (imageWidth / 2);
+                    const trackCenter = trackScrollLeft + (trackWidth / 2);
+                    const distance = Math.abs(imageCenter - trackCenter);
+
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestIndex = index;
+                    }
+                });
+
+                if (closestIndex !== currentIndex) {
+                    currentIndex = closestIndex;
+                    updateIndicators();
+                }
+            }
+
+            // 自動スクロールを開始
+            function startAutoScroll() {
+                if (autoScrollInterval) return;
+
+                autoScrollInterval = setInterval(() => {
+                    if (!isUserScrolling) {
+                        const nextIndex = (currentIndex + 1) % images.length;
+                        scrollToIndex(nextIndex);
+                    }
+                }, 4000); // 4秒ごとに自動スクロール
+            }
+
+            // 自動スクロールを停止
+            function stopAutoScroll() {
+                if (autoScrollInterval) {
+                    clearInterval(autoScrollInterval);
+                    autoScrollInterval = null;
+                }
+            }
+
+            // ユーザーがスクロールしているかどうかを検出
+            track.addEventListener('scroll', () => {
+                isUserScrolling = true;
+                stopAutoScroll();
+
+                // スクロールが止まったら現在のインデックスを更新
+                if (scrollTimeout) {
+                    clearTimeout(scrollTimeout);
+                }
+
+                scrollTimeout = setTimeout(() => {
+                    updateCurrentIndex();
+                    isUserScrolling = false;
+                    startAutoScroll();
+                }, 150);
+            });
+
+            // タッチイベントで自動スクロールを一時停止
+            track.addEventListener('touchstart', () => {
+                stopAutoScroll();
+            });
+
+            track.addEventListener('touchend', () => {
+                setTimeout(() => {
+                    updateCurrentIndex();
+                    startAutoScroll();
+                }, 500);
+            });
+
+            // 初期化
+            startAutoScroll();
+        })();
+
+        // Swiper.jsカルーセル
+        (function () {
+            'use strict';
+
+            // パスを解決（GitHub Pages対応）
+            // baseタグを使用しないため、常に絶対URLを返す
+            function resolvePath(path) {
+                if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                    return path;
+                }
+
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' ||
+                    hostname === '127.0.0.1' ||
+                    hostname === '';
+
+                // カスタムドメイン（misesapo.co.jp）の場合はルートパスを使用
+                const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+
+                if (isLocalDev || isCustomDomain) {
+                    return path.startsWith('/') ? path : '/' + path;
+                }
+
+                // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+                let resolvedPath;
+                if (path.startsWith('/misesapo/')) {
+                    // 既に/misesapo/で始まる場合はそのまま使用
+                    resolvedPath = path;
+                } else if (path.startsWith('/')) {
+                    // /で始まる場合は/misesapo/を追加
+                    resolvedPath = '/misesapo' + path;
+                } else {
+                    // 相対パスの場合は/misesapo/を追加
+                    resolvedPath = '/misesapo/' + path;
+                }
+
+                // 常に絶対URLを返す
+                return window.location.origin + resolvedPath;
+            }
+
+            const wrapper = document.querySelector('.misesapo-flow-wrapper');
+            const swiperWrapper = document.querySelector('#service-carousel-wrapper');
+            if (!wrapper || !swiperWrapper) return;
+
+            let serviceItems = [];
+            let currentCategory = 'heating';
+            let filteredItems = [];
+            let swiper = null;
+
+            // Swiper初期化関数（グローバルスコープで定義）
+            function initSwiper() {
+                if (swiper) {
+                    try {
+                        swiper.destroy(true, true);
+                    } catch (e) {
+                        console.warn('Swiper破棄エラー:', e);
+                    }
+                    swiper = null;
+                }
+
+                // スライドが存在することを確認
+                const slides = swiperWrapper.querySelectorAll('.swiper-slide');
+                if (slides.length === 0) {
+                    console.warn('スライドが存在しません。Swiperの初期化をスキップします。');
+                    return;
+                }
+
+                try {
+                    swiper = new Swiper('.service-carousel', {
+                        slidesPerView: 'auto',
+                        spaceBetween: 90,
+                        centeredSlides: false,
+                        loop: false,
+                        grabCursor: true,
+                        initialSlide: 0,
+                        watchOverflow: true,
+                        on: {
+                            init: function () {
+                                console.log('Swiper初期化完了');
+                                // 最初のスライドが左端から始まるようにする
+                                try {
+                                    this.slideTo(0, 0);
+                                } catch (e) {
+                                    console.warn('slideToエラー:', e);
+                                }
+                            },
+                            error: function (swiper, error) {
+                                console.error('Swiperエラー:', error);
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.error('Swiper初期化エラー:', e);
+                }
+            }
+
+            const categoryMap = {
+                'heating': '厨房設備',
+                'aircon-floor': ['空調設備', 'フロア'],
+                'other': 'その他'
+            };
+
+            const multiplier = {
+                translate: 0.1,
+                rotate: 0.01
+            };
+
+            async function loadServiceItems() {
+                try {
+                    const response = await fetch(resolvePath('/data/service_items.json'));
+                    if (!response.ok) throw new Error('JSONファイルが見つかりません');
+                    const data = await response.json();
+
+                    serviceItems = data.map(item => {
+                        let category = item.category;
+                        if (item.id === 27) category = '空調設備';
+
+                        // サービスページのカードに割り当てられている画像を使用
+                        let imagePath = item.image || '';
+                        // images/で始まる場合は/images/に変換
+                        if (imagePath.startsWith('images/')) {
+                            imagePath = '/' + imagePath;
+                        }
+                        // パスを解決（GitHub Pages対応）
+                        // 絶対URLを返す（baseタグの影響を受けないようにする）
+                        imagePath = resolvePath(imagePath);
+
+                        return { id: item.id, title: item.title, category: category, image: imagePath };
+                    });
+
+                    // 初回はカテゴリを設定しない（init関数で設定される）
+                } catch (error) {
+                    console.error('サービスデータの読み込みに失敗しました:', error);
+                    serviceItems = [
+                        { id: 1, title: 'グリストラップ', category: '厨房設備', image: resolvePath('/images/gurisuto.png') },
+                        { id: 2, title: 'U字溝・グレーチング清掃', category: '厨房設備', image: resolvePath('/images/gure-chingu.png') }
+                    ];
+                }
+            }
+
+            function createSlide(item) {
+                const slide = document.createElement('div');
+                slide.className = 'swiper-slide';
+                slide.setAttribute('data-service-id', item.id);
+
+                const single = document.createElement('div');
+                single.className = 'single';
+                single.setAttribute('data-service-id', item.id);
+
+                const link = document.createElement('a');
+                link.href = resolvePath(`/service/${item.id}`);
+                link.style.textDecoration = 'none';
+                link.style.display = 'block';
+                link.setAttribute('data-service-id', item.id);
+
+                const img = document.createElement('img');
+                // item.imageは既にloadServiceItemsでresolvePathが適用されているので、そのまま使用
+                // 絶対URLを返す（baseタグの影響を受けないようにする）
+                img.src = item.image || resolvePath('/images/service-300x200.svg');
+                img.alt = item.title || '';
+                img.loading = 'lazy';
+                img.decoding = 'async';
+                img.id = `service-image-${item.id}`;
+                img.setAttribute('data-service-id', item.id);
+                img.style.width = '100%';
+                img.style.height = 'auto';
+                img.style.display = 'block';
+
+                img.onerror = function () {
+                    this.src = resolvePath('/images/service-300x200.svg');
+                    this.onerror = null; // 無限ループを防ぐ
+                };
+
+                // キャプション要素を作成
+                const caption = document.createElement('div');
+                caption.className = 'service-caption';
+                caption.textContent = item.title || '';
+                caption.setAttribute('data-service-id', item.id);
+
+                // 正しい順序で要素を追加
+                link.appendChild(img);
+                single.appendChild(link);
+                single.appendChild(caption);
+                slide.appendChild(single);
+
+                return slide;
+            }
+
+            function calculateWheel() {
+                try {
+                    if (!swiper) return;
+                    if (swiper.destroyed) return;
+
+                    const slides = document.querySelectorAll('.service-carousel .single');
+                    if (slides.length === 0) return;
+
+                    slides.forEach((slide) => {
+                        try {
+                            const rect = slide.getBoundingClientRect();
+                            if (!rect || rect.width === 0 || rect.height === 0) return;
+
+                            const r = window.innerWidth * 0.5 - (rect.x + rect.width * 0.5);
+                            let ty = Math.abs(r) * multiplier.translate - rect.width * multiplier.translate;
+                            if (ty < 0) {
+                                ty = 0;
+                            }
+                            const transformOrigin = r < 0 ? 'left top' : 'right top';
+                            slide.style.transform = `translate(0, ${ty}px) rotate(${-r * multiplier.rotate}deg)`;
+                            slide.style.transformOrigin = transformOrigin;
+                        } catch (e) {
+                            // 個別のスライド処理エラーは無視
+                        }
+                    });
+                } catch (e) {
+                    console.warn('calculateWheelエラー:', e);
+                }
+            }
+
+            function createSlidesForCategory(category) {
+                // 既存のスライドを削除
+                swiperWrapper.innerHTML = '';
+
+                let itemsToShow = [];
+
+                // カテゴリに応じたアイテムを取得
+                if (category === 'heating') {
+                    // 厨房設備
+                    itemsToShow = serviceItems.filter(item =>
+                        item.category === '厨房設備'
+                    );
+                } else if (category === 'aircon-floor') {
+                    // 空調設備・フロア
+                    itemsToShow = serviceItems.filter(item =>
+                        item.category === '空調設備' || item.category === 'フロア'
+                    );
+                } else if (category === 'other') {
+                    // その他
+                    itemsToShow = serviceItems.filter(item =>
+                        item.category === 'その他'
+                    );
+                }
+
+                console.log('カテゴリ:', category, 'アイテム数:', itemsToShow.length);
+
+                // スライドを作成
+                itemsToShow.forEach((item, index) => {
+                    const slide = createSlide(item);
+                    slide.setAttribute('data-category', category);
+                    slide.setAttribute('data-index', index);
+                    swiperWrapper.appendChild(slide);
+                });
+
+                console.log('スライド作成完了:', swiperWrapper.children.length);
+            }
+
+            function switchCategory(category, force = false) {
+                if (!force && currentCategory === category) return;
+
+                currentCategory = category;
+
+                // カテゴリボタンのアクティブ状態を更新
+                wrapper.querySelectorAll('.misesapo-category-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.category === category) {
+                        btn.classList.add('active');
+                    }
+                });
+
+                // 選択されたカテゴリの画像のみを表示
+                createSlidesForCategory(category);
+
+                // Swiperを再初期化（DOM更新後に実行）
+                if (typeof Swiper === 'undefined') {
+                    console.error('Swiper.jsが読み込まれていません');
+                    const checkSwiper = setInterval(() => {
+                        if (typeof Swiper !== 'undefined') {
+                            clearInterval(checkSwiper);
+                            setTimeout(() => {
+                                requestAnimationFrame(initSwiper);
+                            }, 100);
+                        }
+                    }, 100);
+                } else {
+                    setTimeout(() => {
+                        requestAnimationFrame(initSwiper);
+                    }, 100);
+                }
+            }
+
+            // 画像パスを設定（GitHub Pages対応）
+            function setImagePaths() {
+                const normalHeaderLogo = document.getElementById('normal-header-logo-img');
+                const cosmeticLogo = document.getElementById('cosmetic-logo-img');
+
+                if (normalHeaderLogo) {
+                    // 絶対URLを返す（baseタグの影響を受けないようにする）
+                    normalHeaderLogo.src = resolvePath('/images-material/logo_144x144.png');
+                    normalHeaderLogo.onerror = function () {
+                        this.style.display = 'none';
+                    };
+                }
+
+                if (cosmeticLogo) {
+                    // 絶対URLを返す（baseタグの影響を受けないようにする）
+                    cosmeticLogo.src = resolvePath('/images-material/logo_ver1-pk.png');
+                    cosmeticLogo.onerror = function () {
+                        this.style.display = 'none';
+                    };
+                }
+            }
+
+            // HTML内の静的なリンクを解決（GitHub Pages対応）
+            function resolveStaticLinks() {
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' ||
+                    hostname === '127.0.0.1' ||
+                    hostname === '';
+
+                if (isLocalDev) {
+                    return; // ローカル開発環境では不要
+                }
+
+                // すべてのaタグのhref属性を解決
+                document.querySelectorAll('a[href^="/"]').forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                        link.href = resolvePath(href);
+                    }
+                });
+
+                // すべてのlinkタグのhref属性を解決
+                document.querySelectorAll('link[href^="/"]').forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                        link.href = resolvePath(href);
+                    }
+                });
+            }
+
+            function init() {
+                // カテゴリボタンのイベントリスナー
+                wrapper.querySelectorAll('.misesapo-category-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        switchCategory(btn.dataset.category);
+                    });
+                });
+
+                // 画像パスを設定
+                setImagePaths();
+
+                // 静的なリンクを解決
+                resolveStaticLinks();
+
+                // データを読み込んで初期表示
+                loadServiceItems().then(() => {
+                    console.log('サービスアイテム読み込み完了:', serviceItems.length);
+
+                    // Swiper.jsが読み込まれるまで待つ
+                    function waitForSwiper() {
+                        if (typeof Swiper !== 'undefined') {
+                            // 初期カテゴリ（厨房設備）を強制表示
+                            switchCategory('heating', true);
+
+                            // calculateWheelを実行（Swiper初期化後に開始）
+                            setTimeout(() => {
+                                function raf() {
+                                    requestAnimationFrame(raf);
+                                    calculateWheel();
+                                }
+                                raf();
+                            }, 300);
+                        } else {
+                            setTimeout(waitForSwiper, 50);
+                        }
+                    }
+                    waitForSwiper();
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+
+        // fadeUpアニメーションは script.js で処理されるため、ここでは削除
+    </script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script src="/js/swiper-bundle.min.js"></script>
+    <script src="/js/script.js"></script>
+    <script>
+        (function () {
+            const heroMediaQuery = window.matchMedia('(max-width: 768px)');
+            const swapTargets = document.querySelectorAll('[data-sp-src]');
+            function updateHeroMediaAssets() {
+                swapTargets.forEach(img => {
+                    const desktop = img.getAttribute('data-desktop-src') || img.getAttribute('src');
+                    const mobile = img.getAttribute('data-sp-src');
+                    if (!mobile) {
+                        return;
+                    }
+                    const targetSrc = heroMediaQuery.matches ? mobile : desktop;
+                    if (targetSrc && img.getAttribute('src') !== targetSrc) {
+                        img.setAttribute('src', targetSrc);
+                    }
+                });
+            }
+            document.addEventListener('DOMContentLoaded', updateHeroMediaAssets);
+            if (typeof heroMediaQuery.addEventListener === 'function') {
+                heroMediaQuery.addEventListener('change', updateHeroMediaAssets);
+            } else if (typeof heroMediaQuery.addListener === 'function') {
+                heroMediaQuery.addListener(updateHeroMediaAssets);
+            }
+        })();
+    </script>
+    <script src="/js/header.js"></script>
+    <script>
+        // SP版：メニューボタンとメニューパネルの制御
+        (function () {
+            const menuButton = document.getElementById('fixed-menu-button');
+            const menuPanel = document.getElementById('sp-menu-panel');
+            const menuOverlay = document.getElementById('sp-menu-panel-overlay');
+
+            if (!menuButton || !menuPanel || !menuOverlay) return;
+
+            // リップルオーバーレイを作成
+            let rippleOverlay = document.querySelector('.menu-ripple-overlay');
+            if (!rippleOverlay) {
+                rippleOverlay = document.createElement('div');
+                rippleOverlay.className = 'menu-ripple-overlay';
+                document.body.appendChild(rippleOverlay);
+            }
+
+            // メニューの開閉
+            function toggleMenu() {
+                const isOpen = menuPanel.classList.contains('open');
+                if (isOpen) {
+                    closeMenu();
+                } else {
+                    openMenu();
+                }
+            }
+
+            function openMenu() {
+                // ボタンの位置を取得
+                const buttonRect = menuButton.getBoundingClientRect();
+                const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+                const buttonCenterY = buttonRect.top + buttonRect.height / 2;
+
+                // リップルオーバーレイの初期サイズ（ボタンと同じサイズ）
+                const initialSize = 100;
+
+                // リップルオーバーレイの位置をボタンの中心に設定
+                rippleOverlay.style.width = initialSize + 'px';
+                rippleOverlay.style.height = initialSize + 'px';
+                rippleOverlay.style.left = (buttonCenterX - initialSize / 2) + 'px';
+                rippleOverlay.style.top = (buttonCenterY - initialSize / 2) + 'px';
+                rippleOverlay.style.transform = 'scale(0)';
+                rippleOverlay.style.transformOrigin = 'center center';
+                rippleOverlay.style.display = 'block';
+                rippleOverlay.style.opacity = '0';
+
+                // リップルアニメーション開始（次のフレームで開始）
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        rippleOverlay.classList.add('animating');
+                    });
+                });
+
+                // アニメーション完了後にパネルを表示
+                setTimeout(() => {
+                    menuPanel.classList.add('open');
+                    document.body.style.overflow = 'hidden';
+                }, 400); // リップルアニメーションの時間（0.4s）
+            }
+
+            function closeMenu() {
+                // 閉じるアニメーション開始
+                menuPanel.classList.remove('open');
+                menuPanel.classList.add('closing');
+
+                // すべてのアコーディオンを閉じる
+                document.querySelectorAll('.sp-menu-item.active').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // リップルオーバーレイを上にスライドアウト
+                if (rippleOverlay.classList.contains('animating')) {
+                    rippleOverlay.classList.remove('animating');
+                    rippleOverlay.classList.add('collapsing');
+                }
+
+                // アニメーション完了後にリセット
+                setTimeout(() => {
+                    menuPanel.classList.remove('closing');
+                    rippleOverlay.classList.remove('collapsing');
+                    rippleOverlay.style.display = 'none';
+                    rippleOverlay.style.opacity = '0';
+                    rippleOverlay.style.transform = 'scale(0)';
+                    rippleOverlay.style.top = '';
+                    rippleOverlay.style.left = '';
+                    document.body.style.overflow = '';
+                }, 300); // アニメーション時間（0.3s）
+            }
+
+            // メニューボタンのクリックイベント
+            menuButton.addEventListener('click', toggleMenu);
+
+            // オーバーレイのクリックイベント
+            menuOverlay.addEventListener('click', closeMenu);
+
+            // アコーディオンメニューの展開
+            const menuItems = document.querySelectorAll('.sp-menu-item-has-submenu');
+            menuItems.forEach(item => {
+                const link = item.querySelector('.sp-menu-link');
+                if (link) {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        item.classList.toggle('active');
+                    });
+                }
+            });
+
+            // メニュー内のリンクをクリックしたらメニューを閉じる
+            menuPanel.querySelectorAll('a[href^="/"]').forEach(link => {
+                link.addEventListener('click', function () {
+                    if (this.getAttribute('href') !== 'javascript:void(0);') {
+                        closeMenu();
+                    }
+                });
+            });
+        })();
+    </script>
+    <script>
+        // ログインボタンの制御
+        (function () {
+            const loginButton = document.querySelector('.fixed-order-button');
+            if (!loginButton) return;
+
+            loginButton.addEventListener('click', function (e) {
+                e.preventDefault();
+                window.location.href = '/signin';
+            });
+        })();
+    </script>
+    <script>
+        // お知らせの取得と表示
+        (function () {
+            'use strict';
+
+            const API_ENDPOINT = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod/announcements';
+            const newsList = document.getElementById('news-list');
+
+            if (!newsList) return;
+
+            // 日付フォーマット変換（ISO形式 → YYYY.MM.DD）
+            function formatDate(isoString) {
+                try {
+                    const date = new Date(isoString);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}.${month}.${day}`;
+                } catch (e) {
+                    console.warn('日付フォーマットエラー:', e);
+                    return '';
+                }
+            }
+
+            // お知らせが新しいかどうか判定（7日以内）
+            function isNew(publishedAt) {
+                try {
+                    const published = new Date(publishedAt);
+                    const now = new Date();
+                    const diffTime = now - published;
+                    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+                    return diffDays <= 7;
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            // お知らせアイテムを生成
+            function createNewsItem(announcement) {
+                const li = document.createElement('li');
+                li.className = 'news-section__item';
+
+                const date = formatDate(announcement.published_at || announcement.created_at);
+                const dateSpan = document.createElement('span');
+                dateSpan.className = 'news-section__date';
+                dateSpan.textContent = date;
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'news-section__text';
+
+                // リンクがある場合はaタグで囲む
+                if (announcement.link) {
+                    const link = document.createElement('a');
+                    link.href = announcement.link;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = announcement.title || 'お知らせ';
+                    link.style.textDecoration = 'none';
+                    link.style.color = 'inherit';
+                    textSpan.appendChild(link);
+                } else {
+                    textSpan.textContent = announcement.title || 'お知らせ';
+                }
+
+                // 新しいお知らせにはNEWバッジを追加
+                if (isNew(announcement.published_at || announcement.created_at)) {
+                    const newBadge = document.createElement('span');
+                    newBadge.className = 'news-section__new';
+                    newBadge.textContent = 'NEW';
+                    textSpan.appendChild(newBadge);
+                }
+
+                li.appendChild(dateSpan);
+                li.appendChild(textSpan);
+
+                return li;
+            }
+
+            // お知らせを取得して表示
+            async function loadAnnouncements() {
+                try {
+                    const response = await fetch(API_ENDPOINT);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const announcements = await response.json();
+
+                    // 「お知らせページのみ」のお知らせを除外
+                    const filteredAnnouncements = announcements.filter(announcement =>
+                        announcement.target !== 'announcements-page'
+                    );
+
+                    // 最新3件のみ表示
+                    const latestAnnouncements = filteredAnnouncements.slice(0, 3);
+
+                    // 既存のリストをクリア
+                    newsList.innerHTML = '';
+
+                    if (latestAnnouncements.length === 0) {
+                        // お知らせがない場合
+                        const li = document.createElement('li');
+                        li.className = 'news-section__item';
+                        li.textContent = '現在お知らせはありません';
+                        li.style.color = '#999';
+                        newsList.appendChild(li);
+                    } else {
+                        // お知らせを追加
+                        latestAnnouncements.forEach((announcement, index) => {
+                            const item = createNewsItem(announcement);
+                            // アニメーション遅延を設定
+                            item.style.animationDelay = `${(index + 1) * 0.1}s`;
+                            newsList.appendChild(item);
+                        });
+                    }
+                } catch (error) {
+                    console.error('[Announcements] お知らせの取得に失敗しました:', error);
+                    // エラー時はフォールバックメッセージを表示
+                    newsList.innerHTML = '<li class="news-section__item" style="color: #999;">お知らせの読み込みに失敗しました</li>';
+                }
+            }
+
+            // ページ読み込み時に実行
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadAnnouncements);
+            } else {
+                loadAnnouncements();
+            }
+        })();
+    </script>
+    <!-- キャンペーンスライダーJavaScript -->
+    <script>
+        // スライダー機能（コンテナ内で完結）
+        (function () {
+            const sliderWrapper = document.getElementById('serviceSliderWrapper');
+            const prevBtn = document.getElementById('servicePrevBtn');
+            const nextBtn = document.getElementById('serviceNextBtn');
+            const indicators = document.querySelectorAll('#serviceSliderIndicators .slider-indicator');
+
+            if (!sliderWrapper || !prevBtn || !nextBtn) return;
+
+            let currentSlide = 0;
+            const totalSlides = 3;
+
+            // スライドを移動
+            function goToSlide(index) {
+                if (index < 0) index = totalSlides - 1;
+                if (index >= totalSlides) index = 0;
+
+                currentSlide = index;
+                sliderWrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+                // インジケーターを更新
+                indicators.forEach((indicator, i) => {
+                    indicator.classList.toggle('active', i === currentSlide);
+                });
+
+                // ボタンの状態を更新
+                prevBtn.disabled = false;
+                nextBtn.disabled = false;
+            }
+
+            // 前のスライドへ
+            prevBtn.addEventListener('click', () => {
+                goToSlide(currentSlide - 1);
+            });
+
+            // 次のスライドへ
+            nextBtn.addEventListener('click', () => {
+                goToSlide(currentSlide + 1);
+            });
+
+            // インジケーターをクリック
+            indicators.forEach((indicator, index) => {
+                indicator.addEventListener('click', () => {
+                    goToSlide(index);
+                });
+            });
+
+            // 初期化
+            goToSlide(0);
+        })();
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,178 @@
+@layout('layouts.base')
+@json('data/meta/dashboard_title.json', $title)
+@json('data/meta/dashboard_body_class.json', $body_class)
+
+<link rel="stylesheet" href="/assets/css/customer-dashboard.css">
+<style>
+    .request-form-container {
+        background: white;
+        padding: 32px;
+        border-radius: 24px;
+        box-shadow: var(--glass-shadow);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 8px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 0.9375rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--ai-accent-light);
+    }
+
+    .history-section {
+        margin-top: 48px;
+    }
+
+    .request-item {
+        background: #f8fafc;
+        padding: 20px;
+        border-radius: 16px;
+        margin-bottom: 16px;
+        border-left: 4px solid #cbd5e1;
+    }
+
+    .request-item.replied {
+        border-left-color: var(--primary);
+    }
+</style>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+    <div class="sidebar-header">
+        <a href="/customer/dashboard" class="logo-link">
+            <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+            <span class="logo-text">ミセサポ</span>
+        </a>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="/customer/dashboard" class="nav-item" data-page="dashboard">
+            <i class="fas fa-th-large"></i>
+            <span class="nav-label">ダッシュボード</span>
+        </a>
+        <a href="/customer/karte" class="nav-item" data-page="karte">
+            <i class="fas fa-heartbeat"></i>
+            <span class="nav-label">店舗カルテ</span>
+        </a>
+        <a href="/customer/reports" class="nav-item" data-page="reports">
+            <i class="fas fa-file-alt"></i>
+            <span class="nav-label">清掃レポート</span>
+        </a>
+        <a href="/customer/documents" class="nav-item" data-page="documents">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <span class="nav-label">見積・契約</span>
+        </a>
+        <a href="/customer/schedule" class="nav-item" data-page="schedule">
+            <i class="fas fa-calendar-alt"></i>
+            <span class="nav-label">スケジュール</span>
+        </a>
+        <a href="/customer/requests" class="nav-item active" data-page="requests">
+            <i class="fas fa-paper-plane"></i>
+            <span class="nav-label">要望・相談</span>
+        </a>
+        <div class="nav-divider"></div>
+        <a href="/customer/ai-advisor" class="nav-item nav-item-ai" data-page="ai-advisor">
+            <i class="fas fa-robot"></i>
+            <span class="nav-label">AIアドバイザー</span>
+        </a>
+        <div class="nav-divider"></div>
+        <a href="/customer/settings" class="nav-item" data-page="settings">
+            <i class="fas fa-cog"></i>
+            <span class="nav-label">設定</span>
+        </a>
+        <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="nav-label">ログアウト</span>
+        </button>
+    </nav>
+
+    <button class="sidebar-toggle" id="sidebar-toggle">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+</aside>
+
+<main id="main" class="container main-content customer-dashboard">
+    <header class="dashboard-header">
+        <div class="welcome-section">
+            <h1 class="welcome-text">要望・相談</h1>
+            <p class="welcome-subtext">清掃内容の改善、追加の作業依頼、担当者へのご相談などはこちらからお送りください。</p>
+        </div>
+    </header>
+
+    <section class="request-form-container">
+        <form id="request-form">
+            <div class="form-group">
+                <label>対象の店舗</label>
+                <select class="form-control">
+                    <option>代官山 権八</option>
+                    <option>西麻布 権八</option>
+                    <option>渋谷 モンスーンカフェ</option>
+                    <option>その他・全体</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>ご相談内容の分類</label>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <input type="radio" name="cat" id="cat1" checked> <label for="cat1"
+                        style="font-weight: 400;">清掃品質について</label>
+                    <input type="radio" name="cat" id="cat2"> <label for="cat2"
+                        style="font-weight: 400;">追加の清掃依頼</label>
+                    <input type="radio" name="cat" id="cat3"> <label for="cat3" style="font-weight: 400;">日程の調整</label>
+                    <input type="radio" name="cat" id="cat4"> <label for="cat4" style="font-weight: 400;">その他</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>内容</label>
+                <textarea class="form-control" rows="6" placeholder="具体的なご要望やご相談内容を入力してください。"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px;">送信する</button>
+        </form>
+
+        <div class="history-section">
+            <h2 class="section-title">過去のやり取り</h2>
+            <div class="request-item replied">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="font-size: 0.875rem;">西麻布 権八 - 清掃品質について</strong>
+                    <span style="font-size: 0.75rem; color: #94a3b8;">2025.12.15</span>
+                </div>
+                <p style="font-size: 0.875rem; color: #475569; margin-bottom: 12px;">
+                    キッチンの排水溝周りの清掃を、次回からもう少し重点的に行っていただけますか？</p>
+                <div
+                    style="background: white; padding: 12px; border-radius: 12px; font-size: 0.875rem; border: 1px solid #e2e8f0;">
+                    <strong style="color: var(--primary);">ミセサポ事務局からの回答:</strong>
+                    <p style="margin-top: 4px; color: #1e293b;">承知いたしました。担当スタッフに共有し、次回よりチェック項目に追加いたします。ご指摘ありがとうございます。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script src="/js/admin-sidebar.js"></script>
+<script>
+    document.getElementById('request-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('ご要望を送信しました。事務局より追ってご連絡いたします。');
+    });
+</script>
