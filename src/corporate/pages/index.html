@@ -773,9 +773,9 @@
         }
 
         /* 固定バナー */
-        .fixed-banner {
+        .fixed-banner,
+        .fixed-banner2 {
             position: absolute;
-            top: 300px;
             right: 50px;
             z-index: 10003;
             width: 250px;
@@ -786,11 +786,22 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .fixed-banner:hover {
+        .fixed-banner {
+            top: 300px;
+        }
+
+        .fixed-banner2 {
+            top: 100px;
+            right: 20px;
+        }
+
+        .fixed-banner:hover,
+        .fixed-banner2:hover {
             transform: translateY(-5px) scale(1.05);
         }
 
-        .fixed-banner img {
+        .fixed-banner img,
+        .fixed-banner2 img {
             width: 100%;
             height: auto;
             display: block;
@@ -799,7 +810,8 @@
             transition: box-shadow 0.3s ease, transform 0.3s ease;
         }
 
-        .fixed-banner:hover img {
+        .fixed-banner:hover img,
+        .fixed-banner2:hover img {
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
             transform: scale(1.02);
         }
@@ -807,6 +819,15 @@
         @media (max-width: 768px) {
             .fixed-banner {
                 display: none;
+            }
+
+            .fixed-banner2 {
+                display: block;
+                position: absolute;
+                top: 345px;
+                right: 16px;
+                width: 200px;
+                max-width: 70vw;
             }
 
             .news-section-wrapper {
@@ -3440,6 +3461,10 @@
         </div>
 
         <!-- 固定バナー -->
+        <div class="fixed-banner2">
+            <a href="mailto:info@misesapo.co.jp"><img src="/images/yakiniku2026_head.png" alt="焼肉フェア2026お問い合わせ"></a>
+        </div>
+
         <div class="fixed-banner">
             <a href="/recruit/"><img src="/images-admin/banner-pickup-sp.png" alt="求人バナー"></a>
         </div>
