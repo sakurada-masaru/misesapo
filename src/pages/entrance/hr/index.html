@@ -442,8 +442,12 @@
         left: 50%;
         transform: translateX(-50%);
         z-index: 100;
-        pointer-events: none;
+        pointer-events: none !important;
         transition: top 0.5s ease-out, transform 0.3s ease;
+    }
+
+    .visualizer-container * {
+        pointer-events: none !important;
     }
 
     /* THE LIQUID CORE - The wave itself */
@@ -3070,7 +3074,7 @@ ${context}
                 { label: '作業指示書を作成', action: 'startWorkOrderWizard()' }
             ],
             hr: [
-                { label: '勤怠確認', action: "document.getElementById('hr-attendance-dashboard').scrollIntoView({behavior:'smooth'})" }
+                { label: '勤怠確認', id: 'btn-hr-attendance-dashboard', action: '' }
             ],
             accounting: [
                 { label: '請求処理', action: "location.href='/admin/orders'" }
@@ -3081,8 +3085,11 @@ ${context}
 
         const actions = jobActions[jobKey] || [];
         actions.forEach(btn => {
+            const idAttr = btn.id ? `id="${btn.id}"` : '';
+            const actionAttr = btn.action ? `onclick="${btn.action}"` : '';
+
             const buttonHtml = `
-                <button class="job-action-btn" onclick="${btn.action}"
+                <button class="job-action-btn" ${idAttr} ${actionAttr}
                     style="background: var(--accent-color); border: none; color: #fff; 
                     padding: 12px 24px; border-radius: 25px; cursor: pointer;
                     font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
@@ -3092,6 +3099,18 @@ ${context}
             `;
             btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
         });
+
+        // HR Button Specific Handler
+        const hrBtn = document.getElementById('btn-hr-attendance-dashboard');
+        if (hrBtn) {
+            hrBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = document.getElementById('hr-attendance-dashboard');
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        }
 
         if (actions.length > 0) {
             actionContainer.appendChild(btnDiv);
