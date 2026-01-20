@@ -1,0 +1,792 @@
+/* 化粧ヘッダー */
+.cosmetic-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 281px;
+    background-color: transparent;
+    background-image: url('../images/images-public/cosmetic-header.svg');
+    background-size: 100% 281px;
+    background-position: center top;
+    background-repeat: no-repeat;
+    box-shadow: none;
+    z-index: 10000;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease-out;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.cosmetic-header.hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cosmetic-header-inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    padding: 20px 40px;
+    transform: translateY(-90px);
+    gap: 0;
+    position: relative;
+    background-color: transparent;
+}
+
+.cosmetic-header-logo {
+    flex: 0 0 auto;
+    position: absolute;
+    left: 40px;
+}
+
+.cosmetic-logo img {
+    height: 80px;
+    width: auto;
+}
+
+.cosmetic-header-nav {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+.cosmetic-nav {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* メガメニュー */
+.misesapo-mega-menu.ishikawa-style {
+    position: relative;
+    width: auto;
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", "MS PGothic", sans-serif;
+}
+
+.misesapo-mega-menu.ishikawa-style * {
+    box-sizing: border-box;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-list {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    justify-content: center;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item {
+    position: relative;
+    margin: 0;
+    height: 100%;
+    opacity: 0;
+    transform: translateX(-30px);
+    animation: navSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(6) {
+    animation-delay: 0.6s;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(7) {
+    animation-delay: 0.7s;
+}
+
+@keyframes navSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0 20px;
+    color: #333;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    position: relative;
+    line-height: 1.6;
+    height: 100%;
+    justify-content: center;
+    letter-spacing: 0.05em;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-link:hover {
+    color: #FF679C;
+    background-color: rgba(255, 103, 156, 0.08);
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-arrow {
+    font-size: 10px;
+    margin-left: 8px;
+    color: #666;
+    transition: transform 0.3s ease;
+    display: inline-block;
+    font-weight: normal;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:hover .mega-menu-arrow {
+    transform: rotate(180deg);
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-text {
+    display: inline-block;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-text::before {
+    content: "⚫︎";
+    margin-right: 8px;
+    font-size: 0.7em;
+    vertical-align: middle;
+}
+
+/* メガメニューサブメニュー */
+.misesapo-mega-menu.ishikawa-style .mega-menu-submenu {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    width: auto;
+    min-width: 600px;
+    max-width: 1200px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10002;
+    padding: 40px 60px;
+    margin-top: 0;
+    border: 1px solid #e5e5e5;
+    border-top: 2px solid #FF679C;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:hover .mega-menu-submenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-submenu-inner {
+    display: flex;
+    gap: 60px;
+    flex-wrap: wrap;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column {
+    min-width: 200px;
+    margin-bottom: 0;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e5e5;
+    letter-spacing: 0.05em;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-title-link {
+    display: inline-block;
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-title-link:hover {
+    color: #FF679C;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-title-link:hover .mega-menu-column-title {
+    color: #FF679C;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list li {
+    margin: 0 0 12px 0;
+    padding: 0;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list a {
+    display: flex;
+    align-items: center;
+    color: #666;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 0;
+    transition: all 0.2s ease;
+    position: relative;
+    line-height: 1.8;
+    letter-spacing: 0.05em;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list a::before {
+    content: "⚫︎";
+    margin-right: 8px;
+    font-size: 0.7em;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list a::after {
+    content: "→";
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list a:hover {
+    color: #FF679C;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list a span {
+    display: inline-block;
+    text-decoration: none;
+    flex: 1;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-column-list a:hover span {
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-decoration-color: #FF679C;
+    text-underline-offset: 4px;
+}
+
+.cosmetic-header-center {
+    display: none;
+}
+
+.cosmetic-header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 0 0 auto;
+    position: absolute;
+    right: 40px;
+}
+
+.cosmetic-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.cosmetic-action-btn {
+    position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    color: #333;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cosmetic-action-btn:hover {
+    background-color: rgba(255, 103, 156, 0.08);
+    color: #FF679C;
+}
+
+.cosmetic-action-btn svg {
+    display: block;
+}
+
+.cosmetic-action-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #FF679C;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+.cosmetic-action-badge:empty {
+    display: none;
+}
+
+.cosmetic-user-menu {
+    position: relative;
+}
+
+.cosmetic-login-btn {
+    padding: 10px 24px;
+    background-color: #FF679C;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.cosmetic-login-btn:hover {
+    background-color: #E35687;
+    transform: translateY(-2px);
+}
+
+.cosmetic-user-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    padding: 8px 0;
+    z-index: 10001;
+}
+
+.cosmetic-user-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.cosmetic-user-menu-item:hover {
+    background-color: rgba(255, 103, 156, 0.08);
+    color: #FF679C;
+}
+
+.cosmetic-user-menu-item svg {
+    flex-shrink: 0;
+}
+
+.cosmetic-user-menu-divider {
+    margin: 8px 0;
+    border: none;
+    border-top: 1px solid #e5e7eb;
+}
+
+.cosmetic-user-menu-logout {
+    color: #dc2626;
+}
+
+.cosmetic-user-menu-logout:hover {
+    background-color: rgba(220, 38, 38, 0.08);
+    color: #b91c1c;
+}
+
+/* 通常ヘッダー */
+.normal-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background: #fff;
+    box-shadow: none;
+    z-index: 9998;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(-100%);
+    border-radius: 0 0 12px 12px;
+}
+
+.normal-header.visible {
+    transform: translateY(0);
+}
+
+.normal-header-inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 0 40px;
+    height: 100%;
+    position: relative;
+}
+
+.normal-header-logo {
+    flex: 0 0 auto;
+    position: absolute;
+    left: 40px;
+}
+
+.normal-header-logo img {
+    height: 40px;
+    width: auto;
+}
+
+.normal-header-nav {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.normal-header-nav a {
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.normal-header-nav a:hover {
+    color: #FF679C;
+    background-color: rgba(255, 103, 156, 0.08);
+}
+
+.normal-header-actions {
+    position: absolute;
+    right: 40px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.normal-header-login {
+    padding: 10px 24px;
+    background-color: #FF679C;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.normal-header-login:hover {
+    background-color: #E35687;
+    transform: translateY(-2px);
+}
+
+/* レスポンシブ - 大きめ画面（1200px〜1400px） */
+@media (max-width: 1400px) {
+    .cosmetic-header {
+        height: 240px;
+        background-size: 100% 240px;
+    }
+
+    .cosmetic-header-inner {
+        transform: translateY(-70px);
+    }
+
+    .cosmetic-logo img {
+        height: 70px;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-link {
+        padding: 0 16px;
+        font-size: 14px;
+    }
+}
+
+/* レスポンシブ - 中画面（1024px〜1200px） */
+@media (max-width: 1200px) {
+    .cosmetic-header {
+        height: 200px;
+        background-size: 100% 200px;
+    }
+
+    .cosmetic-header-inner {
+        transform: translateY(-50px);
+        padding: 15px 30px;
+    }
+
+    .cosmetic-header-logo {
+        left: 30px;
+    }
+
+    .cosmetic-header-right {
+        right: 30px;
+    }
+
+    .cosmetic-logo img {
+        height: 60px;
+    }
+
+    .cosmetic-header-center {
+        display: none;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-link {
+        padding: 0 12px;
+        font-size: 13px;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-text::before {
+        margin-right: 5px;
+        font-size: 0.6em;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-submenu {
+        min-width: 500px;
+        padding: 30px 40px;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-submenu-inner {
+        gap: 40px;
+    }
+
+    .cosmetic-login-btn {
+        padding: 8px 18px;
+        font-size: 13px;
+    }
+}
+
+/* レスポンシブ - タブレット（769px〜1024px） */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .cosmetic-header {
+        height: 140px;
+        background-size: 100% 140px;
+    }
+
+    .cosmetic-header-inner {
+        transform: translateY(-20px);
+        padding: 8px 15px;
+        gap: 10px;
+    }
+
+    .cosmetic-header-logo {
+        left: 15px;
+    }
+
+    .cosmetic-header-right {
+        right: 15px;
+        gap: 8px;
+    }
+
+    .cosmetic-logo img {
+        height: 40px;
+    }
+
+    /* ナビゲーションを中央に配置し、スペースを確保 */
+    .cosmetic-header-nav {
+        max-width: calc(100% - 200px);
+        justify-content: center;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-link {
+        padding: 0 5px;
+        font-size: 10px;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-text::before {
+        margin-right: 3px;
+        font-size: 0.4em;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-arrow {
+        font-size: 7px;
+        margin-left: 3px;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-submenu {
+        min-width: 350px;
+        max-width: 85vw;
+        padding: 15px 20px;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-submenu-inner {
+        gap: 20px;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-column {
+        min-width: 130px;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-column-title {
+        font-size: 11px;
+        margin-bottom: 10px;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-column-list a {
+        font-size: 10px;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-column-list li {
+        margin: 0 0 6px 0;
+    }
+
+    .cosmetic-login-btn {
+        padding: 5px 10px;
+        font-size: 10px;
+        white-space: nowrap;
+    }
+
+    .cosmetic-action-btn {
+        padding: 4px;
+    }
+
+    .cosmetic-action-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .cosmetic-actions {
+        gap: 2px;
+    }
+
+    /* 通常ヘッダー */
+    .normal-header {
+        height: 50px;
+    }
+
+    .normal-header-inner {
+        padding: 0 15px;
+    }
+
+    .normal-header-logo {
+        left: 15px;
+    }
+
+    .normal-header-logo img {
+        height: 28px;
+    }
+
+    .normal-header-nav a {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+
+    .normal-header-actions {
+        right: 15px;
+        gap: 6px;
+    }
+
+    .normal-header-login {
+        padding: 5px 10px;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .normal-header-actions {
+        right: 15px;
+    }
+
+    .normal-header-login {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+
+    .cosmetic-header-inner {
+        padding: 15px 20px;
+        gap: 15px;
+    }
+
+    .cosmetic-header-nav {
+        display: none;
+    }
+
+    .cosmetic-nav {
+        display: none;
+    }
+
+    .cosmetic-logo img {
+        height: 60px;
+    }
+
+    .cosmetic-actions {
+        gap: 4px;
+    }
+
+    .cosmetic-action-btn {
+        padding: 8px;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-list {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-item {
+        width: 100%;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-link {
+        padding: 12px 16px;
+        justify-content: space-between;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-submenu {
+        position: static;
+        transform: none;
+        min-width: 100%;
+        max-width: 100%;
+        padding: 20px;
+        opacity: 1;
+        visibility: visible;
+        box-shadow: none;
+        border: none;
+        border-top: 1px solid #e5e5e5;
+    }
+
+    .misesapo-mega-menu.ishikawa-style .mega-menu-submenu-inner {
+        flex-direction: column;
+        gap: 20px;
+    }
+}
+
+
