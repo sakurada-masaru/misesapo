@@ -3134,6 +3134,10 @@ ${context}
             btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
         });
 
+        if (actions.length > 0) {
+            actionContainer.appendChild(btnDiv);
+        }
+
         // HR Button Specific Handler
         const hrBtn = document.getElementById('btn-hr-attendance-dashboard');
         if (hrBtn) {
@@ -3141,10 +3145,6 @@ ${context}
                 e.preventDefault();
                 toggleHrDashboard(true);
             });
-        }
-
-        if (actions.length > 0) {
-            actionContainer.appendChild(btnDiv);
         }
     }
 
