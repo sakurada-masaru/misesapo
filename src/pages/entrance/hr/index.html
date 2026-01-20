@@ -442,8 +442,12 @@
         left: 50%;
         transform: translateX(-50%);
         z-index: 100;
-        pointer-events: none;
+        pointer-events: none !important;
         transition: top 0.5s ease-out, transform 0.3s ease;
+    }
+
+    .visualizer-container * {
+        pointer-events: none !important;
     }
 
     /* THE LIQUID CORE - The wave itself */
