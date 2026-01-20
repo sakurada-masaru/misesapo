@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="{{ base_path }}" />
+    <title>飲食店が清掃不足によって売上を落とす可能性</title>
+    <meta name="description" content="清掃不足によって売上を落とす可能性を危惧しているなら、飲食店からオフィスまで、24時間対応可能なミセサポにお任せください。">
+    <meta name="keywords" content="ミセサポ,東京,埼玉,店舗清掃,定期清掃,売上低下,原因,口コミ,清掃不足">
+
+    <!--GoogleFonts(Noto Sans JP)-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <!--GoogleFonts(Noto Sans JP) end-->
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <style>
+        .breadcrumb {
+            max-width: 900px;
+            margin: 60px auto 0;
+            padding: 20px 20px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breadcrumb-inner {
+            display: inline-block;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: #FF679C;
+        }
+
+        .breadcrumb span {
+            margin: 0 8px;
+            color: #999;
+        }
+
+        .breadcrumb .current {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* ヒーローセクション */
+        .lp-hero {
+            background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+            color: #fff;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .lp-hero h1 {
+            font-size: 40px;
+            font-weight: 700;
+            line-height: 1.6;
+            padding: 30px;
+        }
+
+        .lp-hero p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto 40px;
+        }
+
+        .lp-hero-cta {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-hero-cta a {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #fff;
+            color: #FF679C;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .lp-hero-cta a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* セクション共通スタイル */
+        .lp-section {
+            max-width: 900px;
+            margin: 60px auto 0;
+        }
+
+        .lp-section .sec-image {
+            height: 150px;
+            display: block;
+            margin: 10px auto 20px;
+            width: auto;
+        }
+
+        .lp-section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            display: block;
+            margin: auto;
+            max-width: 900px;
+            padding-bottom: 20px;
+        }
+
+        .lp-section-subtitle {
+            font-size: clamp(20px, 3vw, 28px);
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #666;
+        }
+
+        .lp-section-text {
+            font-size: 16px;
+            padding-top: 10px;
+            color: #666;
+            max-width: 900px;
+        }
+
+        /* イントロセクション */
+        .lp-intro {
+            background: #FDEDED;
+        }
+
+        .lp-intro-box {
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-intro-box p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .lp-problems {
+            margin: 20px 0;
+            padding-left: 0;
+        }
+
+        .lp-problems ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-problems ul li {
+            padding: 10px 0 10px 30px;
+            position: relative;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+        }
+
+        .lp-problems ul li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-image: url('/images/moya_gr.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .lp-problems ul li strong {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .lp-solution {
+            margin-top: 25px;
+            font-size: 18px;
+            line-height: 1.9;
+            color: #333;
+        }
+
+        .lp-highlight {
+            font-weight: bold;
+            color: #FF679C;
+            padding: 0 4px;
+        }
+
+        /* ポイントセクション */
+        .lp-points {
+            background: #fff;
+        }
+
+        .lp-points-list {
+            max-width: 900px;
+            margin: 50px auto 0;
+        }
+
+        .lp-point-item {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-point-item h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 5px;
+        }
+
+        .lp-point-item p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-point-item ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-point-item ul li {
+            padding: 5px 0 5px 30px;
+            position: relative;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-point-item ul li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* 理由セクション */
+        .lp-reasons {
+            background: #FDEDED;
+        }
+
+        .lp-reasons-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-reasons-box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 5px;
+            margin-top: 20px;
+        }
+
+        .lp-reasons-box p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+            padding: 5px 0;
+        }
+
+        .lp-reasons-box ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-reasons-box ul li {
+            padding: 5px 0 5px 30px;
+            position: relative;
+            font-size: 16px;
+            color: #666;
+        }
+
+        /* .lp-reasons-box ul li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom;
+        } */
+        .lp-reasons-box ul li.check::before,
+        .lp-reasons-box ul li.moya::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            /* background-image: url('/images/check_pk.svg'); */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom;
+        }
+
+        .lp-reasons-box ul li.check::before {
+            background-image: url('/images/check_pk.svg');
+        }
+
+        .lp-reasons-box ul li.moya::before {
+            background-image: url('/images/moya_gr.svg');
+        }
+
+        /* 比較テーブルセクション */
+        .lp-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .lp-table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: white;
+            font-size: 16px;
+        }
+
+        .lp-table th,
+        .lp-table td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e5e5e5;
+            color: #333;
+        }
+
+        .lp-table th {
+            background: #FF679C;
+            color: white;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .lp-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .lp-table-highlight {
+            background: #ffc2d7;
+            font-weight: 700;
+            color: #FF679C;
+            font-size: 17px;
+        }
+
+        .lp-table-note {
+            background: #FDEDED;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+        }
+
+        .lp-table-note p {
+            font-size: 18px;
+            line-height: 1.9;
+            margin: 8px 0;
+            color: #333;
+        }
+
+        /* CTAセクション */
+        .lp-cta {
+            background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+            color: #fff;
+            padding: 40px 20px;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .lp-cta h2 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #ffff00;
+            border-bottom: 2px solid #ffff00;
+            width: fit-content;
+            margin: 0 auto 10px;
+            padding-bottom: 10px;
+        }
+
+        .lp-cta p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            line-height: 1.8;
+            margin-bottom: 40px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .lp-cta-features {
+            padding: 30px 50px;
+            border-radius: 35px;
+            margin: 30px auto;
+            width: fit-content;
+            background-color: #fff;
+            font-weight: bold;
+        }
+
+        .lp-cta-feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .lp-cta-feature-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .lp-cta-feature-item span:first-child {
+            width: 25px;
+            height: 25px;
+            margin-right: 15px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: inline-block;
+        }
+
+        .lp-cta-feature-item span:last-child {
+            color: #FF679C;
+            font-size: 25px;
+            text-align: left;
+        }
+
+        .lp-cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-cta-buttons a {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #ffff00;
+            color: #FF679C;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .lp-cta-buttons a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            background: #ffeb3b;
+        }
+
+        .lp-contact-button {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #FF679C;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .lp-contact-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 103, 156, 0.4);
+            background: #E53888;
+        }
+
+        .lp-main-text-box {
+            margin: 60px auto 0;
+            color: #000;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        .lp-main-text-box h3 {
+            font-size: 24px;
+            border-bottom: #000 2px solid;
+            width: fit-content;
+            padding-bottom: 5px;
+            margin: auto;
+        }
+
+        .lp-main-text-box h2 {
+            font-size: 32px;
+            color: #FF679C;
+        }
+
+        .lp-main-text-box ul {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-main-text-box ul li {
+            color: #FF679C;
+            background: #ffd1ed;
+            width: fit-content;
+            margin: 0 10px 30px;
+            font-size: 16px;
+            border-radius: 15px;
+            padding: 5px 10px;
+            font-weight: bold;
+        }
+
+        .lp-cta-sub-text {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffff00;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .lp-reasons-box ul li br {
+            display: block;
+            margin-top: 5px;
+        }
+
+        h4 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #666;
+            padding: 5px 0  ;
+        }
+
+        @media (max-width: 768px) {
+            .lp-hero {
+                padding: 100px 15px 60px;
+            }
+
+            .lp-section {
+                padding: 0px 15px;
+            }
+
+            .lp-hero-cta,
+            .lp-cta-buttons {
+                flex-direction: column;
+            }
+
+            .lp-hero-cta a,
+            .lp-cta-buttons a {
+                width: 100%;
+                text-align: center;
+            }
+
+            .lp-table-wrapper {
+                overflow-x: scroll;
+            }
+
+            .lp-table {
+                font-size: 1rem;
+            }
+
+            .lp-table th,
+            .lp-table td {
+                padding: 10px 5px;
+                font-size: 16px;
+            }
+
+            .lp-main-text-box h2 {
+                font-size: 24px;
+            }
+
+            .lp-intro-box,
+            .lp-reasons-box,
+            .lp-point-item {
+                padding: 20px;
+            }
+
+            .lp-cta-feature-item span:first-child {
+                width: 25px;
+                height: 25px;
+            }
+
+            .lp-cta-feature-item span:last-child {
+                width: 90%;
+            }
+
+            .lp-cta-features {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+
+<body style="color: #FDEDED;">
+    <!-- 通常ヘッダー -->
+    <header class="normal-header visible">
+        <div class="normal-header-inner">
+            <div class="normal-header-logo">
+                <a href="/">
+                    <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+                        onerror="this.style.display='none'">
+                </a>
+            </div>
+            <nav class="normal-header-nav">
+                <a href="/">TOP</a>
+                <a href="/service">対応可能サービス</a>
+                <a href="/lp#voice">お客様の声</a>
+                <a href="/customers-support-desk">カスタマーズサポート</a>
+                <a href="/index#news">お知らせ</a>
+                <a href="/privacy-policy">規約＆ポリシー</a>
+            </nav>
+        </div>
+    </header>
+
+    <main style="background: #FDEDED;">
+        <!-- パンくずリスト -->
+        <div class="breadcrumb">
+            <div class="breadcrumb-inner">
+                <a href="/">TOP</a>
+                <span>></span>
+                <span class="current">定期清掃</span>
+            </div>
+        </div>
+
+        <!-- ヒーローセクション -->
+        <section class="lp-hero-new" style="position: relative; background-size: cover; background-position: center;">
+            <picture>
+                <source media="(max-width: 768px)" srcset="/images/decline_kv_sp.webp">
+                <img src="/images/decline_kv.webp" style="width: 100%; height: auto; display: block;">
+            </picture>
+        </section>
+
+        <section class="lp-main-text-box">
+            <ul>
+                <li>#定期清掃</li>
+                <li>#売上低下</li>
+                <li>#清掃不足</li>
+                <li>#原因</li>
+                <li>#口コミ</li>
+            </ul>
+            <div>
+                <h3 class="lp-section-sub-title">価格や味の評価だけではない</h3>
+                <h2 class="lp-section-main-title">清掃不足によって売上を落とす可能性</h2>
+            </div>
+        </section>
+
+        <!-- イントロセクション -->
+        <section class="lp-section lp-intro">
+            <div class="lp-intro-box">
+                <p>飲食店経営において、料理の味や価格、立地はもちろん重要です。しかしそれと同じ、もしくはそれ以上に経営へ影響を及ぼす要素があります。それが清掃状態です。</p>
+                <p>清掃不足に陥った飲食店は、顧客満足度の低下やリピート率の激減を招き、結果として静かに、しかし確実に売上低下へと向かいます。2026年現在の市場動向を踏まえると、清掃不足はもはや「気をつければいい問題」ではなく、経営リスクそのものと言っても過言ではありません。
+                </p>
+                <p>本記事では、「定期清掃」「売上低下」「原因」「共通点」「口コミ」という視点から、飲食店が清掃不足によって売上を落とすメカニズムと、その背景にある共通点を詳しく解説します。</p>
+        </section>
+
+        <!-- 清掃不足が招く最大の問題は「気づかない失客」 -->
+        <section class="lp-section lp-reasons">
+            <div class="lp-reasons-box">
+                <img class="sec-image" src="/images/decline_image1.webp" alt="清掃不足が招く最大の問題は「気づかない失客」">
+                <h2 class="lp-section-title">清掃不足が招く最大の問題は「気づかない失客」</h2>
+                <p>飲食店の売上低下は、ある日突然起こるわけではありません。多くの場合、原因は日々の営業の中に静かに潜んでいます。その代表例が清掃不足です。</p>
+                <p>お客様は、清掃状態に違和感を覚えても、それをわざわざ直接店側に伝えることはほとんどありません。「クレームがない＝問題がない」わけではなく、実際には<strong>何も言わずに来店しなくなる</strong>ケースが大半です。
+                </p>
+                <p>清掃不足は、売上低下につながる“沈黙の原因”なのです。</p>
+                <h3>1. 顧客のリピート停止と失客</h3>
+                <p>清掃不足は、飲食店における「客離れ」の直接的な原因となります。</p>
+                <h4>■ 清潔さは味に次ぐ評価基準</h4>
+                <p>飲食店を評価する際、顧客が重視するポイントは「料理の味」「価格」「接客」だけではありません。実は清潔さは、料理の味に次ぐ重要な評価指標だと言われています。</p>
+                <p>トイレの臭い、床のベタつき、テーブルの汚れなど、どれか一つでも気になる点があれば、顧客は<span class="bold">無意識のうちに評価を下げて</span>しまいます。</p>
+                <h4>■「二度と行かない店」になる危険性</h4>
+                <p>調査によると、店内の汚れが原因で「二度と行かなくなった飲食店がある」と回答する消費者は<span
+                        class="bold">6割以上</span>にのぼります。これは、清掃不足が一度でも顕在化すると、リピートの機会をほぼ失う可能性が高いことを示しています。
+                </p>
+                <p>一度失った顧客を呼び戻すことは、新規顧客を獲得するよりもはるかにコストがかかります。清掃不足は、長期的に見て非常に効率の悪い経営判断と言えるでしょう。</p>
+                <h3>2. 新規顧客獲得を妨げる「口コミ」とSNSの影響</h3>
+                <p>2026年現在、飲食店の集客において<span
+                        class="bold">口コミとSNSの影響力</span>は無視できません。むしろ、初来店の判断材料として最重要視されていると言っても過言ではありません。</p>
+                <h4>■ ネガティブな情報は拡散されやすい</h4>
+                <p>「汚いトイレ」「手入れされていない客席」などの写真は、SNS上で一気に拡散されます。清掃不足は視覚的に分かりやすいため、ネガティブな口コミとして残りやすいのです。</p>
+                <p>一方で、「清潔だった」という評価は当たり前と受け取られがちで、口コミには残りにくい傾向があります。この非対称性こそが、清掃不足の怖さです。</p>
+                <h4>■ 清掃状態＝店全体の信頼度</h4>
+                <p>あるデータでは、<span
+                        class="bold">汚れた床を見た顧客の87%が、提供される商品やサービスの品質そのものに疑問を持つ</span>とされています。清掃不足は単なる見た目の問題ではなく、料理や衛生管理全体への不信感につながるのです。
+                </p>
+                <h3>3. 営業効率と生産性の低下</h3>
+                <p>清掃不足の影響は、顧客対応だけにとどまりません。店舗運営そのものにも深刻な悪影響を及ぼします。</p>
+                <h4>■ 設備トラブルによる営業リスク</h4>
+                <p>厨房の排水溝やグリストラップの清掃を怠ると、油汚れの固着による詰まりが発生します。その結果、</p>
+                <ul>
+                    <li class="moya">突然の営業停止</li>
+                    <li class="moya">高額な修理費用</li>
+                    <li class="moya">保健所からの指導</li>
+                </ul>
+                <p>といったリスクが現実のものとなります。これは、定期清掃を行っていれば防げた可能性が高いトラブルです。</p>
+                <h4>■ 人材不足を加速させる清掃環境</h4>
+                <p>2026年の飲食業界における最大の課題の一つが<span class="bold">人手不足</span>です。不衛生な職場環境は、従業員のモチベーションを下げ、離職率を高める要因になります。</p>
+                <p>清掃が行き届いていない職場では、「ここで長く働きたい」と感じるスタッフは増えません。結果として、人材確保がさらに難しくなり、店舗運営の安定性が損なわれます。</p>
+                <h3>4. 科学的根拠に基づく売上低下のメカニズム</h3>
+                <p>清掃と売上の関係は、感覚論だけではありません。複数の研究により、<span
+                        class="bold">清潔な環境が売上に与える影響</span>は数値としても示されています。ある研究では、清潔な環境は顧客の<span
+                        class="bold">滞在時間を平均28%延長させ、購買意欲を最大35%向上させる</span>と報告されています。</p>
+                <p>逆に言えば、清掃不足の店舗は、この潜在的な売上機会をすべて失っている状態です。原材料費や人件費が高騰する2026年において、この差は経営に致命的な影響を与えかねません。</p>
+            </div>
+        </section>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="mailto:info@misesapo.co.jp" class="lp-contact-button">
+                お問い合わせはこちら
+            </a>
+        </div>
+
+        <!-- 清掃不足に陥る飲食店の共通点 -->
+        <section class="lp-section">
+            <div class="lp-reasons-box">
+                <img class="sec-image" src="/images/decline_image2.webp" alt="清掃不足に陥る飲食店の共通点">
+                <h2 class="lp-section-title">清掃不足に陥る飲食店の共通点</h2>
+                <p>では、なぜ多くの飲食店が清掃不足に陥ってしまうのでしょうか。そこにはいくつかの共通点があります。</p>
+                <ul>
+                    <li class="moya">日常清掃だけで十分だと思っている</li>
+                    <li class="moya">定期清掃の必要性を後回しにしている</li>
+                    <li class="moya">清掃をコストとしてのみ捉えている</li>
+                    <li class="moya">口コミで指摘されてから対策を考える</li>
+                </ul>
+                <p>これらはすべて、売上低下につながりやすい思考パターンです。</p><br><br>
+                <h2 class="lp-section-title">定期清掃は「売上を守る経営施策」</h2>
+                <p>定期清掃は、単なる衛生対策ではありません。<span class="bold">売上低下を防ぐための経営施策</span>です。</p>
+                <p>清掃不足は、すぐに数字として現れないからこそ、見過ごされがちですが、リピート率の低下・口コミ評価の悪化・営業効率の悪化といった形で、確実に売上を削っていきます。</p>
+                <p>2026年の飲食業界において、基本的な店舗管理ができていないことは致命的なリスクです。定期清掃を取り入れ、清潔な環境を維持することは、これからの時代を生き残るための重要な経営判断と言えるでしょう。
+                </p>
+                <p>日常清掃では落としきれない汚れや臭いを定期的にリセットすることで、</p>
+                <ul>
+                    <li class="check">口コミ評価の安定</li>
+                    <li class="check">リピート率の維持</li>
+                    <li class="check">従業員負担の軽減</li>
+                </ul>
+                <p>といった好循環が生まれます。</p>
+                <p style="font-weight: 700; color: #FF679C;">ミセサポは、飲食店の未来を支える定期清掃で、売上を守り続けます。</p>
+            </div>
+        </section>
+
+        <!-- ミセサポが提供する定期清掃の考え方 -->
+        <section class="lp-section">
+            <div class="lp-reasons-box">
+                <img class="sec-image" src="/images/decline_image3.webp" alt="ミセサポが提供する定期清掃の考え方">
+                <h2 class="lp-section-title">ミセサポが提供する定期清掃の考え方</h2>
+                <p>私たちミセサポは、飲食店の定期清掃を単なる「作業」や「ルーティン業務」とは捉えていません。
+                    清掃は店舗の第一印象や衛生評価、スタッフの意識、さらには売上やリピート率にまで影響する、重要な経営要素のひとつだと考えています。</p>
+                <p>そのためミセサポでは、画一的な清掃プランを当てはめるのではなく、運営実態を丁寧に把握したうえで、最適な定期清掃を設計します。</p>
+                <p>具体的には、
+                <ul>
+                    <li class="check">必要以上にコストをかけない清掃頻度の最適化</li>
+                    <li class="check">衛生評価や印象を左右する重点箇所の明確化</li>
+                    <li class="check">数か月〜数年単位で店舗価値を維持・向上させるための長期的な清掃計画の設計</li>
+                </ul>
+                <p>を行います。</p>
+                <p>これにより、</p>
+                <ul>
+                    <li class="moya">気づかないうちに汚れが蓄積する</li>
+                    <li class="moya">突発的な大掃除で高額な費用が発生する</li>
+                    <li class="moya">清掃不足が原因で評価や売上が下がる</li>
+                </ul>
+                <p>といったリスクを未然に防ぐことが可能になります。</p>
+                <p style="font-weight: 700; color: #FF679C;">ミセサポの定期清掃は、ただ「きれいにする」ためのものではありません。
+                    店舗の価値を守り、安定した経営を支えるための、継続的なサポートです。</p>
+            </div>
+        </section>
+
+        <!-- CTAセクション -->
+        <section id="cta" class="lp-cta">
+            <h2>その汚れ、売上アップのチャンスを逃していませんか？</h2>
+            <p><strong>飲食店専門のミセサポが、「今やるべき定期清掃」をご提案します。<br>なぜ、今すぐ清掃を見直すべきなのか？</strong></p>
+            <div class="lp-cta-features">
+                <div class="lp-cta-feature-item">
+                    <span></span><span>また来たいと思われる店舗づくりができる</span>
+                </div>
+                <div class="lp-cta-feature-item">
+                    <span></span><span>口コミ評価が安定し、新規集客につながる</span>
+                </div>
+                <div class="lp-cta-feature-item">
+                    <span></span><span>スタッフが働きやすく、接客の質が上がる</span>
+                </div>
+                <div class="lp-cta-feature-item">
+                    <span></span><span>設備を長く・安定して使い続けられる</span>
+                </div>
+            </div>
+            <p class="lp-cta-sub-text">＼お気軽にご相談ください／</p>
+            <div class="lp-cta-buttons">
+                <a href="mailto:info@misesapo.co.jp">お問い合わせはこちら</a>
+            </div>
+        </section>
+    </main>
+
+    <script src="/js/swiper-bundle.min.js"></script>
+    <script src="/js/script.js"></script>
+    <script>
+        // パスを解決（GitHub Pages対応）
+        function resolvePath(path) {
+            if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                return path;
+            }
+
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' ||
+                hostname === '127.0.0.1' ||
+                hostname === '';
+
+            const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+
+            if (isLocalDev || isCustomDomain) {
+                return path.startsWith('/') ? path : '/' + path;
+            }
+
+            // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+            let resolvedPath;
+            if (path.startsWith('/misesapo/')) {
+                resolvedPath = path;
+            } else if (path.startsWith('/')) {
+                resolvedPath = '/misesapo' + path;
+            } else {
+                resolvedPath = '/misesapo/' + path;
+            }
+
+            return window.location.origin + resolvedPath;
+        }
+
+        // LPページでは通常ヘッダーを常時表示
+        document.addEventListener('DOMContentLoaded', function () {
+            const normalHeader = document.querySelector('.normal-header');
+            if (normalHeader) {
+                normalHeader.classList.add('visible');
+                // スクロールイベントでクラスを削除しないようにする
+                const originalRemove = normalHeader.classList.remove;
+                normalHeader.classList.remove = function (...args) {
+                    if (args[0] !== 'visible') {
+                        originalRemove.apply(this, args);
+                    }
+                };
+            }
+
+            // リンクを解決
+            document.querySelectorAll('a[href^="/"]').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                    link.href = resolvePath(href);
+                }
+            });
+
+            // 画像を解決
+            document.querySelectorAll('img[src^="/"]').forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+                    img.src = resolvePath(src);
+                }
+            });
+        });
+    </script>
+    <script src="/js/header.js"></script>
+</body>
+
+</html>

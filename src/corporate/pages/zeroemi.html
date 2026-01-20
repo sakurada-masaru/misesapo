@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="{{ base_path }}" />
+    <title>ゼロエミ導入サポート | ミセサポ</title>
+    <meta name="description" content="東京で店舗を経営するオーナーさまの代わりに、ミセサポはゼロエミッション対策をワンストップで支援します。">
+    <meta name="keywords" content="ミセサポ,清掃業者,,清掃会社,飲食店,ゼロエミ,ゼロエミッション,東京">
+
+    <!--GoogleFonts(Noto Sans JP)-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <!--GoogleFonts(Noto Sans JP) end-->
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <style>
+        .breadcrumb {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px 20px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breadcrumb-inner {
+            display: inline-block;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: #FF679C;
+        }
+
+        .breadcrumb span {
+            margin: 0 8px;
+            color: #999;
+        }
+
+        .breadcrumb .current {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* ヒーローセクション */
+        .lp-hero {
+            background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+            color: #fff;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .lp-hero h1 {
+            font-size: 40px;
+            font-weight: 700;
+            line-height: 1.6;
+            padding: 30px;
+        }
+
+        .lp-hero p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto 40px;
+        }
+
+        .lp-hero-cta {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-hero-cta a {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #fff;
+            color: #FF679C;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .lp-hero-cta a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* セクション共通スタイル */
+        .lp-section {
+            max-width: 900px;
+            margin: 60px auto 0;
+        }
+
+        .lp-section .sec-image {
+            height: 150px;
+            display: block;
+            margin: 10px auto 20px;
+            width: auto !important;
+        }
+
+        .lp-section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            display: block;
+            margin: auto;
+            max-width: 900px;
+            padding-bottom: 20px;
+        }
+
+        .lp-section-subtitle {
+            font-size: clamp(20px, 3vw, 28px);
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #666;
+        }
+
+        .lp-section-text {
+            font-size: 16px;
+            padding-top: 10px;
+            color: #666;
+            max-width: 900px;
+        }
+
+        /* イントロセクション */
+        .lp-intro {
+            background: #FDEDED;
+        }
+
+        .lp-intro-box {
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-intro-box p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .lp-problems {
+            margin: 20px 0;
+            padding-left: 0;
+        }
+
+        .lp-problems p {
+            padding: 10px 0 10px 30px;
+            position: relative;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+        }
+
+        .lp-problems p::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-image: url('/images/moya_gr.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .lp-solution {
+            margin-top: 25px;
+            font-size: 18px;
+            line-height: 1.9;
+            color: #333;
+        }
+
+        .lp-highlight {
+            font-weight: bold;
+            color: #FF679C;
+            padding: 0 4px;
+        }
+
+        /* ポイントセクション */
+        .lp-points {
+            background: #fff;
+        }
+
+        .lp-points-list {
+            max-width: 900px;
+            margin: 50px auto 0;
+        }
+
+        .lp-point-item {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-point-item h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 5px;
+        }
+
+        .lp-point-item p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-point-item ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-point-item ul li {
+            padding: 5px 0 5px 30px;
+            position: relative;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-point-item ul li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* 理由セクション */
+        .lp-reasons {
+            background: #FDEDED;
+        }
+
+        .lp-reasons-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-reasons-box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 5px;
+        }
+
+        .lp-reasons-box p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+        }
+
+        .lp-reasons-box ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-reasons-box ul li {
+            padding: 5px 0 5px 30px;
+            position: relative;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-reasons-box ul li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom;
+        }
+
+        /* 比較テーブルセクション */
+
+        .lp-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .lp-table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: white;
+            /* font-size: 1.5rem; */
+            font-size: 16px;
+        }
+
+        .lp-table th,
+        .lp-table td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e5e5e5;
+            color: #333;
+        }
+
+        .lp-table th {
+            background: #FF679C;
+            color: white;
+            font-weight: 700;
+        }
+
+        .lp-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .lp-table-highlight {
+            background: #ffc2d7;
+            font-weight: 700;
+            color: #FF679C;
+            font-size: 17px;
+        }
+
+        .lp-table-note {
+            background: #FDEDED;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+            text-align: center;
+            border: 2px solid #FF679C;
+        }
+
+        .lp-table-note p {
+            font-size: 18px;
+            line-height: 1.9;
+            margin: 8px 0;
+            color: #333;
+        }
+
+        /* おすすめセクション */
+        .lp-recommend {
+            background: #FDEDED;
+        }
+
+        .lp-recommend-list {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .lp-recommend-item {
+            background: #fff;
+            padding: 15px 30px;
+            border-left: 4px solid #FF679C;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-size: 18px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .lp-recommend-item::before {
+            content: "";
+            position: absolute;
+            left: 20px;
+            top: 25px;
+            width: 24px;
+            height: 24px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .lp-recommend-item strong {
+            color: #FF679C;
+            font-weight: 700;
+        }
+
+        .lp-recommend-item span {
+            font-size: 16px;
+        }
+
+        /* CTAセクション */
+        .lp-cta {
+            background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+            color: #fff;
+            padding: 40px 20px;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .lp-cta h2 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .lp-cta p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            line-height: 1.8;
+            margin-bottom: 40px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .lp-cta-features {
+            padding: 30px 50px;
+            border-radius: 35px;
+            margin: 30px auto;
+            width: fit-content;
+            background-color: #fff;
+            font-weight: bold;
+
+        }
+
+        .lp-cta-feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .lp-cta-feature-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .lp-cta-feature-item span:first-child {
+            width: 25px;
+            height: 25px;
+            margin-right: 15px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: inline-block;
+        }
+
+        .lp-cta-feature-item span:last-child {
+            color: #FF679C;
+            font-size: 18px;
+        }
+
+        .lp-cta-feature-item span:last-child {
+            font-size: 25px;
+        }
+
+        .lp-cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-cta-buttons a {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #ffff00;
+            color: #FF679C;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .lp-cta-buttons a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            background: #ffeb3b;
+        }
+
+        .lp-contact-button {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #FF679C;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .lp-contact-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 103, 156, 0.4);
+            background: #E53888;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+
+        @media (max-width: 768px) {
+            .lp-hero {
+                padding: 100px 15px 60px;
+            }
+
+            .lp-section {
+                padding: 60px 15px;
+            }
+
+            .lp-hero-cta,
+            .lp-cta-buttons {
+                flex-direction: column;
+            }
+
+            .lp-hero-cta a,
+            .lp-cta-buttons a {
+                width: 100%;
+                text-align: center;
+            }
+
+            .lp-table-wrapper {
+                overflow-x: scroll;
+            }
+
+            .lp-table {
+                font-size: 1rem;
+            }
+
+            .lp-table th,
+            .lp-table td {
+                padding: 10px 5px;
+            }
+        }
+
+        .lp-point-main-text {
+            padding: 30px;
+            background: #f9f9f9;
+            border-radius: 12px;
+        }
+
+        .lp-quotation-keyword {
+            background: linear-gradient(transparent 60%, #ffd1ed 60%);
+            font-weight: bold;
+            color: #FF679C;
+            padding: 0 4px;
+        }
+
+        .lp-list-with-image {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            margin: 20px 0;
+        }
+
+        .lp-list-with-image ul {
+            flex: 1;
+            max-width: 800px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .lp-point-item .lp-list-with-image ul,
+        .lp-reasons-box .lp-list-with-image ul {
+            margin: 0;
+        }
+
+        .lp-list-with-image img {
+            flex: 0 0 auto;
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            object-fit: contain;
+        }
+
+        /* 右側イラスト用のスタイル */
+        .lp-list-with-image {
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .lp-list-with-image {
+                flex-direction: column;
+            }
+
+            .lp-list-with-image img {
+                max-width: 100%;
+            }
+        }
+
+        .header-text-icon {
+            font-size: 50px !important;
+            font-weight: bold;
+            padding: 0 30px;
+            color: #ffff00;
+            line-height: 1.2 !important;
+        }
+
+        .quotation_text_h2 {
+            color: #ffff00 !important;
+            border-bottom: 2px solid #ffff00;
+            width: fit-content;
+            padding-bottom: 5px;
+            margin: auto;
+        }
+
+        .quotation-main-text {
+            width: 100%;
+            margin: auto;
+        }
+
+        .lp-reasons-box span {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-point-main-text ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-point-main-text ul li {
+            padding: 5px 0 5px 30px;
+            position: relative;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-problems ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-problems ul li {
+            padding: 5px 0 5px 30px;
+            position: relative;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .lp-main-text-box {
+            margin: 60px auto 0;
+            color: #000;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        .lp-main-text-box h3 {
+            font-size: 24px;
+            border-bottom: #000 2px solid;
+            width: fit-content;
+            padding-bottom: 5px;
+            margin: auto;
+        }
+
+        .lp-main-text-box h2 {
+            font-size: 32px;
+            color: #FF679C;
+        }
+
+        .lp-main-text-box ul {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-main-text-box ul li {
+            color: #FF679C;
+            background: #ffd1ed;
+            width: fit-content;
+            margin: 0 10px 30px;
+            font-size: 16px;
+            border-radius: 15px;
+            padding: 5px 10px;
+            font-weight: bold;
+        }
+
+        .lp-cta h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffff00;
+            border-bottom: 2px solid #ffff00;
+            width: fit-content;
+            margin: 0 auto 10px;
+            padding-bottom: 10px;
+        }
+
+        .lp-cta-sub-text {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffff00;
+            margin-bottom: 5px;
+            display: block;
+        }
+    </style>
+</head>
+
+<body style="color: #FDEDED;">
+    <!-- 通常ヘッダー -->
+    <header class="normal-header visible">
+        <div class="normal-header-inner">
+            <div class="normal-header-logo">
+                <a href="/">
+                    <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+                        onerror="this.style.display='none'">
+                </a>
+            </div>
+            <nav class="normal-header-nav">
+                <a href="/">TOP</a>
+                <a href="/service">対応可能サービス</a>
+                <a href="/lp#voice">お客様の声</a>
+                <a href="/customers-support-desk">カスタマーズサポート</a>
+                <a href="/index#news">お知らせ</a>
+                <a href="/privacy-policy">規約＆ポリシー</a>
+            </nav>
+        </div>
+    </header>
+
+    <main style="background: #FDEDED;">
+        <!-- パンくずリスト -->
+        <div class="breadcrumb">
+            <div class="breadcrumb-inner">
+                <a href="/">TOP</a>
+                <span>></span>
+                <span class="current">東京飲食店清掃</span>
+            </div>
+        </div>
+
+        <!-- ヒーローセクション -->
+        <section class="lp-hero-new" style="position: relative; background-size: cover; background-position: center;">
+            <picture>
+                <source media="(max-width: 768px)" srcset="/images/zeroemi_kv_sp.webp">
+                <img src="/images/zeroemi_kv.webp" style="width: 100%; height: auto; display: block;">
+            </picture>
+        </section>
+
+        <section class="lp-main-text-box">
+            <ul>
+                <li>#ミセサポ</li>
+                <li>#清掃業者</li>
+                <li>#ゼロエミ</li>
+                <li>#助成金</li>
+            </ul>
+            <div>
+                <h3 class="lp-section-sub-title">CO₂問題を、経営と切り離さないために</h3>
+                <h2 class="lp-section-main-title">ゼロエミッションに向き合うお店を<br>ミセサポが徹底サポート</h2>
+            </div>
+        </section>
+
+        <!-- イントロセクション -->
+        <section class="lp-section lp-intro">
+            <div class="lp-intro-box">
+                <p>東京で店舗運営を続けていくために不可欠なゼロエミッション。</p>
+                <p>どこか遠い世界の話、大企業や行政だけが取り組むもの。<br>そう感じている店舗オーナーの方も、少なくはないのでしょうか。</p>
+                <p>しかし今、東京で店舗を経営するということは、CO₂問題を他人事では済ませられない立場にあるということでもあります。</p>
+                <p>ゼロエミッションは、環境意識の高い人のための取り組みではなく、<span class="bold"
+                        style="color: #FF679C;">国・自治体・企業・そして個人の全員がそれぞれの立場で責任を持ち、協力して取り組むべき地球規模の課題</span>です。</p>
+                <div class="lp-solution">
+                </div>
+            </div>
+        </section>
+
+        <!-- 店舗にとってのゼロエミッションとは -->
+        <section class="lp-section">
+            <div class="lp-reasons-box">
+
+                <img class="sec-image" src="./images/zeroemi_image1.webp" alt="">
+                <h2 class="lp-section-title">店舗にとってのゼロエミッションとは</h2>
+                <p class="lp-section-text">
+                    ゼロエミッションとは、人間活動に伴う廃棄物や温室効果ガスなどの「排出（エミッション）」を「ゼロ（Zero）」に近づける、またはなくすことを目指す考え方・目標で、元々は産業廃棄物の再利用による廃棄物ゼロを目指す概念でしたが、近年ではCO₂排出量を実質ゼロにするカーボンニュートラルの意味合いで使われることが増えています。<span
+                        class="bold">資源を循環させ持続可能な社会システムを構築することが目的</span>です。
+                </p>
+                <p class="lp-section-text">店舗運営においては、</p>
+                <ul>
+                    <li>
+                        <span class="bold">高効率設備の導入</span><br>▶ 消費電力を抑える高効率LED照明やインバーターエアコン、省エネ性能の高い冷蔵ショーケースに買い替えるなど。
+                    </li>
+                    <li>
+                        <span class="bold">再生可能エネルギーの活用</span><br>▶ 店舗屋上への太陽光パネル設置や、再エネ電力プランへの切り替えるなど。
+                    </li>
+                </ul>
+                <p class="lp-section-text">
+                    といった、小さいことから大きいことまでの取り組みの積み重ねが中心になります。<br>「大掛かりな投資が必要」というイメージを持たれがちですが、実際には、<span class="bold"
+                        style="color: #FF679C;">助成金を利用しコストを抑えながら進められる選択肢もあります</span>。
+                </p>
+            </div>
+        </section>
+
+        <!-- ミセサポが、申請から設置施工まで担います -->
+        <section class="lp-section lp-reasons">
+
+            <div class="lp-reasons-box">
+                <img class="sec-image" src="./images/zeroemi_image2.webp" alt="">
+                <h2 class="lp-section-title">ミセサポが、申請から設置施工まで担います</h2>
+                <p class="lp-section-text">助成金を利用できると聞いたことはあるけど、手続きが面倒、店舗運営でいっぱいいっぱい…。</p>
+                <p class="lp-section-text">そんな東京で店舗を経営するオーナーさまの代わりに、ミセサポはゼロエミッション対策をワンストップで支援します。</p>
+                <ul>
+                    <li>制度の確認・活用判断</li>
+                    <li>申請手続きのサポート</li>
+                    <li>設備の選定</li>
+                    <li>設置・施工の手配</li>
+                    <li>お客さまにとって<span class="bold">必要な作業だけ</span>を組み合わせた、無駄のない提案</li>
+                </ul>
+                <p style="font-size:18px; margin-top: 20px; color:#FF679C; font-weight: 700;">
+                    店舗オーナーさまは必要な判断だけをしていただければ大丈夫です。</p>
+            </div>
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="mailto:info@misesapo.co.jp" class="lp-contact-button">
+                    お問い合わせをする
+                </a>
+            </div>
+        </section>
+
+        <!-- ゼロエミッションに早めに取り組むメリット -->
+        <section class="lp-section lp-recommend">
+            <div class="lp-reasons-box">
+
+            <img class="sec-image" src="./images/zeroemi_image3.webp" alt="">
+            <h2 class="lp-section-title">ゼロエミッションに早めに取り組むメリット</h2>
+            <div class="lp-recommend-list">
+                <div class="lp-recommend-item">
+                    <strong>将来の選択肢を広げられる</strong><br>
+                    <span>早めに行動する最大のメリットは、<span class="bold">選べる立場</span>でいられることです。<br>
+                        ・無理のないタイミングで導入できる<br>
+                        ・自店舗に合った方法を検討できる<br>
+                        ・時間的余裕があるからこそ、最適な判断が可能になる<br>
+                        後回しにした結果、やらざるを得ない状況になってしまうと<span class="bold">選択肢は一気に狭まって</span>しまいます。<br>
+                        また、設備が古くなってから一気に入れ替えるよりも<span class="bold">段階的に見直す方が経営の負担は小さく</span>なります。</span>
+                </div>
+                <div class="lp-recommend-item">
+                    <strong>制度を有利に使える可能性が高い</strong><br>
+                    <span>ゼロエミッション関連の施策は多くの場合、<span
+                            class="bold">補助制度や支援策とセット</span>で進められます。<br>しかし、これらの制度は<br><span class="bold">・予算に上限がある<br>・申請期間が限られている<br>・先着順・条件付きである</span><br>といった特徴があります。早い段階で取り組むことで、<span
+                            class="bold">選択肢が多い状態で制度を活用できる</span>可能性が高くなります。</span>
+                </div>
+                <div class="lp-recommend-item">
+                    <strong>将来への備えになる</strong><br>
+                    <span>制度が変わってから慌てるのではなく、今のうちから対応しておくことで、安定した店舗運営が可能になります。<br>環境に関するルールや基準は、今後さらに厳しくなる可能性があります。その際、何も対策をしていない店舗は、短期間での対応を迫られ、時間的・金銭的な負担が一気に増えるリスクがあります。<br>早めにゼロエミッションに取り組んでおくことで、<br><span class="bold">・制度変更への対応がスムーズ<br>・急な出費を避けやすい<br>・経営判断に余裕が持てる</span><br>といったメリットが生まれます。
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+        <!-- 無料見積もり・ご相談 -->
+        <section id="cta" class="lp-cta">
+            <h2 style="font-size: clamp(32px, 4vw, 48px); font-weight: 700;">CO₂問題を、経営と切り離さないために</h2>
+            <p style="margin-bottom: 30px; font-size: 20px;">CO₂問題に取り組むことは、単に環境意識が高いという話ではありません。<br>コスト管理、リスク回避をすることで将来の負担を減らし、安心して店舗運営に集中できる環境を整えることでもあります。<br>つまりゼロエミッションは、「今の経営を守る選択肢」でもあります。<br><br>まずは、 自分の店舗で何ができるのかを知ることから。<br>その一歩を、ミセサポが一緒に支えます。</p>
+            <span class="lp-cta-sub-text">＼まずは無料見積もりから！／</span>
+            <div class="lp-cta-buttons">
+                <a href="mailto:info@misesapo.co.jp">お問い合わせをする</a>
+            </div>
+        </section>
+    </main>
+
+    <script src="/js/swiper-bundle.min.js"></script>
+    <script src="/js/script.js"></script>
+    <script>
+        // パスを解決（GitHub Pages対応）
+        function resolvePath(path) {
+            if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                return path;
+            }
+
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' ||
+                hostname === '127.0.0.1' ||
+                hostname === '';
+
+            const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+
+            if (isLocalDev || isCustomDomain) {
+                return path.startsWith('/') ? path : '/' + path;
+            }
+
+            // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+            let resolvedPath;
+            if (path.startsWith('/misesapo/')) {
+                resolvedPath = path;
+            } else if (path.startsWith('/')) {
+                resolvedPath = '/misesapo' + path;
+            } else {
+                resolvedPath = '/misesapo/' + path;
+            }
+
+            return window.location.origin + resolvedPath;
+        }
+
+        // LPページでは通常ヘッダーを常時表示
+        document.addEventListener('DOMContentLoaded', function () {
+            const normalHeader = document.querySelector('.normal-header');
+            if (normalHeader) {
+                normalHeader.classList.add('visible');
+                // スクロールイベントでクラスを削除しないようにする
+                const originalRemove = normalHeader.classList.remove;
+                normalHeader.classList.remove = function (...args) {
+                    if (args[0] !== 'visible') {
+                        originalRemove.apply(this, args);
+                    }
+                };
+            }
+
+            // リンクを解決
+            document.querySelectorAll('a[href^="/"]').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                    link.href = resolvePath(href);
+                }
+            });
+
+            // 画像を解決
+            document.querySelectorAll('img[src^="/"]').forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+                    img.src = resolvePath(src);
+                }
+            });
+        });
+    </script>
+    <script src="/js/header.js"></script>
+</body>
+
+</html>
