@@ -241,24 +241,24 @@
 
     /* MISOGI Styles (Scoped) - keep root styles here */
     :root {
+        --accent-color: #ffffff;
+        --accent-glow: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Job Type Colors - Updated */
+    .job-sales {
         --accent-color: #3b82f6;
         --accent-glow: rgba(59, 130, 246, 0.5);
     }
 
-    /* Job Type Colors */
     .job-cleaning {
         --accent-color: #10b981;
         --accent-glow: rgba(16, 185, 129, 0.5);
     }
 
     .job-office {
-        --accent-color: #3b82f6;
-        --accent-glow: rgba(59, 130, 246, 0.5);
-    }
-
-    .job-sales {
-        --accent-color: #f97316;
-        --accent-glow: rgba(249, 115, 22, 0.5);
+        --accent-color: #06b6d4;
+        --accent-glow: rgba(6, 182, 212, 0.5);
     }
 
     .job-hr {
@@ -266,19 +266,19 @@
         --accent-glow: rgba(139, 92, 246, 0.5);
     }
 
-    .job-accounting {
-        --accent-color: #eab308;
-        --accent-glow: rgba(234, 179, 8, 0.5);
-    }
-
     .job-admin {
         --accent-color: #ffffff;
         --accent-glow: rgba(255, 255, 255, 0.5);
     }
 
+    .job-accounting {
+        --accent-color: #eab308;
+        --accent-glow: rgba(234, 179, 8, 0.5);
+    }
+
     .job-dev {
-        --accent-color: #ef4444;
-        --accent-glow: rgba(239, 68, 68, 0.5);
+        --accent-color: #f97316;
+        --accent-glow: rgba(249, 115, 22, 0.5);
     }
 
     /* Job Change Animation Overlay */
@@ -434,14 +434,15 @@
 
     /* Visualizer Core Container */
     .visualizer-container {
-        width: 500px;
-        height: 500px;
-        position: absolute;
-        top: 50%;
+        width: 400px;
+        height: 400px;
+        position: fixed;
+        top: -200px;
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translateX(-50%);
         z-index: 100;
         pointer-events: none;
+        transition: top 0.5s ease-out, transform 0.3s ease;
     }
 
     /* THE LIQUID CORE - The wave itself */
