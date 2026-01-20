@@ -1579,6 +1579,27 @@
         padding-top: 60px;
         z-index: 20;
     }
+
+    /* Support for visible UI during Dashboard view */
+    #chat-container.dashboard-active-view {
+        z-index: 3000 !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transform: none !important;
+        background: transparent !important;
+        padding-top: 0 !important;
+        justify-content: flex-end !important;
+    }
+
+    #chat-container.dashboard-active-view .action-buttons-container {
+        padding-top: 0 !important;
+        margin-bottom: 5px !important;
+    }
+
+    #chat-container.dashboard-active-view .chat-input-wrapper {
+        margin-bottom: 20px !important;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
 </style>
 
 <main id="main" class="admin-dashboard">
@@ -3059,18 +3080,28 @@ ${context}
     // Global toggle function
     window.toggleHrDashboard = function (show) {
         const dashboard = document.getElementById('hr-attendance-dashboard');
+        const chatContainer = document.getElementById('chat-container');
         const entranceUI = [
-            document.getElementById('action-buttons-container'),
             document.querySelector('.visualizer-container'),
-            document.getElementById('entrance-menu-btn'),
-            document.getElementById('floating-job-btn')
+            document.getElementById('floating-job-btn'),
+            document.getElementById('latest-message-container'),
+            document.getElementById('chat-log-container'),
+            document.getElementById('admin-sidebar'),
+            document.getElementById('mobile-menu-button'),
+            document.getElementById('sidebar-overlay')
         ];
 
         if (show) {
             if (dashboard) dashboard.classList.add('active');
+            if (chatContainer) {
+                chatContainer.classList.add('dashboard-active-view');
+                chatContainer.style.pointerEvents = 'auto';
+            }
             entranceUI.forEach(el => {
-                if (el) el.dataset.prevDisplay = el.style.display;
-                if (el) el.style.display = 'none';
+                if (el) {
+                    el.dataset.prevDisplay = el.style.display || '';
+                    el.style.display = 'none';
+                }
             });
             // Auto-fetch data
             if (window.HrAttendanceDashboard && typeof window.HrAttendanceDashboard.fetchBoard === 'function') {
@@ -3078,9 +3109,11 @@ ${context}
             }
         } else {
             if (dashboard) dashboard.classList.remove('active');
+            if (chatContainer) chatContainer.classList.remove('dashboard-active-view');
             entranceUI.forEach(el => {
                 if (el) el.style.display = el.dataset.prevDisplay || '';
             });
+            // Also ensure body classes are correct if needed
         }
     };
 
