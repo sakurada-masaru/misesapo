@@ -11,7 +11,10 @@ import html
 from decimal import Decimal
 from datetime import datetime, timedelta, timezone
 from boto3.dynamodb.conditions import Key, Attr
-from pydantic import ValidationError
+try:
+    from pydantic import ValidationError
+except ImportError:
+    ValidationError = ValueError  # Fallback if pydantic not available
 
 ATTENDANCE_STAFF_DATE_INDEX = 'staff_id-date-index'
 
@@ -29,7 +32,12 @@ from misogi_flags import (
     has_disallowed_patch_fields,
     is_same_unit,
 )
-from misogi_schemas import PatchFlagRequest, SuggestFlagRequest
+try:
+    from misogi_schemas import PatchFlagRequest, SuggestFlagRequest
+except ImportError:
+    # Fallback if pydantic not available
+    PatchFlagRequest = None
+    SuggestFlagRequest = None
 
 # Google Calendar API用のインポート（オプション）
 # 注意: Lambda Layerまたはrequirements.txtにgoogle-api-python-clientを追加する必要があります
