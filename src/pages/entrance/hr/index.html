@@ -3102,6 +3102,7 @@ ${context}
                 { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'" }
             ],
             cleaning: [
+                { label: 'このラインを開く', action: "location.href='/entrance/cleaning/confirm/'" },
                 { label: 'レポートを作成', action: 'startReportWizard()' }
             ],
             office: [
@@ -3113,7 +3114,9 @@ ${context}
             accounting: [
                 { label: '請求処理', action: "location.href='/admin/orders'" }
             ],
-            admin: [],
+            admin: [
+                { label: '勤怠Dashboard', id: 'btn-hr-attendance-dashboard', action: '' }
+            ],
             dev: []
         };
 
@@ -3134,17 +3137,17 @@ ${context}
             btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
         });
 
-        // HR Button Specific Handler
-        const hrBtn = document.getElementById('btn-hr-attendance-dashboard');
-        if (hrBtn) {
-            hrBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                toggleHrDashboard(true);
-            });
-        }
-
         if (actions.length > 0) {
             actionContainer.appendChild(btnDiv);
+        }
+
+        // --- 勤怠確認ボタンのイベントバインド（最終仕様：onclick上書き） ---
+        const hrBtn = document.getElementById('btn-hr-attendance-dashboard');
+        if (hrBtn) {
+            hrBtn.onclick = (e) => {
+                e.preventDefault();
+                toggleHrDashboard(true);
+            };
         }
     }
 
