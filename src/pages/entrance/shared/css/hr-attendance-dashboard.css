@@ -26,6 +26,9 @@
   flex-direction: column;
   overflow: hidden;
 
+  /* Space for bottom UI (Hotbar & Input) */
+  padding-bottom: 240px;
+
   animation: dashboardFadeIn 0.3s ease-out forwards;
 }
 
@@ -59,22 +62,36 @@
 }
 
 .hr-dashboard-back-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--accent-color);
+  border: 2px solid #fff;
+  /* Prominent white border */
   color: #fff;
-  padding: 8px 16px;
-  border-radius: 20px;
+  padding: 12px 28px;
+  /* Larger */
+  border-radius: 30px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
+  /* Clearer */
+  font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
+  gap: 10px;
+  transition: all 0.3s;
+  box-shadow: 0 0 20px var(--accent-glow);
 }
 
 .hr-dashboard-back-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateX(-3px);
+  background: #fff;
+  color: var(--accent-color);
+  transform: translateX(-5px);
+}
+
+.hr-attendance-dashboard .hr-dashboard-date {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  /* Shift further left to avoid overlapping with top-right global menu (≡) */
+  margin-right: 120px;
 }
 
 .hr-attendance-dashboard h1 {
