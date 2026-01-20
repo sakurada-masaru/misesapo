@@ -111,7 +111,6 @@
             margin-bottom: 20px;
         }
 
-        
         .c-top-heading__sub-text {
             font-size: 14px;
             color: #666;
@@ -1449,7 +1448,7 @@
         .service-section-title {
             position: relative;
             text-align: center;
-            padding: 50px 0 20px;
+            padding: 50px 0 ;
             pointer-events: none;
             z-index: 10;
             background-color: #FDEDED;
@@ -3224,35 +3223,71 @@
             background: #FDEDED;
         }
 
-        .about-coverage-content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
+        .about-coverage-swiper {
+            padding: 0 10px 30px;
         }
 
-        .about-coverage-content a {
+        .about-coverage-swiper .swiper-wrapper {
+            align-items: stretch;
+            transition-timing-function: linear;
+        }
+
+        .about-coverage-swiper .swiper-slide {
+            width: 260px;
+            height: auto;
+        }
+
+        .about-coverage-card {
             display: block;
-            width: 30%;
-            margin: 10px;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(255, 103, 156, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .about-coverage-content img {
+        .about-coverage-card img {
             width: 100%;
-            margin: 0;
+            display: block;
+        }
+
+        .about-coverage-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(255, 103, 156, 0.2);
+        }
+
+        .about-coverage-prev,
+        .about-coverage-next {
+            display: none;
+        }
+
+
+        .about-coverage-more {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .about-coverage-more-button {
+            display: inline-block;
+            padding: 12px 32px;
+            background: #FF679C;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 999px;
+            font-weight: 700;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(255, 103, 156, 0.35);
+            font-size:16px;
+        }
+
+        .about-coverage-more-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(255, 103, 156, 0.45);
         }
 
         @media (max-width: 768px) {
-            .about-coverage-content {
-                justify-content: normal;
-            }
-
-            .about-coverage-content a {
-                width: 44%;
-            }
-
-            .about-coverage-content img {
-                width: 100%;
+            .about-coverage-swiper .swiper-slide {
+                width: 200px;
             }
 
             .event-container img {
@@ -3269,6 +3304,9 @@
         .event-container img {
             width: 400px;
         }
+        .normal-header {
+    transform: translateY(0);
+}
     </style>
 </head>
 
@@ -3672,18 +3710,44 @@
                 <p class="section-tag-label">about</p>
                 <h2 class="service-sections-title">ミセサポとは？</h2>
             </div>
-            <div class="about-coverage-content">
-                <a href="nighttime.html"><img src="/images/nighttime_kv_sp.webp"></a>
-                <a href="quotation.html"><img src="/images/quotation_kv_sp.webp"></a>
-                <a href="chuo-ward.html"><img src="/images/chuo-word_kv_sp.webp"></a>
-                <a href="cleaning-cost.html"><img src="/images/cleaning-cost_kv_sp.png"></a>
-                <a href="regular-cleaning.html"><img src="/images/regular-cleaning_kv_sp.webp"></a>
-                <a href="service-plan.html"><img src="/images/service-plan_kv_sp.png"></a>
-                <a href="subsidy.html"><img src="/images/subsidy_kv_sp.webp"></a>
-                <a href="grease-trap-cleaning-guide.html"><img src="/images/grease-trap-cleaning-guide_kv_sp.png"></a>
-                <a href="haccp-cleaning.html"><img src="/images/haccp-cleaning_kv_sp.png"></a>
-                <a href="consulting.html"><img src="/images/consulting_kv_sp.png"></a>
+            <div class="swiper about-coverage-swiper">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <a class="about-coverage-card" href="decline.html"><img src="/images/decline_kv_sp.webp"
+                                alt="清掃不足"></a>
+                    </div>
 
+                    <div class="swiper-slide">
+                        <a class="about-coverage-card" href="nighttime.html"><img src="/images/nighttime_kv_sp.webp"
+                                alt="夜間清掃"></a>
+                    </div>
+                    <div class="swiper-slide">
+                        <a class="about-coverage-card" href="quotation.html"><img src="/images/quotation_kv_sp.webp"
+                                alt="お見積り"></a>
+                    </div>
+                    <div class="swiper-slide">
+                        <a class="about-coverage-card" href="chuo-ward.html"><img src="/images/chuo-word_kv_sp.webp"
+                                alt="中央区対応"></a>
+                    </div>
+                    <div class="swiper-slide">
+                        <a class="about-coverage-card" href="regular-cleaning.html"><img
+                                src="/images/regular-cleaning_kv_sp.webp" alt="定期清掃"></a>
+                    </div>
+                    <div class="swiper-slide">
+                        <a class="about-coverage-card" href="subsidy.html"><img src="/images/subsidy_kv_sp.webp"
+                                alt="補助金"></a>
+                    </div>
+                    <div class="swiper-slide">
+                        <a class="about-coverage-card" href="zeroemi.html"><img src="/images/zeroemi_kv_sp.webp"
+                                alt="ゼロエミ"></a>
+                    </div>
+                </div>
+                <div class="swiper-pagination about-coverage-pagination"></div>
+                <div class="swiper-button-prev about-coverage-prev"></div>
+                <div class="swiper-button-next about-coverage-next"></div>
+            </div>
+            <div class="about-coverage-more">
+                <a class="about-coverage-more-button" href="about-more.html">もっと見る</a>
             </div>
         </div>
     </section>
@@ -5031,6 +5095,39 @@
 
             // 初期化
             goToSlide(0);
+        })();
+    </script>
+
+    <script>
+        // ミセサポとはカードスライダー
+        (function () {
+            const aboutSwiper = document.querySelector('.about-coverage-swiper');
+            if (!aboutSwiper || typeof Swiper === 'undefined') return;
+
+            new Swiper('.about-coverage-swiper', {
+                slidesPerView: 'auto',
+                spaceBetween: 20,
+                grabCursor: true,
+                loop: true,
+                autoplay: {
+                    delay: 0,
+                    disableOnInteraction: false
+                },
+                speed: 6000,
+                pagination: {
+                    el: '.about-coverage-pagination',
+                    clickable: true
+                },
+                navigation: {
+                    nextEl: '.about-coverage-next',
+                    prevEl: '.about-coverage-prev'
+                },
+                breakpoints: {
+                    769: {
+                        spaceBetween: 30
+                    }
+                }
+            });
         })();
     </script>
 
