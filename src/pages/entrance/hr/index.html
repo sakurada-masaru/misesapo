@@ -1659,7 +1659,12 @@
 
     <section id="hr-attendance-dashboard" class="hr-attendance-dashboard">
         <header class="hr-dashboard-header">
-            <h1><i class="fas fa-user-clock"></i> 人事モード：勤怠管理システム</h1>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button class="hr-dashboard-back-btn" onclick="toggleHrDashboard(false)">
+                    <i class="fas fa-arrow-left"></i> 戻る
+                </button>
+                <h1><i class="fas fa-user-clock"></i> 人事モード：勤怠管理システム</h1>
+            </div>
             <div class="hr-dashboard-date">
                 <input type="date" id="hr-board-date">
                 <button id="hr-board-refresh"><i class="fas fa-sync-alt"></i> 更新</button>
@@ -3050,6 +3055,35 @@ ${context}
     document.addEventListener("DOMContentLoaded", () => {
         EntranceCore.initFadeIn();
     });
+
+    // Global toggle function
+    window.toggleHrDashboard = function (show) {
+        const dashboard = document.getElementById('hr-attendance-dashboard');
+        const entranceUI = [
+            document.getElementById('action-buttons-container'),
+            document.querySelector('.visualizer-container'),
+            document.getElementById('entrance-menu-btn'),
+            document.getElementById('floating-job-btn')
+        ];
+
+        if (show) {
+            if (dashboard) dashboard.classList.add('active');
+            entranceUI.forEach(el => {
+                if (el) el.dataset.prevDisplay = el.style.display;
+                if (el) el.style.display = 'none';
+            });
+            // Auto-fetch data
+            if (window.HrAttendanceDashboard && typeof window.HrAttendanceDashboard.fetchBoard === 'function') {
+                window.HrAttendanceDashboard.fetchBoard();
+            }
+        } else {
+            if (dashboard) dashboard.classList.remove('active');
+            entranceUI.forEach(el => {
+                if (el) el.style.display = el.dataset.prevDisplay || '';
+            });
+        }
+    };
+
     function showJobActions(jobKey) {
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
@@ -3105,10 +3139,7 @@ ${context}
         if (hrBtn) {
             hrBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                const target = document.getElementById('hr-attendance-dashboard');
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
+                toggleHrDashboard(true);
             });
         }
 

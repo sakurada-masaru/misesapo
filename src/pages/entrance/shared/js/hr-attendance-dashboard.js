@@ -2,7 +2,7 @@
  * HR勤怠ダッシュボード - 5分類表示対応
  * 異常分類: 欠勤/未退勤/遅刻/休憩不備/raw-fixed乖離
  */
-(() => {
+window.HrAttendanceDashboard = (() => {
   const apiBase = window.API_BASE || localStorage.getItem('api_base') || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
   const getToken = () => (window.EntranceCore && typeof EntranceCore.getToken === 'function')
     ? EntranceCore.getToken()
@@ -254,4 +254,8 @@
 
   // 初回読み込み
   loadBoard();
+
+  return {
+    fetchBoard: loadBoard
+  };
 })();
