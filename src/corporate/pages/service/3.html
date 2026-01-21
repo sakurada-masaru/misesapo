@@ -42,7 +42,9 @@
 
       /* Hide contact nav link on this page */
       #default-header-wrapper a.nav-link[aria-label="お問い合わせ"],
-      #default-header-wrapper a.mobile-nav-link[aria-label="お問い合わせ"] {
+      #default-header-wrapper a.mobile-nav-link[aria-label="お問い合わせ"],
+      #default-header-wrapper a.nav-link[aria-label="サービス一覧"],
+      #default-header-wrapper a.mobile-nav-link[aria-label="サービス一覧"] {
         display: none !important;
       }
       
@@ -129,83 +131,23 @@
     </style>
   </head>
   <body class="theme-pink ">
-    <div id="default-header-wrapper">
-    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
-<header id="header-guest" class="site-header" data-role="guest">
-  <div class="inner wide">
-    <div class="nav-left">
-      <a class="brand brand-logo" href="/" aria-label="ミセサポ ホーム">
-        <img src="/images/logo_144x144.png" alt="ミセサポ" />
-      </a>
-      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
-        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
-      </nav>
-    </div>
-    <div class="spacer"></div>
-    <nav class="nav-right hide-sm" aria-label="User">
-      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
-      <a class="nav-link" href="/signin">ログイン</a>
-      <a class="nav-link primary" href="/signup">新規登録</a>
-      <button class="icon-btn" aria-label="通知">
-        <i class="fas fa-bell"></i>
-      </button>
-      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
-        <i class="fas fa-sign-out-alt"></i>
-      </button>
-    </nav>
-    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-  </div>
-  <!-- スマホ版ナビゲーションメニュー -->
-  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
-    <div class="mobile-nav-content">
-      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
-        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
-      </nav>
-      <nav class="mobile-nav-user" aria-label="User">
-        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
-        <a class="mobile-nav-link" href="/signin">ログイン</a>
-        <a class="mobile-nav-link primary" href="/signup">新規登録</a>
-      </nav>
-    </div>
-  </nav>
+  <header class="normal-header visible">
+     <div class="normal-header-inner">
+         <div class="normal-header-logo">
+             <a href="/">
+                 <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+             </a>
+         </div>
+         <nav class="normal-header-nav">
+             <a href="/">TOP</a>
+             <a href="/service">対応可能サービス</a>
+             <a href="/lp#voice">お客様の声</a>
+             <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
+             <a href="/#event">イベント</a>
+             <a href="/privacy-policy">規約＆ポリシー</a>
+         </nav>
+     </div>
 </header>
-
-    </div>
-    <!-- 通常ヘッダー（ログイン画面用） -->
-    <div id="normal-header-wrapper" style="display: none;">
-    <!-- 通常ヘッダー -->
-<header class="normal-header">
-    <div class="normal-header-inner">
-        <div class="normal-header-logo">
-            <a href="/">
-                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
-            </a>
-                </div>
-        <nav class="normal-header-nav">
-            <a href="/">TOP</a>
-            <a href="/service/">対応可能サービス</a>
-            <a href="/lp#voice">お客様の声</a>
-            <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
-            <a href="/announcements">お知らせ</a>
-            <a href="/privacy-policy">規約＆ポリシー</a>
-        </nav>
-        <div class="normal-header-actions">
-            <a href="/signin" class="normal-header-login">ログイン</a>
-        </div>
-            </div>
-</header>
-
-
-    </div>
-    <main id="main">
-      
-
-
-
 <main id="main" class="container service-detail-page">
   <div class="page-header">
     <h1 class="page-title">配管高圧洗浄</h1>
