@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="{{ base_path }}" />
+  <title>ダクト清掃の必要性と効果</title>
+  <meta name="description" content="ダクト清掃の必要性と効果をお考えなら、飲食店からオフィスまで、24時間対応可能なミセサポにお任せください。">
+  <meta name="keywords" content="ミセサポ,東京,埼玉,店舗清掃,定期清掃,排気ダクト,ダクト清掃">
+
+  <!--GoogleFonts(Noto Sans JP)-->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+  <!--GoogleFonts(Noto Sans JP) end-->
+  <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+  <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <style>
+    .breadcrumb {
+      max-width: 900px;
+      margin: 60px auto 0;
+      padding: 20px 20px 0;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .breadcrumb-inner {
+      display: inline-block;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .breadcrumb a {
+      color: #666;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .breadcrumb a:hover {
+      color: #FF679C;
+    }
+
+    .breadcrumb span {
+      margin: 0 8px;
+      color: #999;
+    }
+
+    .breadcrumb .current {
+      color: #333;
+      font-weight: 500;
+    }
+
+    /* ヒーローセクション */
+    .lp-hero {
+      background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+      color: #fff;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .lp-hero h1 {
+      font-size: 40px;
+      font-weight: 700;
+      line-height: 1.6;
+      padding: 30px;
+    }
+
+    .lp-hero p {
+      font-size: clamp(16px, 2.5vw, 20px);
+      line-height: 1.8;
+      max-width: 800px;
+      margin: 0 auto 40px;
+    }
+
+    .lp-hero-cta {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .lp-hero-cta a {
+      display: inline-block;
+      padding: 16px 40px;
+      background: #fff;
+      color: #FF679C;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 18px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .lp-hero-cta a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* セクション共通スタイル */
+    .lp-section {
+      max-width: 900px;
+      margin: 60px auto 0;
+    }
+
+    .lp-section .sec-image {
+      height: 150px;
+      display: block;
+      margin: 10px auto 20px;
+      width: auto;
+    }
+
+    .lp-section-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #333;
+      display: block;
+      margin: auto;
+      max-width: 900px;
+      /* padding-bottom: 20px; */
+    }
+
+    .lp-section-subtitle {
+      font-size: clamp(20px, 3vw, 28px);
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 50px;
+      color: #666;
+    }
+
+    .lp-section-text {
+      font-size: 16px;
+      padding-top: 10px;
+      color: #666;
+      max-width: 900px;
+    }
+
+    /* イントロセクション */
+    .lp-intro {
+      background: #FDEDED;
+    }
+
+    .lp-intro-box {
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .lp-intro-box p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    .lp-intro-box ul {
+      list-style: none;
+      padding: 10px 0;
+      margin: 20px 0;
+      border-bottom: 1px solid #000;
+      border-top: 1px solid #000;
+    }
+
+    .lp-intro-box ul li {
+      padding: 5px 0 5px 30px;
+      position: relative;
+      font-size: 16px;
+      color: #666;
+    }
+
+    .lp-problems {
+      margin: 20px 0;
+      padding-left: 0;
+    }
+
+    .lp-problems ul {
+      list-style: none;
+      padding: 10px 0;
+      margin: 20px 0;
+      border-bottom: 1px solid #000;
+      border-top: 1px solid #000;
+    }
+
+    .lp-problems ul li {
+      /* padding: 10px 0 10px 30px; */
+      padding: 5px 0 5px 30px;
+      position: relative;
+      font-size: 16px;
+      /* line-height: 1.8; */
+      color: #666;
+    }
+
+    .lp-problems ul li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 20px;
+      height: 20px;
+      background-image: url('/images/moya_gr.svg');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .lp-problems ul li strong {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .lp-solution {
+      margin-top: 25px;
+      font-size: 18px;
+      line-height: 1.9;
+      color: #333;
+    }
+
+    .lp-highlight {
+      font-weight: bold;
+      color: #FF679C;
+      padding: 0 4px;
+    }
+
+    /* ポイントセクション */
+    .lp-points {
+      background: #fff;
+    }
+
+    .lp-points-list {
+      max-width: 900px;
+      margin: 50px auto 0;
+    }
+
+    .lp-point-item {
+      background: #f9f9f9;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .lp-point-item h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #FF679C;
+      margin-bottom: 5px;
+    }
+
+    .lp-point-item p {
+      font-size: 16px;
+      color: #666;
+    }
+
+    .lp-point-item ul {
+      list-style: none;
+      padding: 10px 0;
+      margin: 20px 0;
+      border-bottom: 1px solid #000;
+      border-top: 1px solid #000;
+    }
+
+    .lp-point-item ul li {
+      padding: 5px 0 5px 30px;
+      position: relative;
+      font-size: 16px;
+      color: #666;
+    }
+
+    .lp-point-item ul li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 20px;
+      height: 20px;
+      background-image: url('/images/check_pk.svg');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    /* 理由セクション */
+    .lp-reasons {
+      background: #FDEDED;
+    }
+
+    .lp-reasons-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      margin: 30px 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .lp-reasons-box h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #FF679C;
+      margin-bottom: 5px;
+      margin-top: 20px;
+    }
+
+    .lp-reasons-box p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #666;
+      padding: 5px 0;
+    }
+
+    .lp-reasons-box ul {
+      list-style: none;
+      padding: 10px 0;
+      margin: 20px 0;
+      border-bottom: 1px solid #000;
+      border-top: 1px solid #000;
+    }
+
+    .lp-reasons-box ul li {
+      padding: 5px 0 5px 30px;
+      position: relative;
+      font-size: 16px;
+      color: #666;
+    }
+
+    /* .lp-reasons-box ul li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom;
+        } */
+    .lp-reasons-box ul li.check::before,
+    .lp-reasons-box ul li.moya::before,
+    .lp-intro-box ul li.moya::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 20px;
+      height: 20px;
+      /* background-image: url('/images/check_pk.svg'); */
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: bottom;
+    }
+
+    .lp-reasons-box ul li.check::before {
+      background-image: url('/images/check_pk.svg');
+    }
+    .lp-reasons-box ul li.moya::before {
+      background-image: url('/images/moya_gr.svg');
+    }
+    .lp-intro-box ul li.moya::before {
+      background-image: url('/images/moya_gr.svg');
+    }
+
+
+    /* 比較テーブルセクション */
+    .lp-table-wrapper {
+      overflow-x: auto;
+      margin: 60px 0;
+    }
+
+    .lp-table {
+      width: 100%;
+      border-collapse: collapse;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      background: white;
+      font-size: 16px;
+    }
+
+    .lp-table th,
+    .lp-table td {
+      padding: 15px;
+      text-align: left;
+      border: 1px solid #e5e5e5;
+      color: #666;
+    }
+
+    .lp-table th {
+      background: #FF679C;
+      color: white;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .lp-table tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .lp-table-highlight {
+      background: #ffc2d7;
+      font-weight: 700;
+      color: #FF679C;
+      font-size: 17px;
+    }
+
+    .lp-table-note {
+      background: #FDEDED;
+      padding-bottom:20px;
+      border-radius: 12px;
+    }
+
+    .lp-table-note p {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #666;
+    }
+
+    /* CTAセクション */
+    .lp-cta {
+      background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+      color: #fff;
+      padding: 40px 20px;
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    .lp-cta h2 {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #ffff00;
+      border-bottom: 2px solid #ffff00;
+      width: fit-content;
+      margin: 0 auto 10px;
+      padding-bottom: 10px;
+    }
+
+    .lp-cta p {
+      font-size: clamp(16px, 2.5vw, 20px);
+      line-height: 1.8;
+      margin-bottom: 40px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .lp-cta-features {
+      padding: 30px 50px;
+      border-radius: 35px;
+      margin: 30px auto;
+      width: fit-content;
+      background-color: #fff;
+      font-weight: bold;
+    }
+
+    .lp-cta-feature-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .lp-cta-feature-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .lp-cta-feature-item span:first-child {
+      width: 25px;
+      height: 25px;
+      margin-right: 15px;
+      background-image: url('/images/check_pk.svg');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      display: inline-block;
+    }
+
+    .lp-cta-feature-item span:last-child {
+      color: #FF679C;
+      font-size: 25px;
+      text-align: left;
+    }
+
+    .lp-cta-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .lp-cta-buttons a {
+      display: inline-block;
+      padding: 16px 40px;
+      background: #ffff00;
+      color: #FF679C;
+      text-decoration: none;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 18px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .lp-cta-buttons a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+      background: #ffeb3b;
+    }
+
+    .lp-contact-button {
+      display: inline-block;
+      padding: 16px 40px;
+      background: #FF679C;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 18px;
+      transition: all 0.3s ease;
+    }
+
+    .lp-contact-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 103, 156, 0.4);
+      background: #E53888;
+    }
+
+    .lp-main-text-box {
+      margin: 60px auto 0;
+      color: #000;
+      max-width: 900px;
+      text-align: center;
+    }
+
+    .lp-main-text-box h3 {
+      font-size: 24px;
+      border-bottom: #000 2px solid;
+      width: fit-content;
+      padding-bottom: 5px;
+      margin: auto;
+    }
+
+    .lp-main-text-box h2 {
+      font-size: 32px;
+      color: #FF679C;
+    }
+
+    .lp-main-text-box ul {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .lp-main-text-box ul li {
+      color: #FF679C;
+      background: #ffd1ed;
+      width: fit-content;
+      margin: 0 10px 30px;
+      font-size: 16px;
+      border-radius: 15px;
+      padding: 5px 10px;
+      font-weight: bold;
+    }
+
+    .lp-cta-sub-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffff00;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    .lp-reasons-box ul li br {
+      display: block;
+      margin-top: 5px;
+    }
+
+    h4 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #666;
+      padding: 5px 0;
+    }
+
+    @media (max-width: 768px) {
+      .lp-hero {
+        padding: 100px 15px 60px;
+      }
+
+      .lp-section {
+        padding: 0px 15px;
+      }
+
+      .lp-hero-cta,
+      .lp-cta-buttons {
+        flex-direction: column;
+      }
+
+      .lp-hero-cta a,
+      .lp-cta-buttons a {
+        width: 100%;
+        text-align: center;
+      }
+
+      .lp-table-wrapper {
+        overflow-x: scroll;
+      }
+
+      .lp-table {
+        font-size: 1rem;
+      }
+
+      .lp-table th,
+      .lp-table td {
+        padding: 10px 5px;
+        font-size: 16px;
+      }
+
+      .lp-main-text-box h2 {
+        font-size: 24px;
+      }
+
+      .lp-intro-box,
+      .lp-reasons-box,
+      .lp-point-item {
+        padding: 20px;
+      }
+
+      .lp-cta-feature-item span:first-child {
+        width: 25px;
+        height: 25px;
+      }
+
+      .lp-cta-feature-item span:last-child {
+        width: 90%;
+      }
+
+      .lp-cta-features {
+        padding: 30px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 通常ヘッダー -->
+  <header class="normal-header visible">
+    <div class="normal-header-inner">
+      <div class="normal-header-logo">
+        <a href="/">
+          <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+            onerror="this.style.display='none'">
+        </a>
+      </div>
+      <nav class="normal-header-nav">
+        <a href="/">TOP</a>
+        <a href="/service">対応可能サービス</a>
+        <a href="/lp#voice">お客様の声</a>
+        <a href="/customers-support-desk">カスタマーズサポート</a>
+        <a href="/index#news">お知らせ</a>
+        <a href="/privacy-policy">規約＆ポリシー</a>
+      </nav>
+    </div>
+  </header>
+
+  <main style="background: #FDEDED;">
+    <!-- パンくずリスト -->
+    <div class="breadcrumb">
+      <div class="breadcrumb-inner">
+        <a href="/">TOP</a>
+        <span>></span>
+        <span class="current">ダクト清掃</span>
+      </div>
+    </div>
+
+    <!-- ヒーローセクション -->
+    <section class="lp-hero-new" style="position: relative; background-size: cover; background-position: center;">
+      <picture>
+        <source media="(max-width: 768px)" srcset="/images/ductcleaning_kv_sp.webp">
+        <img src="/images/ductcleaning_kv.webp" style="width: 100%; height: auto; display: block;">
+      </picture>
+    </section>
+
+    <section class="lp-main-text-box">
+      <ul>
+        <li>#ミセサポ</li>
+        <li>#定期清掃</li>
+        <li>#排気ダクト</li>
+        <li>#ダクト清掃</li>
+      </ul>
+      <div>
+        <h3 class="lp-section-sub-title">排気ダクト清掃は本当に必要？</h3>
+        <h2 class="lp-section-main-title">ダクト清掃の必要性と効果</h2>
+      </div>
+    </section>
+
+    <!-- イントロセクション -->
+    <section class="lp-section lp-intro">
+      <div class="lp-intro-box">
+        <p>このようなお悩みはありませんか？</p>
+        <ul>
+          <li class="moya">店内の空気が重く、油や煙のにおいが残る</li>
+          <li class="moya">厨房が暑く、スタッフの作業効率が落ちている</li>
+          <li class="moya">換気扇の音が以前より大きくなった気がする</li>
+          <li class="moya">火災や保健所指導がなんとなく不安</li>
+          <li class="moya">ダクト清掃は必要だと聞くが、タイミングが分からない</li>
+        </ul>
+        <p>飲食店の清掃というと、床やトイレ、客席など目に見える部分に意識が向きがちです。しかし、<span
+            class="bold">売上や安全性、法令遵守に直結する重要な設備</span>が見落とされているケースも少なくありません。
+        </p>
+        <p>それが<span class="bold">排気ダクト</span>です。</p>
+        <p>排気ダクトは、厨房で発生する油煙・蒸気・臭気を屋外へ排出する重要な設備であり、建築基準法・消防法の観点からも<span class="bold">適切な管理と定期清掃が求められる設備</span>です。</p>
+        <p>実際、消防法では「火災予防上支障のある設備の維持管理」が義務付けられており、油が堆積した排気ダクトは<span class="bold">火災リスクの高い危険設備</span>として扱われます。</p>
+        <p>「まだ問題が起きていないから大丈夫」<br>そう思っている間に、排気ダクト内部では確実に汚れが蓄積していきます。</p>
+    </section>
+
+    <!-- ダクト清掃の必要性と効果 -->
+    <section class="lp-section lp-reasons">
+      <div class="lp-reasons-box">
+        <img class="sec-image" src="/images/ductcleaning_image1.webp" alt="ダクト清掃の必要性と効果">
+        <h2 class="lp-section-title">ダクト清掃の必要性と効果</h2>
+
+        <h3>空気環境の改善</h3>
+        <p>排気ダクト内部には、油・ホコリ・湿気が混ざり合った汚れが蓄積します。<br>これが原因で換気効率が低下すると、厨房内に煙やにおいが滞留しやすくなります。<br>ダクト清掃を行うことで、</p>
+        <ul>
+          <li class="check">厨房・客席の空気が軽くなる</li>
+          <li class="check">油臭さが残りにくくなる</li>
+          <li class="check">近隣へのにおいトラブル防止につながる</li>
+        </ul>
+        <p>といった<span class="bold">体感できる改善効果</span>が期待できます。<br>空気環境は、顧客満足度だけでなく、スタッフの働きやすさにも直結します。</p>
+
+        <h3>機器の寿命延長</h3>
+        <p>排気ダクトや換気扇は、汚れが蓄積すると余計な負荷がかかり、モーターやファンの故障リスクが高まります。<br>定期的なダクト清掃を行うことで、</p>
+        <ul>
+          <li class="check">換気設備の負荷軽減</li>
+          <li class="check">部品劣化の抑制</li>
+          <li class="check">修理・交換コストの削減</li>
+        </ul>
+        <p>につながり、<span class="bold">設備を長く安全に使うことが可能</span>になります。<br>これは結果として、店舗の固定費削減にも貢献します。</p>
+
+        <h3>火災予防</h3>
+        <p>排気ダクト内部に付着した油汚れは、非常に燃えやすい状態です。実際、飲食店火災の原因として、ダクト内部の油への引火は少なくありません。<br>ダクト清掃を行うことで、</p>
+        <ul>
+          <li class="check">火災リスクの大幅な低減</li>
+          <li class="check">消防点検時の指摘リスク軽減</li>
+          <li class="check">オーナー自身の安心感向上</li>
+        </ul>
+        <p>といった<span class="bold">安全面での大きなメリット</span>があります。</p>
+
+        <h3>健康被害の防止</h3>
+        <p>汚れた排気ダクトは、カビや細菌の温床になることもあります。<br>これらが空気中に拡散されることで、</p>
+        <ul>
+          <li class="moya">スタッフの体調不良</li>
+          <li class="moya">慢性的な咳や喉の違和感</li>
+          <li class="moya">職場環境への不満増加</li>
+        </ul>
+        <p>といった問題につながる可能性があります。<br>定期清掃によって、<span class="bold">衛生的で安心できる職場環境</span>を維持することができます。</p>
+
+      </div>
+    </section>
+
+    <div style="text-align: center; margin-top: 40px;">
+      <a href="mailto:info@misesapo.co.jp" class="lp-contact-button">
+        お問い合わせはこちら
+      </a>
+    </div>
+
+    <!-- テーブルセクション -->
+    <section class="lp-section">
+      <div class="lp-table-wrapper">
+        <h2 class="lp-section-title">ダクト清掃のタイミング</h2>
+        <div class="lp-table-note">
+          <p>排気ダクト清掃の適切な頻度は、業態や調理内容によって異なります。<br>目安としては、</p>
+        </div>
+        <table class="lp-table">
+          <thead>
+            <tr>
+              <th style="width: 50%;">店舗のタイプ</th>
+              <th style="width: 50%;">清掃の頻度</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>焼肉・中華・揚げ物中心</td>
+              <td><strong>3〜6ヶ月に1回</strong></td>
+            </tr>
+            <tr>
+              <td>一般的な飲食店</td>
+              <td><strong>6ヶ月〜1年に1回</strong></td>
+            </tr>
+            <tr>
+              <td>軽飲食・カフェ</td>
+              <td><strong>年1回</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="lp-table-note">
+          <p>ただし、これはあくまで目安です。<br>営業日数・回転率・設備構造によって、最適な清掃タイミングは変わります。</p>
+          <p style="margin-top: 15px; font-weight: 700; color: #FF679C;">
+            ミセサポでは、現場状況を確認した上で、<strong>無理のない定期清掃計画</strong>をご提案しています。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 自分でできる範囲と注意点 -->
+    <section class="lp-section">
+      <div class="lp-reasons-box">
+        <img class="sec-image" src="/images/ductcleaning_image2.webp" alt="自分でできる範囲と注意点">
+        <h2 class="lp-section-title">自分でできる範囲と注意点</h2>
+        <p>日常的にできる清掃としては、</p>
+        <ul>
+          <li class="check">フードフィルターの洗浄</li>
+          <li class="check">換気扇周りの簡易清掃</li>
+          <li class="check">油受けの確認</li>
+        </ul>
+        <p>などの簡易的なものになります。表面だけを清掃しても、ダクト内部に蓄積した油汚れは取り除けません。また、無理な清掃は事故や設備破損の原因になります。<br>だからこそ、定期的にプロへ依頼することが重要となります。</p><br>
+
+        <h2 class="lp-section-title">プロに任せるという選択</h2>
+        <p>排気ダクト清掃は、専門知識と経験が求められる作業です。安全性と仕上がりを両立するためには、プロの手が欠かせません。</p>
+        <ul>
+          <li class="check"><span class="bold">高所作業</span><br>脚立や天井付近での作業が必要となるため、転倒や落下のリスクが伴います。安全対策を講じたプロによる作業が安心です。</li>
+          <li class="check"><span class="bold">分解作業</span><br>換気設備の分解には構造理解が不可欠です。誤った取り外しは故障や換気性能低下につながる恐れがあります。</li>
+          <li class="check"><span class="bold">専門工具・薬剤が必要</span><br>内部に固着した油汚れは、市販の洗剤では落としきれません。専用工具と業務用薬剤によって、初めて本来の性能を取り戻せます。</li>
+        </ul>
+        <p style="font-weight: 700; color: #FF679C;">ミセサポは、飲食店の未来を支える定期清掃の中でも、特に排気ダクト清掃を売上を守るための重要施策と位置づけています。</p>
+      </div>
+    </section>
+
+
+    <!-- CTAセクション -->
+    <section id="cta" class="lp-cta">
+      <h2>排気ダクトの状態、把握できていますか？</h2>
+      <p><strong>まずは現状確認だけでもOK!<br>今後の判断材料にしてみませんか？</strong></p>
+      <div class="lp-cta-features">
+        <div class="lp-cta-feature-item">
+          <span></span><span>火災発生のリスクを減らしたい</span>
+        </div>
+        <div class="lp-cta-feature-item">
+          <span></span><span>光熱費を削減したい</span>
+        </div>
+        <div class="lp-cta-feature-item">
+          <span></span><span>お客さま、スタッフの健康を考えたい
+          </span>
+        </div>
+        <div class="lp-cta-feature-item">
+          <span></span><span>設備を長く・安心して使い続けたい</span>
+        </div>
+      </div>
+      <p><strong>飲食店専門のミセサポが、あなたの店舗に必要な「今やるべきダクト清掃・定期清掃」をご提案します。</strong></p>
+      <p class="lp-cta-sub-text">＼お気軽にご相談ください／</p>
+      <div class="lp-cta-buttons">
+        <a href="mailto:info@misesapo.co.jp">お問い合わせはこちら</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/swiper-bundle.min.js"></script>
+  <script src="/js/script.js"></script>
+  <script>
+    // パスを解決（GitHub Pages対応）
+    function resolvePath(path) {
+      if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+        return path;
+      }
+
+      const hostname = window.location.hostname;
+      const isLocalDev = hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '';
+
+      const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+
+      if (isLocalDev || isCustomDomain) {
+        return path.startsWith('/') ? path : '/' + path;
+      }
+
+      // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+      let resolvedPath;
+      if (path.startsWith('/misesapo/')) {
+        resolvedPath = path;
+      } else if (path.startsWith('/')) {
+        resolvedPath = '/misesapo' + path;
+      } else {
+        resolvedPath = '/misesapo/' + path;
+      }
+
+      return window.location.origin + resolvedPath;
+    }
+
+    // LPページでは通常ヘッダーを常時表示
+    document.addEventListener('DOMContentLoaded', function () {
+      const normalHeader = document.querySelector('.normal-header');
+      if (normalHeader) {
+        normalHeader.classList.add('visible');
+        // スクロールイベントでクラスを削除しないようにする
+        const originalRemove = normalHeader.classList.remove;
+        normalHeader.classList.remove = function (...args) {
+          if (args[0] !== 'visible') {
+            originalRemove.apply(this, args);
+          }
+        };
+      }
+
+      // リンクを解決
+      document.querySelectorAll('a[href^="/"]').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+          link.href = resolvePath(href);
+        }
+      });
+
+      // 画像を解決
+      document.querySelectorAll('img[src^="/"]').forEach(img => {
+        const src = img.getAttribute('src');
+        if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+          img.src = resolvePath(src);
+        }
+      });
+    });
+  </script>
+  <script src="/js/header.js"></script>
+</body>
+
+</html>
