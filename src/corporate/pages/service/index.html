@@ -56,6 +56,18 @@
       body.page-staff-signin #normal-header-wrapper {
         display: none !important;
       }
+
+      /* Hide order nav link on this page */
+      #default-header-wrapper a.nav-link[aria-label="発注"],
+      #default-header-wrapper a.mobile-nav-link[aria-label="発注"] {
+        display: none !important;
+      }
+
+      /* Hide contact nav link on this page */
+      #default-header-wrapper a.nav-link[aria-label="お問い合わせ"],
+      #default-header-wrapper a.mobile-nav-link[aria-label="お問い合わせ"] {
+        display: none !important;
+      }
       
       /* Staff pages: hide global header and footer */
       body[class*="page-staff-"] #default-header-wrapper,
@@ -203,7 +215,7 @@
             <a href="/">TOP</a>
             <a href="/service/">対応可能サービス</a>
             <a href="/lp#voice">お客様の声</a>
-            <a href="/customers-support-desk">カスタマーズサポート</a>
+            <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
             <a href="/announcements">お知らせ</a>
             <a href="/privacy-policy">規約＆ポリシー</a>
         </nav>
@@ -343,7 +355,7 @@
     <article class="card-service" data-id="5" data-category="厨房設備">
       <a href="/service/5" class="card-service-link">
         <div class="thumb">
-          <img src="images/dakuto.png" alt="ダクト洗浄" loading="lazy" decoding="async" />
+          <img src="images/dakuto.jpg" alt="ダクト洗浄" loading="lazy" decoding="async" />
         </div>
         <div class="content">
           <h3>ダクト洗浄</h3>
@@ -379,7 +391,7 @@
     <article class="card-service" data-id="8" data-category="厨房設備">
       <a href="/service/8" class="card-service-link">
         <div class="thumb">
-          <img src="images/haikifan.png" alt="排気ファン清掃" loading="lazy" decoding="async" />
+          <img src="images/haikifan.jpg" alt="排気ファン清掃" loading="lazy" decoding="async" />
         </div>
         <div class="content">
           <h3>排気ファン清掃</h3>
@@ -439,7 +451,7 @@
     <article class="card-service" data-id="13" data-category="空調設備">
       <a href="/service/13" class="card-service-link">
         <div class="thumb">
-          <img src="images/eakonfiruta.png" alt="エアコンフィルター洗浄" loading="lazy" decoding="async" />
+          <img src="images/eakonfiruta.jpg" alt="エアコンフィルター洗浄" loading="lazy" decoding="async" />
         </div>
         <div class="content">
           <h3>エアコンフィルター洗浄</h3>
@@ -451,7 +463,7 @@
     <article class="card-service" data-id="14" data-category="空調設備">
       <a href="/service/14" class="card-service-link">
         <div class="thumb">
-          <img src="images/eakonbunkai.png" alt="エアコン分解洗浄" loading="lazy" decoding="async" />
+          <img src="images/eakonbunkai.jpg" alt="エアコン分解洗浄" loading="lazy" decoding="async" />
         </div>
         <div class="content">
           <h3>エアコン分解洗浄</h3>
@@ -535,7 +547,7 @@
     <article class="card-service" data-id="21" data-category="その他">
       <a href="/service/21" class="card-service-link">
         <div class="thumb">
-          <img src="images/gomi_kaishu.png" alt="ゴミ回収" loading="lazy" decoding="async" />
+          <img src="images/gomi_kaishu.jpg" alt="ゴミ回収" loading="lazy" decoding="async" />
         </div>
         <div class="content">
           <h3>ゴミ回収</h3>
@@ -547,7 +559,7 @@
     <article class="card-service" data-id="22" data-category="フロア">
       <a href="/service/22" class="card-service-link">
         <div class="thumb">
-          <img src="images/seiriseiton.png" alt="整理整頓" loading="lazy" decoding="async" />
+          <img src="images/seiriseiton.jpg" alt="整理整頓" loading="lazy" decoding="async" />
         </div>
         <div class="content">
           <h3>整理整頓</h3>
@@ -559,7 +571,7 @@
     <article class="card-service" data-id="23" data-category="その他">
       <a href="/service/23" class="card-service-link">
         <div class="thumb">
-          <img src="images/haisenseiri.png" alt="配線整理" loading="lazy" decoding="async" />
+          <img src="images/haisenseiri.jpg" alt="配線整理" loading="lazy" decoding="async" />
         </div>
         <div class="content">
           <h3>配線整理</h3>
@@ -571,7 +583,7 @@
     <article class="card-service" data-id="24" data-category="フロア">
       <a href="/service/24" class="card-service-link">
         <div class="thumb">
-          <img src="images/sofa.png" alt="ソファークリーニング" loading="lazy" decoding="async" />
+          <img src="images/sofa.jpg" alt="ソファークリーニング" loading="lazy" decoding="async" />
         </div>
         <div class="content">
           <h3>ソファークリーニング</h3>
@@ -643,7 +655,7 @@
     <article class="card-service" data-id="30" data-category="その他">
       <a href="/service/30" class="card-service-link">
         <div class="thumb">
-          <img src="images/kousho.png" alt="高所/厨房機器内埃取り" loading="lazy" decoding="async" />
+          <img src="images/kousho.jpg" alt="高所/厨房機器内埃取り" loading="lazy" decoding="async" />
         </div>
         <div class="content">
           <h3>高所/厨房機器内埃取り</h3>
