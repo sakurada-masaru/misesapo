@@ -872,11 +872,11 @@
     }
 
     .chat-input-wrapper {
+        display: none !important;
         position: fixed;
         bottom: 30px;
         left: 50%;
         transform: translateX(-50%);
-        display: flex;
         gap: 10px;
         background: var(--panel-bg) !important;
         padding: 8px;
@@ -4311,7 +4311,16 @@ ${context}`;
         EntranceCore.initFadeIn();
         const nextPath = getNextFromUrl();
         const normalizedCurrent = normalizeEntrancePath(window.location.pathname);
-        if (nextPath && nextPath !== normalizedCurrent && nextPath !== '/entrance' && MISOGI_NEXT_MAP[nextPath]) {
+        const params = new URLSearchParams(window.location.search);
+        const fromEntrance = params.get('from') === 'entrance';
+        const savedJobType = localStorage.getItem('current_job_type');
+        const isLoggedIn = !!(localStorage.getItem('cognito_id_token') && localStorage.getItem('cognito_user'));
+
+        // If user came from job transition (from=entrance) and is logged in, show job actions
+        if (fromEntrance && isLoggedIn && savedJobType) {
+            console.log('[Entrance] Showing job actions for:', savedJobType);
+            setTimeout(() => showJobActions(savedJobType), 500);
+        } else if (nextPath && nextPath !== normalizedCurrent && nextPath !== '/entrance' && MISOGI_NEXT_MAP[nextPath]) {
             window._entranceNextPath = nextPath;
             showEntranceContinue(nextPath);
         } else if (nextPath) {
@@ -4340,6 +4349,9 @@ ${context}`;
 
         const jobActions = {
             sales: [
+                { label: '予定', action: "location.href='/sales/schedule/'" },
+                { label: '顧客', action: "location.href='/sales/customers/'" },
+                { label: '契約', action: "location.href='/sales/contracts/'" },
                 { label: '依頼書を作成', action: 'startRequestWizard()' },
                 { label: '見積もりを作成', action: "location.href='/sales/estimates/new.html'" }
             ],

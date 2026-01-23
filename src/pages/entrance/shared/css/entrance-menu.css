@@ -18,23 +18,14 @@
 aside,
 .sidebar,
 #attendance-status-tag,
-/* Added */
 .attendance-status-tag,
-/* Added */
 #entrance-menu-btn,
-/* Added */
 .entrance-menu-btn,
-/* Added */
 #mobile-menu-button,
-/* Added */
 .mobile-nav-btn,
-/* Added */
 [class*="status-tag"],
-/* Added generic */
-[id*="status-tag"]
-
-/* Added generic */
-    {
+[id*="status-tag"],
+.chat-input-wrapper {
     display: none !important;
 }
 
