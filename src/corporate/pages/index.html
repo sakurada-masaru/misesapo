@@ -4548,7 +4548,7 @@
 
             async function loadServiceItems() {
                 try {
-                    const response = await fetch(resolvePath('/data/service_item.json'));
+                    const response = await fetch(resolvePath('/data/service_items.json'));
                     if (!response.ok) throw new Error('JSONファイルが見つかりません');
                     const data = await response.json();
 
