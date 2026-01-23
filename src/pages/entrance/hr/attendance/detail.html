@@ -1,0 +1,71 @@
+@layout('layouts.admin')
+@json('data/meta/entrance_hr_title.json', $title)
+@json('data/meta/entrance_hr_body_class.json', $body_class)
+
+<script src="{{ base_path }}js/entrance-core.js"></script>
+<link rel="stylesheet" href="{{ base_path }}css/entrance-menu.css">
+<link rel="stylesheet" href="{{ base_path }}css/hr-attendance-dashboard.css">
+<link rel="stylesheet" href="{{ base_path }}css/hr-attendance-detail.css">
+
+<style>
+    /* Detail page specific overrides if any */
+    .mode-hr-attendance .hr-attendance-detail-view {
+        display: flex !important;
+    }
+</style>
+
+<body class="mode-hr-attendance">
+    <main class="admin-dashboard">
+        <section id="hr-attendance-detail" class="hr-attendance-detail-view active">
+            <header class="hr-dashboard-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <a href="../index.html" class="hr-dashboard-back-btn">
+                        <i class="fas fa-arrow-left"></i> 戻る
+                    </a>
+                    <h1><i class="fas fa-user-clock"></i> 個人勤怠詳細</h1>
+                </div>
+                <div class="hr-dashboard-info">
+                    <span id="target-staff-name" class="staff-tag">読み込み中...</span>
+                    <span id="target-month" class="month-tag">-</span>
+                </div>
+                <div class="hr-dashboard-date" style="display: flex; gap: 10px; align-items: center;">
+                    <button id="hr-detail-refresh"><i class="fas fa-sync-alt"></i> 更新</button>
+                    <!-- Menu button for consistency -->
+                    <button class="mobile-menu-button" style="display:none"></button>
+                </div>
+            </header>
+
+            <div class="hr-detail-content">
+                <section class="hr-board">
+                    <table id="attendance-detail-table">
+                        <thead>
+                            <tr>
+                                <th>日付</th>
+                                <th>raw 出勤</th>
+                                <th>raw 退勤</th>
+                                <th>fixed 出勤</th>
+                                <th>fixed 退勤</th>
+                                <th>実働</th>
+                                <th>休憩</th>
+                                <th>状態</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Loading state -->
+                        </tbody>
+                    </table>
+                    <div class="hr-empty" id="hr-detail-empty" style="display:none;">データが見つかりません</div>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <!-- UI Components for Isolation (empty as we want detail only) -->
+    <div style="display:none">
+        <div id="chat-container"></div>
+        <div id="action-buttons-container"></div>
+    </div>
+
+    <script src="{{ base_path }}js/hr-attendance-detail.js"></script>
+</body>

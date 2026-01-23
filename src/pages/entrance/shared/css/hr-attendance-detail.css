@@ -1,0 +1,119 @@
+/**
+ * HR勤怠個人詳細スタイル
+ */
+
+.hr-attendance-detail-view {
+    font-family: "Inter", sans-serif;
+    padding: 24px;
+    color: #f8fafc;
+    background: radial-gradient(circle at center, #0a1128 0%, #000 100%);
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+}
+
+.hr-attendance-detail-view .staff-tag {
+    background: rgba(139, 92, 246, 0.2);
+    border: 1px solid #8b5cf6;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+.hr-attendance-detail-view .month-tag {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.hr-detail-content {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 20px;
+}
+
+.hr-detail-content table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.hr-detail-content th {
+    background: rgba(139, 92, 246, 0.2);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.hr-detail-content td {
+    padding: 14px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.9rem;
+}
+
+.fix-btn {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid #3b82f6;
+    color: #3b82f6;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.fix-btn:hover {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.approve-btn {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid #10b981;
+    color: #10b981;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.approve-btn:hover {
+    background: #10b981;
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .hr-attendance-detail-view {
+        padding: 12px;
+    }
+
+    .hr-dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .hr-detail-content td,
+    .hr-detail-content th {
+        font-size: 0.75rem;
+        padding: 8px 4px;
+    }
+}

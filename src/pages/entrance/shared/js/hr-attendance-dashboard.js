@@ -136,6 +136,8 @@ window.HrAttendanceDashboard = (() => {
     rows.forEach(r => {
       const statusConfig = STATUS_CONFIG[r.status] || STATUS_CONFIG['ok'];
       const tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.dataset.userId = r.staff_id;
 
       // 異常がある行に背景色を適用
       if (r.status && r.status !== 'ok') {
@@ -156,6 +158,15 @@ window.HrAttendanceDashboard = (() => {
         <td>${r.requests_count || 0}</td>
         <td>${r.errors_count || 0}</td>
       `;
+
+      tr.onclick = () => {
+        const month = dateInput ? dateInput.value.slice(0, 7) : new Date().toISOString().slice(0, 7);
+        // Base path might need to be resolved correctly depending on context, usually {{ base_path }} is handled by template engine
+        // But in JS we might need to use a relative path if not rendered by template
+        const url = `detail.html?user_id=${r.staff_id}&month=${month}`;
+        window.location.href = url;
+      };
+
       tbody.appendChild(tr);
     });
   }
