@@ -2566,8 +2566,12 @@
         <!-- New: Latest Message Display (Centered) -->
         <div id="latest-message-container" class="latest-message-container"></div>
 
-        <!-- New: Action Buttons Container (Centered) -->
-        <div id="action-buttons-container" class="action-buttons-container"></div>
+        <!-- Hotbar (Job-specific Action Buttons) - Always Visible -->
+        <div id="job-hotbar-container" class="action-buttons-container"></div>
+
+        <!-- Job Change Bar (Mode Switcher) - Toggled by Floating Button -->
+        <div id="job-change-bar-container" class="action-buttons-container" style="display: none; margin-bottom: 20px;">
+        </div>
 
         <!-- Login Bubble -->
         <div class="login-bubble-container" id="login-form">
@@ -3676,7 +3680,7 @@ ${context}`;
                     }
                     break;
                 case 'show_attendance':
-                    const actionContainer = document.getElementById('action-buttons-container');
+                    const actionContainer = document.getElementById('job-hotbar-container');
                     if (actionContainer) {
                         actionContainer.innerHTML = ''; // Clear previous actions
                         const btnDiv = document.createElement('div');
@@ -3742,7 +3746,7 @@ ${context}`;
     }
 
     function renderActionButtons(buttons) {
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (!actionContainer) return;
 
         actionContainer.innerHTML = ''; // Clear previous
@@ -3864,7 +3868,7 @@ ${context}`;
     }
 
     function showEntranceContinue(nextPath) {
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (!actionContainer) return;
 
         const nextConfig = MISOGI_NEXT_MAP[nextPath];
@@ -3901,34 +3905,6 @@ ${context}`;
         }
 
         EntranceCore.performJobTransition(nextConfig.jobKey, '{{ base_path }}', buildNextUrl(nextPath));
-    }
-
-    function showJobSelection() {
-        const actionContainer = document.getElementById('action-buttons-container');
-        if (!actionContainer) return;
-
-        actionContainer.innerHTML = '';
-        const btnDiv = document.createElement('div');
-        btnDiv.className = 'action-bubble-container';
-        btnDiv.style.display = 'flex';
-        btnDiv.style.gap = '8px';
-        btnDiv.style.flexWrap = 'wrap';
-        btnDiv.style.justifyContent = 'center';
-
-        Object.keys(JOB_TYPES).forEach(jobKey => {
-            const job = JOB_TYPES[jobKey];
-            const buttonHtml = `
-                <button class="job-select-btn" onclick="selectJobType('${jobKey}')" 
-                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
-                    color: #fff; padding: 10px 20px; border-radius: 20px; cursor: pointer;
-                    transition: all 0.3s; font-size: 0.9rem;">
-                    ${job.label}
-                </button>
-            `;
-            btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
-        });
-
-        actionContainer.appendChild(btnDiv);
     }
 
     function selectJobType(jobKey) {
@@ -4340,7 +4316,8 @@ ${context}`;
             // Sync state
             if (jobToAct) {
                 localStorage.setItem('current_job_type', jobToAct);
-                updateJobPresence(jobToAct); // Show floating button, hide hotbar
+                updateJobPresence(jobToAct);
+                showJobActions(jobToAct); // Hotbar is always visible
             } else {
                 showJobSelection();
             }
@@ -4362,14 +4339,15 @@ ${context}`;
         }
     });
 
-    // Job-specific action buttons
     function showJobActions(jobKey) {
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (!actionContainer) return;
 
         const job = JOB_TYPES[jobKey] || { color: 'var(--accent-color)' };
 
         actionContainer.innerHTML = '';
+        actionContainer.style.display = 'flex';
+
         const btnDiv = document.createElement('div');
         btnDiv.className = 'action-bubble-container';
         btnDiv.style.display = 'flex';
@@ -4417,20 +4395,39 @@ ${context}`;
             btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
         });
 
-        // Add Mode Change button at the end
-        const changeModeHtml = `
-            <button class="job-action-btn" onclick="showJobSelection()"
-                style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); 
-                padding: 12px 24px; border-radius: 25px; cursor: pointer;
-                font-size: 0.9rem; font-weight: 500; transition: all 0.3s;">
-                <i class="fas fa-exchange-alt"></i> モード切替
-            </button>
-        `;
-        btnDiv.insertAdjacentHTML('beforeend', changeModeHtml);
-
-        if (actions.length > 0 || true) {
+        if (actions.length > 0) {
             actionContainer.appendChild(btnDiv);
         }
+    }
+
+    // Job Change Bar: Displays mode selection (Toggled by floating button)
+    function showJobSelection() {
+        const actionContainer = document.getElementById('job-change-bar-container');
+        if (!actionContainer) return;
+
+        actionContainer.innerHTML = '';
+        const btnDiv = document.createElement('div');
+        btnDiv.className = 'action-bubble-container';
+        btnDiv.style.display = 'flex';
+        btnDiv.style.gap = '8px';
+        btnDiv.style.flexWrap = 'wrap';
+        btnDiv.style.justifyContent = 'center';
+        btnDiv.style.animation = 'fadeInUp 0.3s ease-out forwards';
+
+        Object.keys(JOB_TYPES).forEach(jobKey => {
+            const job = JOB_TYPES[jobKey];
+            const buttonHtml = `
+                <button class="job-select-btn" onclick="selectJobType('${jobKey}')" 
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
+                    color: #fff; padding: 10px 20px; border-radius: 20px; cursor: pointer;
+                    transition: all 0.3s; font-size: 0.9rem;">
+                    ${job.label}
+                </button>
+            `;
+            btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
+        });
+
+        actionContainer.appendChild(btnDiv);
     }
 
     function updateJobPresence(jobKey) {
@@ -4448,9 +4445,8 @@ ${context}`;
             floatingBtn.style.boxShadow = `0 0 20px ${job.color}80`;
         }
 
-        // Hide hotbar area initially (as per spec)
-        const actionContainer = document.getElementById('action-buttons-container');
-        if (actionContainer) actionContainer.innerHTML = '';
+        // Show Hotbar (Always visible as per spec)
+        showJobActions(jobKey);
 
         // Filter sidebar if possible
         if (typeof filterSidebar === 'function') {
@@ -4490,25 +4486,21 @@ ${context}`;
         if (chatContainer) chatContainer.classList.add('sidebar-active');
     }
 
-    function toggleJobActions() {
-        const actionContainer = document.getElementById('action-buttons-container');
-        if (!actionContainer) return;
+    function toggleJobChangeBar() {
+        const changeBar = document.getElementById('job-change-bar-container');
+        if (!changeBar) return;
 
-        if (actionContainer.innerHTML.trim() === '') {
-            const currentJob = localStorage.getItem('current_job_type');
-            if (currentJob) {
-                showJobActions(currentJob);
-            } else {
-                showJobSelection();
-            }
+        if (changeBar.style.display === 'none') {
+            showJobSelection();
+            changeBar.style.display = 'flex';
         } else {
-            actionContainer.innerHTML = '';
+            changeBar.style.display = 'none';
         }
     }
 
-    // Reuse requestJobChange for backward compatibility if needed, but point to new logic
+    // Floating Button Action
     function requestJobChange() {
-        toggleJobActions();
+        toggleJobChangeBar();
     }
 
     // Toggle Visualizer Simulation
@@ -4570,7 +4562,7 @@ ${context}`;
 
         appendChatMessage('ai', step.question);
 
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (!actionContainer) return;
         actionContainer.innerHTML = '';
 
@@ -4891,7 +4883,7 @@ ${context}`;
         }
 
         // Clear action buttons
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (actionContainer) actionContainer.innerHTML = '';
 
         // Show job actions again
@@ -4903,7 +4895,7 @@ ${context}`;
         if (chatHistory) chatHistory.style.display = 'block';
         appendChatMessage('ai', '依頼書作成をキャンセルしました。');
 
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (actionContainer) actionContainer.innerHTML = '';
 
         showJobActions('sales');
@@ -4960,7 +4952,7 @@ ${context}`;
     }
 
     function showScheduleSelection(schedules) {
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (!actionContainer) return;
 
         actionContainer.innerHTML = '';
@@ -5022,7 +5014,7 @@ ${context}`;
     }
 
     function showPhotoUploadUI() {
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (!actionContainer) return;
 
         actionContainer.innerHTML = `
@@ -5103,7 +5095,7 @@ ${context}`;
     }
 
     function showCleaningTargetSelection() {
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (!actionContainer) return;
 
         const targets = ['換気扇・ダクト', 'グリストラップ', '床面清掃', '厨房機器', 'エアコン', 'その他'];
@@ -5147,7 +5139,7 @@ ${context}`;
         appendChatMessage('ai', '📤 レポートを送信中...');
 
         // Clear action buttons
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (actionContainer) actionContainer.innerHTML = '';
 
         try {
@@ -5253,7 +5245,7 @@ ${context}`;
     }
 
     function showNextProposalTiming() {
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (!actionContainer) return;
 
         const timings = [
@@ -5308,7 +5300,7 @@ ${context}`;
     }
 
     function showNextProposalWork() {
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (!actionContainer) return;
 
         const works = [
@@ -5363,7 +5355,7 @@ ${context}`;
     }
 
     function showConfirmButtons() {
-        const actionContainer = document.getElementById('action-buttons-container');
+        const actionContainer = document.getElementById('job-hotbar-container');
         if (!actionContainer) return;
 
         actionContainer.innerHTML = `
