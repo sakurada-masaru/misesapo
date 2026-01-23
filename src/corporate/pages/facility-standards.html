@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/" />
+    <title>施設基準（食品衛生法施行規則）に対応する飲食店清掃｜ミセサポ</title>
+    <meta name="description" content="改正食品衛生法・施行規則に完全準拠。施設基準の適合維持とHACCP対応の記録管理を、プロの清掃で同時に解決します。">
+    <meta name="keywords" content="ミセサポ,施設基準,食品衛生法施行規則,HACCP,飲食店清掃,法定記録">
+
+    <!--GoogleFonts(Noto Sans JP)-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <!--GoogleFonts(Noto Sans JP) end-->
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <style>
+        .breadcrumb {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px 20px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breadcrumb-inner {
+            display: inline-block;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: #FF679C;
+        }
+
+        .breadcrumb span {
+            margin: 0 8px;
+            color: #999;
+        }
+
+        .breadcrumb .current {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .lp-hero {
+            background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+            color: #fff;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .lp-hero h1 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 700;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .lp-hero p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            line-height: 1.8;
+            max-width: 820px;
+            margin: 0 auto 30px;
+        }
+
+        .lp-hero-cta {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-hero-cta a {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #fff;
+            color: #FF679C;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .lp-hero-cta a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .lp-section {
+            max-width: 900px;
+            margin: 60px auto 0;
+        }
+
+        .lp-section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            display: block;
+            margin: auto;
+            max-width: 900px;
+            padding-bottom: 20px;
+        }
+
+        .lp-section-text {
+            font-size: 16px;
+            padding-top: 10px;
+            color: #666;
+            max-width: 900px;
+        }
+
+        .lp-reasons {
+            background: #FDEDED;
+        }
+
+        .lp-reasons-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-reasons-box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 5px;
+        }
+
+        .lp-reasons-box p {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #666;
+        }
+
+        .lp-reasons-box ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-reasons-box ul li {
+            padding: 5px 0 5px 30px;
+            position: relative;
+            font-size: 16px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .lp-reasons-box ul li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .lp-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .lp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: #fff;
+        }
+
+        .lp-table th,
+        .lp-table td {
+            border: 1px solid #ddd;
+            padding: 12px 10px;
+            text-align: left;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .lp-table th {
+            background: #ffe8f3;
+        }
+
+        .lp-points {
+            background: #fff;
+        }
+
+        .lp-points-list {
+            max-width: 900px;
+            margin: 30px auto 0;
+        }
+
+        .lp-point-item {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-point-item h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 8px;
+        }
+
+        .lp-point-item p {
+            font-size: 18px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .lp-cta {
+            background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+            color: #fff;
+            padding: 40px 20px;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .lp-cta h2 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .lp-cta p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            line-height: 1.8;
+            margin-bottom: 30px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .lp-cta-sub-text {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffff00;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .lp-cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-cta-buttons a {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #ffff00;
+            color: #FF679C;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .lp-cta-buttons a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            background: #ffeb3b;
+        }
+
+        .lp-main-text-box {
+            margin: 60px auto 0;
+            color: #000;
+            max-width: 900px;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .lp-main-text-box h3 {
+            font-size: 24px;
+            border-bottom: #000 2px solid;
+            width: fit-content;
+            padding-bottom: 5px;
+            margin: auto auto 20px;
+        }
+
+        .lp-main-text-box h2 {
+            font-size: 32px;
+            color: #FF679C;
+            margin-bottom: 20px;
+        }
+
+        .lp-main-text-box ul {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            list-style: none;
+            padding: 0;
+            margin: 0 0 30px 0;
+        }
+
+        .lp-main-text-box ul li {
+            color: #FF679C;
+            background: #ffd1ed;
+            width: fit-content;
+            margin: 0 10px 30px;
+            font-size: 16px;
+            border-radius: 15px;
+            padding: 5px 10px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .lp-hero {
+                padding: 50px 15px;
+            }
+
+            .lp-section {
+                padding: 0px 15px;
+            }
+
+            .lp-hero-cta,
+            .lp-cta-buttons {
+                flex-direction: column;
+            }
+
+            .lp-hero-cta a,
+            .lp-cta-buttons a {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        @media screen and (min-width: 933px) {
+    main {
+        margin-top: 8rem;
+    }
+}
+    </style>
+</head>
+
+<body style="color: #FDEDED;">
+    <!-- 通常ヘッダー -->
+    <header class="normal-header visible">
+        <div class="normal-header-inner">
+            <div class="normal-header-logo">
+                <a href="/">
+                    <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+                        onerror="this.style.display='none'">
+                </a>
+            </div>
+            <nav class="normal-header-nav">
+                <a href="/">TOP</a>
+                <a href="/service/service.html">対応可能サービス</a>
+                <a href="/lp#voice">お客様の声</a>
+                <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
+                <a href="/#event">イベント</a>
+                <a href="/privacy-policy">規約＆ポリシー</a>
+            </nav>
+        </div>
+    </header>
+
+    <main style="background: #FDEDED;">
+        <!-- パンくずリスト -->
+        <div class="breadcrumb">
+            <div class="breadcrumb-inner">
+                <a href="/">TOP</a>
+                <span>></span>
+                <a href="about-more.html">一覧</a>
+                <span>></span>
+                <span class="current">施設基準（食品衛生法施行規則）</span>
+            </div>
+        </div>
+
+        <!-- ヒーローセクション -->
+        <section class="lp-hero-new" style="position: relative; background-size: cover; background-position: center;">
+            <picture>
+                <source media="(max-width: 768px)" srcset="/images/facility-standards_kv_sp.png">
+                <img src="/images/facility-standards_kv_sp.png" style="width: 100%; height: auto; display: block;">
+            </picture>
+        </section>
+
+        <section class="lp-main-text-box">
+            <ul>
+                <li>#施設基準</li>
+                <li>#食品衛生法</li>
+                <li>#HACCP対応</li>
+                <li>#飲食店清掃</li>
+            </ul>
+            <div>
+                <h3>飲食店の許可更新に備える</h3>
+                <h2>施設基準の適合維持サポート</h2>
+            </div>
+        </section>
+
+        <!-- 1. キャッチコピー案 -->
+        <section class="lp-section lp-reasons">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">1. 設基準（食品衛生法施行規則）</h2>
+                <p class="lp-section-text">「その清掃、次回の営業許可更新をクリアできますか？」</p>
+                <p class="lp-section-text" style="margin-top: 10px;">改正食品衛生法・施行規則に完全準拠。プロの清掃で「施設基準」の適合維持と、HACCP対応の記録管理を同時に解決します。</p>
+            </div>
+        </section>
+
+        <!-- 2. 施設基準の正体 -->
+        <section class="lp-section">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">2. 法律が求める「施設基準」の正体</h2>
+                <p class="lp-section-text">2021年の法改正により、飲食店が守るべき「施設基準（食品衛生法施行規則 別表第10）」は全国一律で厳格化されました。清掃業者が介入すべきポイントは以下の4点です。</p>
+                <div class="lp-points-list" style="margin-top: 20px;">
+                    <div class="lp-point-item">
+                        <h3>① 構造の基準（壁・床・天井）</h3>
+                        <p><strong>法的要求:</strong> 清掃・洗浄・消毒が容易な構造であり、不浸透性材料（タイルやステンレス等）を使用すること。</p>
+                        <p style="margin-top: 10px;"><strong>業者の価値:</strong> 蓄積した油汚れ（炭化汚れ）やカビは素材を腐食させ「不浸透性」を損なわせます。プロの洗浄で素材の平滑性を保ち、菌の温床を根絶します。</p>
+                    </div>
+                    <div class="lp-point-item">
+                        <h3>② 排水・廃棄物処理の基準</h3>
+                        <p><strong>法的要求:</strong> 排水が滞留せず、ネズミ・昆虫の侵入を防止する構造であること。</p>
+                        <p style="margin-top: 10px;"><strong>業者の価値:</strong> 排水溝のヌメリやグリストラップの放置は、法的な「清掃・消毒の実施」義務違反に直結します。</p>
+                    </div>
+                    <div class="lp-point-item">
+                        <h3>③ 手洗い・消毒設備の基準</h3>
+                        <p><strong>法的要求:</strong> 従業員専用の手洗い設備を適切な位置に設置し、常に清潔に保つこと。</p>
+                        <p style="margin-top: 10px;"><strong>業者の価値:</strong> 水垢やバイオフィルムが付着した手洗い場は逆に汚染源となります。水栓周りの徹底洗浄と消毒設備の点検を代行します。</p>
+                    </div>
+                    <div class="lp-point-item">
+                        <h3>④ 器具・機械の洗浄・保守</h3>
+                        <p><strong>法的要求:</strong> 冷蔵庫、調理器具、洗浄機などは常に清潔な状態で保守点検すること。</p>
+                        <p style="margin-top: 10px;"><strong>業者の価値:</strong> 冷蔵庫のフィルター、製氷機の内部、レンジフードの奥など、日常清掃では届かない場所の「定期的清掃」こそが、法規上の「保守点検」にあたります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 法的根拠 -->
+        <section class="lp-section lp-reasons">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">3. LPの「信頼性」を高める法的根拠</h2>
+                <p class="lp-section-text">セクション「なぜ清掃業者が必要なのか？」を法的に裏付けます。食品衛生法施行規則 第66条の2（一般衛生管理）には「施設の内外は、清潔な状態を維持しなければならない」と明記されており、これには「清掃・消毒の計画」と「実施記録」がセットで求められます。</p>
+                <p class="lp-section-text" style="margin-top: 10px;">営業許可の更新検査時、床の剥がれやグリストラップの腐食、換気設備の不備があると、<strong>改善命令（最悪の場合は営業停止）</strong>のリスクがあります。</p>
+            </div>
+        </section>
+
+        <!-- 4. メリット -->
+        <section class="lp-section">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">4. プロに頼むメリット</h2>
+                <p class="lp-section-text">日常清掃と専門業者の定期清掃では、法令対応とリスク管理に大きな差が出ます。</p>
+                <div class="lp-table-wrapper" style="margin-top: 20px;">
+                    <table class="lp-table">
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th>日常清掃（アルバイト等）</th>
+                                <th>専門業者の定期清掃</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>HACCP対応記録</td>
+                                <td>漏れがち、根拠が曖昧</td>
+                                <td>清掃完了報告書がそのまま<strong>「法定記録」</strong>として使える</td>
+                            </tr>
+                            <tr>
+                                <td>害虫・ネズミ対策</td>
+                                <td>発生してから駆除（後手）</td>
+                                <td>餌となる汚れを根こそぎ除去（先手の防除）</td>
+                            </tr>
+                            <tr>
+                                <td>設備寿命</td>
+                                <td>汚れによる故障・劣化が早い</td>
+                                <td>適切な洗浄により厨房機器が長持ちし、修繕費抑制</td>
+                            </tr>
+                            <tr>
+                                <td>法的リスク</td>
+                                <td>保健所の指摘に怯える</td>
+                                <td>自信を持って検査を受けられる「適合状態」を維持</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. ターゲット別メッセージ -->
+        <section class="lp-section lp-reasons">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">5. プロに任せる理由</h2>
+                <div class="lp-points-list" style="margin-top: 20px;">
+                    <div class="lp-point-item">
+                        <h3>個人オーナー</h3>
+                        <p>仕込みと接客で手一杯のあなたに代わり、保健所対策（清掃記録の作成）まで丸投げでサポート</p>
+                    </div>
+                    <div class="lp-point-item">
+                        <h3>ビルオーナー・管理会社</h3>
+                        <p>下水道法・水質汚濁防止法に抵触しないよう、テナントの排水管理をプロの基準で統一</p>
+                    </div>
+                    <div class="lp-point-item">
+                        <h3>多店舗展開の企業</h3>
+                        <p>全店舗の『施設基準適合率』を可視化。衛生管理のDX化を清掃から支援</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTAセクション -->
+        <section id="contact" class="lp-cta">
+            <h2>無料の衛生診断実施中！</h2>
+            <p>保健所の検査官と同じ視点で、貴店の厨房をチェックします。<br>施設基準に適合していない箇所をレポートとして提出します。</p>
+            <p class="lp-cta-sub-text">＼お気軽にご相談ください／</p>
+            <div class="lp-cta-buttons">
+                <a href="mailto:info@misesapo.co.jp">お問い合わせをする</a>
+            </div>
+        </section>
+    </main>
+
+    <script src="/js/swiper-bundle.min.js"></script>
+    <script src="/js/script.js"></script>
+    <script>
+        // パスを解決（GitHub Pages対応）
+        function resolvePath(path) {
+            if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                return path;
+            }
+
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' ||
+                hostname === '127.0.0.1' ||
+                hostname === '';
+
+            const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+
+            if (isLocalDev || isCustomDomain) {
+                return path.startsWith('/') ? path : '/' + path;
+            }
+
+            // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+            let resolvedPath;
+            if (path.startsWith('/misesapo/')) {
+                resolvedPath = path;
+            } else if (path.startsWith('/')) {
+                resolvedPath = '/misesapo' + path;
+            } else {
+                resolvedPath = '/misesapo/' + path;
+            }
+
+            return window.location.origin + resolvedPath;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const normalHeader = document.querySelector('.normal-header');
+            if (normalHeader) {
+                normalHeader.classList.add('visible');
+                const originalRemove = normalHeader.classList.remove;
+                normalHeader.classList.remove = function (...args) {
+                    if (args[0] !== 'visible') {
+                        originalRemove.apply(this, args);
+                    }
+                };
+            }
+
+            document.querySelectorAll('a[href^="/"]').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                    link.href = resolvePath(href);
+                }
+            });
+
+            document.querySelectorAll('img[src^="/"]').forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+                    img.src = resolvePath(src);
+                }
+            });
+        });
+    </script>
+    <script src="/js/header.js"></script>
+</body>
+
+</html>
