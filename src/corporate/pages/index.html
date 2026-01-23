@@ -3482,10 +3482,6 @@
         </div>
 
         <!-- 固定バナー -->
-        <div class="fixed-banner2">
-            <a href="mailto:info@misesapo.co.jp"><img src="/images/yakiniku2026_head.png" alt="焼肉フェア2026お問い合わせ"></a>
-        </div>
-
         <div class="fixed-banner">
             <a href="/recruit/"><img src="/images/banner-pickup-sp.png" alt="求人バナー"></a>
         </div>
@@ -3548,11 +3544,7 @@
     </div>
 
     <!-- イベント・キャンペーン -->
-     <div class="event-banner">
-<a href="mailto:info@misesapo.co.jp">
-    <img src="/images/yakiniku2026_head.png" alt="焼肉フェア2026お問い合わせ">
-</a>
-</div>
+
 
     <section id="event" class="service-sections use-sections">
         <div class="service-sections-header">
@@ -3778,6 +3770,10 @@
             <div class="swiper about-coverage-swiper">
                 <div class="swiper-wrapper">
                     <div class="swiper-slide">
+                        <a class="about-coverage-card" href="TOP5.html"><img src="/images/TOP5_kv_sp.webp"
+                                alt="ご依頼数TOP5"></a>
+                    </div>
+                    <div class="swiper-slide">
                         <a class="about-coverage-card" href="ductcleaning.html"><img src="/images/ductcleaning_kv_sp.webp"
                                 alt="ダクト清掃"></a>
                     </div>
@@ -3785,11 +3781,6 @@
                     <div class="swiper-slide">
                         <a class="about-coverage-card" href="decline.html"><img src="/images/decline_kv_sp.webp"
                                 alt="清掃不足"></a>
-                    </div>
-
-                    <div class="swiper-slide">
-                        <a class="about-coverage-card" href="nighttime.html"><img src="/images/nighttime_kv_sp.webp"
-                                alt="夜間清掃"></a>
                     </div>
                     <div class="swiper-slide">
                         <a class="about-coverage-card" href="quotation.html"><img src="/images/quotation_kv_sp.webp"
@@ -4598,7 +4589,7 @@
                 single.setAttribute('data-service-id', item.id);
 
                 const link = document.createElement('a');
-                link.href = resolvePath(`/service/${item.id}`);
+                link.href = resolvePath(`/service/${item.id}/`);
                 link.style.textDecoration = 'none';
                 link.style.display = 'block';
                 link.setAttribute('data-service-id', item.id);
