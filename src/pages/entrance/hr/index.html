@@ -1607,7 +1607,6 @@
     .team-chat-input-wrapper {
         display: none !important;
     }
-
 </style>
 
 <main id="main" class="admin-dashboard">
@@ -3101,6 +3100,7 @@ ${context}
         ];
 
         if (show) {
+            document.body.classList.add('mode-hr-attendance');
             if (dashboard) dashboard.classList.add('active');
             if (chatContainer) {
                 chatContainer.classList.add('dashboard-active-view');
@@ -3117,12 +3117,17 @@ ${context}
                 window.HrAttendanceDashboard.fetchBoard();
             }
         } else {
+            document.body.classList.remove('mode-hr-attendance');
             if (dashboard) dashboard.classList.remove('active');
-            if (chatContainer) chatContainer.classList.remove('dashboard-active-view');
+            if (chatContainer) {
+                chatContainer.classList.remove('dashboard-active-view');
+                chatContainer.style.pointerEvents = 'none';
+            }
             entranceUI.forEach(el => {
-                if (el) el.style.display = el.dataset.prevDisplay || '';
+                if (el) {
+                    el.style.display = el.dataset.prevDisplay || 'flex';
+                }
             });
-            // Also ensure body classes are correct if needed
         }
     };
 

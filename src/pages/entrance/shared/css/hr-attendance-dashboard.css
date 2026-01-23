@@ -318,3 +318,57 @@
 #hr-attendance-dashboard {
   scroll-margin-top: 120px;
 }
+
+/* ===== HR Attendance Mode (isolation) ===== */
+body.mode-hr-attendance {
+  /* 勤怠画面は1ページとして完結させる */
+  overflow: hidden;
+}
+
+/* 勤怠ダッシュボード領域：画面を使い切る */
+body.mode-hr-attendance #hr-attendance-dashboard,
+body.mode-hr-attendance .hr-attendance-dashboard {
+  min-height: 100vh;
+  z-index: 999999;
+  /* Ensure it covers everything */
+  padding-bottom: 40px;
+  /* Reduced to use full height */
+}
+
+/* 勤怠モード中：入口用「勤怠確認」ボタンは表示しない */
+body.mode-hr-attendance #btn-hr-attendance-dashboard,
+body.mode-hr-attendance .job-action-btn {
+  display: none !important;
+}
+
+/* 勤怠モード中：MISOGI共通UIを退避 */
+body.mode-hr-attendance #chat-log-container,
+body.mode-hr-attendance .chat-log-container,
+body.mode-hr-attendance #message-input-holder,
+body.mode-hr-attendance .chat-input-wrapper,
+body.mode-hr-attendance .chat-input-container,
+body.mode-hr-attendance .approval-queue,
+body.mode-hr-attendance #approval-queue,
+body.mode-hr-attendance .sidebar-overlay,
+body.mode-hr-attendance .voice-content,
+body.mode-hr-attendance #latest-message-container,
+body.mode-hr-attendance .action-buttons-container,
+body.mode-hr-attendance #job-change-overlay,
+body.mode-hr-attendance .glitch-overlay {
+  display: none !important;
+}
+
+/* 左下のフローティングボタン（チャットログ等）を退避 */
+body.mode-hr-attendance #chat-log-btn,
+body.mode-hr-attendance .chat-log-btn,
+body.mode-hr-attendance .floating-chat-btn,
+body.mode-hr-attendance #chat-toggle-btn {
+  display: none !important;
+}
+
+/* 右上：更新ボタンがメニューと重ならないよう左に寄せる */
+body.mode-hr-attendance #hr-board-refresh,
+body.mode-hr-attendance .hr-board-refresh {
+  margin-right: 64px !important;
+  /* メニューボタン幅ぶん */
+}
