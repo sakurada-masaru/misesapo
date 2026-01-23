@@ -3,7 +3,19 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta http-equiv="refresh" content="0;url=/entrance?next=/entrance/sales">
+    <script>
+        // Forward query params if they exist, specifically 'from' or theme-related
+        const currentParams = new URLSearchParams(window.location.search);
+        const nextUrl = new URL('/entrance', window.location.origin);
+        nextUrl.searchParams.set('next', '/entrance/sales');
+
+        // Copy any existing params like 'from'
+        currentParams.forEach((value, key) => {
+            if (key !== 'next') nextUrl.searchParams.set(key, value);
+        });
+
+        window.location.href = nextUrl.toString();
+    </script>
     <title>Redirecting...</title>
 </head>
 
