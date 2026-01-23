@@ -1,0 +1,272 @@
+@layout('layouts.admin')
+@json('data/meta/entrance_hr_title.json', $title)
+@json('data/meta/entrance_hr_body_class.json', $body_class)
+
+<script src="{{ base_path }}js/entrance-core.js"></script>
+<link rel="stylesheet" href="{{ base_path }}css/entrance-menu.css">
+<link rel="stylesheet" href="{{ base_path }}css/hr-attendance-dashboard.css">
+<link rel="stylesheet" href="{{ base_path }}css/hr-attendance-detail.css">
+
+<style>
+    .mode-hr-attendance .hr-attendance-detail-view {
+        display: flex !important;
+    }
+
+    .hr-dashboard-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: #000;
+        padding-bottom: 20px;
+    }
+
+    /* Summary Section */
+    .hr-summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .summary-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .summary-card .label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .summary-card .value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    /* Correction Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+    }
+
+    .fix-modal {
+        background: #1a1a1a;
+        width: 90%;
+        max-width: 450px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 24px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-header {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-body {
+        display: grid;
+        gap: 16px;
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .input-group label {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .input-group input,
+    .input-group textarea {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        padding: 10px;
+        border-radius: 8px;
+        outline: none;
+    }
+
+    .modal-footer {
+        margin-top: 24px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-save {
+        flex: 1;
+        background: var(--accent-color);
+        border: none;
+        color: #fff;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-cancel {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #fff;
+        padding: 12px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    /* History Section */
+    .history-section {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px dashed rgba(255, 255, 255, 0.2);
+    }
+
+    .history-item {
+        font-size: 0.8rem;
+        padding: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .history-item strong {
+        color: rgba(255, 255, 255, 0.8);
+    }
+</style>
+
+<body class="mode-hr-attendance">
+    <main class="admin-dashboard">
+        <section id="hr-attendance-detail" class="hr-attendance-detail-view active">
+            <header class="hr-dashboard-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <a href="../index.html" class="hr-dashboard-back-btn">
+                        <i class="fas fa-arrow-left"></i> 一覧に戻る
+                    </a>
+                    <h1><i class="fas fa-user-circle"></i> 個人勤怠詳細</h1>
+                </div>
+                <div class="hr-dashboard-info">
+                    <span id="target-staff-name" class="staff-tag">...</span>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <button class="nav-month-btn" onclick="HrAttendanceUser.changeMonth(-1)"><i
+                                class="fas fa-chevron-left"></i></button>
+                        <span id="target-month" class="month-tag">-</span>
+                        <button class="nav-month-btn" onclick="HrAttendanceUser.changeMonth(1)"><i
+                                class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="hr-dashboard-date" style="display: flex; gap: 10px; align-items: center;">
+                    <button id="hr-detail-refresh"><i class="fas fa-sync-alt"></i> 更新</button>
+                </div>
+            </header>
+
+            <div class="hr-detail-content">
+                <!-- Summary -->
+                <section class="hr-summary-cards">
+                    <div class="summary-card">
+                        <span class="label">出勤日数</span>
+                        <span id="stat-days" class="value">0</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="label">総労働時間</span>
+                        <span id="stat-hours" class="value">0.0</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="label">平均労働時間</span>
+                        <span id="stat-avg" class="value">0.0</span>
+                    </div>
+                </section>
+
+                <!-- Daily List -->
+                <section class="hr-board">
+                    <h2><i class="fas fa-calendar-day"></i> 日別勤怠履歴</h2>
+                    <table id="attendance-detail-table">
+                        <thead>
+                            <tr>
+                                <th>日付</th>
+                                <th style="opacity:0.6">RAW 出勤</th>
+                                <th style="opacity:0.6">RAW 退勤</th>
+                                <th>FIXED 出勤</th>
+                                <th>FIXED 退勤</th>
+                                <th>実働</th>
+                                <th>休憩</th>
+                                <th>状態</th>
+                                <th style="text-align:center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div class="hr-empty" id="hr-detail-empty" style="display:none;">データが見つかりません</div>
+                </section>
+
+                <!-- Change Logs -->
+                <section class="history-section">
+                    <h3><i class="fas fa-history"></i> 変更履歴（監査ログ）</h3>
+                    <div id="hr-audit-logs">
+                        <!-- Audit items -->
+                    </div>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <!-- UI Components for Isolation -->
+    <div style="display:none">
+        <div id="chat-container"></div>
+        <div id="action-buttons-container"></div>
+    </div>
+
+    <!-- Fix Modal -->
+    <div id="fix-modal-overlay" class="modal-overlay">
+        <div class="fix-modal">
+            <div class="modal-header">
+                <h3 id="modal-date-title">勤怠修正</h3>
+                <button onclick="HrAttendanceUser.closeModal()"
+                    style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="fix-date">
+                <div class="input-group">
+                    <label>FIXED 出勤時刻</label>
+                    <input type="time" id="fix-clock-in">
+                </div>
+                <div class="input-group">
+                    <label>FIXED 退勤時刻</label>
+                    <input type="time" id="fix-clock-out">
+                </div>
+                <div class="input-group">
+                    <label>休憩時間 (h)</label>
+                    <input type="number" step="0.5" id="fix-break-hours">
+                </div>
+                <div class="input-group">
+                    <label>修正理由 (必須)</label>
+                    <textarea id="fix-reason" rows="3" placeholder="修正が必要な理由を入力してください"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="HrAttendanceUser.closeModal()">キャンセル</button>
+                <button class="btn-save" onclick="HrAttendanceUser.saveFix()">変更を保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ base_path }}js/hr-attendance-user.js"></script>
+</body>

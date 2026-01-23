@@ -161,9 +161,7 @@ window.HrAttendanceDashboard = (() => {
 
       tr.onclick = () => {
         const month = dateInput ? dateInput.value.slice(0, 7) : new Date().toISOString().slice(0, 7);
-        // Base path might need to be resolved correctly depending on context, usually {{ base_path }} is handled by template engine
-        // But in JS we might need to use a relative path if not rendered by template
-        const url = `detail.html?user_id=${r.staff_id}&month=${month}`;
+        const url = `attendance/user.html?uid=${r.staff_id}&month=${month}`;
         window.location.href = url;
       };
 
