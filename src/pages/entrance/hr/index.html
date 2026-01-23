@@ -1600,6 +1600,14 @@
         margin-bottom: 20px !important;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     }
+
+    /* HR attendance: hide message input UI */
+    #chat-container .chat-input-wrapper,
+    #chat-log-input-wrapper,
+    .team-chat-input-wrapper {
+        display: none !important;
+    }
+
 </style>
 
 <main id="main" class="admin-dashboard">
@@ -3084,6 +3092,7 @@ ${context}
         const entranceUI = [
             document.querySelector('.visualizer-container'),
             document.getElementById('floating-job-btn'),
+            document.getElementById('action-buttons-container'),
             document.getElementById('latest-message-container'),
             document.getElementById('chat-log-container'),
             document.getElementById('admin-sidebar'),
