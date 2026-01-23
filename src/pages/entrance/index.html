@@ -4316,11 +4316,17 @@ ${context}`;
         const savedJobType = localStorage.getItem('current_job_type');
         const isLoggedIn = !!(localStorage.getItem('cognito_id_token') && localStorage.getItem('cognito_user'));
 
-        // If user came from job transition (from=entrance) and is logged in, show job actions
-        if (fromEntrance && isLoggedIn && savedJobType) {
-            console.log('[Entrance] Showing job actions for:', savedJobType);
-            setTimeout(() => showJobActions(savedJobType), 500);
-        } else if (nextPath && nextPath !== normalizedCurrent && nextPath !== '/entrance' && MISOGI_NEXT_MAP[nextPath]) {
+        const nextConfig = nextPath ? MISOGI_NEXT_MAP[nextPath] : null;
+
+        // Priority 1: User is logged in and has a valid next destination/saved job
+        if (isLoggedIn && (nextConfig || (fromEntrance && savedJobType))) {
+            const jobToAct = nextConfig ? nextConfig.jobKey : savedJobType;
+            console.log('[Entrance] Auto-activating job actions for:', jobToAct);
+            localStorage.setItem('current_job_type', jobToAct);
+            setTimeout(() => showJobActions(jobToAct), 500);
+        }
+        // Priority 2: Not logged in or just landed with nextParam -> show "Continue" confirmation
+        else if (nextPath && nextPath !== normalizedCurrent && nextPath !== '/entrance' && MISOGI_NEXT_MAP[nextPath]) {
             window._entranceNextPath = nextPath;
             showEntranceContinue(nextPath);
         } else if (nextPath) {
