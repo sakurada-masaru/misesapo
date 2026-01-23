@@ -2763,6 +2763,9 @@
                         // 特定の職種ディレクトリにいる場合のみ「継続中」とする
                         appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${storeName ? '【' + storeName + '】での' : ''}${JOB_TYPES[urlJob].label}モードの業務を継続中です。`);
                         filterSidebar(urlJob);
+                    } else if (getNextFromUrl()) {
+                        // Skip prompt if we are heading a specific mode
+                        console.log("[DEBUG] Skipping status message because next destination exists.");
                     } else if (!urlJob && savedJobType && JOB_TYPES[savedJobType]) {
                         // トップ（/entrance/）にいて、保存された職種がある場合
                         appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${storeName ? '【' + storeName + '】で' : ''}出勤中ですが、本日はどの業務（モード）を行いますか？`);
@@ -4316,20 +4319,39 @@ ${context}`;
         const savedJobType = localStorage.getItem('current_job_type');
         const isLoggedIn = !!(localStorage.getItem('cognito_id_token') && localStorage.getItem('cognito_user'));
 
-        const nextConfig = nextPath ? MISOGI_NEXT_MAP[nextPath] : null;
+        // Robust map lookup (handles leading slash variations)
+        const getNextConfig = (path) => {
+            if (!path) return null;
+            if (MISOGI_NEXT_MAP[path]) return MISOGI_NEXT_MAP[path];
+            const withSlash = path.startsWith('/') ? path : '/' + path;
+            if (MISOGI_NEXT_MAP[withSlash]) return MISOGI_NEXT_MAP[withSlash];
+            const withoutSlash = path.startsWith('/') ? path.substring(1) : path;
+            if (MISOGI_NEXT_MAP[withoutSlash]) return MISOGI_NEXT_MAP[withoutSlash];
+            return null;
+        };
 
-        // Priority 1: User is logged in and has a valid next destination/saved job
+        const nextConfig = getNextConfig(nextPath);
+
+        // Priority 1: User is logged in and has a valid next destination or was already in a job
         if (isLoggedIn && (nextConfig || (fromEntrance && savedJobType))) {
             const jobToAct = nextConfig ? nextConfig.jobKey : savedJobType;
             console.log('[Entrance] Auto-activating job actions for:', jobToAct);
-            localStorage.setItem('current_job_type', jobToAct);
-            setTimeout(() => showJobActions(jobToAct), 500);
+
+            // Sync state
+            if (jobToAct) {
+                localStorage.setItem('current_job_type', jobToAct);
+                setTimeout(() => showJobActions(jobToAct), 500);
+            } else {
+                showJobSelection();
+            }
         }
-        // Priority 2: Not logged in or just landed with nextParam -> show "Continue" confirmation
-        else if (nextPath && nextPath !== normalizedCurrent && nextPath !== '/entrance' && MISOGI_NEXT_MAP[nextPath]) {
+        // Priority 2: Not logged in but has a valid target -> show "Continue" confirmation
+        else if (!isLoggedIn && nextConfig) {
             window._entranceNextPath = nextPath;
             showEntranceContinue(nextPath);
-        } else if (nextPath) {
+        }
+        // Priority 3: Fallback - show generic selection if we have a destination but can't auto-resolve
+        else if (nextPath) {
             showJobSelection();
         }
 
