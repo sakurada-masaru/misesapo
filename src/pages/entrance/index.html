@@ -2763,6 +2763,9 @@
                         // 特定の職種ディレクトリにいる場合のみ「継続中」とする
                         appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${storeName ? '【' + storeName + '】での' : ''}${JOB_TYPES[urlJob].label}モードの業務を継続中です。`);
                         filterSidebar(urlJob);
+                    } else if (getNextFromUrl()) {
+                        // Skip prompt if we are heading a specific mode
+                        console.log("[DEBUG] Skipping status message because next destination exists.");
                     } else if (!urlJob && savedJobType && JOB_TYPES[savedJobType]) {
                         // トップ（/entrance/）にいて、保存された職種がある場合
                         appendChatMessage('ai', `${user.name || 'ユーザー'}様、おかえりなさい。${storeName ? '【' + storeName + '】で' : ''}出勤中ですが、本日はどの業務（モード）を行いますか？`);
@@ -4316,20 +4319,39 @@ ${context}`;
         const savedJobType = localStorage.getItem('current_job_type');
         const isLoggedIn = !!(localStorage.getItem('cognito_id_token') && localStorage.getItem('cognito_user'));
 
-        const nextConfig = nextPath ? MISOGI_NEXT_MAP[nextPath] : null;
+        // Robust map lookup (handles leading slash variations)
+        const getNextConfig = (path) => {
+            if (!path) return null;
+            if (MISOGI_NEXT_MAP[path]) return MISOGI_NEXT_MAP[path];
+            const withSlash = path.startsWith('/') ? path : '/' + path;
+            if (MISOGI_NEXT_MAP[withSlash]) return MISOGI_NEXT_MAP[withSlash];
+            const withoutSlash = path.startsWith('/') ? path.substring(1) : path;
+            if (MISOGI_NEXT_MAP[withoutSlash]) return MISOGI_NEXT_MAP[withoutSlash];
+            return null;
+        };
 
-        // Priority 1: User is logged in and has a valid next destination/saved job
+        const nextConfig = getNextConfig(nextPath);
+
+        // Priority 1: User is logged in and has a valid next destination or was already in a job
         if (isLoggedIn && (nextConfig || (fromEntrance && savedJobType))) {
             const jobToAct = nextConfig ? nextConfig.jobKey : savedJobType;
-            console.log('[Entrance] Auto-activating job actions for:', jobToAct);
-            localStorage.setItem('current_job_type', jobToAct);
-            setTimeout(() => showJobActions(jobToAct), 500);
+            console.log('[Entrance] Auto-activating job presence for:', jobToAct);
+
+            // Sync state
+            if (jobToAct) {
+                localStorage.setItem('current_job_type', jobToAct);
+                updateJobPresence(jobToAct); // Show floating button, hide hotbar
+            } else {
+                showJobSelection();
+            }
         }
-        // Priority 2: Not logged in or just landed with nextParam -> show "Continue" confirmation
-        else if (nextPath && nextPath !== normalizedCurrent && nextPath !== '/entrance' && MISOGI_NEXT_MAP[nextPath]) {
+        // Priority 2: Not logged in but has a valid target -> show "Continue" confirmation
+        else if (!isLoggedIn && nextConfig) {
             window._entranceNextPath = nextPath;
             showEntranceContinue(nextPath);
-        } else if (nextPath) {
+        }
+        // Priority 3: Fallback - show generic selection if we have a destination but can't auto-resolve
+        else if (nextPath) {
             showJobSelection();
         }
 
@@ -4345,6 +4367,8 @@ ${context}`;
         const actionContainer = document.getElementById('action-buttons-container');
         if (!actionContainer) return;
 
+        const job = JOB_TYPES[jobKey] || { color: 'var(--accent-color)' };
+
         actionContainer.innerHTML = '';
         const btnDiv = document.createElement('div');
         btnDiv.className = 'action-bubble-container';
@@ -4352,6 +4376,7 @@ ${context}`;
         btnDiv.style.gap = '10px';
         btnDiv.style.flexWrap = 'wrap';
         btnDiv.style.justifyContent = 'center';
+        btnDiv.style.animation = 'fadeInUp 0.4s ease-out forwards';
 
         const jobActions = {
             sales: [
@@ -4392,8 +4417,44 @@ ${context}`;
             btnDiv.insertAdjacentHTML('beforeend', buttonHtml);
         });
 
-        if (actions.length > 0) {
+        // Add Mode Change button at the end
+        const changeModeHtml = `
+            <button class="job-action-btn" onclick="showJobSelection()"
+                style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); 
+                padding: 12px 24px; border-radius: 25px; cursor: pointer;
+                font-size: 0.9rem; font-weight: 500; transition: all 0.3s;">
+                <i class="fas fa-exchange-alt"></i> モード切替
+            </button>
+        `;
+        btnDiv.insertAdjacentHTML('beforeend', changeModeHtml);
+
+        if (actions.length > 0 || true) {
             actionContainer.appendChild(btnDiv);
+        }
+    }
+
+    function updateJobPresence(jobKey) {
+        const job = JOB_TYPES[jobKey];
+        if (!job) return;
+
+        const floatingBtn = document.getElementById('floating-job-btn');
+        const label = document.getElementById('floating-job-label');
+        if (floatingBtn && label) {
+            label.textContent = job.label + 'モード';
+            floatingBtn.style.display = 'flex';
+            floatingBtn.style.borderColor = job.color;
+            floatingBtn.style.color = job.color;
+            floatingBtn.querySelector('.job-dot').style.background = job.color;
+            floatingBtn.style.boxShadow = `0 0 20px ${job.color}80`;
+        }
+
+        // Hide hotbar area initially (as per spec)
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (actionContainer) actionContainer.innerHTML = '';
+
+        // Filter sidebar if possible
+        if (typeof filterSidebar === 'function') {
+            filterSidebar(jobKey);
         }
     }
 
@@ -4429,17 +4490,25 @@ ${context}`;
         if (chatContainer) chatContainer.classList.add('sidebar-active');
     }
 
-    function requestJobChange() {
-        const user = JSON.parse(localStorage.getItem('cognito_user') || '{}');
-        appendChatMessage('ai', `${user.name || 'ユーザー'}様、お仕事内容の変更ですね？どの業務を行いますか？`);
-        showJobSelection();
+    function toggleJobActions() {
+        const actionContainer = document.getElementById('action-buttons-container');
+        if (!actionContainer) return;
 
-        // Hide sidebar temporarily
-        if (sidebar) {
-            sidebar.style.opacity = '0';
-            setTimeout(() => sidebar.style.display = 'none', 300);
+        if (actionContainer.innerHTML.trim() === '') {
+            const currentJob = localStorage.getItem('current_job_type');
+            if (currentJob) {
+                showJobActions(currentJob);
+            } else {
+                showJobSelection();
+            }
+        } else {
+            actionContainer.innerHTML = '';
         }
-        if (chatContainer) chatContainer.classList.remove('sidebar-active');
+    }
+
+    // Reuse requestJobChange for backward compatibility if needed, but point to new logic
+    function requestJobChange() {
+        toggleJobActions();
     }
 
     // Toggle Visualizer Simulation
