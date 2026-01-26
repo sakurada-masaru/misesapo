@@ -1,265 +1,363 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <base href="/" />
-    <title>U字溝・グレーチング清掃</title>
-    
-    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
-<link rel="shortcut icon" href="/images/logo_144x144.png" />
-<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
-<link rel="stylesheet" href="/styles.css" />
-<link rel="stylesheet" href="/css/header.css" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<!-- 
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <base href="/" />
+  <title>U字溝・グレーチング清掃</title>
+
+  <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+  <link rel="shortcut icon" href="/images/logo_144x144.png" />
+  <link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
 -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-<style>
-  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
-  /* Brand theme variables (default + variants) */
-  body { --primary: #FF679C; --primary-600: #E35687; }
-  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
-  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
-  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
-  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+    }
+
+    /* Brand theme variables (default + variants) */
+    body {
+      --primary: #FF679C;
+      --primary-600: #E35687;
+    }
+
+    body.theme-pink {
+      --primary: #FF679C;
+      --primary-600: #E35687;
+    }
+
+    body.theme-blue {
+      --primary: #2563eb;
+      --primary-600: #1d4ed8;
+    }
+
+    body.theme-emerald {
+      --primary: #10b981;
+      --primary-600: #059669;
+    }
+
+    /* Note: :root also defines the same brand color; inline vars ensure early paint */
   </style>
 
-    <style>
-      /* Staff signin page: hide all headers */
-      body.page-staff-signin #default-header-wrapper,
-      body.page-staff-signin #normal-header-wrapper {
-        display: none !important;
+  <style>
+    /* Staff signin page: hide all headers */
+    body.page-staff-signin #default-header-wrapper,
+    body.page-staff-signin #normal-header-wrapper {
+      display: none !important;
+    }
+
+    /* Hide order nav link on this page */
+    #default-header-wrapper a.nav-link[aria-label="発注"],
+    #default-header-wrapper a.mobile-nav-link[aria-label="発注"] {
+      display: none !important;
+    }
+
+    /* Hide contact nav link on this page */
+    #default-header-wrapper a.nav-link[aria-label="お問い合わせ"],
+    #default-header-wrapper a.mobile-nav-link[aria-label="お問い合わせ"],
+    #default-header-wrapper a.nav-link[aria-label="サービス一覧"],
+    #default-header-wrapper a.mobile-nav-link[aria-label="サービス一覧"] {
+      display: none !important;
+    }
+
+    /* Staff pages: hide global header and footer */
+    body[class*="page-staff-"] #default-header-wrapper,
+    body[class*="page-staff-"] #normal-header-wrapper,
+    body[class*="page-staff-"] footer {
+      display: none !important;
+    }
+
+    /* Staff pages: ensure full height layout */
+    body[class*="page-staff-"] {
+      margin: 0;
+      padding: 0;
+    }
+
+    body[class*="page-staff-"] #main {
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Admin pages: hide global header while keeping auth buttons */
+    body[class*="page-admin-"] #default-header-wrapper {
+      height: 0;
+      overflow: visible;
+    }
+
+    body[class*="page-admin-"] #default-header-wrapper .site-header {
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
+      min-height: 0;
+    }
+
+    body[class*="page-admin-"] #default-header-wrapper .inner {
+      justify-content: flex-end;
+      padding: 0;
+    }
+
+    body[class*="page-admin-"] #default-header-wrapper .nav-left,
+    body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
+    body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
+    body[class*="page-admin-"] #default-header-wrapper .spacer,
+    body[class*="page-admin-"] #default-header-wrapper .role-badge {
+      display: none !important;
+    }
+
+    body[class*="page-admin-"] #default-header-wrapper .nav-right {
+      position: fixed;
+      top: 16px;
+      right: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      border-radius: 999px;
+      padding: 6px 18px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+      z-index: 300;
+    }
+
+    body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
+      font-weight: 600;
+    }
+
+    body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+    }
+
+    /* Sales pages: hide global header and footer */
+    body[class*="sales-"] #default-header-wrapper,
+    body[class*="sales-"] #normal-header-wrapper,
+    body[class*="sales-"] footer {
+      display: none !important;
+    }
+
+    /* Sales pages: ensure full height layout */
+    body[class*="sales-"] {
+      margin: 0;
+      padding: 0;
+    }
+
+    body[class*="sales-"] #main {
+      margin: 0;
+      padding: 0;
+    }
+
+    /* BeforeAfter */
+    .before-after {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+
+    .be-af {
+      justify-content: space-between;
+      width: 45%;
+    }
+
+    .be-af p {
+      margin: 0 0 10px;
+    }
+
+    .be-af img {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    .triangle {
+      width: 4%;
+      max-width: 30px;
+    }
+
+    .triangle_below {
+      display: none;
+    }
+
+    @media screen and (max-width: 440px) {
+      .before-after {
+        display: block;
       }
 
-      /* Hide order nav link on this page */
-      #default-header-wrapper a.nav-link[aria-label="発注"],
-      #default-header-wrapper a.mobile-nav-link[aria-label="発注"] {
-        display: none !important;
+      .be-af {
+        justify-content: space-between;
+        width: 100%;
       }
 
-      /* Hide contact nav link on this page */
-      #default-header-wrapper a.nav-link[aria-label="お問い合わせ"],
-      #default-header-wrapper a.mobile-nav-link[aria-label="お問い合わせ"],
-      #default-header-wrapper a.nav-link[aria-label="サービス一覧"],
-      #default-header-wrapper a.mobile-nav-link[aria-label="サービス一覧"] {
-        display: none !important;
+      .triangle {
+        display: none;
       }
-      
-      /* Staff pages: hide global header and footer */
-      body[class*="page-staff-"] #default-header-wrapper,
-      body[class*="page-staff-"] #normal-header-wrapper,
-      body[class*="page-staff-"] footer {
-        display: none !important;
+
+      .triangle_below {
+        display: block;
+        margin: 5px auto;
+        width: 20px;
       }
-      
-      /* Staff pages: ensure full height layout */
-      body[class*="page-staff-"] {
-        margin: 0;
-        padding: 0;
-      }
-      
-      body[class*="page-staff-"] #main {
-        margin: 0;
-        padding: 0;
-      }
-      
-      /* Admin pages: hide global header while keeping auth buttons */
-      body[class*="page-admin-"] #default-header-wrapper {
-        height: 0;
-        overflow: visible;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .site-header {
-        background: transparent;
-        box-shadow: none;
-        padding: 0;
-        min-height: 0;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .inner {
-        justify-content: flex-end;
-        padding: 0;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-left,
-      body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
-      body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
-      body[class*="page-admin-"] #default-header-wrapper .spacer,
-      body[class*="page-admin-"] #default-header-wrapper .role-badge {
-        display: none !important;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-right {
-        position: fixed;
-        top: 16px;
-        right: 24px;
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        background: #fff;
-        border-radius: 999px;
-        padding: 6px 18px;
-        box-shadow: 0 12px 30px rgba(15,23,42,0.18);
-        z-index: 300;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
-        font-weight: 600;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 999px;
-        border: 1px solid #e5e7eb;
-      }
-      
-      /* Sales pages: hide global header and footer */
-      body[class*="sales-"] #default-header-wrapper,
-      body[class*="sales-"] #normal-header-wrapper,
-      body[class*="sales-"] footer {
-        display: none !important;
-      }
-      
-      /* Sales pages: ensure full height layout */
-      body[class*="sales-"] {
-        margin: 0;
-        padding: 0;
-      }
-      
-      body[class*="sales-"] #main {
-        margin: 0;
-        padding: 0;
-      }
-    </style>
-  </head>
-  <body class="theme-pink ">
+    }
+  </style>
+</head>
+
+<body class="theme-pink ">
   <header class="normal-header visible">
-     <div class="normal-header-inner">
-         <div class="normal-header-logo">
-             <a href="/">
-                 <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
-             </a>
-         </div>
-         <nav class="normal-header-nav">
-             <a href="/">TOP</a>
-             <a href="/service/service.html">対応可能サービス</a>
-             <a href="/lp#voice">お客様の声</a>
-             <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
-             <a href="/#event">イベント</a>
-             <a href="/privacy-policy">規約＆ポリシー</a>
-         </nav>
-     </div>
-</header>
-<main id="main" class="container service-detail-page">
-  <div class="page-header">
-    <h1 class="page-title">U字溝・グレーチング清掃</h1>
-  </div>
-
-  <div class="service-detail-card">
-    <div class="service-hero-image">
-      <img id="service-hero-img" src="/images/gure-chingu.png" alt="U字溝・グレーチング清掃" data-fallback="/images/gure-chingu.png" />
+    <div class="normal-header-inner">
+      <div class="normal-header-logo">
+        <a href="/">
+          <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+            onerror="this.style.display='none'">
+        </a>
+      </div>
+      <nav class="normal-header-nav">
+        <a href="/">TOP</a>
+        <a href="/service/service.html">対応可能サービス</a>
+        <a href="/lp#voice">お客様の声</a>
+        <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
+        <a href="/#event">イベント</a>
+        <a href="/privacy-policy">規約＆ポリシー</a>
+      </nav>
     </div>
-    <div class="service-detail-card-content">
-      <div class="service-detail-header">
-        <div class="service-info">
-          <h2 class="service-name">U字溝・グレーチング清掃</h2>
-          <div class="service-meta">
-            <span class="service-category">厨房設備</span>
-            <span class="service-id">サービスID: 2</span>
+  </header>
+  <main id="main" class="container service-detail-page">
+    <div class="page-header">
+      <h1 class="page-title">U字溝・グレーチング清掃</h1>
+    </div>
+
+    <div class="service-detail-card">
+      <div class="service-hero-image">
+        <img id="service-hero-img" src="/images/gure-chingu.png" alt="U字溝・グレーチング清掃"
+          data-fallback="/images/gure-chingu.png" />
+      </div>
+      <div class="service-detail-card-content">
+        <div class="service-detail-header">
+          <div class="service-info">
+            <h2 class="service-name">U字溝・グレーチング清掃</h2>
+            <div class="service-meta">
+              <span class="service-category">厨房設備</span>
+              <span class="service-id">サービスID: 2</span>
+            </div>
+          </div>
+          <div class="service-price-section">
+            <div class="service-price-large">¥ 7,000〜</div>
+            <p class="price-note">表示価格は目安です。状況により金額が変動する可能性があります。</p>
           </div>
         </div>
-        <div class="service-price-section">
-          <div class="service-price-large">¥ 7,000〜</div>
-          <p class="price-note">表示価格は目安です。状況により金額が変動する可能性があります。</p>
+
+        <div class="service-detail-content">
+          <section class="detail-section">
+            <h3 class="section-title">サービス説明</h3>
+            <p class="section-content">
+              U字溝（排水溝）は、油分や食材カスで汚れやすく、放置すると様々なトラブルを引き起こします。厨房やホールの床に設置されたグレーチング（排水溝の金属カバー）も、油汚れや食材カスが溜まりやすく、放置すると問題を引き起こします。
+            </p>
+          </section>
+
+          <section class="detail-section">
+            <h3 class="section-title">問題点</h3>
+            <ul class="problems-list">
+
+              <li>強い悪臭の発生</li>
+
+              <li>排水詰まりによる逆流や床の冠水</li>
+
+              <li>ゴキブリ・チョウバエなど害虫の発生源</li>
+
+              <li>排水溝の詰まり → 水が逆流して床が水浸しに</li>
+
+            </ul>
+          </section>
+
+          <section class="detail-section">
+            <h3 class="section-title">解決策・サービス内容</h3>
+            <p class="section-content solution-text">定期的な専門清掃による分解・高圧洗浄が効果的です。</p>
+          </section>
+
+          <section class="detail-section">
+            <h3 class="section-title">ビフォー アフター</h3>
+            <div class="before-after">
+              <div class="be-af">
+                <p>Before</p>
+                <img src="images/service/gure-chingu_be-af01.jpg" alt="">
+              </div>
+              <img src="images/service/triangle.svg" alt="" class="triangle">
+              <img src="images/service/triangle_below.svg" alt="" class="triangle_below">
+              <div class="be-af">
+                <p>After</p>
+                <img src="images/service/gure-chingu_be-af02.jpg" alt="">
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="service-actions">
+          <button class="btn btn-primary btn-lg" id="order-service-btn">
+            <i class="fas fa-shopping-cart"></i> <a style="color:#fff;" href="mailto:info@misesapo.co.jp">お問い合わせをする</a>
+          </button>
         </div>
       </div>
+    </div>
+  </main>
 
-      <div class="service-detail-content">
-        <section class="detail-section">
-          <h3 class="section-title">サービス説明</h3>
-          <p class="section-content">U字溝（排水溝）は、油分や食材カスで汚れやすく、放置すると様々なトラブルを引き起こします。厨房やホールの床に設置されたグレーチング（排水溝の金属カバー）も、油汚れや食材カスが溜まりやすく、放置すると問題を引き起こします。</p>
-        </section>
-
-        <section class="detail-section">
-          <h3 class="section-title">問題点</h3>
-          <ul class="problems-list">
-            
-            <li>強い悪臭の発生</li>
-            
-            <li>排水詰まりによる逆流や床の冠水</li>
-            
-            <li>ゴキブリ・チョウバエなど害虫の発生源</li>
-            
-            <li>排水溝の詰まり → 水が逆流して床が水浸しに</li>
-            
-          </ul>
-        </section>
-
-        <section class="detail-section">
-          <h3 class="section-title">解決策・サービス内容</h3>
-          <p class="section-content solution-text">定期的な専門清掃による分解・高圧洗浄が効果的です。</p>
-        </section>
-      </div>
-
-      <div class="service-actions">
-        <button class="btn btn-primary btn-lg" id="order-service-btn">
-          <i class="fas fa-shopping-cart"></i> <a style="color:#fff;" href="mailto:info@misesapo.co.jp">お問い合わせをする</a>
+  <!-- Service Item Modal (no Tailwind dependency) -->
+  <div id="service-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-dialog">
+      <!-- Header image -->
+      <div class="modal-hero">
+        <img id="modal-image" src="" alt="Service Image" class="modal-hero-img" />
+        <button id="close-modal-btn" class="modal-close" aria-label="閉じる">
+          <i class="fas fa-times"></i>
         </button>
       </div>
-    </div>
-  </div>
-</main>
 
-<!-- Service Item Modal (no Tailwind dependency) -->
-<div id="service-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-  <div class="modal-dialog">
-    <!-- Header image -->
-    <div class="modal-hero">
-      <img id="modal-image" src="" alt="Service Image" class="modal-hero-img" />
-      <button id="close-modal-btn" class="modal-close" aria-label="閉じる">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
+      <div class="modal-body">
+        <h2 id="modal-title" class="modal-title"></h2>
+        <hr class="divider" />
 
-    <div class="modal-body">
-      <h2 id="modal-title" class="modal-title"></h2>
-      <hr class="divider" />
+        <div id="modal-form" class="stack lg"></div>
 
-      <div id="modal-form" class="stack lg"></div>
-
-      <!-- Action Buttons -->
-      <div class="actions">
-        <button class="btn btn-primary btn-fixed btn-round">次へ</button>
-        <button id="back-modal-btn" class="btn btn-fixed btn-round">戻る</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Details Modal -->
-<div id="details-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="details-modal-title">
-  <div class="modal-dialog">
-    <!-- Header image -->
-    <div class="modal-hero">
-      <img id="details-modal-image" src="" alt="Service Image" class="modal-hero-img" />
-      <button id="close-details-modal-btn" class="modal-close" aria-label="閉じる">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-
-    <div class="modal-body modal-scroll">
-      <div class="modal-headline">
-        <h2 id="details-modal-title" class="modal-title"></h2>
-        <div class="price-line">
-          <span class="muted"><i class="fas fa-shopping-cart"></i> 清掃料金は</span>
-          <span class="price-strong">¥0</span>
-          <span class="muted">です。</span>
+        <!-- Action Buttons -->
+        <div class="actions">
+          <button class="btn btn-primary btn-fixed btn-round">次へ</button>
+          <button id="back-modal-btn" class="btn btn-fixed btn-round">戻る</button>
         </div>
       </div>
-      <p class="small muted">設備の詳細を選択してください。選択内容に応じて金額が自動計算されます。</p>
-      <hr class="divider" />
+    </div>
+  </div>
 
-      <div id="details-form" class="stack lg"></div>
+  <!-- Details Modal -->
+  <div id="details-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="details-modal-title">
+    <div class="modal-dialog">
+      <!-- Header image -->
+      <div class="modal-hero">
+        <img id="details-modal-image" src="" alt="Service Image" class="modal-hero-img" />
+        <button id="close-details-modal-btn" class="modal-close" aria-label="閉じる">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
 
-      <!-- Remarks / options -->
+      <div class="modal-body modal-scroll">
+        <div class="modal-headline">
+          <h2 id="details-modal-title" class="modal-title"></h2>
+          <div class="price-line">
+            <span class="muted"><i class="fas fa-shopping-cart"></i> 清掃料金は</span>
+            <span class="price-strong">¥0</span>
+            <span class="muted">です。</span>
+          </div>
+        </div>
+        <p class="small muted">設備の詳細を選択してください。選択内容に応じて金額が自動計算されます。</p>
+        <hr class="divider" />
+
+        <div id="details-form" class="stack lg"></div>
+
+        <!-- Remarks / options -->
         <div>
           <h3 class="section-title">グリスフィルターをレンタルしますか？</h3>
           <div class="stack sm">
@@ -278,397 +376,433 @@
       </div>
     </div>
   </div>
-</div>
-
-<!-- Order Modal (最終セクション) -->
-<div id="order-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
-  <div class="modal-dialog">
-    <!-- Header image -->
-    <div class="modal-hero">
-      <img id="order-modal-image" src="" alt="Service Image" class="modal-hero-img" />
-      <button id="close-order-modal-btn" class="modal-close" aria-label="閉じる">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-
-    <div class="modal-body">
-      <h2 id="order-modal-title" class="modal-title"></h2>
-      <hr class="divider" />
-
-      <!-- Order Section -->
-      <div class="order-section">
-        <p class="small">定期発注なら最大 ¥ 0 お得！</p>
-        <div class="actions">
-          <button id="set-regular-order-btn" class="btn btn-fixed btn-round">定期発注にする</button>
-          <button id="add-to-cart-btn" class="btn btn-primary btn-fixed btn-round">カートに入れる</button>
-          <button id="back-to-details-modal-btn" class="btn btn-fixed btn-round">戻る</button>
-        </div>
-      </div>
-    </div>
   </div>
-</div>
 
+  <!-- Order Modal (最終セクション) -->
+  <div id="order-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
+    <div class="modal-dialog">
+      <!-- Header image -->
+      <div class="modal-hero">
+        <img id="order-modal-image" src="" alt="Service Image" class="modal-hero-img" />
+        <button id="close-order-modal-btn" class="modal-close" aria-label="閉じる">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
 
-<!-- Cart Added Modal -->
-<div id="cart-added-modal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-dialog">
-    <button id="close-cart-added-modal-btn" class="modal-close close-pink" aria-label="閉じる">
-      <i class="fas fa-times"></i>
-    </button>
-    <!-- Full-width title -->
-    <h2 class="modal-title cart-added-title">
-      <i class="fas fa-check-circle"></i>
-      カートに追加しました
-    </h2>
+      <div class="modal-body">
+        <h2 id="order-modal-title" class="modal-title"></h2>
+        <hr class="divider" />
 
-    <div class="grid cart-grid gap-16">
-      <!-- Left: confirmation -->
-      <div>
-        <div class="row">
-          <img id="cart-added-item-image" src="https://placehold.co/150x150/e2e8f0/666" alt="Service Image" class="avatar-round" />
-          <div>
-            <h3 id="cart-added-item-title">サービス名</h3>
-            <div id="cart-added-item-details" class="small muted"></div>
+        <!-- Order Section -->
+        <div class="order-section">
+          <p class="small">定期発注なら最大 ¥ 0 お得！</p>
+          <div class="actions">
+            <button id="set-regular-order-btn" class="btn btn-fixed btn-round">定期発注にする</button>
+            <button id="add-to-cart-btn" class="btn btn-primary btn-fixed btn-round">カートに入れる</button>
+            <button id="back-to-details-modal-btn" class="btn btn-fixed btn-round">戻る</button>
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- Right: totals/actions -->
-      <div>
-        <h3>カート小計</h3>
-        <p>¥<span class="subtotal-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></p>
-        <div class="actions">
-          <a class="btn btn-primary btn-fixed btn-round" href="/cart">カートへ進む</a>
-          <button id="continue-shopping-btn" class="btn btn-fixed btn-round">発注を続ける</button>
+
+  <!-- Cart Added Modal -->
+  <div id="cart-added-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-dialog">
+      <button id="close-cart-added-modal-btn" class="modal-close close-pink" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+      <!-- Full-width title -->
+      <h2 class="modal-title cart-added-title">
+        <i class="fas fa-check-circle"></i>
+        カートに追加しました
+      </h2>
+
+      <div class="grid cart-grid gap-16">
+        <!-- Left: confirmation -->
+        <div>
+          <div class="row">
+            <img id="cart-added-item-image" src="https://placehold.co/150x150/e2e8f0/666" alt="Service Image"
+              class="avatar-round" />
+            <div>
+              <h3 id="cart-added-item-title">サービス名</h3>
+              <div id="cart-added-item-details" class="small muted"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: totals/actions -->
+        <div>
+          <h3>カート小計</h3>
+          <p>¥<span class="subtotal-dots"><span class="dot"></span><span class="dot"></span><span
+                class="dot"></span><span class="dot"></span><span class="dot"></span></span></p>
+          <div class="actions">
+            <a class="btn btn-primary btn-fixed btn-round" href="/cart">カートへ進む</a>
+            <button id="continue-shopping-btn" class="btn btn-fixed btn-round">発注を続ける</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
 
-<script>
-  // Service detail page initialization
-  (function() {
-    // Image fallback handling
-    const heroImg = document.getElementById('service-hero-img');
-    if (heroImg) {
-      const fallback = heroImg.dataset.fallback;
-      const defaultImg = '/images/service-300x200.svg';
-      
-      if (!heroImg.src || heroImg.src.endsWith('/') || heroImg.src.includes('undefined')) {
-        if (fallback && fallback !== '/' && !fallback.includes('undefined')) {
-          heroImg.src = fallback;
-        } else {
-          heroImg.src = defaultImg;
+  <script>
+    // Service detail page initialization
+    (function () {
+      // Image fallback handling
+      const heroImg = document.getElementById('service-hero-img');
+      if (heroImg) {
+        const fallback = heroImg.dataset.fallback;
+        const defaultImg = '/images/service-300x200.svg';
+
+        if (!heroImg.src || heroImg.src.endsWith('/') || heroImg.src.includes('undefined')) {
+          if (fallback && fallback !== '/' && !fallback.includes('undefined')) {
+            heroImg.src = fallback;
+          } else {
+            heroImg.src = defaultImg;
+          }
+        }
+
+        heroImg.addEventListener('error', function () {
+          if (this.src !== fallback && fallback && fallback !== '/' && !fallback.includes('undefined')) {
+            this.src = fallback;
+          } else if (this.src !== defaultImg) {
+            this.src = defaultImg;
+          }
+        });
+      }
+
+
+      // Order button click handler
+      const orderBtn = document.getElementById('order-service-btn');
+      if (orderBtn) {
+        orderBtn.addEventListener('click', function () {
+          // Load service data and open modal
+          fetch('/api/services')
+            .then(response => response.json())
+            .then(services => {
+              const serviceId = 2;
+              const service = services.find(s => s.id === serviceId);
+              if (service) {
+                if (window.ModalManager) {
+                  window.ModalManager.open('service-modal', service);
+                } else if (window.openModal) {
+                  window.openModal(service);
+                }
+              }
+            })
+            .catch(error => {
+              console.error('Failed to load service data:', error);
+              // Fallback: use page data from template variables
+              const problemsList = [];
+
+              problemsList.push('強い悪臭の発生');
+
+              problemsList.push('排水詰まりによる逆流や床の冠水');
+
+              problemsList.push('ゴキブリ・チョウバエなど害虫の発生源');
+
+              problemsList.push('排水溝の詰まり → 水が逆流して床が水浸しに');
+
+              // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+              let sections = [{ "section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"] }, { "section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{ "text": "表面がきれいになれば十分", "img-url": "images/gure-chingu_80.png" }, { "text": "ある程度きれいにしてほしい", "img-url": "images/gure-chingu_90.png" }, { "text": "徹底的にお願いしたい", "img-url": "images/gure-chingu_100.png" }] }, { "section-title": "種類", "section-type": "grid-items", "section-items": [{ "text": "U字溝", "img-url": "images/ujikou.png", "countable": true, "unit": "m", "count": 0 }, { "text": "グレーチング", "img-url": "images/gure-chingu_s.png", "countable": true, "unit": "本", "count": 0 }] }, { "section-title": "※グレーチング1本の長さはおよそ1mです" }, { "section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note" }];
+              const forms = [{ "section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"] }, { "section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{ "text": "表面がきれいになれば十分", "img-url": "images/gure-chingu_80.png" }, { "text": "ある程度きれいにしてほしい", "img-url": "images/gure-chingu_90.png" }, { "text": "徹底的にお願いしたい", "img-url": "images/gure-chingu_100.png" }] }];
+              const details = [{ "section-title": "種類", "section-type": "grid-items", "section-items": [{ "text": "U字溝", "img-url": "images/ujikou.png", "countable": true, "unit": "m", "count": 0 }, { "text": "グレーチング", "img-url": "images/gure-chingu_s.png", "countable": true, "unit": "本", "count": 0 }] }, { "section-title": "※グレーチング1本の長さはおよそ1mです" }, { "section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note" }];
+              // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
+              if (!sections || sections.length === 0) {
+                sections = [];
+                if (forms && forms.length > 0) {
+                  sections = sections.concat(forms);
+                }
+                if (details && details.length > 0) {
+                  sections = sections.concat(details);
+                }
+              }
+              const serviceData = {
+                id: 2,
+                title: 'U字溝・グレーチング清掃',
+                image: 'images/gure-chingu.png',
+                'detail-image': 'images/ミセサポ2025/グレーチング洗浄.png',
+                price: '¥ 7,000〜',
+                category: '厨房設備',
+                description: 'U字溝（排水溝）は、油分や食材カスで汚れやすく、放置すると様々なトラブルを引き起こします。厨房やホールの床に設置されたグレーチング（排水溝の金属カバー）も、油汚れや食材カスが溜まりやすく、放置すると問題を引き起こします。',
+                problems: problemsList,
+                solution: '定期的な専門清掃による分解・高圧洗浄が効果的です。',
+                sections: sections,  // 新しいsections配列構造を優先
+                forms: forms,
+                details: details
+              };
+              if (window.ModalManager) {
+                window.ModalManager.open('service-modal', serviceData);
+              } else if (window.openModal) {
+                window.openModal(serviceData);
+              }
+            });
+        });
+      }
+    })();
+  </script>
+
+  <style>
+    .service-detail-page {
+      max-width: 900px;
+      margin: 80px auto 0;
+      padding: 24px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .service-detail-card {
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .service-hero-image {
+      width: 100%;
+      height: 300px;
+      overflow: hidden;
+    }
+
+    .service-hero-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .service-detail-card-content {
+      padding: 32px;
+    }
+
+    .service-detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .service-name {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 12px 0;
+    }
+
+    .service-meta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .service-category {
+      display: inline-block;
+      padding: 6px 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .service-id {
+      font-size: 0.875rem;
+      color: #9ca3af;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .service-price-section {
+      text-align: right;
+    }
+
+    .service-price-large {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .price-note {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .service-detail-content {
+      margin-bottom: 32px;
+    }
+
+    .detail-section {
+      margin-bottom: 32px;
+    }
+
+    .detail-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 12px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    .section-content {
+      font-size: 0.9375rem;
+      line-height: 1.7;
+      color: #374151;
+      margin: 0;
+    }
+
+    .problems-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .problems-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid #e5e7eb;
+      color: #374151;
+    }
+
+    .problems-list li:last-child {
+      border-bottom: none;
+    }
+
+    .problems-list li::before {
+      content: "• ";
+      color: var(--primary);
+      font-weight: 700;
+      margin-right: 8px;
+    }
+
+    .solution-text {
+      padding: 16px;
+      background: #d1fae5;
+      border-radius: 8px;
+      border-left: 4px solid #059669;
+      color: #065f46;
+      font-weight: 500;
+    }
+
+    .service-actions {
+      padding-top: 24px;
+      border-top: 2px solid #f3f4f6;
+      text-align: center;
+    }
+
+    .btn-lg {
+      padding: 16px 32px;
+      font-size: 1.125rem;
+      min-width: 280px;
+    }
+
+    @media (max-width: 768px) {
+      .service-detail-page {
+        padding: 16px;
+      }
+
+      .service-detail-card-content {
+        padding: 20px;
+      }
+
+      .service-hero-image {
+        height: 250px;
+      }
+
+      .service-detail-header {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .service-price-section {
+        text-align: left;
+      }
+
+      .service-price-large {
+        font-size: 1.5rem;
+      }
+
+      .service-name {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+
+
+  </main>
+  <footer class="site-footer">
+    <div class="container text-center muted small" style="padding: 16px 0;">
+      <p>&copy; 2025 ミセサポ</p>
+    </div>
+  </footer>
+
+
+  <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+  <script src="/js/role_config.js"></script>
+  <script src="/js/users.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/navigation.js"></script>
+  <script src="/modal_manager.js"></script>
+  <script src="/app.js"></script>
+  <script>
+    // ログイン画面では通常ヘッダーを表示
+    (function () {
+      const path = window.location.pathname || '';
+      const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
+
+      // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
+      if (isSigninPage) {
+        const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
+        const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
+        if (defaultHeaderWrapper) {
+          defaultHeaderWrapper.style.display = 'none';
+        }
+        if (normalHeaderWrapper) {
+          normalHeaderWrapper.style.display = 'block';
+          // ログイン画面では通常ヘッダーを常に表示
+          const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
+          if (normalHeader) {
+            normalHeader.classList.add('visible');
+          }
         }
       }
-      
-      heroImg.addEventListener('error', function() {
-        if (this.src !== fallback && fallback && fallback !== '/' && !fallback.includes('undefined')) {
-          this.src = fallback;
-        } else if (this.src !== defaultImg) {
-          this.src = defaultImg;
-        }
-      });
-    }
+    })();
+  </script>
+</body>
 
-
-    // Order button click handler
-    const orderBtn = document.getElementById('order-service-btn');
-    if (orderBtn) {
-      orderBtn.addEventListener('click', function() {
-        // Load service data and open modal
-        fetch('/api/services')
-          .then(response => response.json())
-          .then(services => {
-            const serviceId = 2;
-            const service = services.find(s => s.id === serviceId);
-            if (service) {
-              if (window.ModalManager) {
-                window.ModalManager.open('service-modal', service);
-              } else if (window.openModal) {
-                window.openModal(service);
-              }
-            }
-          })
-          .catch(error => {
-            console.error('Failed to load service data:', error);
-            // Fallback: use page data from template variables
-            const problemsList = [];
-            
-            problemsList.push('強い悪臭の発生');
-            
-            problemsList.push('排水詰まりによる逆流や床の冠水');
-            
-            problemsList.push('ゴキブリ・チョウバエなど害虫の発生源');
-            
-            problemsList.push('排水溝の詰まり → 水が逆流して床が水浸しに');
-            
-            // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
-            let sections = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/gure-chingu_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/gure-chingu_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/gure-chingu_100.png"}]}, {"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "U字溝", "img-url": "images/ujikou.png", "countable": true, "unit": "m", "count": 0}, {"text": "グレーチング", "img-url": "images/gure-chingu_s.png", "countable": true, "unit": "本", "count": 0}]}, {"section-title": "※グレーチング1本の長さはおよそ1mです"}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
-            const forms = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/gure-chingu_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/gure-chingu_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/gure-chingu_100.png"}]}];
-            const details = [{"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "U字溝", "img-url": "images/ujikou.png", "countable": true, "unit": "m", "count": 0}, {"text": "グレーチング", "img-url": "images/gure-chingu_s.png", "countable": true, "unit": "本", "count": 0}]}, {"section-title": "※グレーチング1本の長さはおよそ1mです"}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
-            // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
-            if (!sections || sections.length === 0) {
-              sections = [];
-              if (forms && forms.length > 0) {
-                sections = sections.concat(forms);
-              }
-              if (details && details.length > 0) {
-                sections = sections.concat(details);
-              }
-            }
-            const serviceData = {
-              id: 2,
-              title: 'U字溝・グレーチング清掃',
-              image: 'images/gure-chingu.png',
-              'detail-image': 'images/ミセサポ2025/グレーチング洗浄.png',
-              price: '¥ 7,000〜',
-              category: '厨房設備',
-              description: 'U字溝（排水溝）は、油分や食材カスで汚れやすく、放置すると様々なトラブルを引き起こします。厨房やホールの床に設置されたグレーチング（排水溝の金属カバー）も、油汚れや食材カスが溜まりやすく、放置すると問題を引き起こします。',
-              problems: problemsList,
-              solution: '定期的な専門清掃による分解・高圧洗浄が効果的です。',
-              sections: sections,  // 新しいsections配列構造を優先
-              forms: forms,
-              details: details
-            };
-            if (window.ModalManager) {
-              window.ModalManager.open('service-modal', serviceData);
-            } else if (window.openModal) {
-              window.openModal(serviceData);
-            }
-          });
-      });
-    }
-  })();
-</script>
-
-<style>
-  .service-detail-page {
-    max-width: 900px;
-    margin: 80px auto 0;
-    padding: 24px;
-  }
-  .page-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-  .page-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #111827;
-    margin: 0;
-  }
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--primary);
-    text-decoration: none;
-    font-size: 0.875rem;
-  }
-  .back-link:hover {
-    text-decoration: underline;
-  }
-  .service-detail-card {
-    background: #ffffff;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-  .service-hero-image {
-    width: 100%;
-    height: 300px;
-    overflow: hidden;
-  }
-  .service-hero-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .service-detail-card-content {
-    padding: 32px;
-  }
-  .service-detail-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 32px;
-    padding-bottom: 24px;
-    border-bottom: 2px solid #e5e7eb;
-  }
-  .service-name {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #111827;
-    margin: 0 0 12px 0;
-  }
-  .service-meta {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .service-category {
-    display: inline-block;
-    padding: 6px 12px;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    color: #6b7280;
-    font-weight: 500;
-  }
-  .service-id {
-    font-size: 0.875rem;
-    color: #9ca3af;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  }
-  .service-price-section {
-    text-align: right;
-  }
-  .service-price-large {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 8px;
-  }
-  .price-note {
-    font-size: 0.75rem;
-    color: #6b7280;
-    margin: 0;
-    line-height: 1.4;
-  }
-  .service-detail-content {
-    margin-bottom: 32px;
-  }
-  .detail-section {
-    margin-bottom: 32px;
-  }
-  .detail-section:last-child {
-    margin-bottom: 0;
-  }
-  .section-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #111827;
-    margin: 0 0 12px 0;
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--primary);
-  }
-  .section-content {
-    font-size: 0.9375rem;
-    line-height: 1.7;
-    color: #374151;
-    margin: 0;
-  }
-  .problems-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  .problems-list li {
-    padding: 12px 0;
-    border-bottom: 1px solid #e5e7eb;
-    color: #374151;
-  }
-  .problems-list li:last-child {
-    border-bottom: none;
-  }
-  .problems-list li::before {
-    content: "• ";
-    color: var(--primary);
-    font-weight: 700;
-    margin-right: 8px;
-  }
-  .solution-text {
-    padding: 16px;
-    background: #d1fae5;
-    border-radius: 8px;
-    border-left: 4px solid #059669;
-    color: #065f46;
-    font-weight: 500;
-  }
-  .service-actions {
-    padding-top: 24px;
-    border-top: 2px solid #f3f4f6;
-    text-align: center;
-  }
-  .btn-lg {
-    padding: 16px 32px;
-    font-size: 1.125rem;
-    min-width: 280px;
-  }
-  @media (max-width: 768px) {
-    .service-detail-page {
-      padding: 16px;
-    }
-    .service-detail-card-content {
-      padding: 20px;
-    }
-    .service-hero-image {
-      height: 250px;
-    }
-    .service-detail-header {
-      flex-direction: column;
-      gap: 16px;
-    }
-    .service-price-section {
-      text-align: left;
-    }
-    .service-price-large {
-      font-size: 1.5rem;
-    }
-    .service-name {
-      font-size: 1.5rem;
-    }
-  }
-</style>
-
-
-    </main>
-    <footer class="site-footer">
-  <div class="container text-center muted small" style="padding: 16px 0;">
-    <p>&copy; 2025 ミセサポ</p>
-  </div>
-</footer>
-
-
-    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
-    <script src="/js/role_config.js"></script>
-    <script src="/js/users.js"></script>
-    <script src="/js/auth.js"></script>
-    <script src="/js/navigation.js"></script>
-    <script src="/modal_manager.js"></script>
-    <script src="/app.js"></script>
-    <script>
-      // ログイン画面では通常ヘッダーを表示
-      (function() {
-        const path = window.location.pathname || '';
-        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
-        
-        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
-        if (isSigninPage) {
-          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
-          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
-          if (defaultHeaderWrapper) {
-            defaultHeaderWrapper.style.display = 'none';
-          }
-          if (normalHeaderWrapper) {
-            normalHeaderWrapper.style.display = 'block';
-            // ログイン画面では通常ヘッダーを常に表示
-            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
-            if (normalHeader) {
-              normalHeader.classList.add('visible');
-            }
-          }
-        }
-      })();
-    </script>
-  </body>
-  </html>
-
-
+</html>

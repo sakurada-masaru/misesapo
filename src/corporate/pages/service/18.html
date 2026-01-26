@@ -128,6 +128,56 @@
         margin: 0;
         padding: 0;
       }
+      /* BeforeAfter */
+    .before-after {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+
+    .be-af {
+      justify-content: space-between;
+      width: 45%;
+    }
+
+    .be-af p {
+      margin: 0 0 10px;
+    }
+
+    .be-af img {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    .triangle {
+      width: 4%;
+      max-width: 30px;
+    }
+
+    .triangle_below {
+      display: none;
+    }
+
+    @media screen and (max-width: 440px) {
+      .before-after {
+        display: block;
+      }
+
+      .be-af {
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .triangle {
+        display: none;
+      }
+
+      .triangle_below {
+        display: block;
+        margin: 5px auto;
+        width: 20px;
+      }
+    }
     </style>
   </head>
   <body class="theme-pink ">
@@ -195,6 +245,22 @@
           <h3 class="section-title">解決策・サービス内容</h3>
           <p class="section-content solution-text">便器やタンク、ウォシュレット部分を分解・薬剤洗浄・高圧洗浄・除菌仕上げ。</p>
         </section>
+
+        <!-- <section class="detail-section">
+            <h3 class="section-title">ビフォー アフター</h3>
+            <div class="before-after">
+              <div class="be-af">
+                <p>Before</p>
+                <img src="images/service/_be-af01.jpg" alt="">
+              </div>
+              <img src="images/service/triangle.svg" alt="" class="triangle">
+              <img src="images/service/triangle_below.svg" alt="" class="triangle_below">
+              <div class="be-af">
+                <p>After</p>
+                <img src="images/service/_be-af02.jpg" alt="">
+              </div>
+            </div>
+          </section> -->
       </div>
 
       <div class="service-actions">

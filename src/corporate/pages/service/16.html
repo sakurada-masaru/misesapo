@@ -128,6 +128,56 @@
         margin: 0;
         padding: 0;
       }
+      /* BeforeAfter */
+    .before-after {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+
+    .be-af {
+      justify-content: space-between;
+      width: 45%;
+    }
+
+    .be-af p {
+      margin: 0 0 10px;
+    }
+
+    .be-af img {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    .triangle {
+      width: 4%;
+      max-width: 30px;
+    }
+
+    .triangle_below {
+      display: none;
+    }
+
+    @media screen and (max-width: 440px) {
+      .before-after {
+        display: block;
+      }
+
+      .be-af {
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .triangle {
+        display: none;
+      }
+
+      .triangle_below {
+        display: block;
+        margin: 5px auto;
+        width: 20px;
+      }
+    }
     </style>
   </head>
   <body class="theme-pink ">
@@ -167,7 +217,7 @@
           </div>
         </div>
         <div class="service-price-section">
-          <div class="service-price-large">¥ 35,00〜</div>
+          <div class="service-price-large">¥ 3,500〜</div>
           <p class="price-note">表示価格は目安です。状況により金額が変動する可能性があります。</p>
         </div>
       </div>
@@ -195,6 +245,22 @@
           <h3 class="section-title">解決策・サービス内容</h3>
           <p class="section-content solution-text">専門清掃では、素材に合わせた専用溶剤・工具を使用し、糊残りまで丁寧に除去。表面を傷つけずに、清潔で美しい状態を取り戻します。</p>
         </section>
+
+        <!-- <section class="detail-section">
+            <h3 class="section-title">ビフォー アフター</h3>
+            <div class="before-after">
+              <div class="be-af">
+                <p>Before</p>
+                <img src="images/service/_be-af01.jpg" alt="">
+              </div>
+              <img src="images/service/triangle.svg" alt="" class="triangle">
+              <img src="images/service/triangle_below.svg" alt="" class="triangle_below">
+              <div class="be-af">
+                <p>After</p>
+                <img src="images/service/_be-af02.jpg" alt="">
+              </div>
+            </div>
+          </section> -->
       </div>
 
       <div class="service-actions">
