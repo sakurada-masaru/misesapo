@@ -1503,6 +1503,49 @@
             margin: 0 auto;
         }
 
+        .service-image-swiper {
+            padding: 0 10px 30px;
+            margin: 0 auto 40px;
+            overflow: hidden;
+        }
+
+        .service-image-swiper .swiper-wrapper {
+            align-items: stretch;
+            transition-timing-function: linear;
+        }
+
+        .service-image-swiper .swiper-slide {
+            width: 260px;
+            height: auto;
+        }
+
+        .service-image-card {
+            display: block;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(255, 103, 156, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    background-color: #FDEDED;
+        }
+        .service-image-card p{
+            padding: 5px;
+        }
+        .service-image-card img {
+            width: 100%;
+            height: 200px;
+            display: block;
+            object-fit: cover;
+        }
+
+        .service-image-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(255, 103, 156, 0.2);
+        }
+
         .misesapo-flow-wrapper .misesapo-category-buttons {
             position: relative;
             display: flex;
@@ -1631,14 +1674,19 @@
         }
 
         .service-carousel .single img {
-            width: 100%;
+            width: 400px;
             height: auto;
             max-width: 100%;
+            margin: 0 auto;
             object-fit: cover;
             aspect-ratio: 4 / 3;
             border-radius: 8px;
             display: block;
             box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
+        }
+
+        .misesapo-category-buttons {
+            display: none;
         }
 
         /* サービスセクション */
@@ -3335,6 +3383,10 @@
                 width: 200px;
             }
 
+            .service-image-swiper .swiper-slide {
+                width: 200px;
+            }
+
             .event-container img {
                 width: 80% !important;
                 margin: auto;
@@ -3513,36 +3565,51 @@
     </div>
 
     <!-- サービス画像流れアニメーション -->
-    <div class="misesapo-flow-wrapper">
-        <div class="carousel">
-            <div class="swipe-hint swipe-hint-center">
-                <p>← SWIPE →</p>
-                <div class="swipe-arch">
-                    <svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
-                        <path id="arch-path-center" d="M 10 50 Q 100 45, 190 50" stroke="rgba(255, 0, 140, 0.5)"
-                            stroke-width="1" fill="none" />
-                        <circle class="swipe-circle-arch" r="6" fill="#FF008C">
-                            <animateMotion dur="3s" repeatCount="indefinite" calcMode="linear" keyPoints="0;1;0"
-                                keyTimes="0;0.5;1">
-                                <mpath href="#arch-path-center" />
-                            </animateMotion>
-                        </circle>
-                    </svg>
+    <div class="swiper service-image-swiper">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide">
+                <div class="service-image-card">
+                    <img src="/images/service/gurisuto.jpg" alt="グリストラップ" loading="lazy">
+                    <p>グリストラップ清掃</p>
                 </div>
             </div>
-            <div class="swiper service-carousel">
-                <div class="swiper-wrapper" id="service-carousel-wrapper">
-                    <!-- 画像カードはJavaScriptで動的に生成 -->
+            <div class="swiper-slide">
+                <div class="service-image-card">
+                    <img src="/images/service/eakonbunkai.jpg" alt="エアコン分解清掃" loading="lazy">
+                    <p>エアコン分解洗浄</p>
+                </div>
+            </div>
+            <div class="swiper-slide">
+                <div class="service-image-card">
+                    <img src="/images/service/yuka.png" alt="床清掃" loading="lazy">
+                    <p>床清掃</p>
+                </div>
+            </div>
+            <div class="swiper-slide">
+                <div class="service-image-card">
+                    <img src="/images/service/chuuboukiki.png" alt="厨房機器清掃" loading="lazy">
+                    <p>厨房機器清掃</p>
+                </div>
+            </div>
+            <div class="swiper-slide">
+                <div class="service-image-card">
+                    <img src="/images/service/haikan.png" alt="配管高圧洗浄" loading="lazy">
+                    <p>配管高圧洗浄</p>
+                </div>
+            </div>
+            <div class="swiper-slide">
+                <div class="service-image-card">
+                    <img src="/images/service/renjifu-do.jpg" alt="レンジフード洗浄" loading="lazy">
+                    <p>レンジフード洗浄</p>
                 </div>
             </div>
         </div>
-        <div class="misesapo-category-buttons">
-            <button class="misesapo-category-btn active" data-category="heating">1. 厨房設備</button>
-            <button class="misesapo-category-btn" data-category="aircon-floor">2. 空調設備・フロア</button>
-            <button class="misesapo-category-btn" data-category="other">3. その他</button>
-        </div>
+        <div class="swiper-pagination service-image-pagination"></div>
+        <div class="swiper-button-prev service-image-prev"></div>
+        <div class="swiper-button-next service-image-next"></div>
     </div>
 
+    
     <!-- イベント・キャンペーン -->
 
 
@@ -3770,7 +3837,7 @@
             <div class="swiper about-coverage-swiper">
                 <div class="swiper-wrapper">
                     <div class="swiper-slide">
-                        <a class="about-coverage-card" href="TOP5.html"><img src="/images/TOP5_kv_sp.webp"
+                        <a class="about-coverage-card" href="top5.html"><img src="/images/TOP5_kv_sp.webp"
                                 alt="ご依頼数TOP5"></a>
                     </div>
                     <div class="swiper-slide">
@@ -4498,22 +4565,14 @@
 
                 try {
                     swiper = new Swiper('.service-carousel', {
-                        slidesPerView: 'auto',
-                        spaceBetween: 90,
-                        centeredSlides: false,
-                        loop: false,
                         grabCursor: true,
-                        initialSlide: 0,
+                        slidesPerView: 1,
+                        centeredSlides: true,
+                        loop: false,
                         watchOverflow: true,
                         on: {
                             init: function () {
                                 console.log('Swiper初期化完了');
-                                // 最初のスライドが左端から始まるようにする
-                                try {
-                                    this.slideTo(0, 0);
-                                } catch (e) {
-                                    console.warn('slideToエラー:', e);
-                                }
                             },
                             error: function (swiper, error) {
                                 console.error('Swiperエラー:', error);
@@ -4537,36 +4596,10 @@
             };
 
             async function loadServiceItems() {
-                try {
-                    const response = await fetch(resolvePath('/data/service_items.json'));
-                    if (!response.ok) throw new Error('JSONファイルが見つかりません');
-                    const data = await response.json();
-
-                    serviceItems = data.map(item => {
-                        let category = item.category;
-                        if (item.id === 27) category = '空調設備';
-
-                        // サービスページのカードに割り当てられている画像を使用
-                        let imagePath = item.image || '';
-                        // images/で始まる場合は/images/に変換
-                        if (imagePath.startsWith('images/')) {
-                            imagePath = '/' + imagePath;
-                        }
-                        // パスを解決（GitHub Pages対応）
-                        // 絶対URLを返す（baseタグの影響を受けないようにする）
-                        imagePath = resolvePath(imagePath);
-
-                        return { id: item.id, title: item.title, category: category, image: imagePath };
-                    });
-
-                    // 初回はカテゴリを設定しない（init関数で設定される）
-                } catch (error) {
-                    console.error('サービスデータの読み込みに失敗しました:', error);
-                    serviceItems = [
-                        { id: 1, title: 'グリストラップ', category: '厨房設備', image: resolvePath('/images/gurisuto.png') },
-                        { id: 2, title: 'U字溝・グレーチング清掃', category: '厨房設備', image: resolvePath('/images/gure-chingu.png') }
-                    ];
-                }
+                serviceItems = [
+                    { id: 1, title: 'グリストラップ', category: '厨房設備', image: resolvePath('/images/service/gurisuto.jpg') },
+                    { id: 2, title: 'U字溝・グレーチング清掃', category: '厨房設備', image: resolvePath('/images/service/gure-chingu.png') }
+                ];
             }
 
             function createSlide(item) {
@@ -4651,27 +4684,8 @@
                 // 既存のスライドを削除
                 swiperWrapper.innerHTML = '';
 
-                let itemsToShow = [];
-
-                // カテゴリに応じたアイテムを取得
-                if (category === 'heating') {
-                    // 厨房設備
-                    itemsToShow = serviceItems.filter(item =>
-                        item.category === '厨房設備'
-                    );
-                } else if (category === 'aircon-floor') {
-                    // 空調設備・フロア
-                    itemsToShow = serviceItems.filter(item =>
-                        item.category === '空調設備' || item.category === 'フロア'
-                    );
-                } else if (category === 'other') {
-                    // その他
-                    itemsToShow = serviceItems.filter(item =>
-                        item.category === 'その他'
-                    );
-                }
-
-                console.log('カテゴリ:', category, 'アイテム数:', itemsToShow.length);
+                const itemsToShow = serviceItems;
+                console.log('カードスライド数:', itemsToShow.length);
 
                 // スライドを作成
                 itemsToShow.forEach((item, index) => {
@@ -4792,14 +4806,6 @@
                             // 初期カテゴリ（厨房設備）を強制表示
                             switchCategory('heating', true);
 
-                            // calculateWheelを実行（Swiper初期化後に開始）
-                            setTimeout(() => {
-                                function raf() {
-                                    requestAnimationFrame(raf);
-                                    calculateWheel();
-                                }
-                                raf();
-                            }, 300);
                         } else {
                             setTimeout(waitForSwiper, 50);
                         }
@@ -5161,6 +5167,32 @@
     </script>
 
     <script>
+        // サービス画像スライダー
+        (function () {
+            const serviceImageSwiper = document.querySelector('.service-image-swiper');
+            if (!serviceImageSwiper || typeof Swiper === 'undefined') return;
+
+            new Swiper('.service-image-swiper', {
+                grabCursor: true,
+                slidesPerView: 'auto',
+                spaceBetween: 20,
+                loop: true,
+                autoplay: {
+                    delay: 0,
+                    disableOnInteraction: false
+                },
+                speed: 6000,
+                pagination: {
+                    el: '.service-image-pagination',
+                    clickable: true
+                },
+                navigation: {
+                    nextEl: '.service-image-next',
+                    prevEl: '.service-image-prev'
+                }
+            });
+        })();
+
         // ミセサポとはカードスライダー
         (function () {
             const aboutSwiper = document.querySelector('.about-coverage-swiper');
