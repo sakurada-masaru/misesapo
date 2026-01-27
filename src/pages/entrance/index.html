@@ -2859,6 +2859,7 @@
             });
 
             if (response.ok) {
+                EntranceCore.updateAttendanceIndicator('clocked-in');
                 appendChatMessage('ai', `${user.name || 'ユーザー'}様、出勤を記録しました。本日はどの業務を行いますか？`);
                 showJobSelection();
                 if (btn) btn.innerHTML = '<i class="fas fa-check"></i> 出勤済み';
@@ -4405,6 +4406,7 @@ ${context}`;
         const actionContainer = document.getElementById('job-change-bar-container');
         if (!actionContainer) return;
 
+        actionContainer.style.display = 'flex';
         actionContainer.innerHTML = '';
         const btnDiv = document.createElement('div');
         btnDiv.className = 'action-bubble-container';
