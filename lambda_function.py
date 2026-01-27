@@ -16,6 +16,11 @@ try:
 except ImportError:
     ValidationError = ValueError  # Fallback if pydantic not available
 
+# --- グローバル初期化エラーのトラップ用 ---
+import sys
+import traceback
+# ----------------------------------------
+
 ATTENDANCE_STAFF_DATE_INDEX = 'staff_id-date-index'
 
 class DependencyNotReadyError(Exception):
@@ -801,31 +806,35 @@ s3_client = boto3.client('s3')
 
 # DynamoDBリソースの初期化
 dynamodb = boto3.resource('dynamodb')
-ANNOUNCEMENTS_TABLE = dynamodb.Table('business-announcements')
-ANNOUNCEMENT_READS_TABLE = dynamodb.Table('business-announcement-reads')
-REPORTS_TABLE = dynamodb.Table('staff-reports')
-CLEANING_LOGS_TABLE = dynamodb.Table('cleaning-logs')
-NFC_TAGS_TABLE = dynamodb.Table('nfc-tags')
-SCHEDULES_TABLE = dynamodb.Table('schedules')
-ESTIMATES_TABLE = dynamodb.Table('estimates')
-WORKERS_TABLE = dynamodb.Table('workers')
-WORKER_AVAILABILITY_TABLE = dynamodb.Table('worker-availability')
-CLIENTS_TABLE = dynamodb.Table('misesapo-clients')
-BRANDS_TABLE = dynamodb.Table('misesapo-brands')
-STORES_TABLE = dynamodb.Table('misesapo-stores')
-ATTENDANCE_TABLE = dynamodb.Table('attendance')
-ATTENDANCE_ERRORS_TABLE = dynamodb.Table('attendance-errors')
-ATTENDANCE_REQUESTS_TABLE = dynamodb.Table('attendance-requests')
-HOLIDAYS_TABLE = dynamodb.Table('holidays')
-INVENTORY_ITEMS_TABLE = dynamodb.Table('inventory-items')
-INVENTORY_TRANSACTIONS_TABLE = dynamodb.Table('inventory-transactions')
-DAILY_REPORTS_TABLE = dynamodb.Table('daily-reports')
-TODOS_TABLE = dynamodb.Table('todos')
-REIMBURSEMENTS_TABLE = dynamodb.Table('misesapo-reimbursements')
-REPORT_IMAGES_TABLE = dynamodb.Table('report-images')
-STORE_AUDITS_TABLE = dynamodb.Table('misesapo-store-audits')
-STAFF_REPORT_APPROVALS_TABLE = dynamodb.Table('staff-report-approvals')
-REPORT_FLAGS_TABLE = dynamodb.Table('report-flags-v2')
+try:
+    ANNOUNCEMENTS_TABLE = dynamodb.Table('business-announcements')
+    ANNOUNCEMENT_READS_TABLE = dynamodb.Table('business-announcement-reads')
+    REPORTS_TABLE = dynamodb.Table('staff-reports')
+    CLEANING_LOGS_TABLE = dynamodb.Table('cleaning-logs')
+    NFC_TAGS_TABLE = dynamodb.Table('nfc-tags')
+    SCHEDULES_TABLE = dynamodb.Table('schedules')
+    ESTIMATES_TABLE = dynamodb.Table('estimates')
+    WORKERS_TABLE = dynamodb.Table('workers')
+    WORKER_AVAILABILITY_TABLE = dynamodb.Table('worker-availability')
+    CLIENTS_TABLE = dynamodb.Table('misesapo-clients')
+    BRANDS_TABLE = dynamodb.Table('misesapo-brands')
+    STORES_TABLE = dynamodb.Table('misesapo-stores')
+    ATTENDANCE_TABLE = dynamodb.Table('attendance')
+    ATTENDANCE_ERRORS_TABLE = dynamodb.Table('attendance-errors')
+    ATTENDANCE_REQUESTS_TABLE = dynamodb.Table('attendance-requests')
+    HOLIDAYS_TABLE = dynamodb.Table('holidays')
+    INVENTORY_ITEMS_TABLE = dynamodb.Table('inventory-items')
+    INVENTORY_TRANSACTIONS_TABLE = dynamodb.Table('inventory-transactions')
+    DAILY_REPORTS_TABLE = dynamodb.Table('daily-reports')
+    TODOS_TABLE = dynamodb.Table('todos')
+    REIMBURSEMENTS_TABLE = dynamodb.Table('misesapo-reimbursements')
+    REPORT_IMAGES_TABLE = dynamodb.Table('report-images')
+    STORE_AUDITS_TABLE = dynamodb.Table('misesapo-store-audits')
+    STAFF_REPORT_APPROVALS_TABLE = dynamodb.Table('staff-report-approvals')
+    REPORT_FLAGS_TABLE = dynamodb.Table('report-flags-v2')
+except Exception as _e:
+    print(f"CRITICAL: Table initialization failed: {str(_e)}")
+    traceback.print_exc()
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -1541,14 +1550,15 @@ def lambda_handler(event, context):
     except Exception as e:
         import traceback
         error_trace = traceback.format_exc()
-        print(f"Error: {str(e)}")
+        print(f"Error in _lambda_handler_internal: {str(e)}")
         print(f"Traceback: {error_trace}")
         return {
             'statusCode': 500,
             'headers': headers,
             'body': json.dumps({
-                'error': '処理に失敗しました',
-                'message': str(e)
+                'error': 'Internal Server Error',
+                'message': str(e),
+                'stage': event.get('requestContext', {}).get('stage')
             }, ensure_ascii=False)
         }
 
@@ -2386,11 +2396,37 @@ def check_admin_permission(user_info):
 
 
 def _get_user_info_from_event(event):
+    """
+    API GatewayのAuthorizerコンテキスト、またはAuthorizationヘッダーからユーザー情報を取得
+    """
+    # 1. API Gateway Authorizer (verified claims) を優先
+    authorizer_claims = event.get('requestContext', {}).get('authorizer', {}).get('claims')
+    if authorizer_claims:
+        uid = authorizer_claims.get('sub') or authorizer_claims.get('cognito:username')
+        role = authorizer_claims.get('custom:role')
+        groups = authorizer_claims.get('cognito:groups', [])
+        # 文字列として渡ってくる場合があるためリスト化
+        if isinstance(groups, str):
+            groups = groups.split(',')
+        
+        if not role and groups:
+            if any(g.lower() == 'admin' for g in groups):
+                role = 'admin'
+        
+        return {
+            'uid': uid,
+            'email': authorizer_claims.get('email'),
+            'role': role or 'cleaning',
+            'verified': True
+        }
+
+    # 2. Authorizationヘッダーからのデコード（Fallback/Local Test）
     auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
     id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-    if not id_token:
-        return None
-    return verify_firebase_token(id_token)
+    if id_token:
+        return verify_firebase_token(id_token)
+    
+    return None
 
 def _resolve_unit_id(user_info):
     unit_id = None
@@ -6631,7 +6667,7 @@ def update_worker(worker_id, event, headers):
         }
         
         fields = [
-            'name', 'email', 'phone', 'role', 'role_code', 'department', 'job', 'status',
+            'name', 'email', 'phone', 'role', 'role_code', 'department', 'job', 'status', 'cognito_sub',
             'scheduled_start_time', 'scheduled_end_time', 'scheduled_work_hours', 'work_pattern',
             'hire_date', 'employment_type', 'contract_period', 'certifications', 'skills',
             'experience_years', 'previous_experience', 'emergency_contact_name', 'emergency_contact_phone',
@@ -6706,7 +6742,7 @@ def update_worker(worker_id, event, headers):
 
 def get_attendance(event, headers):
     """
-    勤怠記録を取得
+    勤怠記録を取得 (Scan封印版)
     """
     try:
         # クエリパラメータを取得
@@ -6717,122 +6753,120 @@ def get_attendance(event, headers):
         date_to = query_params.get('date_to')
         year = query_params.get('year')
         month = query_params.get('month')
-        limit = int(query_params.get('limit', 100))
+        limit = min(int(query_params.get('limit', 50)), 100) # 上限を100に制限
         
-        if staff_id and date:
-            # 特定の従業員の特定日の勤怠記録を取得
-            attendance_id = f"{date}_{staff_id}"
-            response = ATTENDANCE_TABLE.get_item(Key={'id': attendance_id})
-            if 'Item' in response:
+        # Scan封印: staff_id, date, または year+month のいずれも無い場合は拒否
+        if not (staff_id or date or date_from or (year and month)):
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '検索条件が不足しています。staff_id, date, または yearとmonthを指定してください。',
+                    'code': 'QUERY_PARAMETER_REQUIRED'
+                }, ensure_ascii=False)
+            }
+        
+        items = []
+        if staff_id:
+            # 従業員IDがある場合はGSIを使用してクエリ
+            try:
+                from boto3.dynamodb.conditions import Key
+                key_expr = Key('staff_id').eq(staff_id)
+                
+                if date:
+                    key_expr = key_expr & Key('date').eq(date)
+                elif date_from and date_to:
+                    key_expr = key_expr & Key('date').between(date_from, date_to)
+                elif date_from:
+                    key_expr = key_expr & Key('date').gte(date_from)
+                elif date_to:
+                    key_expr = key_expr & Key('date').lte(date_to)
+                elif year and month:
+                    month_start = f"{year}-{month.zfill(2)}-01"
+                    import calendar
+                    _, last_day = calendar.monthrange(int(year), int(month))
+                    month_end = f"{year}-{month.zfill(2)}-{str(last_day).zfill(2)}"
+                    key_expr = key_expr & Key('date').between(month_start, month_end)
+                
+                response = ATTENDANCE_TABLE.query(
+                    IndexName='staff_id-date-index',
+                    KeyConditionExpression=key_expr,
+                    ScanIndexForward=False,
+                    Limit=limit
+                )
+                items = response.get('Items', [])
+            except Exception as e:
+                print(f"GSI query failed: {str(e)}")
                 return {
-                    'statusCode': 200,
+                    'statusCode': 500,
                     'headers': headers,
-                    'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
-                }
-            else:
-                return {
-                    'statusCode': 200,
-                    'headers': headers,
-                    'body': json.dumps({
-                        'message': '勤怠記録が見つかりません',
-                        'data': None
-                    }, ensure_ascii=False)
+                    'body': json.dumps({'error': 'クエリ実行に失敗しました', 'message': str(e)}, ensure_ascii=False)
                 }
         else:
-            # フィルタリング条件を構築
+            # staff_idがない場合（管理画面などの月次・日次一覧）
+            # 現状はフィルタ付きScanになるが、実行範囲を限定させる
             filter_expressions = []
-            expression_attribute_values = {}
             expression_attribute_names = {}
-            
-            if staff_id:
-                filter_expressions.append("#staff_id = :staff_id")
-                expression_attribute_names["#staff_id"] = "staff_id"
-                expression_attribute_values[":staff_id"] = staff_id
+            expression_attribute_values = {}
             
             if date:
                 filter_expressions.append("#date = :date")
-                if "#date" not in expression_attribute_names:
-                    expression_attribute_names["#date"] = "date"
+                expression_attribute_names["#date"] = "date"
                 expression_attribute_values[":date"] = date
-            
-            if date_from:
+            elif year and month:
+                month_start = f"{year}-{month.zfill(2)}-01"
+                import calendar
+                _, last_day = calendar.monthrange(int(year), int(month))
+                month_end = f"{year}-{month.zfill(2)}-{str(last_day).zfill(2)}"
+                filter_expressions.append("#date BETWEEN :month_start AND :month_end")
+                expression_attribute_names["#date"] = "date"
+                expression_attribute_values[":month_start"] = month_start
+                expression_attribute_values[":month_end"] = month_end
+            elif date_from:
                 filter_expressions.append("#date >= :date_from")
                 expression_attribute_names["#date"] = "date"
                 expression_attribute_values[":date_from"] = date_from
-            
-            if date_to:
-                filter_expressions.append("#date <= :date_to")
-                if "#date" not in expression_attribute_names:
-                    expression_attribute_names["#date"] = "date"
-                expression_attribute_values[":date_to"] = date_to
-            
-            if year and month:
-                # 月次フィルタリング
-                month_start = f"{year}-{month.zfill(2)}-01"
-                # 次の月の1日を計算
-                next_month = int(month) + 1
-                next_year = int(year)
-                if next_month > 12:
-                    next_month = 1
-                    next_year += 1
-                month_end = f"{next_year}-{str(next_month).zfill(2)}-01"
-                
-                filter_expressions.append("#date >= :month_start")
-                filter_expressions.append("#date < :month_end")
-                if "#date" not in expression_attribute_names:
-                    expression_attribute_names["#date"] = "date"
-                expression_attribute_values[":month_start"] = month_start
-                expression_attribute_values[":month_end"] = month_end
-            
-            # スキャンまたはクエリを実行
-            if staff_id and 'staff_id-date-index' in [idx['IndexName'] for idx in ATTENDANCE_TABLE.meta.client.describe_table(TableName='attendance').get('Table', {}).get('GlobalSecondaryIndexes', [])]:
-                # GSIを使用してクエリ
-                try:
-                    response = ATTENDANCE_TABLE.query(
-                        IndexName='staff_id-date-index',
-                        KeyConditionExpression=Key('staff_id').eq(staff_id),
-                        FilterExpression=' AND '.join(filter_expressions) if filter_expressions else None,
-                        ExpressionAttributeNames=expression_attribute_names if expression_attribute_names else None,
-                        ExpressionAttributeValues=expression_attribute_values if expression_attribute_values else None,
-                        ScanIndexForward=False,
-                        Limit=limit
-                    )
-                except Exception as e:
-                    # GSIが存在しない場合はスキャンにフォールバック
-                    print(f"GSI query failed, falling back to scan: {str(e)}")
-                    if filter_expressions:
-                        response = ATTENDANCE_TABLE.scan(
-                            FilterExpression=' AND '.join(filter_expressions),
-                            ExpressionAttributeNames=expression_attribute_names,
-                            ExpressionAttributeValues=expression_attribute_values,
-                            Limit=limit
-                        )
-                    else:
-                        response = ATTENDANCE_TABLE.scan(Limit=limit)
-            else:
-                # スキャンでフィルタリング
-                if filter_expressions:
-                    response = ATTENDANCE_TABLE.scan(
-                        FilterExpression=' AND '.join(filter_expressions),
-                        ExpressionAttributeNames=expression_attribute_names,
-                        ExpressionAttributeValues=expression_attribute_values,
-                        Limit=limit
-                    )
-                else:
-                    response = ATTENDANCE_TABLE.scan(Limit=limit)
-            
+                if date_to:
+                    filter_expressions.append("#date <= :date_to")
+                    expression_attribute_values[":date_to"] = date_to
+
+            # フィルタが空の場合はScanを走らせない（上記バリデーションで弾いているが念のため）
+            if not filter_expressions:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'フィルタ条件が必要です'}, ensure_ascii=False)
+                }
+
+            response = ATTENDANCE_TABLE.scan(
+                FilterExpression=' AND '.join(filter_expressions),
+                ExpressionAttributeNames=expression_attribute_names,
+                ExpressionAttributeValues=expression_attribute_values,
+                Limit=limit
+            )
             items = response.get('Items', [])
-            # 日付でソート（新しい順）
-            items.sort(key=lambda x: x.get('date', ''), reverse=True)
-            
-            return {
-                'statusCode': 200,
-                'headers': headers,
-                'body': json.dumps({
-                    'attendance': items,
-                    'count': len(items)
-                }, ensure_ascii=False, default=str)
-            }
+
+        # 日付でソート（新しい順）
+        items.sort(key=lambda x: x.get('date', ''), reverse=True)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'attendance': items,
+                'count': len(items)
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting attendance: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '勤怠記録の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
     except Exception as e:
         print(f"Error getting attendance: {str(e)}")
         return {
@@ -7230,6 +7264,26 @@ def create_or_update_attendance(event, headers):
         except Exception as e:
             print(f"Error checking holiday: {str(e)}")
         
+        # 管理者判定 (トークンベース)
+        user_info = _get_user_info_from_event(event)
+        is_admin_request = False
+        if user_info and user_info.get('verified'):
+            is_admin_request = (user_info.get('role') == 'admin')
+        
+        # デバッグログ（管理者として判定されたか）
+        if is_admin_request:
+            print(f"DEBUG: Admin request verified for user: {user_info.get('email')}")
+        
+        # 管理者用フィールドの保護
+        admin_only_fields = ['fixed_clock_in', 'fixed_clock_out', 'fixed_break_hours', 'notes']
+        if not is_admin_request:
+            # 一般スタッフからのリクエストの場合、管理者用フィールドを削除
+            for field in admin_only_fields:
+                if field in body_json:
+                    print(f"WARNING: unauthorized_fixed_field_ignored approach=pop field={field} user={user_info.get('email') if user_info else 'unknown'}")
+                    body_json.pop(field)
+                    if field == 'notes': continue # notesは後続で使う可能性があるが、一般打刻では基本使わない
+        
         # 勤務状態を判定
         status = 'working'
         if clock_in and clock_out:
@@ -7242,9 +7296,20 @@ def create_or_update_attendance(event, headers):
         if existing_item:
             # 既存の記録を更新
             update_expression_parts = []
-            expression_attribute_values = {}
             expression_attribute_names = {}
+            expression_attribute_values = {}
+            condition_expression = None
             
+            # 冪等性のための条件式構築
+            if clock_in and not clock_out and not is_admin_request:
+                # 一般の出勤打刻：既に出勤時刻があればエラーにするための条件
+                # 既存ロジック(7047-7075)で再出勤用ID生成をしているため、
+                # ここでは「同一IDで出勤のみ上書き」を防ぐ
+                condition_expression = Attr('clock_in').not_exists()
+            elif clock_out and not is_admin_request:
+                # 一般の退勤打刻：出勤記録があり、かつ、まだ退勤していないこと
+                condition_expression = Attr('clock_in').exists() & Attr('clock_out').not_exists()
+
             if clock_in:
                 update_expression_parts.append("#clock_in = :clock_in")
                 expression_attribute_names["#clock_in"] = "clock_in"
@@ -7255,6 +7320,15 @@ def create_or_update_attendance(event, headers):
                 expression_attribute_names["#clock_out"] = "clock_out"
                 expression_attribute_values[":clock_out"] = clock_out
             
+            # 管理者による修正フィールドの反映
+            if is_admin_request:
+                for field in admin_only_fields:
+                    val = body_json.get(field)
+                    if val is not None:
+                        update_expression_parts.append(f"#{field} = :{field}")
+                        expression_attribute_names[f"#{field}"] = field
+                        expression_attribute_values[f":{field}"] = Decimal(str(val)) if isinstance(val, (int, float)) else val
+
             if processed_breaks:
                 update_expression_parts.append("#breaks = :breaks")
                 expression_attribute_names["#breaks"] = "breaks"
@@ -7314,12 +7388,26 @@ def create_or_update_attendance(event, headers):
             expression_attribute_names["#updated_at"] = "updated_at"
             expression_attribute_values[":updated_at"] = now
             
-            ATTENDANCE_TABLE.update_item(
-                Key={'id': attendance_id},
-                UpdateExpression='SET ' + ', '.join(update_expression_parts),
-                ExpressionAttributeNames=expression_attribute_names,
-                ExpressionAttributeValues=expression_attribute_values
-            )
+            try:
+                update_params = {
+                    'Key': {'id': attendance_id},
+                    'UpdateExpression': 'SET ' + ', '.join(update_expression_parts),
+                    'ExpressionAttributeNames': expression_attribute_names,
+                    'ExpressionAttributeValues': expression_attribute_values
+                }
+                if condition_expression:
+                    update_params['ConditionExpression'] = condition_expression
+                
+                ATTENDANCE_TABLE.update_item(**update_params)
+            except ATTENDANCE_TABLE.meta.client.exceptions.ConditionalCheckFailedException:
+                return {
+                    'statusCode': 409,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': '既に打刻済みか、無効な打刻順序です。',
+                        'code': 'IDEMPOTENCY_ERROR'
+                    }, ensure_ascii=False)
+                }
         else:
             # 新規作成
             attendance_data = {
@@ -7334,16 +7422,23 @@ def create_or_update_attendance(event, headers):
                 'total_hours': Decimal(str(round(total_hours, 2))) if total_hours > 0 else None,
                 'work_hours': Decimal(str(round(work_hours, 2))) if work_hours > 0 else None,
                 'overtime_hours': Decimal(str(round(overtime_hours, 2))) if overtime_hours > 0 else None,
-                'is_late': is_late if is_late else None,
-                'late_minutes': late_minutes if is_late else None,
-                'is_early_leave': is_early_leave if is_early_leave else None,
-                'early_leave_minutes': early_leave_minutes if is_early_leave else None,
-                'is_holiday': is_holiday if is_holiday else None,
-                'is_holiday_work': is_holiday_work if is_holiday_work else None,
+                'is_late': is_late,
+                'late_minutes': late_minutes,
+                'is_early_leave': is_early_leave,
+                'early_leave_minutes': early_leave_minutes,
+                'is_holiday': is_holiday,
+                'is_holiday_work': is_holiday_work,
                 'status': status,
                 'created_at': now,
                 'updated_at': now
             }
+            # 管理者修正用フィールドの初期値（あれば）
+            if is_admin_request:
+                for field in admin_only_fields:
+                    val = body_json.get(field)
+                    if val is not None:
+                        attendance_data[field] = Decimal(str(val)) if isinstance(val, (int, float)) else val
+
             # Noneの値を削除
             attendance_data = {k: v for k, v in attendance_data.items() if v is not None}
             
