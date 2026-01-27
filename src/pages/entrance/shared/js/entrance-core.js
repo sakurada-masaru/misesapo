@@ -574,22 +574,28 @@ const EntranceCore = {
     // ========================================
 
     initStatusUI() {
-        // Sync job type from URL
         const urlJob = this.getCurrentJobFromUrl();
-        if (urlJob) {
+
+        // ★ /entrance/（トップ）は常にパーソナルに戻す（青）
+        const isEntranceTop =
+            location.pathname.endsWith('/entrance/') || location.pathname === '/entrance';
+
+        if (isEntranceTop) {
+            // 前回状態を破棄して青へ
+            localStorage.removeItem('current_job_type');
+            document.body.classList.remove(
+                'job-cleaning', 'job-office', 'job-sales', 'job-hr', 'job-accounting', 'job-admin', 'job-dev'
+            );
+            // ここで default（:root --accent-color #3b82f6）が効いて青になる
+        } else if (urlJob) {
             this.setJobType(urlJob);
         } else {
-            // If on main entrance, we might want to clear or handle differently
-            // but for now, let it be null or from storage if needed.
             const saved = localStorage.getItem('current_job_type');
             if (saved) this.setJobType(saved);
         }
 
-        // Create attendance indicator
         this.createAttendanceIndicator();
-        // Create menu button
         this.createMenuButton();
-        // Check attendance status
         this.checkAndUpdateAttendance();
     },
 

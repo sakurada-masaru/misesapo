@@ -172,13 +172,29 @@
 /* テーブル */
 .hr-attendance-dashboard .hr-board {
   margin-bottom: 0;
-  /* 下部マージン不要 */
   flex: 1;
-  /* 余白を埋める */
   min-height: 0;
-  /* Flexboxのスクロールバグ防止 */
+  overflow: hidden;
+  /* Use wrapper for scroll */
+}
+
+/* 勤怠テーブルだけスクロール */
+.attendance-table-wrap {
+  max-height: calc(100vh - 260px);
   overflow-y: auto;
-  /* ここだけスクロール */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 16px;
+}
+
+/* スクロールバー見やすく */
+.attendance-table-wrap::-webkit-scrollbar {
+  width: 8px;
+}
+
+.attendance-table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(180, 180, 255, 0.3);
+  border-radius: 4px;
 }
 
 .hr-attendance-dashboard table {
@@ -503,9 +519,11 @@ tr.hr-clickable-row:hover {
 }
 
 /* ===== HR Attendance Mode (isolation) ===== */
-body.mode-hr-attendance {
+body.mode-hr-attendance,
+body.page-admin-dashboard,
+body.job-hr.page-admin-dashboard {
   /* 勤怠画面は1ページとして完結させる */
-  overflow: hidden;
+  overflow: hidden !important;
 }
 
 /* 勤怠ダッシュボード領域：画面を使い切る */

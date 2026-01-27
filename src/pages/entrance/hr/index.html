@@ -1728,21 +1728,23 @@
                     <button class="hr-export-btn" onclick="HrAttendanceDashboard.exportDailyCSV()"><i
                             class="fas fa-file-csv"></i> CSV出力</button>
                 </div>
-                <table id="attendance-table">
-                    <thead>
-                        <tr>
-                            <th>従業員</th>
-                            <th>実打刻 出勤</th>
-                            <th>実打刻 退勤</th>
-                            <th>修正 出勤</th>
-                            <th>修正 退勤</th>
-                            <th>状態（5分類）</th>
-                            <th>申請</th>
-                            <th>エラー</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                <div class="attendance-table-wrap">
+                    <table id="attendance-table">
+                        <thead>
+                            <tr>
+                                <th>従業員</th>
+                                <th>実打刻 出勤</th>
+                                <th>実打刻 退勤</th>
+                                <th>修正 出勤</th>
+                                <th>修正 退勤</th>
+                                <th>状態（5分類）</th>
+                                <th>申請</th>
+                                <th>エラー</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
                 <div class="hr-empty" id="hr-board-empty">この期間のデータはありません</div>
             </section>
 

@@ -910,7 +910,7 @@ def lambda_handler(event, context):
     event_headers = event.get("headers") or {}
     headers = {
         'Access-Control-Allow-Origin': resolve_cors_origin(event_headers),
-        'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,Accept,Origin,X-Requested-With',
         'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,OPTIONS',
         'Access-Control-Allow-Credentials': 'true',
         'Content-Type': 'application/json'
