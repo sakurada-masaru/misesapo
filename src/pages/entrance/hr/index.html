@@ -1687,14 +1687,19 @@
 
     <section id="hr-attendance-dashboard" class="hr-attendance-dashboard">
         <header class="hr-dashboard-header">
-            <div style="display:flex; align-items:center; gap:12px;">
+            <div style="display:flex; align-items:center; gap:20px;">
                 <button class="hr-dashboard-back-btn" onclick="toggleHrDashboard(false)">
                     <i class="fas fa-arrow-left"></i> 戻る
                 </button>
-                <h1><i class="fas fa-user-clock"></i> 人事モード：勤怠管理システム</h1>
+                <div class="hr-view-toggle">
+                    <button id="hr-btn-daily" class="active" onclick="switchHrView('daily')">日別ボード</button>
+                    <button id="hr-btn-monthly" onclick="switchHrView('monthly')">月次集計</button>
+                </div>
             </div>
+            <h1><i class="fas fa-user-shield"></i> 人事ダッシュボード</h1>
             <div class="hr-dashboard-date">
                 <input type="date" id="hr-board-date">
+                <input type="month" id="hr-month-select" style="display:none">
                 <button id="hr-board-refresh"><i class="fas fa-sync-alt"></i> 更新</button>
             </div>
         </header>
@@ -1704,31 +1709,75 @@
             <!-- 5分類 + 承認待ち + エラー未解決 = 7カード -->
         </section>
 
-        <section class="hr-board">
-            <h2><i class="fas fa-table"></i> 勤怠ボード</h2>
-            <table id="attendance-table">
-                <thead>
-                    <tr>
-                        <th>従業員</th>
-                        <th>raw 出勤</th>
-                        <th>raw 退勤</th>
-                        <th>fixed 出勤</th>
-                        <th>fixed 退勤</th>
-                        <th>状態（5分類）</th>
-                        <th>申請</th>
-                        <th>エラー</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-            <div class="hr-empty" id="hr-board-empty">この期間のデータはありません</div>
-        </section>
+        <div id="hr-daily-view">
+            <section class="hr-board">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h2><i class="fas fa-table"></i> 当日勤怠状況</h2>
+                    <button class="hr-export-btn" onclick="HrAttendanceDashboard.exportDailyCSV()"><i class="fas fa-file-csv"></i> CSV出力</button>
+                </div>
+                <table id="attendance-table">
+                    <thead>
+                        <tr>
+                            <th>従業員</th>
+                            <th>実打刻 出勤</th>
+                            <th>実打刻 退勤</th>
+                            <th>修正 出勤</th>
+                            <th>修正 退勤</th>
+                            <th>状態（5分類）</th>
+                            <th>申請</th>
+                            <th>エラー</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div class="hr-empty" id="hr-board-empty">この期間のデータはありません</div>
+            </section>
 
-        <section class="hr-queue">
-            <h2><i class="fas fa-inbox"></i> 承認待ちキュー</h2>
-            <div id="hr-queue-list"></div>
-            <div class="hr-empty" id="hr-queue-empty">申請はありません</div>
-        </section>
+            <section class="hr-queue">
+                <h2><i class="fas fa-inbox"></i> 承認待ちキュー</h2>
+                <div id="hr-queue-list"></div>
+                <div class="hr-empty" id="hr-queue-empty">申請はありません</div>
+            </section>
+        </div>
+
+        <div id="hr-monthly-view" style="display:none">
+            <section class="hr-board">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h2><i class="fas fa-calendar-alt"></i> 月次人別集計</h2>
+                    <button class="hr-export-btn" onclick="HrAttendanceDashboard.exportMonthlyCSV()"><i class="fas fa-file-csv"></i> CSV出力</button>
+                </div>
+                <table id="monthly-table">
+                    <thead>
+                        <tr>
+                            <th>氏名</th>
+                            <th>出勤日数</th>
+                            <th>総労働時間</th>
+                            <th>総休憩時間</th>
+                            <th>未確定日</th>
+                            <th>アラート数</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div class="hr-empty" id="hr-monthly-empty">データがありません</div>
+            </section>
+        </div>
+
+        <!-- Detail Panel (Overlay Modal) -->
+        <div id="hr-detail-modal" class="hr-modal">
+            <div class="hr-modal-content">
+                <div class="hr-modal-header">
+                    <h3><i class="fas fa-info-circle"></i> 勤怠詳細</h3>
+                    <button onclick="closeHrDetail()">&times;</button>
+                </div>
+                <div class="hr-modal-body" id="hr-detail-body">
+                    <!-- JS injected -->
+                </div>
+                <div class="hr-modal-footer">
+                    <button class="hr-secondary-btn" onclick="closeHrDetail()">閉じる</button>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- Voice Content -->

@@ -1189,6 +1189,19 @@ def lambda_handler(event, context):
             # 勤怠司令塔ボード
             if method == 'GET':
                 return get_admin_attendance_board(event, headers)
+        elif normalized_path == '/admin/attendance/monthly/summary':
+            # 月次サマリー
+            if method == 'GET':
+                return get_admin_attendance_monthly_summary(event, headers)
+        elif normalized_path == '/admin/attendance/monthly/users':
+            # 月次人別
+            if method == 'GET':
+                return get_admin_attendance_monthly_users(event, headers)
+        elif normalized_path.startswith('/admin/attendance/') and normalized_path.endswith('/fixed'):
+            # 勤怠内容の修正・確定
+            attendance_id = normalized_path.split('/')[-2]
+            if method == 'PATCH' or method == 'PUT':
+                return patch_admin_attendance_fixed(attendance_id, event, headers)
         elif normalized_path == '/attendance/requests':
             # 出退勤修正申請の取得・作成
             if method == 'GET':
@@ -8299,6 +8312,7 @@ def get_admin_attendance_board(event, headers):
     except Exception as e:
         print(f"Error fetching attendance errors for board: {str(e)}")
 
+    # 人数把握
     try:
         workers_response = WORKERS_TABLE.scan()
         workers = workers_response.get('Items', [])
@@ -8327,8 +8341,8 @@ def get_admin_attendance_board(event, headers):
         if not time_str:
             return None
         try:
-            # ISO形式対応 (2026-01-20T09:00:00+09:00 or 09:00 or 09:00:00)
             if 'T' in str(time_str):
+                # ISO: 2026-01-20T09:00:00+09:00 -> 09:00
                 time_part = str(time_str).split('T')[1][:5]
             else:
                 time_part = str(time_str)[:5]
@@ -8338,7 +8352,6 @@ def get_admin_attendance_board(event, headers):
             return None
 
     def calc_break_total(breaks_data):
-        """休憩データから合計分を計算"""
         if not breaks_data:
             return 0
         total = 0
@@ -8348,28 +8361,26 @@ def get_admin_attendance_board(event, headers):
                 end = time_to_minutes(b.get('end') or b.get('break_end'))
                 if start is not None and end is not None and end > start:
                     total += (end - start)
-        elif isinstance(breaks_data, (int, float)):
-            total = int(breaks_data)
         return total
 
     def abs_diff_minutes(t1, t2):
-        """2つの時刻の差（分）を絶対値で返す"""
         m1 = time_to_minutes(t1)
         m2 = time_to_minutes(t2)
         if m1 is None or m2 is None:
-            return None
+            return 0
         return abs(m1 - m2)
 
     board_rows = []
-    # KPIカウント（5分類）
-    count_absent = 0       # 欠勤
-    count_no_clockout = 0  # 未退勤
-    count_late = 0         # 遅刻
-    count_break_issue = 0  # 休憩不備
-    count_divergence = 0   # raw/fixed乖離
+    count_absent = 0
+    count_no_clockout = 0
+    count_late = 0
+    count_break_issue = 0
+    count_divergence = 0
+    count_alert_12h = 0
+    count_alert_break_90m = 0
 
     scheduled_minutes = time_to_minutes(SCHEDULED_START_TIME)
-
+    
     for worker in workers:
         staff_id = worker.get('id')
         staff_name = worker.get('name') or worker.get('display_name') or staff_id
@@ -8377,98 +8388,105 @@ def get_admin_attendance_board(event, headers):
         requests = request_by_staff.get(staff_id, [])
         errors = error_by_staff.get(staff_id, [])
 
-        raw_clock_in = attendance.get('clock_in') if attendance else None
-        raw_clock_out = attendance.get('clock_out') if attendance else None
-        fixed_clock_in = attendance.get('fixed_clock_in') if attendance else None
-        fixed_clock_out = attendance.get('fixed_clock_out') if attendance else None
+        raw_in = attendance.get('clock_in') if attendance else None
+        raw_out = attendance.get('clock_out') if attendance else None
+        fixed_in = attendance.get('fixed_clock_in') if attendance else None
+        fixed_out = attendance.get('fixed_clock_out') if attendance else None
         raw_breaks = attendance.get('breaks') if attendance else None
         fixed_breaks = attendance.get('fixed_breaks') if attendance else None
 
-        # --- 5分類の異常判定 ---
         issues = []
-
-        # 1. 欠勤: clock_in が無い
-        if not raw_clock_in:
+        
+        # 1. 欠勤
+        if not raw_in:
             issues.append('absent')
             count_absent += 1
         else:
-            # 2. 未退勤: clock_in あり & clock_out 無し
-            if not raw_clock_out:
+            # 2. 未退勤 (12時間超チェック含む)
+            if not raw_out:
                 issues.append('no_clockout')
                 count_no_clockout += 1
-
-            # 3. 遅刻: clock_in が規定時刻より後
-            clock_in_minutes = time_to_minutes(raw_clock_in)
-            if clock_in_minutes is not None and scheduled_minutes is not None:
-                if clock_in_minutes > scheduled_minutes:
-                    issues.append('late')
-                    count_late += 1
-
-            # 4. 休憩不備: breaks が無い or 合計が基準未満
-            break_total = calc_break_total(fixed_breaks) or calc_break_total(raw_breaks)
-            if break_total < MIN_BREAK_MINUTES:
+                try:
+                    in_dt = datetime.fromisoformat(raw_in.replace('Z', '+00:00'))
+                    if (now_jst - in_dt).total_seconds() > 12 * 3600:
+                        issues.append('alert_12h')
+                        count_alert_12h += 1
+                except: pass
+            
+            # 3. 遅刻
+            in_min = time_to_minutes(raw_in)
+            if in_min and scheduled_minutes and in_min > scheduled_minutes:
+                issues.append('late')
+                count_late += 1
+            
+            # 4. 休憩不備 (90分超チェック含む)
+            brk_total = calc_break_total(fixed_breaks) or calc_break_total(raw_breaks)
+            if brk_total < MIN_BREAK_MINUTES:
                 issues.append('break_issue')
                 count_break_issue += 1
+            
+            current_breaks = fixed_breaks or raw_breaks
+            if isinstance(current_breaks, list):
+                for b in current_breaks:
+                    b_start = b.get('start') or b.get('break_start')
+                    b_end = b.get('end') or b.get('break_end')
+                    if b_start and not b_end:
+                        try:
+                            s_dt = datetime.fromisoformat(b_start.replace('Z', '+00:00'))
+                            if (now_jst - s_dt).total_seconds() > 90 * 60:
+                                issues.append('alert_break_90m')
+                                count_alert_break_90m += 1
+                                break
+                        except: pass
 
-            # 5. raw/fixed乖離: fixed が無い or 差が閾値超
+            # 5. 乖離
             if attendance:
-                if fixed_clock_in is None and fixed_clock_out is None:
+                if fixed_in is None and fixed_out is None:
                     issues.append('divergence')
                     count_divergence += 1
                 else:
-                    diff_in = abs_diff_minutes(raw_clock_in, fixed_clock_in) if fixed_clock_in else 0
-                    diff_out = abs_diff_minutes(raw_clock_out, fixed_clock_out) if fixed_clock_out else 0
-                    if (diff_in and diff_in > RAW_FIXED_THRESHOLD_MINUTES) or (diff_out and diff_out > RAW_FIXED_THRESHOLD_MINUTES):
+                    diff_in = abs_diff_minutes(raw_in, fixed_in) if fixed_in else 0
+                    diff_out = abs_diff_minutes(raw_out, fixed_out) if fixed_out else 0
+                    if diff_in > RAW_FIXED_THRESHOLD_MINUTES or diff_out > RAW_FIXED_THRESHOLD_MINUTES:
                         issues.append('divergence')
                         count_divergence += 1
 
-        # 状態ラベル（優先順位: 欠勤 > 未退勤 > 遅刻 > 休憩不備 > 乖離 > 正常）
         STATUS_LABELS = {
             'absent': '欠勤',
             'no_clockout': '未退勤',
+            'alert_12h': '退勤未打刻(12h超)',
             'late': '遅刻',
-            'break_issue': '休憩不備',
-            'divergence': 'raw/fixed乖離'
+            'break_issue': '休憩不足',
+            'alert_break_90m': '休憩未終了(90m超)',
+            'divergence': '記載乖離'
         }
-        primary_issue = issues[0] if issues else None
-        status_label = STATUS_LABELS.get(primary_issue, '正常')
-
+        primary_issue = None
+        # 警告を優先
+        for key in ['alert_12h', 'alert_break_90m', 'absent', 'no_clockout', 'late', 'break_issue', 'divergence']:
+            if key in issues:
+                primary_issue = key
+                break
+        
         board_rows.append({
             'attendance_id': attendance.get('id') if attendance else None,
             'staff_id': staff_id,
             'staff_name': staff_name,
             'role': worker.get('role'),
             'raw': {
-                'clock_in': _to_jst_iso(raw_clock_in) if raw_clock_in else None,
-                'clock_out': _to_jst_iso(raw_clock_out) if raw_clock_out else None,
+                'clock_in': _to_jst_iso(raw_in),
+                'clock_out': _to_jst_iso(raw_out),
                 'breaks': raw_breaks
             },
             'fixed': {
-                'clock_in': _to_jst_iso(fixed_clock_in) if fixed_clock_in else None,
-                'clock_out': _to_jst_iso(fixed_clock_out) if fixed_clock_out else None,
+                'clock_in': _to_jst_iso(fixed_in),
+                'clock_out': _to_jst_iso(fixed_out),
                 'breaks': fixed_breaks
             },
             'issues': issues,
             'status': primary_issue or 'ok',
-            'status_label': status_label,
+            'status_label': STATUS_LABELS.get(primary_issue, '正常'),
             'requests_count': len(requests),
             'errors_count': len(errors)
-        })
-
-    queue = []
-    for req in pending_requests:
-        queue.append({
-            'request_id': req.get('id'),
-            'attendance_id': req.get('attendance_id'),
-            'staff_id': req.get('staff_id'),
-            'staff_name': req.get('staff_name'),
-            'date': req.get('date'),
-            'reason': req.get('reason', ''),
-            'current_clock_in': req.get('current_clock_in'),
-            'current_clock_out': req.get('current_clock_out'),
-            'requested_clock_in': req.get('requested_clock_in'),
-            'requested_clock_out': req.get('requested_clock_out'),
-            'status': req.get('status')
         })
 
     kpis = {
@@ -8478,6 +8496,8 @@ def get_admin_attendance_board(event, headers):
         'late': count_late,
         'break_issue': count_break_issue,
         'divergence': count_divergence,
+        'alert_12h': count_alert_12h,
+        'alert_break_90m': count_alert_break_90m,
         'unresolved_errors': len(error_items)
     }
 
@@ -8487,7 +8507,6 @@ def get_admin_attendance_board(event, headers):
         'body': json.dumps({
             'result': 'ok' if board_rows else 'no_data',
             'date': date,
-            'timezone': 'Asia/Tokyo',
             'kpis': kpis,
             'board': board_rows,
             'queue': queue
@@ -8669,36 +8688,206 @@ def get_admin_attendance_user_detail(event, headers, worker_id):
         }, ensure_ascii=False, default=str)
     }
 
-def get_attendance_detail(attendance_id, headers):
-    """
-    勤怠記録詳細を取得
-    """
+def _is_hr_admin(user_info):
+    role = (user_info or {}).get('role')
+    return role in ['human_resources', 'hr', 'admin', 'operation', 'general_affairs']
+
+def get_admin_attendance_monthly_summary(event, headers):
+    user_info = _get_user_info_from_event(event)
+    if not _is_hr_admin(user_info):
+        return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'}, ensure_ascii=False)}
+    
+    query_params = event.get('queryStringParameters') or {}
+    month = query_params.get('month') # YYYY-MM
+    if not month:
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'month is required'}, ensure_ascii=False)}
+    
     try:
-        response = ATTENDANCE_TABLE.get_item(Key={'id': attendance_id})
-        if 'Item' in response:
-            return {
-                'statusCode': 200,
-                'headers': headers,
-                'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
-            }
-        else:
-            return {
-                'statusCode': 404,
-                'headers': headers,
-                'body': json.dumps({
-                    'error': '勤怠記録が見つかりません'
-                }, ensure_ascii=False)
-            }
-    except Exception as e:
-        print(f"Error getting attendance detail: {str(e)}")
+        # Scan for the month
+        response = ATTENDANCE_TABLE.scan(
+            FilterExpression=Attr('date').begins_with(month)
+        )
+        items = response.get('Items', [])
+        
+        # Calculate summary
+        total_work_min = 0
+        total_work_days = len(set(item.get('date') for item in items))
+        alert_count = 0
+        unconfirmed_count = 0
+        
+        now_jst = datetime.now(timezone.utc) + timedelta(hours=9)
+        
+        for item in items:
+            total_work_min += calc_work_minutes(item)
+            issues = get_issues(item, now_jst)
+            if any(i.startswith('alert_') or i in ['late', 'break_issue'] for i in issues):
+                alert_count += 1
+            if not item.get('fixed_clock_in') and not item.get('fixed_clock_out'):
+                unconfirmed_count += 1
+                
         return {
-            'statusCode': 500,
+            'statusCode': 200,
             'headers': headers,
             'body': json.dumps({
-                'error': '勤怠記録の取得に失敗しました',
-                'message': str(e)
+                'month': month,
+                'kpis': {
+                    'total_work_hours': round(total_work_min / 60, 1),
+                    'total_work_days': total_work_days,
+                    'unconfirmed_days': unconfirmed_count,
+                    'alert_count': alert_count
+                }
             }, ensure_ascii=False)
         }
+    except Exception as e:
+        print(f"Error monthly summary: {str(e)}")
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)}, ensure_ascii=False)}
+
+def get_admin_attendance_monthly_users(event, headers):
+    user_info = _get_user_info_from_event(event)
+    if not _is_hr_admin(user_info):
+        return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'}, ensure_ascii=False)}
+    
+    query_params = event.get('queryStringParameters') or {}
+    month = query_params.get('month')
+    if not month:
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'month is required'}, ensure_ascii=False)}
+    
+    try:
+        # Get all workers first to ensure everyone is listed
+        workers_res = WORKERS_TABLE.scan()
+        workers = workers_res.get('Items', [])
+        
+        # Get all attendance for the month
+        att_res = ATTENDANCE_TABLE.scan(
+            FilterExpression=Attr('date').begins_with(month)
+        )
+        items = att_res.get('Items', [])
+        
+        # Group by user
+        user_stats = {}
+        for w in workers:
+            user_stats[w['id']] = {
+                'staff_id': w['id'],
+                'staff_name': w.get('name') or w.get('display_name'),
+                'work_days': 0,
+                'total_work_min': 0,
+                'total_break_min': 0,
+                'unconfirmed_days': 0,
+                'alert_count': 0
+            }
+            
+        now_jst = datetime.now(timezone.utc) + timedelta(hours=9)
+        
+        for item in items:
+            sid = item.get('staff_id')
+            if sid not in user_stats: continue
+            
+            stats = user_stats[sid]
+            stats['work_days'] += 1
+            stats['total_work_min'] += calc_work_minutes(item)
+            stats['total_break_min'] += calc_break_total(item.get('fixed_breaks') or item.get('breaks'))
+            
+            issues = get_issues(item, now_jst)
+            if any(i.startswith('alert_') or i in ['late', 'break_issue'] for i in issues):
+                stats['alert_count'] += 1
+            if not item.get('fixed_clock_in') and not item.get('fixed_clock_out'):
+                stats['unconfirmed_days'] += 1
+                
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'month': month,
+                'users': list(user_stats.values())
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error monthly users: {str(e)}")
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)}, ensure_ascii=False)}
+
+def patch_admin_attendance_fixed(attendance_id, event, headers):
+    user_info = _get_user_info_from_event(event)
+    if not _is_hr_admin(user_info):
+        return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'}, ensure_ascii=False)}
+    
+    body = json.loads(event.get('body', '{}'))
+    reason_code = body.get('reason_code')
+    if not reason_code:
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'reason_code is required'}, ensure_ascii=False)}
+    
+    try:
+        # Prepare UpdateExpression
+        update_parts = ["SET fixed_reason_code = :rc, fixed_at = :now, fixed_by = :by"]
+        vals = {
+            ':rc': reason_code,
+            ':now': (datetime.now(timezone.utc) + timedelta(hours=9)).isoformat(),
+            ':by': user_info.get('email')
+        }
+        
+        # 可変フィールド
+        fields = ['fixed_clock_in', 'fixed_clock_out', 'fixed_breaks', 'fixed_total_minutes', 'fixed_status']
+        for f in fields:
+            if f in body:
+                update_parts.append(f"{f} = :{f}")
+                vals[f":{f}"] = body[f]
+        
+        ATTENDANCE_TABLE.update_item(
+            Key={'id': attendance_id},
+            UpdateExpression=", ".join(update_parts),
+            ExpressionAttributeValues=vals
+        )
+        
+        return {'statusCode': 200, 'headers': headers, 'body': json.dumps({'status': 'success'}, ensure_ascii=False)}
+    except Exception as e:
+        print(f"Error patching attendance: {str(e)}")
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)}, ensure_ascii=False)}
+
+def calc_work_minutes(attendance):
+    # (Helper used by monthly)
+    clock_in = attendance.get('fixed_clock_in') or attendance.get('clock_in')
+    clock_out = attendance.get('fixed_clock_out') or attendance.get('clock_out')
+    if not clock_in or not clock_out:
+        return 0
+    try:
+        in_dt = datetime.fromisoformat(clock_in.replace('Z', '+00:00'))
+        out_dt = datetime.fromisoformat(clock_out.replace('Z', '+00:00'))
+        total_min = (out_dt - in_dt).total_seconds() / 60
+        brk = calc_break_total(attendance.get('fixed_breaks') or attendance.get('breaks'))
+        return max(0, int(total_min - brk))
+    except:
+        return 0
+
+def get_issues(attendance, now_jst):
+    # (Helper used by monthly)
+    issues = []
+    raw_in = attendance.get('clock_in')
+    raw_out = attendance.get('clock_out')
+    if not raw_in:
+        issues.append('absent')
+        return issues
+        
+    if not raw_out:
+        issues.append('no_clockout')
+        try:
+            in_dt = datetime.fromisoformat(raw_in.replace('Z', '+00:00'))
+            if (now_jst - in_dt).total_seconds() > 12 * 3600:
+                issues.append('alert_12h')
+        except: pass
+    
+    # Simple thresholds for late/break issue
+    # clock_in > 09:00 JST
+    try:
+        in_dt = datetime.fromisoformat(raw_in.replace('Z', '+00:00'))
+        in_jst = in_dt + timedelta(hours=9)
+        if in_jst.hour > 9 or (in_jst.hour == 9 and in_jst.minute > 0):
+            issues.append('late')
+    except: pass
+    
+    brk = calc_break_total(attendance.get('fixed_breaks') or attendance.get('breaks'))
+    if brk < 60:
+        issues.append('break_issue')
+        
+    return issues
 
 def update_attendance(attendance_id, event, headers):
     """
