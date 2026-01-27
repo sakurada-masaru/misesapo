@@ -25,6 +25,11 @@
         pointer-events: none;
     }
 
+    #job-change-overlay.active {
+        display: flex;
+        pointer-events: auto;
+    }
+
     #job-change-label {
         position: absolute;
         font-family: Inter, sans-serif;
@@ -295,6 +300,13 @@
         justify-content: center;
         align-items: center;
         opacity: 0;
+        pointer-events: none;
+    }
+
+    #job-change-overlay.active {
+        display: flex;
+        opacity: 1;
+        pointer-events: auto;
     }
 
     #job-change-label {
@@ -320,7 +332,7 @@
         border-radius: 25px;
         cursor: pointer;
         z-index: 8000;
-        display: none;
+        display: flex;
         align-items: center;
         gap: 8px;
         font-size: 0.85rem;
@@ -1713,7 +1725,8 @@
             <section class="hr-board">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <h2><i class="fas fa-table"></i> 当日勤怠状況</h2>
-                    <button class="hr-export-btn" onclick="HrAttendanceDashboard.exportDailyCSV()"><i class="fas fa-file-csv"></i> CSV出力</button>
+                    <button class="hr-export-btn" onclick="HrAttendanceDashboard.exportDailyCSV()"><i
+                            class="fas fa-file-csv"></i> CSV出力</button>
                 </div>
                 <table id="attendance-table">
                     <thead>
@@ -1744,7 +1757,8 @@
             <section class="hr-board">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <h2><i class="fas fa-calendar-alt"></i> 月次人別集計</h2>
-                    <button class="hr-export-btn" onclick="HrAttendanceDashboard.exportMonthlyCSV()"><i class="fas fa-file-csv"></i> CSV出力</button>
+                    <button class="hr-export-btn" onclick="HrAttendanceDashboard.exportMonthlyCSV()"><i
+                            class="fas fa-file-csv"></i> CSV出力</button>
                 </div>
                 <table id="monthly-table">
                     <thead>
@@ -3131,6 +3145,13 @@ ${context}
 
     document.addEventListener("DOMContentLoaded", () => {
         EntranceCore.initFadeIn();
+        const isLoggedIn = !!(localStorage.getItem('cognito_id_token') && localStorage.getItem('cognito_user'));
+        const savedJobType = localStorage.getItem('current_job_type');
+        if (isLoggedIn) {
+            const floatingBtn = document.getElementById('floating-job-btn');
+            if (floatingBtn) floatingBtn.style.display = 'flex';
+            if (savedJobType) updateJobPresence(savedJobType);
+        }
     });
 
     // Global toggle function
@@ -3139,7 +3160,6 @@ ${context}
         const chatContainer = document.getElementById('chat-container');
         const entranceUI = [
             document.querySelector('.visualizer-container'),
-            document.getElementById('floating-job-btn'),
             document.getElementById('action-buttons-container'),
             document.getElementById('latest-message-container'),
             document.getElementById('chat-log-container'),
@@ -3245,6 +3265,24 @@ ${context}
                 toggleHrDashboard(true);
             };
         }
+    }
+
+    function updateJobPresence(jobKey) {
+        const job = JOB_TYPES[jobKey];
+        if (!job) return;
+
+        const floatingBtn = document.getElementById('floating-job-btn');
+        const label = document.getElementById('floating-job-label');
+        if (floatingBtn && label) {
+            label.textContent = job.label + 'モード';
+            floatingBtn.style.display = 'flex';
+            floatingBtn.style.borderColor = job.color;
+            floatingBtn.style.color = job.color;
+            const dot = floatingBtn.querySelector('.job-dot');
+            if (dot) dot.style.background = job.color;
+            floatingBtn.style.boxShadow = `0 0 20px ${job.color}80`;
+        }
+        showJobActions(jobKey);
     }
 
     function filterSidebar(jobKey) {

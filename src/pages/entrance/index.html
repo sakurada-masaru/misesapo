@@ -20,6 +20,11 @@
         pointer-events: none;
     }
 
+    #job-change-overlay.active {
+        display: flex;
+        pointer-events: auto;
+    }
+
     #job-change-label {
         position: absolute;
         font-family: 'Inter', sans-serif;
@@ -973,6 +978,13 @@
         justify-content: center;
         align-items: center;
         opacity: 0;
+        pointer-events: none;
+    }
+
+    #job-change-overlay.active {
+        display: flex;
+        opacity: 1;
+        pointer-events: auto;
     }
 
     #job-change-label {
@@ -998,7 +1010,7 @@
         border-radius: 25px;
         cursor: pointer;
         z-index: 8000;
-        display: none;
+        display: flex;
         align-items: center;
         gap: 8px;
         font-size: 0.85rem;
@@ -2261,15 +2273,37 @@
     /* Action Buttons Container Style */
     .action-buttons-container {
         width: 100%;
-        display: flex;
+        display: flex !important;
         justify-content: center;
         align-items: center;
         flex-direction: column;
-        gap: 10px;
-        margin-bottom: 20px;
-        margin-top: auto;
-        padding-top: 60px;
-        z-index: 20;
+        gap: 15px;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        z-index: 1000 !important;
+        position: relative;
+        min-height: 50px;
+    }
+
+    .job-select-btn {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        color: #fff !important;
+        padding: 14px 28px !important;
+        border-radius: 30px !important;
+        cursor: pointer !important;
+        transition: all 0.2s !important;
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        backdrop-filter: blur(15px) !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .job-select-btn:hover {
+        background: var(--accent-color) !important;
+        border-color: #fff !important;
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 8px 25px var(--accent-glow) !important;
     }
 </style>
 
@@ -4289,12 +4323,20 @@ ${context}`;
 
     document.addEventListener('DOMContentLoaded', () => {
         EntranceCore.initFadeIn();
+        const isLoggedIn = !!(localStorage.getItem('cognito_id_token') && localStorage.getItem('cognito_user'));
+        const savedJobType = localStorage.getItem('current_job_type');
+
+        // Show floating button and sync presence if logged in
+        if (isLoggedIn) {
+            const floatingBtn = document.getElementById('floating-job-btn');
+            if (floatingBtn) floatingBtn.style.display = 'flex';
+            if (savedJobType) updateJobPresence(savedJobType);
+        }
+
         const nextPath = getNextFromUrl();
         const normalizedCurrent = normalizeEntrancePath(window.location.pathname);
         const params = new URLSearchParams(window.location.search);
         const fromEntrance = params.get('from') === 'entrance';
-        const savedJobType = localStorage.getItem('current_job_type');
-        const isLoggedIn = !!(localStorage.getItem('cognito_id_token') && localStorage.getItem('cognito_user'));
 
         // Robust map lookup (handles leading slash variations)
         const getNextConfig = (path) => {
@@ -4403,26 +4445,30 @@ ${context}`;
 
     // Job Change Bar: Displays mode selection (Toggled by floating button)
     function showJobSelection() {
+        console.log("[DEBUG] showJobSelection called");
         const actionContainer = document.getElementById('job-change-bar-container');
-        if (!actionContainer) return;
+        if (!actionContainer) {
+            console.error("[ERROR] job-change-bar-container not found");
+            return;
+        }
 
         actionContainer.style.display = 'flex';
+        actionContainer.style.opacity = '1';
         actionContainer.innerHTML = '';
+
         const btnDiv = document.createElement('div');
         btnDiv.className = 'action-bubble-container';
         btnDiv.style.display = 'flex';
-        btnDiv.style.gap = '8px';
+        btnDiv.style.gap = '15px';
         btnDiv.style.flexWrap = 'wrap';
         btnDiv.style.justifyContent = 'center';
-        btnDiv.style.animation = 'fadeInUp 0.3s ease-out forwards';
+        // 確実に表示するためアニメーションを外す
+        btnDiv.style.opacity = '1';
 
         Object.keys(JOB_TYPES).forEach(jobKey => {
             const job = JOB_TYPES[jobKey];
             const buttonHtml = `
-                <button class="job-select-btn" onclick="selectJobType('${jobKey}')" 
-                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
-                    color: #fff; padding: 10px 20px; border-radius: 20px; cursor: pointer;
-                    transition: all 0.3s; font-size: 0.9rem;">
+                <button class="job-select-btn" onclick="selectJobType('${jobKey}')">
                     ${job.label}
                 </button>
             `;
@@ -4430,6 +4476,12 @@ ${context}`;
         });
 
         actionContainer.appendChild(btnDiv);
+
+        // メッセージコンテナの直後に移動させて確実に表示させる
+        const latestMsg = document.getElementById('latest-message-container');
+        if (latestMsg) {
+            latestMsg.after(actionContainer);
+        }
     }
 
     function updateJobPresence(jobKey) {

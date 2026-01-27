@@ -511,8 +511,7 @@ const EntranceCore = {
         setTimeout(() => {
             if (overlay && label) {
                 console.log('[EntranceCore] Showing label flicker animation');
-                overlay.style.display = 'flex';
-                overlay.style.opacity = '1';
+                overlay.classList.add('active');
                 overlay.style.background = 'transparent'; // CRITICAL: Keep transparent to see CRT
                 label.textContent = 'CHANGE JOB';
                 label.classList.add('flicker');
