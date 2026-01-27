@@ -1507,6 +1507,7 @@
             padding: 0 10px 30px;
             margin: 0 auto 40px;
             overflow: hidden;
+            max-width: 1200px;
         }
 
         .service-image-swiper .swiper-wrapper {
@@ -5184,12 +5185,16 @@
         (function () {
             const serviceImageSwiper = document.querySelector('.service-image-swiper');
             if (!serviceImageSwiper || typeof Swiper === 'undefined') return;
+            const slideCount = serviceImageSwiper.querySelectorAll('.swiper-slide').length;
 
             new Swiper('.service-image-swiper', {
                 grabCursor: true,
                 slidesPerView: 'auto',
                 spaceBetween: 20,
                 loop: true,
+                loopedSlides: slideCount,
+                loopAdditionalSlides: Math.min(slideCount, 6),
+                watchSlidesProgress: true,
                 autoplay: {
                     delay: 0,
                     disableOnInteraction: false
