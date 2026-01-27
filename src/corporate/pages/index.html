@@ -5188,18 +5188,15 @@
             const slideCount = serviceImageSwiper.querySelectorAll('.swiper-slide').length;
 
             new Swiper('.service-image-swiper', {
-                grabCursor: true,
                 slidesPerView: 'auto',
                 spaceBetween: 20,
+                grabCursor: true,
                 loop: true,
-                loopedSlides: slideCount,
-                loopAdditionalSlides: slideCount,
-                watchSlidesProgress: true,
                 autoplay: {
                     delay: 0,
                     disableOnInteraction: false
                 },
-                speed: 12000,
+                speed: 6000,
                 pagination: {
                     el: '.service-image-pagination',
                     clickable: true
