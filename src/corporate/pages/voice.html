@@ -2,6 +2,26 @@
 @json('data/meta/voice_title.json', $title)
 @json('data/meta/voice_body_class.json', $body_class)
 
+<!-- 通常ヘッダー（about-more.html と同じ） -->
+<header class="normal-header visible">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+                    onerror="this.style.display='none'">
+            </a>
+        </div>
+        <nav class="normal-header-nav">
+            <a href="/">TOP</a>
+            <a href="/service/service.html">対応可能サービス</a>
+            <a href="/voice/">お客様の声</a>
+            <a href="mailto:support@misesapo.com">カスタマーズサポート</a>
+            <a href="/#event">イベント</a>
+            <a href="/privacy-policy/">規約＆ポリシー</a>
+        </nav>
+    </div>
+</header>
+
 <main id="main" class="voice-page">
     <!-- パンくずリスト -->
     <nav class="breadcrumb" aria-label="パンくずリスト">
@@ -245,6 +265,11 @@
             background: #FDEDED;
             min-height: 100vh;
             padding-top: 100px;
+        }
+
+        body.page-voice #default-header-wrapper,
+        body.page-voice #normal-header-wrapper {
+            display: none !important;
         }
 
         .breadcrumb {

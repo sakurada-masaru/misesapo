@@ -1,0 +1,156 @@
+@layout('layouts.base')
+@json('data/meta/recruit_apply_inside_sales_title.json', $title)
+@json('data/meta/recruit_apply_inside_sales_body_class.json', $body_class)
+
+<!-- 通常ヘッダー（about-more.html と同じ） -->
+<header class="normal-header visible">
+  <div class="normal-header-inner">
+    <div class="normal-header-logo">
+      <a href="/">
+        <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+          onerror="this.style.display='none'">
+      </a>
+    </div>
+    <nav class="normal-header-nav">
+      <a href="/">TOP</a>
+      <a href="/service/service.html">対応可能サービス</a>
+      <a href="/voice/">お客様の声</a>
+      <a href="mailto:support@misesapo.com">カスタマーズサポート</a>
+      <a href="/#event">イベント</a>
+      <a href="/privacy-policy/">規約＆ポリシー</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  body.page-recruit-apply #default-header-wrapper,
+  body.page-recruit-apply #normal-header-wrapper {
+    display: none !important;
+  }
+</style>
+
+<main id="main" class="recruit-apply-page">
+  <div class="recruit-apply-container">
+    <!-- Header -->
+    <div class="recruit-apply-header">
+      <div class="recruit-breadcrumb">
+        <span>シート記入</span>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span>内容確認</span>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span>応募完了</span>
+      </div>
+    </div>
+
+    <!-- Main Title -->
+    <h1 class="recruit-apply-title">インサイドセールス 募集要項_応募シート</h1>
+
+    <!-- Main Content -->
+    <div class="recruit-apply-content">
+      <!-- Left: Job Details -->
+      <div class="recruit-apply-details">
+        <table class="recruit-details-table">
+          <tr>
+            <th>項目</th>
+            <th>内容</th>
+          </tr>
+          <tr>
+            <td>雇用形態</td>
+            <td>
+              正社員<br>
+              契約社員 (正社員登用あり)<br>
+              パート (時短勤務希望者応相談)
+            </td>
+          </tr>
+          <tr>
+            <td>勤務先</td>
+            <td>東京都中央区日本橋茅場町1-8-1茅場町一丁目</td>
+          </tr>
+          <tr>
+            <td>勤務地(エリア)</td>
+            <td>不定</td>
+          </tr>
+          <tr>
+            <td>職種</td>
+            <td>インサイドセールス(法人向けインフラ支援サービスの案内・提案)</td>
+          </tr>
+          <tr>
+            <td>勤務時間</td>
+            <td>
+              10:00~11:30<br>
+              14:00~17:30<br>
+              20:00~23:00<br>
+              時短・週4日勤務など応相談 (パートの場合)<br>
+              リモート併用可 (一部出社あり)
+            </td>
+          </tr>
+          <tr>
+            <td>給与</td>
+            <td>
+              月給:250,000円~400,000円(経験・スキルに応じて)<br>
+              インセンティブあり (成果に応じた報奨制度)<br>
+              昇給:年1回(評価による)<br>
+              賞与:年2回(業績・評価により変動)
+            </td>
+          </tr>
+          <tr>
+            <td>福利厚生</td>
+            <td>
+              各種社会保険完備<br>
+              交通費支給(上限あり)<br>
+              営業研修・ロープレ・OJTあり<br>
+              ノートPC・業務用スマホ貸与<br>
+              リモート勤務支援制度<br>
+              服装自由(ビジネスカジュアル)<br>
+              産休・育休制度(取得実績あり)<br>
+              ストックオプション制度(一定条件あり)
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Right: Application Form -->
+      <div class="recruit-apply-form">
+        <h2 class="recruit-form-title">必須項目の記入をお願いします。</h2>
+        <form id="recruit-apply-form" action="/recruit/apply/confirm.html" method="get">
+          <div class="recruit-form-group">
+            <label class="recruit-form-label">
+              お名前
+              <span class="recruit-required-badge">必須</span>
+            </label>
+            <input type="text" name="name" class="recruit-form-input" required />
+          </div>
+          <div class="recruit-form-group">
+            <label class="recruit-form-label">
+              ふりがな
+              <span class="recruit-required-badge">必須</span>
+            </label>
+            <input type="text" name="furigana" class="recruit-form-input" required />
+          </div>
+          <div class="recruit-form-group">
+            <label class="recruit-form-label">
+              電話番号
+              <span class="recruit-required-badge">必須</span>
+            </label>
+            <input type="tel" name="phone" class="recruit-form-input" required />
+          </div>
+          <div class="recruit-form-group">
+            <label class="recruit-form-label">
+              メールアドレス
+              <span class="recruit-required-badge">必須</span>
+            </label>
+            <input type="email" name="email" class="recruit-form-input" required />
+          </div>
+          <input type="hidden" name="job_type" value="inside-sales" />
+          <button type="submit" class="recruit-form-submit">入力内容の確認</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="/css/recruit-apply.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <script src="/js/recruit-apply.js"></script>
+  <script src="/js/header.js"></script>
+</main>
+
