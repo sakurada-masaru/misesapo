@@ -1712,6 +1712,9 @@
             <div class="hr-dashboard-date">
                 <input type="date" id="hr-board-date">
                 <input type="month" id="hr-month-select" style="display:none">
+                <button id="hr-theme-toggle" onclick="toggleHrTheme()" title="テーマ切替">
+                    <i class="fas fa-sun"></i>
+                </button>
                 <button id="hr-board-refresh"><i class="fas fa-sync-alt"></i> 更新</button>
             </div>
         </header>
@@ -3215,6 +3218,42 @@ ${context}
             });
         }
     };
+
+    // Theme toggle function for HR Dashboard
+    window.toggleHrTheme = function () {
+        const dashboard = document.getElementById('hr-attendance-dashboard');
+        const toggleBtn = document.getElementById('hr-theme-toggle');
+        if (!dashboard) return;
+
+        const isLight = dashboard.classList.toggle('light-mode');
+
+        // Update button icon
+        if (toggleBtn) {
+            toggleBtn.innerHTML = isLight
+                ? '<i class="fas fa-moon"></i>'
+                : '<i class="fas fa-sun"></i>';
+            toggleBtn.title = isLight ? 'ダークモードに切替' : 'ライトモードに切替';
+        }
+
+        // Save preference
+        localStorage.setItem('hr-dashboard-theme', isLight ? 'light' : 'dark');
+    };
+
+    // Apply saved theme on load
+    (function applyHrTheme() {
+        const saved = localStorage.getItem('hr-dashboard-theme');
+        if (saved === 'light') {
+            const dashboard = document.getElementById('hr-attendance-dashboard');
+            const toggleBtn = document.getElementById('hr-theme-toggle');
+            if (dashboard) {
+                dashboard.classList.add('light-mode');
+            }
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+                toggleBtn.title = 'ダークモードに切替';
+            }
+        }
+    })();
 
     function showJobActions(jobKey) {
         const actionContainer = document.getElementById('action-buttons-container');

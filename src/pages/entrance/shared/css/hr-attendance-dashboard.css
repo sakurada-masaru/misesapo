@@ -637,5 +637,170 @@ body.mode-hr-attendance .hr-board-refresh {
   width: 100%;
   height: calc(100% - 60px);
   border: 0;
-  background: #0b1220;
+  background: #f9fafb;
+}
+
+/* ============================================
+   Theme Toggle Button
+   ============================================ */
+#hr-theme-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fbbf24;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#hr-theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+/* ============================================
+   Light Mode Styles
+   ============================================ */
+.hr-attendance-dashboard.light-mode {
+  background: #f9fafb !important;
+  color: #1f2937 !important;
+}
+
+.hr-attendance-dashboard.light-mode .hr-dashboard-header h1 {
+  color: #6366f1 !important;
+}
+
+.hr-attendance-dashboard.light-mode .hr-dashboard-back-btn {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+
+.hr-attendance-dashboard.light-mode .hr-view-toggle button {
+  background: #e5e7eb;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.hr-attendance-dashboard.light-mode .hr-view-toggle button.active {
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
+}
+
+.hr-attendance-dashboard.light-mode .hr-kpi-grid .kpi-card {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.hr-attendance-dashboard.light-mode .hr-kpi-grid .kpi-card .kpi-value {
+  color: #1f2937 !important;
+}
+
+.hr-attendance-dashboard.light-mode .hr-kpi-grid .kpi-card .kpi-label {
+  color: #6b7280 !important;
+}
+
+.hr-attendance-dashboard.light-mode .hr-board,
+.hr-attendance-dashboard.light-mode .hr-monthly-section {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.hr-attendance-dashboard.light-mode .hr-board h2,
+.hr-attendance-dashboard.light-mode .hr-monthly-section h2 {
+  color: #1f2937 !important;
+}
+
+.hr-attendance-dashboard.light-mode table {
+  color: #1f2937 !important;
+}
+
+.hr-attendance-dashboard.light-mode table th {
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  border-color: #e5e7eb !important;
+}
+
+.hr-attendance-dashboard.light-mode table td {
+  border-color: #e5e7eb !important;
+}
+
+.hr-attendance-dashboard.light-mode table tr:hover {
+  background: #f9fafb !important;
+}
+
+.hr-attendance-dashboard.light-mode input[type="date"],
+.hr-attendance-dashboard.light-mode input[type="month"] {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+  border-color: #d1d5db !important;
+}
+
+.hr-attendance-dashboard.light-mode #hr-board-refresh,
+.hr-attendance-dashboard.light-mode #hr-theme-toggle {
+  background: #ffffff;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.hr-attendance-dashboard.light-mode #hr-theme-toggle {
+  color: #1f2937;
+}
+
+.hr-attendance-dashboard.light-mode .hr-export-btn {
+  background: #10b981;
+  color: #fff;
+}
+
+.hr-attendance-dashboard.light-mode .hr-empty {
+  color: #6b7280 !important;
+}
+
+/* Light mode modal */
+.hr-attendance-dashboard.light-mode .hr-modal-content {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+}
+
+.hr-attendance-dashboard.light-mode .hr-modal-header {
+  background: #f9fafb !important;
+  border-color: #e5e7eb !important;
+  color: #1f2937 !important;
+}
+
+.hr-attendance-dashboard.light-mode .hr-modal-header h3 {
+  color: #1f2937 !important;
+}
+
+.hr-attendance-dashboard.light-mode .hr-modal-body {
+  color: #1f2937 !important;
+}
+
+.hr-attendance-dashboard.light-mode .hr-modal-footer {
+  background: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+
+/* Light mode timecard modal */
+.hr-attendance-dashboard.light-mode .hr-timecard-panel {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+}
+
+.hr-attendance-dashboard.light-mode .hr-timecard-modal .hr-modal-header {
+  background: #f3f4f6 !important;
+}
+
+.hr-attendance-dashboard.light-mode .hr-timecard-modal .hr-modal-header h3 {
+  color: #6366f1 !important;
+}
+
+.hr-attendance-dashboard.light-mode .hr-timecard-modal .hr-modal-header button {
+  background: #ffffff;
+  border-color: #d1d5db;
+  color: #374151;
 }

@@ -2758,11 +2758,28 @@
         const embedMonth = urlParams.get('month');
 
         if (embedMode === 'timecard') {
-          // 埋め込みモード: タイムカードセクションのみ表示
-          document.documentElement.style.background = '#0b1220';
+          // 埋め込みモード: タイムカードセクションのみ表示（ライトモード）
+          document.documentElement.style.background = '#f9fafb';
           document.body.style.margin = '0';
           document.body.style.padding = '0';
-          document.body.style.background = '#0b1220';
+          document.body.style.background = '#f9fafb';
+
+          // CSSでサイドバーマージンを強制的に削除
+          const embedStyle = document.createElement('style');
+          embedStyle.textContent = `
+            .sidebar, .admin-sidebar { display: none !important; }
+            .main-content { 
+              margin-left: 0 !important; 
+              padding: 16px !important;
+              width: 100% !important;
+            }
+            .admin-user-detail { min-height: auto !important; }
+            .page-header { display: none !important; }
+            .info-card { display: none !important; }
+            .schedule-section, .actions-section, .nav-section { display: none !important; }
+            .attendance-section:not(:first-of-type) { display: none !important; }
+          `;
+          document.head.appendChild(embedStyle);
 
           // サイドバーとヘッダーを非表示
           const sidebar = document.querySelector('.sidebar, .admin-sidebar');
@@ -2772,17 +2789,13 @@
           if (mainContent) {
             mainContent.style.marginLeft = '0';
             mainContent.style.padding = '16px';
-            mainContent.style.background = '#0b1220';
-            mainContent.style.color = '#f8fafc';
+            mainContent.style.background = '#f9fafb';
+            mainContent.style.width = '100%';
           }
 
           // ページヘッダーを非表示
           const pageHeader = document.querySelector('.page-header');
           if (pageHeader) pageHeader.style.display = 'none';
-
-          // ローディング表示のスタイル
-          const loading = document.getElementById('loading');
-          if (loading) loading.style.color = '#f8fafc';
 
           // 全情報カードを非表示
           document.querySelectorAll('.info-card').forEach(el => el.style.display = 'none');
@@ -2796,21 +2809,13 @@
             if (idx > 0) section.style.display = 'none'; // 最初のタイムカードセクション以外を非表示
           });
 
-          // タイムカードセクションのスタイル調整
+          // タイムカードセクションのスタイル調整（ライトモード）
           const timecardSection = document.querySelector('.attendance-section');
           if (timecardSection) {
-            timecardSection.style.background = '#0b1220';
-            timecardSection.style.color = '#f8fafc';
-            timecardSection.style.padding = '0';
-            timecardSection.style.borderRadius = '0';
-
-            // セクションヘッダのスタイル
-            const sectionHeader = timecardSection.querySelector('.section-header');
-            if (sectionHeader) sectionHeader.style.color = '#f8fafc';
-
-            // タイトル
-            const sectionTitle = timecardSection.querySelector('.section-title');
-            if (sectionTitle) sectionTitle.style.color = '#8b5cf6';
+            timecardSection.style.background = '#ffffff';
+            timecardSection.style.padding = '16px';
+            timecardSection.style.borderRadius = '12px';
+            timecardSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
           }
 
           // 月の初期値を設定（embedMonth があれば）
