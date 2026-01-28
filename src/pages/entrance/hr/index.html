@@ -1763,19 +1763,19 @@
                             class="fas fa-file-csv"></i> CSV出力</button>
                 </div>
                 <div class="attendance-table-wrap">
-                <table id="monthly-table">
-                    <thead>
-                        <tr>
-                            <th>氏名</th>
-                            <th>出勤日数</th>
-                            <th>総労働時間</th>
-                            <th>総休憩時間</th>
-                            <th>未確定日</th>
-                            <th>アラート数</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                    <table id="monthly-table">
+                        <thead>
+                            <tr>
+                                <th>氏名</th>
+                                <th>出勤日数</th>
+                                <th>総労働時間</th>
+                                <th>総休憩時間</th>
+                                <th>未確定日</th>
+                                <th>アラート数</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
                 <div class="hr-empty" id="hr-monthly-empty">データがありません</div>
             </section>
@@ -1794,6 +1794,18 @@
                 <div class="hr-modal-footer">
                     <button class="hr-secondary-btn" onclick="closeHrDetail()">閉じる</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Timecard Modal (iframe) -->
+        <div id="hr-timecard-modal" class="hr-modal hr-timecard-modal">
+            <div class="hr-modal-backdrop" onclick="HrAttendanceDashboard.closeTimecardModal()"></div>
+            <div class="hr-timecard-panel">
+                <div class="hr-modal-header">
+                    <h3 id="hr-timecard-title"><i class="fas fa-calendar-check"></i> タイムカード</h3>
+                    <button onclick="HrAttendanceDashboard.closeTimecardModal()">&times;</button>
+                </div>
+                <iframe id="hr-timecard-iframe" class="hr-timecard-iframe" src="about:blank"></iframe>
             </div>
         </div>
     </section>

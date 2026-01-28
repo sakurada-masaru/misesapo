@@ -573,3 +573,69 @@ body.mode-hr-attendance .hr-board-refresh {
   margin-right: 64px !important;
   /* メニューボタン幅ぶん */
 }
+
+/* ============================================
+   Timecard Modal (iframe)
+   ============================================ */
+.hr-timecard-modal .hr-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+}
+
+.hr-timecard-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(1100px, 92vw);
+  height: min(82vh, 820px);
+  background: #0b1220;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 14px;
+  overflow: hidden;
+  z-index: 9999;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(139, 92, 246, 0.2);
+}
+
+.hr-timecard-modal .hr-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.hr-timecard-modal .hr-modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.hr-timecard-modal .hr-modal-header button {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hr-timecard-modal .hr-modal-header button:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.hr-timecard-iframe {
+  width: 100%;
+  height: calc(100% - 60px);
+  border: 0;
+  background: #0b1220;
+}

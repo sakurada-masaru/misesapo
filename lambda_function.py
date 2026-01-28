@@ -8388,7 +8388,10 @@ def get_admin_attendance_board(event, headers):
         staff_name = worker.get('name') or worker.get('display_name') or staff_id
         attendance = attendance_map.get(staff_id)
         requests = request_by_staff.get(staff_id, [])
-        errors = error_by_staff.get(staff_id, [])
+        # 必須③：エラーを当日＋未解決のみにフィルタ
+        all_errors = error_by_staff.get(staff_id, [])
+        errors = [e for e in all_errors if e.get('date') == date and not e.get('resolved', False)]
+
 
         raw_in = attendance.get('clock_in') if attendance else None
         raw_out = attendance.get('clock_out') if attendance else None
@@ -8649,7 +8652,10 @@ def get_admin_attendance_user_detail(event, headers, worker_id):
             errors_by_date.setdefault(date_key, []).append({
                 'error_id': err.get('id'),
                 'type': err.get('type'),
-                'status': err.get('status')
+                'status': err.get('status'),
+                'message': err.get('message', ''),  # 必須②：エラーメッセージ追加
+                'resolved': err.get('resolved', False),  # 必須②：解決フラグ追加
+                'created_at': err.get('created_at', '')  # 必須②：作成日時追加
             })
 
     days = []
@@ -8659,6 +8665,7 @@ def get_admin_attendance_user_detail(event, headers, worker_id):
             continue
         days.append({
             'date': date_key,
+            'attendance_id': item.get('id'),  # 必須①：attendance_id追加
             'fixed': {
                 'clock_in': _to_jst_iso(item.get('fixed_clock_in')),
                 'clock_out': _to_jst_iso(item.get('fixed_clock_out')),

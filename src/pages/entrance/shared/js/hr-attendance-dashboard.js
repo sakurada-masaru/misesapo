@@ -274,13 +274,14 @@ window.HrAttendanceDashboard = (() => {
         if (e.target.classList.contains('hr-admin-detail-link')) return;
         window.location.href = `attendance/user.html?uid=${u.staff_id}&month=${document.getElementById('hr-month-select').value}`;
       };
-      // 個人詳細リンクのクリックハンドラ
+      // 個人詳細リンクのクリックハンドラ（タイムカードモーダル表示）
       const detailLink = tr.querySelector('.hr-admin-detail-link');
       if (detailLink) {
         detailLink.onclick = (e) => {
           e.preventDefault();
           e.stopPropagation();
-          window.open('/admin/users/detail?id=' + u.staff_id, '_blank');
+          const month = document.getElementById('hr-month-select')?.value || new Date().toISOString().slice(0, 7);
+          openTimecardModal(u.staff_id, u.staff_name || u.staff_id, month);
         };
       }
       tbody.appendChild(tr);
@@ -307,26 +308,247 @@ window.HrAttendanceDashboard = (() => {
       const day = data.days?.[0];
       if (!day) { body.innerHTML = 'データなし'; return; }
 
+      // 時刻をHH:MM形式に変換
+      const rawInTime = formatTime(day.raw.clock_in);
+      const rawOutTime = formatTime(day.raw.clock_out);
+      const fixedInTime = formatTime(day.fixed.clock_in) || rawInTime || '';
+      const fixedOutTime = formatTime(day.fixed.clock_out) || rawOutTime || '';
+
+      // エラー一覧HTML生成
+      let errorsHtml = '';
+      if (day.errors && day.errors.length > 0) {
+        errorsHtml = `
+          <div style="margin-top:15px;padding:10px;background:rgba(239,68,68,0.1);border-radius:8px;border:1px solid rgba(239,68,68,0.3)">
+            <h5 style="margin:0 0 10px 0;color:#ef4444"><i class="fas fa-exclamation-triangle"></i> エラー (${day.errors.length}件)</h5>
+            ${day.errors.map(e => `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
+                <div>
+                  <span style="font-weight:600">${escapeHtml(e.type || 'unknown')}</span>
+                  <span style="color:#888;font-size:0.8rem;margin-left:8px">${escapeHtml(e.message || '')}</span>
+                  ${e.resolved ? '<span style="color:#10b981;font-size:0.75rem;margin-left:5px">[解決済]</span>' : ''}
+                </div>
+                ${!e.resolved ? `<button onclick="HrAttendanceDashboard.resolveError('${e.error_id}')" style="padding:4px 10px;background:#10b981;color:#fff;border:none;border-radius:4px;font-size:0.75rem;cursor:pointer">解決</button>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      // 申請一覧HTML生成
+      let requestsHtml = '';
+      if (day.requests && day.requests.length > 0) {
+        requestsHtml = `
+          <div style="margin-top:15px;padding:10px;background:rgba(139,92,246,0.1);border-radius:8px;border:1px solid rgba(139,92,246,0.3)">
+            <h5 style="margin:0 0 10px 0;color:#8b5cf6"><i class="fas fa-file-alt"></i> 申請 (${day.requests.length}件)</h5>
+            ${day.requests.map(r => `
+              <div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.1)">
+                <span style="font-weight:600">${escapeHtml(r.type || '-')}</span>
+                <span style="margin-left:10px;padding:2px 8px;border-radius:10px;font-size:0.7rem;background:${r.status === 'approved' ? '#10b981' : r.status === 'pending' ? '#f59e0b' : '#6b7280'}">${escapeHtml(r.status || '-')}</span>
+                ${r.reason_code ? `<span style="color:#888;font-size:0.8rem;margin-left:8px">${escapeHtml(r.reason_code)}</span>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
       body.innerHTML = `
-        <h4>${staffName} (${effectiveDate})</h4>
+        <h4>${escapeHtml(staffName)} (${effectiveDate})</h4>
+        <input type="hidden" id="detail-attendance-id" value="${day.attendance_id || ''}">
+        <input type="hidden" id="detail-staff-id" value="${staffId}">
+        <input type="hidden" id="detail-date" value="${effectiveDate}">
+        
         <table class="detail-table">
-          <tr><th>実打刻</th><td>${formatTime(day.raw.clock_in)} - ${formatTime(day.raw.clock_out)}</td></tr>
-          <tr><th>確定値</th><td>${formatTime(day.fixed.clock_in)} - ${formatTime(day.fixed.clock_out)}</td></tr>
-          <tr><th>労働時間</th><td>${day.fixed.total_minutes || 0} 分</td></tr>
+          <tr><th>実打刻</th><td>${rawInTime || '-'} - ${rawOutTime || '-'}</td></tr>
         </table>
+
+        <div style="margin-top:15px;padding:15px;background:rgba(139,92,246,0.1);border-radius:8px;border:1px solid rgba(139,92,246,0.3)">
+          <h5 style="margin:0 0 10px 0;color:#8b5cf6"><i class="fas fa-edit"></i> 確定値を編集</h5>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label style="font-size:0.75rem;color:#888">出勤時刻</label>
+              <input type="time" id="fixed-clock-in" value="${fixedInTime.replace('-', '')}" style="width:100%;padding:8px;background:#1a1a2e;color:#fff;border:1px solid #444;border-radius:4px">
+            </div>
+            <div>
+              <label style="font-size:0.75rem;color:#888">退勤時刻</label>
+              <input type="time" id="fixed-clock-out" value="${fixedOutTime.replace('-', '')}" style="width:100%;padding:8px;background:#1a1a2e;color:#fff;border:1px solid #444;border-radius:4px">
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <label style="font-size:0.75rem;color:#888">休憩時間（分）</label>
+            <input type="number" id="fixed-break-minutes" value="${day.fixed.breaks?.[0] ? 60 : 0}" min="0" max="240" style="width:100%;padding:8px;background:#1a1a2e;color:#fff;border:1px solid #444;border-radius:4px">
+          </div>
+          <div style="margin-top:10px;padding:10px;background:rgba(0,0,0,0.2);border-radius:4px;text-align:center">
+            <span style="color:#888;font-size:0.8rem">労働時間: </span>
+            <span id="calculated-work-time" style="font-size:1.2rem;font-weight:700;color:#10b981">${day.fixed.total_minutes || 0} 分</span>
+          </div>
+        </div>
+
+        ${errorsHtml}
+        ${requestsHtml}
+
         <div style="margin-top:20px">
-          <select id="fix-reason" style="width:100%;padding:8px;background:#111;color:#fff;border:1px solid #444">
+          <select id="fix-reason" style="width:100%;padding:8px;background:#1a1a2e;color:#fff;border:1px solid #444;border-radius:4px">
             <option value="admin">管理者修正</option>
             <option value="forget">打刻忘れ</option>
+            <option value="system_error">システムエラー</option>
+            <option value="other">その他</option>
           </select>
-          <button onclick="HrAttendanceDashboard.approve('${day.attendance_id}')" style="width:100%;margin-top:10px;padding:10px;background:#8b5cf6;color:#fff;border:none">確定する</button>
+          <button onclick="HrAttendanceDashboard.approveWithValues()" style="width:100%;margin-top:10px;padding:12px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer">
+            <i class="fas fa-check"></i> 確定値を保存
+          </button>
         </div>
       `;
+
+      // 労働時間自動計算
+      const calcWorkTime = () => {
+        const inVal = document.getElementById('fixed-clock-in')?.value;
+        const outVal = document.getElementById('fixed-clock-out')?.value;
+        const breakMin = parseInt(document.getElementById('fixed-break-minutes')?.value) || 0;
+        if (inVal && outVal) {
+          const [inH, inM] = inVal.split(':').map(Number);
+          const [outH, outM] = outVal.split(':').map(Number);
+          const totalMin = (outH * 60 + outM) - (inH * 60 + inM) - breakMin;
+          document.getElementById('calculated-work-time').textContent = `${Math.max(0, totalMin)} 分`;
+        }
+      };
+      document.getElementById('fixed-clock-in')?.addEventListener('change', calcWorkTime);
+      document.getElementById('fixed-clock-out')?.addEventListener('change', calcWorkTime);
+      document.getElementById('fixed-break-minutes')?.addEventListener('input', calcWorkTime);
+
     } catch (e) { body.innerHTML = 'Error: ' + e.message; }
   };
 
   window.closeHrDetail = () => document.getElementById('hr-detail-modal')?.classList.remove('active');
 
+  // ============================================
+  // Timecard Modal (iframe)
+  // ============================================
+  function openTimecardModal(staffId, staffName, month) {
+    const modal = document.getElementById('hr-timecard-modal');
+    const iframe = document.getElementById('hr-timecard-iframe');
+    const title = document.getElementById('hr-timecard-title');
+    if (!modal || !iframe) return;
+
+    const safeName = staffName || staffId || 'タイムカード';
+    if (title) {
+      title.innerHTML = `<i class="fas fa-calendar-check"></i> ${escapeHtml(safeName)} (${escapeHtml(staffId)}) タイムカード`;
+    }
+
+    // embed=timecard でタイムカードのみ表示する埋め込みモードへ
+    const qsMonth = month ? `&month=${encodeURIComponent(month)}` : '';
+    iframe.src = `/admin/users/detail?id=${encodeURIComponent(staffId)}&embed=timecard${qsMonth}`;
+
+    modal.classList.add('active');
+
+    // ESCで閉じる
+    document.addEventListener('keydown', onTimecardEscClose);
+  }
+
+  function onTimecardEscClose(e) {
+    const modal = document.getElementById('hr-timecard-modal');
+    if (!modal || !modal.classList.contains('active')) return;
+    if (e.key === 'Escape') closeTimecardModal();
+  }
+
+  function closeTimecardModal() {
+    const modal = document.getElementById('hr-timecard-modal');
+    const iframe = document.getElementById('hr-timecard-iframe');
+    if (!modal) return;
+    modal.classList.remove('active');
+    if (iframe) iframe.src = 'about:blank';
+    document.removeEventListener('keydown', onTimecardEscClose);
+  }
+
+
+  // 確定値を含めた保存
+  async function approveWithValues() {
+    const attendanceId = document.getElementById('detail-attendance-id')?.value;
+    const staffId = document.getElementById('detail-staff-id')?.value;
+    const date = document.getElementById('detail-date')?.value;
+    const fixedIn = document.getElementById('fixed-clock-in')?.value;
+    const fixedOut = document.getElementById('fixed-clock-out')?.value;
+    const breakMin = parseInt(document.getElementById('fixed-break-minutes')?.value) || 0;
+    const reason = document.getElementById('fix-reason')?.value || 'admin';
+
+    if (!fixedIn || !fixedOut) {
+      alert('出勤・退勤時刻を入力してください');
+      return;
+    }
+
+    // 労働時間計算
+    const [inH, inM] = fixedIn.split(':').map(Number);
+    const [outH, outM] = fixedOut.split(':').map(Number);
+    const totalMin = Math.max(0, (outH * 60 + outM) - (inH * 60 + inM) - breakMin);
+
+    const token = getToken();
+    const payload = {
+      fixed_clock_in: `${date}T${fixedIn}:00+09:00`,
+      fixed_clock_out: `${date}T${fixedOut}:00+09:00`,
+      fixed_breaks: breakMin > 0 ? [{ duration_minutes: breakMin }] : [],
+      fixed_total_minutes: totalMin,
+      fixed_status: 'ok',
+      reason_code: reason
+    };
+
+    try {
+      // attendance_idがあればPATCH、なければPOSTで新規作成
+      let res;
+      if (attendanceId) {
+        res = await fetch(`${apiBase}/admin/attendance/${attendanceId}/fixed`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        // 新規作成の場合
+        res = await fetch(`${apiBase}/attendance`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            staff_id: staffId,
+            date: date,
+            ...payload
+          })
+        });
+      }
+
+      if (res.ok) {
+        alert('確定しました');
+        closeHrDetail();
+        loadBoard();
+      } else {
+        const errData = await res.json();
+        alert('エラー: ' + (errData.message || res.status));
+      }
+    } catch (e) { alert('通信エラー: ' + e.message); }
+  }
+
+  // エラー解決
+  async function resolveError(errorId) {
+    if (!confirm('このエラーを解決済みにしますか？')) return;
+    const token = getToken();
+    try {
+      const res = await fetch(`${apiBase}/attendance/errors/${errorId}/resolve`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resolved: true })
+      });
+      if (res.ok) {
+        alert('エラーを解決済みにしました');
+        // モーダル再読込
+        const staffId = document.getElementById('detail-staff-id')?.value;
+        const date = document.getElementById('detail-date')?.value;
+        if (staffId && date) {
+          openDayDetail(staffId, date, '');
+        }
+        loadBoard();
+      } else {
+        alert('エラー解決に失敗しました');
+      }
+    } catch (e) { alert('通信エラー: ' + e.message); }
+  }
+
+  // 旧approve関数（互換性のため残す）
   async function approve(id) {
     const reason = document.getElementById('fix-reason').value;
     const token = getToken();
@@ -339,6 +561,7 @@ window.HrAttendanceDashboard = (() => {
       if (res.ok) { alert('確定しました'); closeHrDetail(); loadBoard(); }
     } catch (e) { alert(e.message); }
   }
+
 
   // --- Export ---
   function downloadCSV(name, rows) {
@@ -373,5 +596,5 @@ window.HrAttendanceDashboard = (() => {
 
   loadBoard();
 
-  return { loadBoard, approve, exportDailyCSV, exportMonthlyCSV };
+  return { loadBoard, approve, approveWithValues, resolveError, openTimecardModal, closeTimecardModal, exportDailyCSV, exportMonthlyCSV };
 })();
