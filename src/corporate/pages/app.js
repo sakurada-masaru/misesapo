@@ -5,6 +5,19 @@
 
   function clear(el) { while (el && el.firstChild) el.removeChild(el.firstChild); }
 
+  // サービス詳細の「お問い合わせ」ボタンでモーダルを開かない
+  document.addEventListener('click', (event) => {
+    const orderBtn = event.target.closest('.service-actions #order-service-btn');
+    if (!orderBtn) return;
+    const mailtoLink = event.target.closest('a[href^="mailto:"]');
+    if (mailtoLink) {
+      event.stopImmediatePropagation();
+      return;
+    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
+
   // ベースパスを取得（GitHub Pages対応）
   function getBasePath() {
     const base = document.querySelector('base');
