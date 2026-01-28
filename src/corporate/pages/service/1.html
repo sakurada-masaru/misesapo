@@ -161,37 +161,77 @@
       justify-content: space-between;
       margin-bottom: 40px;
     }
-    .be-af{
+
+    .be-af {
       justify-content: space-between;
       width: 45%;
     }
-    .be-af p{
+
+    .be-af p {
       margin: 0 0 10px;
     }
-    .be-af img{
+
+    .be-af img {
       width: 100%;
       border-radius: 10px;
     }
-    .arrow{
+
+    .triangle {
       width: 4%;
       max-width: 30px;
     }
-    @media screen and (max-width: 768px){
-      .before-after {
-      display: block;
-    }
-      .be-af{
-      justify-content: space-between;
-      width: 100%;
-    }
-      .arrow{
-      transform: rotate(90deg);
-      display: block;
-      margin: 10px auto;
-      width: 20px;
-    }
+
+    .triangle_below {
+      display: none;
     }
 
+    h4{
+      margin: 10px 0 ;
+    }
+    .meyasu {
+      color: var(--primary);
+    }
+    .timing {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .timing div{
+      width: 49%;
+    }
+
+    .bold{
+      font-weight: bold;
+    }
+
+    @media screen and (max-width: 440px) {
+      .before-after {
+        display: block;
+      }
+
+      .be-af {
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .triangle {
+        display: none;
+      }
+
+      .triangle_below {
+        display: block;
+        margin: 5px auto;
+        width: 20px;
+      }
+
+      .timing {
+        display: block;
+      }
+
+      .timing div{
+        width: 100%;
+      }
+    }
   </style>
 </head>
 
@@ -207,10 +247,10 @@
       <nav class="normal-header-nav">
         <a href="/">TOP</a>
         <a href="/service/service.html">対応可能サービス</a>
-        <a href="/lp#voice">お客様の声</a>
+        <a href="/voice/">お客様の声</a>
         <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
         <a href="/#event">イベント</a>
-        <a href="/privacy-policy">規約＆ポリシー</a>
+        <a href="/privacy-policy/">規約＆ポリシー</a>
       </nav>
     </div>
   </header>
@@ -226,7 +266,7 @@
 
     <div class="service-detail-card">
       <div class="service-hero-image">
-        <img id="service-hero-img" src="/images/service/gurisuto.jpg" alt="グリストラップ" data-fallback="/images/ervice/gurisuto.jpg" />
+        <img id="service-hero-img" src="/images/service/gurisuto.jpg" alt="グリストラップ" data-fallback="/images/gurisuto.png" />
       </div>
       <div class="service-detail-card-content">
         <div class="service-detail-header">
@@ -253,15 +293,10 @@
           <section class="detail-section">
             <h3 class="section-title">問題点</h3>
             <ul class="problems-list">
-
               <li>強い悪臭の発生</li>
-
               <li>排水詰まりによる逆流や床の冠水</li>
-
               <li>ゴキブリ・チョウバエなど害虫の発生源</li>
-
               <li>油脂の蓄積による火災リスク</li>
-
             </ul>
           </section>
 
@@ -271,27 +306,58 @@
           </section>
 
           <section class="detail-section">
+            <h3 class="section-title">日常清掃とプロ清掃を入れるタイミング</h3>
+            <div class="timing">
+              <div>
+                <h4>日常でできるお手入れ</h4>
+                <ul class="problems-list">
+                  <li>浮いている油脂・残渣の回収</li>
+                  <li>ゴミ受け・バスケット内の清掃</li>
+                  <li>フタ周り・周辺の拭き取り</li>
+                </ul>
+              </div>
+              <div>
+                <h4>プロ清掃を入れるタイミング</h4>
+                <ul class="problems-list">
+                  <li>ニオイが取れなくなってきた</li>
+                  <li>油が固まり、すくい取りにくい</li>
+                  <li>排水の流れが悪くなった</li>
+                </ul>
+                <img src="images/triangle_below.svg" alt="" class="triangle" style="display: block; margin: 10px auto 20px;">
+                <h4 class="meyasu">プロ清掃を入れる頻度の目安</h4>
+                <ul class="problems-list">
+                  <li>一般的な飲食店：<span class="bold">3〜6ヶ月に1回</span></li>
+                  <li>油の使用量が多い店舗：<span class="bold">1〜3ヶ月に1回</span></li>
+                  <li>油の使用量が少ない店舗：<span class="bold">6ヶ月に1回程度</span></li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section class="detail-section">
             <h3 class="section-title">ビフォー アフター</h3>
             <div class="before-after">
               <div class="be-af">
                 <p>Before</p>
-                <img src="images/service/gurisuto_be-af01.jpg" alt="">
+                <img src="images/gurisuto_be-af01.jpg" alt="">
               </div>
-              <img src="images/service/triangle.svg" alt="" class="arrow">
+              <img src="images/triangle.svg" alt="" class="triangle">
+              <img src="images/triangle_below.svg" alt="" class="triangle_below">
               <div class="be-af">
                 <p>After</p>
-                <img src="images/service/gurisuto_be-af02.jpg" alt="">
+                <img src="images/gurisuto_be-af02.jpg" alt="">
               </div>
             </div>
             <div class="before-after">
               <div class="be-af">
                 <p>Before</p>
-                <img src="images/service/gurisuto_be-af03.jpg" alt="">
+                <img src="images/gurisuto_be-af03.jpg" alt="">
               </div>
-              <img src="images/service/triangle.svg" alt="" class="arrow">
+              <img src="images/triangle.svg" alt="" class="triangle">
+              <img src="images/triangle_below.svg" alt="" class="triangle_below">
               <div class="be-af">
                 <p>After</p>
-                <img src="images/service/gurisuto_be-af04.jpg" alt="">
+                <img src="images/gurisuto_be-af04.jpg" alt="">
               </div>
             </div>
           </section>
@@ -299,9 +365,9 @@
         </div>
 
         <div class="service-actions">
-          <button class="btn btn-primary btn-lg" id="order-service-btn">
+          <div class="btn btn-primary btn-lg" id="order-service-btn" data-disable-modal="true">
             <i class="fas fa-shopping-cart"></i> <a style="color:#fff;" href="mailto:info@misesapo.co.jp">お問い合わせをする</a>
-          </button>
+          </div>
         </div>
       </div>
     </div>
@@ -478,6 +544,9 @@
       // Order button click handler
       const orderBtn = document.getElementById('order-service-btn');
       if (orderBtn) {
+        if (orderBtn.dataset.disableModal === 'true') {
+          return;
+        }
         orderBtn.addEventListener('click', function () {
           // Load service data and open modal
           fetch('/api/services')
@@ -523,8 +592,8 @@
               const serviceData = {
                 id: 1,
                 title: 'グリストラップ',
-                image: 'images/ervice/gurisuto.jpg',
-                'detail-image': 'images/service/gurisuto.jpg',
+                image: 'images/gurisuto.png',
+                'detail-image': 'images/gurisuto.png',
                 price: '¥ 21,000〜',
                 category: '厨房設備',
                 description: 'グリストラップ（油脂分離槽）は、厨房の排水に含まれる油分を分離・回収する設備です。日々の使用で油分や食材カスが蓄積しやすく、定期的なメンテナンスを怠ると様々なトラブルを引き起こします。',

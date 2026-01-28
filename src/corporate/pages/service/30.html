@@ -158,7 +158,28 @@
       display: none;
     }
 
-    @media screen and (max-width: 768px) {
+    h4 {
+      margin: 10px 0;
+    }
+
+    .meyasu {
+      color: var(--primary);
+    }
+
+    .timing {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .timing div {
+      width: 49%;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    @media screen and (max-width: 440px) {
       .before-after {
         display: block;
       }
@@ -177,6 +198,14 @@
         margin: 5px auto;
         width: 20px;
       }
+
+      .timing {
+        display: block;
+      }
+
+      .timing div {
+        width: 100%;
+      }
     }
     </style>
   </head>
@@ -191,10 +220,10 @@
          <nav class="normal-header-nav">
              <a href="/">TOP</a>
              <a href="/service/service.html">対応可能サービス</a>
-             <a href="/lp#voice">お客様の声</a>
+        <a href="/voice/">お客様の声</a>
              <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
              <a href="/#event">イベント</a>
-             <a href="/privacy-policy">規約＆ポリシー</a>
+        <a href="/privacy-policy/">規約＆ポリシー</a>
          </nav>
      </div>
 </header>
@@ -231,13 +260,9 @@
         <section class="detail-section">
           <h3 class="section-title">問題点</h3>
           <ul class="problems-list">
-            
             <li>埃が落下して料理や食材を汚染、悪臭や不衛生な印象に</li>
-            
             <li>故障・火災リスクの増加</li>
-            
             <li>店舗イメージを大きく損なう</li>
-            
           </ul>
         </section>
 
@@ -247,17 +272,45 @@
         </section>
 
         <section class="detail-section">
+            <h3 class="section-title">日常清掃とプロ清掃を入れるタイミング</h3>
+            <div class="timing">
+              <div>
+                <h4>日常でできるお手入れ</h4>
+                <ul class="problems-list">
+                  <li>手の届く範囲の埃をこまめに拭き取る</li>
+                  <li>機器下・裏の簡易清掃</li>
+                </ul>
+              </div>
+              <div>
+                <h4>プロ清掃を入れるタイミング</h4>
+                <ul class="problems-list">
+                  <li>高所や機器内部に埃の堆積が見られる</li>
+                  <li>定期点検・法定点検の前後</li>
+                </ul>
+                <img src="images/triangle_below.svg" alt="" class="triangle"
+                  style="display: block; margin: 10px auto 20px;">
+                <h4 class="meyasu">プロ清掃を入れる頻度の目安</h4>
+                <ul class="problems-list">
+                  <li>一般的な飲食店：<span class="bold">年1回</span></li>
+                  <li>営業時間の長い店舗：<span class="bold">半年に1回</span></li>
+                  <li>営業時間の短い店舗：<span class="bold">汚れが気になったタイミングで</span></li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+        <section class="detail-section">
             <h3 class="section-title">ビフォー アフター</h3>
             <div class="before-after">
               <div class="be-af">
                 <p>Before</p>
-                <img src="images/service/kousho_be-af01.jpg" alt="">
+                <img src="images/kousho_be-af01.jpg" alt="">
               </div>
-              <img src="images/service/triangle.svg" alt="" class="triangle">
-              <img src="images/service/triangle_below.svg" alt="" class="triangle_below">
+              <img src="images/triangle.svg" alt="" class="triangle">
+              <img src="images/triangle_below.svg" alt="" class="triangle_below">
               <div class="be-af">
                 <p>After</p>
-                <img src="images/service/kousho_be-af02.jpg" alt="">
+                <img src="images/kousho_be-af02.jpg" alt="">
               </div>
             </div>
           </section>

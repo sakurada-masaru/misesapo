@@ -158,7 +158,28 @@
       display: none;
     }
 
-    @media screen and (max-width: 768px) {
+    h4 {
+      margin: 10px 0;
+    }
+
+    .meyasu {
+      color: var(--primary);
+    }
+
+    .timing {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .timing div {
+      width: 49%;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    @media screen and (max-width: 440px) {
       .before-after {
         display: block;
       }
@@ -176,6 +197,14 @@
         display: block;
         margin: 5px auto;
         width: 20px;
+      }
+
+      .timing {
+        display: block;
+      }
+
+      .timing div {
+        width: 100%;
       }
     }
     </style>
@@ -240,10 +269,10 @@
         <nav class="normal-header-nav">
             <a href="/">TOP</a>
             <a href="/service/service.html">対応可能サービス</a>
-            <a href="/lp#voice">お客様の声</a>
+        <a href="/voice/">お客様の声</a>
             <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
             <a href="/#event">イベント</a>
-            <a href="/privacy-policy">規約＆ポリシー</a>
+        <a href="/privacy-policy/">規約＆ポリシー</a>
         </nav>
         <div class="normal-header-actions">
             <a href="/signin" class="normal-header-login">ログイン</a>
@@ -286,13 +315,9 @@
         <section class="detail-section">
           <h3 class="section-title">問題点</h3>
           <ul class="problems-list">
-            
             <li>強烈な悪臭が店内や周辺に充満、排水詰まり・逆流</li>
-            
             <li>ゴキブリやチョウバエなど害虫の発生源に</li>
-            
             <li>行政からの指導・営業停止リスク</li>
-            
           </ul>
         </section>
 
@@ -302,17 +327,46 @@
         </section>
 
         <section class="detail-section">
+            <h3 class="section-title">日常清掃とプロ清掃を入れるタイミング</h3>
+            <div class="timing">
+              <div>
+                <h4>日常でできる確認</h4>
+                <ul class="problems-list">
+                  <li>異臭・異音がしないか確認する</li>
+                  <li>警報ランプ・制御盤の表示確認</li>
+                  <li>周辺に水漏れ・あふれがないか</li>
+                </ul>
+              </div>
+              <div>
+                <h4>プロ清掃を入れるタイミング</h4>
+                <ul class="problems-list">
+                  <li>排水トラブルが起きた／起きそう</li>
+                  <li>臭いが強くなってきた</li>
+                  <li>前回清掃から一定期間が経過している</li>
+                </ul>
+                <img src="images/triangle_below.svg" alt="" class="triangle"
+                  style="display: block; margin: 10px auto 20px;">
+                <h4 class="meyasu">プロ清掃を入れる頻度の目安</h4>
+                <ul class="problems-list">
+                  <li>一般的な飲食店：<span class="bold">年1回</span></li>
+                  <li>油・排水量が多い店舗：<span class="bold">年2回</span></li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+        <section class="detail-section">
             <h3 class="section-title">ビフォー アフター</h3>
             <div class="before-after">
               <div class="be-af">
                 <p>Before</p>
-                <img src="images/service/osuisou_be-af01.jpg" alt="">
+                <img src="images/osuisou_be-af01.jpg" alt="">
               </div>
-              <img src="images/service/triangle.svg" alt="" class="triangle">
-              <img src="images/service/triangle_below.svg" alt="" class="triangle_below">
+              <img src="images/triangle.svg" alt="" class="triangle">
+              <img src="images/triangle_below.svg" alt="" class="triangle_below">
               <div class="be-af">
                 <p>After</p>
-                <img src="images/service/osuisou_be-af02.jpg" alt="">
+                <img src="images/osuisou_be-af02.jpg" alt="">
               </div>
             </div>
           </section>

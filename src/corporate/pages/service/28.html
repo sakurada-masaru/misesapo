@@ -158,7 +158,28 @@
       display: none;
     }
 
-    @media screen and (max-width: 768px) {
+    h4 {
+      margin: 10px 0;
+    }
+
+    .meyasu {
+      color: var(--primary);
+    }
+
+    .timing {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .timing div {
+      width: 49%;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    @media screen and (max-width: 440px) {
       .before-after {
         display: block;
       }
@@ -177,6 +198,14 @@
         margin: 5px auto;
         width: 20px;
       }
+
+      .timing {
+        display: block;
+      }
+
+      .timing div {
+        width: 100%;
+      }
     }
     </style>
   </head>
@@ -191,10 +220,10 @@
          <nav class="normal-header-nav">
              <a href="/">TOP</a>
              <a href="/service/service.html">対応可能サービス</a>
-             <a href="/lp#voice">お客様の声</a>
+        <a href="/voice/">お客様の声</a>
              <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
              <a href="/#event">イベント</a>
-             <a href="/privacy-policy">規約＆ポリシー</a>
+        <a href="/privacy-policy/">規約＆ポリシー</a>
          </nav>
      </div>
 </header>
@@ -231,13 +260,9 @@
         <section class="detail-section">
           <h3 class="section-title">問題点</h3>
           <ul class="problems-list">
-            
             <li>調理設備や什器の不具合が放置されて事故や故障に</li>
-            
             <li>衛生管理不足による行政指導・営業停止リスク</li>
-            
             <li>店舗オーナーやスタッフの意識低下・離反</li>
-            
           </ul>
         </section>
 
@@ -251,13 +276,13 @@
             <div class="before-after">
               <div class="be-af">
                 <p>Before</p>
-                <img src="images/service/_be-af01.jpg" alt="">
+                <img src="images/_be-af01.jpg" alt="">
               </div>
-              <img src="images/service/triangle.svg" alt="" class="triangle">
-              <img src="images/service/triangle_below.svg" alt="" class="triangle_below">
+              <img src="images/triangle.svg" alt="" class="triangle">
+              <img src="images/triangle_below.svg" alt="" class="triangle_below">
               <div class="be-af">
                 <p>After</p>
-                <img src="images/service/_be-af02.jpg" alt="">
+                <img src="images/_be-af02.jpg" alt="">
               </div>
             </div>
           </section> -->

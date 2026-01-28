@@ -185,7 +185,28 @@
       display: none;
     }
 
-    @media screen and (max-width: 768px) {
+    h4 {
+      margin: 10px 0;
+    }
+
+    .meyasu {
+      color: var(--primary);
+    }
+
+    .timing {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .timing div {
+      width: 49%;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    @media screen and (max-width: 440px) {
       .before-after {
         display: block;
       }
@@ -204,6 +225,14 @@
         margin: 5px auto;
         width: 20px;
       }
+
+      .timing {
+        display: block;
+      }
+
+      .timing div {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -220,10 +249,10 @@
       <nav class="normal-header-nav">
         <a href="/">TOP</a>
         <a href="/service/service.html">対応可能サービス</a>
-        <a href="/lp#voice">お客様の声</a>
+        <a href="/voice/">お客様の声</a>
         <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
         <a href="/#event">イベント</a>
-        <a href="/privacy-policy">規約＆ポリシー</a>
+        <a href="/privacy-policy/">規約＆ポリシー</a>
       </nav>
     </div>
   </header>
@@ -260,13 +289,9 @@
           <section class="detail-section">
             <h3 class="section-title">問題点</h3>
             <ul class="problems-list">
-
               <li>排水の流れが悪くなる</li>
-
               <li>悪臭の発生</li>
-
               <li>ゴキブリやチョウバエなど害虫の温床化</li>
-
               <li>深刻な詰まりによる営業停止リスク</li>
 
             </ul>
@@ -277,18 +302,48 @@
             <p class="section-content solution-text">高圧洗浄による定期的なクリーニングが効果的です。</p>
           </section>
 
+          <section class="detail-section">
+            <h3 class="section-title">日常清掃とプロ清掃を入れるタイミング</h3>
+            <div class="timing">
+              <div>
+                <h4>日常でできるお手入れ</h4>
+                <ul class="problems-list">
+                  <li>排水口まわりのゴミ・残渣の回収</li>
+                  <li>排水口フタ・トラップ部分の簡易清掃</li>
+                  <li>油や汚れを流しすぎない運用の徹底</li>
+                </ul>
+              </div>
+              <div>
+                <h4>プロ清掃を入れるタイミング</h4>
+                <ul class="problems-list">
+                  <li>排水の流れが明らかに悪くなった</li>
+                  <li>ニオイが排水口から上がってくる</li>
+                  <li>油や汚れが固まって取りにくくなった</li>
+                </ul>
+                <img src="images/triangle_below.svg" alt="" class="triangle"
+                  style="display: block; margin: 10px auto 20px;">
+                <h4 class="meyasu">プロ清掃を入れる頻度の目安</h4>
+                <ul class="problems-list">
+                  <li>一般的な飲食店：<span class="bold">年1回</span></li>
+                  <li>油の使用量が多い店舗：<span class="bold">半年〜1年に1回</span></li>
+                  <li>油の使用量が少ない店舗：<span class="bold">1〜2年に1回</span></li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
           <!-- <section class="detail-section">
             <h3 class="section-title">ビフォー アフター</h3>
             <div class="before-after">
               <div class="be-af">
                 <p>Before</p>
-                <img src="images/service/_be-af01.jpg" alt="">
+                <img src="images/_be-af01.jpg" alt="">
               </div>
-              <img src="images/service/triangle.svg" alt="" class="triangle">
-              <img src="images/service/triangle_below.svg" alt="" class="triangle_below">
+              <img src="images/triangle.svg" alt="" class="triangle">
+              <img src="images/triangle_below.svg" alt="" class="triangle_below">
               <div class="be-af">
                 <p>After</p>
-                <img src="images/service/_be-af02.jpg" alt="">
+                <img src="images/_be-af02.jpg" alt="">
               </div>
             </div>
           </section> -->

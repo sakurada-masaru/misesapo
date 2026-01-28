@@ -185,7 +185,28 @@
       display: none;
     }
 
-    @media screen and (max-width: 768px) {
+    h4 {
+      margin: 10px 0;
+    }
+
+    .meyasu {
+      color: var(--primary);
+    }
+
+    .timing {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .timing div {
+      width: 49%;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    @media screen and (max-width: 440px) {
       .before-after {
         display: block;
       }
@@ -204,6 +225,14 @@
         margin: 5px auto;
         width: 20px;
       }
+
+      .timing {
+        display: block;
+      }
+
+      .timing div {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -220,10 +249,10 @@
       <nav class="normal-header-nav">
         <a href="/">TOP</a>
         <a href="/service/service.html">対応可能サービス</a>
-        <a href="/lp#voice">お客様の声</a>
+        <a href="/voice/">お客様の声</a>
         <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
         <a href="/#event">イベント</a>
-        <a href="/privacy-policy">規約＆ポリシー</a>
+        <a href="/privacy-policy/">規約＆ポリシー</a>
       </nav>
     </div>
   </header>
@@ -261,13 +290,9 @@
           <section class="detail-section">
             <h3 class="section-title">問題点</h3>
             <ul class="problems-list">
-
               <li>ベルトの摩耗・亀裂→突然の断裂</li>
-
               <li>換気効率の低下や異音発生</li>
-
               <li>排気不良による店内の煙・臭いこもり</li>
-
             </ul>
           </section>
 
@@ -276,22 +301,49 @@
             <p class="section-content solution-text">定期点検・張り具合調整・交換作業を行うことで、設備を長持ちさせ、突発的なトラブルを未然に防ぎます。</p>
           </section>
 
+          <section class="detail-section">
+            <h3 class="section-title">日常清掃とプロ清掃を入れるタイミング</h3>
+            <div class="timing">
+              <div>
+                <h4>日常でできるお手入れ</h4>
+                <ul class="problems-list">
+                  <li>異音（キュルキュル音）がないかの確認</li>
+                  <li>ファンの回転が不安定でないかの確認</li>
+                </ul>
+              </div>
+              <div>
+                <h4>プロ対応を入れるタイミング</h4>
+                <ul class="problems-list">
+                  <li>異音や振動が継続して発生している</li>
+                  <li>回転数が落ち、排気量が低下している</li>
+                </ul>
+                <img src="images/triangle_below.svg" alt="" class="triangle"
+                  style="display: block; margin: 10px auto 20px;">
+                <h4 class="meyasu">交換調整を入れる頻度の目安</h4>
+                <ul class="problems-list">
+                  <li><span class="bold">1〜2年に1回</span></li>
+                  <li><span class="bold">運転時間3000時間前後</span></li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
           <!-- <section class="detail-section">
             <h3 class="section-title">ビフォー アフター</h3>
             <div class="before-after">
               <div class="be-af">
                 <p>Before</p>
-                <img src="images/service/_be-af01.jpg" alt="">
+                <img src="images/_be-af01.jpg" alt="">
               </div>
-              <img src="images/service/triangle.svg" alt="" class="triangle">
-              <img src="images/service/triangle_below.svg" alt="" class="triangle_below">
+              <img src="images/triangle.svg" alt="" class="triangle">
+              <img src="images/triangle_below.svg" alt="" class="triangle_below">
               <div class="be-af">
                 <p>After</p>
-                <img src="images/service/_be-af02.jpg" alt="">
+                <img src="images/_be-af02.jpg" alt="">
               </div>
             </div>
           </section> -->
-          
+
         </div>
 
         <div class="service-actions">

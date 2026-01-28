@@ -158,7 +158,28 @@
       display: none;
     }
 
-    @media screen and (max-width: 768px) {
+    h4 {
+      margin: 10px 0;
+    }
+
+    .meyasu {
+      color: var(--primary);
+    }
+
+    .timing {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .timing div {
+      width: 49%;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    @media screen and (max-width: 440px) {
       .before-after {
         display: block;
       }
@@ -177,6 +198,14 @@
         margin: 5px auto;
         width: 20px;
       }
+
+      .timing {
+        display: block;
+      }
+
+      .timing div {
+        width: 100%;
+      }
     }
     </style>
   </head>
@@ -191,10 +220,10 @@
          <nav class="normal-header-nav">
              <a href="/">TOP</a>
              <a href="/service/service.html">対応可能サービス</a>
-             <a href="/lp#voice">お客様の声</a>
+        <a href="/voice/">お客様の声</a>
              <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
              <a href="/#event">イベント</a>
-             <a href="/privacy-policy">規約＆ポリシー</a>
+        <a href="/privacy-policy/">規約＆ポリシー</a>
          </nav>
      </div>
 </header>
@@ -231,13 +260,9 @@
         <section class="detail-section">
           <h3 class="section-title">問題点</h3>
           <ul class="problems-list">
-            
             <li>マットの黒ずみやシミで不衛生な第一印象</li>
-            
             <li>吸水・防滑効果が落ちて転倒リスクが増加</li>
-            
             <li>見た目の劣化で店舗全体のイメージダウン</li>
-            
           </ul>
         </section>
 
@@ -246,18 +271,38 @@
           <p class="section-content solution-text">定期的なマット交換・クリーニング済みマットの設置を行い、常に清潔で安全な入口環境を維持いたします。</p>
         </section>
 
+        <section class="detail-section">
+            <h3 class="section-title">日常清掃とプロ清掃を入れるタイミング</h3>
+            <div class="timing">
+              <div>
+                <h4>日常でできるお手入れ</h4>
+                <ul class="problems-list">
+                  <li>営業後の簡易清掃</li>
+                  <li>水分・油分が付着したらすぐ拭き取る</li>
+                </ul>
+              </div>
+              <div>
+                <h4>プロ清掃を入れるタイミング</h4>
+                <ul class="problems-list">
+                  <li>油染み・黒ずみが目立つようになった</li>
+                  <li>破れ・反り・劣化が見られる</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
         <!-- <section class="detail-section">
             <h3 class="section-title">ビフォー アフター</h3>
             <div class="before-after">
               <div class="be-af">
                 <p>Before</p>
-                <img src="images/service/_be-af01.jpg" alt="">
+                <img src="images/_be-af01.jpg" alt="">
               </div>
-              <img src="images/service/triangle.svg" alt="" class="triangle">
-              <img src="images/service/triangle_below.svg" alt="" class="triangle_below">
+              <img src="images/triangle.svg" alt="" class="triangle">
+              <img src="images/triangle_below.svg" alt="" class="triangle_below">
               <div class="be-af">
                 <p>After</p>
-                <img src="images/service/_be-af02.jpg" alt="">
+                <img src="images/_be-af02.jpg" alt="">
               </div>
             </div>
           </section> -->

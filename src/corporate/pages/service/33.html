@@ -158,7 +158,28 @@
       display: none;
     }
 
-    @media screen and (max-width: 768px) {
+    h4 {
+      margin: 10px 0;
+    }
+
+    .meyasu {
+      color: var(--primary);
+    }
+
+    .timing {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .timing div {
+      width: 49%;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    @media screen and (max-width: 440px) {
       .before-after {
         display: block;
       }
@@ -176,6 +197,14 @@
         display: block;
         margin: 5px auto;
         width: 20px;
+      }
+
+      .timing {
+        display: block;
+      }
+
+      .timing div {
+        width: 100%;
       }
     }
     </style>
@@ -240,10 +269,10 @@
         <nav class="normal-header-nav">
             <a href="/">TOP</a>
             <a href="/service/service.html">対応可能サービス</a>
-            <a href="/lp#voice">お客様の声</a>
+        <a href="/voice/">お客様の声</a>
             <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
             <a href="/#event">イベント</a>
-            <a href="/privacy-policy">規約＆ポリシー</a>
+        <a href="/privacy-policy/">規約＆ポリシー</a>
         </nav>
         <div class="normal-header-actions">
             <a href="/signin" class="normal-header-login">ログイン</a>
@@ -286,13 +315,9 @@
         <section class="detail-section">
           <h3 class="section-title">問題点</h3>
           <ul class="problems-list">
-            
             <li>記録不備で 行政指導・営業停止リスク</li>
-            
             <li>温度管理や衛生管理不足による食中毒リスク</li>
-            
             <li>スタッフ任せで運用が定着せず、業務負担が増加</li>
-            
           </ul>
         </section>
 
@@ -301,18 +326,40 @@
           <p class="section-content solution-text">点検チェックリストの整備、温度・衛生データの一元管理、スタッフへの教育・運用サポートで仕組みを構築のお手伝いをいたします。</p>
         </section>
 
+        <section class="detail-section">
+            <h3 class="section-title">日常清掃とプロ清掃を入れるタイミング</h3>
+            <div class="timing">
+              <div>
+                <h4>日常でできる取り組み</h4>
+                <ul class="problems-list">
+                  <li>清掃・点検の記録を残す</li>
+                  <li>異常があった場合は共有・対応する</li>
+                  <li>決めたルールを守る</li>
+                </ul>
+              </div>
+              <div>
+                <h4>プロサポートを入れるタイミング</h4>
+                <ul class="problems-list">
+                  <li>HACCPの対応がよく分からない</li>
+                  <li>書類作成・記録管理が負担になっている</li>
+                  <li>保健所の指導・確認が入る前後</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
         <!-- <section class="detail-section">
             <h3 class="section-title">ビフォー アフター</h3>
             <div class="before-after">
               <div class="be-af">
                 <p>Before</p>
-                <img src="images/service/_be-af01.jpg" alt="">
+                <img src="images/_be-af01.jpg" alt="">
               </div>
-              <img src="images/service/triangle.svg" alt="" class="triangle">
-              <img src="images/service/triangle_below.svg" alt="" class="triangle_below">
+              <img src="images/triangle.svg" alt="" class="triangle">
+              <img src="images/triangle_below.svg" alt="" class="triangle_below">
               <div class="be-af">
                 <p>After</p>
-                <img src="images/service/_be-af02.jpg" alt="">
+                <img src="images/_be-af02.jpg" alt="">
               </div>
             </div>
           </section> -->

@@ -158,7 +158,28 @@
       display: none;
     }
 
-    @media screen and (max-width: 768px) {
+    h4 {
+      margin: 10px 0;
+    }
+
+    .meyasu {
+      color: var(--primary);
+    }
+
+    .timing {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .timing div {
+      width: 49%;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    @media screen and (max-width: 440px) {
       .before-after {
         display: block;
       }
@@ -177,6 +198,14 @@
         margin: 5px auto;
         width: 20px;
       }
+
+      .timing {
+        display: block;
+      }
+
+      .timing div {
+        width: 100%;
+      }
     }
     </style>
   </head>
@@ -191,10 +220,10 @@
          <nav class="normal-header-nav">
              <a href="/">TOP</a>
              <a href="/service/service.html">対応可能サービス</a>
-             <a href="/lp#voice">お客様の声</a>
+        <a href="/voice/">お客様の声</a>
              <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
              <a href="/#event">イベント</a>
-             <a href="/privacy-policy">規約＆ポリシー</a>
+        <a href="/privacy-policy/">規約＆ポリシー</a>
          </nav>
      </div>
 </header>
@@ -231,13 +260,9 @@
         <section class="detail-section">
           <h3 class="section-title">問題点</h3>
           <ul class="problems-list">
-            
             <li>食中毒リスク、糞尿や毛による悪臭・不衛生感</li>
-            
             <li>配線をかじられて火災・設備故障の危険</li>
-            
             <li>クレームや営業停止リスク</li>
-            
           </ul>
         </section>
 
@@ -247,17 +272,39 @@
         </section>
 
         <section class="detail-section">
+            <h3 class="section-title">日常清掃とプロ清掃を入れるタイミング</h3>
+            <div class="timing">
+              <div>
+                <h4>日常でできるお手入れ</h4>
+                <ul class="problems-list">
+                  <li>食品・ゴミを放置しない</li>
+                  <li>隙間・侵入口がないか確認する</li>
+                  <li>物を溜め込まない</li>
+                </ul>
+              </div>
+              <div>
+                <h4>プロに依頼するタイミング</h4>
+                <ul class="problems-list">
+                  <li>フン・かじり跡・足音などの痕跡が見られた</li>
+                  <li>厨房・バックヤードで異臭がする</li>
+                  <li>保健所・管理会社から指摘があった場合</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+        <section class="detail-section">
             <h3 class="section-title">ビフォー アフター</h3>
             <div class="before-after">
               <div class="be-af">
                 <p>Before</p>
-                <img src="images/service/nezumi_be-af01.jpg" alt="">
+                <img src="images/nezumi_be-af01.jpg" alt="">
               </div>
-              <img src="images/service/triangle.svg" alt="" class="triangle">
-              <img src="images/service/triangle_below.svg" alt="" class="triangle_below">
+              <img src="images/triangle.svg" alt="" class="triangle">
+              <img src="images/triangle_below.svg" alt="" class="triangle_below">
               <div class="be-af">
                 <p>After</p>
-                <img src="images/service/nezumi_be-af02.jpg" alt="">
+                <img src="images/nezumi_be-af02.jpg" alt="">
               </div>
             </div>
           </section>
