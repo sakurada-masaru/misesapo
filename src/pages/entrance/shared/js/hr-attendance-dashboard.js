@@ -126,7 +126,11 @@ window.HrAttendanceDashboard = (() => {
       if (r.status && r.status !== 'ok') tr.style.backgroundColor = statusConfig.bgColor;
 
       tr.innerHTML = `
-        <td>${escapeHtml(r.staff_name || '-')}</td>
+        <td>
+          <div style="font-weight:600">${escapeHtml(r.staff_name || '-')}</div>
+          <div style="font-size:0.7rem;color:#888;margin-top:2px">${escapeHtml(r.staff_id || '')}</div>
+          <a href="#" class="hr-admin-detail-link" data-staff-id="${escapeHtml(r.staff_id)}" style="font-size:0.7rem;color:#8b5cf6;text-decoration:underline;margin-top:4px;display:inline-block">個人詳細</a>
+        </td>
         <td>${formatTime(r.raw?.clock_in)}</td>
         <td>${formatTime(r.raw?.clock_out)}</td>
         <td>${formatTime(r.fixed?.clock_in)}</td>
@@ -139,7 +143,21 @@ window.HrAttendanceDashboard = (() => {
         <td>${r.requests_count || 0}</td>
         <td>${r.errors_count || 0}</td>
       `;
-      tr.onclick = () => openDayDetail(r.staff_id, document.getElementById('hr-board-date').value, r.staff_name);
+      // 行クリックで日別モーダル（既存機能維持）
+      tr.onclick = (e) => {
+        // リンクのクリックはモーダルを開かない
+        if (e.target.classList.contains('hr-admin-detail-link')) return;
+        openDayDetail(r.staff_id, document.getElementById('hr-board-date').value, r.staff_name);
+      };
+      // 個人詳細リンクのクリックハンドラ
+      const detailLink = tr.querySelector('.hr-admin-detail-link');
+      if (detailLink) {
+        detailLink.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.open('/admin/users/detail?id=' + r.staff_id, '_blank');
+        };
+      }
       tbody.appendChild(tr);
     });
   }
@@ -240,16 +258,31 @@ window.HrAttendanceDashboard = (() => {
       const tr = document.createElement('tr');
       tr.className = 'hr-clickable-row';
       tr.innerHTML = `
-        <td>${escapeHtml(u.staff_name || u.staff_id)}</td>
+        <td>
+          <div style="font-weight:600">${escapeHtml(u.staff_name || u.staff_id)}</div>
+          <div style="font-size:0.7rem;color:#888;margin-top:2px">${escapeHtml(u.staff_id || '')}</div>
+          <a href="#" class="hr-admin-detail-link" data-staff-id="${escapeHtml(u.staff_id)}" style="font-size:0.7rem;color:#8b5cf6;text-decoration:underline;margin-top:4px;display:inline-block">個人詳細</a>
+        </td>
         <td>${u.work_days} 日</td>
         <td>${u.total_work_min ? (u.total_work_min / 60).toFixed(1) : 0} h</td>
         <td>${u.total_break_min || 0} min</td>
         <td><span style="${u.unconfirmed_days > 0 ? 'color:#ef4444;font-weight:700' : ''}">${u.unconfirmed_days}</span></td>
         <td>${u.alert_count || 0} 件</td>
       `;
-      tr.onclick = () => {
+      // 行クリックで個人月次ページへ（リンククリック時は除外）
+      tr.onclick = (e) => {
+        if (e.target.classList.contains('hr-admin-detail-link')) return;
         window.location.href = `attendance/user.html?uid=${u.staff_id}&month=${document.getElementById('hr-month-select').value}`;
       };
+      // 個人詳細リンクのクリックハンドラ
+      const detailLink = tr.querySelector('.hr-admin-detail-link');
+      if (detailLink) {
+        detailLink.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.open('/admin/users/detail?id=' + u.staff_id, '_blank');
+        };
+      }
       tbody.appendChild(tr);
     });
   }
@@ -263,8 +296,11 @@ window.HrAttendanceDashboard = (() => {
     body.innerHTML = '読み込み中...';
     modal.classList.add('active');
 
+    // dateが空の場合はボード日付または今日の日付を使用
+    const effectiveDate = date || document.getElementById('hr-board-date')?.value || new Date().toISOString().slice(0, 10);
+
     try {
-      const res = await fetch(`${apiBase}/admin/attendance/users/${staffId}/detail?from=${date}&to=${date}`, {
+      const res = await fetch(`${apiBase}/admin/attendance/users/${staffId}/detail?from=${effectiveDate}&to=${effectiveDate}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -272,7 +308,7 @@ window.HrAttendanceDashboard = (() => {
       if (!day) { body.innerHTML = 'データなし'; return; }
 
       body.innerHTML = `
-        <h4>${staffName} (${date})</h4>
+        <h4>${staffName} (${effectiveDate})</h4>
         <table class="detail-table">
           <tr><th>実打刻</th><td>${formatTime(day.raw.clock_in)} - ${formatTime(day.raw.clock_out)}</td></tr>
           <tr><th>確定値</th><td>${formatTime(day.fixed.clock_in)} - ${formatTime(day.fixed.clock_out)}</td></tr>
@@ -317,7 +353,7 @@ window.HrAttendanceDashboard = (() => {
   async function exportDailyCSV() {
     const date = document.getElementById('hr-board-date').value;
     const data = await fetchBoard(date);
-    const rows = [["名前", "出勤(実)", "退勤(実)", "状態"], ...data.board.map(r => [r.staff_name, formatTime(r.raw.clock_in), formatTime(r.raw.clock_out), r.status_label])];
+    const rows = [["staff_id", "名前", "出勤(実)", "退勤(実)", "状態"], ...data.board.map(r => [r.staff_id || '', r.staff_name, formatTime(r.raw.clock_in), formatTime(r.raw.clock_out), r.status_label])];
     downloadCSV(`daily_${date}.csv`, rows);
   }
 
@@ -326,7 +362,7 @@ window.HrAttendanceDashboard = (() => {
     const token = getToken();
     const res = await fetch(`${apiBase}/admin/attendance/monthly/users?month=${month}`, { headers: { 'Authorization': `Bearer ${token}` } });
     const data = await res.json();
-    const rows = [["名前", "日数", "時間(h)", "アラート"], ...data.users.map(u => [u.staff_name, u.work_days, (u.total_work_min / 60).toFixed(1), u.alert_count])];
+    const rows = [["staff_id", "名前", "日数", "時間(h)", "アラート"], ...data.users.map(u => [u.staff_id || '', u.staff_name, u.work_days, (u.total_work_min / 60).toFixed(1), u.alert_count])];
     downloadCSV(`monthly_${month}.csv`, rows);
   }
 

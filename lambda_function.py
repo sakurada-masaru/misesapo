@@ -890,6 +890,42 @@ def resolve_cors_origin(event_headers: dict) -> str:
     # デフォルトのオリジンを返す
     return ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "*"
 
+
+# --- Utils: time / breaks ---
+
+def time_to_minutes(time_str):
+    if not time_str:
+        return None
+    try:
+        if 'T' in str(time_str):
+            # ISO: 2026-01-20T09:00:00+09:00 -> 09:00
+            time_part = str(time_str).split('T')[1][:5]
+        else:
+            time_part = str(time_str)[:5]
+        h, m = map(int, time_part.split(':'))
+        return h * 60 + m
+    except Exception:
+        return None
+
+def calc_break_total(breaks_data):
+    if not breaks_data:
+        return 0
+    total = 0
+    if isinstance(breaks_data, list):
+        for b in breaks_data:
+            start = time_to_minutes(b.get('start') or b.get('break_start'))
+            end = time_to_minutes(b.get('end') or b.get('break_end'))
+            if start is not None and end is not None and end > start:
+                total += (end - start)
+    return total
+
+def abs_diff_minutes(t1, t2):
+    m1 = time_to_minutes(t1)
+    m2 = time_to_minutes(t2)
+    if m1 is None or m2 is None:
+        return 0
+    return abs(m1 - m2)
+
 def lambda_handler(event, context):
     """
     S3に画像をアップロード、または清掃マニュアルデータの読み書きを行うLambda関数
@@ -911,12 +947,12 @@ def lambda_handler(event, context):
     headers = {
         'Access-Control-Allow-Origin': resolve_cors_origin(event_headers),
         'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,Accept,Origin,X-Requested-With',
-        'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,OPTIONS',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
         'Access-Control-Allow-Credentials': 'true',
         'Content-Type': 'application/json'
     }
     
-    # OPTIONSリクエスト（プリフライト）の処理
+    # OPTIONSリクエスト（プリフライト）の処理: どのパスでも即座に200を返す
     if method == 'OPTIONS':
         return {
             'statusCode': 200,
@@ -8336,40 +8372,6 @@ def get_admin_attendance_board(event, headers):
         if staff_id:
             error_by_staff.setdefault(staff_id, []).append(err)
 
-    # --- ヘルパー関数: 時刻文字列を分に変換 ---
-    def time_to_minutes(time_str):
-        if not time_str:
-            return None
-        try:
-            if 'T' in str(time_str):
-                # ISO: 2026-01-20T09:00:00+09:00 -> 09:00
-                time_part = str(time_str).split('T')[1][:5]
-            else:
-                time_part = str(time_str)[:5]
-            h, m = map(int, time_part.split(':'))
-            return h * 60 + m
-        except:
-            return None
-
-    def calc_break_total(breaks_data):
-        if not breaks_data:
-            return 0
-        total = 0
-        if isinstance(breaks_data, list):
-            for b in breaks_data:
-                start = time_to_minutes(b.get('start') or b.get('break_start'))
-                end = time_to_minutes(b.get('end') or b.get('break_end'))
-                if start is not None and end is not None and end > start:
-                    total += (end - start)
-        return total
-
-    def abs_diff_minutes(t1, t2):
-        m1 = time_to_minutes(t1)
-        m2 = time_to_minutes(t2)
-        if m1 is None or m2 is None:
-            return 0
-        return abs(m1 - m2)
-
     board_rows = []
     count_absent = 0
     count_no_clockout = 0
@@ -8509,7 +8511,7 @@ def get_admin_attendance_board(event, headers):
             'date': date,
             'kpis': kpis,
             'board': board_rows,
-            'queue': queue
+            'queue': pending_requests
         }, ensure_ascii=False, default=str)
     }
 
@@ -8571,12 +8573,14 @@ def get_admin_attendance_user_detail(event, headers, worker_id):
     query_params = event.get('queryStringParameters') or {}
     date_from = query_params.get('from')
     date_to = query_params.get('to')
+    
+    # from/to が空の場合は date パラメータまたは今日の日付をフォールバック
     if not date_from or not date_to:
-        return {
-            'statusCode': 400,
-            'headers': headers,
-            'body': json.dumps({'error': 'missing_params', 'message': 'from と to は必須です'}, ensure_ascii=False)
-        }
+        fallback_date = query_params.get('date') or datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d')
+        original_from, original_to = date_from, date_to
+        date_from = date_from or fallback_date
+        date_to = date_to or fallback_date
+        print(f"[get_admin_attendance_user_detail] Fallback date applied: from={original_from}->{date_from}, to={original_to}->{date_to}, worker_id={worker_id}")
 
     # 日付範囲バリデーション: 最大31日
     try:
