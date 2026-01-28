@@ -877,7 +877,7 @@
     }
 
     .chat-input-wrapper {
-        display: none !important;
+        display: flex !important;
         position: fixed;
         bottom: 30px;
         left: 50%;
@@ -894,6 +894,7 @@
         box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
     }
 
+
     #text-input {
         flex: 1;
         background: none !important;
@@ -909,6 +910,65 @@
         color: var(--text-secondary) !important;
         opacity: 0.7;
     }
+
+    /* Quick Action Buttons for Attendance */
+    .attendance-quick-actions {
+        position: fixed;
+        bottom: 90px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 2001;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 600px;
+        width: 90%;
+    }
+
+    .quick-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 25px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .quick-action-btn.break-btn {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #fff;
+    }
+
+    .quick-action-btn.break-end-btn {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+    }
+
+    .quick-action-btn.clockout-btn {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: #fff;
+    }
+
+    .quick-action-btn.status-btn {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: #fff;
+    }
+
+    .quick-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .quick-action-btn:active {
+        transform: translateY(0);
+    }
+
 
     /* Fixed Button Visibility and Job Selection */
     .job-select-btn {
@@ -1128,7 +1188,7 @@
         width: 500px;
         height: 500px;
         position: absolute;
-        top: 50%;
+        top: calc(50% - 40px);
         left: 50%;
         transform: translate(-50%, -50%);
         z-index: 100;
@@ -2619,12 +2679,30 @@
         </div>
     </div>
 
-    <div class="chat-input-wrapper">
+    <!-- Quick Action Buttons (Attendance) -->
+    <div id="attendance-quick-actions" class="attendance-quick-actions" style="display: none;">
+        <button class="quick-action-btn break-btn" onclick="performBreakStart()" id="btn-break-start">
+            <i class="fas fa-coffee"></i> 休憩開始
+        </button>
+        <button class="quick-action-btn break-end-btn" onclick="performBreakEnd()" id="btn-break-end"
+            style="display: none;">
+            <i class="fas fa-play"></i> 休憩終了
+        </button>
+        <button class="quick-action-btn clockout-btn" onclick="performClockOut()">
+            <i class="fas fa-sign-out-alt"></i> 退勤
+        </button>
+        <button class="quick-action-btn status-btn" onclick="showAttendanceStatus()">
+            <i class="fas fa-info-circle"></i> 勤怠確認
+        </button>
+    </div>
+
+    <div class="chat-input-wrapper" id="misogi-input-wrapper">
         <input type="file" id="image-upload" accept="image/*" style="display: none;" onchange="handleImageSelect(this)">
         <button class="attach-btn" onclick="document.getElementById('image-upload').click()" title="写真を追加">
             <i class="fas fa-camera"></i>
         </button>
-        <input type="text" id="text-input" placeholder="メッセージを入力..." autocomplete="off">
+        <input type="text" id="text-input" placeholder="MISOGIに話しかける..." autocomplete="off"
+            onkeypress="if(event.key==='Enter') sendTextMessage()">
         <button class="send-btn" onclick="sendTextMessage()">
             <i class="fas fa-paper-plane"></i>
         </button>
@@ -2788,9 +2866,11 @@
                     EntranceCore.updateAttendanceIndicator('on-break');
                     appendChatMessage('ai', `${user.name || 'ユーザー'}様、お疲れ様です。現在は【休憩中】として認識されています。業務を再開しますか？`);
                     handleAiCommands({ ui_commands: [{ type: 'show_break_end' }] });
+                    updateQuickActionButtons('on-break');
                 } else if (isClockedIn) {
                     // 出勤済み → 「再開」扱い
                     EntranceCore.updateAttendanceIndicator('clocked-in');
+                    updateQuickActionButtons('clocked-in');
 
                     // URLから現在のジョブを判定
                     const urlJob = EntranceCore.getCurrentJobFromUrl();
@@ -2818,6 +2898,7 @@
                     EntranceCore.updateAttendanceIndicator('not-clocked');
                     appendChatMessage('ai', `${user.name || 'ユーザー'}様、おはようございます。現在は【未出勤】の状態です。業務を開始しますか？`);
                     handleAiCommands({ ui_commands: [{ type: 'show_attendance' }] });
+                    updateQuickActionButtons('not-clocked');
                 }
             } catch (e) {
                 console.error('Failed to check attendance:', e);
@@ -2927,6 +3008,8 @@
             if (response.ok) {
                 appendChatMessage('ai', '休憩を記録しました。ゆっくりお休みください。');
                 handleAiResponse({ intent: 'break_start' }); // Trigger visual transition
+                EntranceCore.updateAttendanceIndicator('on-break');
+                updateQuickActionButtons('on-break');
             }
         } catch (e) { console.error(e); }
     }
@@ -2949,6 +3032,8 @@
             if (response.ok) {
                 appendChatMessage('ai', 'お帰りなさいませ。業務の再開を記録しました。');
                 handleAiResponse({ intent: 'break_end' }); // Trigger visual transition
+                EntranceCore.updateAttendanceIndicator('clocked-in');
+                updateQuickActionButtons('clocked-in');
             }
         } catch (e) { console.error(e); }
     }
@@ -2973,9 +3058,59 @@
                 appendChatMessage('ai', 'お疲れ様でした。退勤を記録しました。また明日もお待ちしております。');
                 localStorage.removeItem('current_job_type'); // Clear job type on clock out
                 handleAiResponse({ intent: 'clock_out' }); // Trigger visual transition
+                updateQuickActionButtons('not-clocked');
             }
         } catch (e) { console.error(e); }
     }
+
+    // Update quick action buttons based on attendance status
+    function updateQuickActionButtons(status) {
+        const container = document.getElementById('attendance-quick-actions');
+        const breakStartBtn = document.getElementById('btn-break-start');
+        const breakEndBtn = document.getElementById('btn-break-end');
+
+        if (!container) return;
+
+        if (status === 'clocked-in') {
+            container.style.display = 'flex';
+            if (breakStartBtn) breakStartBtn.style.display = 'flex';
+            if (breakEndBtn) breakEndBtn.style.display = 'none';
+        } else if (status === 'on-break') {
+            container.style.display = 'flex';
+            if (breakStartBtn) breakStartBtn.style.display = 'none';
+            if (breakEndBtn) breakEndBtn.style.display = 'flex';
+        } else {
+            // Not clocked in - hide all quick actions
+            container.style.display = 'none';
+        }
+    }
+
+    // Show attendance status in chat
+    function showAttendanceStatus() {
+        const attendance = window.currentAttendanceRecord;
+        if (attendance && !attendance.clock_out) {
+            const isOnBreak = attendance.break_start && !attendance.break_end;
+            const clockInTime = attendance.clock_in ? new Date(attendance.clock_in).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '-';
+            const storeName = attendance.store_name || '-';
+
+            let statusHtml = `<strong>現在の勤怠状況</strong><br><br>`;
+            statusHtml += `📍 店舗: ${storeName}<br>`;
+            statusHtml += `🕐 出勤時刻: ${clockInTime}<br>`;
+            statusHtml += `📊 状態: ${isOnBreak ? '【休憩中】' : '【勤務中】'}<br><br>`;
+
+            if (isOnBreak) {
+                statusHtml += `<button class="attendance-btn" onclick="performBreakEnd()"><i class="fas fa-play"></i> 休憩終了</button> `;
+            } else {
+                statusHtml += `<button class="attendance-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706);" onclick="performBreakStart()"><i class="fas fa-coffee"></i> 休憩開始</button> `;
+            }
+            statusHtml += `<button class="attendance-btn" style="background: linear-gradient(135deg, #ef4444, #dc2626);" onclick="performClockOut()"><i class="fas fa-sign-out-alt"></i> 退勤</button>`;
+
+            appendChatMessage('ai', statusHtml);
+        } else {
+            appendChatMessage('ai', '現在は【未出勤】です。<br><br><button class="attendance-btn" onclick="performClockIn()"><i class="fas fa-sign-in-alt"></i> 出勤</button>');
+        }
+    }
+
 
     function switchMode(mode) {
         currentMode = mode;
