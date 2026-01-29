@@ -57,6 +57,29 @@
     return { ok: res.ok, status: res.status, data };
   }
 
+  async function bulkState(ids, to, reason) {
+    const res = await fetch(`${API_BASE}/admin/work-reports/bulk/state`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ ids, to, reason: reason || '' })
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
+  }
+
+  function getTokenPayload() {
+    const token = getAuthToken();
+    if (!token) return null;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const payload = JSON.parse(atob(parts[1]));
+      return { exp: payload.exp, email: payload.email, sub: payload.sub };
+    } catch (e) {
+      return null;
+    }
+  }
+
   function showToast(message, type) {
     const toast = document.getElementById('office-wr-toast');
     if (!toast) return;
@@ -98,10 +121,12 @@
   window.OfficeWorkReports = {
     API_BASE,
     getAuthToken,
+    getTokenPayload,
     fetchAdminReports,
     fetchReportDetail,
     patchState,
     exportPdf,
+    bulkState,
     showToast,
     handle409,
     stateLabel

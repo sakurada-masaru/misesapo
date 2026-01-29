@@ -6,70 +6,123 @@
 <link rel="stylesheet" href="/css/admin-sidebar.css" />
 <script src="/js/office-work-reports.js"></script>
 <style>
-  .office-wr { max-width: 1200px; margin: 0 auto; padding: 1rem; }
-  .office-wr h1 { font-size: 1.25rem; margin-bottom: 1rem; }
-  .office-wr-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-  .office-wr-table th, .office-wr-table td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #eee; }
-  .office-wr-table th { background: #f8fafc; font-weight: 600; }
-  .office-wr-table tbody tr { cursor: pointer; }
+  .office-wr { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+  .office-wr-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+  .office-wr-title { font-size: 1.25rem; font-weight: 600; margin: 0; }
+  .office-wr-header-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+  .office-wr-header-actions button, .office-wr-header-actions a.btn { padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 0.875rem; text-decoration: none; color: inherit; }
+  .office-wr-header-actions button.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+  .office-wr-debug { padding: 0.5rem 0.75rem; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; font-size: 0.8rem; margin-bottom: 1rem; }
+  .office-wr-debug.ok { background: #d1fae5; border-color: #10b981; }
+  .office-wr-kpi { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+  .office-wr-kpi-card { padding: 0.75rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+  .office-wr-kpi-card .label { font-size: 0.75rem; color: #64748b; }
+  .office-wr-kpi-card .value { font-size: 1.25rem; font-weight: 700; }
+  .office-wr-filter { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
+  .office-wr-filter label { font-size: 0.875rem; }
+  .office-wr-filter input, .office-wr-filter select { padding: 0.4rem 0.5rem; border-radius: 6px; border: 1px solid #ddd; }
+  .office-wr-table-wrap { overflow-x: auto; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .office-wr-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+  .office-wr-table th, .office-wr-table td { padding: 0.5rem 0.6rem; text-align: left; border-bottom: 1px solid #eee; font-size: 0.875rem; }
+  .office-wr-table th { background: #f8fafc; font-weight: 600; white-space: nowrap; }
   .office-wr-table tbody tr:hover { background: #f1f5f9; }
-  .office-wr-detail { display: none; margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-  .office-wr-detail.show { display: block; }
-  .office-wr-detail h2 { font-size: 1rem; margin-bottom: 0.5rem; }
-  .office-wr-actions { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  .office-wr-actions button { padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-  .office-wr-actions button.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
-  .office-wr-actions button.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
-  .office-wr-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
-  .office-wr-toast { position: fixed; bottom: 1rem; right: 1rem; padding: 0.75rem 1rem; border-radius: 8px; background: #1e293b; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 9999; opacity: 0; transition: opacity 0.2s; }
-  .office-wr-toast.show { opacity: 1; }
-  .office-wr-toast.warn { background: #b45309; }
-  .office-wr-refresh-cta { margin-top: 0.5rem; }
-  .office-wr-refresh-cta button { padding: 0.4rem 0.8rem; font-size: 0.875rem; background: #0ea5e9; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
-  .office-wr-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 9998; }
-  .office-wr-modal.show { display: flex; }
-  .office-wr-modal-inner { background: #fff; padding: 1.5rem; border-radius: 8px; min-width: 320px; }
-  .office-wr-modal-inner label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
-  .office-wr-modal-inner textarea { width: 100%; min-height: 80px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; }
-  .office-wr-modal-actions { margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end; }
-  .office-wr-state { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
+  .office-wr-table tbody tr { cursor: pointer; }
+  .office-wr-state { display: inline-block; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem; }
   .office-wr-state.submitted { background: #dbeafe; color: #1d4ed8; }
   .office-wr-state.triaged { background: #e0e7ff; color: #3730a3; }
   .office-wr-state.approved { background: #d1fae5; color: #065f46; }
   .office-wr-state.rejected { background: #fee2e2; color: #991b1b; }
-  .office-wr-loading { text-align: center; padding: 2rem; color: #64748b; }
-  .office-wr-auth-required { padding: 2rem; text-align: center; color: #dc2626; }
+  .office-wr-state.draft { background: #f1f5f9; color: #475569; }
+  .office-wr-loading { text-align: center; padding: 1rem; color: #64748b; font-size: 0.875rem; }
+  .office-wr-empty { text-align: center; padding: 2rem; color: #64748b; }
+  .office-wr-toast { position: fixed; bottom: 1rem; right: 1rem; padding: 0.75rem 1rem; border-radius: 8px; background: #1e293b; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 9999; opacity: 0; transition: opacity 0.2s; }
+  .office-wr-toast.show { opacity: 1; }
+  .office-wr-toast.warn { background: #b45309; }
+  .office-wr-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 9998; }
+  .office-wr-modal.show { display: flex; }
+  .office-wr-modal-inner { background: #fff; padding: 1.5rem; border-radius: 8px; min-width: 320px; max-width: 90vw; }
+  .office-wr-detail { display: none; margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .office-wr-detail.show { display: block; }
+  .office-wr-actions { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .office-wr-actions button { padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 0.875rem; }
+  .office-wr-actions button.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+  .office-wr-actions button.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
+  .office-wr-row-actions { display: flex; gap: 0.25rem; }
+  .office-wr-row-actions button { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
 </style>
 
 <main id="main" class="office-wr">
-  <h1>作業報告（事務）</h1>
-
-  <div id="office-wr-auth-required" class="office-wr-auth-required" style="display: none;">
-    管理者ロールでログインしてください。<br />
-    <a href="/pages/entrance/index.html">入り口へ</a>
+  <!-- ヘッダー: タイトル + 期間 + 右に操作 -->
+  <div class="office-wr-header">
+    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+      <a href="/entrance.html" style="font-size: 0.875rem;">← /entrance に戻る</a>
+      <h1 class="office-wr-title">作業報告（管理）</h1>
+    </div>
+    <div class="office-wr-header-actions">
+      <label>期間</label>
+      <input type="date" id="office-wr-from" />
+      <span>〜</span>
+      <input type="date" id="office-wr-to" />
+      <button type="button" id="office-wr-refresh-btn">更新</button>
+      <button type="button" id="office-wr-csv-btn">CSV</button>
+      <button type="button" id="office-wr-bulk-triage" class="primary">一括受付</button>
+      <button type="button" id="office-wr-bulk-approve" class="primary">一括承認</button>
+      <button type="button" id="office-wr-bulk-reject">一括差戻し</button>
+      <button type="button" id="office-wr-bulk-pdf">一括PDF</button>
+    </div>
   </div>
 
-  <div id="office-wr-list-wrap" style="display: none;">
-    <div class="office-wr-refresh-cta" id="office-wr-refresh-wrap" style="display: none;">
-      <button type="button" id="office-wr-refresh-btn">再読み込み</button>
-    </div>
+  <!-- デバッグ: role / email / exp を常に表示（認証で止まらず何がダメか分かる） -->
+  <div id="office-wr-debug" class="office-wr-debug" role="status"></div>
+
+  <!-- KPI カード（0件でも骨格表示） -->
+  <div class="office-wr-kpi">
+    <div class="office-wr-kpi-card"><span class="label">未承認</span><div class="value" id="office-wr-kpi-unapproved">0</div></div>
+    <div class="office-wr-kpi-card"><span class="label">差戻し</span><div class="value" id="office-wr-kpi-rejected">0</div></div>
+    <div class="office-wr-kpi-card"><span class="label">未提出相当</span><div class="value" id="office-wr-kpi-missing">—</div></div>
+  </div>
+
+  <!-- フィルタ -->
+  <div class="office-wr-filter">
+    <label>状態</label>
+    <select id="office-wr-filter-state">
+      <option value="">すべて</option>
+      <option value="submitted">提出済</option>
+      <option value="triaged">受付済</option>
+      <option value="rejected">差戻し</option>
+      <option value="approved">承認済</option>
+    </select>
+    <label>ユーザー</label>
+    <input type="text" id="office-wr-filter-user" placeholder="名前・ID" style="width: 140px;" />
+    <button type="button" id="office-wr-filter-apply">反映</button>
+  </div>
+
+  <!-- テーブル（主戦場・0件でも骨格は出す） -->
+  <div class="office-wr-table-wrap">
     <table class="office-wr-table" id="office-wr-table">
       <thead>
         <tr>
-          <th>報告日</th>
+          <th><input type="checkbox" id="office-wr-select-all" aria-label="全選択" /></th>
+          <th>日付</th>
+          <th>対象</th>
+          <th>テンプレ</th>
+          <th>作成者</th>
           <th>状態</th>
-          <th>作業者</th>
-          <th>テンプレート</th>
+          <th>申告(分)</th>
+          <th>最終更新</th>
+          <th>操作</th>
         </tr>
       </thead>
       <tbody id="office-wr-tbody"></tbody>
     </table>
-    <div id="office-wr-loading" class="office-wr-loading">読み込み中...</div>
+    <div id="office-wr-loading" class="office-wr-loading" style="display: none;">読み込み中...</div>
+    <div id="office-wr-empty" class="office-wr-empty" style="display: none;">該当なし（0件でも骨格は表示されています）</div>
   </div>
 
+  <!-- 詳細パネル -->
   <div id="office-wr-detail" class="office-wr-detail">
     <button type="button" id="office-wr-back-btn">&larr; 一覧へ</button>
-    <h2 id="office-wr-detail-title">詳細</h2>
+    <h2 id="office-wr-detail-title" style="font-size: 1rem;">詳細</h2>
     <pre id="office-wr-detail-body" style="font-size: 0.85rem; white-space: pre-wrap; margin: 0.5rem 0;"></pre>
     <div class="office-wr-actions" id="office-wr-actions"></div>
   </div>
@@ -81,7 +134,7 @@
   <div class="office-wr-modal-inner">
     <label for="office-wr-reason-input">差戻し理由（必須）</label>
     <textarea id="office-wr-reason-input" placeholder="理由を入力"></textarea>
-    <div class="office-wr-modal-actions">
+    <div class="office-wr-modal-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
       <button type="button" id="office-wr-reason-cancel">キャンセル</button>
       <button type="button" id="office-wr-reason-submit">送信</button>
     </div>
@@ -90,88 +143,24 @@
 
 <script>
 (function () {
-  const API_BASE = window.OfficeWorkReports ? window.OfficeWorkReports.API_BASE : 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
   const tbody = document.getElementById('office-wr-tbody');
-  const listWrap = document.getElementById('office-wr-list-wrap');
+  const listWrap = document.getElementById('main');
   const detailEl = document.getElementById('office-wr-detail');
   const detailBody = document.getElementById('office-wr-detail-body');
   const detailTitle = document.getElementById('office-wr-detail-title');
   const actionsEl = document.getElementById('office-wr-actions');
-  const authRequired = document.getElementById('office-wr-auth-required');
   const loadingEl = document.getElementById('office-wr-loading');
-  const refreshWrap = document.getElementById('office-wr-refresh-wrap');
-  const refreshBtn = document.getElementById('office-wr-refresh-btn');
+  const emptyEl = document.getElementById('office-wr-empty');
+  const debugEl = document.getElementById('office-wr-debug');
+  const kpiUnapproved = document.getElementById('office-wr-kpi-unapproved');
+  const kpiRejected = document.getElementById('office-wr-kpi-rejected');
+  const kpiMissing = document.getElementById('office-wr-kpi-missing');
   const reasonModal = document.getElementById('office-wr-reason-modal');
   const reasonInput = document.getElementById('office-wr-reason-input');
   const reasonCancel = document.getElementById('office-wr-reason-cancel');
   const reasonSubmit = document.getElementById('office-wr-reason-submit');
-
-  function getToken() {
-    return window.OfficeWorkReports ? window.OfficeWorkReports.getAuthToken() : (localStorage.getItem('cognito_id_token') || '');
-  }
-
-  async function hasAdminRole() {
-    if (window.AdminSidebar && window.AdminSidebar.getCurrentUserRole) {
-      const role = await window.AdminSidebar.getCurrentUserRole();
-      return role === 'admin' || role === '管理者';
-    }
-    return true;
-  }
-
-  function showList() {
-    listWrap.style.display = 'block';
-    detailEl.classList.remove('show');
-  }
-  function showDetail() {
-    listWrap.style.display = 'none';
-    detailEl.classList.add('show');
-  }
-
-  function safeDefaultParams() {
-    const to = new Date();
-    const from = new Date(to);
-    from.setDate(from.getDate() - 7);
-    return {
-      from: from.toISOString().slice(0, 10),
-      to: to.toISOString().slice(0, 10),
-      states: 'submitted,triaged,rejected'
-    };
-  }
-
-  async function loadList() {
-    if (!tbody) return;
-    loadingEl.style.display = 'block';
-    tbody.innerHTML = '';
-    const params = safeDefaultParams();
-    const res = await window.OfficeWorkReports.fetchAdminReports(params);
-    loadingEl.style.display = 'none';
-    if (!res.ok) {
-      if (res.status === 401 || res.status === 403) {
-        authRequired.style.display = 'block';
-        listWrap.style.display = 'none';
-        return;
-      }
-      window.OfficeWorkReports.showToast('一覧の取得に失敗しました。', 'warn');
-      refreshWrap.style.display = 'block';
-      return;
-    }
-    const rows = res.data.rows || res.data.items || [];
-    if (rows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4">該当なし</td></tr>';
-      return;
-    }
-    rows.forEach(function (row) {
-      const tr = document.createElement('tr');
-      tr.dataset.logId = row.log_id || '';
-      const workDate = row.work_date || row.report_date || row.date || '-';
-      const state = row.state || '-';
-      const workerId = row.worker_id || row.created_by_name || '-';
-      const templateId = row.template_id || '-';
-      tr.innerHTML = '<td>' + escapeHtml(workDate) + '</td><td><span class="office-wr-state ' + escapeHtml(state) + '">' + (window.OfficeWorkReports ? window.OfficeWorkReports.stateLabel(state) : state) + '</span></td><td>' + escapeHtml(workerId) + '</td><td>' + escapeHtml(templateId) + '</td>';
-      tr.addEventListener('click', function () { openDetail(row.log_id); });
-      tbody.appendChild(tr);
-    });
-  }
+  const selectAllCb = document.getElementById('office-wr-select-all');
+  let filterUserDebounce = null;
 
   function escapeHtml(s) {
     if (s == null) return '';
@@ -180,152 +169,272 @@
     return div.innerHTML;
   }
 
-  let currentDetailId = null;
-  let currentDetailItem = null;
+  function setDebug(ok, msg, payload) {
+    if (!debugEl) return;
+    debugEl.textContent = msg;
+    debugEl.className = 'office-wr-debug' + (ok ? ' ok' : '');
+    if (payload && payload.exp) {
+      const expDate = new Date(payload.exp * 1000);
+      debugEl.textContent += ' | token exp: ' + expDate.toLocaleString('ja-JP');
+    }
+  }
 
-  async function openDetail(id) {
-    currentDetailId = id;
-    currentDetailItem = null;
+  function showList() { detailEl.classList.remove('show'); }
+  function showDetail() { detailEl.classList.add('show'); }
+
+  function defaultFromTo() {
+    const to = new Date();
+    const from = new Date(to);
+    from.setDate(from.getDate() - 7);
+    return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+  }
+
+  function getFilterParams() {
+    const from = document.getElementById('office-wr-from');
+    const to = document.getElementById('office-wr-to');
+    const state = document.getElementById('office-wr-filter-state');
+    const user = document.getElementById('office-wr-filter-user');
+    const p = { states: 'submitted,triaged,rejected' };
+    if (from && from.value) p.from = from.value;
+    if (to && to.value) p.to = to.value;
+    if (!p.from || !p.to) {
+      const d = defaultFromTo();
+      p.from = p.from || d.from;
+      p.to = p.to || d.to;
+    }
+    if (state && state.value) p.states = state.value;
+    if (user && user.value.trim()) p.q_user = user.value.trim();
+    return p;
+  }
+
+  function updateKPI(items) {
+    const unapproved = (items || []).filter(function (r) { return r.state === 'submitted' || r.state === 'triaged'; }).length;
+    const rejected = (items || []).filter(function (r) { return r.state === 'rejected'; }).length;
+    if (kpiUnapproved) kpiUnapproved.textContent = unapproved;
+    if (kpiRejected) kpiRejected.textContent = rejected;
+    if (kpiMissing) kpiMissing.textContent = '—';
+  }
+
+  function renderTable(rows) {
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const items = rows || [];
+    if (items.length === 0) {
+      if (emptyEl) emptyEl.style.display = 'block';
+      if (loadingEl) loadingEl.style.display = 'none';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#64748b;">0件</td></tr>';
+      return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+    const stateLabel = window.OfficeWorkReports ? window.OfficeWorkReports.stateLabel : function (s) { return s || '-'; };
+    items.forEach(function (row) {
+      const tr = document.createElement('tr');
+      tr.dataset.logId = row.log_id || '';
+      const date = row.work_date || row.report_date || row.date || '-';
+      const target = row.target_label || '-';
+      const templ = row.template_id || '-';
+      const creator = row.worker_id || row.created_by_name || '-';
+      const state = row.state || '-';
+      const minutes = row.work_minutes != null ? row.work_minutes : (row.total_minutes != null ? row.total_minutes : '-');
+      const updated = row.updated_at ? row.updated_at.slice(0, 16) : '-';
+      tr.innerHTML =
+        '<td><input type="checkbox" class="office-wr-row-cb" data-id="' + escapeHtml(row.log_id) + '" /></td>' +
+        '<td>' + escapeHtml(date) + '</td>' +
+        '<td>' + escapeHtml(target) + '</td>' +
+        '<td>' + escapeHtml(templ) + '</td>' +
+        '<td>' + escapeHtml(creator) + '</td>' +
+        '<td><span class="office-wr-state ' + escapeHtml(state) + '">' + stateLabel(state) + '</span></td>' +
+        '<td>' + escapeHtml(String(minutes)) + '</td>' +
+        '<td>' + escapeHtml(updated) + '</td>' +
+        '<td><div class="office-wr-row-actions"><button type="button" class="btn-detail">詳細</button></div></td>';
+      tr.querySelector('.btn-detail').addEventListener('click', function (e) { e.stopPropagation(); openDetail(row.log_id); });
+      tr.addEventListener('click', function (e) { if (!e.target.closest('input[type=checkbox]') && !e.target.closest('button')) openDetail(row.log_id); });
+      tbody.appendChild(tr);
+    });
+    if (loadingEl) loadingEl.style.display = 'none';
+  }
+
+  async function loadList() {
+    if (loadingEl) loadingEl.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+    const params = getFilterParams();
+    const res = await window.OfficeWorkReports.fetchAdminReports(params);
+    if (!res.ok) {
+      setDebug(false, 'API: ' + res.status + ' ' + (res.data && res.data.error ? res.data.error : ''), window.OfficeWorkReports.getTokenPayload && window.OfficeWorkReports.getTokenPayload());
+      updateKPI([]);
+      renderTable([]);
+      if (res.status === 401 || res.status === 403) {
+        setDebug(false, '認証できません。role/メール/期限を確認してください。', window.OfficeWorkReports.getTokenPayload && window.OfficeWorkReports.getTokenPayload());
+      }
+      return;
+    }
+    const rows = res.data.rows || res.data.items || [];
+    updateKPI(rows);
+    renderTable(rows);
+    var payload = window.OfficeWorkReports.getTokenPayload && window.OfficeWorkReports.getTokenPayload();
+    var msg = 'role: ' + (window.officeWrDebugRole || '—') + ' | email: ' + (window.officeWrDebugEmail || '—');
+    if (payload && payload.exp) msg += ' | exp: ' + new Date(payload.exp * 1000).toLocaleString('ja-JP');
+    msg += ' | 一覧: ' + rows.length + '件';
+    setDebug(true, msg, payload);
+  }
+
+  function getSelectedIds() {
+    const checked = document.querySelectorAll('.office-wr-row-cb:checked');
+    return Array.from(checked).map(function (cb) { return cb.dataset.id; }).filter(Boolean);
+  }
+
+  function openDetail(id) {
+    window.officeWrOpenDetail && window.officeWrOpenDetail(id);
+  }
+
+  window.officeWrOpenDetail = async function (id) {
+    if (!id) return;
     showDetail();
     detailBody.textContent = '読み込み中...';
     actionsEl.innerHTML = '';
     const res = await window.OfficeWorkReports.fetchReportDetail(id);
     if (!res.ok) {
       detailBody.textContent = '取得に失敗しました。';
-      if (res.status === 401 || res.status === 403) {
-        authRequired.style.display = 'block';
-      }
       return;
     }
-    currentDetailItem = res.data;
-    detailTitle.textContent = '報告 ID: ' + (id || '');
+    window.officeWrCurrentDetailId = id;
+    window.officeWrCurrentDetailItem = res.data;
+    detailTitle.textContent = '報告 ID: ' + id;
     detailBody.textContent = JSON.stringify(res.data, null, 2);
-    renderActionButtons(res.data);
-  }
-
-  function renderActionButtons(item) {
-    actionsEl.innerHTML = '';
-    const state = item.state || '';
-    const version = item.version;
-    const templateId = item.template_id || '';
-
+    const state = res.data.state || '';
+    const version = res.data.version;
+    const templateId = res.data.template_id || '';
     function addBtn(label, to, style, needReason) {
       const btn = document.createElement('button');
       btn.textContent = label;
       if (style === 'primary') btn.className = 'primary';
       if (style === 'danger') btn.className = 'danger';
       btn.type = 'button';
-      btn.addEventListener('click', function () {
+      btn.onclick = function () {
         if (needReason) {
-          openReasonModal(to, version);
+          reasonInput.value = '';
+          reasonModal.classList.add('show');
+          reasonSubmit.onclick = function () {
+            const reason = reasonInput.value.trim();
+            if (!reason) { window.OfficeWorkReports.showToast('理由を入力してください。', 'warn'); return; }
+            reasonModal.classList.remove('show');
+            window.officeWrDoPatchState && window.officeWrDoPatchState(to, reason, version);
+          };
         } else {
-          doPatchState(to, '', version);
+          window.officeWrDoPatchState && window.officeWrDoPatchState(to, '', version);
         }
-      });
+      };
       actionsEl.appendChild(btn);
     }
-
-    if (state === 'submitted') {
-      addBtn('受付', 'triaged', 'primary', false);
-      addBtn('承認', 'approved', 'primary', false);
-      addBtn('差戻し', 'rejected', 'danger', true);
-    }
-    if (state === 'triaged') {
-      addBtn('承認', 'approved', 'primary', false);
-      addBtn('差戻し', 'rejected', 'danger', true);
-    }
+    if (state === 'submitted') { addBtn('受付', 'triaged', 'primary', false); addBtn('承認', 'approved', 'primary', false); addBtn('差戻し', 'rejected', 'danger', true); }
+    if (state === 'triaged') { addBtn('承認', 'approved', 'primary', false); addBtn('差戻し', 'rejected', 'danger', true); }
     if (state === 'approved' && templateId === 'CLEANING_PDF') {
       const pdfBtn = document.createElement('button');
       pdfBtn.textContent = 'PDF生成';
-      pdfBtn.type = 'button';
-      pdfBtn.addEventListener('click', doExportPdf);
+      pdfBtn.onclick = function () {
+        window.OfficeWorkReports.exportPdf(id).then(function (r) {
+          if (r.ok && r.data.pdf_url) { window.open(r.data.pdf_url); window.OfficeWorkReports.showToast('PDFを開きました。'); }
+          else { window.OfficeWorkReports.showToast(r.data.error || '失敗', 'warn'); }
+        });
+      };
       actionsEl.appendChild(pdfBtn);
     }
-  }
+  };
 
-  async function doPatchState(to, reason, version) {
-    if (!currentDetailId) return;
-    const body = { to: to };
-    if (reason) body.reason = reason;
-    if (version != null) body.version = version;
-    const res = await window.OfficeWorkReports.patchState(currentDetailId, body);
+  window.officeWrDoPatchState = async function (to, reason, version) {
+    const id = window.officeWrCurrentDetailId;
+    if (!id) return;
+    const body = { to: to }; if (reason) body.reason = reason; if (version != null) body.version = version;
+    const res = await window.OfficeWorkReports.patchState(id, body);
     if (res.ok) {
-      window.OfficeWorkReports.showToast('状態を更新しました。');
-      currentDetailItem = res.data;
-      detailBody.textContent = JSON.stringify(res.data, null, 2);
-      renderActionButtons(res.data);
+      window.OfficeWorkReports.showToast('更新しました。');
       loadList();
+      const r2 = await window.OfficeWorkReports.fetchReportDetail(id);
+      if (r2.ok) { window.officeWrCurrentDetailItem = r2.data; detailBody.textContent = JSON.stringify(r2.data, null, 2); window.officeWrOpenDetail(id); }
       return;
     }
-    if (res.status === 409) {
-      const action = window.OfficeWorkReports.handle409(res.data, loadList);
-      if (action === 'refresh') refreshWrap.style.display = 'block';
-      return;
-    }
-    if (res.status === 403) {
-      window.OfficeWorkReports.handle409({ reason: 'not_authorized', message: '権限がありません。' });
-      return;
-    }
-    window.OfficeWorkReports.showToast(res.data.message || 'エラーが発生しました。', 'warn');
-  }
+    if (res.status === 409) window.OfficeWorkReports.handle409(res.data, loadList);
+    else window.OfficeWorkReports.showToast(res.data.message || 'エラー', 'warn');
+  };
 
-  function openReasonModal(to, version) {
-    reasonInput.value = '';
-    reasonModal.classList.add('show');
-    reasonModal.setAttribute('aria-hidden', 'false');
-    reasonSubmit.onclick = function () {
-      const reason = reasonInput.value.trim();
-      if (!reason) {
-        window.OfficeWorkReports.showToast('差戻し理由を入力してください。', 'warn');
-        return;
-      }
-      reasonModal.classList.remove('show');
-      reasonModal.setAttribute('aria-hidden', 'true');
-      doPatchState(to, reason, version);
-    };
-  }
-  reasonCancel.addEventListener('click', function () {
-    reasonModal.classList.remove('show');
-    reasonModal.setAttribute('aria-hidden', 'true');
+  reasonCancel.addEventListener('click', function () { reasonModal.classList.remove('show'); });
+  document.getElementById('office-wr-back-btn').addEventListener('click', function () { showList(); loadList(); });
+
+  selectAllCb.addEventListener('change', function () {
+    document.querySelectorAll('.office-wr-row-cb').forEach(function (cb) { cb.checked = selectAllCb.checked; });
   });
 
-  async function doExportPdf() {
-    if (!currentDetailId) return;
-    const res = await window.OfficeWorkReports.exportPdf(currentDetailId);
-    if (res.ok && res.data.pdf_url) {
-      window.open(res.data.pdf_url, '_blank');
-      window.OfficeWorkReports.showToast('PDFを生成しました。');
+  function doBulk(to, needReason) {
+    const ids = getSelectedIds();
+    if (ids.length === 0) { window.OfficeWorkReports.showToast('行を選択してください。', 'warn'); return; }
+    if (needReason) {
+      reasonInput.value = '';
+      reasonModal.classList.add('show');
+      reasonSubmit.onclick = function () {
+        const reason = reasonInput.value.trim();
+        if (!reason) { window.OfficeWorkReports.showToast('差戻し理由を入力してください。', 'warn'); return; }
+        reasonModal.classList.remove('show');
+        window.OfficeWorkReports.bulkState(ids, to, reason).then(function (r) {
+          if (r.ok) {
+            var okCount = (r.data && r.data.ok_ids) ? r.data.ok_ids.length : ids.length;
+            var ngCount = (r.data && r.data.ng) ? r.data.ng.length : 0;
+            window.OfficeWorkReports.showToast('一括処理: 成功 ' + okCount + '件' + (ngCount ? '、失敗 ' + ngCount + '件' : ''));
+            loadList();
+            selectAllCb.checked = false;
+          } else window.OfficeWorkReports.showToast(r.data.error || '失敗', 'warn');
+        });
+      };
       return;
     }
-    window.OfficeWorkReports.showToast(res.data.error || 'PDFの生成に失敗しました。', 'warn');
+    window.OfficeWorkReports.bulkState(ids, to, '').then(function (r) {
+      if (r.ok) {
+        var okCount = (r.data && r.data.ok_ids) ? r.data.ok_ids.length : ids.length;
+        var ngCount = (r.data && r.data.ng) ? r.data.ng.length : 0;
+        window.OfficeWorkReports.showToast('一括処理: 成功 ' + okCount + '件' + (ngCount ? '、失敗 ' + ngCount + '件' : ''));
+        loadList();
+        selectAllCb.checked = false;
+      } else window.OfficeWorkReports.showToast(r.data.error || '失敗', 'warn');
+    });
   }
 
-  document.getElementById('office-wr-back-btn').addEventListener('click', function () {
-    showList();
-    loadList();
-  });
-  refreshBtn.addEventListener('click', function () {
-    refreshWrap.style.display = 'none';
-    loadList();
+  document.getElementById('office-wr-bulk-triage').addEventListener('click', function () { doBulk('triaged', false); });
+  document.getElementById('office-wr-bulk-approve').addEventListener('click', function () { doBulk('approved', false); });
+  document.getElementById('office-wr-bulk-reject').addEventListener('click', function () { doBulk('rejected', true); });
+  document.getElementById('office-wr-bulk-pdf').addEventListener('click', function () { window.OfficeWorkReports.showToast('一括PDFは別実装'); });
+  document.getElementById('office-wr-csv-btn').addEventListener('click', function () { window.OfficeWorkReports.showToast('CSVは別実装'); });
+
+  document.getElementById('office-wr-refresh-btn').addEventListener('click', loadList);
+  document.getElementById('office-wr-filter-apply').addEventListener('click', loadList);
+
+  document.getElementById('office-wr-filter-user').addEventListener('input', function () {
+    clearTimeout(filterUserDebounce);
+    filterUserDebounce = setTimeout(loadList, 300);
   });
 
   async function init() {
-    const token = getToken();
-    const admin = await hasAdminRole();
-    if (!token || !admin) {
-      authRequired.style.display = 'block';
-      listWrap.style.display = 'none';
-      return;
+    const fromInp = document.getElementById('office-wr-from');
+    const toInp = document.getElementById('office-wr-to');
+    const d = defaultFromTo();
+    if (fromInp) fromInp.value = d.from;
+    if (toInp) toInp.value = d.to;
+
+    const token = window.OfficeWorkReports.getAuthToken();
+    const payload = window.OfficeWorkReports.getTokenPayload && window.OfficeWorkReports.getTokenPayload();
+    let role = '';
+    if (window.AdminSidebar && window.AdminSidebar.getCurrentUserRole) {
+      try { role = await window.AdminSidebar.getCurrentUserRole(); } catch (e) { role = '取得失敗'; }
     }
-    authRequired.style.display = 'none';
-    listWrap.style.display = 'block';
+    const email = (payload && payload.email) || (function () { try { return JSON.parse(localStorage.getItem('cognito_user') || '{}').email; } catch (e) { return ''; }()) || '';
+    window.officeWrDebugRole = role || 'なし';
+    window.officeWrDebugEmail = email || 'なし';
+    setDebug(!!token && (role === 'admin' || role === '管理者'), 'role: ' + window.officeWrDebugRole + ' | email: ' + window.officeWrDebugEmail + (payload && payload.exp ? ' | exp: ' + new Date(payload.exp * 1000).toLocaleString('ja-JP') : ''), payload);
+
+    updateKPI([]);
+    renderTable([]);
     await loadList();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
 </script>
