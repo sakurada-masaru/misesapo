@@ -37,7 +37,8 @@
     'images': ['images'],
     'wiki': ['wiki'],
     'sitemap': ['sitemap'],
-    'work-list': ['work-list', 'work', 'list']
+    'work-list': ['work-list', 'work', 'list'],
+    'work-reports': ['office', 'work-reports']
   };
 
   /**
