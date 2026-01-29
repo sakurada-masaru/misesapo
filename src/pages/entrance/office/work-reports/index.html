@@ -51,11 +51,20 @@
   .office-wr-row-actions button { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
 </style>
 
-<main id="main" class="office-wr">
+<!-- モバイルメニューボタン -->
+<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+  <i class="fas fa-bars"></i>
+</button>
+
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+@include('partials.admin-sidebar')
+
+<main id="main" class="main-content office-wr">
   <!-- ヘッダー: タイトル + 期間 + 右に操作 -->
   <div class="office-wr-header">
     <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-      <a href="/entrance.html" style="font-size: 0.875rem;">← /entrance に戻る</a>
       <h1 class="office-wr-title">作業報告（管理）</h1>
     </div>
     <div class="office-wr-header-actions">
