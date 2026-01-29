@@ -965,12 +965,15 @@ def build_all() -> List[str]:
     # 複数のページディレクトリを処理
     # 役割分担: corporate, customer はルートレベルに出力
     # staff, sales, admin は各ディレクトリ配下に出力
+    # entrance/office → public/office/（仕様URL /office/work-reports と一致させる）
+    OFFICE_PAGES_DIR = PAGES_DIR / "entrance" / "office"
     page_dirs = [
         (CORPORATE_PAGES_DIR, ""),      # corporate → public/ (ルート)
         (CUSTOMER_PAGES_DIR, "customer"),# customer → public/customer/
         (STAFF_PAGES_DIR, "staff"),     # staff → public/staff/
         (SALES_PAGES_DIR, "sales"),     # sales → public/sales/
         (ADMIN_PAGES_DIR, "admin"),     # admin → public/admin/
+        (OFFICE_PAGES_DIR, "office"),   # entrance/office → public/office/（/office/work-reports 等）
         (PAGES_DIR, ""),                # pages → public/ (後方互換性)
     ]
     
@@ -980,6 +983,9 @@ def build_all() -> List[str]:
         
         for page in pages_dir.rglob("*.html"):
             rel = page.relative_to(pages_dir)
+            # entrance/office は上で office として出力するため、pages ルートではスキップ
+            if output_prefix == "" and str(rel).startswith("entrance/office"):
+                continue
             # Special: generate detail pages from reports/[id].html
             # Note: reports/[id].html is now a dynamic page that fetches data from API
             # So we just copy the template as-is, not generate static pages

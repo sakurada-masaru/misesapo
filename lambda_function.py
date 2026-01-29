@@ -53,12 +53,14 @@ try:
     from universal_work_reports import (
         handle_universal_worker_work_reports,
         handle_universal_admin_work_reports,
+        handle_admin_work_reports,
     )
     UNIVERSAL_WORK_REPORTS_AVAILABLE = True
 except Exception as e:
     UNIVERSAL_WORK_REPORTS_AVAILABLE = False
     handle_universal_worker_work_reports = None
     handle_universal_admin_work_reports = None
+    handle_admin_work_reports = None
     logger.warning("universal_work_reports not available: %s", repr(e))
     logger.warning("traceback:\n%s", traceback.format_exc())
     logger.warning("sys.path=%s", sys.path)
@@ -1619,13 +1621,14 @@ def lambda_handler(event, context):
                 }
         # ========================================
         # 業務報告（work-report / admin/work-reports）
+        # 複数形 /admin/work-reports は handle_admin_work_reports（一覧・詳細・PATCH state・PDF）
         # ========================================
         elif normalized_path.startswith('/admin/work-reports'):
-            if not handle_universal_admin_work_reports:
+            if not handle_admin_work_reports:
                 return {'statusCode': 503, 'headers': headers, 'body': json.dumps({'error': 'Service unavailable'}, ensure_ascii=False)}
             user_info = _get_user_info_from_event(event)
             is_hr_admin = _is_hr_admin(user_info)
-            return handle_universal_admin_work_reports(event, headers, normalized_path, method, user_info, is_hr_admin)
+            return handle_admin_work_reports(event, headers, normalized_path, method, user_info, is_hr_admin)
         elif normalized_path.startswith('/work-report'):
             if not handle_universal_worker_work_reports:
                 return {'statusCode': 503, 'headers': headers, 'body': json.dumps({'error': 'Service unavailable'}, ensure_ascii=False)}
