@@ -1,10 +1,30 @@
 #!/bin/bash
 # scripts/deploy_lambda.sh
+#
+# 要点:
+#   - 実行時に REPO_ROOT に cd して安定化
+#   - ZIP: zip -j で lambda_package/*.py を全部ルートに投入 → 続けて lambda_function.py / misogi_flags.py / misogi_schemas.py を投入して handler をルート版で上書き
+#   - lambda_package/*.py が 0 件のときはエラー終了（nullglob or find 列挙で対応）
+#   - unzip -l で universal_work_reports.py が無ければエラー終了
+#   - 同梱 .py 一覧を表示してログに残す
+#   - 依存: boto3（Lambda内蔵）と標準ライブラリのみ。追加パッケージ不要。
+#
+# 実行例: ./scripts/deploy_lambda.sh misesapo-reports prod lambda_function.py
+#
+# 完了条件: GET /work-report?date=2026-01-29 が 503 以外（200/401/404等）になり、CloudWatch で import 後ログが確認できること。
+#
+# ローカルでZIP内容を確認する例:
+#   cd /path/to/misesapo
+#   TEMP_ZIP="/tmp/lambda_verify.zip"
+#   find lambda_package -maxdepth 1 -name "*.py" -type f -exec zip -j "$TEMP_ZIP" {} \;
+#   for f in lambda_function.py misogi_flags.py misogi_schemas.py; do [[ -f "$f" ]] && zip -j "$TEMP_ZIP" "$f"; done
+#   unzip -l "$TEMP_ZIP" | grep universal_work_reports.py  # 必ず 1 行出ること
+#   rm -f "$TEMP_ZIP"
 
 # 引数チェック
 if [[ $# -lt 2 ]]; then
     echo "Usage: $0 <function-name> <stg|prod> [source-file]"
-    echo "Example: $0 misesapo-s3-upload stg lambda_function.py"
+    echo "Example: $0 misesapo-reports prod lambda_function.py"
     exit 1
 fi
 
@@ -15,16 +35,41 @@ API_ID="51bhoxkbxd"
 REGION="ap-northeast-1"
 ACCOUNT_ID="475462779604"
 
+# リポジトリルートで実行されている前提（lambda_package/ と lambda_function.py が同じ階層）
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$REPO_ROOT" || exit 1
+
 echo "--------------------------------------------------"
 echo "🚀 Deploying to $FUNCTION_NAME ($STAGE)"
 echo "📄 Source file: $SOURCE_FILE"
+echo "📁 Working directory: $REPO_ROOT"
 echo "--------------------------------------------------"
 
-# 1. コードのZIP作成 (依存ファイルも含める)
+# 1. コードのZIP作成（lambda_function.py の場合は lambda_package を全部ルートに投入し、続けて handler をルート版で上書き）
 TEMP_ZIP="/tmp/lambda_deploy_$(date +%s).zip"
 if [[ "$SOURCE_FILE" == "lambda_function.py" ]]; then
-    # メイン関数の場合は共通モジュールも含める
-    zip -j "$TEMP_ZIP" "$SOURCE_FILE" misogi_flags.py misogi_schemas.py
+    # lambda_package/*.py が 0 件の場合はエラー（find で列挙して nullglob 相当を回避）
+    PACKAGE_PY_COUNT=$(find lambda_package -maxdepth 1 -name "*.py" -type f 2>/dev/null | wc -l)
+    if [[ "$PACKAGE_PY_COUNT" -eq 0 ]]; then
+        echo "❌ ERROR: lambda_package/*.py が 0 件です。lambda_package/ に .py を配置してください。"
+        exit 1
+    fi
+    # lambda_package/*.py をすべて ZIP ルートに投入（-j でパスを落とす）
+    find lambda_package -maxdepth 1 -name "*.py" -type f -exec zip -j "$TEMP_ZIP" {} \;
+    # ルートの lambda_function.py / misogi_*.py を投入して handler をルート版で上書き
+    for f in lambda_function.py misogi_flags.py misogi_schemas.py; do
+        [[ -f "$f" ]] && zip -j "$TEMP_ZIP" "$f"
+    done
+    # 必須: universal_work_reports.py がZIPに無ければエラー終了
+    if ! unzip -l "$TEMP_ZIP" | grep -q "universal_work_reports.py"; then
+        echo "❌ ERROR: universal_work_reports.py がZIPに含まれていません。lambda_package/universal_work_reports.py を確認してください。"
+        rm -f "$TEMP_ZIP"
+        exit 1
+    fi
+    # 同梱 .py 一覧を表示してログに残す
+    echo "✅ 同梱 .py 一覧:"
+    unzip -l "$TEMP_ZIP" | grep -E "\.py$"
 else
     zip -j "$TEMP_ZIP" "$SOURCE_FILE"
 fi

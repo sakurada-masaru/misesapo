@@ -19,7 +19,12 @@ except ImportError:
 # --- グローバル初期化エラーのトラップ用 ---
 import sys
 import traceback
+import logging
 # ----------------------------------------
+
+# Logger 設定（import 失敗時の traceback 出力用）
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 ATTENDANCE_STAFF_DATE_INDEX = 'staff_id-date-index'
 
@@ -43,6 +48,20 @@ except ImportError:
     # Fallback if pydantic not available
     PatchFlagRequest = None
     SuggestFlagRequest = None
+
+try:
+    from universal_work_reports import (
+        handle_universal_worker_work_reports,
+        handle_universal_admin_work_reports,
+    )
+    UNIVERSAL_WORK_REPORTS_AVAILABLE = True
+except Exception as e:
+    UNIVERSAL_WORK_REPORTS_AVAILABLE = False
+    handle_universal_worker_work_reports = None
+    handle_universal_admin_work_reports = None
+    logger.warning("universal_work_reports not available: %s", repr(e))
+    logger.warning("traceback:\n%s", traceback.format_exc())
+    logger.warning("sys.path=%s", sys.path)
 
 # Google Calendar API用のインポート（オプション）
 # 注意: Lambda Layerまたはrequirements.txtにgoogle-api-python-clientを追加する必要があります
@@ -926,6 +945,21 @@ def abs_diff_minutes(t1, t2):
         return 0
     return abs(m1 - m2)
 
+
+def _get_headers(event):
+    """event の headers を必ず dict で返す。None や非 dict の場合は {} に正規化する。"""
+    h = event.get("headers")
+    if h is None or not isinstance(h, dict):
+        return {}
+    return h
+
+
+def _get_auth_header(event):
+    """event から Authorization ヘッダー値を取得する。headers が None/非 dict でも安全。"""
+    headers = _get_headers(event)
+    return headers.get("Authorization") or headers.get("authorization") or ""
+
+
 def lambda_handler(event, context):
     """
     S3に画像をアップロード、または清掃マニュアルデータの読み書きを行うLambda関数
@@ -943,7 +977,7 @@ def lambda_handler(event, context):
             method = request_context.get('http', {}).get('method', '')
     
     # CORSヘッダー
-    event_headers = event.get("headers") or {}
+    event_headers = _get_headers(event)
     headers = {
         'Access-Control-Allow-Origin': resolve_cors_origin(event_headers),
         'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,Accept,Origin,X-Requested-With',
@@ -970,6 +1004,8 @@ def lambda_handler(event, context):
     normalized_path = path.rstrip('/') if path else ''
     if normalized_path.startswith('/prod/'):
         normalized_path = normalized_path[6:]  # '/prod/' を除去
+    elif normalized_path.startswith('/stg/'):
+        normalized_path = normalized_path[5:]  # '/stg/' を除去
     elif normalized_path.startswith('/dev/'):
         normalized_path = normalized_path[5:]  # '/dev/' を除去
     elif normalized_path.startswith('/stage/'):
@@ -1581,6 +1617,20 @@ def lambda_handler(event, context):
                     'headers': headers,
                     'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
                 }
+        # ========================================
+        # 業務報告（work-report / admin/work-reports）
+        # ========================================
+        elif normalized_path.startswith('/admin/work-reports'):
+            if not handle_universal_admin_work_reports:
+                return {'statusCode': 503, 'headers': headers, 'body': json.dumps({'error': 'Service unavailable'}, ensure_ascii=False)}
+            user_info = _get_user_info_from_event(event)
+            is_hr_admin = _is_hr_admin(user_info)
+            return handle_universal_admin_work_reports(event, headers, normalized_path, method, user_info, is_hr_admin)
+        elif normalized_path.startswith('/work-report'):
+            if not handle_universal_worker_work_reports:
+                return {'statusCode': 503, 'headers': headers, 'body': json.dumps({'error': 'Service unavailable'}, ensure_ascii=False)}
+            user_info = _get_user_info_from_event(event)
+            return handle_universal_worker_work_reports(event, headers, normalized_path, method, user_info)
         else:
             # デバッグ: パスが一致しなかった場合
             print(f"DEBUG: Path not matched. normalized_path={normalized_path}, original_path={path}")
@@ -1597,7 +1647,24 @@ def lambda_handler(event, context):
                 })
             }
     except Exception as e:
+        # NOTE:
+        # - 既存のエラーレスポンス仕様は維持する
+        # - ただし DEBUG_LOG=1 のときは原因特定のため、必ず traceback を出して raise する
+        import os
         import traceback
+
+        if os.getenv("DEBUG_LOG") == "1":
+            print("🔥 UNHANDLED ERROR")
+            try:
+                # event が巨大/非JSON化の場合でも落ちないように安全に要約して出す
+                event_summary = json.dumps(event, ensure_ascii=False, default=str)[:4000]
+            except Exception:
+                event_summary = "<event not json serializable>"
+            print("event=", event_summary)
+            print("error=", repr(e))
+            traceback.print_exc()
+            raise
+
         error_trace = traceback.format_exc()
         print(f"Error in _lambda_handler_internal: {str(e)}")
         print(f"Traceback: {error_trace}")
@@ -2470,7 +2537,7 @@ def _get_user_info_from_event(event):
         }
 
     # 2. Authorizationヘッダーからのデコード（Fallback/Local Test）
-    auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+    auth_header = _get_auth_header(event)
     id_token = auth_header.replace('Bearer ', '') if auth_header else ''
     if id_token:
         return verify_firebase_token(id_token)
@@ -3026,7 +3093,7 @@ def get_nfc_clock_in_logs(event, headers):
     """
     try:
         # 認証チェック（開発環境では緩和）
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # 開発環境ではdev-tokenを許可
@@ -3275,7 +3342,7 @@ def create_report(event, headers):
     """
     try:
         # Firebase ID Tokenを取得
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # トークンを検証（清掃員もレポート作成可能）
@@ -3546,7 +3613,7 @@ def get_reports(event, headers):
     """
     try:
         # Firebase ID Tokenを取得
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # トークンを検証
@@ -3701,7 +3768,7 @@ def get_report_detail(report_id, event, headers):
     """
     try:
         # Firebase ID Tokenを取得
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # トークンを検証
@@ -3946,7 +4013,7 @@ def update_report(event, headers):
     """
     try:
         # Firebase ID Tokenを取得
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # トークンを検証
@@ -4159,7 +4226,7 @@ def update_report_by_id(report_id, event, headers):
     """
     try:
         # Firebase ID Tokenを取得
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # トークンを検証
@@ -4454,7 +4521,7 @@ def delete_report(report_id, event, headers):
     """
     try:
         # Firebase ID Tokenを取得
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # トークンを検証
@@ -5167,7 +5234,7 @@ def decline_schedule(schedule_id, event, headers):
     スケジュールを辞退
     """
     try:
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         if not user_info.get('verified'):
@@ -5705,7 +5772,7 @@ def get_worker_availability(event, headers):
     作業者本人の稼働可否を取得
     """
     try:
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         if not user_info.get('verified'):
@@ -5749,7 +5816,7 @@ def update_worker_availability(event, headers):
     作業者本人の稼働可否を更新
     """
     try:
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         if not user_info.get('verified'):
@@ -5804,7 +5871,7 @@ def get_sales_availability_matrix(event, headers):
     営業向け 稼働可否マトリクス
     """
     try:
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         if not user_info.get('verified'):
@@ -9577,7 +9644,7 @@ def get_stores(event, headers):
     """
     try:
         # 認証・権限チェック
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         
@@ -9658,7 +9725,7 @@ def create_store(event, headers):
     """
     try:
         # 認証チェック
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         
@@ -9985,7 +10052,7 @@ def get_report_feedback(report_id, event, headers):
     """
     try:
         # 認証チェック
-        auth_header = event.get('headers', {}).get('Authorization', '') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         if not auth_header or not auth_header.startswith('Bearer '):
             return {
                 'statusCode': 401,
@@ -10120,7 +10187,7 @@ def create_inventory_item(event, headers):
     """
     try:
         # 認証チェック
-        auth_header = event.get('headers', {}).get('Authorization', '') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         if not auth_header or not auth_header.startswith('Bearer '):
             return {
                 'statusCode': 401,
@@ -10211,7 +10278,7 @@ def update_inventory_item(product_id, event, headers):
     """
     try:
         # 認証チェック
-        auth_header = event.get('headers', {}).get('Authorization', '') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         if not auth_header or not auth_header.startswith('Bearer '):
             return {
                 'statusCode': 401,
@@ -10352,7 +10419,7 @@ def process_inventory_transaction(event, headers, transaction_type):
     """
     try:
         # 認証チェック
-        auth_header = event.get('headers', {}).get('Authorization', '') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         if not auth_header or not auth_header.startswith('Bearer '):
             return {
                 'statusCode': 401,
@@ -10511,7 +10578,7 @@ def get_inventory_transactions(event, headers):
     """
     try:
         # 認証チェック
-        auth_header = event.get('headers', {}).get('Authorization', '') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         if not auth_header or not auth_header.startswith('Bearer '):
             return {
                 'statusCode': 401,
@@ -10620,7 +10687,7 @@ def get_staff_announcements(event, headers):
     """
     try:
         # 認証チェック（CognitoトークンまたはFirebaseトークン）
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         if not id_token or id_token == 'mock-token':
@@ -10733,7 +10800,7 @@ def mark_announcement_read(announcement_id, event, headers):
     """
     try:
         # 認証チェック
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         if not user_info or not user_info.get('verified'):
@@ -10788,7 +10855,7 @@ def get_admin_announcements(event, headers):
         print(f"[DEBUG] ANNOUNCEMENTS_TABLE: {ANNOUNCEMENTS_TABLE}")
         
         # 認証・権限チェック
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         if not user_info or not user_info.get('verified'):
@@ -10873,7 +10940,7 @@ def create_announcement(event, headers):
     """
     try:
         # 認証・権限チェック
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         if not user_info or not user_info.get('verified'):
@@ -11042,7 +11109,7 @@ def get_announcement_detail(announcement_id, event, headers):
     """
     try:
         # 認証・権限チェック
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         if not user_info or not user_info.get('verified'):
@@ -11137,7 +11204,7 @@ def update_announcement(announcement_id, event, headers):
     """
     try:
         # 認証・権限チェック
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         if not user_info or not user_info.get('verified'):
@@ -11218,7 +11285,7 @@ def delete_announcement(announcement_id, event, headers):
     """
     try:
         # 認証・権限チェック
-        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         user_info = verify_firebase_token(id_token)
         if not user_info or not user_info.get('verified'):
