@@ -433,7 +433,7 @@
     if (window.AdminSidebar && window.AdminSidebar.getCurrentUserRole) {
       try { role = await window.AdminSidebar.getCurrentUserRole(); } catch (e) { role = '取得失敗'; }
     }
-    const email = (payload && payload.email) || (function () { try { return JSON.parse(localStorage.getItem('cognito_user') || '{}').email; } catch (e) { return ''; }()) || '';
+    const email = (payload && payload.email) || (function () { try { return JSON.parse(localStorage.getItem('cognito_user') || '{}').email; } catch (e) { return ''; } })() || '';
     window.officeWrDebugRole = role || 'なし';
     window.officeWrDebugEmail = email || 'なし';
     setDebug(!!token && (role === 'admin' || role === '管理者'), 'role: ' + window.officeWrDebugRole + ' | email: ' + window.officeWrDebugEmail + (payload && payload.exp ? ' | exp: ' + new Date(payload.exp * 1000).toLocaleString('ja-JP') : ''), payload);
