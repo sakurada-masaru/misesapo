@@ -2479,12 +2479,16 @@ def verify_firebase_token(id_token):
         # ロールを取得（カスタムクレーム、グループ、またはデフォルト）
         role = payload.get('custom:role') or payload.get('role')
         
-        # Cognitoグループをチェック
-        groups = payload.get('cognito:groups', [])
+        # Cognitoグループをチェック（文字列で渡る場合あり）
+        groups_raw = payload.get('cognito:groups', [])
+        groups = groups_raw if isinstance(groups_raw, list) else (groups_raw.split(',') if isinstance(groups_raw, str) else [])
         if not role and groups:
-            if 'admin' in groups or 'ADMIN' in groups:
+            g_lower = [str(g).lower() for g in groups]
+            if 'admin' in g_lower:
                 role = 'admin'
-            elif 'staff' in groups or 'STAFF' in groups:
+            elif 'headquarters' in g_lower:
+                role = 'headquarters'
+            elif 'staff' in g_lower:
                 role = 'cleaning'
         
         unit_id = payload.get('custom:unit_id') or payload.get('unit_id') or payload.get('tenant_id')
@@ -8771,7 +8775,16 @@ def get_admin_attendance_user_detail(event, headers, worker_id):
 
 def _is_hr_admin(user_info):
     role = (user_info or {}).get('role')
-    return role in ['human_resources', 'hr', 'admin', 'operation', 'general_affairs']
+    if not role:
+        return False
+    r = str(role).lower()
+    allowed = [
+        'human_resources', 'hr', 'admin', 'operation', 'general_affairs',
+        'headquarters',  # 本社（業務報告の事務操作を許可）
+    ]
+    if role == '管理者':
+        return True
+    return r in allowed
 
 def get_admin_attendance_monthly_summary(event, headers):
     user_info = _get_user_info_from_event(event)

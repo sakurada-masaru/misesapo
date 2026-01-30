@@ -83,6 +83,9 @@
 
   <!-- デバッグ: role / email / exp を常に表示（認証で止まらず何がダメか分かる） -->
   <div id="office-wr-debug" class="office-wr-debug" role="status"></div>
+  <div id="office-wr-relogin" style="display: none; margin-top: 0.5rem;">
+    <a href="/staff/signin.html" style="font-weight: bold;">→ 再ログインはこちら</a>（有効期限切れの場合は再ログインすると一覧が表示されます）
+  </div>
 
   <!-- KPI カード（0件でも骨格表示） -->
   <div class="office-wr-kpi">
@@ -269,17 +272,35 @@
     const params = getFilterParams();
     const res = await window.OfficeWorkReports.fetchAdminReports(params);
     if (!res.ok) {
-      setDebug(false, 'API: ' + res.status + ' ' + (res.data && res.data.error ? res.data.error : ''), window.OfficeWorkReports.getTokenPayload && window.OfficeWorkReports.getTokenPayload());
+      var errMsg = 'API: ' + res.status;
+      if (res.data && typeof res.data === 'object') {
+        var d = res.data;
+        var parts = [];
+        if (d.exception_type) parts.push(d.exception_type);
+        if (d.error) parts.push(d.error);
+        if (d.message) parts.push(d.message);
+        if (d.code) parts.push('[' + d.code + ']');
+        if (parts.length) errMsg += ' | ' + parts.join(' ');
+        else errMsg += ' | ' + JSON.stringify(d).slice(0, 180);
+      }
+      setDebug(false, errMsg, window.OfficeWorkReports.getTokenPayload && window.OfficeWorkReports.getTokenPayload());
       updateKPI([]);
       renderTable([]);
       if (res.status === 401 || res.status === 403) {
-        setDebug(false, '認証できません。role/メール/期限を確認してください。', window.OfficeWorkReports.getTokenPayload && window.OfficeWorkReports.getTokenPayload());
+        setDebug(false, '認証できません。ログインの有効期限が切れているか、権限がありません。', window.OfficeWorkReports.getTokenPayload && window.OfficeWorkReports.getTokenPayload());
+        var reloginEl = document.getElementById('office-wr-relogin');
+        if (reloginEl) reloginEl.style.display = 'block';
+      } else {
+        var reloginEl2 = document.getElementById('office-wr-relogin');
+        if (reloginEl2) reloginEl2.style.display = 'none';
       }
       return;
     }
     const rows = res.data.rows || res.data.items || [];
     updateKPI(rows);
     renderTable(rows);
+    var reloginOk = document.getElementById('office-wr-relogin');
+    if (reloginOk) reloginOk.style.display = 'none';
     var payload = window.OfficeWorkReports.getTokenPayload && window.OfficeWorkReports.getTokenPayload();
     var msg = 'role: ' + (window.officeWrDebugRole || '—') + ' | email: ' + (window.officeWrDebugEmail || '—');
     if (payload && payload.exp) msg += ' | exp: ' + new Date(payload.exp * 1000).toLocaleString('ja-JP');

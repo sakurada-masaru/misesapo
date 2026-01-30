@@ -843,17 +843,31 @@ def handle_admin_work_reports(event, headers, path, method, user_info, is_hr_adm
     管理者向け業務報告API（/admin/work-reports 複数形）
     ルールA〜Gに準拠
     """
+    if headers is None:
+        headers = {}
     if not user_info:
         return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'})}
     if not is_hr_admin:
         return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'})}
+    if not path:
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': 'Missing path', 'exception_type': 'ValueError'})}
 
     parts = path.split('/')
     parts = [p for p in parts if p]  # 空文字を除去
     
     # GET /admin/work-reports (一覧)  path => admin, work-reports => len 2
     if method == 'GET' and len(parts) == 2 and parts[0] == 'admin' and parts[1] == 'work-reports':
-        return _handle_admin_work_reports_list(event, headers, user_info, is_hr_admin)
+        try:
+            return _handle_admin_work_reports_list(event, headers, user_info, is_hr_admin)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            err_body = {'error': str(e)[:500], 'exception_type': type(e).__name__}
+            try:
+                body_str = json.dumps(err_body, ensure_ascii=False)
+            except Exception:
+                body_str = json.dumps({'error': 'Internal error', 'exception_type': type(e).__name__})
+            return {'statusCode': 500, 'headers': headers, 'body': body_str}
     
     # GET /admin/work-reports/{id} (詳細)  path => admin, work-reports, id => len 3
     if method == 'GET' and len(parts) == 3 and parts[0] == 'admin' and parts[1] == 'work-reports':
@@ -885,8 +899,10 @@ def _handle_admin_work_reports_list(event, headers, user_info, is_hr_admin):
     GET /admin/work-reports 一覧取得
     ルールD準拠: report_date desc, updated_at desc の安定ソート、limit + next_cursor
     """
+    if headers is None:
+        headers = {}
     try:
-        query_params = event.get('queryStringParameters') or {}
+        query_params = (event or {}).get('queryStringParameters') or {}
         
         # クエリパラメータのパース
         date_from = query_params.get('from')
@@ -926,38 +942,58 @@ def _handle_admin_work_reports_list(event, headers, user_info, is_hr_admin):
             if not date_from:
                 date_from = (now_jst - timedelta(days=7)).strftime('%Y-%m-%d')
         
-        # DynamoDB クエリの構築
-        # まず state で GSI を使う（StateIndex が存在する場合）
+        # ソートキー（report_date, updated_at を str 化して型混在による TypeError を防ぐ）
+        def _sort_key(x):
+            d = x.get('report_date') or x.get('work_date') or x.get('date') or ''
+            u = x.get('updated_at') or ''
+            return (str(d), str(u))
+        
         items = []
         next_cursor = None
         
         try:
-            # StateIndex を使ったクエリ（各 state ごと）
+            # 状態ごとに scan してマージ（OR 式は boto3 環境差で落ちることがあるため避ける）
             all_items = []
             for state in states:
                 try:
-                    response = table.query(
-                        IndexName='StateIndex',
-                        KeyConditionExpression=Key('state').eq(state),
-                        ScanIndexForward=False  # report_date 降順
-                    )
+                    scan_filter = Attr('state').eq(state)
+                    if date_from:
+                        scan_filter = scan_filter & Attr('work_date').gte(date_from)
+                    if date_to:
+                        scan_filter = scan_filter & Attr('work_date').lte(date_to)
+                    scan_kw = {'FilterExpression': scan_filter}
+                    response = table.scan(**scan_kw)
                     all_items.extend(response.get('Items', []))
-                except Exception as e:
-                    print(f"StateIndex query failed for state={state}: {str(e)}")
-                    # フォールバック: scan
-                    scan_response = table.scan(
-                        FilterExpression=Attr('state').eq(state)
-                    )
-                    all_items.extend(scan_response.get('Items', []))
+                    while response.get('LastEvaluatedKey'):
+                        scan_kw['ExclusiveStartKey'] = response['LastEvaluatedKey']
+                        response = table.scan(**scan_kw)
+                        all_items.extend(response.get('Items', []))
+                except ClientError as ce:
+                    err_code = ce.response.get('Error', {}).get('Code', '')
+                    print(f"DynamoDB ClientError state={state}: {err_code} - {ce}")
+                    return {
+                        'statusCode': 503,
+                        'headers': headers,
+                        'body': json.dumps({'error': str(ce), 'code': err_code, 'hint': 'Check UNIVERSAL_WORK_LOGS_TABLE and IAM'})
+                    }
+            # log_id で重複除去（同一レコードが複数 state でヒットすることはないが念のため）
+            seen = set()
+            unique = []
+            for it in all_items:
+                lid = it.get('log_id')
+                if lid and lid not in seen:
+                    seen.add(lid)
+                    unique.append(it)
+            all_items = unique
             
-            # フィルタリング
+            # フィルタリング（日付・文字列は str に正規化して TypeError を防ぐ）
             filtered_items = []
             for item in all_items:
-                # 日付範囲フィルタ
-                report_date = item.get('report_date') or item.get('work_date') or item.get('date')
-                if report_date:
-                    if report_date < date_from or report_date > date_to:
-                        continue
+                # 日付範囲フィルタ（型混在で比較エラーにならないよう str 化）
+                report_date_raw = item.get('report_date') or item.get('work_date') or item.get('date')
+                report_date = str(report_date_raw) if report_date_raw else ''
+                if report_date and (report_date < date_from or report_date > date_to):
+                    continue
                 
                 # template_id フィルタ
                 if templates and item.get('template_id') not in templates:
@@ -965,20 +1001,22 @@ def _handle_admin_work_reports_list(event, headers, user_info, is_hr_admin):
                 
                 # target_label 部分一致
                 if q_target:
-                    target_label = item.get('target_label', '')
+                    target_label = str(item.get('target_label') or '')
                     if q_target.lower() not in target_label.lower():
                         continue
                 
                 # user 検索（worker_id または created_by_name）
                 if q_user:
-                    worker_id = item.get('worker_id', '')
-                    created_by_name = item.get('created_by_name', '')
+                    worker_id = str(item.get('worker_id') or '')
+                    created_by_name = str(item.get('created_by_name') or '')
                     if q_user.lower() not in worker_id.lower() and q_user.lower() not in created_by_name.lower():
                         continue
                 
                 # flags フィルタ（flags のいずれかが true）
                 if flags:
-                    item_flags = item.get('flags', {})
+                    item_flags = item.get('flags')
+                    if not isinstance(item_flags, dict):
+                        item_flags = {}
                     has_flag = any(item_flags.get(flag, False) for flag in flags)
                     if not has_flag:
                         continue
@@ -986,10 +1024,7 @@ def _handle_admin_work_reports_list(event, headers, user_info, is_hr_admin):
                 filtered_items.append(item)
             
             # ソート: report_date desc, updated_at desc
-            filtered_items.sort(key=lambda x: (
-                x.get('report_date') or x.get('work_date') or x.get('date') or '',
-                x.get('updated_at') or ''
-            ), reverse=True)
+            filtered_items.sort(key=_sort_key, reverse=True)
             
             # limit 適用
             items = filtered_items[:limit]
@@ -1000,20 +1035,27 @@ def _handle_admin_work_reports_list(event, headers, user_info, is_hr_admin):
         
         except Exception as e:
             print(f"Error querying work reports: {str(e)}")
-            # フォールバック: scan（テーブルは work_date を保存しているので work_date でフィルタ）
-            scan_filter = Attr('state').is_in(states) if states else None
-            if date_from:
-                scan_filter = scan_filter & Attr('work_date').gte(date_from) if scan_filter else Attr('work_date').gte(date_from)
-            if date_to:
-                scan_filter = scan_filter & Attr('work_date').lte(date_to) if scan_filter else Attr('work_date').lte(date_to)
-            
-            response = table.scan(FilterExpression=scan_filter) if scan_filter else table.scan()
-            items = response.get('Items', [])
-            items.sort(key=lambda x: (
-                x.get('report_date') or x.get('work_date') or x.get('date') or '',
-                x.get('updated_at') or ''
-            ), reverse=True)
-            items = items[:limit]
+            # フォールバック: 状態ごとに単純 scan
+            all_items = []
+            for state in states:
+                try:
+                    fe = Attr('state').eq(state)
+                    if date_from:
+                        fe = fe & Attr('work_date').gte(date_from)
+                    if date_to:
+                        fe = fe & Attr('work_date').lte(date_to)
+                    resp = table.scan(FilterExpression=fe)
+                    all_items.extend(resp.get('Items', []))
+                except Exception:
+                    pass
+            seen = set()
+            unique = []
+            for it in all_items:
+                lid = it.get('log_id')
+                if lid and lid not in seen:
+                    seen.add(lid)
+                    unique.append(it)
+            items = sorted(unique, key=_sort_key, reverse=True)[:limit]
         
         # HR_V1 の template_data をマスク（ルールE）
         for item in items:
@@ -1022,22 +1064,25 @@ def _handle_admin_work_reports_list(event, headers, user_info, is_hr_admin):
                 if 'template_data' in item:
                     item['template_data'] = {'visibility': 'private', 'masked': True}
         
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'body': json.dumps({
+        try:
+            body_str = json.dumps({
                 'items': items,
                 'rows': items,
                 'next_cursor': next_cursor,
                 'count': len(items)
             }, ensure_ascii=False)
-        }
+        except Exception as serr:
+            print(f"JSON serialize error: {serr}")
+            return {'statusCode': 500, 'headers': headers or {}, 'body': json.dumps({'error': str(serr), 'exception_type': type(serr).__name__, 'hint': 'Response serialization failed'})}
+        
+        return {'statusCode': 200, 'headers': headers, 'body': body_str}
     
     except Exception as e:
-        print(f"Error in _handle_admin_work_reports_list: {str(e)}")
         import traceback
         traceback.print_exc()
-        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
+        print(f"Error in _handle_admin_work_reports_list: {str(e)}")
+        err_body = {'error': str(e), 'exception_type': type(e).__name__}
+        return {'statusCode': 500, 'headers': headers or {}, 'body': json.dumps(err_body)}
 
 def _handle_admin_work_reports_detail(report_id, headers, user_info, is_hr_admin):
     """

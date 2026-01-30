@@ -1,0 +1,826 @@
+@layout('layouts.admin')
+@json('data/meta/mode_sales_title.json', $title)
+@json('data/meta/mode_sales_body_class.json', $body_class)
+
+<style>
+    /* === 営業モード専用スタイル === */
+    :root {
+        --sales-accent: #f59e0b;
+        --sales-glow: rgba(245, 158, 11, 0.4);
+        --bg-dark: #0a0a0f;
+        --bg-surface: rgba(255, 255, 255, 0.03);
+        --text-primary: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.6);
+        --border-glow: rgba(245, 158, 11, 0.3);
+    }
+
+    body {
+        background: var(--bg-dark);
+        color: var(--text-primary);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    #default-header-wrapper,
+    #normal-header-wrapper {
+        display: none !important;
+    }
+
+    .sales-mode-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 140px;
+        /* ホットバー + チャット分 */
+    }
+
+    /* === メインビューエリア === */
+    .sales-main-view {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 24px 16px;
+    }
+
+    .sales-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .sales-header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 8px 0;
+        letter-spacing: 0.5px;
+    }
+
+    .sales-header .date-display {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    /* === ビューコンテナ（各画面の内容） === */
+    .view-container {
+        width: 100%;
+        max-width: 600px;
+        display: none;
+    }
+
+    .view-container.active {
+        display: block;
+        animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* === 下部ホットバー === */
+    .sales-hotbar {
+        position: fixed;
+        bottom: 60px;
+        /* チャットUIの上 */
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        padding: 0 16px;
+    }
+
+    .sales-hotbar-inner {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        width: 100%;
+        max-width: 500px;
+        padding: 12px 8px;
+        background: rgba(10, 10, 15, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-top: 1px solid var(--border-glow);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 上部の発光ライン */
+    .sales-hotbar-inner::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--sales-accent), transparent);
+        opacity: 0.6;
+    }
+
+    .hotbar-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 16px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        position: relative;
+    }
+
+    .hotbar-item i {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+        transition: all 0.15s ease;
+    }
+
+    .hotbar-item span {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        transition: all 0.15s ease;
+    }
+
+    .hotbar-item:hover i,
+    .hotbar-item:hover span {
+        color: var(--text-primary);
+    }
+
+    /* アクティブ状態 */
+    .hotbar-item.active i {
+        color: var(--sales-accent);
+        text-shadow: 0 0 12px var(--sales-glow);
+    }
+
+    .hotbar-item.active span {
+        color: var(--sales-accent);
+    }
+
+    /* アクティブドット */
+    .hotbar-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        background: var(--sales-accent);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--sales-glow);
+    }
+
+    /* バッジ（未読・未提出等） */
+    .hotbar-badge {
+        position: absolute;
+        top: 4px;
+        right: 8px;
+        min-width: 16px;
+        height: 16px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 0.6rem;
+        font-weight: 700;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+    }
+
+    /* === チャットUI（プレースホルダー） === */
+    .sales-chat-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 999;
+        padding: 12px 16px;
+        background: rgba(10, 10, 15, 0.95);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sales-chat-input {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+        display: flex;
+        gap: 8px;
+    }
+
+    .sales-chat-input input {
+        flex: 1;
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+
+    .sales-chat-input input::placeholder {
+        color: var(--text-secondary);
+    }
+
+    .sales-chat-input input:focus {
+        outline: none;
+        border-color: var(--sales-accent);
+        box-shadow: 0 0 0 2px var(--sales-glow);
+    }
+
+    .sales-chat-input button {
+        padding: 10px 16px;
+        background: var(--sales-accent);
+        border: none;
+        border-radius: 20px;
+        color: #000;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .sales-chat-input button:hover {
+        filter: brightness(1.1);
+    }
+
+    /* === 顧客ビュー === */
+    .customer-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .customer-card {
+        background: var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .customer-card:hover {
+        border-color: var(--border-glow);
+        box-shadow: 0 0 20px rgba(245, 158, 11, 0.1);
+    }
+
+    .customer-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+    }
+
+    .customer-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .customer-status {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        border-radius: 12px;
+        background: rgba(245, 158, 11, 0.15);
+        color: var(--sales-accent);
+    }
+
+    .customer-meta {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    /* 新規登録FAB */
+    .fab-add {
+        position: fixed;
+        bottom: 150px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        background: var(--sales-accent);
+        border: none;
+        border-radius: 50%;
+        color: #000;
+        font-size: 1.5rem;
+        cursor: pointer;
+        box-shadow: 0 4px 20px var(--sales-glow);
+        transition: all 0.2s;
+        z-index: 1001;
+    }
+
+    .fab-add:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 30px var(--sales-glow);
+    }
+
+    /* === 進捗ビュー === */
+    .progress-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .progress-card {
+        background: var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 16px;
+    }
+
+    .progress-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .progress-customer-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .progress-status-chip {
+        font-size: 0.7rem;
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
+
+    .progress-status-chip.contact {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+    }
+
+    .progress-status-chip.hearing {
+        background: rgba(168, 85, 247, 0.2);
+        color: #c084fc;
+    }
+
+    .progress-status-chip.proposal {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+    }
+
+    .progress-status-chip.estimate {
+        background: rgba(34, 197, 94, 0.2);
+        color: #4ade80;
+    }
+
+    .progress-status-chip.closed {
+        background: rgba(34, 197, 94, 0.3);
+        color: #22c55e;
+    }
+
+    .progress-status-chip.lost {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+    }
+
+    .progress-push-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .push-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .push-dots {
+        display: flex;
+        gap: 6px;
+    }
+
+    .push-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        background: transparent;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .push-dot.active {
+        background: var(--sales-accent);
+        border-color: var(--sales-accent);
+        box-shadow: 0 0 8px var(--sales-glow);
+    }
+
+    .progress-next-action {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .progress-next-action i {
+        color: var(--sales-accent);
+    }
+
+    /* === 予定ビュー === */
+    .schedule-day {
+        margin-bottom: 24px;
+    }
+
+    .schedule-day-header {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--sales-accent);
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .schedule-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .schedule-check {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .schedule-check.done {
+        background: var(--sales-accent);
+        border-color: var(--sales-accent);
+    }
+
+    .schedule-content {
+        flex: 1;
+    }
+
+    .schedule-customer {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .schedule-text {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    /* === 業務報告ビュー === */
+    .report-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .report-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .report-field label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .report-field label .required {
+        color: #ef4444;
+        font-size: 0.7rem;
+        margin-left: 4px;
+    }
+
+    .report-field input,
+    .report-field textarea {
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-family: inherit;
+    }
+
+    .report-field input:focus,
+    .report-field textarea:focus {
+        outline: none;
+        border-color: var(--sales-accent);
+        box-shadow: 0 0 0 2px var(--sales-glow);
+    }
+
+    .report-field textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .report-submit-btn {
+        padding: 14px 24px;
+        background: var(--sales-accent);
+        border: none;
+        border-radius: 8px;
+        color: #000;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .report-submit-btn:hover {
+        filter: brightness(1.1);
+    }
+
+    .report-submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* === 空状態 === */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 16px;
+        opacity: 0.3;
+    }
+
+    .empty-state p {
+        font-size: 0.9rem;
+    }
+
+    /* === レスポンシブ === */
+    @media (max-width: 480px) {
+        .sales-hotbar-inner {
+            padding: 10px 4px;
+        }
+
+        .hotbar-item {
+            padding: 8px 12px;
+        }
+
+        .hotbar-item i {
+            font-size: 1.1rem;
+        }
+
+        .hotbar-item span {
+            font-size: 0.65rem;
+        }
+    }
+</style>
+
+<main id="main" class="sales-mode-container">
+    <!-- メインビュー -->
+    <div class="sales-main-view">
+        <header class="sales-header">
+            <h1>営業モード</h1>
+            <div class="date-display" id="current-date"></div>
+        </header>
+
+        <!-- 顧客ビュー -->
+        <div class="view-container active" id="view-customers">
+            <div class="customer-list" id="customer-list">
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <p>顧客データを読み込み中...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 進捗ビュー -->
+        <div class="view-container" id="view-progress">
+            <div class="progress-list" id="progress-list">
+                <div class="empty-state">
+                    <i class="fas fa-chart-line"></i>
+                    <p>進捗データを読み込み中...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 予定ビュー -->
+        <div class="view-container" id="view-schedule">
+            <div class="schedule-list" id="schedule-list">
+                <div class="empty-state">
+                    <i class="fas fa-calendar"></i>
+                    <p>予定データを読み込み中...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 業務報告ビュー -->
+        <div class="view-container" id="view-report">
+            <form class="report-form" id="report-form">
+                <div class="report-field">
+                    <label>活動内容 <span class="required">必須</span></label>
+                    <textarea name="body" placeholder="本日の活動内容を入力..." required></textarea>
+                </div>
+                <div class="report-field">
+                    <label>接触件数 <span class="required">必須</span></label>
+                    <input type="number" name="count" placeholder="0" min="0" required>
+                </div>
+                <div class="report-field">
+                    <label>明日の予定 <span class="required">必須</span></label>
+                    <textarea name="plan" placeholder="明日の予定を入力..." required></textarea>
+                </div>
+                <div class="report-field">
+                    <label>所感</label>
+                    <textarea name="notes" placeholder="所感・気づきなど（任意）"></textarea>
+                </div>
+                <button type="submit" class="report-submit-btn">
+                    <i class="fas fa-paper-plane"></i> 報告を提出
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 新規登録FAB（顧客ビュー時のみ表示） -->
+    <button class="fab-add" id="fab-add" onclick="showCustomerForm()">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- 下部ホットバー -->
+    <nav class="sales-hotbar" aria-label="営業メニュー">
+        <div class="sales-hotbar-inner">
+            <button class="hotbar-item active" data-view="customers">
+                <i class="fas fa-users"></i>
+                <span>顧客</span>
+            </button>
+            <button class="hotbar-item" data-view="progress">
+                <i class="fas fa-chart-line"></i>
+                <span>進捗</span>
+            </button>
+            <button class="hotbar-item" data-view="schedule">
+                <i class="fas fa-calendar"></i>
+                <span>予定</span>
+            </button>
+            <button class="hotbar-item" data-view="report">
+                <i class="fas fa-file-alt"></i>
+                <span>業務報告</span>
+                <span class="hotbar-badge" id="report-badge" style="display:none;">!</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- チャットUI -->
+    <div class="sales-chat-bar">
+        <div class="sales-chat-input">
+            <input type="text" placeholder="AIに質問する..." id="chat-input">
+            <button type="button" id="chat-send">送信</button>
+        </div>
+    </div>
+</main>
+
+<script>
+    (function () {
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+        // 日付表示
+        const today = new Date();
+        const dateStr = today.toLocaleDateString('ja-JP', {
+            year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
+        });
+        document.getElementById('current-date').textContent = dateStr;
+
+        // ホットバーナビゲーション
+        const hotbarItems = document.querySelectorAll('.hotbar-item');
+        const viewContainers = document.querySelectorAll('.view-container');
+        const fabAdd = document.getElementById('fab-add');
+
+        hotbarItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const targetView = item.dataset.view;
+
+                // アクティブ状態の切り替え
+                hotbarItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                // ビューの切り替え
+                viewContainers.forEach(v => v.classList.remove('active'));
+                document.getElementById(`view-${targetView}`).classList.add('active');
+
+                // FABの表示/非表示
+                fabAdd.style.display = targetView === 'customers' ? 'flex' : 'none';
+
+                // URL更新（履歴に残す）
+                history.pushState({ view: targetView }, '', `/mode/sales/${targetView}`);
+            });
+        });
+
+        // 初期データ読み込み
+        async function loadCustomers() {
+            try {
+                const res = await fetch(`${API_BASE}/stores`);
+                const data = await res.json();
+                const customers = Array.isArray(data) ? data : (data.items || data.stores || []);
+                renderCustomerList(customers);
+            } catch (e) {
+                console.error('Error loading customers:', e);
+                document.getElementById('customer-list').innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-exclamation-circle"></i>
+          <p>顧客データの読み込みに失敗しました</p>
+        </div>
+      `;
+            }
+        }
+
+        function renderCustomerList(customers) {
+            const container = document.getElementById('customer-list');
+            if (customers.length === 0) {
+                container.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-users"></i>
+          <p>登録された顧客がありません</p>
+        </div>
+      `;
+                return;
+            }
+
+            container.innerHTML = customers.slice(0, 20).map(c => `
+      <div class="customer-card" onclick="showCustomerDetail('${c.id}')">
+        <div class="customer-card-header">
+          <span class="customer-name">${escapeHtml(c.name || c.store_name || '名称未設定')}</span>
+          <span class="customer-status">${c.status || '未設定'}</span>
+        </div>
+        <div class="customer-meta">
+          ${c.address ? `<i class="fas fa-map-marker-alt"></i> ${escapeHtml(c.address)}` : ''}
+        </div>
+      </div>
+    `).join('');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // 業務報告の未提出チェック
+        function checkReportStatus() {
+            const todayStr = today.toISOString().split('T')[0];
+            const submitted = localStorage.getItem(`sales_report_${todayStr}`);
+            const badge = document.getElementById('report-badge');
+            badge.style.display = submitted ? 'none' : 'flex';
+        }
+
+        // 業務報告フォーム
+        const reportForm = document.getElementById('report-form');
+        reportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(reportForm);
+            const data = {
+                body: formData.get('body'),
+                count: parseInt(formData.get('count') || 0),
+                plan: formData.get('plan'),
+                notes: formData.get('notes'),
+                date: today.toISOString().split('T')[0],
+                created_at: new Date().toISOString()
+            };
+
+            // 保存処理（実際はAPIに送信）
+            localStorage.setItem(`sales_report_${data.date}`, JSON.stringify(data));
+            alert('業務報告を提出しました！');
+            checkReportStatus();
+            reportForm.reset();
+        });
+
+        // グローバル関数
+        window.showCustomerDetail = function (id) {
+            // TODO: 顧客詳細モーダル
+            alert('顧客詳細: ' + id);
+        };
+
+        window.showCustomerForm = function () {
+            // TODO: 顧客登録モーダル
+            window.location.href = '/sales/clients/new.html';
+        };
+
+        // 初期化
+        loadCustomers();
+        checkReportStatus();
+    })();
+</script>
