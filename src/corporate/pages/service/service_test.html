@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title></title>
+        <meta name="description" content="ミセサポが提供する店舗清掃・設備メンテナンスサービスの一覧です。グリストラップ清掃、ダクト清掃、レンジフード清掃、換気扇清掃、フロア清掃など、幅広いサービスをご用意しています。">
+    <meta name="keywords" content="サービス一覧,店舗清掃,清掃サービス,グリストラップ,ダクト清掃,レンジフード,換気扇清掃,フロア清掃,設備メンテナンス,ミセサポ">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://misesapo.co.jp/service">
+    <meta property="og:title" content="サービス一覧 | ミセサポ">
+    <meta property="og:description" content="ミセサポが提供する店舗清掃・設備メンテナンスサービスの一覧です。グリストラップ清掃、ダクト清掃、レンジフード清掃、換気扇清掃、フロア清掃など、幅広いサービスをご用意しています。">
+    <meta property="og:image" content="https://misesapo.co.jp/images/logo_144x144.png">
+    <meta property="og:site_name" content="ミセサポ">
+    <meta property="og:locale" content="ja_JP">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://misesapo.co.jp/service">
+    <meta name="twitter:title" content="サービス一覧 | ミセサポ">
+    <meta name="twitter:description" content="ミセサポが提供する店舗清掃・設備メンテナンスサービスの一覧です。グリストラップ清掃、ダクト清掃、レンジフード清掃、換気扇清掃、フロア清掃など、幅広いサービスをご用意しています。">
+    <meta name="twitter:image" content="https://misesapo.co.jp/images/logo_144x144.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://misesapo.co.jp/service">
+
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<style>
+  body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
+  /* Brand theme variables (default + variants) */
+  body { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-pink { --primary: #FF679C; --primary-600: #E35687; }
+  body.theme-blue { --primary: #2563eb; --primary-600: #1d4ed8; }
+  body.theme-emerald { --primary: #10b981; --primary-600: #059669; }
+  /* Note: :root also defines the same brand color; inline vars ensure early paint */
+  </style>
+
+    <style>
+      /* Staff signin page: hide all headers */
+      body.page-staff-signin #default-header-wrapper,
+      body.page-staff-signin #normal-header-wrapper {
+        display: none !important;
+      }
+
+      /* Hide order nav link on this page */
+      #default-header-wrapper a.nav-link[aria-label="発注"],
+      #default-header-wrapper a.mobile-nav-link[aria-label="発注"] {
+        display: none !important;
+      }
+
+      /* Hide contact nav link on this page */
+      #default-header-wrapper a.nav-link[aria-label="お問い合わせ"],
+      #default-header-wrapper a.mobile-nav-link[aria-label="お問い合わせ"],
+      #default-header-wrapper a.nav-link[aria-label="サービス一覧"],
+      #default-header-wrapper a.mobile-nav-link[aria-label="サービス一覧"] {
+        display: none !important;
+      }
+      
+      /* Staff pages: hide global header and footer */
+      body[class*="page-staff-"] #default-header-wrapper,
+      body[class*="page-staff-"] #normal-header-wrapper,
+      body[class*="page-staff-"] footer {
+        display: none !important;
+      }
+      
+      /* Staff pages: ensure full height layout */
+      body[class*="page-staff-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="page-staff-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Admin pages: hide global header while keeping auth buttons */
+      body[class*="page-admin-"] #default-header-wrapper {
+        height: 0;
+        overflow: visible;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .site-header {
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        min-height: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .inner {
+        justify-content: flex-end;
+        padding: 0;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-left,
+      body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
+      body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
+      body[class*="page-admin-"] #default-header-wrapper .spacer,
+      body[class*="page-admin-"] #default-header-wrapper .role-badge {
+        display: none !important;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right {
+        position: fixed;
+        top: 16px;
+        right: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 18px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.18);
+        z-index: 300;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
+        font-weight: 600;
+      }
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+      }
+      
+      /* Sales pages: hide global header and footer */
+      body[class*="sales-"] #default-header-wrapper,
+      body[class*="sales-"] #normal-header-wrapper,
+      body[class*="sales-"] footer {
+        display: none !important;
+      }
+      
+      /* Sales pages: ensure full height layout */
+      body[class*="sales-"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="sales-"] #main {
+        margin: 0;
+        padding: 0;
+      }
+
+      @media (max-width: 767.98px) {
+        .normal-header-nav {
+          display: flex;
+        }
+      }
+
+      main{
+        margin:auto;
+      }
+      .hero{
+        margin-top: 80px;
+      }
+    </style>
+  </head>
+  <body class="theme-pink ">
+    <header class="normal-header visible">
+      <div class="normal-header-inner">
+        <div class="normal-header-logo">
+          <a href="/">
+              <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+          </a>
+      </div>
+  
+          <nav class="normal-header-nav">
+              <a href="/">TOP</a>
+             <a href="/service/service.html">対応可能サービス</a>
+              <a href="/lp#voice">お客様の声</a>
+              <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
+              <a href="/#event">イベント</a>
+              <a href="/privacy-policy">規約＆ポリシー</a>
+          </nav>
+      </div>
+  </header>
+
+    <main id="main">
+      
+
+
+
+
+<!-- Splash Screen -->
+<div id="splash-screen" class="splash-screen">
+  <img src="/images/logo_144x144.png" alt="ミセサポ" class="splash-logo" />
+</div>
+
+<!-- Main Content -->
+<div id="page-content">
+<!-- Hero (full-bleed) -->
+<section class="hero">
+  <div class="swiper hero-swiper" aria-label="ヒーロースライダー">
+    <div class="swiper-wrapper">
+      <div class="swiper-slide">
+        <a href="#" class="hero-category-link" data-category="サービス一覧">
+          <img src="/images/service/header-main1.jpg" alt="サービス一覧"> 
+        </a>
+      </div>
+
+      <div class="swiper-slide">
+        <a href="#" class="hero-category-link" data-category="厨房設備">
+          <img src="/images/service-main02.jpg" alt="厨房洗浄"> 
+        </a>
+      </div>
+      <div class="swiper-slide">
+        <a href="#" class="hero-category-link" data-category="空調設備">
+          <img src="/images/service-main03.jpg" alt="エアコン洗浄" />
+        </a>
+        </div>
+      <div class="swiper-slide">
+        <a href="#" class="hero-category-link" data-category="フロア">
+          <img src="/images/service-main04.jpg" alt="フロア洗浄" />
+        </a>
+        </div>
+      <div class="swiper-slide">
+        <a href="#" class="hero-category-link" data-category="その他">
+          <img src="/images/service-main05.jpg" alt="その他サービス" />
+        </a>
+      </div>
+    </div>
+    <div class="swiper-pagination" aria-hidden="true"></div>
+  </div>
+</section>
+
+<!-- Category Tabs just below Hero -->
+<section class="container section-gap-lg">
+  <div class="tabs-row">
+    <div class="tabs">
+      <button class="tab active" data-category="all">全て</button>
+      <button class="tab" data-category="厨房設備">厨房設備</button>
+      <button class="tab" data-category="空調設備">空調設備</button>
+      <button class="tab" data-category="フロア">フロア</button>
+      <button class="tab" data-category="その他">その他</button>
+      <button class="tab">
+        <a href="/images/service/service_catalog.pdf"  style="display: flex;align-items: center;"><img src="/images/service/pdf_icon.svg" width="25px"> カタログ
+        </a>
+      </button>
+    </div>
+  </div>
+  </section>
+
+<!-- Main Content -->
+<!-- Cart and Categories -->
+<section class="container section-gap-lg">
+  <!--
+  <div class="cart-row">
+    <a class="btn btn-primary cart-button" href="/cart">
+      <i class="fas fa-shopping-cart"></i>
+      <span>カートを見る</span>
+      <span class="cart-badge">0</span>
+    </a>
+  </div>
+-->
+  <p class="muted text-center small">
+    ※料金は目安となります。店舗の広さや業態、建物の状況により金額が前後する場合がございます。<br />
+    クリックすると詳細入力画面が表示されます。
+  </p>
+
+  <!-- Services Grid -->
+  
+  <div class="service-grid">
+    <!-- Service Items (generated) -->
+    
+    <article class="card-service" data-id="1" data-category="厨房設備">
+      <a href="/service/1/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/service/gurisuto.jpg" alt="グリストラップ" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>グリストラップ</h3>
+          <p class="price">¥ 21,000〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="2" data-category="厨房設備">
+      <a href="/service/2/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/gure-chingu.png" alt="U字溝・グレーチング清掃" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>U字溝・グレーチング清掃</h3>
+          <p class="price">¥ 7,000〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="3" data-category="厨房設備">
+      <a href="/service/3/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/haikan.png" alt="配管高圧洗浄" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>配管高圧洗浄</h3>
+          <p class="price">¥ 35,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="4" data-category="厨房設備">
+      <a href="/service/4/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/renjifu-do.jpg" alt="レンジフード洗浄" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>レンジフード洗浄</h3>
+          <p class="price">¥ 17,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="5" data-category="厨房設備">
+      <a href="/service/5/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/dakuto.jpg" alt="ダクト洗浄" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>ダクト洗浄</h3>
+          <p class="price">¥ 17,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="6" data-category="厨房設備">
+      <a href="/service/6/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/boukashatta.png" alt="防火シャッター清掃" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>防火シャッター清掃</h3>
+          <p class="price">¥ 17,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="7" data-category="厨房設備">
+      <a href="/service/7/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/kankisen.jpg" alt="換気扇洗浄" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>換気扇洗浄</h3>
+          <p class="price">¥ 7,000〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="8" data-category="厨房設備">
+      <a href="/service/8/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/haikifan.jpg" alt="排気ファン清掃" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>排気ファン清掃</h3>
+          <p class="price">¥ 3,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="9" data-category="厨房設備">
+      <a href="/service/9/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/haikifanberuto.jpg" alt="排気ファンベルト交換調整" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>排気ファンベルト交換調整</h3>
+          <p class="price">¥ 17,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="10" data-category="厨房設備">
+      <a href="/service/10/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/chuuboukiki.png" alt="厨房機器洗浄" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>厨房機器洗浄</h3>
+          <p class="price">¥ 17,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="11" data-category="厨房設備">
+      <a href="/service/11/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/kabe.png" alt="壁清掃" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>壁清掃</h3>
+          <p class="price">¥ 10,000</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="12" data-category="厨房設備">
+      <a href="/service/12/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/sinku.jpg" alt="シンク洗浄" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>シンク洗浄</h3>
+          <p class="price">¥ 14,000〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="13" data-category="空調設備">
+      <a href="/service/13/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/eakonfiruta.jpg" alt="エアコンフィルター洗浄" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>エアコンフィルター洗浄</h3>
+          <p class="price">¥ 5,250〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="14" data-category="空調設備">
+      <a href="/service/14/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/eakonbunkai.jpg" alt="エアコン分解洗浄" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>エアコン分解洗浄</h3>
+          <p class="price">¥ 11,375〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="15" data-category="フロア">
+      <a href="/service/15/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/mado.png" alt="窓清掃" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>窓清掃</h3>
+          <p class="price">¥ 5,250〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="16" data-category="フロア">
+      <a href="/service/16/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/si-ruhagasi.png" alt="シール剥がし" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>シール剥がし</h3>
+          <p class="price">¥ 3,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="17" data-category="フロア">
+      <a href="/service/17/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/te-burufuki.png" alt="テーブル拭き" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>テーブル拭き</h3>
+          <p class="price">¥ 8,750〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="18" data-category="フロア">
+      <a href="/service/18/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/toire.png" alt="トイレ洗浄" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>トイレ洗浄</h3>
+          <p class="price">¥ 12,250〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="19" data-category="フロア">
+      <a href="/service/19/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/yuka.png" alt="床清掃" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>床清掃</h3>
+          <p class="price">¥ 12,250</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="20" data-category="フロア">
+      <a href="/service/20/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/yuka_yukawakkusu.png" alt="床ワックス" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>床ワックス</h3>
+          <p class="price">¥ 8,750</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="21" data-category="その他">
+      <a href="/service/21/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/gomi_kaishu.jpg" alt="ゴミ回収" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>ゴミ回収</h3>
+          <p class="price">¥ 5,250〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="22" data-category="フロア">
+      <a href="/service/22/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/seiriseiton.jpg" alt="整理整頓" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>整理整頓</h3>
+          <p class="price">¥ 8,750</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="23" data-category="その他">
+      <a href="/service/23/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/haisenseiri.jpg" alt="配線整理" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>配線整理</h3>
+          <p class="price">¥ 3,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="24" data-category="フロア">
+      <a href="/service/24/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/sofa.jpg" alt="ソファークリーニング" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>ソファークリーニング</h3>
+          <p class="price">¥ 35,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="25" data-category="その他">
+      <a href="/service/25/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/staffroom.png" alt="スタッフルーム清掃" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>スタッフルーム清掃</h3>
+          <p class="price">¥ 7,000〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="26" data-category="その他">
+      <a href="/service/26/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/yukamatto_koukan.png" alt="床マット交換" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>床マット交換</h3>
+          <p class="price">¥ 17,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="27" data-category="その他">
+      <a href="/service/27/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/eakonhouteitenken.jpg" alt="エアコン法定点検" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>エアコン法定点検</h3>
+          <p class="price">¥ 8,750</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="28" data-category="その他">
+      <a href="/service/28/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/eiseikanri.png" alt="店舗衛生管理" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>店舗衛生管理</h3>
+          <p class="price">¥ 50,000〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="29" data-category="その他">
+      <a href="/service/29/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/5s.png" alt="5Sコンサルティング" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>5Sコンサルティング</h3>
+          <p class="price">¥ 10,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="30" data-category="その他">
+      <a href="/service/30/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/kousho.jpg" alt="高所/厨房機器内埃取り" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>高所/厨房機器内埃取り</h3>
+          <p class="price">¥ 875</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="31" data-category="その他">
+      <a href="/service/31/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/nezumi.png" alt="ネズミ駆除" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>ネズミ駆除</h3>
+          <p class="price">¥ 17,500〜</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="32" data-category="その他">
+      <a href="/service/32/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/gokiburichoubae.png" alt="ゴキブリ/チョウバエ駆除" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>ゴキブリ/チョウバエ駆除</h3>
+          <p class="price">¥ 12,250</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="33" data-category="その他">
+      <a href="/service/33/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/haccp.png" alt="HACCP" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>HACCP</h3>
+          <p class="price">¥ 10,000</p>
+        </div>
+      </a>
+    </article>
+    
+    <article class="card-service" data-id="34" data-category="その他">
+      <a href="/service/34/" class="card-service-link">
+        <div class="thumb">
+          <img src="images/osuisou.jpg" alt="汚水槽" loading="lazy" decoding="async" />
+        </div>
+        <div class="content">
+          <h3>汚水槽</h3>
+          <p class="price">¥ 50,000</p>
+        </div>
+      </a>
+    </article>
+    
+  </div>
+</section>
+
+<!-- Service Item Modal (no Tailwind dependency) -->
+<div id="service-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-dialog">
+    <!-- Header image -->
+    <div class="modal-hero">
+      <img id="modal-image" src="" alt="Service Image" class="modal-hero-img" />
+      <button id="close-modal-btn" class="modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <h2 id="modal-title" class="modal-title"></h2>
+      <hr class="divider" />
+
+      <div id="modal-form" class="stack lg"></div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button class="btn btn-primary btn-fixed btn-round">次へ</button>
+        <button id="back-modal-btn" class="btn btn-fixed btn-round">戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Details Modal -->
+<div id="details-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="details-modal-title">
+  <div class="modal-dialog">
+    <!-- Header image -->
+    <div class="modal-hero">
+      <img id="details-modal-image" src="" alt="Service Image" class="modal-hero-img" />
+      <button id="close-details-modal-btn" class="modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body modal-scroll">
+      <div class="modal-headline">
+        <h2 id="details-modal-title" class="modal-title"></h2>
+        <div class="price-line">
+          <span class="muted"><i class="fas fa-shopping-cart"></i> 清掃料金は</span>
+          <span class="price-strong">¥0</span>
+          <span class="muted">です。</span>
+        </div>
+      </div>
+      <p class="small muted">設備の詳細を選択してください。選択内容に応じて金額が自動計算されます。</p>
+      <hr class="divider" />
+
+      <div id="details-form" class="stack lg"></div>
+
+      <!-- Remarks / options -->
+        <div>
+          <h3 class="section-title">グリスフィルターをレンタルしますか？</h3>
+          <div class="stack sm">
+            <label class="choice-row"><input type="radio" name="rental" class="radio" /><span>はい</span></label>
+            <label class="choice-row"><input type="radio" name="rental" class="radio" /><span>いいえ</span></label>
+          </div>
+          <h3 class="section-title">備考欄(任意)</h3>
+          <textarea class="textarea" rows="3" placeholder="自由入力"></textarea>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button class="btn btn-primary btn-fixed btn-round">次へ</button>
+        <button id="back-to-service-modal-btn" class="btn btn-fixed btn-round">戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Modal (最終セクション) -->
+<div id="order-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
+  <div class="modal-dialog">
+    <!-- Header image -->
+    <div class="modal-hero">
+      <img id="order-modal-image" src="" alt="Service Image" class="modal-hero-img" />
+      <button id="close-order-modal-btn" class="modal-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <h2 id="order-modal-title" class="modal-title"></h2>
+      <hr class="divider" />
+
+      <!-- Order Section -->
+      <div class="order-section">
+        <p class="small">定期発注なら最大 ¥ 0 お得！</p>
+        <div class="actions">
+          <button id="set-regular-order-btn" class="btn btn-fixed btn-round">定期発注にする</button>
+          <button id="add-to-cart-btn" class="btn btn-primary btn-fixed btn-round">カートに入れる</button>
+          <button id="back-to-details-modal-btn" class="btn btn-fixed btn-round">戻る</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Cart Added Modal -->
+<div id="cart-added-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-dialog">
+    <button id="close-cart-added-modal-btn" class="modal-close close-pink" aria-label="閉じる">
+      <i class="fas fa-times"></i>
+    </button>
+    <!-- Full-width title -->
+    <h2 class="modal-title cart-added-title">
+      <i class="fas fa-check-circle"></i>
+      カートに追加しました
+    </h2>
+
+    <div class="grid cart-grid gap-16">
+      <!-- Left: confirmation -->
+      <div>
+        <div class="row">
+          <img id="cart-added-item-image" src="https://placehold.co/150x150/e2e8f0/666" alt="Service Image" class="avatar-round" />
+          <div>
+            <h3 id="cart-added-item-title">サービス名</h3>
+            <div id="cart-added-item-details" class="small muted"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: totals/actions -->
+      <div>
+        <h3>カート小計</h3>
+        <p>¥<span class="subtotal-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></p>
+        <div class="actions">
+          <a class="btn btn-primary btn-fixed btn-round" href="/cart">カートへ進む</a>
+          <button id="continue-shopping-btn" class="btn btn-fixed btn-round">発注を続ける</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.SERVICE_ITEMS = [{"id": 1, "title": "グリストラップ", "category": "厨房設備", "price": "¥ 21,000〜", "image": "images/gurisuto.png", "detail-image": "images/gurisuto.png", "description": "グリストラップ（油脂分離槽）は、厨房の排水に含まれる油分を分離・回収する設備です。日々の使用で油分や食材カスが蓄積しやすく、定期的なメンテナンスを怠ると様々なトラブルを引き起こします。", "problems": ["強い悪臭の発生", "排水詰まりによる逆流や床の冠水", "ゴキブリ・チョウバエなど害虫の発生源", "油脂の蓄積による火災リスク"], "solution": "専門清掃では、グリストラップを分解・高圧洗浄・除菌仕上げで徹底的にクリーニングいたします。", "forms": [], "details": []}, {"id": 2, "title": "U字溝・グレーチング清掃", "category": "厨房設備", "price": "¥ 7,000〜", "image": "images/gure-chingu.png", "description": "U字溝（排水溝）は、油分や食材カスで汚れやすく、放置すると様々なトラブルを引き起こします。厨房やホールの床に設置されたグレーチング（排水溝の金属カバー）も、油汚れや食材カスが溜まりやすく、放置すると問題を引き起こします。", "problems": ["強い悪臭の発生", "排水詰まりによる逆流や床の冠水", "ゴキブリ・チョウバエなど害虫の発生源", "排水溝の詰まり → 水が逆流して床が水浸しに"], "solution": "定期的な専門清掃による分解・高圧洗浄が効果的です。", "forms": [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/gure-chingu_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/gure-chingu_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/gure-chingu_100.png"}]}], "details": [{"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "U字溝", "img-url": "images/ujikou.png", "countable": true, "unit": "m", "count": 0}, {"text": "グレーチング", "img-url": "images/gure-chingu_s.png", "countable": true, "unit": "本", "count": 0}]}, {"section-title": "※グレーチング1本の長さはおよそ1mです"}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/グレーチング洗浄.png"}, {"id": 3, "title": "配管高圧洗浄", "category": "厨房設備", "price": "¥ 35,500〜", "image": "images/haikan.png", "description": "日々の油脂・食材カス・洗剤などが蓄積しやすく、定期的なメンテナンスを怠ると以下のようなトラブルにつながります。", "problems": ["排水の流れが悪くなる", "悪臭の発生", "ゴキブリやチョウバエなど害虫の温床化", "深刻な詰まりによる営業停止リスク"], "solution": "高圧洗浄による定期的なクリーニングが効果的です。", "forms": [{"section-title": "現在の状況を教えてください", "section-type": "radio-text", "required": true, "section-items": ["問題なく流れている", "少し流れが悪い", "完全に詰まっている"], "section-image": "images/TOP2.png"}, {"section-title": "グリストラップの清掃頻度を教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "週に1回程度", "月に1回程度", "半年〜1年に1回", "一度もしていない"]}, {"section-title": "配管が詰まったり、流れが悪くなるのはどのくらいの頻度ですか？", "section-type": "radio-text", "required": true, "section-items": ["ほとんどない", "年に1回程度", "半年に1回程度", "もっと頻繁にある"]}], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "配管", "img-url": "images/haikan.png", "countable": true, "unit": "/10m", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}]}, {"id": 4, "title": "レンジフード洗浄", "category": "厨房設備", "price": "¥ 17,500〜", "image": "images/renjifu-do.png", "description": "レンジフード（換気フード）は、油煙やホコリが短期間で蓄積しやすく、そのままにするとトラブルを招きます。", "problems": ["店内に煙や油臭が充満、火災の原因に", "油汚れの固着による強烈な悪臭", "ゴキブリなど害虫の発生源に"], "solution": "専門清掃では、フード内部・フィルター・シロッコファンを分解洗浄・高圧洗浄・除菌仕上げで徹底的にクリーニングいたします。", "forms": [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/renjifu-do_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/renjifu-do_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/renjifu-do_100.png"}]}], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "シロッコファン", "img-url": "images/renjifu-do_sirokkofan .png", "countable": true, "unit": "個", "count": 0}, {"text": "排気シャッター", "img-url": "images/renjifu-do_haikishatta.png", "countable": true, "unit": "個", "count": 0}, {"text": "フィルターケース", "img-url": "images/renjifu-do_firutake-su.png", "countable": true, "unit": "個", "count": 0}, {"text": "グリスフィルター", "img-url": "images/renjifu-do_gurisufiruta.png", "countable": true, "unit": "個", "count": 0}, {"text": "プロペラファン", "img-url": "images/renjifu-do_puroperafan.png", "countable": true, "unit": "個", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/レンジフード.png"}, {"id": 5, "title": "ダクト洗浄", "category": "厨房設備", "price": "¥ 17,500〜", "image": "images/dakuto.png", "description": "ダクト管内は、油脂やホコリが内壁に付着しやすく、放置すると次のようなリスクにつながります。", "problems": ["換気効率が低下、火災の原因に", "油汚れが酸化して強烈な悪臭の原因に", "ゴキブリ・ネズミなど害虫・害獣の温床に"], "solution": "専門清掃では、ダクト管を専用機材で内部洗浄・高圧洗浄・除菌仕上げを行い、見えない部分まで徹底的にクリーニングいたします。", "forms": [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "週に1回程度", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/dakuto_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/dakuto_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/dakuto_100.png"}]}], "details": [{"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "ダクト", "img-url": "images/dakuto.png", "countable": true, "unit": "m", "count": 0}]}, {"section-title": "種類", "section-type": "radio-text", "required": true, "section-items": ["火災保険を見直す"]}, {"section-title": "日頃のダクト火災は厨房火災の大きな原因です。清掃で予防し、保険で備えることが安心経営につながります。"}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/ダクト内清掃.png"}, {"id": 6, "title": "防火シャッター清掃", "category": "厨房設備", "price": "¥ 17,500〜", "image": "images/boukashatta.png", "description": "万一の火災時に店内を守る防火シャッター。油汚れやホコリ、ゴミが蓄積し、以下のようなリスクが生じます。", "problems": ["レール詰まりでシャッターが正常に作動しない", "緊急時に作動せず防火機能が損なわれる", "見た目の劣化による店舗イメージの低下"], "solution": "専門清掃では、レール・可動部・シャッター本体を分解洗浄・サビ取り・潤滑調整。防火性能を維持し、非常時にも確実に作動する状態に保ちます。", "forms": [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "週に1回程度", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/boukashatta_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/boukashatta_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/boukashatta_100.png"}]}], "details": [{"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "防火シャッター", "img-url": "images/boukashatta_boukashatta.png", "countable": true, "unit": "箇所", "count": 0}]}, {"section-type": "radio-text", "required": true, "section-title": "フィルターケースやグリスフィルターを外す必要がありますか？", "section-items": ["はい", "いいえ"]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/防火シャッター清掃.png"}, {"id": 7, "title": "換気扇洗浄", "category": "厨房設備", "price": "¥ 7,000〜", "image": "images/kankisen.png", "description": "厨房やホールの換気扇は、油煙やホコリが羽根やモーター部分に溜まりやすく、放置すると問題を引き起こします。", "problems": ["換気能力の低下で煙や臭いがこもる、火災の原因", "モーターに負担がかかり故障・異音の原因に", "ゴキブリ・チョウバエなどの害虫温床に"], "solution": "専門清掃では、羽根やカバーを分解・高圧洗浄・除菌仕上げで徹底クリーニングいたします。", "forms": [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "週に1回程度", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/kankisen_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/kankisen_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/kankisen_100.png"}]}], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "プロペラ", "img-url": "images/kankisen_puroperafan.png", "countable": true, "unit": "個", "count": 0}, {"text": "天井", "img-url": "images/kankisen_tenjyou.png", "countable": true, "unit": "個", "count": 0}, {"text": "シロッコファン", "img-url": "images/kankisen_sirokkofan.png", "countable": true, "unit": "個", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/換気扇洗浄.png"}, {"id": 8, "title": "排気ファン清掃", "category": "厨房設備", "price": "¥ 3,500〜", "image": "images/haikifan.png", "description": "排気ファンは、油煙・ホコリ・水蒸気を直接吸い込むため、汚れが蓄積しやすい設備です。放置すると問題を引き起こします。", "problems": ["油汚れで羽根が重くなり回転効率が低下、火災のリスク", "モーターに負担がかかり故障・異音の原因に", "強い悪臭や害虫の発生源に"], "solution": "排気ファンを分解し、羽根・カバー・モーター部分を高圧洗浄・除菌仕上げいたします。", "sections": [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "section-items": ["毎日清掃している", "週に1回程度", "月に1回程度", "半年〜1年に1回", "1度もしていない"], "required": true}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/haikifan_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/haikifan_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/haikifan_100.png"}], "required": false}, {"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "排気ファン", "img-url": "images/chuuboukiki_haikifan.png", "countable": true, "unit": "式", "count": 0}]}, {"section-title": "現在の状況を教えてください", "section-type": "radio-text", "section-items": ["問題なく吸えている", "少し弱い", "吸えていない"], "required": true}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}]}, {"id": 9, "title": "排気ファンベルト交換調整", "category": "厨房設備", "price": "¥ 17,500〜", "image": "images/haikifanberuto.png", "description": "ファンベルトは、回転・摩擦のため、劣化や伸び、ゆるみが発生しやすい部品です。放置するとトラブルを引き起こします。", "problems": ["ベルトの摩耗・亀裂→突然の断裂", "換気効率の低下や異音発生", "排気不良による店内の煙・臭いこもり"], "solution": "定期点検・張り具合調整・交換作業を行うことで、設備を長持ちさせ、突発的なトラブルを未然に防ぎます。", "forms": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "排気ファン", "img-url": "images/haikifanberuto_haikifanberuto.png", "countable": true, "unit": "式", "count": 0}]}, {"section-title": "現在の状況を教えてください", "section-type": "radio-text", "required": true, "section-items": ["問題なく吸えている", "少し弱い", "吸えていない"]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/ファンベルト交換調整.png"}, {"id": 10, "title": "厨房機器洗浄", "category": "厨房設備", "price": "¥ 17,500〜", "image": "images/chuuboukiki.png", "description": "フライヤー・コンロ・オーブン・冷蔵庫などは、毎日の使用で油汚れ・焦げ付き・ホコリが蓄積しやすく、放置すると以下のリスクが生じます。", "problems": ["機器の性能低下・寿命の短縮", "油煙・焦げ付きによる火災リスク", "厨房全体の清潔感低下によるスタッフ・お客様への悪影響"], "solution": "プロの専用洗剤・工具による分解洗浄で、表面だけでなく内部の蓄積汚れまで徹底除去します。", "forms": [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "週に1回程度", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/chuuboukiki_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/chuuboukiki_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/chuuboukiki_100.png"}]}], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "冷蔵庫", "img-url": "images/chuuboukiki_reizouko.png", "countable": true, "unit": "基", "count": 0}, {"text": "冷凍庫", "img-url": "images/chuuboukiki_reizouko.png", "countable": true, "unit": "基", "count": 0}, {"text": "製氷機", "img-url": "images/chuuboukiki_shokusenki.png", "countable": true, "unit": "基", "count": 0}, {"text": "ワインセラー", "img-url": "images/chuuboukiki_wain.png", "countable": true, "unit": "基", "count": 0}, {"text": "食洗機", "img-url": "images/chuuboukiki_shokusenki.png", "countable": true, "unit": "基", "count": 0}, {"text": "ステンレス作業台", "img-url": "images/chuuboukiki_sutenresu.png", "countable": true, "unit": "基", "count": 0}, {"text": "作業用ラック", "img-url": "images/chuuboukiki_rakku.png", "countable": true, "unit": "基", "count": 0}, {"text": "壁", "img-url": "images/chuuboukiki_kabe.png", "countable": true, "unit": "基", "count": 0}, {"text": "スチームコンベクションオーブン", "img-url": "images/chuuboukiki_suchi-mu.png", "countable": true, "unit": "基", "count": 0}, {"text": "デッキオーブン", "img-url": "images/chuuboukiki_dekki.png", "countable": true, "unit": "基", "count": 0}, {"text": "ガスレンジ", "img-url": "images/chuuboukiki_gasurenji.png", "countable": true, "unit": "基", "count": 0}, {"text": "調理台", "img-url": "images/chuuboukiki_chouridai.png", "countable": true, "unit": "基", "count": 0}, {"text": "ウォーマー", "img-url": "images/chuuboukiki_wo-ma.png", "countable": true, "unit": "基", "count": 0}, {"text": "給湯器", "img-url": "images/chuuboukiki_kyuutouki.png", "countable": true, "unit": "基", "count": 0}, {"text": "コンロ", "img-url": "images/chuuboukiki_konro.png", "countable": true, "unit": "基", "count": 0}, {"text": "フライヤー", "img-url": "images/chuuboukiki_furaiya.png", "countable": true, "unit": "基", "count": 0}, {"text": "グリドル", "img-url": "images/chuuboukiki_guridoru.png", "countable": true, "unit": "基", "count": 0}, {"text": "その他", "img-url": "images/chuuboukiki_sonota.png", "countable": true, "unit": "基", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/厨房機器洗浄.png"}, {"id": 11, "title": "壁清掃", "category": "厨房設備", "price": "¥ 10,000", "image": "images/kabe.png", "description": "壁紙(クロス)は、油ハネやタバコのヤニ、傷や剥がれなどで劣化しやすく、放置すると店舗の印象を大きく損ねます。", "problems": ["シミ・汚れ・黄ばみによる不衛生な印象、カビや害虫が発生", "店舗の雰囲気が暗くなり集客力の低下", "劣化が進むと大規模な張り替えが必要になるリスク"], "solution": "専門修繕では、部分補修から全面張り替えまで対応可能。店舗の雰囲気やブランドイメージに合わせた仕上げで、清潔感と居心地の良さを回復させます。", "forms": [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "月に1回程度", "週に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/kabe_80.jpeg"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/kabe_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/kabe_100.png"}]}], "details": [{"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "壁", "img-url": "images/kabe_kabe.png", "countable": true, "unit": "㎡", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/壁紙修繕.png"}, {"id": 12, "title": "シンク洗浄", "category": "厨房設備", "price": "¥ 14,000〜", "image": "images/sinku.png", "description": "シンク（流し台）は、油汚れや食材カス、石けんカスなどが蓄積しやすく、放置すると以下のような問題を招きます。", "problems": ["排水口やパイプの悪臭", "水アカや油膜による見た目の不衛生感", "カビや雑菌の繁殖→ 食中毒リスクの増加"], "solution": "専門清掃では、シンク全体の分解・高圧洗浄・除菌仕上げを行い、清潔で衛生的な状態を維持します。", "forms": [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "月に1回程度", "週に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/sink_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/sink_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/sink_100.png"}]}], "details": [{"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "シンク", "img-url": "images/sinku_sinku.png", "countable": true, "unit": "槽", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/シンク洗浄.png"}, {"id": 13, "title": "エアコンフィルター洗浄", "category": "空調設備", "price": "¥ 5,250〜", "image": "images/eakonfiruta.png", "description": "エアコンのフィルターは、空気中のホコリや汚れを捕集する重要な役割を果たします。定期的な清掃を怠ると、エアコンの性能低下や空気の質の悪化につながります。", "problems": ["エアコンの冷房・暖房効率の低下", "空気の質の悪化による健康への影響", "フィルターの目詰まりによる電気代の増加", "カビや細菌の繁殖による悪臭の発生"], "solution": "専門清掃では、フィルターを専用洗剤で洗浄・除菌し、エアコンの性能と空気の質を回復させます。", "forms": [], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "エアコン", "img-url": "images/eakon.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/eakonfiruta.png"}, {"id": 14, "title": "エアコン分解洗浄", "category": "空調設備", "price": "¥ 11,375〜", "image": "images/eakonbunkai.png", "description": "エアコン内部に油煙、ホコリ、カビが短期間で蓄積しやすく、放置すると問題が発生します。", "problems": ["冷暖房効率の低下、悪臭や店内空気の汚染、健康被害", "水漏れ・異音などの故障リスク増大", "カビや雑菌の繁殖による悪臭や店内空気の汚染"], "solution": "完全分解し、高圧洗浄・除菌仕上げを実施。省エネ効果と衛生環境の改善を実現します。", "forms": [], "details": [{"section-title": "ルームエアコン", "section-type": "grid-items", "section-items": [{"text": "家庭用", "img-url": "images/eakon_gyoumuyou.png", "countable": true, "unit": "台", "count": 0}, {"text": "業務用", "img-url": "images/eakon_gyoumuyou.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "床置き型", "section-type": "grid-items", "section-items": [{"text": "床置き型", "img-url": "images/eakon_yukaokigata.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "天カセ型", "section-type": "grid-items", "section-items": [{"text": "天カセ型", "img-url": "images/eakon_tenkasegata.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "吹き出し口の数を教えてください", "section-type": "radio-text", "required": true, "section-items": ["1方向", "2方向", "4方向"]}, {"section-title": "埋め込型", "section-type": "grid-items", "section-items": [{"text": "埋め込型", "img-url": "images/eakon_umekomi.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "設置場所を教えてください", "section-type": "radio-text", "required": true, "section-items": ["壁", "天井", "床置き"]}, {"section-title": "オプション", "section-type": "grid-items", "section-items": [{"text": "室外機", "img-url": "images/eakon_situgaiki.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（必須）エアコンの年式をご記入ください", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/エアコン分解洗浄.png"}, {"id": 15, "title": "窓清掃", "category": "フロア", "price": "¥ 5,250〜", "image": "images/mado.png", "description": "窓やガラス面は油膜・指紋・ホコリ・雨ジミなどが付着しやすく、放置すると次のような問題が起こります。", "problems": ["曇りやシミで店内が暗く見え視認性が低下し 集客力ダウン", "油膜や汚れが固着して落ちにくくなる", "店舗イメージの低下"], "solution": "専用の洗剤・道具を使用し、油膜や水アカまで徹底除去。透明感のあるガラス面を取り戻し、店舗の印象アップと衛生感の向上を実現します。", "forms": [], "details": [{"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "幅 30〜60cm × 高さ 30〜60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "幅 90〜200cm × 高さ 90〜120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "幅 160〜240cm × 高さ 180〜200cm", "countable": true, "unit": "枚", "count": 0}, {"text": "幅 300〜600cm × 高さ 200〜300cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "高所での作業になりますか？", "section-type": "radio-group", "section-items": [{"text": "はい"}, {"text": "いいえ"}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/窓清掃.png"}, {"id": 16, "title": "シール剥がし", "category": "フロア", "price": "¥ 35,00〜", "image": "images/si-ruhagasi.png", "description": "ステッカーやテープ跡は、時間が経つと糊が固着して簡単には落とせなくなります。", "problems": ["ベタつきや黒ずみで不衛生な印象になり集客力ダウン", "糊残りにホコリが付着してさらに目立つ汚れに", "無理に剥がすと素材や表面を傷つけるリスク"], "solution": "専門清掃では、素材に合わせた専用溶剤・工具を使用し、糊残りまで丁寧に除去。表面を傷つけずに、清潔で美しい状態を取り戻します。", "forms": [], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "シール", "img-url": "images/si-ruhagasi_si-ru.png", "countable": true, "unit": "箇所", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/シール剥がし.png"}, {"id": 17, "title": "テーブル拭き", "category": "フロア", "price": "¥ 8,750〜", "image": "images/te-burufuki.png", "description": "飲食店のテーブルは、お客様が直接触れる重要な接客スペースです。日々の使用で汚れや指紋が付着しやすく、清潔感を保つためには定期的な清掃が必要です。", "problems": ["汚れや指紋による清潔感の低下", "油汚れやシミによる見た目の悪化", "細菌の繁殖による衛生面のリスク", "お客様への印象悪化による集客力の低下"], "solution": "専門清掃では、専用洗剤と工具を使用して、テーブル表面の汚れやシミを徹底的に除去し、清潔感と美観を回復させます。", "forms": [], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "テーブル", "img-url": "images/te-burufuki_te-buru.png", "countable": true, "unit": "基", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/te-burufuki.png"}, {"id": 18, "title": "トイレ洗浄", "category": "フロア", "price": "¥ 12,250〜", "image": "images/toire.png", "description": "お客様が必ず利用する場所であり、店舗の印象を大きく左右します。通常の清掃だけでは取りきれない汚れが蓄積すると…", "problems": ["尿石やカビで強烈な悪臭", "ウォシュレットや配管の詰まりによる水漏れ・故障", "清潔感の低下で店舗全体の評価が下がる"], "solution": "便器やタンク、ウォシュレット部分を分解・薬剤洗浄・高圧洗浄・除菌仕上げ。", "forms": [], "details": [{"section-title": "数量"}, {"section-title": "分解洗浄あり", "section-type": "grid-items", "section-items": [{"text": "洋式", "img-url": "images/toire_yousiki.png", "countable": true, "unit": "台", "count": 0}, {"text": "小便器", "img-url": "images/toire_shoubenki.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "分解洗浄なし", "section-type": "grid-items", "section-items": [{"text": "洋式", "img-url": "images/toire_yousiki.png", "countable": true, "unit": "台", "count": 0}, {"text": "洋式", "img-url": "images/toire_wasiki.png", "countable": true, "unit": "台", "count": 0}, {"text": "小便器", "img-url": "images/toire_shoubenki.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/トイレ.png"}, {"id": 19, "title": "床清掃", "category": "フロア", "price": "¥ 12,250", "image": "images/yuka.png", "description": "飲食店の床は、油、食材カス、飲み物の飛び散りなどで常に汚れやすい状況です。", "problems": ["ベタつきや滑り、黒ずみや油膜による不衛生な印象や転倒", "カビや雑菌の繁殖による悪臭や食中毒リスク", "汚れの蓄積による床材の劣化・寿命短縮"], "solution": "床材に応じて洗剤洗浄・高圧洗浄・ワックス仕上げを実施。", "forms": [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/yuka_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/yuka_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/yuka_100.png"}]}], "details": [{"section-title": "床ポリッシャー洗浄", "section-type": "grid-items", "section-items": [{"text": "キッチン", "img-url": "images/yuka_kicchin.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "フローリング", "img-url": "images/yuka_furo-ring.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "タイル", "img-url": "images/yuka_tairu.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "木材", "img-url": "images/yuka_mokuzai.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "石材", "img-url": "images/yuka_isizai.png", "countable": true, "unit": "㎡", "count": 0}]}, {"section-title": "床ワックス（フローリング）"}, {"section-title": "※過去にワックスを塗布されている場合は、事前に剥離作業を行ってから洗浄することで、より効果的な清掃が可能です。"}, {"section-type": "radio-group", "section-items": [{"text": "ワックス剥離"}, {"text": "ワックス塗布"}]}, {"section-title": "床スイーパー洗浄", "section-type": "grid-items", "section-items": [{"text": "カーペット", "img-url": "images/yuka_ka-petto.png", "countable": true, "unit": "㎡", "count": 0}]}, {"section-title": "その他", "section-type": "grid-items", "section-items": [{"text": "床掃除機", "img-url": "images/yuka_soujiki.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "階段清掃", "img-url": "images/yuka_kaidanseisou.png", "countable": true, "unit": "階分", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/床洗浄.png"}, {"id": 20, "title": "床ワックス", "category": "フロア", "price": "¥ 8,750", "image": "images/yuka_yukawakkusu.png", "description": "床は、毎日の清掃だけでは落としきれない油汚れや黒ずみが蓄積し、ワックス本来の効果が失われていきます。", "problems": ["床のツヤがなくなり不衛生な印象を与える", "汚れが床材に染み込み劣化や剥がれの原因に", "定期メンテナンスを怠ると床の寿命が短くなる"], "solution": "古いワックスや汚れを剥離作業で完全除去し、その後に新しいワックスを均一に塗布し、床本来の美しさと保護効果を取り戻します。", "forms": [], "details": [{"section-type": "grid-items", "section-items": [{"text": "床ワックス", "img-url": "images/yuka_wakkusu.png", "countable": true, "unit": "㎡", "count": 0}]}, {"section-title": "※過去にワックスを塗布されている場合は、事前に剥離作業を行ってから洗浄することで、より効果的な清掃が可能です。", "section-type": "radio-group", "section-items": [{"text": "ワックス剥離"}, {"text": "ワックス塗布"}, {"text": "ポリッシャー洗浄"}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/ワックス.png"}, {"id": 21, "title": "ゴミ回収", "category": "その他", "price": "¥ 5,250〜", "image": "images/gomi_kaishu.png", "description": "日々の営業で大量のゴミ(可燃・不燃)が発生します。古くなった厨房機器・テーブル・椅子・什器類など、大型の粗大ゴミをそのまま放置すると…", "problems": ["ゴミの散乱や悪臭によるゴキブリ・害虫・害獣の発生源となる", "不適切な分別による行政指導や罰則のリスク", "店舗スタッフの負担が増加し、本業の時間が削られる", "店舗スペースを圧迫し作業効率が低下し衛生環境の悪化", "不法投棄や処理不備で行政指導や罰則リスク", "お客様から見える場所にあると店舗イメージの低下"], "solution": "定期回収・臨時回収の両方に対応。可燃・不燃ゴミをルールに従って分別し、効率的で衛生的なゴミ管理を実現します。厨房機器から什器まで大型ゴミを迅速に回収・処分。リサイクル・産廃ルールに基づき適切に処理するため、安心・安全・手間のない廃棄管理を実現します。", "forms": [], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "家電", "img-url": "images/gomi_kaden.png", "countable": true, "unit": "基", "count": 0}, {"text": "ステンレス", "img-url": "images/gomi_sutenresu.png", "countable": true, "unit": "基", "count": 0}, {"text": "可燃", "img-url": "images/gomi_kanen.png", "countable": true, "unit": "個", "count": 0}, {"text": "不燃", "img-url": "images/gomi_funen.png", "countable": true, "unit": "個", "count": 0}, {"text": "ビン", "img-url": "images/gomi_bin.png", "countable": true, "unit": "個", "count": 0}, {"text": "カン", "img-url": "images/gomi_kan.png", "countable": true, "unit": "個", "count": 0}, {"text": "ペットボトル", "img-url": "images/gomi_pettobotoru.png", "countable": true, "unit": "個", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/可燃ゴミ.png"}, {"id": 22, "title": "整理整頓", "category": "フロア", "price": "¥ 8,750", "image": "images/seiriseiton.png", "description": "飲食店のバックヤード・厨房・倉庫は、食材や備品が多く、物が散乱しやすい環境です。整理整頓を怠ると…", "problems": ["必要な物がすぐに見つからず 業務効率が低下", "不要な在庫や備品が溜まりコストが増加", "雑然とした空間がスタッフのモチベーション低下に"], "solution": "現場の動線を考慮しながら備品や食材の配置最適化・ラベリング・棚卸しサポートを実施。", "forms": [], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/seiriseiton_seiriseiton.png", "countable": true, "unit": "箇所", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/整理整頓.png"}, {"id": 23, "title": "配線整理", "category": "その他", "price": "¥ 3,500〜", "image": "images/haisenseiri.png", "description": "調理機器や冷蔵庫、POSレジなどで電源コードや配線が複雑に絡まりやすい環境です。放置すると…", "problems": ["ホコリや油汚れが付着し火災・ショートリスク", "機器の入れ替えや掃除のたびに作業効率が低下", "見た目が乱雑で不衛生・管理不足の印象"], "solution": "専門スタッフが、現場の動線や機器配置に合わせて配線の整理・結束・ラベリングを実施。", "forms": [], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/haisenseiri_haisenseiri.png", "countable": true, "unit": "箇所", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/配線整理.png"}, {"id": 24, "title": "ソファークリーニング", "category": "フロア", "price": "¥ 35,500〜", "image": "images/sofa.png", "description": "飲食店のソファや椅子は、お客様が長時間座る接客スペースです。日々の使用で汚れや臭いが蓄積しやすく、清潔感を保つためには定期的な専門クリーニングが必要です。", "problems": ["汚れや臭いによる清潔感の低下", "シミやカビによる見た目の悪化", "細菌やダニの繁殖による衛生面のリスク", "お客様への印象悪化による集客力の低下"], "solution": "専門クリーニングでは、専用洗剤と工具を使用して、ソファや椅子の汚れや臭いを徹底的に除去し、清潔感と美観を回復させます。", "forms": [], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/sofa_sofa.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/sofa.png"}, {"id": 25, "title": "スタッフルーム清掃", "category": "その他", "price": "¥ 7,000〜", "image": "images/staffroom.png", "description": "飲食店スタッフが利用する休憩室・更衣室（スタッフルーム）は、油汚れの付着や食べかす・ゴミが溜まりやすく、放置すると次のような問題が起こります。", "problems": ["ゴミや食べ残しが原因で害虫の発生源に", "散らかった休憩室でスタッフのモチベーション低下", "不衛生な環境が従業員定着率や店舗評価に悪影響"], "solution": "専門清掃では、床や壁の洗浄、ロッカーやテーブル周りの拭き上げ、ゴミの回収までを徹底対応。", "forms": [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/staffroom_80.jpeg"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/staffroom_90.jpeg"}, {"text": "徹底的にお願いしたい", "img-url": "images/staffroom_100.jpeg"}]}], "details": [{"section-title": "", "section-type": "grid-items", "section-items": [{"text": "スタッフルーム清掃", "img-url": "images/staffroom_staffroom.png"}]}, {"section-title": "辞めたスタッフのゴミも処分しますか？", "section-type": "radio-group", "section-items": [{"text": "はい", "value": "ok", "default": false}, {"text": "いいえ", "value": "no", "default": false}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/スタッフルーム.png"}, {"id": 26, "title": "床マット交換", "category": "その他", "price": "¥ 17,500〜", "image": "images/yukamatto_koukan.png", "description": "店舗の入口に設置される玄関マットは、泥・ホコリ・油分を吸着し、店内を清潔に保つ役割を果たします。", "problems": ["マットの黒ずみやシミで不衛生な第一印象", "吸水・防滑効果が落ちて転倒リスクが増加", "見た目の劣化で店舗全体のイメージダウン"], "solution": "定期的なマット交換・クリーニング済みマットの設置を行い、常に清潔で安全な入口環境を維持いたします。", "forms": [], "details": [{"section-title": "数量"}, {"section-title": "ブラック/ブラウン(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_nairon.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)36×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×180cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "ブルー/ブラック(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironblue.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)36×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×180cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "ブラック/スカーレット(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironred.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)36×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×180cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "ブラック/パール(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironpearl.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)36×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×180cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "グリーン/ブラック(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_nairongreen.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "グレー(材質：PVC)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironpvcgray.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)40×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)50×80cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "吸水・吸油ハイスペック玄関マットブラック(材質：ナイロン・特殊合成ゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironhi.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)40×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)50×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "交換頻度を教えてください", "section-type": "radio-group", "section-items": [{"text": "２週間に１回", "value": "ok", "default": false}, {"text": "１ヶ月に１回", "value": "no", "default": false}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/玄関マット交換.png"}, {"id": 27, "title": "エアコン法定点検", "category": "その他", "price": "¥ 8,750", "image": "images/eakonhouteitenken.png", "description": "定期点検を怠ると、次のようなリスクが発生します。", "problems": ["冷暖房効率の低下・電気代の増加・寿命が短くなる", "ドレンの詰まりや部品摩耗による水漏れ・異音・故障", "突発的なトラブルで営業に支障が出る可能性"], "solution": "年に1~2回の定期点検・簡易清掃・動作確認を行うことで、故障を未然に防ぎ、安心して長期間使用できます。", "forms": [], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "室内機", "img-url": "images/eakontenken_situnaiki.png", "countable": true, "unit": "台", "count": 0}, {"text": "室外機", "img-url": "images/eakontenken_situgaiki.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/エアコン定期点検.png"}, {"id": 28, "title": "店舗衛生管理", "category": "その他", "price": "¥ 50,000〜", "image": "images/eiseikanri.png", "description": "本部のブランドイメージや衛生基準を守るために、定期的な巡回・査察が欠かせません。放置すると以下の問題が発生します。", "problems": ["調理設備や什器の不具合が放置されて事故や故障に", "衛生管理不足による行政指導・営業停止リスク", "店舗オーナーやスタッフの意識低下・離反"], "solution": "本部基準に沿ったチェックリストを用い、店舗ごとの清掃・衛生状況・設備点検を定期的に実施。", "forms": [], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "店舗数", "img-url": "images/eiseikanri_tenposuu.png", "countable": true, "unit": "店舗", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/FC店舗.png"}, {"id": 29, "title": "5Sコンサルティング", "category": "その他", "price": "¥ 10,500〜", "image": "images/5s.png", "description": "飲食店の現場では、モノが多く、清掃・整理が行き届かないことがよくありますが、そのまま放置すると…", "problems": ["倉庫や厨房が乱雑し作業効率が低下", "ゴミや汚れがたまり 害虫・悪臭の原因に", "雑然とした雰囲気が衛生管理不足の印象を与える"], "solution": "現場調査を行い、5Sの導入指導・改善提案・仕組みづくりを実施いたします。", "forms": [], "details": [{"section-title": "5Sとは「清掃、整理、整頓、清潔、躾」の頭文字を取った、職場の環境を整え効率と安全を高めるための改善活動です。"}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/5s.png"}, {"id": 30, "title": "高所/厨房機器内埃取り", "category": "その他", "price": "¥ 875", "image": "images/kousho.png", "description": "高所部分(天井・照明・ダクト周り) や厨房機器内部は、埃や油汚れが蓄積しやすい場所です。", "problems": ["埃が落下して料理や食材を汚染、悪臭や不衛生な印象に", "故障・火災リスクの増加", "店舗イメージを大きく損なう"], "solution": "専門清掃では、専用の器具・高所対応機材を用いて、普段届かない場所の埃や油汚れを徹底除去いたします。", "forms": [], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "清掃箇所の高さ", "img-url": "images/kousho_takasa.png", "countable": true, "unit": "m", "count": 0}]}, {"section-title": "備考欄（任意）埃を取りたい箇所をご記入ください。", "section-type": "textarea", "placeholder": "例：天井、エアコン上", "maxLength": 500, "key": "note"}], "detail-image": "images/kousho.png"}, {"id": 31, "title": "ネズミ駆除", "category": "その他", "price": "¥ 17,500〜", "image": "images/nezumi.png", "description": "ネズミが飲食店に侵入することによるリスクがあります。食材、配線、建材をかじるだけでなく、病原菌やウイルスを媒介する大きなリスクがあります。", "problems": ["食中毒リスク、糞尿や毛による悪臭・不衛生感", "配線をかじられて火災・設備故障の危険", "クレームや営業停止リスク"], "solution": "生息調査、侵入経路の封鎖、トラップ設置、薬剤処理を組み合わせて徹底的に対応。", "forms": [{"section-title": "ネズミの発生状況について、現在の緊急度を教えてください。", "section-type": "radio-text", "required": true, "section-items": ["すぐに駆除が必要", "早めに対応したい", "様子を見ながら検討"]}, {"section-title": "駆除のご希望レベルをお選びください", "section-type": "radio-text", "required": true, "section-items": ["ゼロにしたい", "減衰したい", "予防したい"]}], "details": [{"section-title": "種類を教えてください", "section-type": "radio-text", "required": true, "section-items": ["クマネズミ", "ドブネズミ", "ハツカズミ", "わからない"]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/ネズミ駆除.png"}, {"id": 32, "title": "ゴキブリ/チョウバエ駆除", "category": "その他", "price": "¥ 12,250", "image": "images/gokiburichoubae.png", "description": "食材や油汚れ・湿気などの環境から害虫が発生しやすい場所です。ゴキブリやチョウバエなどを放置すると…", "problems": ["食材や調理器具を汚染し食中毒リスク", "クレームや店舗イメージの悪化", "行政からの指導や営業停止リスク"], "solution": "状況に応じて薬剤散布・トラップ設置・発生源対策を実施。駆除だけでなく再発防止策(清掃・侵入経路対策) までサポートし、安心できる衛生環境を提供します。", "forms": [{"section-title": "害虫の発生状況について、現在の緊急度を教えてください。", "section-type": "radio-text", "required": true, "section-items": ["すぐに駆除が必要", "早めに対応したい", "様子を見ながら検討"]}, {"section-title": "駆除のご希望レベルをお選びください", "section-type": "radio-text", "required": true, "section-items": ["ゼロにしたい", "減衰したい", "予防したい"]}], "details": [{"section-title": "種類を教えてください", "section-type": "radio-text", "required": true, "section-items": ["チャバネゴキブリ", "クロゴキブリ", "ワモンゴキブリ", "チョウバエ", "チャタテムシ", "わからない"]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/害虫駆除.png"}, {"id": 33, "title": "HACCP", "category": "その他", "price": "¥ 10,000", "image": "images/haccp.png", "description": "日々の記録や点検をスタッフ任せにすると、抜け漏れや形骸化が発生しやすくなります。放置すると…", "problems": ["記録不備で 行政指導・営業停止リスク", "温度管理や衛生管理不足による食中毒リスク", "スタッフ任せで運用が定着せず、業務負担が増加"], "solution": "点検チェックリストの整備、温度・衛生データの一元管理、スタッフへの教育・運用サポートで仕組みを構築のお手伝いをいたします。", "forms": [], "details": [{"section-title": "当社は、HACCPに準拠した衛生管理体制の構築を支援する清掃サービスを提供しています。厨房・調理場・設備機器を対象に、細菌や害虫の温床となりやすい箇所を徹底的に洗浄・除菌し、食品衛生法に基づく管理基準を満たす環境づくりをサポートします。監査・保健所の検査における信頼性向上と、持続的な衛生管理の仕組みづくりを実現します。"}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/HACCAP.png"}, {"id": 34, "title": "汚水槽", "category": "その他", "price": "¥ 50,000", "image": "images/osuisou.png", "description": "汚水は汚水槽に一時的に溜まります。放置すると、短期間で以下のような深刻な問題が発生します。", "problems": ["強烈な悪臭が店内や周辺に充満、排水詰まり・逆流", "ゴキブリやチョウバエなど害虫の発生源に", "行政からの指導・営業停止リスク"], "solution": "槽内の汚泥を吸引・除去し、高圧洗浄・除菌仕上げを実施。悪臭・害虫・詰まりを防止し、快適で衛生的な店舗環境を維持できます。定期的な清掃が法令遵守にもつながります。", "forms": [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/osuisou_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/osuisou_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/osuisou_100.png"}]}], "details": [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "縦横 約1m×深さ 約1m 約500L程度", "countable": true, "unit": "", "count": 0}, {"text": "縦横 約1.5m×深さ 約1.5m 約1,000~1,500L程度", "countable": true, "unit": "", "count": 0}, {"text": "縦横 約2m×深さ 約2m 約2,500~3,000L程度", "countable": true, "unit": "", "count": 0}, {"text": "それ以上のサイズ 3,000L以上", "countable": true, "unit": "", "count": 0}, {"text": "わからない", "countable": true, "unit": "", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}], "detail-image": "images/ミセサポ2025/汚水槽.png"}];
+  // body_class と title は JSON で供給
+</script>
+
+<style>
+  /* サービスページのヒーローセクションを全画面表示 */
+  body.page-service .hero {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    min-height: 600px;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  body.page-service .hero .swiper,
+  body.page-service .hero .swiper-wrapper,
+  body.page-service .hero .swiper-slide {
+    width: 100%;
+    height: 100%;
+  }
+
+  body.page-service .hero .swiper-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+  
+  body.page-service .hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 1;
+  }
+  
+  body.page-service .carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #333;
+    transition: background 0.3s;
+  }
+  
+  body.page-service .carousel-btn:hover {
+    background: rgba(255, 255, 255, 1);
+  }
+  
+  body.page-service .carousel-btn.left {
+    left: 20px;
+  }
+  
+  body.page-service .carousel-btn.right {
+    right: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    body.page-service .hero {
+      height: 50vh;
+      min-height: 400px;
+    }
+    
+    body.page-service .carousel-btn {
+      width: 40px;
+      height: 40px;
+      font-size: 1rem;
+    }
+    
+    body.page-service .carousel-btn.left {
+      left: 10px;
+    }
+    
+    body.page-service .carousel-btn.right {
+      right: 10px;
+    }
+  }
+</style>
+</div>
+<!-- End of page-content -->
+
+    </main>
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/modal_manager.js"></script>
+    <script src="/app.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const heroSwiper = document.querySelector('.hero-swiper');
+        if (heroSwiper && window.Swiper) {
+          new Swiper(heroSwiper, {
+            loop: true,
+            speed: 800,
+            autoplay: {
+              delay: 4500,
+              disableOnInteraction: false,
+            },
+            pagination: {
+              el: '.hero-swiper .swiper-pagination',
+              clickable: true,
+            },
+          });
+        }
+
+        document.querySelectorAll('.hero-category-link').forEach((link) => {
+          link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const category = link.getAttribute('data-category') || '';
+            if (!category) return;
+            const tab = document.querySelector(`.tab[data-category="${category}"]`);
+            if (tab) {
+              tab.click();
+            }
+          });
+        });
+      });
+
+      // ログイン画面では通常ヘッダーを表示
+      (function() {
+        const path = window.location.pathname || '';
+        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
+        
+        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
+        if (isSigninPage) {
+          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
+          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
+          if (defaultHeaderWrapper) {
+            defaultHeaderWrapper.style.display = 'none';
+          }
+          if (normalHeaderWrapper) {
+            normalHeaderWrapper.style.display = 'block';
+            // ログイン画面では通常ヘッダーを常に表示
+            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
+            if (normalHeader) {
+              normalHeader.classList.add('visible');
+            }
+          }
+        }
+      })();
+    </script>
+  </body>
+  </html>
+
+
