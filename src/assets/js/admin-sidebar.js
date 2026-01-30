@@ -678,7 +678,7 @@
         sidebarNav.querySelector('a[data-page="mypage"]');
 
       attendanceLink = document.createElement('a');
-      attendanceLink.href = '/admin/attendance/errors';
+      attendanceLink.href = '/admin/attendance/errors.html';
       attendanceLink.className = 'nav-item';
       attendanceLink.setAttribute('data-page', 'attendance-errors'); // data-pageを統一
       attendanceLink.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span class="nav-label">勤怠管理</span>';
