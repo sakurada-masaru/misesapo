@@ -3357,12 +3357,12 @@
 
 
         .about-coverage-more {
+            margin:10px 20px;
             text-align: center;
-            margin-top: 20px;
         }
 
         .about-coverage-more-button {
-            display: inline-block;
+            display: inline-flex;
             padding: 12px 32px;
             background: #FF679C;
             color: #fff;
@@ -3372,6 +3372,7 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0 4px 10px rgba(255, 103, 156, 0.35);
             font-size:16px;
+            align-items: center;
         }
 
         .about-coverage-more-button:hover {
@@ -3394,6 +3395,11 @@
             .event-container img {
                 width: 80% !important;
                 margin: auto;
+            }
+
+            .service-btn-box{
+                display: block !important;
+                text-align: center;
             }
         }
 
@@ -3420,6 +3426,10 @@
 }
 .sns-section{
 background-color: #fff;
+}
+.service-btn-box{
+display: flex;
+justify-content: center;
 }
 </style>
 </head>
@@ -3634,9 +3644,18 @@ background-color: #fff;
         </div>
         <div class="swiper-pagination service-image-pagination"></div>
     </div>
+<div class="service-btn-box">
     <div class="about-coverage-more">
         <a class="about-coverage-more-button" href="/service/service.html">対応可能サービス一覧</a>
     </div>
+    <!--
+    <div class="about-coverage-more">
+        <a class="about-coverage-more-button" href="/images/service/service_catalog.pdf">
+            <img src="/images/service/pdf_icon.svg" style="margin-right:5px;width: 25px !important;">
+            カタログはこちら</a>
+    </div>
+    -->
+</div>
 </section>
     
     <!-- イベント・キャンペーン -->
@@ -3950,7 +3969,38 @@ background-color: #fff;
         .cosmetic-header-logo {
             position: static;
         }
-    </style>
+        .misesapo-mega-menu.ishikawa-style .mega-menu-submenu{
+            padding: 20px;
+        }
+        .catalog-link-box{
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-bottom:1px solid #e5e5e5;
+            width: fit-content;
+            padding-bottom: 10px;
+        }
+        .catalog-link-box img{
+            width: 25px !important;
+            margin-right: 5px;
+        }
+        .catalog-link-box a{
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .catalog-link-box{
+                margin-bottom: 0px;
+                margin-left: 10px;
+            }
+            .catalog-link-box a{
+            color: #fff;
+        }
+
+        }
+
+
+</style>
 
     <!-- 化粧ヘッダー -->
     <header class="cosmetic-header">
@@ -3978,6 +4028,14 @@ background-color: #fff;
                                 <span class="mega-menu-arrow">▼</span>
                             </a>
                             <div class="mega-menu-submenu">
+
+                                <!--
+                                <div class="catalog-link-box">
+                                    <a href="/images/service/service_catalog.pdf"  style="display: flex;align-items: center;">
+                                        <img src="/images/service/pdf_icon.svg" style="width: 25px !important;"> カタログ
+                                    </a>
+                                </div>
+                            -->
                                 <div class="mega-menu-submenu-inner">
                                     <div class="mega-menu-column">
                                         <a href="/service/service.html" class="mega-menu-column-title-link" data-service-category="厨房設備">
@@ -4040,7 +4098,7 @@ background-color: #fff;
                                     <div class="mega-menu-column">
                                         <h3 class="mega-menu-column-title">導入実績</h3>
                                         <ul class="mega-menu-column-list">
-                                            <li><a href="/customers/"><span>導入店舗一覧</span></a></li>
+                                            <li><a href="/customer/customers.html"><span>導入店舗一覧</span></a></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -4219,6 +4277,13 @@ background-color: #fff;
                     <span class="sp-menu-arrow">▼</span>
                 </a>
                 <div class="sp-menu-submenu">
+<!--
+                    <div class="catalog-link-box">
+                        <a href="/images/service/service_catalog.pdf"  style="display: flex;align-items: center;">
+                            <img src="/images/service/pdf_icon.svg" style="width: 25px !important;"> カタログ
+                        </a>
+                    </div>
+-->
                     <ul class="sp-menu-submenu-list">
                         <li class="sp-menu-submenu-item"><a href="/service/" class="sp-menu-submenu-link" style="font-weight:bold">対応可能サービス一覧</a></li>
                         <li class="sp-menu-submenu-item"><a href="/service/1/" class="sp-menu-submenu-link">グリストラップ清掃</a></li>
