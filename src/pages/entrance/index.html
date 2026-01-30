@@ -208,6 +208,14 @@
         --text-secondary: rgba(255, 255, 255, 0.6);
         --border-color: rgba(255, 255, 255, 0.1);
         --accent-glow: rgba(59, 130, 246, 0.5);
+
+        /* === UI Layer System === */
+        --z-base: 10;
+        --z-attendance-tag: 90;
+        --z-visualizer: 100;
+        --z-chat: 110;
+        --z-hotbar: 120;
+        --z-overlay: 1500;
     }
 
     body.light-mode {
@@ -219,12 +227,12 @@
         --accent-glow: rgba(59, 130, 246, 0.3);
     }
 
-    /* Attendance Status Tag */
+    /* Attendance Status Tag - Layer: 背面 */
     #attendance-status-tag {
         position: fixed;
         top: 20px;
         left: 20px;
-        z-index: 1500;
+        z-index: var(--z-attendance-tag);
         padding: 8px 16px;
         background: var(--panel-bg);
         backdrop-filter: blur(15px);
@@ -237,6 +245,7 @@
         transition: all 0.3s ease;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
+
 
     #attendance-status-tag .tag-dot {
         width: 10px;
@@ -526,22 +535,20 @@
         color: #fff;
     }
 
-    /* Feature Overlay Styles (TODO / Daily Report) */
+    /* Feature Overlay Styles (TODO / Daily Report) - Layer: Overlay */
     .feature-overlay {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        inset: 0;
         background: rgba(0, 0, 0, 0.95);
         backdrop-filter: blur(20px);
-        z-index: 10000;
+        z-index: var(--z-overlay);
         display: none;
         justify-content: center;
         align-items: flex-start;
         padding: 20px;
         overflow-y: auto;
     }
+
 
     .feature-overlay.visible {
         display: flex;
@@ -911,7 +918,7 @@
         opacity: 0.7;
     }
 
-    /* Quick Action Buttons for Attendance */
+    /* Quick Action Buttons for Attendance - Layer: Hotbar */
     .attendance-quick-actions {
         position: fixed;
         bottom: 90px;
@@ -919,12 +926,13 @@
         transform: translateX(-50%);
         display: flex;
         gap: 10px;
-        z-index: 2001;
+        z-index: var(--z-hotbar);
         flex-wrap: wrap;
         justify-content: center;
         max-width: 600px;
         width: 90%;
     }
+
 
     /* 営業モード時は勤怠ボタンを非表示 */
     body.job-sales .attendance-quick-actions {
@@ -1189,7 +1197,7 @@
         margin-right: -2px;
     }
 
-    /* Visualizer Core Container */
+    /* Visualizer Core Container - Layer: UI */
     .visualizer-container {
         width: 500px;
         height: 500px;
@@ -1197,41 +1205,50 @@
         top: calc(50% - 40px);
         left: 50%;
         transform: translate(-50%, -50%);
-        z-index: 100;
+        z-index: var(--z-visualizer);
         pointer-events: none;
         transition: all 0.3s ease;
     }
 
-    /* 営業モードではビジュアライザーを上部に配置（半分だけ表示） */
+    /* ===== 営業モード専用レイアウト ===== */
+
+    /* ビジュアライザーを上部に移動（半分だけ表示） */
     body.job-sales .visualizer-container {
-        top: 0;
-        transform: translate(-50%, -50%);
+        top: -150px;
+        transform: translate(-50%, 0);
     }
 
-    /* 営業モードのメッセージコンテナ：ビジュアライザーの下に配置 */
+    /* メッセージコンテナ：ビジュアライザーの下、ホットバーの上 */
     body.job-sales .latest-message-container {
-        position: absolute;
-        top: 120px;
-        bottom: 130px;
-        left: 0;
-        right: 0;
-        margin: 0;
-        padding: 10px 16px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        justify-content: flex-start;
-        pointer-events: auto;
-        z-index: 200;
+        position: fixed !important;
+        top: 100px !important;
+        bottom: 180px !important;
+        left: 16px !important;
+        right: 16px !important;
+        margin: 0 !important;
+        padding: 16px !important;
+        padding-bottom: 20px !important;
+        overflow-y: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        pointer-events: auto !important;
+        z-index: var(--z-chat) !important;
+        background: rgba(10, 10, 20, 0.6) !important;
+        border-radius: 12px !important;
     }
 
-    /* 営業モードのホットバー位置調整 */
+    /* ホットバー：チャット入力の上 - Layer: Hotbar */
     body.job-sales .action-buttons-container {
-        bottom: 155px;
+        position: fixed !important;
+        bottom: env(safe-area-inset-bottom, 70px) !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: var(--z-hotbar) !important;
+        padding: 12px 16px !important;
+        background: rgba(10, 10, 20, 0.95) !important;
     }
-
-
 
 
     /* THE LIQUID CORE - The wave itself */
@@ -1485,10 +1502,10 @@
         box-shadow: 0 5px 15px var(--accent-glow);
     }
 
-    /* Chat UI */
+    /* Chat UI - Layer: Chat */
     #chat-container {
-        position: absolute;
-        top: 0;
+        position: fixed;
+        bottom: 0;
         left: 0;
         width: 100%;
         height: 100%;
@@ -1503,9 +1520,9 @@
         pointer-events: none;
         transform: translateY(20px);
         transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        z-index: 400;
-        /* Behind core but above background */
+        z-index: var(--z-chat);
     }
+
 
     #chat-container.active {
         opacity: 1;
@@ -2372,7 +2389,8 @@
         }
     }
 
-    /* Action Buttons Container Style - Fixed Bottom Hotbar */
+    /* Action Buttons Container Style - Fixed Bottom Hotbar - Layer: Hotbar */
+    #job-hotbar-container,
     .action-buttons-container {
         width: 100%;
         display: flex !important;
@@ -2380,9 +2398,9 @@
         align-items: center;
         flex-direction: column;
         gap: 12px;
-        z-index: 2100 !important;
+        z-index: var(--z-hotbar);
         position: fixed;
-        bottom: 60px;
+        bottom: env(safe-area-inset-bottom, 60px);
         left: 0;
         right: 0;
         padding: 10px 16px;
@@ -2391,6 +2409,7 @@
         -webkit-backdrop-filter: blur(12px);
         border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
+
 
     /* 上部の発光ライン */
     .action-buttons-container::before {
