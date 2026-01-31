@@ -31,7 +31,22 @@ jobs:
           python3 scripts/build.py
           echo "Build completed. Files in public/:"
           ls -la public/ | head -20
-      
+
+      - name: Setup Node (for v2)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/pages/misogi-v2-scaffold/package-lock.json
+
+      - name: Build v2 (misogi-v2-scaffold)
+        run: |
+          cd src/pages/misogi-v2-scaffold
+          npm ci
+          npm run build
+          mkdir -p ../../../public/v2
+          cp -r dist/* ../../../public/v2/
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
