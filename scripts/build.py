@@ -530,7 +530,7 @@ def copy_assets(outputs: List[str]) -> None:
             continue
             
         for src_path in asset_root.rglob("*"):
-            if src_path.is_dir():
+            if src_path.is_dir() or src_path.name == ".DS_Store":
                 continue
             # mirror under public/ stripping the leading root
             rel = src_path.relative_to(asset_root)

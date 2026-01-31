@@ -1,0 +1,357 @@
+/**
+ * M.I.S.O.G.I ビジュアライザー
+ * 中央コア・回転テキストリング・外側リップルの3要素。
+ * トークン参照: --fg, --accent, --z-*
+ */
+
+.visualizer-container {
+  --visualizer-ripple-duration: 5s;
+  --visualizer-ripple-duration-active: 1.5s;
+}
+
+@keyframes core-liquid-breathe {
+  0%, 100% {
+    border-radius: 48% 52% 50% 50% / 50% 50% 52% 48%;
+    transform: translate(-50%, -50%) rotate(0deg) scale(1);
+    opacity: 0.9;
+  }
+  16.67% {
+    border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+    transform: translate(-50%, -50%) rotate(60deg) scale(1.15);
+    opacity: 1;
+  }
+  33% {
+    border-radius: 52% 48% 50% 50% / 48% 52% 50% 50%;
+    transform: translate(-50%, -50%) rotate(120deg) scale(1.15);
+    opacity: 1;
+  }
+  50% {
+    border-radius: 50% 50% 48% 52% / 52% 48% 50% 50%;
+    transform: translate(-50%, -50%) rotate(180deg) scale(1);
+    opacity: 0.9;
+  }
+  66% {
+    border-radius: 50% 50% 48% 52% / 52% 48% 50% 50%;
+    transform: translate(-50%, -50%) rotate(240deg) scale(1);
+    opacity: 0.9;
+  }
+  83.33% {
+    border-radius: 48% 52% 50% 50% / 50% 50% 52% 48%;
+    transform: translate(-50%, -50%) rotate(300deg) scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes misogi-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes ripple-out {
+  0% { width: 100px; height: 100px; opacity: 0.6; }
+  100% { width: 600px; height: 600px; opacity: 0; border-width: 0.5px; }
+}
+
+.visualizer-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 0 auto;
+}
+
+.visualizer-container .circle-text-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  z-index: 5;
+  opacity: 0.6;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: misogi-spin 40s linear infinite;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.visualizer-container.active .circle-text-container {
+  width: 220px;
+  height: 220px;
+  opacity: 1;
+}
+.visualizer-container .circle-svg { width: 200px; height: 200px; font-size: 10px; font-family: var(--font-family-base); }
+.visualizer-container .circle-svg path { fill: none; stroke: none; }
+.visualizer-container .circle-svg text {
+  fill: var(--fg);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.visualizer-container .core-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  box-shadow: 0 0 40px var(--accent-glow), 0 0 80px var(--accent-glow), inset 0 0 20px rgba(255, 255, 255, 0.3);
+  animation: core-liquid-breathe 6s ease-in-out infinite;
+  z-index: 10;
+  transition: box-shadow 0.3s ease, filter 0.3s ease, background 0.3s ease;
+}
+.visualizer-container.active .core-circle {
+  background: var(--fg);
+  transform: translate(-50%, -50%) scale(1.3) !important;
+  filter: blur(2px);
+  box-shadow: 0 0 100px var(--accent-color), 0 0 200px var(--accent-color);
+  animation: none;
+}
+
+.visualizer-container .wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  border: 1.5px solid var(--accent-color);
+  border-radius: 50%;
+  opacity: 0;
+  animation: ripple-out var(--visualizer-ripple-duration) ease-out infinite;
+  pointer-events: none;
+}
+.visualizer-container .wave:nth-child(3) { animation-delay: 0s; }
+.visualizer-container .wave:nth-child(4) { animation-delay: 1.67s; }
+.visualizer-container .wave:nth-child(5) { animation-delay: 3.33s; }
+.visualizer-container.active .wave { animation-duration: var(--visualizer-ripple-duration-active); }
+.visualizer-container.active .wave:nth-child(3) { animation-delay: 0s; }
+.visualizer-container.active .wave:nth-child(4) { animation-delay: 0.33s; }
+.visualizer-container.active .wave:nth-child(5) { animation-delay: 0.66s; }
+
+/* mode=base/target/status/plan/log（数値固定）。base=現状維持。 */
+/* base: 追加アニメ無し（上記デフォルトのまま） */
+
+/* 1: target — リングのみ広い範囲から中央に収束。発生間隔ゆっくり。コアは一切動かさない */
+@keyframes ring-inward {
+  0% { transform: translate(-50%, -50%) scale(4.5); opacity: 0.12; }
+  40% { opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.08; }
+}
+.visualizer-container[data-mode="target"] .wave {
+  animation: ring-inward 2200ms cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  width: 100px;
+  height: 100px;
+}
+.visualizer-container[data-mode="target"] .wave:nth-child(3) { animation-delay: 0s; }
+.visualizer-container[data-mode="target"] .wave:nth-child(4) { animation-delay: 2.2s; }
+.visualizer-container[data-mode="target"] .wave:nth-child(5) { animation-delay: 4.4s; }
+.visualizer-container[data-mode="target"] .core-circle { animation: none; }
+
+/* 2: status — サークルテキスト表示・回転なし・コア同様に鼓動。波紋も鼓動に合わせる */
+@keyframes core-heartbeat {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  25% { transform: translate(-50%, -50%) scale(1.05); }
+  50% { transform: translate(-50%, -50%) scale(1); }
+  75% { transform: translate(-50%, -50%) scale(1.08); }
+}
+.visualizer-container[data-mode="status"] .circle-text-container.viz-ring {
+  animation: core-heartbeat 1250ms ease-in-out infinite;
+}
+.visualizer-container[data-mode="status"] .core-circle {
+  animation: core-heartbeat 1250ms ease-in-out infinite;
+}
+@keyframes status-wave-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  20% { opacity: 0.5; }
+  50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.15; }
+  80% { opacity: 0.4; }
+}
+.visualizer-container[data-mode="status"] .wave {
+  display: block;
+  animation: status-wave-pulse 625ms ease-in-out infinite;
+  width: 100px;
+  height: 100px;
+}
+.visualizer-container[data-mode="status"] .wave:nth-child(3) { animation-delay: 0ms; }
+.visualizer-container[data-mode="status"] .wave:nth-child(4) { animation-delay: 312ms; }
+.visualizer-container[data-mode="status"] .wave:nth-child(5) { animation-delay: 624ms; }
+
+/* 3: plan — 1秒ごとに6degカチカチ回転。カチカチに合わせて波紋 */
+.visualizer-container[data-mode="plan"] {
+  transform: rotateZ(var(--plan-angle, 0deg));
+}
+.visualizer-container[data-mode="plan"] .circle-text-container {
+  animation: none;
+  width: 240px;
+  height: 240px;
+}
+.visualizer-container[data-mode="plan"] .circle-svg {
+  width: 240px;
+  height: 240px;
+  font-size: 12px;
+}
+.visualizer-container[data-mode="plan"] .core-circle { animation: none; }
+@keyframes plan-tick-wave {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+.visualizer-container[data-mode="plan"] .wave {
+  animation: plan-tick-wave 1000ms ease-out infinite;
+  width: 100px;
+  height: 100px;
+}
+.visualizer-container[data-mode="plan"] .wave:nth-child(3) { animation-delay: 0ms; }
+.visualizer-container[data-mode="plan"] .wave:nth-child(4) { animation-delay: 1000ms; }
+.visualizer-container[data-mode="plan"] .wave:nth-child(5) { animation-delay: 2000ms; }
+
+/* 4: log — シネマティック遷移。0s UIフェード / 1s MODE CHANGE 明滅 / 2.2s グリッチ / 3s CRT＋白フラッシュ / 5.2s 遷移 */
+.visualizer-container.log-focus {
+  transform: scale(1.1);
+  transform-origin: center center;
+  transition: transform 0.5s ease;
+}
+.visualizer-container.log-focus .core-circle {
+  box-shadow: 0 0 60px var(--accent-glow), 0 0 120px var(--accent-glow), inset 0 0 24px rgba(255, 255, 255, 0.35);
+}
+
+.report-cinematic {
+  position: fixed;
+  inset: 0;
+  z-index: 1000000;
+  pointer-events: none;
+}
+
+.report-cinematic-label {
+  position: absolute;
+  left: 50%;
+  top: calc(50% - 50px);
+  transform: translate(-50%, -50%);
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--fg);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.report-cinematic-label.visible {
+  opacity: 1;
+}
+
+/* ラベル：小刻みにランダムなぶれ（明滅の代わり） */
+.report-cinematic-label .label-jitter {
+  display: inline-block;
+  animation: label-jitter 0.4s steps(1) infinite;
+}
+@keyframes label-jitter {
+  0%   { transform: translate(0, 0); }
+  5%   { transform: translate(1px, -1px); }
+  10%  { transform: translate(-2px, 0); }
+  15%  { transform: translate(0, 2px); }
+  20%  { transform: translate(-1px, -1px); }
+  25%  { transform: translate(2px, 1px); }
+  30%  { transform: translate(0, -2px); }
+  35%  { transform: translate(-2px, 1px); }
+  40%  { transform: translate(1px, 0); }
+  45%  { transform: translate(-1px, 2px); }
+  50%  { transform: translate(2px, -2px); }
+  55%  { transform: translate(0, 1px); }
+  60%  { transform: translate(-2px, -1px); }
+  65%  { transform: translate(1px, 1px); }
+  70%  { transform: translate(-1px, 0); }
+  75%  { transform: translate(0, -1px); }
+  80%  { transform: translate(2px, 0); }
+  85%  { transform: translate(-1px, -2px); }
+  90%  { transform: translate(1px, -1px); }
+  95%  { transform: translate(-2px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* デジタル・グリッチ（2.2s〜0.8s）— 3px走査線＋RGBズレ */
+.glitch-overlay {
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+  background-size: 100% 3px, 3px 100%;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+}
+.glitch-overlay.glitch-active {
+  opacity: 1;
+  animation: glitch-brief 0.8s ease-out forwards;
+}
+@keyframes glitch-brief {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.visualizer-viz-wrap.log-glitch .visualizer-container {
+  filter: hue-rotate(90deg);
+}
+
+/* CRT COLLAPSE（3s）— scale(1.3, 0.001) を経て scale(0, 0.0001) で横長収束 */
+@keyframes crt-turn-off {
+  0%   { transform: scale(1, 1.3); filter: brightness(1); opacity: 1; }
+  60%  { transform: scale(1.3, 0.001); filter: brightness(10); }
+  100% { transform: scale(0, 0.0001); filter: brightness(50); opacity: 0; }
+}
+.crt-off {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  transform-origin: center center;
+  animation: crt-turn-off 1s ease-in forwards;
+  z-index: 2;
+}
+
+/* 一瞬の白フラッシュ → 間髪入れず暗転 */
+.white-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  z-index: 3;
+  animation: white-flash-brief 0.12s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes white-flash-brief {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.dark-instant {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  z-index: 3;
+  opacity: 0;
+  animation: dark-instant-in 0.01s 0.12s forwards;
+  pointer-events: none;
+}
+@keyframes dark-instant-in {
+  to { opacity: 1; }
+}
+
+.visualizer-viz-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+.visualizer-viz-wrap .visualizer-container { cursor: pointer; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+.visualizer-status { text-align: center; z-index: 20; }
+.visualizer-status .status-text {
+  font-weight: 300;
+  letter-spacing: 0.15em;
+  font-size: 1rem;
+  color: var(--fg);
+  text-transform: uppercase;
+  margin: 0;
+  animation: text-pulse 2s infinite alternate;
+}
+.visualizer-status .hint { font-size: 0.8rem; color: var(--muted); margin-top: 10px; letter-spacing: 0.05em; }
+@keyframes text-pulse { from { opacity: 0.5; } to { opacity: 1; } }

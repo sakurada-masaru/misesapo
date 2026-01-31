@@ -1,0 +1,40 @@
+.theme-toggle {
+  position: fixed;
+  top: var(--space-4, 16px);
+  right: var(--space-4, 16px);
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--fs-14, 14px);
+  font-family: var(--font-family-base);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-md, 0 2px 8px rgba(0, 0, 0, 0.15));
+}
+
+.theme-toggle:hover {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 1px var(--accent-color);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.theme-toggle-icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.theme-toggle-label {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}

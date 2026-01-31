@@ -1,0 +1,19 @@
+/**
+ * 管理エントランス（/admin/entrance）
+ * レイアウトは .job-entrance-page + ホットバー4枠に合わせる。
+ */
+
+.admin-entrance-back {
+  margin-top: var(--space-6);
+  font-size: var(--fs-13, 13px);
+  color: var(--muted);
+}
+
+.admin-entrance-back a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.admin-entrance-back a:hover {
+  text-decoration: underline;
+}

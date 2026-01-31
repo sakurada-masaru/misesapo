@@ -1,0 +1,290 @@
+/**
+ * 清掃レポート（1日）画面
+ * ヘッダー・店舗タブ・タブ内フォーム・バッジ
+ */
+
+.cleaning-day-report-page .cleaning-day-content {
+  padding: 0 var(--space-4) var(--space-6);
+}
+
+.cleaning-day-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-4);
+  color: var(--fg);
+}
+
+/* ヘッダー */
+.cleaning-day-header {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+}
+.cleaning-day-header-row {
+  margin-bottom: var(--space-2);
+}
+.cleaning-day-header-row label {
+  display: block;
+  font-size: var(--fs-13, 13px);
+  color: var(--fg);
+  margin-bottom: var(--space-1);
+}
+.cleaning-day-header-row input {
+  width: 100%;
+  max-width: 240px;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: var(--font-size-base);
+}
+.cleaning-day-header-actions {
+  margin-top: var(--space-3);
+}
+.cleaning-day-error {
+  color: var(--alert, #f03);
+  font-size: var(--fs-13, 13px);
+  margin-top: var(--space-2);
+  margin-bottom: 0;
+}
+.cleaning-day-warning {
+  color: #b45309;
+  background: rgba(234, 179, 8, 0.15);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-13, 13px);
+  margin-top: var(--space-2);
+  margin-bottom: 0;
+}
+
+/* 店舗タブ */
+.cleaning-day-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+.cleaning-day-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: var(--card-bg);
+  color: var(--fg);
+  font-size: var(--fs-13, 13px);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.cleaning-day-tab:hover:not(.disabled) {
+  background: var(--card-border);
+}
+.cleaning-day-tab.active {
+  background: var(--surface);
+  border-color: var(--accent-color);
+  margin-bottom: -1px;
+  padding-bottom: calc(var(--space-2) + 1px);
+}
+.cleaning-day-tab.disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.cleaning-day-tab-label {
+  font-weight: 500;
+}
+.cleaning-day-tab-enable {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-12, 12px);
+  color: var(--muted);
+  cursor: pointer;
+}
+.cleaning-day-tab-enable input {
+  margin: 0;
+}
+.cleaning-day-tab-badge {
+  font-size: 1em;
+  line-height: 1;
+}
+.cleaning-day-badge-unsaved { color: var(--muted); }
+.cleaning-day-badge-draft { color: #b45309; }
+.cleaning-day-badge-submitted { color: var(--job-cleaning, #10b981); }
+
+/* タブパネル */
+.cleaning-day-panel {
+  padding: var(--space-4);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+.cleaning-day-panel.active {
+  display: block;
+}
+.cleaning-day-panel.hidden {
+  display: none;
+}
+
+.cleaning-day-store-fields {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  max-width: 400px;
+}
+.cleaning-day-field label {
+  display: block;
+  font-size: var(--fs-13, 13px);
+  color: var(--fg);
+  margin-bottom: var(--space-1);
+}
+.cleaning-day-field input {
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: var(--font-size-base);
+}
+
+/* 補助資料添付 */
+.cleaning-day-attachments {
+  margin-bottom: var(--space-4);
+}
+.cleaning-day-attachments h3 {
+  font-size: var(--fs-14, 14px);
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+  color: var(--fg);
+}
+.cleaning-day-file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.cleaning-day-attachments .btn-sm {
+  margin-right: var(--space-2);
+}
+.cleaning-day-attachments-hint {
+  font-size: var(--fs-12, 12px);
+  color: var(--muted);
+  margin: var(--space-1) 0 var(--space-2);
+}
+.cleaning-day-attachment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 560px;
+}
+.cleaning-day-attachment-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-1);
+  background: var(--surface);
+  font-size: var(--fs-13, 13px);
+}
+.cleaning-day-attachment-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg);
+}
+.cleaning-day-attachment-size {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.cleaning-day-attachment-open {
+  color: var(--accent-color);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.cleaning-day-attachment-open:hover {
+  text-decoration: underline;
+}
+.cleaning-day-attachment-remove {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.cleaning-day-attachment-remove:hover {
+  color: var(--alert, #f03);
+  border-color: var(--alert, #f03);
+}
+
+/* 作業一覧 */
+.cleaning-day-services h3 {
+  font-size: var(--fs-14, 14px);
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+  color: var(--fg);
+}
+.cleaning-day-service-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.cleaning-day-service-row input[type="text"]:first-of-type {
+  flex: 1;
+  min-width: 120px;
+}
+.cleaning-day-service-row input[type="number"] {
+  width: 72px;
+}
+.cleaning-day-service-row input[type="text"]:last-of-type {
+  flex: 1;
+  min-width: 80px;
+}
+.cleaning-day-service-row input {
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: var(--font-size-base);
+}
+.cleaning-day-services .btn-sm {
+  margin-top: var(--space-2);
+}
+
+.cleaning-day-store-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.cleaning-day-store-actions .btn-primary {
+  background: var(--accent-color);
+  color: var(--accent-fg, #fff);
+  border-color: var(--accent-color);
+}
+.cleaning-day-store-actions .btn-primary:hover {
+  filter: brightness(1.1);
+}
+.btn-sm {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--fs-12, 12px);
+}

@@ -1,0 +1,280 @@
+/**
+ * 営業入口「顧客」タブ：顧客一覧パネル（UIのみ・モック）
+ * および /sales/customers, /sales/kartes ページ用
+ */
+
+.sales-page {
+  min-height: 100vh;
+  padding: var(--space-4);
+  background: var(--surface);
+  color: var(--fg);
+}
+.sales-page-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+  color: var(--fg);
+}
+.sales-page-back {
+  font-size: var(--fs-13, 13px);
+  margin-bottom: var(--space-4);
+  color: var(--muted);
+}
+.sales-page-back a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+.sales-page-back a:hover {
+  text-decoration: underline;
+}
+
+.sales-register-placeholder {
+  color: var(--muted);
+  font-size: var(--fs-14, 14px);
+  margin: var(--space-4) 0;
+}
+
+/* ---- /sales/customers 新規顧客登録フォーム ---- */
+.sales-customers-form-section {
+  max-width: 480px;
+  margin-bottom: var(--space-6);
+}
+.sales-customers-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.sales-customers-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.sales-customers-form-row label {
+  font-size: var(--fs-13, 13px);
+  font-weight: 500;
+  color: var(--fg);
+}
+.sales-required {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: var(--fs-12, 12px);
+}
+.sales-customers-input {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: var(--font-size-base);
+}
+.sales-customers-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb, 59, 130, 246), 0.2);
+}
+.sales-customers-input.sales-input-error {
+  border-color: var(--error-color, #dc2626);
+  color: var(--error-color, #dc2626);
+}
+.sales-field-error {
+  font-size: var(--fs-12, 12px);
+  color: var(--error-color, #dc2626);
+  margin-top: var(--space-1);
+}
+.sales-customers-form-actions {
+  margin-top: var(--space-2);
+}
+.sales-customers-submit {
+  padding: var(--space-2) var(--space-4);
+  background: var(--accent-color);
+  color: var(--accent-fg, #fff);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+.sales-customers-submit:hover {
+  filter: brightness(1.05);
+}
+
+/* ---- 登録済み一覧 ---- */
+.sales-customers-list-section {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.sales-customers-list-heading {
+  font-size: var(--fs-14, 14px);
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+  color: var(--fg);
+}
+.sales-customer-card-with-karte {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  color: var(--fg);
+  text-align: left;
+  cursor: default;
+}
+.sales-customer-card-with-karte .sales-customer-list-card-store,
+.sales-customer-card-with-karte .sales-customer-list-card-company {
+  margin: 0;
+}
+.sales-customer-list-card-address {
+  font-size: var(--fs-12, 12px);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.sales-customer-karte-btn {
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--fs-12, 12px);
+  background: var(--accent-color);
+  color: var(--accent-fg, #fff);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.sales-customer-karte-btn:hover {
+  filter: brightness(1.05);
+}
+
+.sales-customer-list-panel {
+  padding: 0 var(--space-2);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.sales-customer-list-title {
+  font-size: var(--fs-14, 14px);
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+  color: var(--fg);
+}
+
+.sales-customer-list-search {
+  margin-bottom: var(--space-3);
+}
+
+.sales-customer-list-search-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: var(--font-size-base);
+}
+
+.sales-customer-list-search-input::placeholder {
+  color: var(--muted);
+}
+
+.sales-customer-list-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sales-customer-list-empty {
+  color: var(--muted);
+  font-size: var(--fs-13, 13px);
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.sales-customer-list-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.sales-customer-list-card:hover {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 1px var(--accent-color);
+}
+
+.sales-customer-list-card-store {
+  font-size: var(--fs-14, 14px);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.sales-customer-list-card-company {
+  font-size: var(--fs-12, 12px);
+  color: var(--muted);
+}
+
+.sales-customer-list-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: var(--fs-12, 12px);
+  color: var(--muted);
+  margin-top: var(--space-1);
+}
+
+.sales-customer-list-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm, 4px);
+  font-size: var(--fs-12, 12px);
+  font-weight: 500;
+}
+
+/* pipeline 色 */
+.sales-customer-list-badge.pipeline-new {
+  background: #9ca3af;
+  color: #fff;
+}
+
+.sales-customer-list-badge.pipeline-contacted {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.sales-customer-list-badge.pipeline-qualified {
+  background: #8b5cf6;
+  color: #fff;
+}
+
+.sales-customer-list-badge.pipeline-proposal {
+  background: #f97316;
+  color: #fff;
+}
+
+.sales-customer-list-badge.pipeline-estimate {
+  background: #eab308;
+  color: #1f2937;
+}
+
+.sales-customer-list-badge.pipeline-won {
+  background: #22c55e;
+  color: #fff;
+}
+
+.sales-customer-list-badge.pipeline-lost {
+  background: #ef4444;
+  color: #fff;
+}

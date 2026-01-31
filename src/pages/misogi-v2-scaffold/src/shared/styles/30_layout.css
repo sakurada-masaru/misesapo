@@ -1,0 +1,54 @@
+/* レイアウトの核のみ: body / コンテナ幅 / 余白（参照のフォント・タイポに統一） */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-base);
+  line-height: var(--line-height-base);
+  cursor: default;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100%;
+}
+
+/* ライトページ用（参照の --text を使用） */
+.page-light {
+  background: var(--bg-light);
+  color: var(--text);
+}
+
+/* 共通コンテナ幅 */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+/* 余白ユーティリティ（最小限） */
+.mt-2 { margin-top: var(--space-2); }
+.mt-4 { margin-top: var(--space-4); }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-4 { margin-bottom: var(--space-4); }

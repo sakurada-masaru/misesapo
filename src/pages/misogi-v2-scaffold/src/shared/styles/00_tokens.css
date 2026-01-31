@@ -1,0 +1,140 @@
+/* デザイントークン: 色 / 余白 / 角丸 / フォント / レイアウト / z-index */
+/* デフォルト: ダークモード（data-theme 未指定時も dark） */
+:root,
+[data-theme="dark"] {
+  /* ---- ダークテーマ・基本色 ---- */
+  --bg: #0a0a0a;
+  --bg-light: #f8fafc;
+  --fg: #fff;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --border: #374151;
+  --surface: #1f2937;
+  --alert: #ff3030;
+
+  /* ---- エントランス・パネル用 ---- */
+  --panel-bg: rgba(0, 0, 0, 0.7);
+  --text-primary: #fff;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --border-color: rgba(255, 255, 255, 0.1);
+
+  /* ---- アクセント・ネオン ---- */
+  --accent: #00e5ff;
+  --accent-color: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.5);
+  --accent-fg: #fff;
+  --primary: #ff679c;
+  --primary-600: #e35687;
+
+  /* ---- ジョブ・パーソナルカラー（ビジュアライザー発光・モードアクセント用） ---- */
+  --job-cleaning: #10b981;
+  --job-cleaning-glow: rgba(16, 185, 129, 0.5);
+  --job-office: #3b82f6;
+  --job-office-glow: rgba(59, 130, 246, 0.5);
+  --job-sales: #8b5cf6;
+  --job-sales-glow: rgba(139, 92, 246, 0.5);
+  --job-hr: #ec4899;
+  --job-hr-glow: rgba(236, 72, 153, 0.5);
+  --job-accounting: #eab308;
+  --job-accounting-glow: rgba(234, 179, 8, 0.5);
+  --job-admin: #ffffff;
+  --job-admin-glow: rgba(255, 255, 255, 0.5);
+  --job-dev: #ef4444;
+  --job-dev-glow: rgba(239, 68, 68, 0.5);
+
+  /* ---- カード・パネル ---- */
+  --card-bg: rgba(255, 255, 255, 0.06);
+  --card-border: rgba(255, 255, 255, 0.12);
+
+  /* ---- 余白 ---- */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* ---- 角丸 ---- */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-round: 999px;
+
+  /* ---- フォントサイズ ---- */
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-20: 20px;
+  --fs-22: 22px;
+
+  /* ---- ベースタイポグラフィ（参照） ---- */
+  --font-family-base: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+  --font-size-base: 14px;
+  --line-height-base: 1.7;
+  --font-weight-base: 400;
+
+  /* ---- 影（従来互換） ---- */
+  --shadow-md: 0 12px 40px rgba(0, 0, 0, 0.35);
+
+  /* ---- コンテナ幅 ---- */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1440px;
+  --container-xl: 1280px;
+
+  /* ---- ブレークポイント ---- */
+  --bp-xs: 480px;
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+
+  /* ---- サイドバー ---- */
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 64px;
+
+  /* ---- 背景グラデーション ---- */
+  --bg-gradient: radial-gradient(circle at center, #0a1128 0%, #03060f 100%);
+
+  /* ---- z-index（直書き禁止） ---- */
+  --z-base: 10;
+  --z-attendance-tag: 90;
+  --z-visualizer: 100;
+  --z-header: 100;
+  --z-chat: 110;
+  --z-hotbar: 120;
+  --z-overlay: 1500;
+  --z-modal: 1000;
+  --z-entrance-btn: 200;
+
+  /* Font Awesome（参照用） */
+  --fa-style-family-brands: "Font Awesome 6 Brands";
+  --fa-font-brands: normal 400 1em/1 "Font Awesome 6 Brands";
+  --fa-font-regular: normal 400 1em/1 "Font Awesome 6 Free";
+  --fa-style-family-classic: "Font Awesome 6 Free";
+  --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Free";
+}
+
+/* ライトモード（色のみ上書き） */
+[data-theme="light"] {
+  --bg: #f1f5f9;
+  --bg-light: #ffffff;
+  --fg: #0f172a;
+  --text: #334155;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --surface: #ffffff;
+  --panel-bg: rgba(255, 255, 255, 0.9);
+  --text-primary: #0f172a;
+  --text-secondary: rgba(15, 23, 42, 0.7);
+  --border-color: rgba(0, 0, 0, 0.08);
+  --card-bg: rgba(0, 0, 0, 0.04);
+  --card-border: rgba(0, 0, 0, 0.08);
+  --bg-gradient: radial-gradient(circle at center, #e2e8f0 0%, #cbd5e1 100%);
+  --accent-fg: #fff;
+}

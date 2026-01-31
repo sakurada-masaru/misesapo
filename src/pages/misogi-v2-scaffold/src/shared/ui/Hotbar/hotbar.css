@@ -1,0 +1,97 @@
+/* アクションボタン用ホットバー。トレイは装飾なし・ボタンだけ並ぶ。スマホ対応。 */
+
+.hotbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 10px 12px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+}
+
+@media (min-width: 480px) {
+  .hotbar {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 12px;
+    width: calc(100% - 24px);
+    padding: 12px 16px;
+    padding-bottom: 12px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+.hotbar-btn {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  height: 56px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
+}
+
+@media (min-width: 480px) {
+  .hotbar-btn {
+    font-size: 14px;
+  }
+}
+
+.hotbar-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-color);
+  background: var(--card-border);
+  box-shadow: 0 4px 20px var(--card-border), 0 0 24px var(--accent-glow);
+}
+
+.hotbar-btn:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 0.08s;
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.hotbar-btn.active {
+  border-color: var(--accent-color);
+  background: var(--card-border);
+  box-shadow: 0 0 0 1px var(--accent-glow) inset, 0 0 28px var(--accent-glow);
+}
+
+.hotbar-btn.active:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px var(--accent-glow) inset, 0 0 32px var(--accent-glow);
+}
+
+.hotbar-btn-disabled,
+.hotbar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}

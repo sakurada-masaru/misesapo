@@ -1,0 +1,329 @@
+/**
+ * 営業カルテ（店舗単位）画面
+ * 基本情報・活動ログ・ToDo・補助資料添付
+ */
+
+.sales-karte-page {
+  min-height: 100vh;
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.sales-karte-content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+.sales-karte-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+  color: var(--fg);
+}
+
+/* パンくずとタブの間を十分に空ける */
+.sales-karte-content .report-page-back {
+  font-size: var(--fs-13, 13px);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+}
+.sales-karte-content .report-page-back a {
+  color: var(--accent-color);
+}
+
+/* タブ：基本情報 / 活動ログ / 次アクション（パンくずと離して押しやすく） */
+.sales-karte-tabs {
+  display: flex;
+  gap: 0;
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-4);
+  padding: 0 var(--space-2);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  box-shadow: 0 -1px 0 0 var(--border);
+}
+.sales-karte-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 48px;
+  padding: var(--space-3) var(--space-2);
+  font-size: var(--fs-14, 14px);
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  text-align: center;
+  box-sizing: border-box;
+}
+.sales-karte-tab:hover {
+  color: var(--fg);
+  background: rgba(0, 0, 0, 0.03);
+}
+.sales-karte-tab.is-active {
+  color: var(--accent-color);
+  border-bottom-color: var(--accent-color);
+  background: transparent;
+}
+.sales-karte-tab:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.sales-karte-card[hidden] {
+  display: none;
+}
+
+.sales-karte-loading,
+.sales-karte-error {
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.sales-karte-error {
+  color: var(--alert, #f03);
+  font-size: var(--fs-13, 13px);
+  margin-top: var(--space-2);
+  margin-bottom: 0;
+}
+
+.sales-karte-card {
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+}
+
+.sales-karte-card h2 {
+  font-size: var(--fs-14, 14px);
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+  color: var(--fg);
+}
+
+.sales-karte-card h3 {
+  font-size: var(--fs-13, 13px);
+  font-weight: 600;
+  margin: var(--space-3) 0 var(--space-2);
+  color: var(--fg);
+}
+
+.sales-karte-fields {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  max-width: 400px;
+}
+
+.sales-karte-field label {
+  display: block;
+  font-size: var(--fs-13, 13px);
+  color: var(--fg);
+  margin-bottom: var(--space-1);
+}
+
+.sales-karte-field input,
+.sales-karte-field select,
+.sales-karte-field textarea {
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: var(--font-size-base);
+}
+
+.sales-karte-field textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.sales-karte-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.sales-karte-file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sales-karte-attachments-hint {
+  font-size: var(--fs-12, 12px);
+  color: var(--muted);
+  margin: var(--space-1) 0 var(--space-2);
+}
+
+.sales-karte-attachment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 560px;
+}
+
+.sales-karte-attachment-list.small {
+  margin-top: var(--space-1);
+  font-size: var(--fs-12, 12px);
+}
+
+.sales-karte-attachment-list.small a {
+  color: var(--accent-color);
+}
+
+.sales-karte-attachment-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-1);
+  background: var(--surface);
+  font-size: var(--fs-13, 13px);
+}
+
+.sales-karte-attachment-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg);
+}
+
+.sales-karte-attachment-size {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.sales-karte-attachment-open {
+  color: var(--accent-color);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.sales-karte-attachment-open:hover {
+  text-decoration: underline;
+}
+
+.sales-karte-attachment-remove {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.sales-karte-attachment-remove:hover {
+  color: var(--alert, #f03);
+  border-color: var(--alert, #f03);
+}
+
+.btn-sm {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--fs-12, 12px);
+}
+
+/* 活動ログ */
+.sales-karte-activity-form,
+.sales-karte-todo-form {
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.sales-karte-activity-list,
+.sales-karte-todo-list {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+}
+
+.sales-karte-activity-item {
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-13, 13px);
+}
+
+.sales-karte-activity-type {
+  font-weight: 600;
+  margin-right: var(--space-2);
+}
+
+.sales-karte-activity-datetime {
+  color: var(--muted);
+  margin-right: var(--space-2);
+}
+
+.sales-karte-activity-summary {
+  color: var(--fg);
+}
+
+.sales-karte-activity-detail {
+  margin: var(--space-2) 0 0;
+  color: var(--muted);
+  font-size: var(--fs-12, 12px);
+}
+
+.sales-karte-todo-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  margin-bottom: var(--space-1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-13, 13px);
+}
+
+.sales-karte-todo-item.done .sales-karte-todo-title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.sales-karte-todo-due {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.sales-karte-todo-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.sales-karte-todo-note {
+  width: 100%;
+  font-size: var(--fs-12, 12px);
+  color: var(--muted);
+}

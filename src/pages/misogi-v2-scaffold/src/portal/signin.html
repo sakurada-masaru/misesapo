@@ -1,0 +1,589 @@
+@layout('layouts.base')
+@json('data/meta/staff_signin_title.json', $title)
+@json('data/meta/staff_signin_body_class.json', $body_class)
+
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/js/cognito_config.js"></script>
+<script src="/js/cognito_auth.js"></script>
+<!-- role_config.jsはbase.htmlレイアウトで読み込まれるため、ここでは読み込まない -->
+
+<style>
+  .signin-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%);
+  }
+
+  .signin-container {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  @media (min-width: 768px) {
+    .signin-container {
+      max-width: 550px;
+    }
+  }
+
+  .signin-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    padding: 40px 32px;
+  }
+
+  .signin-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .signin-logo img {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 16px;
+  }
+
+  .signin-logo h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+
+  .signin-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 24px 0;
+  }
+
+  .signin-description {
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 24px;
+    line-height: 1.8;
+    min-height: 60px;
+  }
+
+  @media (min-width: 768px) {
+    .signin-description {
+      white-space: nowrap;
+    }
+  }
+
+  .signin-description strong {
+    color: #111827;
+    font-weight: 600;
+  }
+
+  .signin-form .form-group {
+    margin-bottom: 20px;
+  }
+
+  .signin-form .label {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+
+  .signin-form .input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    box-sizing: border-box;
+  }
+
+  .signin-form .input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+  }
+
+  .signin-form .field {
+    position: relative;
+  }
+
+  .signin-form .toggle-visibility {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .signin-form .toggle-visibility:hover {
+    color: #6b7280;
+  }
+
+  .signin-form .btn-signin {
+    width: 100%;
+    padding: 14px 24px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .signin-form .btn-signin:hover {
+    background: var(--primary-600);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+  }
+
+  .signin-form .btn-signin:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .signin-error {
+    padding: 12px 16px;
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    color: #991b1b;
+    font-size: 0.875rem;
+    margin-bottom: 16px;
+    line-height: 1.6;
+    transition: all 0.3s ease;
+  }
+
+  .signin-error strong {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+
+  .signin-error button {
+    transition: all 0.2s ease;
+  }
+
+  .signin-error button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .signin-error button:active {
+    transform: translateY(0);
+  }
+
+  @media (max-width: 480px) {
+    .signin-card {
+      padding: 32px 24px;
+    }
+  }
+</style>
+
+<div class="signin-wrapper">
+  <div class="signin-container">
+    <div class="signin-card">
+      <div class="signin-logo">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+        <h2>従業員ログイン</h2>
+      </div>
+
+      <div class="signin-divider"></div>
+
+      <p class="signin-description" id="signin-description">
+        お疲れ様です。<br />
+        ユーザー情報を入力しログインしてください。<br />
+        <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
+      </p>
+
+      <form id="staff-signin-form" action="#" method="post" class="signin-form">
+        <div class="form-group">
+          <label for="email" class="label">
+            メールアドレス
+            <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+          </label>
+          <input type="email" id="email" name="email" class="input" placeholder="name@example.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="label">
+            パスワード
+            <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+          </label>
+          <div class="field">
+            <input type="password" id="password" name="password" class="input" required />
+            <button type="button" class="toggle-visibility" aria-label="パスワードを表示"
+              onclick="togglePasswordVisibility('password')">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="signin-error" class="signin-error" style="display: none;"></div>
+
+        <button type="submit" class="btn-signin">ログイン</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function togglePasswordVisibility(id) {
+    const input = document.getElementById(id);
+    const icon = input && input.parentElement && input.parentElement.querySelector('i');
+    if (!input || !icon) return;
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  }
+
+  // ページ読み込み時に既存の認証情報をチェック
+  (async function () {
+    // CognitoAuthが読み込まれるまで待つ
+    if (typeof window.CognitoAuth === 'undefined') {
+      // CognitoAuthが読み込まれるまで待機
+      let retries = 0;
+      const checkCognitoAuth = setInterval(() => {
+        if (typeof window.CognitoAuth !== 'undefined' || retries > 20) {
+          clearInterval(checkCognitoAuth);
+          if (typeof window.CognitoAuth !== 'undefined') {
+            checkExistingAuth();
+          }
+        }
+        retries++;
+      }, 100);
+    } else {
+      checkExistingAuth();
+    }
+
+    async function checkExistingAuth() {
+      try {
+        const descriptionEl = document.getElementById('signin-description');
+
+        // 既存の認証情報をチェック
+        if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+          const existingUser = await window.CognitoAuth.getCurrentUser();
+          if (existingUser) {
+            // 説明文を更新（認証情報がある場合）
+            if (descriptionEl) {
+              descriptionEl.innerHTML = `
+                認証コードを確認。<br />
+                <strong>${existingUser.name || existingUser.email}様</strong>ですね。<br />
+                ユーザー情報を入力しログインしてください。<br />
+                <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
+              `;
+            }
+
+            // 既にログインしている場合、警告を表示
+            const errorDiv = document.getElementById('signin-error');
+            if (errorDiv) {
+              errorDiv.innerHTML = `
+                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 12px; text-align: center;">
+                  別ユーザーでログインする場合は下記ボタンを押してください。
+                </div>
+                <button 
+                  type="button" 
+                  id="clear-auth-btn" 
+                  style="
+                    width: 100%;
+                    padding: 8px 16px;
+                    background: #ef4444;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    margin-top: 8px;
+                  "
+                  onmouseover="this.style.background='#dc2626'"
+                  onmouseout="this.style.background='#ef4444'"
+                >
+                  認証情報をクリアして新規ログイン
+                </button>
+              `;
+              errorDiv.style.display = 'block';
+              errorDiv.style.background = '#fef3c7';
+              errorDiv.style.borderColor = '#fbbf24';
+              errorDiv.style.color = '#92400e';
+
+              // クリアボタンのイベントリスナー
+              const clearBtn = document.getElementById('clear-auth-btn');
+              if (clearBtn) {
+                clearBtn.addEventListener('click', async function () {
+                  // 認証情報をクリア
+                  if (window.CognitoAuth && window.CognitoAuth.clearAuthData) {
+                    window.CognitoAuth.clearAuthData();
+                  } else {
+                    // フォールバック: 手動でクリア
+                    localStorage.removeItem('cognito_id_token');
+                    localStorage.removeItem('cognito_access_token');
+                    localStorage.removeItem('cognito_refresh_token');
+                    localStorage.removeItem('cognito_user');
+                    localStorage.removeItem('misesapo_auth');
+                    sessionStorage.clear();
+
+                    // Cognitoセッションもクリア
+                    if (window.CognitoAuth && window.CognitoAuth.logout) {
+                      window.CognitoAuth.logout();
+                    }
+                  }
+
+                  // 説明文を更新（認証情報がない場合）
+                  const descriptionElAfter = document.getElementById('signin-description');
+                  if (descriptionElAfter) {
+                    descriptionElAfter.innerHTML = `
+                      お疲れ様です。<br />
+                      ユーザー情報を入力しログインしてください。<br />
+                      <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
+                    `;
+                  }
+
+                  // メッセージを更新
+                  errorDiv.innerHTML = `
+                    <div style="margin-bottom: 8px;">
+                      <strong>認証情報をクリアしました</strong>
+                    </div>
+                    <div style="font-size: 0.875rem; color: #6b7280;">
+                      新しいユーザーでログインできます。
+                    </div>
+                  `;
+                  errorDiv.style.background = '#d1fae5';
+                  errorDiv.style.borderColor = '#10b981';
+                  errorDiv.style.color = '#065f46';
+
+                  // 3秒後にメッセージを非表示
+                  setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                  }, 3000);
+                });
+              }
+            }
+          } else {
+            // 認証情報がない場合、説明文を更新
+            if (descriptionEl) {
+              descriptionEl.innerHTML = `
+                お疲れ様です。<br />
+                ユーザー情報を入力しログインしてください。<br />
+                <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
+              `;
+            }
+          }
+        } else {
+          // 認証情報がない場合、説明文を更新
+          if (descriptionEl) {
+            descriptionEl.innerHTML = `
+              お疲れ様です。<br />
+              ユーザー情報を入力しログインしてください。<br />
+              <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
+            `;
+          }
+        }
+      } catch (error) {
+        console.warn('[Signin] Error checking existing auth:', error);
+        // エラー時もデフォルトの説明文を表示
+        const descriptionEl = document.getElementById('signin-description');
+        if (descriptionEl) {
+          descriptionEl.innerHTML = `
+            お疲れ様です。<br />
+            ユーザー情報を入力しログインしてください。<br />
+            <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
+          `;
+        }
+      }
+    }
+  })();
+
+  // ログインフォーム処理
+  (function () {
+    const signinForm = document.getElementById('staff-signin-form');
+    const errorDiv = document.getElementById('signin-error');
+
+    if (signinForm) {
+      signinForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!email || !password) {
+          errorDiv.textContent = 'メールアドレスとパスワードを入力してください';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        // ログインボタンを無効化
+        const submitButton = signinForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.textContent = 'ログイン中...';
+        }
+
+        try {
+          // AWS Cognitoでログイン
+          if (!window.CognitoAuth) {
+            throw new Error('Cognito認証が利用できません');
+          }
+
+          const result = await window.CognitoAuth.login(email, password);
+
+          console.log('[Signin] Login result:', result);
+
+          if (result.success) {
+            errorDiv.style.display = 'none';
+
+            // ユーザー情報を保存
+            localStorage.setItem('cognito_user', JSON.stringify(result.user));
+            localStorage.setItem('misesapo_auth', JSON.stringify({
+              role: result.user.role,
+              email: result.user.email,
+              user: result.user
+            }));
+
+            console.log('[Signin] Login successful. User ID:', result.user.id, 'Role:', result.user.role);
+            console.log('[Signin] User object:', result.user);
+
+            // ベースパスを取得（GitHub Pages対応）
+            const base = document.querySelector('base');
+            const basePath = base ? (base.getAttribute('href') || '/') : '/';
+
+            const getDefaultPath = (user) => {
+              const role = (user?.role || '').toLowerCase();
+              const department = (user?.department || '').toLowerCase();
+              // 営業: 営業用マイページ（SP用、クイックメニューあり）
+              if (role === 'sales' || role === 'concierge' || department.includes('営業') || department.includes('sales')) {
+                return '/sales/mypage.html';
+              }
+              // OS課 & 清掃事業部: OS課用マイページ（SP用、クイックメニューあり）
+              if (department.includes('os') || department.includes('ｏｓ') || department.includes('os課') || department.includes('ｏｓ課') || department.includes('清掃') || department.includes('clean') || role === 'cleaning' || role === 'clean') {
+                return '/staff/os/mypage.html';
+              }
+              // 事務: 事務マイページ（PC向け、サイドバーのみ）
+              if (role === 'office' || department.includes('事務') || department.includes('office')) {
+                return '/staff/office/mypage.html';
+              }
+              // 開発: 開発マイページ（PC向け、サイドバーのみ）
+              if (role === 'developer' || department.includes('開発') || department.includes('developer')) {
+                return '/staff/developer/mypage.html';
+              }
+              // その他（バックオフィス）: 通常マイページ（PC向け、サイドバーのみ）
+              return '/staff/mypage.html';
+            };
+
+            // 部署に応じたデフォルトリダイレクト
+            let defaultPath = getDefaultPath(result.user);
+
+            // ユーザーIDをパラメータに追加
+            if (result.user.id) {
+              defaultPath += `?id=${encodeURIComponent(result.user.id)}`;
+            }
+
+            // URLパラメータからリダイレクト先とNFCタグIDを取得
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectPath = urlParams.get('redirect');
+            const nfcTagId = urlParams.get('nfc_tag_id');
+
+            let redirectUrl;
+            if (redirectPath) {
+              // リダイレクト先が指定されている場合
+              redirectUrl = basePath === '/'
+                ? redirectPath
+                : basePath.replace(/\/$/, '') + redirectPath;
+
+              // NFCタグIDがある場合は追加
+              if (nfcTagId) {
+                redirectUrl += (redirectUrl.includes('?') ? '&' : '?') + `nfc_tag_id=${nfcTagId}`;
+              }
+            } else {
+              // デフォルトのマイページにリダイレクト
+              redirectUrl = basePath === '/'
+                ? defaultPath
+                : basePath.replace(/\/$/, '') + defaultPath;
+            }
+
+            console.log('[Signin] Redirecting to:', redirectUrl);
+
+            // 確実にリダイレクト（即座に実行）
+            window.location.replace(redirectUrl);
+          } else {
+            // エラーメッセージを表示
+            const errorMessage = result.message || 'ログインに失敗しました';
+            errorDiv.textContent = errorMessage;
+            errorDiv.style.display = 'block';
+
+            // 認証競合の場合は特別な処理
+            if (result.code === 'AUTH_CONFLICT' && result.requiresRetry) {
+              // 3秒後に自動的に再試行を促す
+              setTimeout(() => {
+                errorDiv.innerHTML = `
+                  <div style="margin-bottom: 8px;">${errorMessage}</div>
+                  <div style="font-size: 0.875rem; color: #6b7280;">
+                    認証情報をクリアしました。再度ログインしてください。
+                  </div>
+                `;
+              }, 3000);
+            }
+
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = 'ログイン';
+            }
+          }
+        } catch (error) {
+          console.error('Login error:', error);
+
+          // エラーオブジェクトからメッセージを取得
+          let errorMessage = 'ログインに失敗しました';
+          if (error.message) {
+            errorMessage = error.message;
+          } else if (typeof error === 'string') {
+            errorMessage = error;
+          }
+
+          // 認証競合の場合は特別な処理
+          if (error.code === 'AUTH_CONFLICT' && error.requiresRetry) {
+            errorDiv.innerHTML = `
+              <div style="margin-bottom: 8px;"><strong>ログイン情報が競合しています</strong></div>
+              <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 8px;">
+                ${errorMessage}
+              </div>
+              <div style="font-size: 0.875rem; color: #6b7280;">
+                認証情報をクリアしました。数秒待ってから再度ログインしてください。
+              </div>
+            `;
+          } else {
+            errorDiv.textContent = errorMessage;
+          }
+          errorDiv.style.display = 'block';
+
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'ログイン';
+          }
+        }
+      });
+    }
+  })();
+</script>
