@@ -332,21 +332,36 @@ def render_page(path: Path, preset_context: Optional[Dict[str, object]] = None) 
             text = text.replace(base_match.group(0), "___BASE_TAG_PLACEHOLDER___")
         
         # Replace absolute paths in href, src, url attributes
-        # But preserve external URLs (http://, https://, //)
-        text = re.sub(r'(href|src|url)\s*=\s*["\'](/[^"\']*)["\']', 
-                     lambda m: f'{m.group(1)}="{base_prefix}{m.group(2)}"',
-                     text)
+        # But preserve external URLs (http://, https://, //) AND /misogi/ paths
+        def _path_sub(m: re.Match) -> str:
+            attr = m.group(1)
+            path = m.group(2)
+            if path.startswith("/misogi/"):
+                return f'{attr}="{path}"'
+            return f'{attr}="{base_prefix}{path}"'
+        
+        text = re.sub(r'(href|src|url)\s*=\s*["\'](/[^"\']*)["\']', _path_sub, text)
+
         # Replace absolute paths in srcset attribute (handles multiple URLs)
         def fix_srcset(match):
             srcset_content = match.group(1)
-            # Replace /path with /repo/path in srcset
-            fixed = re.sub(r'/([^\s,]+)', rf'{base_prefix}/\1', srcset_content)
+            # Replace /path with /repo/path in srcset, but skip /misogi/
+            def _srcset_sub(m: re.Match) -> str:
+                path = m.group(1)
+                if path.startswith("misogi/"):
+                    return f'/{path}'
+                return f'{base_prefix}/{path}'
+            fixed = re.sub(r'/([^\s,]+)', _srcset_sub, srcset_content)
             return f'srcset="{fixed}"'
         text = re.sub(r'srcset\s*=\s*["\']([^"\']*)["\']', fix_srcset, text)
+
         # Also handle CSS url() syntax
-        text = re.sub(r'url\(["\']?/([^"\']*)["\']?\)', 
-                     lambda m: f'url("{base_prefix}/{m.group(1)}")',
-                     text)
+        def _url_sub(m: re.Match) -> str:
+            path = m.group(1)
+            if path.startswith("misogi/"):
+                return f'url("/{path}")'
+            return f'url("{base_prefix}/{path}")'
+        text = re.sub(r'url\(["\']?/([^"\']*)["\']?\)', _url_sub, text)
         
         # Restore original base tag
         if base_match:
