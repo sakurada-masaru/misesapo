@@ -32,45 +32,45 @@ jobs:
           echo "Build completed. Files in public/:"
           ls -la public/ | head -20
 
-      - name: Setup Node (for v2)
+      - name: Setup Node (for misogi)
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: src/misogi/package-lock.json
 
-      - name: Build v2 (misogi)
+      - name: Build misogi
         env:
           VITE_API_BASE: ${{ vars.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod' }}
         run: |
           if [ -f ../../CNAME ]; then
-            export VITE_BASE_PATH="/v2/"
+            export VITE_BASE_PATH="/misogi/"
           else
             REPO_NAME="${GITHUB_REPOSITORY##*/}"
-            export VITE_BASE_PATH="/${REPO_NAME}/v2/"
+            export VITE_BASE_PATH="/${REPO_NAME}/misogi/"
           fi
           echo "VITE_BASE_PATH=$VITE_BASE_PATH"
           cd src/misogi
           npm ci
           npm run build
-          mkdir -p ../../public/v2
-          cp -r dist/* ../../public/v2/
-          echo "v2 build output:"
-          ls -la ../../public/v2/
-          ls -la ../../public/v2/assets/ 2>/dev/null || true
-          test -f ../../public/v2/index.html || { echo "ERROR: public/v2/index.html missing"; exit 1; }
+          mkdir -p ../../public/misogi
+          cp -r dist/* ../../public/misogi/
+          echo "misogi build output:"
+          ls -la ../../public/misogi/
+          ls -la ../../public/misogi/assets/ 2>/dev/null || true
+          test -f ../../public/misogi/index.html || { echo "ERROR: public/misogi/index.html missing"; exit 1; }
 
-      - name: Add SPA fallback 404 for v2
+      - name: Add SPA fallback 404 for misogi
         run: |
           cat > public/404.html << 'EOF'
           <!DOCTYPE html>
-          <html><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0;url=/v2/"><title>Redirecting...</title></head><body>
+          <html><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0;url=/misogi/"><title>Redirecting...</title></head><body>
           <script>
           (function(){
             var path = location.pathname;
-            if (path.indexOf('/v2') === 0 && path !== '/v2' && path !== '/v2/') {
-              var sub = path.replace(/^\/v2\/?/, '') || 'portal';
-              location.replace('/v2/#/' + sub + location.search + location.hash);
+            if (path.indexOf('/misogi') === 0 && path !== '/misogi' && path !== '/misogi/') {
+              var sub = path.replace(/^\/misogi\/?/, '') || '';
+              location.replace('/misogi/#/' + sub + location.search + location.hash);
               return;
             }
             document.body.innerHTML = '<h1>404 Not Found</h1><p><a href="/">トップへ</a></p>';

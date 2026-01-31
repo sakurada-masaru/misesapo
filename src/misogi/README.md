@@ -5,7 +5,7 @@ npm install
 npm run dev
 
 Open:
-http://localhost:3333/v2/
+http://localhost:3333/misogi/
 
 ## レイアウト方針
 ルート直下（`package.json` / `vite.config.js` / `index.html` / `package-lock.json` 等）にファイルが増えると散らかる。  

@@ -20,8 +20,8 @@ export default function AdminEntrancePage() {
     (id) => {
       const action = ADMIN_HOTBAR.find((a) => a.id === id);
       if (action?.disabled || !action?.to) return;
-      const to = action.to; // /admin/work-reports → 実際のURLは /v2/admin/work-reports
-      if (id === 'work-reports') console.log('go:', '/v2/admin/work-reports');
+      const to = action.to; // /admin/work-reports → 実際のURLは /misogi/#/admin/work-reports
+      if (id === 'work-reports') console.log('go:', '/misogi/#/admin/work-reports');
       navigate(to);
     },
     [navigate]

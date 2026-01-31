@@ -56,7 +56,7 @@ Forbidden:
 ## UI base (v2)
 - **メイン UI** は `src/misogi`（v2）とする。
 - 新規・改修は v2 を優先し、他ページは段階的にこのディレクトリに統合する。
-- 本番 URL: `https://misesapo.co.jp/v2/`。トップ＝Portal（ジョブ選択の玄関）。`/` で表示。
+- 本番 URL: `https://misesapo.co.jp/misogi/`。トップ＝Portal（ジョブ選択の玄関）。`/` で表示。
 
 ## Governance
 - AGENTS.md and docs/spec/* are the top-level rules.

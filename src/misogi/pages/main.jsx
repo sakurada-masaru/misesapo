@@ -15,7 +15,7 @@ if (!rootEl) {
 } else {
   try {
     ReactDOM.createRoot(rootEl).render(
-      <HashRouter basename="/v2">
+      <HashRouter basename="/misogi">
         <App />
       </HashRouter>
     );

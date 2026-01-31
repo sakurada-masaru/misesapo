@@ -40,7 +40,7 @@ function JobEntranceRoute() {
 }
 
 /**
- * ルーティング定義（basename /v2 → 実際のURLは /v2/admin/work-reports 等）
+ * ルーティング定義（basename /misogi → 実際のURLは /misogi/#/admin/work-reports 等）
  * ボタン遷移先と完全一致させる（末尾スラッシュなし）
  */
 export default function Router() {
@@ -53,7 +53,7 @@ export default function Router() {
       <Route path="/jobs/:job/report" element={<ReportCreatePage />} />
       <Route path="/admin" element={<AdminHome />} />
       <Route path="/admin/entrance" element={<AdminEntrancePage />} />
-      {/* /v2/admin/work-reports で確実に表示 */}
+      {/* /misogi/#/admin/work-reports で確実に表示 */}
       <Route path="/admin/work-reports" element={<AdminWorkReportsPage />} />
       <Route path="/admin/hr/attendance" element={<HrAttendance />} />
       <Route path="/sales/store/:storeKey" element={<SalesStoreKartePage />} />

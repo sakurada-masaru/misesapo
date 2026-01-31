@@ -1,6 +1,6 @@
 # app/ の構成
 
-- **router.jsx** … ルーティング定義（basename /v2）
+- **router.jsx** … ルーティング定義（basename /misogi）
 - **App.jsx** … アプリ骨格（共通ナビ・Router）
 
 ## 大前提（ナビゲーション）
@@ -16,9 +16,9 @@
 **ホットバー4枠の定義（固定）**: 1=ターゲット / 2=ステータス / 3=プラン / 4=**報告**（属性は報告で統一。ラベルはジョブで変わるだけ）
 
 URL（V2配下）:
-- `/v2/` または `/v2/#/` → Misogi Portal（トップ・認証仮・業務開始意思表示・Job選択）
-- `/v2/#/portal` → `/` へリダイレクト（Portal と同じ）
-- `/v2/jobs/:job/entrance` → Job Entrance（sales|cleaning|office|dev）
-- `/v2/admin/entrance` → 管理エントランス
-- `/v2/admin` → 管理 TOP
-- `/v2/admin/hr/attendance` → HR Attendance（Placeholder）
+- `/misogi/` または `/misogi/#/` → Misogi Portal（トップ・認証仮・業務開始意思表示・Job選択）
+- `/misogi/#/portal` → `/` へリダイレクト（Portal と同じ）
+- `/misogi/#/jobs/:job/entrance` → Job Entrance（sales|cleaning|office|dev）
+- `/misogi/#/admin/entrance` → 管理エントランス
+- `/misogi/#/admin` → 管理 TOP
+- `/misogi/#/admin/hr/attendance` → HR Attendance（Placeholder）
