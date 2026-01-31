@@ -59,6 +59,7 @@ jobs:
           ls -la ../../public/misogi/
           ls -la ../../public/misogi/assets/ 2>/dev/null || true
           test -f ../../public/misogi/index.html || { echo "ERROR: public/misogi/index.html missing"; exit 1; }
+          grep -q '/misogi/assets/' ../../public/misogi/index.html || { echo "ERROR: built index.html does not contain /misogi/assets/ (wrong base?)"; exit 1; }
 
       - name: Add SPA fallback 404 for misogi
         run: |

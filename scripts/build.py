@@ -530,39 +530,35 @@ def copy_assets(outputs: List[str]) -> None:
             continue
             
         for src_path in asset_root.rglob("*"):
-            if src_path.is_dir() or src_path.name == ".DS_Store":
+            if src_path.name.startswith(".") or src_path.is_dir():
                 continue
             # mirror under public/ stripping the leading root
             rel = src_path.relative_to(asset_root)
             dst_path = PUBLIC / rel
             ensure_dir(dst_path)
             
-            # Process CSS files to fix absolute paths for GitHub Pages
-            if src_path.suffix == ".css" and base_path != "/":
-                content = read_text(src_path)
-                base_prefix = base_path.rstrip("/")
-                # Fix CSS url() syntax for absolute paths
-                content = re.sub(r'url\(["\']?/([^"\']*)["\']?\)', 
-                               lambda m: f'url("{base_prefix}/{m.group(1)}")',
-                               content)
-                dst_path.write_text(content, encoding="utf-8")
-            else:
-                # Use copy instead of copy2 to avoid timeout issues with extended attributes
-                try:
+            try:
+                # Process CSS files to fix absolute paths for GitHub Pages
+                if src_path.suffix == ".css" and base_path != "/":
+                    content = read_text(src_path)
+                    base_prefix = base_path.rstrip("/")
+                    # Fix CSS url() syntax for absolute paths
+                    content = re.sub(r'url\(["\']?/([^"\']*)["\']?\)', 
+                                   lambda m: f'url("{base_prefix}/{m.group(1)}")',
+                                   content)
+                    dst_path.write_text(content, encoding="utf-8")
+                else:
+                    # Use copy instead of copy2 to avoid timeout issues with extended attributes
                     shutil.copy(src_path, dst_path)
-                except (OSError, IOError) as e:
-                    print(f"[build:error] copy failed for {src_path.name}: {e}")
-                    raise
-            outputs.append(str(dst_path))
+                outputs.append(str(dst_path))
+            except Exception as e:
+                print(f"[build:warn] Skipping {src_path.name} due to error: {e}")
     
     # Copy logo_144x144.png to public/favicon.ico for browser auto-detection
     logo_path = ASSETS_DIR / "images" / "logo_144x144.png"
     if logo_path.exists():
         favicon_path = PUBLIC / "favicon.ico"
-        try:
-            shutil.copy2(logo_path, favicon_path)
-        except (OSError, IOError):
-            shutil.copy(logo_path, favicon_path)
+        shutil.copy(logo_path, favicon_path)
         outputs.append(str(favicon_path))
 
     # Copy manifest.json and CNAME from root to public
@@ -570,10 +566,7 @@ def copy_assets(outputs: List[str]) -> None:
         src_file = ROOT / filename
         if src_file.exists():
             dst_file = PUBLIC / filename
-            try:
-                shutil.copy2(src_file, dst_file)
-            except (OSError, IOError):
-                shutil.copy(src_file, dst_file)
+            shutil.copy(src_file, dst_file)
             outputs.append(str(dst_file))
 
 
@@ -584,14 +577,17 @@ def copy_data_files(outputs: List[str]) -> None:
         return
     
     for src_path in data_dir.rglob("*.json"):
-        if src_path.is_dir():
+        if src_path.is_dir() or src_path.name.startswith("."):
             continue
         # mirror under public/data/ keeping the same structure
         rel = src_path.relative_to(data_dir)
         dst_path = PUBLIC / "data" / rel
         ensure_dir(dst_path)
-        shutil.copy2(src_path, dst_path)
-        outputs.append(str(dst_path))
+        try:
+            shutil.copy(src_path, dst_path)
+            outputs.append(str(dst_path))
+        except Exception as e:
+            print(f"[build:warn] Skipping {src_path.name} due to error: {e}")
 
 
 def generate_images_list(outputs: List[str]) -> None:
@@ -633,6 +629,32 @@ def generate_images_list(outputs: List[str]) -> None:
     ensure_dir(images_json_path)
     images_json_path.write_text(json.dumps(images_data, ensure_ascii=False, indent=2), encoding="utf-8")
     outputs.append(str(images_json_path))
+
+def copy_misogi_subproject(outputs: List[str]) -> None:
+    """Copy MISOGI subproject (Vite build) from src/misogi/dist to public/misogi"""
+    misogi_dist = SRC / "misogi" / "dist"
+    if not misogi_dist.exists():
+        print("[build] MISOGI project dist not found, skipping...")
+        return
+    
+    misogi_public = PUBLIC / "misogi"
+    if misogi_public.exists():
+        shutil.rmtree(misogi_public)
+    
+    print(f"[build] Copying MISOGI project from {misogi_dist} to {misogi_public}")
+    
+    # Manual robust copy instead of shutil.copytree to skip hidden files
+    for p in misogi_dist.rglob("*"):
+        if p.name.startswith(".") or p.is_dir():
+            continue
+        rel = p.relative_to(misogi_dist)
+        dst = misogi_public / rel
+        ensure_dir(dst)
+        try:
+            shutil.copy(p, dst)
+            outputs.append(str(dst))
+        except Exception as e:
+            print(f"[build:warn] Skipping MISOGI asset {p.name} due to error: {e}")
 
 
 def _build_client_detail_pages(template: Path, outputs: List[str]) -> None:
@@ -1035,18 +1057,21 @@ def build_all() -> List[str]:
     copy_assets(outputs)
     # copy data files for client-side access
     copy_data_files(outputs)
+    # copy MISOGI subproject
+    copy_misogi_subproject(outputs)
     # generate images list JSON for client-side access
     generate_images_list(outputs)
     # copy CNAME file for custom domain (GitHub Pages)
     cname_src = ROOT / "CNAME"
     if cname_src.exists():
         cname_dst = PUBLIC / "CNAME"
-        shutil.copy2(cname_src, cname_dst)
+        shutil.copy(cname_src, cname_dst)
         outputs.append(str(cname_dst))
     return outputs
 
 
 def main() -> int:
+    import traceback
     try:
         outputs = build_all()
     except BuildError as e:
@@ -1054,6 +1079,7 @@ def main() -> int:
         return 1
     except Exception as e:
         print(f"[build:exception] {e}")
+        traceback.print_exc()
         return 1
 
     print("[build] generated files:\n" + "\n".join(outputs))
