@@ -1,1 +1,0 @@
-import{j as o}from"./index-Dg_Y-G2P.js";import{J as e}from"./JobEntranceScreen-C84lZi_G.js";const l=[{id:"site",role:"target",label:"店舗"},{id:"quality",role:"status",label:"進捗"},{id:"flow",role:"plan",label:"予定"},{id:"photo",role:"log",label:"報告"}];function r(){return o.jsx(e,{job:"cleaning",hotbarConfig:l})}export{r as default};

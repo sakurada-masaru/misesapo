@@ -1,1 +1,0 @@
-import{j as e}from"./index-Dg_Y-G2P.js";import{J as o}from"./JobEntranceScreen-C84lZi_G.js";const t=[{id:"task",role:"target",label:"責任者"},{id:"status",role:"status",label:"進捗"},{id:"plan",role:"plan",label:"予定"},{id:"memo",role:"log",label:"報告"}];function r(){return e.jsx(o,{job:"office",hotbarConfig:t})}export{r as default};
