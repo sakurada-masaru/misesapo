@@ -6,6 +6,4 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('fetch', () => {
-  // Pass-through: rely on network, no caching for now.
-});
+// fetch は未登録のまま（ネットワークをそのまま利用）。no-op ハンドラは登録しない。

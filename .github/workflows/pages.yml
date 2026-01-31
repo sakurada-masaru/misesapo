@@ -40,12 +40,35 @@ jobs:
           cache-dependency-path: src/pages/misogi-v2-scaffold/package-lock.json
 
       - name: Build v2 (misogi-v2-scaffold)
+        env:
+          # 本番 API のベース URL（未設定ならビルド時は /api、クライアントは same-origin 想定）
+          VITE_API_BASE: ${{ vars.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod' }}
         run: |
           cd src/pages/misogi-v2-scaffold
           npm ci
           npm run build
           mkdir -p ../../../public/v2
           cp -r dist/* ../../../public/v2/
+
+      - name: Add SPA fallback 404 for v2
+        run: |
+          cat > public/404.html << 'EOF'
+          <!DOCTYPE html>
+          <html><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0;url=/v2/"><title>Redirecting...</title></head><body>
+          <script>
+          (function(){
+            var path = location.pathname;
+            if (path.indexOf('/v2') === 0 && path !== '/v2' && path !== '/v2/') {
+              var sub = path.replace(/^\/v2\/?/, '') || 'portal';
+              location.replace('/v2/#/' + sub + location.search + location.hash);
+              return;
+            }
+            document.body.innerHTML = '<h1>404 Not Found</h1><p><a href="/">トップへ</a></p>';
+          })();
+          </script>
+          <p>Redirecting...</p>
+          </body></html>
+          EOF
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
