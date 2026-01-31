@@ -43,7 +43,7 @@ jobs:
         env:
           VITE_API_BASE: ${{ vars.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod' }}
         run: |
-          if [ -f ../../CNAME ]; then
+          if [ -f CNAME ]; then
             export VITE_BASE_PATH="/misogi/"
           else
             REPO_NAME="${GITHUB_REPOSITORY##*/}"
