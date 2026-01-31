@@ -1,0 +1,847 @@
+@layout('layouts.base')
+@json('data/meta/customers_title.json', $title)
+@json('data/meta/customers_body_class.json', $body_class)
+
+<style>
+@media (max-width: 767.98px) {
+    main, .container {
+        max-width: 100% !important;
+        padding-left:0; 
+        padding-right:0; 
+        }
+}
+</style>
+
+<!-- 通常ヘッダー（about-more.html と同じ） -->
+<header class="normal-header visible">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+                    onerror="this.style.display='none'">
+            </a>
+        </div>
+        <nav class="normal-header-nav">
+            <a href="/">TOP</a>
+            <a href="/service/service.html">対応可能サービス</a>
+            <a href="/voice/">お客様の声</a>
+            <a href="mailto:info@misesapo.com">カスタマーズサポート</a>
+            <a href="/#event">イベント</a>
+            <a href="/privacy-policy/">規約＆ポリシー</a>
+        </nav>
+    </div>
+</header>
+
+<main id="main" class="customers-page">
+    <!-- パンくずリスト -->
+    <nav class="breadcrumb" aria-label="パンくずリスト">
+        <div class="breadcrumb-inner">
+            <a href="/">TOP</a>
+            <span>></span>
+            <span class="current">導入店舗一覧</span>
+        </div>
+    </nav>
+
+    <!-- ヒーローセクション -->
+    <section class="customers-hero">
+        <h1>導入店舗一覧</h1>
+        <p>ミセサポをご利用いただいている店舗様をご紹介します</p>
+    </section>
+
+    <!-- メインコンテンツ -->
+    <div class="container">
+        <section class="customers-section">
+            
+            <!-- 無限スライダー（左から右へ） -->
+            <div class="infinite-slider-wrapper fade-in">
+                <div class="swiper infinite-slider swiper-left">
+                    <ul class="swiper-wrapper customer-items">
+                        <li class="swiper-slide customer-card">
+                            <div class="customer-card-grid">
+                                <div class="customer-card-item">
+                                    <img src="/images/customer01.jpg" alt="株式会社Dart Ace">
+                                    <p>株式会社Dart Ace</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer02.jpg" alt="合同会社TRANSAM">
+                                    <p>合同会社TRANSAM</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer03.jpg" alt="Japrise">
+                                    <p>Japrise</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer04.jpg" alt="株式会社がっと">
+                                    <p>株式会社がっと</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer05.jpg" alt="合同会社FOOD GROOVE JAPAN">
+                                    <p>合同会社FOOD GROOVE JAPAN</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer06.jpg" alt="麺と肴　担々麺 ペン坊">
+                                    <p>麺と肴　担々麺 ペン坊</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer07.jpg" alt="株式会社クラフトマスタージャパン">
+                                    <p>株式会社クラフトマスタージャパン</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer08.jpg" alt="創作イタリアン肉バル　スオーノ">
+                                    <p>創作イタリアン肉バル　スオーノ</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer09.jpg" alt="株式会社名店館">
+                                    <p>株式会社名店館</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer10.jpg" alt="リストランティアーノ　ルベロ">
+                                    <p>リストランティアーノ　ルベロ</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer11.jpg" alt="株式会社Next Culture">
+                                    <p>株式会社Next Culture</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer12.jpg" alt="株式会社フードアンドパートナーズ">
+                                    <p>株式会社フードアンドパートナーズ</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="swiper-slide customer-card">
+                            <div class="customer-card-grid">
+                                <div class="customer-card-item">
+                                    <img src="/images/customer13.jpg" alt="株式会社しゃぶ庵">
+                                    <p>株式会社しゃぶ庵</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer14.jpg" alt="合同会社SKTC">
+                                    <p>合同会社SKTC</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer15.jpg" alt="アークワークス株式会社">
+                                    <p>アークワークス株式会社</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer16.jpg" alt="株式会社FELICE">
+                                    <p>株式会社FELICE</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer17.jpg" alt="光フードサービス株式会社">
+                                    <p>光フードサービス株式会社</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer18.jpg" alt="焼きとん　大黒">
+                                    <p>焼きとん　大黒</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer19.jpg" alt="立ち吞み　魚椿">
+                                    <p>立ち吞み　魚椿</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer20.jpg" alt="株式会社価値創り研究所">
+                                    <p>株式会社価値創り研究所</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer21.jpg" alt="ステーキロッヂ">
+                                    <p>ステーキロッヂ</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer22.jpg" alt="株式会社エイトシナジー">
+                                    <p>株式会社エイトシナジー</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer23.jpg" alt="蕎麦割烹居酒屋　更科天狐〜さらしなてんこ〜">
+                                    <p>蕎麦割烹居酒屋　更科天狐〜さらしなてんこ〜</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer24.jpg" alt="ダイキチシステム株式会社">
+                                    <p>ダイキチシステム株式会社</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="swiper-slide customer-card">
+                            <div class="customer-card-grid">
+                                <div class="customer-card-item">
+                                    <img src="/images/customer25.jpg" alt="やきとり大吉">
+                                    <p>やきとり大吉</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer01.jpg" alt="株式会社Dart Ace">
+                                    <p>株式会社Dart Ace</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer02.jpg" alt="合同会社TRANSAM">
+                                    <p>合同会社TRANSAM</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer03.jpg" alt="Japrise">
+                                    <p>Japrise</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer04.jpg" alt="株式会社がっと">
+                                    <p>株式会社がっと</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer05.jpg" alt="合同会社FOOD GROOVE JAPAN">
+                                    <p>合同会社FOOD GROOVE JAPAN</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer06.jpg" alt="麺と肴　担々麺 ペン坊">
+                                    <p>麺と肴　担々麺 ペン坊</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer07.jpg" alt="株式会社クラフトマスタージャパン">
+                                    <p>株式会社クラフトマスタージャパン</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer08.jpg" alt="創作イタリアン肉バル　スオーノ">
+                                    <p>創作イタリアン肉バル　スオーノ</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer09.jpg" alt="株式会社名店館">
+                                    <p>株式会社名店館</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer10.jpg" alt="リストランティアーノ　ルベロ">
+                                    <p>リストランティアーノ　ルベロ</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer11.jpg" alt="株式会社Next Culture">
+                                    <p>株式会社Next Culture</p>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 無限スライダー（右から左へ） -->
+            <div class="infinite-slider-wrapper fade-in-delay">
+                <div class="swiper infinite-slider swiper-right">
+                    <ul class="swiper-wrapper customer-items">
+                        <li class="swiper-slide customer-card">
+                            <div class="customer-card-grid">
+                                <div class="customer-card-item">
+                                    <img src="/images/customer26.jpg" alt="株式会社まんてん">
+                                    <p>株式会社まんてん</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer26.jpg" alt="炉端居酒屋">
+                                    <p>炉端居酒屋</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer27.jpg" alt="炭火焼きホルモンまんてん">
+                                    <p>炭火焼きホルモンまんてん</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer28.jpg" alt="株式会社ストラク">
+                                    <p>株式会社ストラク</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer29.jpg" alt="焼肉商店浦島屋　津田沼店">
+                                    <p>焼肉商店浦島屋　津田沼店</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer30.jpg" alt="株式会社INGS">
+                                    <p>株式会社INGS</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer31.jpg" alt="CONA　千葉駅前店">
+                                    <p>CONA　千葉駅前店</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer32.jpg" alt="ラ・フェス">
+                                    <p>ラ・フェス</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer33.jpg" alt="有限会社タカネット">
+                                    <p>有限会社タカネット</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer34.jpg" alt="ベトナムパレス船橋">
+                                    <p>ベトナムパレス船橋</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer35.jpg" alt="発酵デリカテッセン カフェテリアKouji&ko">
+                                    <p>発酵デリカテッセン カフェテリアKouji&ko</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer36.jpg" alt="株式会社アクティブソース">
+                                    <p>株式会社アクティブソース</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="swiper-slide customer-card">
+                            <div class="customer-card-grid">
+                                <div class="customer-card-item">
+                                    <img src="/images/customer37.jpg" alt="晩杯屋">
+                                    <p>晩杯屋</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer38.jpg" alt="株式会社雷神">
+                                    <p>株式会社雷神</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer39.jpg" alt="油そば雷神　市川店">
+                                    <p>油そば雷神　市川店</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer40.jpg" alt="西麻布ZERO">
+                                    <p>西麻布ZERO</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer41.jpg" alt="西麻布カラオケCLT">
+                                    <p>西麻布カラオケCLT</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer42.jpg" alt="株式会社エデュケーション">
+                                    <p>株式会社エデュケーション</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer43.jpg" alt="モンキーツリー">
+                                    <p>モンキーツリー</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer44.jpg" alt="株式会社ZANGIRI">
+                                    <p>株式会社ZANGIRI</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer45.jpg" alt="株式会社SSG">
+                                    <p>株式会社SSG</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer46.jpg" alt="株式会社GOSSO">
+                                    <p>株式会社GOSSO</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer47.jpg" alt="0秒レモンサワー仙台ホルモン焼肉酒場ときわ亭　渋谷店">
+                                    <p>0秒レモンサワー仙台ホルモン焼肉酒場ときわ亭　渋谷店</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer48.jpg" alt="板前寿司ジャパン">
+                                    <p>板前寿司ジャパン</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="swiper-slide customer-card">
+                            <div class="customer-card-grid">
+                                <div class="customer-card-item">
+                                    <img src="/images/customer49.jpg" alt="株式会社カワイハイ">
+                                    <p>株式会社カワイハイ</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer26.jpg" alt="株式会社まんてん">
+                                    <p>株式会社まんてん</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer27.jpg" alt="炭火焼きホルモンまんてん">
+                                    <p>炭火焼きホルモンまんてん</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer28.jpg" alt="株式会社ストラク">
+                                    <p>株式会社ストラク</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer29.jpg" alt="焼肉商店浦島屋　津田沼店">
+                                    <p>焼肉商店浦島屋　津田沼店</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer30.jpg" alt="株式会社INGS">
+                                    <p>株式会社INGS</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer31.jpg" alt="CONA　千葉駅前店">
+                                    <p>CONA　千葉駅前店</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer32.jpg" alt="ラ・フェス">
+                                    <p>ラ・フェス</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer33.jpg" alt="有限会社タカネット">
+                                    <p>有限会社タカネット</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer34.jpg" alt="ベトナムパレス船橋">
+                                    <p>ベトナムパレス船橋</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer35.jpg" alt="発酵デリカテッセン カフェテリアKouji&ko">
+                                    <p>発酵デリカテッセン カフェテリアKouji&ko</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer36.jpg" alt="株式会社アクティブソース">
+                                    <p>株式会社アクティブソース</p>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 無限スライダー（左から右へ - 3列目） -->
+            <div class="infinite-slider-wrapper fade-in-delay-2">
+                <div class="swiper infinite-slider swiper-left">
+                    <ul class="swiper-wrapper customer-items">
+                        <li class="swiper-slide customer-card">
+                            <div class="customer-card-grid">
+                                <div class="customer-card-item">
+                                    <img src="/images/customer50.jpg" alt="東京五反田串揚げ酒場仲丸">
+                                    <p>東京五反田串揚げ酒場仲丸</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer51.jpg" alt="人形町和食居酒屋なかまる">
+                                    <p>人形町和食居酒屋なかまる</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer52.jpg" alt="株式会社でですけ">
+                                    <p>株式会社でですけ</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer53.jpg" alt="でですけサイゴンキッチン">
+                                    <p>でですけサイゴンキッチン</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer54.jpg" alt="株式会社小肥羊ジャパン">
+                                    <p>株式会社小肥羊ジャパン</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer55.jpg" alt="株式会社パズルフードサービス">
+                                    <p>株式会社パズルフードサービス</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer56.jpg" alt="株式会社ニュートン">
+                                    <p>株式会社ニュートン</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer57.jpg" alt="カラオケパセラ">
+                                    <p>カラオケパセラ</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer58.jpg" alt="株式会社ラムラ">
+                                    <p>株式会社ラムラ</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer59.jpg" alt="すし土風炉　登戸店">
+                                    <p>すし土風炉　登戸店</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer60.jpg" alt="株式会社2M8">
+                                    <p>株式会社2M8</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer61.jpg" alt="株式会社デイジイ">
+                                    <p>株式会社デイジイ</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="swiper-slide customer-card">
+                            <div class="customer-card-grid">
+                                <div class="customer-card-item">
+                                    <img src="/images/customer62.jpg" alt="株式会社CatchBall">
+                                    <p>株式会社CatchBall</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer63.jpg" alt="御座敷天婦羅　神楽坂 天孝">
+                                    <p>御座敷天婦羅　神楽坂 天孝</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer64.jpg" alt="FEEP">
+                                    <p>FEEP</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer65.jpg" alt="一般社団法人日本創世推進機構">
+                                    <p>一般社団法人日本創世推進機構</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer66.jpg" alt="株式会社スモールズ">
+                                    <p>株式会社スモールズ</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer67.jpg" alt="オイスター&珍味 bar 不夜城">
+                                    <p>オイスター&珍味 bar 不夜城</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer68.jpg" alt="ディストピアBar KARMA カルマン">
+                                    <p>ディストピアBar KARMA カルマン</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer69.jpg" alt="Japanese Bar　猪鹿蝶">
+                                    <p>Japanese Bar　猪鹿蝶</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer70.jpg" alt="Bar ANIME HOLIC アニメホリック goldengai">
+                                    <p>Bar ANIME HOLIC アニメホリック goldengai</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer71.jpg" alt="Bar 灯鏡 tokyo　歌舞伎町レッドのれん街">
+                                    <p>Bar 灯鏡 tokyo　歌舞伎町レッドのれん街</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer72.jpg" alt="株式会社千寿菊">
+                                    <p>株式会社千寿菊</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer73.jpg" alt="株式会社ビック・バン">
+                                    <p>株式会社ビック・バン</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="swiper-slide customer-card">
+                            <div class="customer-card-grid">
+                                <div class="customer-card-item">
+                                    <img src="/images/customer74.jpg" alt="ホルモン屋　だん">
+                                    <p>ホルモン屋　だん</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer75.jpg" alt="生ラムかんな">
+                                    <p>生ラムかんな</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer76.jpg" alt="株式会社マッスルボディメイク">
+                                    <p>株式会社マッスルボディメイク</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/partner/customer_27.jpg" alt="分とく山">
+                                    <p>分とく山</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/partner/customer_26.jpg" alt="とく山">
+                                    <p>とく山</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer50.jpg" alt="東京五反田串揚げ酒場仲丸">
+                                    <p>東京五反田串揚げ酒場仲丸</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer51.jpg" alt="人形町和食居酒屋なかまる">
+                                    <p>人形町和食居酒屋なかまる</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer52.jpg" alt="株式会社でですけ">
+                                    <p>株式会社でですけ</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer53.jpg" alt="でですけサイゴンキッチン">
+                                    <p>でですけサイゴンキッチン</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer54.jpg" alt="株式会社小肥羊ジャパン">
+                                    <p>株式会社小肥羊ジャパン</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer55.jpg" alt="株式会社パズルフードサービス">
+                                    <p>株式会社パズルフードサービス</p>
+                                </div>
+                                <div class="customer-card-item">
+                                    <img src="/images/customer56.jpg" alt="株式会社ニュートン">
+                                    <p>株式会社ニュートン</p>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <style>
+        .customers-page {
+            background: #FDEDED;
+            min-height: 100vh;
+            padding-top: 100px;
+        }
+
+        body.page-customers #default-header-wrapper,
+        body.page-customers #normal-header-wrapper {
+            display: none !important;
+        }
+
+        .breadcrumb {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breadcrumb-inner {
+            display: inline-block;
+            padding-bottom: 8px;
+        }
+
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: #FF679C;
+        }
+
+        .breadcrumb span {
+            margin: 0 8px;
+            color: #999;
+        }
+
+        .breadcrumb .current {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .customers-hero {
+            background: linear-gradient(135deg, #FF679C 0%, #FF008C 100%);
+            color: #fff;
+            padding: 60px 24px;
+            text-align: center;
+        }
+
+        .customers-hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 0.1em;
+        }
+
+        .customers-hero p {
+            font-size: 18px;
+            opacity: 0.95;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+
+        .customers-section {
+            background: #ffffff;
+            border-radius: 12px;
+            padding:0 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .section-description {
+            font-size: 18px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        /* フェードインアニメーション */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .fade-in-delay {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
+        }
+
+        .fade-in-delay-2 {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.6s forwards;
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 無限スライダー */
+        .infinite-slider-wrapper {
+            margin: 40px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .infinite-slider {
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .infinite-slider .swiper-wrapper {
+            transition-timing-function: linear;
+            display: flex;
+            align-items: center;
+        }
+
+        .infinite-slider.swiper-left .swiper-wrapper {
+            animation: slideLeft 30s linear infinite;
+        }
+
+        .infinite-slider.swiper-right .swiper-wrapper {
+            animation: slideRight 30s linear infinite;
+        }
+
+        @keyframes slideLeft {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        @keyframes slideRight {
+            0% {
+                transform: translateX(-50%);
+            }
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        .customer-items {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            width: fit-content;
+        }
+
+        .customer-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-right: 24px;
+            width: 760px;
+            flex-shrink: 0;
+        }
+
+
+        .customer-card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .customer-card-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            text-align: center;
+            color: #333;
+            border:solid 1px #ccc;
+            border-radius: 10px;
+            padding:5px;
+            justify-content: center;
+        }
+
+        .customer-card-item img {
+            width: 70px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .customer-card-item p {
+            font-size: 0.85rem;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        /* スライダーの複製（無限ループ用） */
+        .infinite-slider .swiper-wrapper::after {
+            content: '';
+            display: block;
+        }
+
+        .swiper-slide {
+            transition: none;
+        }
+
+        .swiper-slide:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        @media (max-width: 768px) {
+            .customers-hero {
+                padding: 40px 16px;
+            }
+
+            .customers-hero h1 {
+                font-size: 32px;
+            }
+
+            .customers-hero p {
+                font-size: 16px;
+            }
+
+            .container {
+                padding: 40px 16px;
+            }
+
+            .customers-section {
+                padding: 0 20px;
+            }
+
+            .section-title {
+                font-size: 28px;
+            }
+
+            .section-description {
+                font-size: 16px;
+                margin-bottom: 32px;
+            }
+
+            .customer-card {
+                width: 320px;
+                padding: 16px;
+            }
+
+            .customer-card-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .customer-card-item img {
+                width: 60px;
+            }
+
+            .customer-card-item p {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+
+    <script>
+        // Swiperの初期化（無限ループ用に複製）
+        document.addEventListener('DOMContentLoaded', function() {
+            const sliders = document.querySelectorAll('.infinite-slider');
+            
+            sliders.forEach(slider => {
+                const wrapper = slider.querySelector('.swiper-wrapper');
+                const items = wrapper.querySelectorAll('.swiper-slide');
+                
+                // アイテムを複製して無限ループを実現
+                items.forEach(item => {
+                    const clone = item.cloneNode(true);
+                    wrapper.appendChild(clone);
+                });
+            });
+        });
+    </script>
+</main>
+
