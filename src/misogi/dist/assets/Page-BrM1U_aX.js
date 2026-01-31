@@ -1,0 +1,1 @@
+import{j as e}from"./index-BUlWcmh9.js";import{J as r}from"./JobEntranceScreen-DMwgxQEw.js";const o=[{id:"customer",role:"target",label:"顧客"},{id:"progress",role:"status",label:"進捗"},{id:"schedule",role:"plan",label:"予定"},{id:"report",role:"log",label:"報告"}];function a(){return e.jsx(r,{job:"sales",hotbarConfig:o})}export{a as default};

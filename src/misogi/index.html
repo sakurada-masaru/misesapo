@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>MISOGI V2</title>
+  <script>
+    (function(){
+      var s = localStorage.getItem('misogi-v2-theme');
+      if (s === 'light' || s === 'dark') document.documentElement.setAttribute('data-theme', s);
+      else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/pages/main.jsx"></script>
+  <script>
+    (function(){
+      setTimeout(function(){
+        var root = document.getElementById('root');
+        if (root && !root.innerHTML.trim()) {
+          root.innerHTML = '<div style="padding:2rem;color:var(--fg);font-family:sans-serif">' +
+            '<p>読み込みに失敗しました。</p>' +
+            '<p>ブラウザの開発者ツール → Network で <code>/v2/assets/</code> の .js が 200 か 404 か確認してください。</p>' +
+            '<p><a href="/v2/" style="color:var(--accent)">/v2/ を再読み込み</a></p></div>';
+        }
+      }, 5000);
+    })();
+  </script>
+</body>
+</html>

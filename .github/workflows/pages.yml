@@ -37,18 +37,28 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: src/pages/misogi-v2-scaffold/package-lock.json
+          cache-dependency-path: src/misogi/package-lock.json
 
-      - name: Build v2 (misogi-v2-scaffold)
+      - name: Build v2 (misogi)
         env:
-          # 本番 API のベース URL（未設定ならビルド時は /api、クライアントは same-origin 想定）
           VITE_API_BASE: ${{ vars.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod' }}
         run: |
-          cd src/pages/misogi-v2-scaffold
+          if [ -f ../../CNAME ]; then
+            export VITE_BASE_PATH="/v2/"
+          else
+            REPO_NAME="${GITHUB_REPOSITORY##*/}"
+            export VITE_BASE_PATH="/${REPO_NAME}/v2/"
+          fi
+          echo "VITE_BASE_PATH=$VITE_BASE_PATH"
+          cd src/misogi
           npm ci
           npm run build
-          mkdir -p ../../../public/v2
-          cp -r dist/* ../../../public/v2/
+          mkdir -p ../../public/v2
+          cp -r dist/* ../../public/v2/
+          echo "v2 build output:"
+          ls -la ../../public/v2/
+          ls -la ../../public/v2/assets/ 2>/dev/null || true
+          test -f ../../public/v2/index.html || { echo "ERROR: public/v2/index.html missing"; exit 1; }
 
       - name: Add SPA fallback 404 for v2
         run: |
