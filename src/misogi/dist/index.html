@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>MISOGI V2</title>
+  <!-- 既存サインイン (src/pages/staff/signin.html) と同様の Cognito 環境 -->
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+  <script>
+    window.CognitoConfig = {
+      region: 'ap-northeast-1',
+      userPoolId: 'ap-northeast-1_EDKElIGoC',
+      clientId: '25abe85ibm5hn6rrsokd5jssb5'
+    };
+  </script>
   <script>
     (function(){
       var s = localStorage.getItem('misogi-v2-theme');
@@ -11,8 +21,8 @@
       else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.setAttribute('data-theme', 'light');
     })();
   </script>
-  <script type="module" crossorigin src="/misogi/assets/index-KAQsWF0Z.js"></script>
-  <link rel="stylesheet" crossorigin href="/misogi/assets/index-CyO9Te-N.css">
+  <script type="module" crossorigin src="/misogi/assets/index-B7dwYVfK.js"></script>
+  <link rel="stylesheet" crossorigin href="/misogi/assets/index-D_JG2Z91.css">
 </head>
 <body>
   <div id="root"></div>

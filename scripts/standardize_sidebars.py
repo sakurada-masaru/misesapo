@@ -178,7 +178,7 @@ def ensure_setup_mypage_link(content):
         }
       }
 
-      // Firebase認証からメールアドレスを取得（フォールバック）
+      // Cognito認証からメールアドレスを取得（フォールバック）
       if (!email) {
         const authData = window.Auth?.getAuthData?.();
         if (authData) {

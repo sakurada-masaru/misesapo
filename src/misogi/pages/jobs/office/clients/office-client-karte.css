@@ -1,0 +1,193 @@
+/**
+ * 事務・顧客カルテ（詳細）ページ
+ */
+.office-client-karte-content {
+  max-width: 720px;
+}
+
+.office-client-karte-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.office-client-karte-back {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--fg);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.office-client-karte-back:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.office-client-karte-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+}
+
+.office-client-karte-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.office-client-karte-btn {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  border: none;
+}
+
+.office-client-karte-btn--primary {
+  background: var(--job-office);
+  color: #fff;
+}
+
+.office-client-karte-btn--primary:hover {
+  filter: brightness(1.05);
+}
+
+.office-client-karte-btn--secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--fg);
+}
+
+.office-client-karte-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.office-client-karte-hero {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.office-client-karte-store-name {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--fg);
+}
+
+.office-client-karte-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.office-client-karte-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.office-client-karte-tag--client {
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: var(--fg);
+}
+
+.office-client-karte-tag--brand {
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  color: var(--fg);
+}
+
+.office-client-karte-section {
+  margin-bottom: 24px;
+}
+
+.office-client-karte-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 12px 0;
+}
+
+.office-client-karte-dl {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 8px 16px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.office-client-karte-dl dt {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.office-client-karte-dl dd {
+  margin: 0;
+  color: var(--fg);
+}
+
+.office-client-karte-dl dd a {
+  color: var(--job-office);
+  text-decoration: none;
+}
+
+.office-client-karte-dl dd a:hover {
+  text-decoration: underline;
+}
+
+.office-client-karte-pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.office-client-karte-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.office-client-karte-status--active {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.office-client-karte-status--contract_in_progress {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+.office-client-karte-status--suspended {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.office-client-karte-status--inactive {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.office-client-karte-link {
+  color: var(--job-office);
+  font-size: 0.85rem;
+  text-decoration: none;
+  opacity: 0.8;
+}
+
+.office-client-karte-link:hover {
+  text-decoration: underline;
+}

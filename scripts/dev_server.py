@@ -1327,7 +1327,7 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             }
         
         # 暫定実装: 開発サーバーでは常に許可
-        # 本番環境ではFirebase Admin SDKでトークンを検証する必要がある
+        # 本番環境では Cognito/JWT でトークン署名検証を行うことを推奨
         return {
             'authenticated': True,
             'role': 'admin',

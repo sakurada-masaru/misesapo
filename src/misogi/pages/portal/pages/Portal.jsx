@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Visualizer from '../../shared/ui/Visualizer/Visualizer';
 import { JOBS } from '../../shared/utils/constants';
+import { useAuth } from '../../shared/auth/useAuth';
 
-/** ダミー: 認証ユーザー（role: admin | multi | single:sales 等） */
-const DUMMY_USER = { id: 'dummy', name: 'テストユーザー', role: 'multi' };
+const SignInModal = React.lazy(() => import('../../shared/auth/SignInModal'));
 
 /**
  * 大前提（ナビゲーション）
@@ -15,24 +15,26 @@ const DUMMY_USER = { id: 'dummy', name: 'テストユーザー', role: 'multi' }
 const JOB_ENTRANCE_KEYS = ['sales', 'cleaning', 'office', 'dev', 'admin'];
 
 /**
- * Misogi Portal（認証仮・業務開始意思表示・role により遷移）
- * - role=admin → /admin
- * - role=multi → job選択（営業/清掃/事務/開発/管理 ボタン）
- * - role=single:sales 等 → /jobs/sales/entrance へ直接
+ * Misogi Portal（認証・業務開始意思表示・role により遷移）
+ * - 未認証: 「ログイン」→ サインインページへ（ログイン後に Portal へ戻る）
+ * - 認証済: 「入室」→ role=admin なら /admin/entrance、single:sales 等なら該当エントランス、それ以外はジョブ選択
  */
 export default function Portal() {
   const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading, refresh, logout } = useAuth();
   const [started, setStarted] = useState(false);
-  const user = DUMMY_USER;
+  const [showSignInModal, setShowSignInModal] = useState(false);
 
-  function handleStart() {
+  const effectiveUser = user ?? { id: 'guest', name: '', role: '' };
+
+  function handleEnter() {
     setStarted(true);
-    if (user.role === 'admin') {
-      navigate('/admin');
+    if (effectiveUser.role === 'admin') {
+      navigate('/admin/entrance');
       return;
     }
-    if (user.role.startsWith('single:')) {
-      const job = user.role.replace('single:', '');
+    if (effectiveUser.role && String(effectiveUser.role).startsWith('single:')) {
+      const job = String(effectiveUser.role).replace('single:', '');
       if (job === 'admin') {
         navigate('/admin/entrance');
         return;
@@ -43,6 +45,19 @@ export default function Portal() {
       }
     }
     // multi or fallback: 画面に job 選択を表示
+  }
+
+  if (isLoading) {
+    return (
+      <div className="entrance-page">
+        <div className="logo-section">
+          <div className="logo-main">
+            <span className="initial-glow" aria-hidden="true">M</span>ISOGI
+          </div>
+        </div>
+        <p style={{ marginTop: 24, color: 'var(--muted)', fontSize: '0.9rem' }}>読み込み中...</p>
+      </div>
+    );
   }
 
   return (
@@ -58,20 +73,41 @@ export default function Portal() {
 
       <Visualizer active={false} />
 
-      {!started ? (
+      {!isAuthenticated ? (
+        <>
+          <p className="job-selector-label" style={{ marginTop: 24, marginBottom: 8, fontSize: '0.9rem', color: 'var(--muted)' }}>
+            ログインして業務を開始してください
+          </p>
+          <button
+            type="button"
+            className="start-btn entrance-login-btn"
+            onClick={() => setShowSignInModal(true)}
+            aria-label="ログイン"
+            style={{ marginTop: 16, position: 'relative', zIndex: 200 }}
+          >
+            <PowerIcon />
+            <span className="start-btn-label">ログイン</span>
+          </button>
+        </>
+      ) : !started ? (
         <button
           type="button"
           className="start-btn entrance-login-btn"
-          onClick={handleStart}
-          aria-label="業務開始意思表示（ログイン）"
+          onClick={handleEnter}
+          aria-label="業務開始（入室）"
           style={{ marginTop: 40, position: 'relative', zIndex: 200 }}
         >
           <PowerIcon />
-          <span className="start-btn-label">LOGIN</span>
+          <span className="start-btn-label">入室</span>
         </button>
-      ) : user.role === 'multi' || !user.role.startsWith('single:') ? (
+      ) : effectiveUser.role === 'multi' || !String(effectiveUser.role || '').startsWith('single:') ? (
         <>
-          <p className="job-selector-label" style={{ marginTop: 24, marginBottom: 8, fontSize: '0.8rem', color: 'var(--muted)' }}>
+          {effectiveUser.name && (
+            <p className="job-selector-label" style={{ marginTop: 16, marginBottom: 4, fontSize: '0.85rem', color: 'var(--muted)' }}>
+              {effectiveUser.name} さん
+            </p>
+          )}
+          <p className="job-selector-label" style={{ marginTop: 8, marginBottom: 8, fontSize: '0.8rem', color: 'var(--muted)' }}>
             ジョブを選んで入室
           </p>
           <div className="job-selector">
@@ -95,11 +131,35 @@ export default function Portal() {
         </>
       ) : null}
 
-      <p style={{ marginTop: 16 }}>
+      <p style={{ marginTop: 16, fontSize: '0.85rem' }}>
         <Link to="/">Portal（トップ）に戻る</Link>
+        {isAuthenticated && (
+          <>
+            {' · '}
+            <button
+              type="button"
+              onClick={logout}
+              style={{ background: 'none', border: 'none', padding: 0, color: 'var(--job-sales)', cursor: 'pointer', textDecoration: 'underline', fontSize: 'inherit' }}
+            >
+              ログアウト
+            </button>
+          </>
+        )}
         {' · '}
         <Link to="/sales/store/demo">営業カルテ</Link>
       </p>
+
+      {showSignInModal && (
+        <Suspense fallback={<div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg)' }}>読み込み中...</div>}>
+          <SignInModal
+            onClose={() => setShowSignInModal(false)}
+            onSuccess={() => {
+              refresh();
+              setShowSignInModal(false);
+            }}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

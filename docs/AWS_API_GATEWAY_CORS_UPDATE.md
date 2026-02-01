@@ -2,6 +2,41 @@
 
 API GatewayのCORS設定を更新して、すべてのオリジンからのアクセスを許可する方法です。
 
+## ローカル開発用: localhost:3334 を許可する（51bhoxkbxd / 2z0ui5xfxb）
+
+misogi 等のローカル開発（例: http://localhost:3334/misogi/）で CORS エラーを出さないため、次の **2 つの API** で CORS を更新し、**必ずデプロイ**してください。
+
+| API ID | 用途・エンドポイント例 |
+|--------|------------------------|
+| **51bhoxkbxd** | メイン API（work-report, workers, stores 等） |
+| **2z0ui5xfxb** | レポート・お知らせ等（announcements, reports 等） |
+
+### 手順（各 API で実施）
+
+1. **AWS Console** → **API Gateway** を開く。
+2. 左の「API」一覧から **該当 API（ID: 51bhoxkbxd または 2z0ui5xfxb）** をクリック。
+3. 左メニュー **「リソース」** を選択。
+4. **「アクション」** → **「CORS を有効にする」**（または「CORS の設定」）をクリック。
+5. **「アクセス制御を許可するオリジン」** に、既存の値に加えて次を追加（カンマ区切りで複数指定可）:
+   - `http://localhost:3334`
+   - （必要なら）`http://localhost:3333`
+   - すべて許可する場合は `*`
+6. **「アクセス制御を許可するヘッダー」** に少なくとも `Content-Type,Authorization` を指定。
+7. **「アクセス制御を許可するメソッド」** で GET, POST, PUT, PATCH, DELETE, OPTIONS にチェック。
+8. **「CORS を有効にして既存の CORS ヘッダーを置き換える」** 等で保存。
+9. **必ず「API のデプロイ」を実行**
+   - **「アクション」** → **「API のデプロイ」**
+   - デプロイ先ステージ: **prod**（本番を使う場合）
+   - 「デプロイ」をクリック。
+
+**注意**: CORS を変更しただけでは反映されません。**必ず「API のデプロイ」** を実行してください。
+
+### Lambda 側の対応（51bhoxkbxd 用）
+
+`lambda_function.py` の `resolve_cors_origin` で、`http://localhost:` で始まるオリジン（任意ポート）を許可するようにしてあります。Lambda を再デプロイすると、51bhoxkbxd 経由のレスポンスで localhost が CORS で許可されます。API Gateway の CORS とあわせて設定することを推奨します。
+
+---
+
 ## 現在の設定
 
 現在、`access-control-allow-origin`が`https://sakurada-masaru.github.io`に限定されているため、他のオリジン（localhostなど）からのアクセスがブロックされる可能性があります。

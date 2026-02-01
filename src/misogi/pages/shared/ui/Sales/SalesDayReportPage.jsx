@@ -1,8 +1,17 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useFlashTransition } from '../../../shared/ui/ReportTransition/reportTransition';
 import Visualizer from '../Visualizer/Visualizer';
 import { useAuth } from '../../auth/useAuth';
-import { putWorkReport, patchWorkReport, getWorkReportByDate, getUploadUrl } from './salesDayReportApi';
+import { putWorkReport, patchWorkReport, getWorkReportByDate, getUploadUrl, uploadPutToS3 } from './salesDayReportApi';
+
+/** 社内共有URL（report_id で詳細ページへ。認証必須） */
+function buildReportShareUrl(reportId) {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const pathname = typeof window !== 'undefined' ? (window.location.pathname || '').replace(/\/$/, '') : '';
+  const base = pathname || '/misogi';
+  return `${origin}${base}#/office/work-reports/${encodeURIComponent(reportId)}`;
+}
 import './sales-day-report.css';
 
 const TEMPLATE_DAY = 'SALES_DAY_V1';
@@ -76,7 +85,7 @@ function deserializeHeader(descriptionJson, workReportItem) {
     work_end_time = d.work_end_time || '';
     reporter_name = d.reporter_name || '';
     attachments = Array.isArray(d.attachments) ? d.attachments : [];
-  } catch (_) {}
+  } catch (_) { }
   return {
     work_date: workReportItem?.work_date || getToday(),
     total_minutes: workReportItem?.work_minutes || 0,
@@ -112,7 +121,7 @@ function deserializeCase(descriptionJson, workReportItem) {
   let o = {};
   try {
     o = JSON.parse(descriptionJson || '{}');
-  } catch (_) {}
+  } catch (_) { }
   const next = o.next || {};
   return {
     store_key: o.store_key || '',
@@ -148,6 +157,7 @@ function badgeSymbol(saved) {
 export default function SalesDayReportPage() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { startTransition } = useFlashTransition();
   const dateFromQuery = searchParams.get('date') || '';
   const workDate = dateFromQuery || getToday();
 
@@ -162,6 +172,8 @@ export default function SalesDayReportPage() {
   const [submitErrors, setSubmitErrors] = useState({});
   const [uploading, setUploading] = useState({ section: null, id: null });
   const [attachmentErrors, setAttachmentErrors] = useState({});
+  const [shareUrl, setShareUrl] = useState(null);
+  const [shareUrlCopied, setShareUrlCopied] = useState(false);
   const fileInputRefs = useRef({});
 
   const updateHeader = useCallback((next) => setHeader((h) => (typeof next === 'function' ? next(h) : { ...h, ...next })), []);
@@ -208,11 +220,16 @@ export default function SalesDayReportPage() {
           date: header.work_date || workDate,
           storeKey: attachTo.section === 'case' ? attachTo.storeKey : undefined,
         });
-        const res = await fetch(uploadUrl, {
-          method: 'PUT',
-          body: file,
-          headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        const fileBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result;
+            resolve(dataUrl.indexOf(',') >= 0 ? dataUrl.slice(dataUrl.indexOf(',') + 1) : dataUrl);
+          };
+          reader.onerror = () => reject(new Error('ファイル読み込みに失敗しました'));
+          reader.readAsDataURL(file);
         });
+        const res = await uploadPutToS3(uploadUrl, file.type || 'application/octet-stream', fileBase64);
         if (!res.ok) throw new Error('アップロードに失敗しました');
         const item = { name: file.name, mime: file.type || 'application/octet-stream', size: file.size, url: fileUrl, key: s3Key, uploaded_at: new Date().toISOString() };
         if (attachTo.section === 'header') {
@@ -308,10 +325,12 @@ export default function SalesDayReportPage() {
       return;
     }
     setHeaderSubmitting(true);
+    setShareUrl(null);
     try {
-      await patchWorkReport(header.saved.log_id, { state: 'submitted', version: header.saved.version });
+      const res = await patchWorkReport(header.saved.log_id, { state: 'submitted', version: header.saved.version });
       setHeader((h) => ({ ...h, saved: { ...h.saved, state: 'submitted', version: (h.saved?.version || 0) + 1 } }));
       setHeaderSubmitError('');
+      if (res?.log_id) setShareUrl(buildReportShareUrl(res.log_id));
     } catch (e) {
       setHeaderSubmitError(e.message || '提出に失敗しました');
     } finally {
@@ -360,10 +379,12 @@ export default function SalesDayReportPage() {
         return;
       }
       setCaseSaving((prev) => ({ ...prev, [index]: true }));
+      setShareUrl(null);
       try {
-        await patchWorkReport(c.saved.log_id, { state: 'submitted', version: c.saved.version });
+        const res = await patchWorkReport(c.saved.log_id, { state: 'submitted', version: c.saved.version });
         updateCase(index, (prev) => ({ ...prev, saved: { ...prev.saved, state: 'submitted', version: (prev.saved?.version || 0) + 1 } }));
         setSubmitErrors((prev) => ({ ...prev, [index]: null }));
+        if (res?.log_id) setShareUrl(buildReportShareUrl(res.log_id));
       } catch (e) {
         setSubmitErrors((prev) => ({ ...prev, [index]: e.message || '提出に失敗しました' }));
       } finally {
@@ -381,7 +402,9 @@ export default function SalesDayReportPage() {
     setHeader((h) => ({ ...h, work_date: workDate }));
   }, [workDate]);
 
+  const [authError, setAuthError] = useState(false);
   useEffect(() => {
+    setAuthError(false);
     getWorkReportByDate(workDate)
       .then((items) => {
         if (!Array.isArray(items)) return;
@@ -390,7 +413,9 @@ export default function SalesDayReportPage() {
         if (dayItem) setHeader(deserializeHeader(dayItem.description, dayItem));
         setCases(caseItems.map((it) => deserializeCase(it.description, it)));
       })
-      .catch(() => {});
+      .catch((e) => {
+        if (e?.status === 401) setAuthError(true);
+      });
   }, [workDate]);
 
   const isUploading = (section, id) => uploading.section === section && uploading.id === id;
@@ -401,10 +426,35 @@ export default function SalesDayReportPage() {
         <Visualizer mode="base" className="report-page-visualizer" />
       </div>
       <div className="report-page-content sales-day-content">
-        <h1 className="sales-day-report-title">業務報告</h1>
-        <p className="report-page-back">
-          <Link to="/">Portal に戻る</Link> / <Link to="/jobs/sales/entrance">営業入口</Link>
-        </p>
+        {authError && (
+          <div style={{ marginBottom: 16, padding: 12, background: 'rgba(255,48,48,0.15)', border: '1px solid rgba(255,48,48,0.3)', borderRadius: 8, fontSize: '0.9rem' }} role="alert">
+            ログインが必要です。業務報告の取得・保存にはサインインしてください。
+            <Link to="/" style={{ marginLeft: 8, color: 'var(--accent)' }}>トップへ</Link>
+          </div>
+        )}
+        {/* ヘッダー・戻るボタン */}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
+          <button
+            onClick={() => startTransition('/jobs/sales/entrance')}
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: 'var(--fg)',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.2rem',
+              marginRight: '12px'
+            }}
+          >
+            ←
+          </button>
+          <h1 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 600 }}>業務報告</h1>
+        </div>
 
         {/* 報告者（証跡） */}
         <section className="sales-day-reporter" aria-label="報告者">
@@ -618,6 +668,78 @@ export default function SalesDayReportPage() {
             ))}
           </div>
         </section>
+
+        {shareUrl && (
+          <div
+            className="sales-day-share-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="個別URLを発行しました"
+            onClick={() => { setShareUrl(null); setShareUrlCopied(false); }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+            }}
+          >
+            <div
+              className="sales-day-share-modal"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'var(--surface, #1f2937)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 12,
+                padding: 24,
+                maxWidth: 480,
+                width: '90%',
+              }}
+            >
+              <h3 style={{ margin: '0 0 12px', fontSize: '1.1rem' }}>社内共有URLを発行しました</h3>
+              <p style={{ margin: '0 0 12px', fontSize: '0.9rem', color: 'var(--muted, #9ca3af)' }}>
+                社内ログイン後にこのURLで報告詳細を閲覧できます。
+              </p>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16 }}>
+                <input
+                  type="text"
+                  readOnly
+                  value={shareUrl}
+                  style={{
+                    flex: 1,
+                    padding: '10px 12px',
+                    background: 'rgba(0,0,0,0.3)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    color: 'var(--fg)',
+                    fontSize: '0.85rem',
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    if (typeof navigator?.clipboard?.writeText === 'function') {
+                      navigator.clipboard.writeText(shareUrl);
+                      setShareUrlCopied(true);
+                    }
+                  }}
+                >
+                  {shareUrlCopied ? 'コピーしました' : 'コピー'}
+                </button>
+              </div>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => { setShareUrl(null); setShareUrlCopied(false); }}
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

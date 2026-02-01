@@ -49,13 +49,41 @@
   min-height: 100vh;
   background: var(--bg);
 }
-.report-page[data-job="cleaning"] { --accent-color: var(--job-cleaning); --accent-glow: var(--job-cleaning-glow); }
-.report-page[data-job="office"]   { --accent-color: var(--job-office);   --accent-glow: var(--job-office-glow); }
-.report-page[data-job="sales"]    { --accent-color: var(--job-sales);    --accent-glow: var(--job-sales-glow); }
-.report-page[data-job="hr"]       { --accent-color: var(--job-hr);       --accent-glow: var(--job-hr-glow); }
-.report-page[data-job="accounting"] { --accent-color: var(--job-accounting); --accent-glow: var(--job-accounting-glow); }
-.report-page[data-job="admin"]    { --accent-color: var(--job-admin);    --accent-glow: var(--job-admin-glow); }
-.report-page[data-job="dev"]      { --accent-color: var(--job-dev);      --accent-glow: var(--job-dev-glow); }
+
+.report-page[data-job="cleaning"] {
+  --accent-color: var(--job-cleaning);
+  --accent-glow: var(--job-cleaning-glow);
+}
+
+.report-page[data-job="office"] {
+  --accent-color: var(--job-office);
+  --accent-glow: var(--job-office-glow);
+}
+
+.report-page[data-job="sales"] {
+  --accent-color: var(--job-sales);
+  --accent-glow: var(--job-sales-glow);
+}
+
+.report-page[data-job="hr"] {
+  --accent-color: var(--job-hr);
+  --accent-glow: var(--job-hr-glow);
+}
+
+.report-page[data-job="accounting"] {
+  --accent-color: var(--job-accounting);
+  --accent-glow: var(--job-accounting-glow);
+}
+
+.report-page[data-job="admin"] {
+  --accent-color: var(--job-admin);
+  --accent-glow: var(--job-admin-glow);
+}
+
+.report-page[data-job="dev"] {
+  --accent-color: var(--job-dev);
+  --accent-glow: var(--job-dev-glow);
+}
 
 .report-page-viz {
   flex-shrink: 0;
@@ -67,13 +95,16 @@
   justify-content: center;
   padding-bottom: 0;
 }
+
 .report-page-viz .visualizer-viz-wrap {
   /* ビジュアライザーだけ下にずらす（下半分のみ表示） */
   transform: translateY(10%);
 }
+
 .report-page-viz .report-page-visualizer {
   pointer-events: none;
 }
+
 .report-page-viz .visualizer-container .wave {
   display: none;
 }
@@ -86,22 +117,35 @@
   width: 100%;
   box-sizing: border-box;
 }
+
+.report-page-content--full {
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
 .report-page-muted {
   color: var(--muted);
   margin-top: var(--space-4);
   margin-bottom: 0;
 }
+
 .report-page-form {
   margin-top: var(--space-4);
 }
+
 .report-page-field {
   margin-bottom: var(--space-4);
 }
+
 .report-page-field label {
   display: block;
   margin-bottom: var(--space-2);
   color: var(--fg);
 }
+
 .report-page-field textarea {
   width: 100%;
   padding: var(--space-2);
@@ -113,26 +157,32 @@
   font-family: var(--font-family-base);
   font-size: var(--font-size-base);
 }
+
 .report-page-field textarea:focus {
   outline: none;
   border-color: var(--accent-color);
   box-shadow: 0 0 0 2px var(--accent-glow);
 }
+
 .report-page-back {
   margin-top: var(--space-6);
   margin-bottom: 0;
 }
+
 .report-page-back a {
   color: var(--accent-color);
   text-decoration: none;
 }
+
 .report-page-back a:hover {
   text-decoration: underline;
 }
+
 .report-page-back .report-page-back-link {
   color: var(--accent-color);
   text-decoration: none;
 }
+
 .report-page-back .report-page-back-link:hover {
   text-decoration: underline;
 }
@@ -150,13 +200,40 @@
 }
 
 /* ジョブ別エントランス：ビジュアライザーのアクセント色をジョブカラーに上書き */
-.entrance-job-page[data-job="cleaning"] { --accent-color: var(--job-cleaning); --accent-glow: var(--job-cleaning-glow); }
-.entrance-job-page[data-job="office"]   { --accent-color: var(--job-office);   --accent-glow: var(--job-office-glow); }
-.entrance-job-page[data-job="sales"]    { --accent-color: var(--job-sales);    --accent-glow: var(--job-sales-glow); }
-.entrance-job-page[data-job="hr"]       { --accent-color: var(--job-hr);       --accent-glow: var(--job-hr-glow); }
-.entrance-job-page[data-job="accounting"] { --accent-color: var(--job-accounting); --accent-glow: var(--job-accounting-glow); }
-.entrance-job-page[data-job="admin"]    { --accent-color: var(--job-admin);    --accent-glow: var(--job-admin-glow); }
-.entrance-job-page[data-job="dev"]     { --accent-color: var(--job-dev);      --accent-glow: var(--job-dev-glow); }
+.entrance-job-page[data-job="cleaning"] {
+  --accent-color: var(--job-cleaning);
+  --accent-glow: var(--job-cleaning-glow);
+}
+
+.entrance-job-page[data-job="office"] {
+  --accent-color: var(--job-office);
+  --accent-glow: var(--job-office-glow);
+}
+
+.entrance-job-page[data-job="sales"] {
+  --accent-color: var(--job-sales);
+  --accent-glow: var(--job-sales-glow);
+}
+
+.entrance-job-page[data-job="hr"] {
+  --accent-color: var(--job-hr);
+  --accent-glow: var(--job-hr-glow);
+}
+
+.entrance-job-page[data-job="accounting"] {
+  --accent-color: var(--job-accounting);
+  --accent-glow: var(--job-accounting-glow);
+}
+
+.entrance-job-page[data-job="admin"] {
+  --accent-color: var(--job-admin);
+  --accent-glow: var(--job-admin-glow);
+}
+
+.entrance-job-page[data-job="dev"] {
+  --accent-color: var(--job-dev);
+  --accent-glow: var(--job-dev-glow);
+}
 
 /* ジョブ選択ボタン群 */
 .job-selector {
@@ -203,33 +280,58 @@
     radial-gradient(800px 500px at 50% 40%, rgba(70, 140, 255, 0.18), transparent 55%),
     radial-gradient(900px 700px at 50% 65%, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.92));
 }
+
 [data-theme="light"] .job-entrance-page {
   background:
     radial-gradient(800px 500px at 50% 40%, rgba(59, 130, 246, 0.12), transparent 55%),
     var(--bg-gradient);
 }
-.job-entrance-page[data-job="admin"]    { --accent-color: var(--job-admin);    --accent-glow: var(--job-admin-glow); }
-.job-entrance-page[data-job="cleaning"] { --accent-color: var(--job-cleaning); --accent-glow: var(--job-cleaning-glow); }
-.job-entrance-page[data-job="office"]   { --accent-color: var(--job-office);   --accent-glow: var(--job-office-glow); }
-.job-entrance-page[data-job="sales"]    { --accent-color: var(--job-sales);    --accent-glow: var(--job-sales-glow); }
-.job-entrance-page[data-job="dev"]      { --accent-color: var(--job-dev);      --accent-glow: var(--job-dev-glow); }
+
+.job-entrance-page[data-job="admin"] {
+  --accent-color: var(--job-admin);
+  --accent-glow: var(--job-admin-glow);
+}
+
+.job-entrance-page[data-job="cleaning"] {
+  --accent-color: var(--job-cleaning);
+  --accent-glow: var(--job-cleaning-glow);
+}
+
+.job-entrance-page[data-job="office"] {
+  --accent-color: var(--job-office);
+  --accent-glow: var(--job-office-glow);
+}
+
+.job-entrance-page[data-job="sales"] {
+  --accent-color: var(--job-sales);
+  --accent-glow: var(--job-sales-glow);
+}
+
+.job-entrance-page[data-job="dev"] {
+  --accent-color: var(--job-dev);
+  --accent-glow: var(--job-dev-glow);
+}
 
 .job-entrance-viz {
   flex-shrink: 0;
   width: 100%;
 }
+
 .job-entrance-ui {
   transition: opacity 0.5s ease, transform 0.5s ease;
 }
+
 .job-entrance-ui.transitioning-out {
   opacity: 0;
   transform: scale(0.96);
   pointer-events: none;
 }
+
 .job-entrance-page.log-transition .hotbar {
   opacity: 0;
   transition: opacity 0.5s ease;
 }
+
 .job-entrance-main {
   flex: 1;
   display: flex;
@@ -239,44 +341,52 @@
   padding: var(--space-4);
   text-align: center;
 }
+
 .job-entrance-title {
   font-size: 2rem;
   font-weight: 600;
   margin: 0 0 var(--space-2);
 }
+
 .job-entrance-dummy {
   color: var(--muted);
   font-size: 0.9rem;
   margin: 0;
 }
 
-/* 営業入口「顧客」タブ：サブボタンのみ（一覧は別ページ） */
-.sales-entrance-submenu {
+/* サブホットバー（メインUIエリアの中央に表示される2次選択肢） */
+.sub-hotbar {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   gap: var(--space-4);
-  margin-top: var(--space-4);
+  margin-top: var(--space-6);
+  justify-content: center;
+  flex-wrap: wrap;
 }
-.sales-entrance-subbtn {
-  min-width: 200px;
+
+.sub-hotbar-btn {
+  min-width: 160px;
   padding: var(--space-3) var(--space-4);
   font-size: 1rem;
   font-weight: 500;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--card-bg);
   color: var(--fg);
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
 }
-.sales-entrance-subbtn:hover:not(:disabled) {
+
+.sub-hotbar-btn:hover:not(:disabled) {
   background: var(--card-border);
   border-color: var(--accent-color);
-  transform: scale(1.02);
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px var(--accent-glow);
 }
-.sales-entrance-subbtn:disabled {
-  opacity: 0.7;
+
+.sub-hotbar-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -289,6 +399,7 @@
   flex-wrap: wrap;
   justify-content: center;
 }
+
 .job-entrance-hotbar .hotbar-btn {
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
@@ -298,6 +409,7 @@
   font-size: var(--fs-14);
   cursor: pointer;
 }
+
 .job-entrance-hotbar .hotbar-btn:hover {
   background: var(--card-bg);
 }
@@ -314,6 +426,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -385,15 +498,18 @@
   0% {
     opacity: 0;
   }
+
   10%,
   25%,
   40% {
     opacity: 1;
   }
+
   15%,
   30% {
     opacity: 0.1;
   }
+
   100% {
     opacity: 1;
   }
@@ -436,10 +552,12 @@
     filter: brightness(1);
     opacity: 1;
   }
+
   60% {
     transform: scale(1.3, 0.001);
     filter: brightness(10);
   }
+
   100% {
     transform: scale(0, 0.0001);
     filter: brightness(50);

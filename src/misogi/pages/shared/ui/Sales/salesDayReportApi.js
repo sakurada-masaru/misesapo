@@ -1,13 +1,15 @@
 /**
- * 営業日報用 API
- * PUT /work-report（日次・案件の下書き）、PATCH /work-report/{log_id}（案件提出）、GET /work-report?date=...
- * POST /upload-url（添付用、清掃側と同等・context で区別）
+ * 営業日報用 API（業務報告専用ゲート /api-wr = 1x0f73dj2l）
+ * PUT /work-report、PATCH /work-report/{log_id}、GET /work-report?date=...
+ * POST /upload-url、POST /upload-put（Lambda 経由 S3）
  */
-import { apiFetch } from '../../api/client';
+import { apiFetchWorkReport } from '../../api/client';
+import { getAuthHeaders } from '../../auth/cognitoStorage';
 
 export async function putWorkReport(body) {
-  return apiFetch('/work-report', {
+  return apiFetchWorkReport('/work-report', {
     method: 'PUT',
+    headers: getAuthHeaders(),
     body: JSON.stringify(body),
   });
 }
@@ -18,8 +20,9 @@ export async function putWorkReport(body) {
  * @param {{ version: number, state?: string }} body - 例: { version, state: 'submitted' }
  */
 export async function patchWorkReport(logId, body) {
-  return apiFetch(`/work-report/${logId}`, {
+  return apiFetchWorkReport(`/work-report/${logId}`, {
     method: 'PATCH',
+    headers: getAuthHeaders(),
     body: JSON.stringify(body),
   });
 }
@@ -27,7 +30,7 @@ export async function patchWorkReport(logId, body) {
 export async function getWorkReport(query = {}) {
   const params = new URLSearchParams(query);
   const qs = params.toString();
-  return apiFetch(qs ? `/work-report?${qs}` : '/work-report');
+  return apiFetchWorkReport(qs ? `/work-report?${qs}` : '/work-report', { headers: getAuthHeaders() });
 }
 
 /**
@@ -40,13 +43,22 @@ export async function getWorkReportByDate(date) {
 
 /**
  * 補助資料アップロード用 Presigned URL
- * @param {{ filename: string, mime: string, size: number, context: string, date: string, storeKey?: string }} params
- * context: "sales-day-attachment" | "sales-case-attachment"
- * storeKey: 案件用の場合に case.store_key を渡す（任意）
  */
 export async function getUploadUrl({ filename, mime, size, context, date, storeKey }) {
-  return apiFetch('/upload-url', {
+  return apiFetchWorkReport('/upload-url', {
     method: 'POST',
+    headers: getAuthHeaders(),
     body: JSON.stringify({ filename, mime, size, context, date, storeKey: storeKey || '' }),
+  });
+}
+
+/**
+ * Presigned URL 宛に API 経由で PUT（Lambda が S3 に PUT）。約 4.5MB まで。
+ */
+export async function uploadPutToS3(uploadUrl, contentType, fileBase64) {
+  return apiFetchWorkReport('/upload-put', {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ uploadUrl, contentType, fileBase64 }),
   });
 }

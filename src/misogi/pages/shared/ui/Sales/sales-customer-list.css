@@ -226,6 +226,12 @@
   color: var(--muted);
 }
 
+.sales-customer-list-card-sales-rep {
+  font-size: var(--fs-12, 12px);
+  color: var(--muted);
+  margin-top: var(--space-1);
+}
+
 .sales-customer-list-card-meta {
   display: flex;
   flex-wrap: wrap;

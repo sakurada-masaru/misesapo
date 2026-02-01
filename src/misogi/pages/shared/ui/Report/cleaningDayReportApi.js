@@ -1,13 +1,14 @@
 /**
- * 清掃レポート（1日）用 API
- * PUT /work-report（下書き保存）、PATCH /work-report/{log_id}（提出）、GET /work-report?date=...（復元）
- * POST /upload-url（Presigned URL取得）→ ブラウザからS3直PUT
+ * 清掃レポート（1日）用 API（業務報告専用ゲート /api-wr = 1x0f73dj2l）
+ * PUT /work-report、PATCH /work-report/{log_id}、GET /work-report?date=...
  */
-import { apiFetch } from '../../api/client';
+import { apiFetchWorkReport } from '../../api/client';
+import { getAuthHeaders } from '../../auth/cognitoStorage';
 
 export async function putWorkReport(body) {
-  return apiFetch('/work-report', {
+  return apiFetchWorkReport('/work-report', {
     method: 'PUT',
+    headers: getAuthHeaders(),
     body: JSON.stringify(body),
   });
 }
@@ -18,8 +19,9 @@ export async function putWorkReport(body) {
  * @param {{ version: number, state?: string }} body - version 必須（V1 楽観ロック）。例: { version, state: 'submitted' }
  */
 export async function patchWorkReport(logId, body) {
-  return apiFetch(`/work-report/${logId}`, {
+  return apiFetchWorkReport(`/work-report/${logId}`, {
     method: 'PATCH',
+    headers: getAuthHeaders(),
     body: JSON.stringify(body),
   });
 }
@@ -27,7 +29,7 @@ export async function patchWorkReport(logId, body) {
 export async function getWorkReport(query = {}) {
   const params = new URLSearchParams(query);
   const qs = params.toString();
-  return apiFetch(qs ? `/work-report?${qs}` : '/work-report');
+  return apiFetchWorkReport(qs ? `/work-report?${qs}` : '/work-report', { headers: getAuthHeaders() });
 }
 
 /**
@@ -36,8 +38,9 @@ export async function getWorkReport(query = {}) {
  * @returns {{ uploadUrl: string, fileUrl: string, key: string }}
  */
 export async function getUploadUrl({ filename, mime, size, context, date, storeIndex }) {
-  return apiFetch('/upload-url', {
+  return apiFetchWorkReport('/upload-url', {
     method: 'POST',
+    headers: getAuthHeaders(),
     body: JSON.stringify({ filename, mime, size, context, date, storeIndex }),
   });
 }

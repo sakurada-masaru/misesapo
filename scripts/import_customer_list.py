@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-顧客管理リストCSVをDynamoDBにインポートするスクリプト
-既存のデータを上書きします
+顧客DBCSV（顧客DB 152a4cf1e6bd80218baad0a094e029d5.csv 形式）を DynamoDB にインポートするスクリプト。
+設計: docs/CUSTOMER_TABLE_SCHEMA.md に準拠。既存の clients / brands / stores は全件削除後に再投入。
 """
 
 import boto3
 import csv
-import json
-import re
 from datetime import datetime, timezone
 from collections import defaultdict
-from botocore.exceptions import ClientError
 
-# DynamoDB設定
 REGION = 'ap-northeast-1'
 CLIENTS_TABLE_NAME = 'misesapo-clients'
 BRANDS_TABLE_NAME = 'misesapo-brands'
@@ -24,13 +20,26 @@ clients_table = dynamodb.Table(CLIENTS_TABLE_NAME)
 brands_table = dynamodb.Table(BRANDS_TABLE_NAME)
 stores_table = dynamodb.Table(STORES_TABLE_NAME)
 
+
+def normalize_status(csv_value):
+    """CSVのステータスを API 用に正規化。"""
+    if not csv_value:
+        return 'inactive'
+    v = str(csv_value).strip()
+    if v == '稼働中':
+        return 'active'
+    if v == '契約作業中':
+        return 'contract_in_progress'
+    if v == '現場一時停止':
+        return 'suspended'
+    return 'inactive'
+
+
 def generate_next_id(table, prefix):
     """次のIDを生成（5桁形式: CL00001〜）"""
     try:
         response = table.scan(ProjectionExpression='id')
         items = response.get('Items', [])
-        
-        # 既存のIDから最大値を取得
         max_num = 0
         for item in items:
             id_str = item.get('id', '')
@@ -40,241 +49,212 @@ def generate_next_id(table, prefix):
                     max_num = max(max_num, num)
                 except ValueError:
                     pass
-        
-        # 次の番号を生成
-        next_num = max_num + 1
-        return f"{prefix}{next_num:05d}"
+        return f"{prefix}{max_num + 1:05d}"
     except Exception as e:
         print(f"Error generating ID: {e}")
-        # フォールバック: タイムスタンプベース
         return f"{prefix}{int(datetime.now().timestamp())}"
 
-def parse_address(address_str):
-    """住所を解析して郵便番号、都道府県、市区町村、番地に分割"""
-    if not address_str or address_str.strip() == '':
-        return {'postcode': '', 'pref': '', 'city': '', 'address1': '', 'address2': ''}
-    
-    address = address_str.strip()
-    
-    # 郵便番号を抽出（〒123-4567 または 〒1234567）
-    postcode = ''
-    postcode_match = re.search(r'〒?(\d{3}-?\d{4})', address)
-    if postcode_match:
-        postcode = postcode_match.group(1).replace('-', '')
-        address = address.replace(postcode_match.group(0), '').strip()
-    
-    # 都道府県を抽出
-    pref = ''
-    prefs = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
-             '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
-             '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
-             '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
-             '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
-             '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
-             '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
-    
-    for p in prefs:
-        if address.startswith(p):
-            pref = p
-            address = address[len(p):].strip()
-            break
-    
-    # 市区町村を抽出（都道府県の後の最初の区切りまで）
-    city = ''
-    city_match = re.match(r'^([^市区町村]+[市区町村])', address)
-    if city_match:
-        city = city_match.group(1)
-        address = address[len(city):].strip()
-    
-    # 残りをaddress1とaddress2に分割（簡易的に）
-    address1 = address
-    address2 = ''
-    
-    return {
-        'postcode': postcode,
-        'pref': pref,
-        'city': city,
-        'address1': address1,
-        'address2': address2
-    }
 
 def clean_string(s):
-    """文字列をクリーンアップ"""
+    """文字列をクリーン（改行はスペースに）"""
     if not s:
         return ''
-    return s.strip().replace('\n', ' ').replace('\r', '')
+    return s.strip().replace('\r\n', ' ').replace('\n', ' ').replace('\r', '')
+
+
+def get_cell(row, *keys):
+    """複数の列名候補で最初に存在する値を返す（Notion 等の列名ゆれ対応）"""
+    for k in keys:
+        v = row.get(k, '')
+        if v is not None and str(v).strip():
+            return clean_string(str(v))
+    return ''
+
 
 def import_customer_list(csv_file_path):
-    """CSVファイルを読み込んでDynamoDBにインポート"""
-    
-    # 既存データを削除（オプション: コメントアウトで無効化）
+    """CSV を読み込み、DynamoDB に clients / brands / stores を投入する。"""
+
+    # 既存データを削除
     print("既存データを削除中...")
+    def delete_all(table, label):
+        deleted = 0
+        kw = {'ProjectionExpression': 'id'}
+        while True:
+            response = table.scan(**kw)
+            for item in response.get('Items', []):
+                table.delete_item(Key={'id': item['id']})
+                deleted += 1
+            if 'LastEvaluatedKey' not in response:
+                break
+            kw['ExclusiveStartKey'] = response['LastEvaluatedKey']
+        print(f"  - {deleted}件の{label}を削除")
+        return deleted
+
     try:
-        # 既存のclientsを削除
-        response = clients_table.scan(ProjectionExpression='id')
-        for item in response.get('Items', []):
-            clients_table.delete_item(Key={'id': item['id']})
-        print(f"  - {len(response.get('Items', []))}件のclientsを削除")
-        
-        # 既存のbrandsを削除
-        response = brands_table.scan(ProjectionExpression='id')
-        for item in response.get('Items', []):
-            brands_table.delete_item(Key={'id': item['id']})
-        print(f"  - {len(response.get('Items', []))}件のbrandsを削除")
-        
-        # 既存のstoresを削除
-        response = stores_table.scan(ProjectionExpression='id')
-        for item in response.get('Items', []):
-            stores_table.delete_item(Key={'id': item['id']})
-        print(f"  - {len(response.get('Items', []))}件のstoresを削除")
+        delete_all(clients_table, 'clients')
+        delete_all(brands_table, 'brands')
+        delete_all(stores_table, 'stores')
     except Exception as e:
         print(f"既存データの削除でエラー: {e}")
-    
-    # データを読み込む
-    clients_map = {}  # 法人名 -> client_id
-    brands_map = {}   # (client_id, ブランド名) -> brand_id
-    stores_data = []  # 店舗データのリスト
-    
+
+    clients_map = {}   # 法人名 -> client_id
+    brands_map = {}    # (client_id, ブランド名) -> brand_id
+    stores_data = []
+
+    # CSV 列名（Notion エクスポートのゆれに対応）
+    # 獲得者(ミセサポ) はスペース付きの可能性あり
+    def company_name(r):
+        return get_cell(r, '会社名', '法人名')
+    def brand_name(r):
+        return get_cell(r, 'ブランド名')
+    def store_name(r):
+        return get_cell(r, '店舗名（地名・ビル名+店）', '店舗名')
+    def contact_person(r):
+        return get_cell(r, '担当者（代表者）紹介者', '担当者名(できればフルネーム+要フリガナ)')
+    def email(r):
+        return get_cell(r, 'ログインメールアドレス', '連絡手段（メールアドレス）')
+    def phone(r):
+        return get_cell(r, '電話番号')
+    def url(r):
+        return get_cell(r, 'URL')
+    def acquired_by(r):
+        return get_cell(r, '獲得者(ミセサポ) ', '獲得者(ミセサポ)')
+    def assigned_to(r):
+        return get_cell(r, '担当者(ミセサポ)')
+    def store_count(r):
+        return get_cell(r, '店舗数')
+    def status_raw(r):
+        return get_cell(r, 'ステータス', '稼働状態')
+    def needs_notes(r):
+        return get_cell(r, 'ニーズ内容', '備考')
+    def cleaning_frequency(r):
+        return get_cell(r, '清掃頻度', '定期契約')
+    def introducer(r):
+        return get_cell(r, '紹介者')
+    def implementation_items(r):
+        return get_cell(r, '実施項目')
+
     print("\nCSVファイルを読み込み中...")
     with open(csv_file_path, 'r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            # CSVのカラム名を取得
-            company_name = clean_string(row.get('法人名', ''))
-            brand_name = clean_string(row.get('ブランド名', ''))
-            store_name = clean_string(row.get('店舗名（地名・ビル名+店）', ''))
-            address = clean_string(row.get('住所', ''))
-            contact_person = clean_string(row.get('担当者名(できればフルネーム+要フリガナ)', ''))
-            phone = clean_string(row.get('電話番号', ''))
-            email = clean_string(row.get('連絡手段（メールアドレス）', ''))
-            contract_type = clean_string(row.get('定期契約', ''))
-            concierge = clean_string(row.get('コンシェルジュ名', ''))
-            status = clean_string(row.get('稼働状態', ''))
-            notes = clean_string(row.get('備考', ''))
-            
-            # 空行や無効なデータをスキップ
-            if not company_name and not brand_name and not store_name:
+            company = company_name(row)
+            brand = brand_name(row)
+            store = store_name(row)
+
+            if not company and not brand and not store:
                 continue
-            
-            # 「稼働中」などの無効なデータをスキップ
-            if company_name in ['稼働中'] or brand_name in ['稼働中'] or store_name in ['稼働中']:
+            if company in ('稼働中',) or brand in ('稼働中',) or store in ('稼働中',):
                 continue
-            
-            # 法人名が空の場合はブランド名を使用
-            if not company_name:
-                company_name = brand_name if brand_name else store_name
-            
-            # ブランド名が空の場合は法人名を使用
-            if not brand_name:
-                brand_name = company_name
-            
-            # 店舗名が空の場合はブランド名を使用
-            if not store_name:
-                store_name = brand_name
-            
-            # クライアント（法人）を登録
-            if company_name not in clients_map:
+
+            if not company:
+                company = brand if brand else store
+            if not brand:
+                brand = company
+            if not store:
+                store = brand
+
+            status = normalize_status(status_raw(row))
+
+            # 法人
+            if company not in clients_map:
                 client_id = generate_next_id(clients_table, 'CL')
-                clients_map[company_name] = client_id
-                
+                clients_map[company] = client_id
                 now = datetime.now(timezone.utc).isoformat()
                 client_data = {
                     'id': client_id,
-                    'name': company_name,
-                    'email': email if email else '',
-                    'phone': phone if phone else '',
-                    'contact_person': contact_person if contact_person else '',
-                    'status': 'active' if status == '稼働中' else 'inactive',
-                    'role': 'customer',
+                    'name': company,
+                    'status': status,
                     'created_at': now,
-                    'updated_at': now
+                    'updated_at': now,
                 }
-                
                 try:
                     clients_table.put_item(Item=client_data)
-                    print(f"  ✓ クライアント作成: {company_name} ({client_id})")
+                    print(f"  ✓ クライアント: {company} ({client_id})")
                 except Exception as e:
-                    print(f"  ✗ クライアント作成エラー: {company_name} - {e}")
-            
-            client_id = clients_map[company_name]
-            
-            # ブランドを登録
-            brand_key = (client_id, brand_name)
+                    print(f"  ✗ クライアントエラー: {company} - {e}")
+
+            cid = clients_map[company]
+
+            # ブランド
+            brand_key = (cid, brand)
             if brand_key not in brands_map:
                 brand_id = generate_next_id(brands_table, 'BR')
                 brands_map[brand_key] = brand_id
-                
                 now = datetime.now(timezone.utc).isoformat()
                 brand_data = {
                     'id': brand_id,
-                    'client_id': client_id,
-                    'name': brand_name,
-                    'status': 'active',
+                    'client_id': cid,
+                    'name': brand,
+                    'status': status,
                     'created_at': now,
-                    'updated_at': now
+                    'updated_at': now,
                 }
-                
                 try:
                     brands_table.put_item(Item=brand_data)
-                    print(f"    ✓ ブランド作成: {brand_name} ({brand_id})")
+                    print(f"    ✓ ブランド: {brand} ({brand_id})")
                 except Exception as e:
-                    print(f"    ✗ ブランド作成エラー: {brand_name} - {e}")
-            
-            brand_id = brands_map[brand_key]
-            
-            # 店舗データを収集（後で一括登録）
-            address_parts = parse_address(address)
-            now = datetime.utcnow().isoformat() + 'Z'
-            
+                    print(f"    ✗ ブランドエラー: {brand} - {e}")
+
+            bid = brands_map[brand_key]
+
+            # 店舗（1行 = 1店舗、CSV 全項目をマッピング。法人名・ブランド名を店舗に持たせる）
+            now = datetime.now(timezone.utc).isoformat()
             store_data = {
-                'client_id': client_id,
-                'brand_id': brand_id,
-                'name': store_name,
-                'postcode': address_parts['postcode'],
-                'pref': address_parts['pref'],
-                'city': address_parts['city'],
-                'address1': address_parts['address1'],
-                'address2': address_parts['address2'],
-                'phone': phone if phone else '',
-                'email': email if email else '',
-                'contact_person': contact_person if contact_person else '',
-                'status': 'active' if status == '稼働中' else 'inactive',
-                'notes': notes if notes else '',
-                'sales_notes': f"契約タイプ: {contract_type}, コンシェルジュ: {concierge}" if contract_type or concierge else '',
+                'client_id': cid,
+                'client_name': company,
+                'brand_id': bid,
+                'brand_name': brand,
+                'name': store,
+                'contact_person': contact_person(row),
+                'email': email(row),
+                'phone': phone(row),
+                'url': url(row),
+                'acquired_by': acquired_by(row),
+                'assigned_to': assigned_to(row),
+                'store_count': store_count(row),
+                'status': status,
+                'needs_notes': needs_notes(row),
+                'cleaning_frequency': cleaning_frequency(row),
+                'introducer': introducer(row),
+                'implementation_items': implementation_items(row),
+                'postcode': '',
+                'pref': '',
+                'city': '',
+                'address1': '',
+                'address2': '',
+                'notes': '',
+                'sales_notes': '',
                 'registration_type': 'csv_import',
                 'created_at': now,
-                'updated_at': now
+                'updated_at': now,
             }
-            
             stores_data.append(store_data)
-    
+
     # 店舗を一括登録
     print(f"\n店舗を登録中... ({len(stores_data)}件)")
     for store_data in stores_data:
         store_id = generate_next_id(stores_table, 'ST')
         store_data['id'] = store_id
-        
         try:
             stores_table.put_item(Item=store_data)
-            print(f"  ✓ 店舗作成: {store_data['name']} ({store_id})")
+            print(f"  ✓ 店舗: {store_data['name']} ({store_id})")
         except Exception as e:
-            print(f"  ✗ 店舗作成エラー: {store_data['name']} - {e}")
-    
+            print(f"  ✗ 店舗エラー: {store_data['name']} - {e}")
+
     print("\n==========================================")
-    print("インポート完了！")
+    print("インポート完了")
     print("==========================================")
     print(f"クライアント: {len(clients_map)}件")
     print(f"ブランド: {len(brands_map)}件")
     print(f"店舗: {len(stores_data)}件")
     print("==========================================")
 
+
 if __name__ == '__main__':
     import sys
-    
     if len(sys.argv) < 2:
         print("使用方法: python3 import_customer_list.py <CSVファイルパス>")
+        print("例: python3 scripts/import_customer_list.py scripts/customer_list_notion.csv")
         sys.exit(1)
-    
-    csv_file_path = sys.argv[1]
-    import_customer_list(csv_file_path)
-
+    import_customer_list(sys.argv[1])

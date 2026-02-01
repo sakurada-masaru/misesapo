@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Router from './router';
 import ThemeToggle from '../shared/ui/ThemeToggle/ThemeToggle';
 import HamburgerMenu from '../shared/ui/HamburgerMenu/HamburgerMenu';
+import { GlobalFlashTransition } from '../shared/ui/ReportTransition/reportTransition';
 
 /** ヘッダーなし・フルスクリーンにするパス（トップ＝Portal / 全ジョブエントランス・報告・営業日報・顧客登録・営業カルテ・管理エントランス・業務報告管理） */
 function isFullscreenPath(pathname) {
@@ -11,10 +12,21 @@ function isFullscreenPath(pathname) {
   if (/^\/jobs\/[^/]+\/report$/.test(pathname)) return true;
   if (pathname === '/sales/report-day') return true;
   if (pathname === '/sales/customers') return true;
+  if (pathname === '/sales/clients/list') return true;
+  if (pathname === '/sales/clients/new') return true;
   if (pathname === '/sales/kartes') return true;
   if (/^\/sales\/store\/[^/]+$/.test(pathname)) return true;
+  if (pathname === '/sales/leads') return true;
+  if (pathname === '/sales/leads/new') return true;
+  if (/^\/sales\/leads\/[^/]+$/.test(pathname)) return true;
+  if (pathname === '/sales/schedule') return true;
+  if (pathname === '/office/clients/list') return true;
+  if (pathname === '/office/clients/new') return true;
+  if (pathname.startsWith('/office/clients/') && pathname !== '/office/clients/list' && pathname !== '/office/clients/new') return true;
   if (pathname === '/admin/entrance') return true;
   if (pathname === '/admin/work-reports') return true;
+  if (pathname.startsWith('/office/payroll/')) return true;
+  if (pathname.startsWith('/office/work-reports/')) return true;
   return false;
 }
 
@@ -26,6 +38,7 @@ export default function App() {
     <>
       <HamburgerMenu />
       <ThemeToggle />
+      <GlobalFlashTransition />
       {fullscreen ? (
         <div className="app-fullscreen">
           <Router />

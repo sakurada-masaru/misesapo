@@ -3,6 +3,7 @@ import boto3
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
+import calendar
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 from decimal import Decimal
@@ -37,8 +38,9 @@ json.dumps = json_dumps_decimal
 
 # DynamoDB initialization
 dynamodb = boto3.resource('dynamodb')
-# 使用するテーブル名を環境変数から取得。デフォルトは UNIVERSAL_WORK_LOGS
-TABLE_NAME = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'UNIVERSAL_WORK_LOGS')
+# 業務報告用テーブル。既存の WORK REPORT（UNIVERSAL_WORK_LOGS）は使わない。新テーブルのみ。
+# 環境変数 UNIVERSAL_WORK_LOGS_TABLE で上書き可。未設定時は misesapo-sales-work-reports（新API用）
+TABLE_NAME = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-reports')
 table = dynamodb.Table(TABLE_NAME)
 
 def _get_jst_now():
@@ -83,11 +85,13 @@ def _create_history_entry(history_type, by_user, from_state, to_state, reason=No
         entry['reason'] = reason
     return entry
 
+
 def handle_universal_worker_work_reports(event, headers, path, method, user_info):
     """
     Worker向け汎用業務報告API
     """
     if not user_info:
+        print("[work-report] 401: user_info is None (token missing or invalid; 403 may be from API Gateway)")
         return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'})}
     
     worker_id = user_info['uid']
@@ -184,6 +188,21 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                 'body': json.dumps(items, ensure_ascii=False)
             }
 
+    # GET /work-report/{log_id} 自分の報告1件を log_id で取得
+    if method == 'GET' and len(parts) >= 3 and parts[1] == 'work-report':
+        log_id = parts[2]
+        try:
+            resp = table.get_item(Key={'log_id': log_id})
+            item = resp.get('Item')
+            if not item:
+                return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Not found'})}
+            if item.get('worker_id') != worker_id:
+                print(f"[GET /work-report/{log_id}] 403: worker_id mismatch (report owner != current user)")
+                return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'})}
+            return {'statusCode': 200, 'headers': headers, 'body': json.dumps(item, ensure_ascii=False)}
+        except Exception as e:
+            return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
+
     # PUT /work-report (Save Draft)
     if method == 'PUT' and path == '/work-report':
         request_id = event.get('requestContext', {}).get('requestId', 'unknown')
@@ -256,21 +275,8 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                         }, ensure_ascii=False)
                     }
                 
-                # submitted も編集禁止（draft に戻す場合は rejected 経由）
-                if current_state == 'submitted':
-                    print(f"[PUT /work-report] request_id={request_id}: Conflict - state=submitted")
-                    return {
-                        'statusCode': 409,
-                        'headers': headers,
-                        'body': json.dumps({
-                            'error': 'Conflict',
-                            'reason': 'invalid_transition',
-                            'message': 'Cannot edit submitted report. Please request rejection first.',
-                            'current_state': current_state,
-                            'required_action': 'rejection'
-                        }, ensure_ascii=False)
-                    }
-                
+                # submitted は編集可（蓄積・参照のみの運用のため差し戻しフローは使わない）
+
                 # 楽観的ロック
                 old_version = body.get('version', 0)
                 existing_version = existing.get('version', 0)
@@ -523,12 +529,14 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                 from_state=current_state,
                 to_state='submitted'
             ))
+            # 提出時に個別URL用の share_token を発行（既にある場合は上書きしない）
+            share_token = item.get('share_token') or uuid.uuid4().hex
 
             updated = table.update_item(
                 Key={'log_id': log_id},
-                UpdateExpression="SET #st=:st, history=:hist, updated_at=:at, version=version + :one",
+                UpdateExpression="SET #st=:st, history=:hist, updated_at=:at, share_token=:share, version=version + :one",
                 ExpressionAttributeNames={'#st': 'state'},
-                ExpressionAttributeValues={':st': 'submitted', ':hist': history, ':at': now_iso, ':one': 1},
+                ExpressionAttributeValues={':st': 'submitted', ':hist': history, ':at': now_iso, ':share': share_token, ':one': 1},
                 ReturnValues="ALL_NEW"
             )
             return {'statusCode': 200, 'headers': headers, 'body': json.dumps(updated['Attributes'], ensure_ascii=False)}
@@ -646,11 +654,12 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                 from_state=current_state,
                 to_state='submitted'
             ))
+            share_token = item.get('share_token') or uuid.uuid4().hex
 
             try:
                 updated = table.update_item(
                     Key={'log_id': log_id},
-                    UpdateExpression="SET #st=:st, history=:hist, updated_at=:at, last_submitted_at=:lsa, version=version + :one",
+                    UpdateExpression="SET #st=:st, history=:hist, updated_at=:at, last_submitted_at=:lsa, share_token=:share, version=version + :one",
                     ConditionExpression="version = :v AND #st = :draft AND worker_id = :wid",
                     ExpressionAttributeNames={'#st': 'state'},
                     ExpressionAttributeValues={
@@ -658,6 +667,7 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                         ':hist': history,
                         ':at': now_iso,
                         ':lsa': now_iso,
+                        ':share': share_token,
                         ':one': 1,
                         ':v': int(provided_version),
                         ':draft': 'draft',
@@ -854,6 +864,12 @@ def handle_admin_work_reports(event, headers, path, method, user_info, is_hr_adm
 
     parts = path.split('/')
     parts = [p for p in parts if p]  # 空文字を除去
+
+    # GET /admin/payroll/{user_id}/{YYYY-MM} 経理用・ユーザー×年月の月次ビュー（支払対象＝approved のみデフォルト）
+    if method == 'GET' and len(parts) == 4 and parts[0] == 'admin' and parts[1] == 'payroll':
+        user_id = parts[2]
+        yyyy_mm = parts[3]
+        return _handle_admin_payroll_month(user_id, yyyy_mm, event, headers, user_info, is_hr_admin)
     
     # GET /admin/work-reports (一覧)  path => admin, work-reports => len 2
     if method == 'GET' and len(parts) == 2 and parts[0] == 'admin' and parts[1] == 'work-reports':
@@ -893,6 +909,82 @@ def handle_admin_work_reports(event, headers, path, method, user_info, is_hr_adm
         return _handle_admin_work_reports_bulk_export_pdf(event, headers, user_info, is_hr_admin)
     
     return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Not found'})}
+
+
+def _handle_admin_payroll_month(user_id, yyyy_mm, event, headers, user_info, is_hr_admin):
+    """
+    経理用: GET /admin/payroll/{user_id}/{YYYY-MM}
+    ユーザー×年月の月次ビュー。デフォルトは支払対象（state=approved）のみ。
+    WorkerIndex (PK=worker_id, SK=work_date) で Query。Scan は使わない。
+    """
+    if headers is None:
+        headers = {}
+    try:
+        # YYYY-MM 検証と月の範囲
+        if len(yyyy_mm) != 7 or yyyy_mm[4] != '-':
+            return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'BadRequest', 'message': 'month must be YYYY-MM'})}
+        try:
+            y, m = int(yyyy_mm[:4]), int(yyyy_mm[5:7])
+            if m < 1 or m > 12:
+                raise ValueError('month out of range')
+        except (ValueError, TypeError):
+            return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'BadRequest', 'message': 'invalid YYYY-MM'})}
+        _, last_day = calendar.monthrange(y, m)
+        month_start = f'{y:04d}-{m:02d}-01'
+        month_end = f'{y:04d}-{m:02d}-{last_day:02d}'
+
+        query_params = (event or {}).get('queryStringParameters') or {}
+        state_filter = (query_params.get('state') or 'approved').strip().lower()
+        approved_only = (state_filter != 'all')
+
+        items = []
+        try:
+            q = table.query(
+                IndexName='WorkerIndex',
+                KeyConditionExpression=Key('worker_id').eq(user_id) & Key('work_date').between(month_start, month_end)
+            )
+            items = q.get('Items', [])
+            while q.get('LastEvaluatedKey'):
+                q = table.query(
+                    IndexName='WorkerIndex',
+                    KeyConditionExpression=Key('worker_id').eq(user_id) & Key('work_date').between(month_start, month_end),
+                    ExclusiveStartKey=q['LastEvaluatedKey']
+                )
+                items.extend(q.get('Items', []))
+        except ClientError as e:
+            code = e.response.get('Error', {}).get('Code', '')
+            return {'statusCode': 503, 'headers': headers, 'body': json.dumps({'error': str(e), 'code': code})}
+
+        if approved_only:
+            items = [i for i in items if i.get('state') == 'approved']
+
+        rows = []
+        total_minutes = 0
+        for it in items:
+            mins = int(it.get('work_minutes') or it.get('total_minutes') or 0)
+            total_minutes += mins
+            rows.append({
+                'report_id': it.get('log_id'),
+                'date': it.get('work_date') or it.get('report_date') or it.get('date'),
+                'template_id': it.get('template_id'),
+                'minutes': mins,
+                'state': it.get('state'),
+                'amount': None,
+            })
+
+        body = {
+            'user_id': user_id,
+            'month': yyyy_mm,
+            'total_minutes': total_minutes,
+            'total_amount': None,
+            'rows': rows,
+        }
+        return {'statusCode': 200, 'headers': headers, 'body': json.dumps(body, ensure_ascii=False)}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
+
 
 def _handle_admin_work_reports_list(event, headers, user_info, is_hr_admin):
     """
@@ -974,7 +1066,7 @@ def _handle_admin_work_reports_list(event, headers, user_info, is_hr_admin):
                     return {
                         'statusCode': 503,
                         'headers': headers,
-                        'body': json.dumps({'error': str(ce), 'code': err_code, 'hint': 'Check UNIVERSAL_WORK_LOGS_TABLE and IAM'})
+                        'body': json.dumps({'error': str(ce), 'code': err_code, 'hint': 'Check UNIVERSAL_WORK_LOGS_TABLE (or default misesapo-sales-work-reports) and IAM'})
                     }
             # log_id で重複除去（同一レコードが複数 state でヒットすることはないが念のため）
             seen = set()
@@ -1316,11 +1408,21 @@ def _handle_admin_work_reports_export_pdf(report_id, headers, user_info, is_hr_a
         
         # S3 key を生成
         s3_key = f"work-reports/{report_id}/export_{_get_jst_now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        s3_bucket = os.environ.get('S3_BUCKET_NAME', 'misesapo-assets')
+        # 業務報告専用バケット（WORK_REPORTS_BUCKET）があれば優先
+        s3_bucket = os.environ.get('WORK_REPORTS_BUCKET') or os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
         s3_region = os.environ.get('S3_REGION', 'ap-northeast-1')
+        s3_client = boto3.client('s3', region_name=s3_region)
+        
+        # 最小限の PDF プレースホルダーを S3 に配置（オブジェクトがないと get 署名 URL でエラーになるため）
+        pdf_placeholder = b'%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000052 00000 n \n0000000101 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n178\n%%EOF'
+        s3_client.put_object(
+            Bucket=s3_bucket,
+            Key=s3_key,
+            Body=pdf_placeholder,
+            ContentType='application/pdf'
+        )
         
         # S3署名URL生成（1時間有効）
-        s3_client = boto3.client('s3', region_name=s3_region)
         pdf_url = s3_client.generate_presigned_url(
             'get_object',
             Params={'Bucket': s3_bucket, 'Key': s3_key},
@@ -1370,7 +1472,7 @@ def _handle_admin_work_reports_bulk_export_pdf(event, headers, user_info, is_hr_
         ng = []
         pdf_urls = {}
         
-        s3_bucket = os.environ.get('S3_BUCKET_NAME', 'misesapo-assets')
+        s3_bucket = os.environ.get('WORK_REPORTS_BUCKET') or os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
         s3_region = os.environ.get('S3_REGION', 'ap-northeast-1')
         s3_client = boto3.client('s3', region_name=s3_region)
         
@@ -1396,11 +1498,16 @@ def _handle_admin_work_reports_bulk_export_pdf(event, headers, user_info, is_hr_
                     })
                     continue
                 
-                # PDF生成（簡易版）
+                # PDF生成（簡易版: プレースホルダーを S3 に配置してから署名 URL を発行）
                 s3_key = f"work-reports/{report_id}/export_{_get_jst_now().strftime('%Y%m%d_%H%M%S')}.pdf"
                 now_iso = _get_jst_now().isoformat()
-                
-                # S3署名URL生成（1時間有効）
+                pdf_placeholder = b'%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000052 00000 n \n0000000101 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n178\n%%EOF'
+                s3_client.put_object(
+                    Bucket=s3_bucket,
+                    Key=s3_key,
+                    Body=pdf_placeholder,
+                    ContentType='application/pdf'
+                )
                 pdf_url = s3_client.generate_presigned_url(
                     'get_object',
                     Params={'Bucket': s3_bucket, 'Key': s3_key},

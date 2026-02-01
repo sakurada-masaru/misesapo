@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { getWorkReportsByDate } from '../../shared/api/adminWorkReportsApi';
+import { getAdminWorkReports } from '../../shared/api/adminWorkReportsApi';
 import './admin-work-reports.css';
 
 /** 清掃・提出済みサンプル1件（管理側で表示確認用。?sample=1 で表示） */
@@ -141,7 +141,7 @@ function filterAndSort(items) {
 
 /**
  * 業務報告（管理）一覧
- * GET /work-report?date=YYYY-MM-DD + Bearer → 提出済みカード一覧 → 検索 → 詳細モーダル
+ * GET /admin/work-reports?from=YYYY-MM-DD&to=YYYY-MM-DD（管理用・全件）→ 検索 → 詳細モーダル
  */
 export default function AdminWorkReportsPage() {
   const [searchParams] = useSearchParams();
@@ -157,7 +157,7 @@ export default function AdminWorkReportsPage() {
     setLoading(true);
     setError('');
     try {
-      const list = await getWorkReportsByDate(date);
+      const list = await getAdminWorkReports({ from: date, to: date });
       setRawList(Array.isArray(list) ? list : []);
     } catch (e) {
       setError(e?.message || String(e) || '取得に失敗しました');
@@ -294,6 +294,13 @@ export default function AdminWorkReportsPage() {
                   添付: {count}件
                 </span>
                 <span className="admin-work-reports-card-updated">更新: {updatedAt}</span>
+                {item.log_id && (
+                  <span className="admin-work-reports-card-link" style={{ marginTop: 8, display: 'block' }}>
+                    <Link to={`/office/work-reports/${item.log_id}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                      個別ページを開く
+                    </Link>
+                  </span>
+                )}
               </button>
             );
           })}
@@ -302,7 +309,7 @@ export default function AdminWorkReportsPage() {
       {selected && (
         <div
           className="admin-work-reports-modal-backdrop"
-          onClick={() => setSelected(null)}
+          onClick={() => { setSelected(null); setStateChangeError(''); setStateChangeReason(''); }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="admin-work-reports-modal-title"
@@ -316,7 +323,7 @@ export default function AdminWorkReportsPage() {
               <button
                 type="button"
                 className="admin-work-reports-modal-close"
-                onClick={() => setSelected(null)}
+                onClick={() => { setSelected(null); setStateChangeError(''); setStateChangeReason(''); }}
                 aria-label="閉じる"
               >
                 ×
@@ -331,7 +338,7 @@ export default function AdminWorkReportsPage() {
                   <strong>version:</strong> {selected.version ?? '—'}
                 </p>
                 <p>
-                  <strong>state:</strong> {selected.state ?? '—'}
+                  <strong>state:</strong> {selected.state === 'submitted' ? '提出済み' : selected.state === 'rejected' ? '差し戻し' : selected.state === 'approved' ? '承認済み' : selected.state ?? '—'}
                 </p>
                 <p>
                   <strong>work_date:</strong>{' '}
@@ -353,6 +360,14 @@ export default function AdminWorkReportsPage() {
                 <p>
                   <strong>更新日時:</strong> {selected.updated_at ?? '—'}
                 </p>
+                {selected.log_id && (
+                  <p>
+                    <strong>個別URL:</strong>{' '}
+                    <Link to={`/office/work-reports/${selected.log_id}`} target="_blank" rel="noopener noreferrer">
+                      個別ページを開く
+                    </Link>
+                  </p>
+                )}
               </section>
               {selected.template_id && String(selected.template_id).includes('CLEANING') && (() => {
                 const desc = safeJsonParse(selected.description);

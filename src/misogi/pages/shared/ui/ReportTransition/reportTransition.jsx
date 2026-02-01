@@ -4,10 +4,14 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './reportTransition.css';
 
 /** 遷移アニメーションの長さ（ms）。Visualizer log モードの完了タイミングと揃える */
 export const TRANSITION_DURATION_MS = 5200;
+
+/** 高速遷移（戻るボタン用など）の長さ（ms） */
+export const FAST_TRANSITION_DURATION_MS = 800;
 
 /** 遷移中にページルートに付与するクラス名（ホットバー非表示など） */
 export const TRANSITION_CLASS_PAGE = 'log-transition';
@@ -84,7 +88,12 @@ export function useReportStyleTransition(navigate) {
   useEffect(() => {
     if (!targetPath) return;
     const t = setTimeout(() => {
-      navigate(targetPath);
+      // .html で終わるパスは React 外部の既存ページへの遷移として扱う
+      if (targetPath.endsWith('.html')) {
+        window.location.href = targetPath;
+      } else {
+        navigate(targetPath);
+      }
       setTargetPath(null);
       setIsTransitioning(false);
     }, TRANSITION_DURATION_MS);
@@ -97,4 +106,84 @@ export function useReportStyleTransition(navigate) {
   }, []);
 
   return { isTransitioning, startTransition };
+}
+
+/**
+ * 高速フラッシュ遷移フック（戻るボタン用）
+ * 全局イベントを発行して、App.jsx 等に配置された GlobalFlashTransition を起動させる。
+ */
+export function useFlashTransition() {
+  const startTransition = useCallback((path) => {
+    window.dispatchEvent(new CustomEvent('misogi-flash-transition', { detail: { path } }));
+  }, []);
+
+  return { startTransition };
+}
+
+/**
+ * 全全局で使い回すフラッシュ遷移コンポーネント
+ * App.jsx に配置することで、ページ遷移中も暗転を維持できる。
+ */
+export function GlobalFlashTransition() {
+  const navigate = useNavigate();
+  const [phase, setPhase] = useState('idle'); // idle | noise | snap | dark | fading
+  const [targetPath, setTargetPath] = useState(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      const { path } = e.detail;
+      setTargetPath(path);
+      setPhase('noise');
+
+      // 0.6秒間ノイズを見せる
+      setTimeout(() => setPhase('snap'), 600);
+
+      // 0.4秒間のスナップアニメーション後に暗転
+      setTimeout(() => setPhase('dark'), 1000);
+
+      // 暗転中に遷移実行
+      setTimeout(() => {
+        if (path.endsWith('.html')) {
+          window.location.href = path;
+        } else {
+          navigate(path);
+        }
+        // 遷移実行後、少し待ってからフェードアウト開始
+        setTimeout(() => setPhase('fading'), 300);
+      }, 1200);
+
+      // 全行程終了
+      setTimeout(() => {
+        setPhase('idle');
+        setTargetPath(null);
+      }, 2000);
+    };
+
+    window.addEventListener('misogi-flash-transition', handler);
+    return () => window.removeEventListener('misogi-flash-transition', handler);
+  }, [navigate]);
+
+  if (phase === 'idle') return null;
+
+  return (
+    <div className="report-transition-overlay"
+      style={{
+        zIndex: 10000000,
+        background: (phase === 'dark' || phase === 'snap' || phase === 'fading') ? '#000' : 'transparent',
+        pointerEvents: 'all'
+      }}>
+      {/* ノイズ: snap フェーズまで表示 */}
+      {(phase === 'noise' || phase === 'snap') && (
+        <div className="report-transition-glitch report-transition-glitch-active" style={{ zIndex: 10000001 }} />
+      )}
+      {/* CRTスナップ演出 */}
+      {phase === 'snap' && (
+        <div className="report-transition-crt-snap" style={{ zIndex: 10000002 }} />
+      )}
+      {/* フェードアウト */}
+      {phase === 'fading' && (
+        <div className="report-transition-dark-fade-out" style={{ animationDuration: '0.6s', zIndex: 10000003 }} />
+      )}
+    </div>
+  );
 }

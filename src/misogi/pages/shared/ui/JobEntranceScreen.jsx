@@ -51,27 +51,25 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig }) {
       <div className={`job-entrance-ui ${showTransition ? TRANSITION_CLASS_UI : ''}`}>
         <main className="job-entrance-main">
           <h1 className="job-entrance-title" style={{ color: job.color }}>{job.label}</h1>
-          {jobKey === 'sales' && tab === 'customer' ? (
-            <div className="sales-entrance-submenu">
-              {/* 報告スタイル遷移（ReportTransition）を割り当て：フェードアウト → 5.2秒後に遷移 */}
-              <button
-                type="button"
-                className="sales-entrance-subbtn"
-                onClick={() => startTransition('/sales/customers')}
-                disabled={isTransitioning}
-              >
-                顧客登録
-              </button>
-              <button
-                type="button"
-                className="sales-entrance-subbtn"
-                onClick={() => startTransition('/sales/kartes')}
-                disabled={isTransitioning}
-              >
-                営業カルテ
-              </button>
+
+          {/* サブホットバー（選択中のアクションに subItems がある場合表示） */}
+          {currentAction?.subItems && (
+            <div className="sub-hotbar">
+              {currentAction.subItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="sub-hotbar-btn"
+                  onClick={() => startTransition(item.path)}
+                  disabled={isTransitioning}
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
-          ) : (
+          )}
+
+          {!currentAction?.subItems && (
             <p className="job-entrance-dummy">{actions ? `タブ: ${tabLabel}` : '（ダミー画面）'}</p>
           )}
           <p style={{ marginTop: 16 }}><Link to="/">Portal へ戻る</Link></p>

@@ -93,10 +93,28 @@ export default function SalesCustomersPage() {
           <Link to="/jobs/sales/entrance">営業入口に戻る</Link>
         </p>
 
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '8px' }}>
+          <h1 id="sales-customers-form-title" className="sales-page-title" style={{ margin: 0 }}>
+            新規顧客登録
+          </h1>
+          <Link
+            to="/sales/clients/list"
+            className="btn"
+            style={{
+              padding: '8px 16px',
+              fontSize: '0.9rem',
+              background: 'var(--job-sales, #0d9488)',
+              color: '#fff',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontWeight: 600,
+            }}
+          >
+            一覧
+          </Link>
+        </div>
+
         <section className="sales-customers-form-section" aria-labelledby="sales-customers-form-title">
-        <h1 id="sales-customers-form-title" className="sales-page-title">
-          新規顧客登録
-        </h1>
         <form onSubmit={handleSubmit} className="sales-customers-form">
           <div className="sales-customers-form-row">
             <label htmlFor="sales-form-company">会社名</label>

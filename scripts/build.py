@@ -1006,9 +1006,8 @@ def build_all() -> List[str]:
     OFFICE_PAGES_DIR = PAGES_DIR / "entrance" / "office"
     page_dirs = [
         (CORPORATE_PAGES_DIR, ""),      # corporate → public/ (ルート)
-        (CUSTOMER_PAGES_DIR, "customer"),# customer → public/customer/
-        (STAFF_PAGES_DIR, "staff"),     # staff → public/staff/
         (SALES_PAGES_DIR, "sales"),     # sales → public/sales/
+        (SRC / "misogi" / "pages" / "jobs" / "sales" / "entrance", "misogi/sales/clients"),
         (ADMIN_PAGES_DIR, "admin"),     # admin → public/admin/
         (OFFICE_PAGES_DIR, "office"),   # entrance/office → public/office/（/office/work-reports 等）
         (PAGES_DIR, ""),                # pages → public/ (後方互換性)

@@ -1,0 +1,199 @@
+/* 事務・顧客リスト内 カルテ詳細パネル（新規フォーム） */
+.office-client-karte-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.office-karte-panel-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 12px;
+}
+
+.office-karte-panel-btn {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.office-karte-panel-btn--primary {
+  background: var(--job-office);
+  border-color: var(--job-office);
+  color: #fff;
+  font-weight: 600;
+}
+
+.office-karte-panel-btn--primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.office-karte-panel-btn--small {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+
+.office-karte-panel-link {
+  text-decoration: none;
+  color: var(--fg);
+  margin-left: auto;
+}
+
+.office-karte-panel-link:hover {
+  color: var(--job-office);
+}
+
+.office-karte-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.office-karte-panel-section {
+  margin-bottom: 20px;
+}
+
+.office-karte-panel-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0 0 10px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.office-karte-panel-subtitle {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 12px 0 8px 0;
+}
+
+.office-karte-panel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+
+.office-karte-panel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.office-karte-panel-field label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.office-karte-panel-value {
+  font-size: 0.85rem;
+  color: var(--fg);
+}
+
+.office-karte-panel-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--fg);
+  box-sizing: border-box;
+}
+
+.office-karte-panel-input--small {
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+}
+
+.office-karte-panel-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.office-karte-panel-checkgroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.office-karte-panel-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.office-karte-panel-check input {
+  margin: 0;
+}
+
+.office-karte-panel-category {
+  margin-bottom: 12px;
+}
+
+.office-karte-panel-muted {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 8px 0;
+}
+
+.office-karte-panel-list {
+  list-style: none;
+  margin: 0 0 10px 0;
+  padding: 0;
+}
+
+.office-karte-panel-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.85rem;
+}
+
+.office-karte-panel-list-remove {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.office-karte-panel-list-remove:hover {
+  color: var(--alert, #f87171);
+}
+
+.office-karte-panel-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.office-karte-panel-inline .office-karte-panel-input--small {
+  width: 120px;
+}
+
+@media (max-width: 640px) {
+  .office-karte-panel-grid {
+    grid-template-columns: 1fr;
+  }
+}

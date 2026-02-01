@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-テスト用に UNIVERSAL_WORK_LOGS に業務報告を1件挿入するスクリプト。
+テスト用に業務報告テーブル（デフォルト misesapo-sales-work-reports）に1件挿入するスクリプト。既存の WORK REPORT は使わない。
 事務UI（/office/work-reports）の一覧で「未承認」として表示される想定。
 実行: AWS_PROFILE=your_profile python scripts/create_one_test_work_report.py
 """
@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 # プロジェクトルートをパスに追加（universal_work_reports の定数を使う場合用）
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-TABLE_NAME = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'UNIVERSAL_WORK_LOGS')
+TABLE_NAME = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-reports')
 
 
 def jst_now():

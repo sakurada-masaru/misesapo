@@ -1,0 +1,326 @@
+/* 顧客リストページ表示中のみ：ページ全体のスクロールバーを青に */
+html.office-client-list-scrollbar,
+body.office-client-list-scrollbar {
+  scrollbar-color: #3b82f6 rgba(0, 0, 0, 0.2);
+}
+html.office-client-list-scrollbar::-webkit-scrollbar,
+body.office-client-list-scrollbar::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+html.office-client-list-scrollbar::-webkit-scrollbar-track,
+body.office-client-list-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+html.office-client-list-scrollbar::-webkit-scrollbar-thumb,
+body.office-client-list-scrollbar::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 6px;
+}
+html.office-client-list-scrollbar::-webkit-scrollbar-thumb:hover,
+body.office-client-list-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+/* OfficeClientListPage：ページスクロールでメインが上に詰まり、上端で sticky。祖先に overflow を付けない（sticky が効くため） */
+.report-page.office-client-list-page[data-job="office"] {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.report-page-content--full.office-client-list-page-content {
+  flex: 1;
+  min-height: 0;
+}
+
+/* 事務・顧客リスト：page-content に overflow を付けない（sticky の祖先制約） */
+.office-client-list-page-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* メイン2カラム：画面上端に到達したら sticky で止まり、以降は左右の中だけスクロール */
+.office-client-list-main-container {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+/* 2カラム：[左パネル | リサイザー | 右パネル]。flex:1 + min-height:0 + overflow:hidden */
+.office-client-list-two-columns {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* 左：1カラム・2カラムとも独立スクロール。overflow-y: auto + min-height: 0 */
+.office-client-list-two-columns .office-client-list-column-left {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-color: rgba(255, 255, 255, 0.25) rgba(0, 0, 0, 0.4);
+}
+
+.office-client-list-two-columns--with-panel .office-client-list-column-left {
+  flex-shrink: 0;
+}
+
+/* 右：独立スクロール。min-height: 0。上部操作バー固定 + 本文だけスクロール */
+.office-client-list-two-columns--with-panel .office-client-list-column-right {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+
+/* カルテ表示時：右パネル幅を広く（左30% / 右70%）。左は固定幅、右が残りを占有 */
+.office-client-list-two-columns--karte .office-client-list-column-left {
+  flex-shrink: 0;
+}
+
+.office-client-list-two-columns--karte .office-client-list-column-right {
+  flex: 1;
+  min-width: 0;
+}
+
+/* リスト：パネル表示時は右と同じ枠線で整合 */
+.office-client-list-column-left {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.15s ease;
+}
+
+.office-client-list-two-columns--with-panel .office-client-list-column-left {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.office-client-list-column-left:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* 編集パネル：左リスト同様にボタンと本文を別ブロックで表示 */
+.office-client-list-column-right {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.15s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.office-client-list-two-columns--with-panel .office-client-list-column-right {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.office-client-list-column-right:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* 右パネル・操作バー：パディング・背景・ボーダーなしでボタンを直接配置 */
+.office-client-list-panel-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* 編集パネルヘッダー（操作バー内の左右グループ） */
+.office-client-list-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* 編集パネル本文：リストのテーブルブロックのように独立した1ブロック。縦だけスクロール */
+.office-client-list-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  scrollbar-color: rgba(255, 255, 255, 0.25) rgba(0, 0, 0, 0.4);
+}
+
+/* 左右カラムのスクロールバー：背景を黒くして眩しさを抑える（WebKit） */
+.office-client-list-two-columns--with-panel .office-client-list-column-left::-webkit-scrollbar,
+.office-client-list-panel-body::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.office-client-list-two-columns--with-panel .office-client-list-column-left::-webkit-scrollbar-track,
+.office-client-list-panel-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+}
+.office-client-list-two-columns--with-panel .office-client-list-column-left::-webkit-scrollbar-thumb,
+.office-client-list-panel-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+}
+.office-client-list-two-columns--with-panel .office-client-list-column-left::-webkit-scrollbar-thumb:hover,
+.office-client-list-panel-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* リサイザー：左パネルと右パネルの間。中央にライン。ドラッグで幅変更（左カラムの overflow より前面に） */
+.office-client-list-resizer {
+  flex-shrink: 0;
+  width: 10px;
+  min-width: 10px;
+  padding: 0 5px;
+  box-sizing: content-box;
+  user-select: none;
+  cursor: col-resize;
+  position: relative;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.office-client-list-resizer::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateX(-50%);
+  border-radius: 1px;
+}
+
+.office-client-list-resizer:hover,
+.office-client-list-resizer:active {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.office-client-list-resizer:hover::before,
+.office-client-list-resizer:active::before {
+  background: var(--job-office);
+  width: 3px;
+  box-shadow: 0 0 8px var(--job-office-glow);
+}
+
+/* リストは左カラム1つで縦横スクロール（ネストした overflow をやめて競合防止） */
+.office-client-list-table {
+  border-radius: 0 0 8px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: none;
+}
+
+.office-client-list-row {
+  min-width: 920px;
+}
+
+.office-client-list-row:not(.office-client-list-header)+.office-client-list-row:not(.office-client-list-header) {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.office-client-list-row:not(.office-client-list-header):hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 契約内容タグ（定期清掃 / スポット清掃） */
+.office-client-list-contract {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.office-client-list-contract-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.office-client-list-contract-tag--regular {
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.5);
+  color: #4ade80;
+}
+
+.office-client-list-contract-tag--spot {
+  background: rgba(251, 191, 36, 0.2);
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  color: #fbbf24;
+}
+
+.office-client-list-contract-tag--other {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ブランド名列をタグ風に */
+.office-client-list-brand {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: var(--fg);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 編集パネル内・本文エリアは上で定義（リストと整合） */
+
+/* 編集パネル内・カルテ表示用ラップ */
+.office-client-list-karte-wrap {
+  min-height: 0;
+}
+
+/* 編集パネル内・カルテ表示用 iframe */
+.office-client-list-karte-iframe {
+  flex: 1;
+  width: 100%;
+  min-height: 480px;
+  height: calc(100vh - 140px);
+  border: none;
+  border-radius: 0 0 8px 8px;
+  background: rgba(255, 255, 255, 0.02);
+}

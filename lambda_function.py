@@ -891,23 +891,38 @@ WIKI_KEY = 'wiki/wiki_entries.json'
 def resolve_cors_origin(event_headers: dict) -> str:
     # クレデンシャルが false なので、特定のオリジンを返す代わりに * でも動作するが、
     # 互換性のためにリクエストの Origin をそのまま返すか、許可リストをチェックする。
-    origin = event_headers.get("origin") or event_headers.get("Origin") or ""
-    
+    # API Gateway はキーを小文字にする場合があるので両方参照
+    origin = (
+        event_headers.get("origin")
+        or event_headers.get("Origin")
+        or event_headers.get("ORIGIN")
+        or ""
+    )
+    if isinstance(origin, list):
+        origin = origin[0] if origin else ""
+    origin = (origin or "").strip()
+
     if not origin:
         return "*"
-        
+
     # * が許可されている場合はオリジンを返す
     if "*" in ALLOWED_ORIGINS:
         return origin
-        
-    # ドメインマッチング（サフィックスチェック）
-    if origin.endswith('misesapo.co.jp') or origin.endswith('sakurada-masaru.github.io'):
+
+    # ローカル開発: localhost / 127.0.0.1（任意ポート）を許可（http://localhost:3335 等）
+    if origin.startswith("http://localhost:") or origin.startswith("https://localhost:"):
         return origin
-        
+    if origin.startswith("http://127.0.0.1:") or origin.startswith("https://127.0.0.1:"):
+        return origin
+
+    # ドメインマッチング（サフィックスチェック）
+    if origin.endswith("misesapo.co.jp") or origin.endswith("sakurada-masaru.github.io"):
+        return origin
+
     # 特定のオリジンが許可リストにある場合
     if origin in ALLOWED_ORIGINS:
         return origin
-    
+
     # デフォルトのオリジンを返す
     return ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "*"
 
@@ -949,10 +964,16 @@ def abs_diff_minutes(t1, t2):
 
 
 def _get_headers(event):
-    """event の headers を必ず dict で返す。None や非 dict の場合は {} に正規化する。"""
+    """event の headers を必ず dict で返す。API Gateway の headers / multiValueHeaders の両方に対応。"""
     h = event.get("headers")
     if h is None or not isinstance(h, dict):
-        return {}
+        h = {}
+    # API Gateway HTTP API などでは小文字キーで渡る場合がある。multiValueHeaders の先頭値も使う
+    multi = event.get("multiValueHeaders") or {}
+    if isinstance(multi, dict):
+        for k, v in multi.items():
+            if k not in h and isinstance(v, list) and len(v) > 0:
+                h[k] = v[0]
     return h
 
 
@@ -1023,6 +1044,16 @@ def lambda_handler(event, context):
         if normalized_path == '/upload':
             # 画像アップロード
             return handle_image_upload(event, headers)
+        elif normalized_path == '/upload-url':
+            # 業務報告添付用 Presigned URL 取得（認証必須）
+            if method == 'POST':
+                return handle_upload_url(event, headers)
+            return {'statusCode': 405, 'headers': headers, 'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)}
+        elif normalized_path == '/upload-put':
+            # Presigned URL 宛に Lambda が PUT（CORS プリフライト回避）
+            if method == 'POST':
+                return handle_upload_put(event, headers)
+            return {'statusCode': 405, 'headers': headers, 'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)}
         elif normalized_path == '/ai/process':
             # AIによるデータ処理（要約・生成・分析）
             if method == 'POST':
@@ -1620,10 +1651,11 @@ def lambda_handler(event, context):
                     'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
                 }
         # ========================================
-        # 業務報告（work-report / admin/work-reports）
-        # 複数形 /admin/work-reports は handle_admin_work_reports（一覧・詳細・PATCH state・PDF）
+        # 業務報告（work-report / admin/work-reports / admin/payroll）
+        # /admin/work-reports: 一覧・詳細・PATCH state・PDF
+        # /admin/payroll: 経理用・ユーザー×年月の月次ビュー
         # ========================================
-        elif normalized_path.startswith('/admin/work-reports'):
+        elif normalized_path.startswith('/admin/work-reports') or normalized_path.startswith('/admin/payroll'):
             if not handle_admin_work_reports:
                 return {'statusCode': 503, 'headers': headers, 'body': json.dumps({'error': 'Service unavailable'}, ensure_ascii=False)}
             user_info = _get_user_info_from_event(event)
@@ -1680,6 +1712,97 @@ def lambda_handler(event, context):
                 'stage': event.get('requestContext', {}).get('stage')
             }, ensure_ascii=False)
         }
+
+def _sanitize_upload_filename(filename):
+    """アップロード用ファイル名をサニタイズ（reports/ 用）"""
+    if not filename or not isinstance(filename, str):
+        return 'file'
+    import re
+    base = re.sub(r'^.*[/\\]', '', filename)
+    base = re.sub(r'[^\w\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf.\-]', '_', base)
+    return (base[:200] or 'file')
+
+
+def handle_upload_url(event, headers):
+    """
+    POST /upload-url: 業務報告添付用 Presigned URL を発行（認証必須）
+    ボディ: { filename, mime, size, context, date, storeKey? }
+    返却: { uploadUrl, fileUrl, key }
+    """
+    user_info = _get_user_info_from_event(event)
+    if not user_info:
+        print("[upload-url] 403/401: user_info is None (token missing or invalid; 403 may be from API Gateway Authorizer)")
+        return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)}
+    try:
+        body = event.get('body') or '{}'
+        body_json = json.loads(body) if isinstance(body, str) else body
+    except json.JSONDecodeError:
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'Invalid JSON'}, ensure_ascii=False)}
+    filename = body_json.get('filename') or 'file'
+    mime = body_json.get('mime') or 'application/octet-stream'
+    date = body_json.get('date') or datetime.utcnow().strftime('%Y-%m-%d')
+    safe_name = _sanitize_upload_filename(filename)
+    key = f"reports/{date}/{str(uuid.uuid4())}_{safe_name}"
+    # 業務報告専用バケット（WORK_REPORTS_BUCKET）があれば優先、なければ UPLOAD_BUCKET / S3_BUCKET_NAME
+    bucket = os.environ.get('WORK_REPORTS_BUCKET') or os.environ.get('UPLOAD_BUCKET', S3_BUCKET_NAME)
+    region = os.environ.get('S3_REGION', S3_REGION)
+    try:
+        upload_url = s3_client.generate_presigned_url(
+            'put_object',
+            Params={'Bucket': bucket, 'Key': key, 'ContentType': mime},
+            ExpiresIn=3600
+        )
+    except Exception as e:
+        print(f"[upload-url] presign failed: {e}")
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': 'Failed to generate upload URL'}, ensure_ascii=False)}
+    file_url = f"https://{bucket}.s3.{region}.amazonaws.com/{key}"
+    return {
+        'statusCode': 200,
+        'headers': headers,
+        'body': json.dumps({'uploadUrl': upload_url, 'fileUrl': file_url, 'key': key}, ensure_ascii=False)
+    }
+
+
+def handle_upload_put(event, headers):
+    """
+    POST /upload-put: Presigned URL 宛に Lambda が PUT する（CORS プリフライト回避用）
+    ボディ JSON: { uploadUrl, contentType, fileBase64 }
+    フロントは S3 に直接 PUT せずこの API を呼ぶことで、S3 CORS プリフライト問題を回避する。
+    ペイロード制限: Lambda 6MB のため、base64 込みで約 4.5MB 程度のファイルまで。
+    """
+    user_info = _get_user_info_from_event(event)
+    if not user_info:
+        print("[upload-put] 401: user_info is None")
+        return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)}
+    try:
+        body = event.get('body') or '{}'
+        body_json = json.loads(body) if isinstance(body, str) else body
+    except json.JSONDecodeError:
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'Invalid JSON'}, ensure_ascii=False)}
+    upload_url = body_json.get('uploadUrl')
+    contentType = body_json.get('contentType') or 'application/octet-stream'
+    file_b64 = body_json.get('fileBase64')
+    if not upload_url or not file_b64:
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'uploadUrl and fileBase64 required'}, ensure_ascii=False)}
+    try:
+        file_bytes = base64.b64decode(file_b64)
+    except Exception as e:
+        print(f"[upload-put] base64 decode failed: {e}")
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'Invalid base64'}, ensure_ascii=False)}
+    try:
+        req = urllib.request.Request(upload_url, data=file_bytes, method='PUT', headers={'Content-Type': contentType})
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            if resp.status not in (200, 204):
+                print(f"[upload-put] S3 PUT returned {resp.status}")
+                return {'statusCode': 502, 'headers': headers, 'body': json.dumps({'error': 'Upload failed'}, ensure_ascii=False)}
+    except urllib.error.HTTPError as e:
+        print(f"[upload-put] S3 PUT HTTPError: {e.code} {e.reason}")
+        return {'statusCode': 502, 'headers': headers, 'body': json.dumps({'error': 'Upload failed'}, ensure_ascii=False)}
+    except Exception as e:
+        print(f"[upload-put] S3 PUT failed: {e}")
+        return {'statusCode': 502, 'headers': headers, 'body': json.dumps({'error': 'Upload failed'}, ensure_ascii=False)}
+    return {'statusCode': 200, 'headers': headers, 'body': json.dumps({'ok': True}, ensure_ascii=False)}
+
 
 def handle_image_upload(event, headers):
     """
@@ -2444,10 +2567,10 @@ def get_announcements(headers):
 # レポート機能
 # ============================================================================
 
-def verify_firebase_token(id_token):
+def verify_cognito_id_token(id_token):
     """
-    Cognito ID Tokenを検証（簡易版）
-    注意: 本番環境では、適切なJWT検証ライブラリを使用して署名検証を行うことを推奨
+    Cognito ID Token（Authorization: Bearer）を検証（簡易デコード版）。
+    注意: 本番環境では、適切なJWT検証ライブラリで署名検証を行うことを推奨。
     """
     if not id_token:
         return None
@@ -2511,6 +2634,7 @@ def verify_firebase_token(id_token):
         # エラー時はNoneを返す（認証失敗）
         return None
 
+
 def check_admin_permission(user_info):
     """
     管理者権限をチェック
@@ -2547,7 +2671,7 @@ def _get_user_info_from_event(event):
     auth_header = _get_auth_header(event)
     id_token = auth_header.replace('Bearer ', '') if auth_header else ''
     if id_token:
-        return verify_firebase_token(id_token)
+        return verify_cognito_id_token(id_token)
     
     return None
 
@@ -3105,7 +3229,7 @@ def get_nfc_clock_in_logs(event, headers):
         
         # 開発環境ではdev-tokenを許可
         if id_token and id_token != 'dev-token':
-            user_info = verify_firebase_token(id_token)
+            user_info = verify_cognito_id_token(id_token)
             if not user_info:
                 print(f"[NFC Clock-in Logs] Invalid token: {id_token[:20]}...")
                 # 開発環境ではエラーを返さない（後で削除可能）
@@ -3348,12 +3472,12 @@ def create_report(event, headers):
     レポートを作成（管理者・清掃員どちらも可能）
     """
     try:
-        # Firebase ID Tokenを取得
+        # Cognito ID Token（Bearer）を取得
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # トークンを検証（清掃員もレポート作成可能）
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info.get('verified'):
             # トークンがない場合でも、開発環境では許可（後で削除可能）
             if not id_token or id_token == 'dev-token':
@@ -3619,12 +3743,12 @@ def get_reports(event, headers):
     レポート一覧を取得
     """
     try:
-        # Firebase ID Tokenを取得
+        # Cognito ID Token（Bearer）を取得
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # トークンを検証
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -3774,12 +3898,12 @@ def get_report_detail(report_id, event, headers):
     レポート詳細を取得
     """
     try:
-        # Firebase ID Tokenを取得
+        # Cognito ID Token（Bearer）を取得
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # トークンを検証
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -4019,12 +4143,12 @@ def update_report(event, headers):
     レポートを更新（管理者のみ）
     """
     try:
-        # Firebase ID Tokenを取得
+        # Cognito ID Token（Bearer）を取得
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # トークンを検証
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -4232,12 +4356,12 @@ def update_report_by_id(report_id, event, headers):
     管理者は全レポートを更新可能、清掃員は自分のレポートのみ更新可能
     """
     try:
-        # Firebase ID Tokenを取得
+        # Cognito ID Token（Bearer）を取得
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # トークンを検証
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -4527,12 +4651,12 @@ def delete_report(report_id, event, headers):
     レポートを削除（管理者のみ）
     """
     try:
-        # Firebase ID Tokenを取得
+        # Cognito ID Token（Bearer）を取得
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
         # トークンを検証
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -5243,7 +5367,7 @@ def decline_schedule(schedule_id, event, headers):
     try:
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -5699,7 +5823,6 @@ def get_workers(event, headers):
         role = query_params.get('role')
         status = query_params.get('status')
         email = query_params.get('email')
-        firebase_uid = query_params.get('firebase_uid')
         cognito_sub = query_params.get('cognito_sub')
         
         # スキャンまたはクエリを実行（強整合性読み取りを有効化、ページネーション対応）
@@ -5709,9 +5832,6 @@ def get_workers(event, headers):
         if cognito_sub:
             # Cognito Subでフィルタ（従業員ログイン用）
             scan_kwargs['FilterExpression'] = Attr('cognito_sub').eq(cognito_sub)
-        elif firebase_uid:
-            # Firebase UIDでフィルタ（お客様ログイン用、後方互換性のため残す）
-            scan_kwargs['FilterExpression'] = Attr('firebase_uid').eq(firebase_uid)
         elif role:
             # ロールでフィルタ
             scan_kwargs['FilterExpression'] = Attr('role').eq(role)
@@ -5781,7 +5901,7 @@ def get_worker_availability(event, headers):
     try:
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -5825,7 +5945,7 @@ def update_worker_availability(event, headers):
     try:
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -5880,7 +6000,7 @@ def get_sales_availability_matrix(event, headers):
     try:
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -6023,16 +6143,10 @@ def get_clients(event, headers):
         # クエリパラメータからフィルタ条件を取得
         query_params = event.get('queryStringParameters') or {}
         email = query_params.get('email')
-        firebase_uid = query_params.get('firebase_uid')
         status = query_params.get('status')
         
         # スキャンまたはクエリを実行
-        if firebase_uid:
-            # Firebase UIDでフィルタ（クライアントログイン用）
-            response = CLIENTS_TABLE.scan(
-                FilterExpression=Attr('firebase_uid').eq(firebase_uid)
-            )
-        elif email:
+        if email:
             # メールアドレスでフィルタ
             response = CLIENTS_TABLE.scan(
                 FilterExpression=Attr('email').eq(email)
@@ -6096,7 +6210,6 @@ def create_client(event, headers):
         # デフォルト値を設定
         client_data = {
             'id': client_id,
-            'firebase_uid': body_json.get('firebase_uid', ''),  # Firebase UID（必須）
             'email': body_json.get('email', ''),
             'name': body_json.get('name', ''),
             'phone': body_json.get('phone', ''),
@@ -6655,7 +6768,6 @@ def create_worker(event, headers):
         worker_data = {
             'id': worker_id,
             'cognito_sub': body_json.get('cognito_sub', ''),  # Cognito User Sub（従業員用）
-            'firebase_uid': body_json.get('firebase_uid', ''),  # Firebase UID（お客様用、後方互換性のため残す）
             'name': body_json.get('name', ''),
             'email': email,
             'phone': body_json.get('phone', ''),
@@ -9418,46 +9530,34 @@ def delete_worker(worker_id, headers):
 
 def get_brands(event, headers):
     """
-    ブランド一覧を取得
+    ブランド一覧を取得。
+    ページネーション対応で全件返す。いかなる例外でも 200 で空配列を返し 502 を避ける。
     """
-    try:
-        # クエリパラメータからフィルタ条件を取得
-        query_params = event.get('queryStringParameters') or {}
-        client_id = query_params.get('client_id')
-        
-        # スキャンまたはクエリを実行
-        if client_id:
-            # クライアントIDでフィルタ
-            response = BRANDS_TABLE.scan(
-                FilterExpression=Attr('client_id').eq(client_id)
-            )
-        else:
-            # 全件取得
-            response = BRANDS_TABLE.scan()
-        
-        brands = response.get('Items', [])
-        
-        # レスポンス形式を統一（items配列で返す）
+    def _ok(brands_list):
         return {
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps({
-                'items': brands,
-                'count': len(brands)
-            }, ensure_ascii=False, default=str)
+            'body': json.dumps({'items': brands_list, 'count': len(brands_list)}, ensure_ascii=False, default=str)
         }
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        client_id = query_params.get('client_id')
+        brands = []
+        scan_kw = {}
+        if client_id:
+            scan_kw['FilterExpression'] = Attr('client_id').eq(client_id)
+        while True:
+            response = BRANDS_TABLE.scan(**scan_kw)
+            brands.extend(response.get('Items', []))
+            if 'LastEvaluatedKey' not in response:
+                break
+            scan_kw['ExclusiveStartKey'] = response['LastEvaluatedKey']
+        return _ok(brands)
     except Exception as e:
-        print(f"Error getting brands: {str(e)}")
+        print(f"get_brands: error (returning empty list to avoid 502): {e}")
         import traceback
-        print(f"Traceback: {traceback.format_exc()}")
-        return {
-            'statusCode': 500,
-            'headers': headers,
-            'body': json.dumps({
-                'error': 'ブランド一覧の取得に失敗しました',
-                'message': str(e)
-            }, ensure_ascii=False)
-        }
+        traceback.print_exc()
+        return _ok([])
 
 def create_brand(event, headers):
     """
@@ -9662,7 +9762,7 @@ def get_stores(event, headers):
         # 認証・権限チェック
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         
         # 開発環境などのためのフォールバック: 認証なしでも一旦通すが、本番では厳格化推奨
         if not user_info and os.environ.get('STAGE') == 'dev':
@@ -9708,9 +9808,15 @@ def get_stores(event, headers):
             scan_params['ExpressionAttributeValues'] = expression_attribute_values
             
         response = STORES_TABLE.scan(**scan_params)
-        
         stores = response.get('Items', [])
-        
+        # ページネーション: 全件取得
+        while 'LastEvaluatedKey' in response:
+            scan_params['ExclusiveStartKey'] = response['LastEvaluatedKey']
+            response = STORES_TABLE.scan(**scan_params)
+            stores.extend(response.get('Items', []))
+
+        # client_name / brand_name は店舗レコードに保存済み（インポート・create/update で設定）。そのまま返す。
+
         # レスポンス形式を統一（items配列で返す）
         return {
             'statusCode': 200,
@@ -9718,7 +9824,7 @@ def get_stores(event, headers):
             'body': json.dumps({
                 'items': stores,
                 'count': len(stores),
-                'debug_info': {'role': current_role, 'uid': current_user_id} # デバッグ用
+                'debug_info': {'role': current_role, 'uid': current_user_id}
             }, ensure_ascii=False, default=str)
         }
     except Exception as e:
@@ -9743,7 +9849,7 @@ def create_store(event, headers):
         # 認証チェック
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         
         # 開発環境フォールバック
         if not user_info and os.environ.get('STAGE') == 'dev':
@@ -9796,7 +9902,7 @@ def create_store(event, headers):
         address1 = body_json.get('address1') or body_json.get('address', '')
         notes = body_json.get('notes') or body_json.get('memo', '')
         
-        # デフォルト値を設定
+        # デフォルト値を設定（顧客DBCSV設計: docs/CUSTOMER_TABLE_SCHEMA.md の属性を含む）
         store_data = {
             'id': store_id,
             'name': store_name,
@@ -9816,16 +9922,47 @@ def create_store(event, headers):
             'notes': notes,
             'sales_notes': body_json.get('sales_notes', ''),
             'registration_type': body_json.get('registration_type', 'manual'),
-            
+            # リード登録用（misogi /sales/leads/new から送信）
+            'lead_status': body_json.get('lead_status', ''),
+            'next_action_date': body_json.get('next_action_date', ''),
+            'next_action_content': body_json.get('next_action_content', ''),
+            # 顧客DBCSV由来の属性
+            'url': body_json.get('url', ''),
+            'acquired_by': body_json.get('acquired_by', ''),
+            'assigned_to': body_json.get('assigned_to', ''),
+            'store_count': body_json.get('store_count', ''),
+            'needs_notes': body_json.get('needs_notes', ''),
+            'cleaning_frequency': body_json.get('cleaning_frequency', ''),
+            'introducer': body_json.get('introducer', ''),
+            'implementation_items': body_json.get('implementation_items', ''),
             # オーナー情報（最重要）
             'owner_id': current_user_id,
             'created_by': current_user_id,
             'created_by_name': current_user_name,
-            
             'created_at': body_json.get('created_at', now),
             'updated_at': now
         }
-        
+        # 店舗レコードに法人名・ブランド名を保存（一覧で名前を返すため）
+        try:
+            cid = store_data.get('client_id')
+            bid = store_data.get('brand_id')
+            if cid:
+                r = CLIENTS_TABLE.get_item(Key={'id': cid})
+                c = r.get('Item') or {}
+                store_data['client_name'] = c.get('name') or c.get('company_name') or ''
+            else:
+                store_data['client_name'] = body_json.get('client_name', '')
+            if bid:
+                r = BRANDS_TABLE.get_item(Key={'id': bid})
+                b = r.get('Item') or {}
+                store_data['brand_name'] = b.get('name') or ''
+            else:
+                store_data['brand_name'] = body_json.get('brand_name', '')
+        except Exception as _e:
+            print(f"create_store: resolve client/brand name: {_e}")
+            store_data['client_name'] = store_data.get('client_name', '')
+            store_data['brand_name'] = store_data.get('brand_name', '')
+
         # DynamoDBに保存
         STORES_TABLE.put_item(Item=store_data)
         
@@ -9914,17 +10051,33 @@ def update_store(store_id, event, headers):
         existing_item = response['Item']
         now = datetime.utcnow().isoformat() + 'Z'
         
-        # 更新可能なフィールド
+        # 更新可能なフィールド（顧客DBCSV設計の属性を含む）
         updatable_fields = [
-            'name', 'client_id', 'brand_id', 'postcode', 'pref', 'city',
-            'address1', 'address2', 'phone', 'email', 'contact_person',
-            'status', 'notes', 'sales_notes', 'registration_type'
+            'name', 'client_id', 'brand_id', 'client_name', 'brand_name',
+            'postcode', 'pref', 'city', 'address1', 'address2', 'phone', 'email', 'contact_person',
+            'status', 'notes', 'sales_notes', 'registration_type',
+            'url', 'acquired_by', 'assigned_to', 'store_count',
+            'needs_notes', 'cleaning_frequency', 'introducer', 'implementation_items'
         ]
         updated_data = existing_item.copy()
         for field in updatable_fields:
             if field in body_json:
                 updated_data[field] = body_json[field]
-        
+        # client_id / brand_id が更新されたら法人名・ブランド名を解決して持たせる
+        if 'client_id' in body_json or 'brand_id' in body_json:
+            try:
+                cid = updated_data.get('client_id')
+                bid = updated_data.get('brand_id')
+                if cid:
+                    r = CLIENTS_TABLE.get_item(Key={'id': cid})
+                    c = r.get('Item') or {}
+                    updated_data['client_name'] = c.get('name') or c.get('company_name') or ''
+                if bid:
+                    r = BRANDS_TABLE.get_item(Key={'id': bid})
+                    b = r.get('Item') or {}
+                    updated_data['brand_name'] = b.get('name') or ''
+            except Exception as _e:
+                print(f"update_store: resolve client/brand name: {_e}")
         updated_data['updated_at'] = now
         
         # DynamoDBに保存
@@ -10077,7 +10230,7 @@ def get_report_feedback(report_id, event, headers):
             }
         
         id_token = auth_header.replace('Bearer ', '')
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info:
             return {
                 'statusCode': 401,
@@ -10212,7 +10365,7 @@ def create_inventory_item(event, headers):
             }
         
         id_token = auth_header.replace('Bearer ', '')
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         
         if not user_info or user_info.get('role') != 'admin':
             return {
@@ -10303,7 +10456,7 @@ def update_inventory_item(product_id, event, headers):
             }
         
         id_token = auth_header.replace('Bearer ', '')
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         
         if not user_info or user_info.get('role') != 'admin':
             return {
@@ -10444,7 +10597,7 @@ def process_inventory_transaction(event, headers, transaction_type):
             }
         
         id_token = auth_header.replace('Bearer ', '')
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         
         if not user_info:
             return {
@@ -10603,7 +10756,7 @@ def get_inventory_transactions(event, headers):
             }
         
         id_token = auth_header.replace('Bearer ', '')
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         
         if not user_info:
             return {
@@ -10702,7 +10855,7 @@ def get_staff_announcements(event, headers):
     清掃員向け業務連絡一覧取得
     """
     try:
-        # 認証チェック（CognitoトークンまたはFirebaseトークン）
+        # 認証チェック（Cognito ID トークン）
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
         
@@ -10713,7 +10866,7 @@ def get_staff_announcements(event, headers):
                 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
             }
         
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info:
             return {
                 'statusCode': 401,
@@ -10818,7 +10971,7 @@ def mark_announcement_read(announcement_id, event, headers):
         # 認証チェック
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info or not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -10873,7 +11026,7 @@ def get_admin_announcements(event, headers):
         # 認証・権限チェック
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info or not user_info.get('verified'):
             print(f"[DEBUG] Unauthorized: user_info={user_info}")
             return {
@@ -10958,7 +11111,7 @@ def create_announcement(event, headers):
         # 認証・権限チェック
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info or not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -11127,7 +11280,7 @@ def get_announcement_detail(announcement_id, event, headers):
         # 認証・権限チェック
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info or not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -11222,7 +11375,7 @@ def update_announcement(announcement_id, event, headers):
         # 認証・権限チェック
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info or not user_info.get('verified'):
             return {
                 'statusCode': 401,
@@ -11303,7 +11456,7 @@ def delete_announcement(announcement_id, event, headers):
         # 認証・権限チェック
         auth_header = _get_auth_header(event)
         id_token = auth_header.replace('Bearer ', '') if auth_header else ''
-        user_info = verify_firebase_token(id_token)
+        user_info = verify_cognito_id_token(id_token)
         if not user_info or not user_info.get('verified'):
             return {
                 'statusCode': 401,

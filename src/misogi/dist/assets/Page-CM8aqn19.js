@@ -1,1 +1,0 @@
-import{j as o}from"./index-KAQsWF0Z.js";import{J as e}from"./JobEntranceScreen-ujxsp2gj.js";const l=[{id:"site",role:"target",label:"店舗"},{id:"quality",role:"status",label:"進捗"},{id:"flow",role:"plan",label:"予定"},{id:"photo",role:"log",label:"報告"}];function r(){return o.jsx(e,{job:"cleaning",hotbarConfig:l})}export{r as default};
