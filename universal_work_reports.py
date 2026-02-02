@@ -2,11 +2,17 @@ import json
 import boto3
 import os
 import uuid
+import logging
+import traceback
 from datetime import datetime, timedelta, timezone
 import calendar
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 from decimal import Decimal
+
+# ロガー設定（CloudWatch Logs 用）
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def decimal_handler(obj):
@@ -39,9 +45,13 @@ json.dumps = json_dumps_decimal
 # DynamoDB initialization（リージョン明示で保存先を確実に）
 DYNAMODB_REGION = os.environ.get('AWS_REGION', 'ap-northeast-1')
 dynamodb = boto3.resource('dynamodb', region_name=DYNAMODB_REGION)
-# 業務報告用テーブル。環境変数 UNIVERSAL_WORK_LOGS_TABLE で上書き可。未設定時は misesapo-sales-work-reports
+# ✅ ハードコード排除: 環境変数から必ず取得（文字列直書き禁止）
 TABLE_NAME = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-reports')
+if not TABLE_NAME:
+    raise ValueError("UNIVERSAL_WORK_LOGS_TABLE environment variable is required")
 table = dynamodb.Table(TABLE_NAME)
+logger.info("[INIT] DynamoDB table=%s, region=%s", TABLE_NAME, DYNAMODB_REGION)
+print(f"[INIT] DynamoDB table={TABLE_NAME}, region={DYNAMODB_REGION}")
 
 def _get_jst_now():
     return datetime.now(timezone(timedelta(hours=9)))
@@ -90,12 +100,28 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
     """
     Worker向け汎用業務報告API
     """
+    # ✅ デバッグ: event / method / path を可視化
+    try:
+        event_str = json.dumps(event, default=str, ensure_ascii=False)
+        logger.info("[DEBUG] raw_event (first 4000 chars)=%s", event_str[:4000])
+    except Exception as e:
+        logger.warning("[DEBUG] Failed to serialize event: %s", str(e))
+    
+    # method / path の正規化（API Gateway の形式に合わせる）
+    method_upper = (method or '').upper()
+    path_normalized = (path or '').split('?')[0]  # クエリパラメータ除去
+    
+    logger.info("[DEBUG] method=%s path=%s (normalized: %s)", method, path, path_normalized)
+    
     if not user_info:
+        logger.warning("[work-report] 401: user_info is None (token missing or invalid; 403 may be from API Gateway)")
         print("[work-report] 401: user_info is None (token missing or invalid; 403 may be from API Gateway)")
         return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'})}
     
     worker_id = user_info['uid']
-    parts = path.split('/')
+    parts = path_normalized.split('/')
+    
+    logger.info("[DEBUG] worker_id=%s, parts=%s", worker_id, parts)
     
     # GET /work-report
     # 自分の報告一覧を取得（クエリパラメータでフィルタリング可）
@@ -204,7 +230,11 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
             return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
 
     # PUT /work-report (Save Draft)
-    if method == 'PUT' and path == '/work-report':
+    # ✅ デバッグ: 分岐マッチ確認
+    logger.info("[DEBUG] Checking PUT /work-report: method=%s (==PUT? %s), path=%s (==/work-report? %s)", 
+                method_upper, method_upper == 'PUT', path_normalized, path_normalized == '/work-report')
+    
+    if method_upper == 'PUT' and path_normalized == '/work-report':
         request_id = event.get('requestContext', {}).get('requestId', 'unknown')
         try:
             body = json.loads(event.get('body') or '{}')
@@ -363,6 +393,11 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
             try:
                 item["date"] = date
                 item["work_date"] = date
+                
+                # ✅ 保存処理ログ（直前）
+                table_name = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-reports')
+                logger.info("[WORK_REPORT] saving log_id=%s, table=%s, existing=%s", log_id, table_name, bool(existing))
+                print(f"[PUT /work-report] About to save: log_id={log_id}, table={table_name}, existing={bool(existing)}")
 
                 if existing:
                     # 既存レコードは version で楽観ロック
@@ -377,6 +412,10 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                         Item=item,
                         ConditionExpression="attribute_not_exists(log_id)"
                     )
+                
+                # ✅ 保存処理ログ（直後）
+                logger.info("[WORK_REPORT] saved log_id=%s, table=%s", log_id, table_name)
+                print(f"[PUT /work-report] Saved successfully: log_id={log_id}, table={table_name}")
 
             except ClientError as e:
                 error_code = e.response.get("Error", {}).get("Code", "Unknown")
@@ -416,7 +455,19 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                 print(f"[PUT /work-report] request_id={request_id}: DynamoDB ClientError - {error_code}: {str(e)}")
                 raise
 
+            # ✅ 保存成功ログ（必須）
+            logger.info(f"[WORK_REPORT] saved log_id={log_id}, version={new_version}, worker_id={worker_id}, template_id={item.get('template_id', 'N/A')}")
             print(f"[PUT /work-report] request_id={request_id}: Success - log_id={log_id}, version={new_version}")
+            
+            # ✅ 必須: log_id が確実に含まれることを確認
+            if not item.get('log_id'):
+                logger.error(f"[WORK_REPORT] CRITICAL: log_id missing in response item! log_id={log_id}")
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'InternalServerError', 'message': 'log_id missing in response', 'request_id': request_id})
+                }
+            
             return {
                 "statusCode": 200,
                 "headers": headers,
@@ -445,14 +496,20 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                 'body': json.dumps({'error': 'BadRequest', 'message': str(e)})
             }
         except Exception as e:
-            import traceback
+            # ✅ 保存失敗ログ（必須: logger.exception 相当）
             error_trace = traceback.format_exc()
+            logger.exception(f"[WORK_REPORT] save failed request_id={request_id}, error={str(e)}")
             print(f"[PUT /work-report] request_id={request_id}: Unexpected error - {str(e)}")
             print(f"[PUT /work-report] request_id={request_id}: Traceback:\n{error_trace}")
+            # ✅ 必須: 保存失敗時は絶対に200を返さない
             return {
                 'statusCode': 500,
                 'headers': headers,
-                'body': json.dumps({'error': 'InternalServerError', 'message': 'An unexpected error occurred', 'request_id': request_id})
+                'body': json.dumps({
+                    'error': 'InternalServerError',
+                    'message': 'An unexpected error occurred',
+                    'request_id': request_id
+                }, ensure_ascii=False)
             }
 
     # POST /work-report/submit
@@ -497,7 +554,11 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
 
     # PATCH /work-report/{log_id}
     # 状態遷移: draft -> submitted（Worker 用）
-    if method == 'PATCH' and len(parts) >= 3 and parts[1] == 'work-report':
+    # ✅ デバッグ: 分岐マッチ確認
+    logger.info("[DEBUG] Checking PATCH /work-report/{log_id}: method=%s (==PATCH? %s), parts=%s, len(parts)=%d, parts[1]=%s (==work-report? %s)", 
+                method_upper, method_upper == 'PATCH', parts, len(parts), parts[1] if len(parts) > 1 else None, parts[1] == 'work-report' if len(parts) > 1 else False)
+    
+    if method_upper == 'PATCH' and len(parts) >= 3 and parts[1] == 'work-report':
         log_id = parts[2]
         try:
             body = json.loads(event.get('body') or '{}')
@@ -532,6 +593,11 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
             # 提出時に個別URL用の share_token を発行（既にある場合は上書きしない）
             share_token = item.get('share_token') or uuid.uuid4().hex
 
+            # ✅ 保存処理ログ（直前）
+            table_name = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-reports')
+            logger.info("[WORK_REPORT] submitting log_id=%s, table=%s", log_id, table_name)
+            print(f"[PATCH /work-report/{log_id}] About to submit: log_id={log_id}, table={table_name}")
+            
             updated = table.update_item(
                 Key={'log_id': log_id},
                 UpdateExpression="SET #st=:st, history=:hist, updated_at=:at, share_token=:share, version=version + :one",
@@ -539,14 +605,46 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                 ExpressionAttributeValues={':st': 'submitted', ':hist': history, ':at': now_iso, ':share': share_token, ':one': 1},
                 ReturnValues="ALL_NEW"
             )
-            return {'statusCode': 200, 'headers': headers, 'body': json.dumps(updated['Attributes'], ensure_ascii=False)}
+            
+            # ✅ 保存処理ログ（直後）
+            logger.info("[WORK_REPORT] submitted log_id=%s, table=%s", log_id, table_name)
+            print(f"[PATCH /work-report/{log_id}] Submitted successfully: log_id={log_id}, table={table_name}")
+            updated_item = updated['Attributes']
+            
+            # ✅ 必須: log_id が確実に含まれることを確認
+            if not updated_item.get('log_id'):
+                logger.error(f"[WORK_REPORT] CRITICAL: log_id missing in PATCH response! log_id={log_id}")
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'InternalServerError', 'message': 'log_id missing in response'}, ensure_ascii=False)
+                }
+            
+            # ✅ 保存成功ログ（必須）
+            logger.info(f"[WORK_REPORT] submitted log_id={log_id}, worker_id={worker_id}, state=submitted")
+            print(f"[PATCH /work-report/{log_id}] Success - state=submitted")
+            
+            return {'statusCode': 200, 'headers': headers, 'body': json.dumps(updated_item, ensure_ascii=False)}
         except Exception as e:
-            return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
+            # ✅ 保存失敗ログ（必須: logger.exception 相当）
+            error_trace = traceback.format_exc()
+            logger.exception(f"[WORK_REPORT] submit failed log_id={log_id}, error={str(e)}")
+            print(f"[PATCH /work-report/{log_id}] Error: {str(e)}\n{error_trace}")
+            # ✅ 必須: 保存失敗時は絶対に200を返さない
+            return {
+                'statusCode': 500,
+                'headers': headers,
+                'body': json.dumps({'error': 'InternalServerError', 'message': str(e)}, ensure_ascii=False)
+            }
 
     # PATCH /work-report  (bodyで対象を指定する互換パス)
     # - UI/クライアントが /work-report/{log_id} を未使用の場合の救済
     # - PUT と同じキー（worker_id + report_date）または log_id で対象を特定
-    if method == 'PATCH' and path == '/work-report':
+    # ✅ デバッグ: 分岐マッチ確認
+    logger.info("[DEBUG] Checking PATCH /work-report (compat): method=%s (==PATCH? %s), path=%s (==/work-report? %s)", 
+                method_upper, method_upper == 'PATCH', path_normalized, path_normalized == '/work-report')
+    
+    if method_upper == 'PATCH' and path_normalized == '/work-report':
         request_id = event.get('requestContext', {}).get('requestId', 'unknown')
         try:
             body = json.loads(event.get('body') or '{}')
@@ -656,6 +754,11 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
             ))
             share_token = item.get('share_token') or uuid.uuid4().hex
 
+            # ✅ 保存処理ログ（直前）
+            table_name = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-reports')
+            logger.info("[WORK_REPORT] submitting (compat) log_id=%s, table=%s", log_id, table_name)
+            print(f"[PATCH /work-report (compat)] About to submit: log_id={log_id}, table={table_name}")
+
             try:
                 updated = table.update_item(
                     Key={'log_id': log_id},
@@ -696,6 +799,10 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                         }, ensure_ascii=False)
                     }
                 raise
+            
+            # ✅ 保存処理ログ（直後）
+            logger.info("[WORK_REPORT] submitted (compat) log_id=%s, table=%s", log_id, table_name)
+            print(f"[PATCH /work-report (compat)] Submitted successfully: log_id={log_id}, table={table_name}")
 
             return {'statusCode': 200, 'headers': headers, 'body': json.dumps(updated['Attributes'], ensure_ascii=False)}
 
@@ -704,7 +811,11 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
         except Exception as e:
             return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': 'InternalServerError', 'message': str(e)}, ensure_ascii=False)}
 
-    return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Not found'})}
+    # ✅ 未マッチ時の警告（必須）
+    logger.warning("[WORK_REPORT] unmatched route: method=%s path=%s (normalized: %s), parts=%s", 
+                  method_upper, path, path_normalized, parts)
+    print(f"[WORK_REPORT] WARNING: Unmatched route - method={method_upper}, path={path} (normalized: {path_normalized}), parts={parts}")
+    return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Not found'}, ensure_ascii=False)}
 
 def handle_universal_admin_work_reports(event, headers, path, method, user_info, is_hr_admin):
     """
@@ -852,13 +963,14 @@ def handle_admin_work_reports(event, headers, path, method, user_info, is_hr_adm
     """
     管理者向け業務報告API（/admin/work-reports 複数形）
     ルールA〜Gに準拠。GET /admin/work-reports/{id} は管理者または報告本人（worker_id 一致）も可。
+    すべてのレスポンス（エラー含む）に CORS ヘッダが含まれることを保証（headers は lambda_work_reports.py で CORS 付きで渡される）。
     """
     if headers is None:
         headers = {}
     if not user_info:
-        return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'})}
+        return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)}
     if not path:
-        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': 'Missing path', 'exception_type': 'ValueError'})}
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': 'Missing path', 'exception_type': 'ValueError'}, ensure_ascii=False)}
 
     parts = path.split('/')
     parts = [p for p in parts if p]  # 空文字を除去

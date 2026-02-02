@@ -1025,19 +1025,26 @@ def lambda_handler(event, context):
     # パスを正規化（末尾のスラッシュを削除、先頭のスラッシュを保持）
     # ステージパス（/prod, /dev など）を除去
     normalized_path = path.rstrip('/') if path else ''
-    if normalized_path.startswith('/prod/'):
-        normalized_path = normalized_path[6:]  # '/prod/' を除去
-    elif normalized_path.startswith('/stg/'):
-        normalized_path = normalized_path[5:]  # '/stg/' を除去
-    elif normalized_path.startswith('/dev/'):
-        normalized_path = normalized_path[5:]  # '/dev/' を除去
-    elif normalized_path.startswith('/stage/'):
-        normalized_path = normalized_path[7:]  # '/stage/' を除去
+    print(f"DEBUG: normalized_path (before stage removal)={normalized_path}")
+    
+    # stage 除去（/prod/clients → /clients, /prod → /）
+    for stage in ('/prod', '/stg', '/dev', '/stage', '/test'):
+        if normalized_path == stage:
+            normalized_path = '/'
+            break
+        elif normalized_path.startswith(stage + '/'):
+            normalized_path = normalized_path[len(stage) + 1:]  # stage + '/' を除去
+            break
+    
+    print(f"DEBUG: normalized_path (after stage removal)={normalized_path}")
+    
     # 先頭にスラッシュがない場合は追加、再度末尾のスラッシュを除去して耐性を持たせる
     if normalized_path and not normalized_path.startswith('/'):
         normalized_path = '/' + normalized_path
     if normalized_path and len(normalized_path) > 1:
         normalized_path = normalized_path.rstrip('/')
+    
+    print(f"DEBUG: normalized_path (final)={normalized_path}")
     
     try:
         # パスに応じて処理を分岐

@@ -207,39 +207,74 @@ def handle_upload_put(event, headers):
 
 
 def _cors_headers(event_headers):
-    """CORS ヘッダー（業務報告専用 API 用）"""
-    origin = (event_headers.get('Origin') or event_headers.get('origin') or '*')
-    return {
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
+    """
+    CORS ヘッダー（業務報告専用 API 用）
+    Origin が https://misesapo.co.jp のときはそれに限定、それ以外は許可しない（本番セキュリティ）。
+    """
+    origin_header = event_headers.get('Origin') or event_headers.get('origin') or ''
+    # 本番: https://misesapo.co.jp のみ許可
+    allowed_origins = ['https://misesapo.co.jp']
+    # 開発用: localhost も許可（必要に応じて追加）
+    if origin_header.startswith('http://localhost:') or origin_header.startswith('https://localhost:'):
+        allowed_origins.append(origin_header)
+    
+    # Origin が許可リストに含まれる場合のみ返す
+    if origin_header in allowed_origins:
+        allow_origin = origin_header
+    else:
+        # 許可されていない Origin の場合は空文字（CORS エラーになるが、セキュリティ上正しい）
+        allow_origin = ''
+    
+    headers = {
+        'Access-Control-Allow-Origin': allow_origin,
+        'Access-Control-Allow-Headers': 'Authorization,Content-Type',
         'Access-Control-Allow-Methods': 'GET,PUT,POST,PATCH,DELETE,OPTIONS',
-        'Content-Type': 'application/json; charset=utf-8',
+        'Vary': 'Origin',
     }
+    # Content-Type は通常レスポンスに付けるが、OPTIONS では不要な場合もあるので呼び出し側で追加
+    return headers
 
 
 def lambda_handler(event, context):
     """
     業務報告専用 API（1x0f73dj2l）からの /work-report・/upload-url・/upload-put のみ処理。
     """
-    path = event.get('path', '') or event.get('requestContext', {}).get('path', '') or ''
-    method = event.get('httpMethod', '') or event.get('requestContext', {}).get('http', {}).get('method', '') or ''
-    normalized_path = (path or '/').split('?')[0]
-    if not normalized_path.startswith('/'):
-        normalized_path = '/' + normalized_path
-    if len(normalized_path) > 1:
-        normalized_path = normalized_path.rstrip('/')
-    # API Gateway の path に stage（/prod, /dev）が含まれる場合を除去（GET /admin/work-reports/{id} 等のルート一致のため）
-    for stage in ('/prod', '/dev', '/test'):
-        if normalized_path.startswith(stage + '/') or normalized_path == stage:
-            normalized_path = normalized_path[len(stage):] or '/'
-            break
+    try:
+        path = event.get('path', '') or event.get('requestContext', {}).get('path', '') or ''
+        method = event.get('httpMethod', '') or event.get('requestContext', {}).get('http', {}).get('method', '') or ''
+        
+        event_headers = _get_headers(event)
+        cors_headers = _cors_headers(event_headers)
+        
+        # OPTIONS（CORS プリフライト）: 早期リターン（path 処理不要）
+        if method == 'OPTIONS':
+            return {'statusCode': 200, 'headers': cors_headers, 'body': ''}
+        
+        normalized_path = (path or '/').split('?')[0]
+        if not normalized_path.startswith('/'):
+            normalized_path = '/' + normalized_path
+        if len(normalized_path) > 1:
+            normalized_path = normalized_path.rstrip('/')
+        # API Gateway の path に stage（/prod, /dev）が含まれる場合を除去（GET /admin/work-reports/{id} 等のルート一致のため）
+        for stage in ('/prod', '/dev', '/test'):
+            if normalized_path.startswith(stage + '/') or normalized_path == stage:
+                normalized_path = normalized_path[len(stage):] or '/'
+                break
 
-    event_headers = _get_headers(event)
-    headers = _cors_headers(event_headers)
-
-    # OPTIONS（CORS プリフライト）
-    if method == 'OPTIONS':
-        return {'statusCode': 200, 'headers': headers, 'body': ''}
+        # 通常レスポンス用ヘッダー（CORS + Content-Type）
+        headers = {**cors_headers, 'Content-Type': 'application/json; charset=utf-8'}
+    except Exception as e:
+        # OPTIONS 処理やヘッダー生成でエラーが発生した場合も CORS ヘッダを返す
+        print(f"[lambda_handler] Error in initial processing: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        error_cors = {
+            'Access-Control-Allow-Origin': event_headers.get('Origin') or event_headers.get('origin') or '',
+            'Access-Control-Allow-Headers': 'Authorization,Content-Type',
+            'Access-Control-Allow-Methods': 'GET,PUT,POST,PATCH,DELETE,OPTIONS',
+            'Vary': 'Origin',
+        }
+        return {'statusCode': 500, 'headers': error_cors, 'body': json.dumps({'error': 'Internal server error'}, ensure_ascii=False)}
 
     if normalized_path == '/upload-url':
         if method == 'POST':
