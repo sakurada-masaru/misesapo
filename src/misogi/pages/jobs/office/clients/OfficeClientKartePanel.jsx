@@ -24,7 +24,7 @@ const FALLBACK_SERVICE_ITEMS = [
   { id: 10, title: 'HACCP', category: 'その他' },
 ];
 
-const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ storeId, store, brands = [], clients = [], getBrandName, getClientName, onBack }, ref) {
+const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ storeId, store, brands = [], clients = [], getBrandName, getClientName, onBack, isLocked = false }, ref) {
   const [karte, setKarte] = useState(() => ensureKarteExists(storeId, store || {}));
   const [serviceItems, setServiceItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -147,6 +147,7 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
         value={karte[key] ?? ''}
         onChange={e => update(key, e.target.value)}
         placeholder={placeholder}
+        disabled={isLocked}
         className="office-karte-panel-input"
       />
     </div>
@@ -159,6 +160,7 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
         onChange={e => update(key, e.target.value)}
         placeholder={placeholder}
         rows={2}
+        disabled={isLocked}
         className="office-karte-panel-input"
       />
     </div>
@@ -166,7 +168,7 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
   const select = (label, key, options) => (
     <div key={key} className="office-karte-panel-field">
       <label>{label}</label>
-      <select value={karte[key] ?? ''} onChange={e => update(key, e.target.value)} className="office-karte-panel-input">
+      <select value={karte[key] ?? ''} onChange={e => update(key, e.target.value)} disabled={isLocked} className="office-karte-panel-input">
         <option value="">選択してください</option>
         {options.map(o => (
           <option key={o.value || o} value={o.value || o}>{o.label || o}</option>
@@ -176,7 +178,7 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
   );
 
   return (
-    <div className="office-client-karte-panel">
+    <div className="office-client-karte-panel" style={{ opacity: isLocked ? 0.6 : 1, pointerEvents: isLocked ? 'none' : 'auto' }}>
       <div className="office-karte-panel-body">
         {/* 基本情報（表示のみ） */}
         <section className="office-karte-panel-section">
@@ -228,7 +230,7 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
           <div className="office-karte-panel-checkgroup">
             {['カウンター席', 'ボックス席', '座敷'].map(name => (
               <label key={name} className="office-karte-panel-check">
-                <input type="checkbox" checked={name === 'カウンター席' ? karte.seat_counter : name === 'ボックス席' ? karte.seat_box : karte.seat_zashiki} onChange={e => update(name === 'カウンター席' ? 'seat_counter' : name === 'ボックス席' ? 'seat_box' : 'seat_zashiki', e.target.checked)} />
+                <input type="checkbox" checked={name === 'カウンター席' ? karte.seat_counter : name === 'ボックス席' ? karte.seat_box : karte.seat_zashiki} onChange={e => update(name === 'カウンター席' ? 'seat_counter' : name === 'ボックス席' ? 'seat_box' : 'seat_zashiki', e.target.checked)} disabled={isLocked} />
                 <span>{name}</span>
               </label>
             ))}
@@ -237,7 +239,7 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
           <div className="office-karte-panel-checkgroup">
             {EQUIPMENT_OPTIONS.map(name => (
               <label key={name} className="office-karte-panel-check">
-                <input type="checkbox" checked={(karte.equipment || []).includes(name)} onChange={() => toggleEquipment(name)} />
+                <input type="checkbox" checked={(karte.equipment || []).includes(name)} onChange={() => toggleEquipment(name)} disabled={isLocked} />
                 <span>{name}</span>
               </label>
             ))}
@@ -266,7 +268,7 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
                 <div className="office-karte-panel-checkgroup">
                   {items.map(s => (
                     <label key={s.id || s.title} className="office-karte-panel-check">
-                      <input type="checkbox" checked={(karte.services || []).includes(s.title)} onChange={() => toggleService(s.title)} />
+                      <input type="checkbox" checked={(karte.services || []).includes(s.title)} onChange={() => toggleService(s.title)} disabled={isLocked} />
                       <span>{s.title}</span>
                     </label>
                   ))}
@@ -286,15 +288,15 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
               {karte.consumables.map((item, i) => (
                 <li key={i} className="office-karte-panel-list-item">
                   <span>{item.name}{item.quantity ? `（${item.quantity}）` : ''}</span>
-                  <button type="button" onClick={() => removeConsumable(i)} className="office-karte-panel-list-remove" aria-label="削除">×</button>
+                  <button type="button" onClick={() => removeConsumable(i)} disabled={isLocked} className="office-karte-panel-list-remove" aria-label="削除">×</button>
                 </li>
               ))}
             </ul>
           )}
           <div className="office-karte-panel-inline">
-            <input type="text" value={consumableName} onChange={e => setConsumableName(e.target.value)} placeholder="品名" className="office-karte-panel-input office-karte-panel-input--small" />
-            <input type="text" value={consumableQuantity} onChange={e => setConsumableQuantity(e.target.value)} placeholder="数量" className="office-karte-panel-input office-karte-panel-input--small" />
-            <button type="button" onClick={addConsumable} className="office-karte-panel-btn office-karte-panel-btn--small">消耗品を追加</button>
+            <input type="text" value={consumableName} onChange={e => setConsumableName(e.target.value)} disabled={isLocked} placeholder="品名" className="office-karte-panel-input office-karte-panel-input--small" />
+            <input type="text" value={consumableQuantity} onChange={e => setConsumableQuantity(e.target.value)} disabled={isLocked} placeholder="数量" className="office-karte-panel-input office-karte-panel-input--small" />
+            <button type="button" onClick={addConsumable} disabled={isLocked} className="office-karte-panel-btn office-karte-panel-btn--small">消耗品を追加</button>
           </div>
         </section>
 
@@ -308,15 +310,15 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
               {karte.cleaning_staff_history.map((item, i) => (
                 <li key={i} className="office-karte-panel-list-item">
                   <span>{item.worker_name || '-'} {item.start_date ? `（${item.start_date}〜）` : ''}</span>
-                  <button type="button" onClick={() => removeStaffHistory(i)} className="office-karte-panel-list-remove" aria-label="削除">×</button>
+                  <button type="button" onClick={() => removeStaffHistory(i)} disabled={isLocked} className="office-karte-panel-list-remove" aria-label="削除">×</button>
                 </li>
               ))}
             </ul>
           )}
           <div className="office-karte-panel-inline">
-            <input type="text" value={staffName} onChange={e => setStaffName(e.target.value)} placeholder="担当者名" className="office-karte-panel-input office-karte-panel-input--small" />
-            <input type="date" value={staffStartDate} onChange={e => setStaffStartDate(e.target.value)} className="office-karte-panel-input office-karte-panel-input--small" />
-            <button type="button" onClick={addStaffHistory} className="office-karte-panel-btn office-karte-panel-btn--small">担当者を追加</button>
+            <input type="text" value={staffName} onChange={e => setStaffName(e.target.value)} disabled={isLocked} placeholder="担当者名" className="office-karte-panel-input office-karte-panel-input--small" />
+            <input type="date" value={staffStartDate} onChange={e => setStaffStartDate(e.target.value)} disabled={isLocked} className="office-karte-panel-input office-karte-panel-input--small" />
+            <button type="button" onClick={addStaffHistory} disabled={isLocked} className="office-karte-panel-btn office-karte-panel-btn--small">担当者を追加</button>
           </div>
         </section>
 

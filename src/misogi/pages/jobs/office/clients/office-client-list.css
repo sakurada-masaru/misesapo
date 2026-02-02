@@ -207,10 +207,15 @@ body.office-client-list-scrollbar::-webkit-scrollbar-thumb:hover {
   padding: 0 5px;
   box-sizing: content-box;
   user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   cursor: col-resize;
   position: relative;
-  z-index: 2;
+  z-index: 10;
   background: rgba(255, 255, 255, 0.06);
+  pointer-events: auto;
+  touch-action: none;
 }
 
 .office-client-list-resizer::before {

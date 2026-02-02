@@ -70,6 +70,7 @@ export default function OfficeClientListPage() {
   const [karteRefreshKey, setKarteRefreshKey] = useState(0); // カルテパネル再読み込み用
   const [leftColumnPercent, setLeftColumnPercent] = useState(50);
   const [resizing, setResizing] = useState(false);
+  const [isLocked, setIsLocked] = useState(false); // 誤操作防止: 鍵がONの時は編集・カルテ操作を無効化
   const [form, setForm] = useState(initialForm());
   const [editLoading, setEditLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -194,11 +195,18 @@ export default function OfficeClientListPage() {
     });
   }, [editLoading, selectedStoreId, stores, brands, clients]);
 
+  /* 店舗が変更されたら鍵をリセット */
+  useEffect(() => {
+    setIsLocked(false);
+  }, [selectedStoreId]);
+
   const onResizeStart = useCallback((e) => {
     e.preventDefault();
+    e.stopPropagation();
     setResizing(true);
 
     const onMove = (moveEvent) => {
+      moveEvent.preventDefault();
       const container = listContainerRef.current;
       if (!container) return;
       const rect = container.getBoundingClientRect();
@@ -206,17 +214,20 @@ export default function OfficeClientListPage() {
       const next = Math.max(20, Math.min(80, percent));
       setLeftColumnPercent(next);
     };
-    const onUp = () => {
+    const onUp = (upEvent) => {
+      upEvent.preventDefault();
       setResizing(false);
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
+      document.body.style.pointerEvents = '';
     };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
+    document.addEventListener('mousemove', onMove, { passive: false });
+    document.addEventListener('mouseup', onUp, { passive: false });
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
+    document.body.style.pointerEvents = 'auto';
   }, []);
 
   const getClientName = (store) => {
@@ -544,6 +555,7 @@ export default function OfficeClientListPage() {
                   <button
                     type="button"
                     onClick={() => setPanelView('edit')}
+                    disabled={isLocked}
                     style={{
                       padding: '10px 16px',
                       fontSize: '0.85rem',
@@ -551,8 +563,9 @@ export default function OfficeClientListPage() {
                       border: `1px solid ${panelView === 'edit' ? 'var(--job-office)' : 'rgba(255,255,255,0.15)'}`,
                       borderRadius: '8px',
                       color: panelView === 'edit' ? '#fff' : 'var(--fg)',
-                      cursor: 'pointer',
+                      cursor: isLocked ? 'not-allowed' : 'pointer',
                       fontWeight: 600,
+                      opacity: isLocked ? 0.5 : 1,
                     }}
                   >
                     基本情報編集
@@ -560,6 +573,7 @@ export default function OfficeClientListPage() {
                   <button
                     type="button"
                     onClick={() => setPanelView('karte')}
+                    disabled={isLocked}
                     style={{
                       padding: '10px 16px',
                       fontSize: '0.85rem',
@@ -567,11 +581,33 @@ export default function OfficeClientListPage() {
                       border: `1px solid ${panelView === 'karte' ? 'var(--job-office)' : 'rgba(255,255,255,0.15)'}`,
                       borderRadius: '8px',
                       color: panelView === 'karte' ? '#fff' : 'var(--fg)',
-                      cursor: 'pointer',
+                      cursor: isLocked ? 'not-allowed' : 'pointer',
                       fontWeight: 600,
+                      opacity: isLocked ? 0.5 : 1,
                     }}
                   >
                     カルテ
+                  </button>
+                  {/* 誤操作防止: 鍵アイコン */}
+                  <button
+                    type="button"
+                    onClick={() => setIsLocked(!isLocked)}
+                    title={isLocked ? '編集を有効化' : '編集を無効化（誤操作防止）'}
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: '1.1rem',
+                      background: isLocked ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.08)',
+                      border: `1px solid ${isLocked ? 'rgba(251, 191, 36, 0.5)' : 'rgba(255,255,255,0.15)'}`,
+                      borderRadius: '8px',
+                      color: isLocked ? '#fbbf24' : 'var(--fg)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: '40px',
+                    }}
+                  >
+                    {isLocked ? '🔒' : '🔓'}
                   </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -579,7 +615,7 @@ export default function OfficeClientListPage() {
                     <button
                       type="button"
                       onClick={handleSave}
-                      disabled={isSubmitting || editLoading}
+                      disabled={isLocked || isSubmitting || editLoading}
                       style={{
                         padding: '8px 20px',
                         fontSize: '0.9rem',
@@ -587,8 +623,9 @@ export default function OfficeClientListPage() {
                         border: '1px solid rgba(255,255,255,0.2)',
                         borderRadius: '8px',
                         color: 'var(--fg)',
-                        cursor: isSubmitting || editLoading ? 'not-allowed' : 'pointer',
+                        cursor: isLocked || isSubmitting || editLoading ? 'not-allowed' : 'pointer',
                         fontWeight: 600,
+                        opacity: isLocked ? 0.5 : 1,
                       }}
                     >
                       {isSubmitting ? '保存中...' : '保存'}
@@ -603,7 +640,7 @@ export default function OfficeClientListPage() {
                         if (p && typeof p.finally === 'function') p.finally(() => setKarteSaving(false));
                         else setKarteSaving(false);
                       }}
-                      disabled={karteSaving}
+                      disabled={isLocked || karteSaving}
                       style={{
                         padding: '8px 20px',
                         fontSize: '0.9rem',
@@ -611,8 +648,9 @@ export default function OfficeClientListPage() {
                         border: '1px solid rgba(255,255,255,0.2)',
                         borderRadius: '8px',
                         color: 'var(--fg)',
-                        cursor: karteSaving ? 'not-allowed' : 'pointer',
+                        cursor: isLocked || karteSaving ? 'not-allowed' : 'pointer',
                         fontWeight: 600,
+                        opacity: isLocked ? 0.5 : 1,
                       }}
                     >
                       {karteSaving ? '保存中...' : '保存'}
@@ -626,6 +664,7 @@ export default function OfficeClientListPage() {
                         forceCreateKarte(selectedStoreId, store);
                         setKarteRefreshKey(k => k + 1);
                       }}
+                      disabled={isLocked}
                       style={{
                         padding: '8px 14px',
                         fontSize: '0.85rem',
@@ -633,8 +672,9 @@ export default function OfficeClientListPage() {
                         border: '1px solid var(--job-office)',
                         borderRadius: '8px',
                         color: '#fff',
-                        cursor: 'pointer',
+                        cursor: isLocked ? 'not-allowed' : 'pointer',
                         fontWeight: 600,
+                        opacity: isLocked ? 0.5 : 1,
                       }}
                     >
                       新規カルテ作成
@@ -677,51 +717,52 @@ export default function OfficeClientListPage() {
                     getBrandName={getBrandName}
                     getClientName={getClientName}
                     onBack={() => setPanelView('edit')}
+                    isLocked={isLocked}
                   />
                 ) : editLoading ? (
                   <p style={{ opacity: 0.7 }}>読み込み中...</p>
                 ) : (
-                  <form onSubmit={handleSave} className="report-page-form" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <form onSubmit={handleSave} className="report-page-form" style={{ display: 'flex', flexDirection: 'column', gap: 12, opacity: isLocked ? 0.6 : 1, pointerEvents: isLocked ? 'none' : 'auto' }}>
                     {/* リストの列順に合わせる：ブランド名・店舗名・法人名・電話・メール・担当者・営業担当者・契約内容 */}
                     <div className="report-page-field">
                       <label>ブランド名</label>
-                      <input type="text" name="brand_name" value={form.brand_name} onChange={handleChange} placeholder="ブランド名を入力" style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <input type="text" name="brand_name" value={form.brand_name} onChange={handleChange} disabled={isLocked} placeholder="ブランド名を入力" style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                     <div className="report-page-field">
                       <label>店舗名 *</label>
-                      <input type="text" name="name" value={form.name} onChange={handleChange} required style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <input type="text" name="name" value={form.name} onChange={handleChange} disabled={isLocked} required style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                     <div className="report-page-field">
                       <label>法人名</label>
-                      <input type="text" name="client_name" value={form.client_name} onChange={handleChange} placeholder="法人名を入力" style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <input type="text" name="client_name" value={form.client_name} onChange={handleChange} disabled={isLocked} placeholder="法人名を入力" style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                     <div className="report-page-field">
                       <label>電話番号</label>
-                      <input type="text" name="phone" value={form.phone} onChange={handleChange} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <input type="text" name="phone" value={form.phone} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                     <div className="report-page-field">
                       <label>メールアドレス</label>
-                      <input type="email" name="email" value={form.email} onChange={handleChange} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <input type="email" name="email" value={form.email} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                     <div className="report-page-field">
                       <label>担当者</label>
-                      <input type="text" name="contact_person" value={form.contact_person} onChange={handleChange} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <input type="text" name="contact_person" value={form.contact_person} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                     <div className="report-page-field">
                       <label>営業担当者</label>
-                      <input type="text" name="assigned_to" value={form.assigned_to} onChange={handleChange} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <input type="text" name="assigned_to" value={form.assigned_to} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                     <div className="report-page-field">
                       <label>契約内容（清掃頻度）</label>
-                      <input type="text" name="cleaning_frequency" value={form.cleaning_frequency} onChange={handleChange} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <input type="text" name="cleaning_frequency" value={form.cleaning_frequency} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                     <div className="report-page-field">
                       <label>URL</label>
-                      <input type="url" name="url" value={form.url} onChange={handleChange} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <input type="url" name="url" value={form.url} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                     <div className="report-page-field">
                       <label>ステータス</label>
-                      <select name="status" value={form.status} onChange={handleChange} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }}>
+                      <select name="status" value={form.status} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }}>
                         {STATUS_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
@@ -729,19 +770,19 @@ export default function OfficeClientListPage() {
                     </div>
                     <div className="report-page-field">
                       <label>獲得者(ミセサポ)</label>
-                      <input type="text" name="acquired_by" value={form.acquired_by} onChange={handleChange} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <input type="text" name="acquired_by" value={form.acquired_by} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                     <div className="report-page-field">
                       <label>紹介者</label>
-                      <input type="text" name="introducer" value={form.introducer} onChange={handleChange} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <input type="text" name="introducer" value={form.introducer} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                     <div className="report-page-field">
                       <label>ニーズ内容</label>
-                      <textarea name="needs_notes" value={form.needs_notes} onChange={handleChange} rows={2} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <textarea name="needs_notes" value={form.needs_notes} onChange={handleChange} disabled={isLocked} rows={2} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                     <div className="report-page-field">
                       <label>実施項目</label>
-                      <textarea name="implementation_items" value={form.implementation_items} onChange={handleChange} rows={2} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      <textarea name="implementation_items" value={form.implementation_items} onChange={handleChange} disabled={isLocked} rows={2} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                     </div>
                   </form>
                 )}
