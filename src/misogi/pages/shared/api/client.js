@@ -31,16 +31,19 @@ export async function apiFetch(path, options = {}) {
   });
   if (!res.ok) {
     let bodyMessage = res.statusText || 'API Error';
+    let bodyText = '';
     try {
-      const text = await res.text();
-      if (text) {
-        const j = JSON.parse(text);
+      bodyText = await res.text();
+      if (bodyText) {
+        const j = JSON.parse(bodyText);
         bodyMessage = j?.message || j?.error || bodyMessage;
       }
     } catch (_) {}
     const err = new Error(bodyMessage);
     err.status = res.status;
     err.response = res;
+    err.url = url;
+    err.body = bodyText;
     throw err;
   }
   return res.json();
@@ -56,16 +59,19 @@ export async function apiFetchWorkReport(path, options = {}) {
   });
   if (!res.ok) {
     let bodyMessage = res.statusText || 'API Error';
+    let bodyText = '';
     try {
-      const text = await res.text();
-      if (text) {
-        const j = JSON.parse(text);
+      bodyText = await res.text();
+      if (bodyText) {
+        const j = JSON.parse(bodyText);
         bodyMessage = j?.message || j?.error || bodyMessage;
       }
     } catch (_) {}
     const err = new Error(bodyMessage);
     err.status = res.status;
     err.response = res;
+    err.url = url;
+    err.body = bodyText;
     throw err;
   }
   return res.json();

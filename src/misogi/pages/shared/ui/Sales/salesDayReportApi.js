@@ -42,6 +42,14 @@ export async function getWorkReportByDate(date) {
 }
 
 /**
+ * 1件取得（楽観ロック 409 時の再取得用）
+ * @param {string} logId
+ */
+export async function getWorkReportById(logId) {
+  return apiFetchWorkReport(`/work-report/${logId}`, { headers: getAuthHeaders() });
+}
+
+/**
  * 補助資料アップロード用 Presigned URL
  */
 export async function getUploadUrl({ filename, mime, size, context, date, storeKey }) {

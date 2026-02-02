@@ -2635,11 +2635,16 @@ def verify_cognito_id_token(id_token):
         return None
 
 
+def _is_master_role(role):
+    """admin または headquarters（マスター＝全閲覧可）"""
+    return role in ('admin', 'headquarters')
+
+
 def check_admin_permission(user_info):
     """
-    管理者権限をチェック
+    管理者権限をチェック（admin または headquarters＝マスター）
     """
-    return user_info.get('role') == 'admin'
+    return _is_master_role(user_info.get('role'))
 
 
 def _get_user_info_from_event(event):
@@ -3762,8 +3767,8 @@ def get_reports(event, headers):
         status_filter = query_params.get('status')
         staff_id_filter = query_params.get('staff_id')
         
-        # 管理者は全レポートを取得、清掃員は自分のレポートのみ
-        is_admin = user_info.get('role') == 'admin'
+        # 管理者・マスターは全レポートを取得、清掃員は自分のレポートのみ
+        is_admin = _is_master_role(user_info.get('role'))
         user_uid = user_info.get('uid')
         
         # フィルター条件を構築
@@ -4369,7 +4374,7 @@ def update_report_by_id(report_id, event, headers):
                 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
             }
         
-        is_admin = user_info.get('role') == 'admin'
+        is_admin = _is_master_role(user_info.get('role'))
         user_uid = user_info.get('uid')
         
         # リクエストボディを取得
@@ -7503,7 +7508,7 @@ def create_or_update_attendance(event, headers):
         user_info = _get_user_info_from_event(event)
         is_admin_request = False
         if user_info and user_info.get('verified'):
-            is_admin_request = (user_info.get('role') == 'admin')
+            is_admin_request = _is_master_role(user_info.get('role'))
         
         # デバッグログ（管理者として判定されたか）
         if is_admin_request:
@@ -10367,7 +10372,7 @@ def create_inventory_item(event, headers):
         id_token = auth_header.replace('Bearer ', '')
         user_info = verify_cognito_id_token(id_token)
         
-        if not user_info or user_info.get('role') != 'admin':
+        if not user_info or not _is_master_role(user_info.get('role')):
             return {
                 'statusCode': 403,
                 'headers': headers,
@@ -10458,7 +10463,7 @@ def update_inventory_item(product_id, event, headers):
         id_token = auth_header.replace('Bearer ', '')
         user_info = verify_cognito_id_token(id_token)
         
-        if not user_info or user_info.get('role') != 'admin':
+        if not user_info or not _is_master_role(user_info.get('role')):
             return {
                 'statusCode': 403,
                 'headers': headers,
@@ -10767,7 +10772,7 @@ def get_inventory_transactions(event, headers):
         
         # クエリパラメータを取得
         query_params = event.get('queryStringParameters') or {}
-        is_admin = user_info.get('role') == 'admin'
+        is_admin = _is_master_role(user_info.get('role'))
         staff_id = user_info.get('uid') or user_info.get('cognito_sub', '')
         
         # フィルター条件

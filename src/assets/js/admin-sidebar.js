@@ -506,28 +506,6 @@
               }
             }
           }
-
-          // APIで取得できない場合のみ、ローカルのworkers.jsonをフォールバックとして使用
-          if (!userId) {
-            console.warn('[AdminSidebar] API取得に失敗、ローカルのworkers.jsonを試行');
-            try {
-              const localResponse = await fetch(`/data/workers.json?t=${timestamp}&_=${Date.now()}`, {
-                cache: 'no-store'
-              });
-              if (localResponse.ok) {
-                const localWorkers = await localResponse.json();
-                if (Array.isArray(localWorkers) && localWorkers.length > 0) {
-                  const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
-                  if (matchingUser && matchingUser.id) {
-                    userId = matchingUser.id;
-                    console.log('[AdminSidebar] Found ID from local workers.json (fallback):', userId);
-                  }
-                }
-              }
-            } catch (e) {
-              console.log('[AdminSidebar] Local workers.json also not available');
-            }
-          }
         } catch (e) {
           console.log('[AdminSidebar] Error fetching user ID:', e);
         }
@@ -801,7 +779,7 @@
    */
   async function hasAdminAccess() {
     const role = await getCurrentUserRole();
-    return role && (role === 'admin' || role === '管理者');
+    return role && (role === 'admin' || role === 'headquarters' || role === '管理者');
   }
 
   /**

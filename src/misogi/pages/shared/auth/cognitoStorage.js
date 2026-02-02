@@ -28,8 +28,8 @@ export function getStoredRole() {
   return user?.role ?? null;
 }
 
-/** admin または office なら true */
-const ALLOWED_ROLES = ['admin', 'office'];
+/** admin / headquarters（マスター）または office なら true */
+const ALLOWED_ROLES = ['admin', 'headquarters', 'office'];
 export function isAdminOrOffice() {
   const role = getStoredRole();
   return role && ALLOWED_ROLES.includes(role);

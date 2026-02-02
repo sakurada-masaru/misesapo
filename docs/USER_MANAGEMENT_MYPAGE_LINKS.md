@@ -3,18 +3,9 @@
 ## 📋 調査日
 2025年1月
 
-## ✅ JSONファイルの同期
+## ユーザーリストの正のソース
 
-### 同期スクリプト
-- **ファイル**: `scripts/sync_workers_json.py`
-- **機能**: AWS APIから最新のユーザー情報を取得して`src/data/workers.json`を更新
-- **修正**: 正規表現のバグを修正（`name.match()` → `re.match()`）
-- **実行結果**: 22名のユーザー情報を同期完了
-
-### 実行方法
-```bash
-python3 scripts/sync_workers_json.py
-```
+workers 一覧の正のソースは **DynamoDB の workers テーブル**（および API `GET /workers`）のみです。`workers.json` は廃止済みです。詳細は `docs/spec/WORKERS_LIST_REFERENCE.md` を参照してください。
 
 ---
 
@@ -92,9 +83,7 @@ if (urlId) {
 4. `misesapo_auth`
 5. Firebase認証情報
 
-**データソースの優先順位**:
-1. ローカルの`/data/workers.json`
-2. AWS API (`/workers/{id}` または `/workers?email={email}`)
+**データソース**: AWS API（`/workers/{id}` または `/workers?email={email}`）のみ。workers 一覧の正のソースは DynamoDB です。
 
 ---
 
@@ -151,6 +140,5 @@ if (u.id && u.id !== 'N/A' && !u.id.startsWith('temp_')) {
 
 ### 📝 注意事項
 - マイページはURLパラメータ（`id`または`email`）でユーザーを識別
-- ローカルの`workers.json`を優先し、見つからない場合にAWS APIから取得
-- JSONファイルの同期は手動実行が必要（自動同期は未実装）
+- ユーザー情報は AWS API（DynamoDB workers）からのみ取得（workers.json は廃止済み）
 

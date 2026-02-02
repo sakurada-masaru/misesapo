@@ -3,14 +3,14 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useFlashTransition } from '../../../shared/ui/ReportTransition/reportTransition';
 import Visualizer from '../Visualizer/Visualizer';
 import { useAuth } from '../../auth/useAuth';
-import { putWorkReport, patchWorkReport, getWorkReportByDate, getUploadUrl, uploadPutToS3 } from './salesDayReportApi';
+import { putWorkReport, patchWorkReport, getWorkReportByDate, getWorkReportById, getUploadUrl, uploadPutToS3 } from './salesDayReportApi';
 
-/** 社内共有URL（report_id で詳細ページへ。認証必須） */
+/** 営業で作成した報告の詳細URL（report_id で詳細ページへ。認証必須）。パスは末尾スラッシュ必須（Vite base /misogi/ で 404 防止） */
 function buildReportShareUrl(reportId) {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const pathname = typeof window !== 'undefined' ? (window.location.pathname || '').replace(/\/$/, '') : '';
-  const base = pathname || '/misogi';
-  return `${origin}${base}#/office/work-reports/${encodeURIComponent(reportId)}`;
+  const base = (pathname || '/misogi').replace(/\/?$/, '/');
+  return `${origin}${base}#/sales/work-reports/${encodeURIComponent(reportId)}`;
 }
 import './sales-day-report.css';
 
@@ -174,6 +174,8 @@ export default function SalesDayReportPage() {
   const [attachmentErrors, setAttachmentErrors] = useState({});
   const [shareUrl, setShareUrl] = useState(null);
   const [shareUrlCopied, setShareUrlCopied] = useState(false);
+  /** 提出成功後にサーバーで読めない場合の警告（保存が別テーブル等で反映されていない） */
+  const [shareVerifyError, setShareVerifyError] = useState(null);
   const fileInputRefs = useRef({});
 
   const updateHeader = useCallback((next) => setHeader((h) => (typeof next === 'function' ? next(h) : { ...h, ...next })), []);
@@ -308,11 +310,23 @@ export default function SalesDayReportPage() {
       setHeader((h) => ({ ...h, saved: { log_id: res.log_id, version: res.version, state: res.state } }));
       setHeaderError('');
     } catch (e) {
-      setHeaderError(e.message || '保存に失敗しました');
+      const msg = e?.message || '保存に失敗しました';
+      setHeaderError(msg);
+      if (msg.includes('another process') || msg.includes('refresh')) {
+        const logId = header.saved?.log_id;
+        if (logId) {
+          getWorkReportById(logId)
+            .then((item) => {
+              setHeader(deserializeHeader(item.description, item));
+              setHeaderError('最新の内容を反映しました。もう一度保存してください。');
+            })
+            .catch(() => {});
+        }
+      }
     } finally {
       setHeaderSaving(false);
     }
-  }, [header, user?.name, validateHeader]);
+  }, [header, user?.name, validateHeader, workDate]);
 
   const handleHeaderSubmit = useCallback(async () => {
     setHeaderSubmitError('');
@@ -326,17 +340,35 @@ export default function SalesDayReportPage() {
     }
     setHeaderSubmitting(true);
     setShareUrl(null);
+    setShareVerifyError(null);
     try {
       const res = await patchWorkReport(header.saved.log_id, { state: 'submitted', version: header.saved.version });
-      setHeader((h) => ({ ...h, saved: { ...h.saved, state: 'submitted', version: (h.saved?.version || 0) + 1 } }));
+      setHeader((h) => ({ ...h, saved: { ...h.saved, state: 'submitted', version: res?.version ?? (h.saved?.version || 0) + 1 } }));
       setHeaderSubmitError('');
-      if (res?.log_id) setShareUrl(buildReportShareUrl(res.log_id));
+      if (res?.log_id) {
+        setShareUrl(buildReportShareUrl(res.log_id));
+        getWorkReportById(res.log_id).catch((err) => {
+          if (err?.status === 404) setShareVerifyError('サーバーに反映されていない可能性があります。管理者に連絡してください。');
+        });
+      }
     } catch (e) {
-      setHeaderSubmitError(e.message || '提出に失敗しました');
+      const msg = e?.message || '提出に失敗しました';
+      setHeaderSubmitError(msg);
+      if (msg.includes('another process') || msg.includes('refresh')) {
+        const logId = header.saved?.log_id;
+        if (logId) {
+          getWorkReportById(logId)
+            .then((item) => {
+              setHeader(deserializeHeader(item.description, item));
+              setHeaderSubmitError('最新の内容を反映しました。もう一度提出してください。');
+            })
+            .catch(() => {});
+        }
+      }
     } finally {
       setHeaderSubmitting(false);
     }
-  }, [header.saved?.log_id, header.saved?.version, header.saved?.state]);
+  }, [header.saved?.log_id, header.saved?.version, header.saved?.state, header.work_date, workDate]);
 
   const handleCaseSave = useCallback(
     async (index) => {
@@ -360,7 +392,19 @@ export default function SalesDayReportPage() {
         const res = await putWorkReport(body);
         updateCase(index, (prev) => ({ ...prev, saved: { log_id: res.log_id, version: res.version, state: res.state } }));
       } catch (e) {
-        setCaseErrors((prev) => ({ ...prev, [index]: e.message || '保存に失敗しました' }));
+        const msg = e?.message || '保存に失敗しました';
+        setCaseErrors((prev) => ({ ...prev, [index]: msg }));
+        if (msg.includes('another process') || msg.includes('refresh')) {
+          const logId = c.saved?.log_id;
+          if (logId) {
+            getWorkReportById(logId)
+              .then((item) => {
+                updateCase(index, () => deserializeCase(item.description, item));
+                setCaseErrors((prev) => ({ ...prev, [index]: '最新の内容を反映しました。もう一度保存してください。' }));
+              })
+              .catch(() => {});
+          }
+        }
       } finally {
         setCaseSaving((prev) => ({ ...prev, [index]: false }));
       }
@@ -380,18 +424,36 @@ export default function SalesDayReportPage() {
       }
       setCaseSaving((prev) => ({ ...prev, [index]: true }));
       setShareUrl(null);
+      setShareVerifyError(null);
       try {
         const res = await patchWorkReport(c.saved.log_id, { state: 'submitted', version: c.saved.version });
-        updateCase(index, (prev) => ({ ...prev, saved: { ...prev.saved, state: 'submitted', version: (prev.saved?.version || 0) + 1 } }));
+        updateCase(index, (prev) => ({ ...prev, saved: { ...prev.saved, state: 'submitted', version: res?.version ?? (prev.saved?.version || 0) + 1 } }));
         setSubmitErrors((prev) => ({ ...prev, [index]: null }));
-        if (res?.log_id) setShareUrl(buildReportShareUrl(res.log_id));
+        if (res?.log_id) {
+          setShareUrl(buildReportShareUrl(res.log_id));
+          getWorkReportById(res.log_id).catch((err) => {
+            if (err?.status === 404) setShareVerifyError('サーバーに反映されていない可能性があります。管理者に連絡してください。');
+          });
+        }
       } catch (e) {
-        setSubmitErrors((prev) => ({ ...prev, [index]: e.message || '提出に失敗しました' }));
+        const msg = e?.message || '提出に失敗しました';
+        setSubmitErrors((prev) => ({ ...prev, [index]: msg }));
+        if (msg.includes('another process') || msg.includes('refresh')) {
+          const logId = c.saved?.log_id;
+          if (logId) {
+            getWorkReportById(logId)
+              .then((item) => {
+                updateCase(index, () => deserializeCase(item.description, item));
+                setSubmitErrors((prev) => ({ ...prev, [index]: '最新の内容を反映しました。もう一度提出してください。' }));
+              })
+              .catch(() => {});
+          }
+        }
       } finally {
         setCaseSaving((prev) => ({ ...prev, [index]: false }));
       }
     },
-    [cases, validateCaseSubmit, updateCase]
+    [cases, validateCaseSubmit, updateCase, header.work_date, workDate]
   );
 
   const addCase = useCallback(() => {
@@ -675,7 +737,7 @@ export default function SalesDayReportPage() {
             role="dialog"
             aria-modal="true"
             aria-label="個別URLを発行しました"
-            onClick={() => { setShareUrl(null); setShareUrlCopied(false); }}
+            onClick={() => { setShareUrl(null); setShareUrlCopied(false); setShareVerifyError(null); }}
             style={{
               position: 'fixed',
               inset: 0,
@@ -702,6 +764,11 @@ export default function SalesDayReportPage() {
               <p style={{ margin: '0 0 12px', fontSize: '0.9rem', color: 'var(--muted, #9ca3af)' }}>
                 社内ログイン後にこのURLで報告詳細を閲覧できます。
               </p>
+              {shareVerifyError && (
+                <p role="alert" style={{ margin: '0 0 12px', fontSize: '0.9rem', color: 'var(--alert, #ff3030)' }}>
+                  {shareVerifyError}
+                </p>
+              )}
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16 }}>
                 <input
                   type="text"
@@ -733,7 +800,7 @@ export default function SalesDayReportPage() {
               <button
                 type="button"
                 className="btn"
-                onClick={() => { setShareUrl(null); setShareUrlCopied(false); }}
+                onClick={() => { setShareUrl(null); setShareUrlCopied(false); setShareVerifyError(null); }}
               >
                 閉じる
               </button>

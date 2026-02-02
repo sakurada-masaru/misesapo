@@ -75,7 +75,7 @@ misesapo-data/                    ← プライベートバケット
 ├── masters/                      ← マスターデータ（本番用）
 │   ├── stores.json
 │   ├── services.json
-│   ├── workers.json
+│   ├── workers.json              ← エクスポート用スナップショットの場合あり。正のソースは DynamoDB workers。
 │   └── providers.json
 ├── backups/                      ← 定期バックアップ
 │   └── YYYY-MM-DD/
@@ -194,7 +194,9 @@ misesapo-static/                  ← Webサイトホスティング（将来）
 }
 ```
 
-### 4.4 清掃員 (workers.json)
+### 4.4 清掃員 (workers) — 正のソースは DynamoDB テーブル `workers`
+
+※ ローカル `workers.json` は廃止済み。一覧は API / DynamoDB のみ。
 
 ```json
 {

@@ -709,16 +709,16 @@
       roleLabel = '管理者';
       roleBg = '#fee2e2';
       roleColor = '#dc2626';
+    } else if (user.role === 'headquarters') {
+      roleLabel = 'マスター';
+      roleBg = '#e0e7ff';
+      roleColor = '#4338ca';
     } else if (user.role === 'manager' || user.role_code === '2') {
       roleLabel = 'マネージャー';
       roleBg = '#ffedd5';
       roleColor = '#c2410c';
     } else if (user.role === 'developer') {
       roleLabel = '開発者';
-      roleBg = '#e0e7ff';
-      roleColor = '#4338ca';
-    } else if (user.role === 'headquarters') {
-      roleLabel = '本部';
       roleBg = '#e0e7ff';
       roleColor = '#4338ca';
     }
@@ -994,9 +994,9 @@
     return jobs.map(job => `< span class="job-badge" > ${escapeHtml(job)}</span > `).join('');
   }
 
-  // ロールが管理者かどうかを判定
+  // ロールが管理者・マスターかどうかを判定（admin / headquarters＝全閲覧可）
   function isAdminRole(role) {
-    return role === 'admin' || role === '管理者';
+    return role === 'admin' || role === 'headquarters' || role === '管理者';
   }
 
   function escapeHtml(text) {
@@ -1007,10 +1007,9 @@
   }
 
   function getRoleLabel(role) {
-    // 管理者のみ表示、その他は空文字を返す
-    if (role === 'admin' || role === '管理者') {
-      return '管理者';
-    }
+    // 管理者・マスターのみ表示
+    if (role === 'admin' || role === '管理者') return '管理者';
+    if (role === 'headquarters') return 'マスター';
     return '';
   }
 
@@ -2069,7 +2068,7 @@
     // 現在そのロールに設定されているユーザーを取得
     const roleUsers = allUsers.filter(u => {
       if (role === 'admin') {
-        return (u.role === 'admin' || u.role === 'other') && u.status === 'active';
+        return (u.role === 'admin' || u.role === 'headquarters' || u.role === 'other') && u.status === 'active';
       }
       return u.role === role && u.status === 'active';
     });

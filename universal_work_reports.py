@@ -36,10 +36,10 @@ def json_dumps_decimal(obj, *args, **kwargs):
 
 json.dumps = json_dumps_decimal
 
-# DynamoDB initialization
-dynamodb = boto3.resource('dynamodb')
-# 業務報告用テーブル。既存の WORK REPORT（UNIVERSAL_WORK_LOGS）は使わない。新テーブルのみ。
-# 環境変数 UNIVERSAL_WORK_LOGS_TABLE で上書き可。未設定時は misesapo-sales-work-reports（新API用）
+# DynamoDB initialization（リージョン明示で保存先を確実に）
+DYNAMODB_REGION = os.environ.get('AWS_REGION', 'ap-northeast-1')
+dynamodb = boto3.resource('dynamodb', region_name=DYNAMODB_REGION)
+# 業務報告用テーブル。環境変数 UNIVERSAL_WORK_LOGS_TABLE で上書き可。未設定時は misesapo-sales-work-reports
 TABLE_NAME = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-reports')
 table = dynamodb.Table(TABLE_NAME)
 
@@ -851,19 +851,25 @@ def handle_universal_admin_work_reports(event, headers, path, method, user_info,
 def handle_admin_work_reports(event, headers, path, method, user_info, is_hr_admin):
     """
     管理者向け業務報告API（/admin/work-reports 複数形）
-    ルールA〜Gに準拠
+    ルールA〜Gに準拠。GET /admin/work-reports/{id} は管理者または報告本人（worker_id 一致）も可。
     """
     if headers is None:
         headers = {}
     if not user_info:
         return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'})}
-    if not is_hr_admin:
-        return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'})}
     if not path:
         return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': 'Missing path', 'exception_type': 'ValueError'})}
 
     parts = path.split('/')
     parts = [p for p in parts if p]  # 空文字を除去
+
+    # GET /admin/work-reports/{id} (詳細) は管理者でなくても報告本人なら閲覧可（/sales/work-reports で開くため）
+    if method == 'GET' and len(parts) == 3 and parts[0] == 'admin' and parts[1] == 'work-reports':
+        report_id = parts[2]
+        return _handle_admin_work_reports_detail(report_id, headers, user_info, is_hr_admin)
+
+    if not is_hr_admin:
+        return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'})}
 
     # GET /admin/payroll/{user_id}/{YYYY-MM} 経理用・ユーザー×年月の月次ビュー（支払対象＝approved のみデフォルト）
     if method == 'GET' and len(parts) == 4 and parts[0] == 'admin' and parts[1] == 'payroll':
@@ -885,11 +891,8 @@ def handle_admin_work_reports(event, headers, path, method, user_info, is_hr_adm
                 body_str = json.dumps({'error': 'Internal error', 'exception_type': type(e).__name__})
             return {'statusCode': 500, 'headers': headers, 'body': body_str}
     
-    # GET /admin/work-reports/{id} (詳細)  path => admin, work-reports, id => len 3
-    if method == 'GET' and len(parts) == 3 and parts[0] == 'admin' and parts[1] == 'work-reports':
-        report_id = parts[2]
-        return _handle_admin_work_reports_detail(report_id, headers, user_info, is_hr_admin)
-    
+    # GET /admin/work-reports/{id} は上で処理済み
+
     # PATCH /admin/work-reports/{id}/state  path => admin, work-reports, id, state => len 4
     if method == 'PATCH' and len(parts) == 4 and parts[0] == 'admin' and parts[1] == 'work-reports' and parts[3] == 'state':
         report_id = parts[2]
@@ -1018,7 +1021,8 @@ def _handle_admin_work_reports_list(event, headers, user_info, is_hr_admin):
         # states のパース（カンマ区切り）
         states = [s.strip() for s in states_str.split(',') if s.strip()] if states_str else []
         if not states:
-            states = ['submitted', 'triaged', 'rejected']  # デフォルト
+            # デフォルト: 下書きも含めて一覧表示（提出済みだけでなく保存済みも見えるようにする）
+            states = ['draft', 'submitted', 'triaged', 'rejected']
         
         # templates のパース
         templates = [t.strip() for t in templates_str.split(',') if t.strip()] if templates_str else []
@@ -1178,7 +1182,8 @@ def _handle_admin_work_reports_list(event, headers, user_info, is_hr_admin):
 
 def _handle_admin_work_reports_detail(report_id, headers, user_info, is_hr_admin):
     """
-    GET /admin/work-reports/{id} 詳細取得
+    GET /admin/work-reports/{id} 詳細取得。
+    管理者は全件、それ以外は報告本人（worker_id 一致）のみ閲覧可。
     """
     try:
         resp = table.get_item(Key={'log_id': report_id})
@@ -1186,6 +1191,12 @@ def _handle_admin_work_reports_detail(report_id, headers, user_info, is_hr_admin
         
         if not item:
             return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Not found'})}
+        
+        # 管理者でない場合は報告本人（worker_id 一致）のみ許可
+        if not is_hr_admin:
+            uid = (user_info or {}).get('uid') or (user_info or {}).get('sub') or ''
+            if item.get('worker_id') != uid:
+                return {'statusCode': 403, 'headers': headers, 'body': json.dumps({'error': 'Forbidden'})}
         
         # HR_V1 の template_data をマスク（ルールE）
         if item.get('template_id') == 'HR_V1' and not is_hr_admin:

@@ -15,9 +15,26 @@ const SignInModal = React.lazy(() => import('../../shared/auth/SignInModal'));
 const JOB_ENTRANCE_KEYS = ['sales', 'cleaning', 'office', 'dev', 'admin'];
 
 /**
+ * workers リスト（GET /api/workers）の role ごとのエントランス振り分け。
+ * docs/spec/WORKERS_LIST_REFERENCE.md の role に合わせる。
+ */
+const ROLE_TO_ENTRANCE = {
+  admin: '/admin/entrance',
+  sales: '/jobs/sales/entrance',
+  office: '/jobs/office/entrance',
+  staff: '/jobs/cleaning/entrance',
+  cleaning: '/jobs/cleaning/entrance',
+  developer: '/jobs/dev/entrance',
+  dev: '/jobs/dev/entrance',
+  operation: '/admin/entrance',
+  human_resources: '/admin/entrance',
+  // headquarters は ROLE_TO_ENTRANCE に含めない → 入室時にジョブ選択を表示（全ジョブに権限あり）
+};
+
+/**
  * Misogi Portal（認証・業務開始意思表示・role により遷移）
  * - 未認証: 「ログイン」→ サインインページへ（ログイン後に Portal へ戻る）
- * - 認証済: 「入室」→ role=admin なら /admin/entrance、single:sales 等なら該当エントランス、それ以外はジョブ選択
+ * - 認証済: 「入室」→ role に応じて ROLE_TO_ENTRANCE で振り分け、該当なしはジョブ選択
  */
 export default function Portal() {
   const navigate = useNavigate();
@@ -29,22 +46,23 @@ export default function Portal() {
 
   function handleEnter() {
     setStarted(true);
-    if (effectiveUser.role === 'admin') {
-      navigate('/admin/entrance');
+    const role = (effectiveUser.role && String(effectiveUser.role).trim()) || '';
+    // workers リストの role で振り分け
+    const path = ROLE_TO_ENTRANCE[role];
+    if (path) {
+      navigate(path);
       return;
     }
-    if (effectiveUser.role && String(effectiveUser.role).startsWith('single:')) {
-      const job = String(effectiveUser.role).replace('single:', '');
-      if (job === 'admin') {
-        navigate('/admin/entrance');
-        return;
-      }
-      if (JOB_ENTRANCE_KEYS.includes(job)) {
-        navigate(`/jobs/${job}/entrance`);
+    // single:xxx 形式の互換
+    if (role.startsWith('single:')) {
+      const job = role.replace('single:', '');
+      const singlePath = job === 'admin' ? '/admin/entrance' : (JOB_ENTRANCE_KEYS.includes(job) ? `/jobs/${job}/entrance` : null);
+      if (singlePath) {
+        navigate(singlePath);
         return;
       }
     }
-    // multi or fallback: 画面に job 選択を表示
+    // 該当なし: ジョブ選択を表示
   }
 
   if (isLoading) {
@@ -90,21 +108,37 @@ export default function Portal() {
           </button>
         </>
       ) : !started ? (
-        <button
-          type="button"
-          className="start-btn entrance-login-btn"
-          onClick={handleEnter}
-          aria-label="業務開始（入室）"
-          style={{ marginTop: 40, position: 'relative', zIndex: 200 }}
-        >
-          <PowerIcon />
-          <span className="start-btn-label">入室</span>
-        </button>
-      ) : effectiveUser.role === 'multi' || !String(effectiveUser.role || '').startsWith('single:') ? (
+        <>
+          {effectiveUser.role && (
+            <p className="job-selector-label" style={{ marginTop: 16, marginBottom: 4, fontSize: '0.75rem', color: 'var(--muted)' }}>
+              現在のロール: {effectiveUser.role}
+            </p>
+          )}
+          <button
+            type="button"
+            className="start-btn entrance-login-btn"
+            onClick={handleEnter}
+            aria-label="業務開始（入室）"
+            style={{ marginTop: 40, position: 'relative', zIndex: 200 }}
+          >
+            <PowerIcon />
+            <span className="start-btn-label">入室</span>
+          </button>
+        </>
+      ) : (() => {
+        const role = (effectiveUser.role && String(effectiveUser.role).trim()) || '';
+        const hasDirectEntrance = !!ROLE_TO_ENTRANCE[role] || (role.startsWith('single:') && (() => { const j = role.replace('single:', ''); return j === 'admin' || JOB_ENTRANCE_KEYS.includes(j); })());
+        return started && !hasDirectEntrance;
+      })() ? (
         <>
           {effectiveUser.name && (
             <p className="job-selector-label" style={{ marginTop: 16, marginBottom: 4, fontSize: '0.85rem', color: 'var(--muted)' }}>
               {effectiveUser.name} さん
+            </p>
+          )}
+          {effectiveUser.role && (
+            <p className="job-selector-label" style={{ marginTop: 4, marginBottom: 4, fontSize: '0.75rem', color: 'var(--muted)', opacity: 0.9 }}>
+              現在のロール: {effectiveUser.role}
             </p>
           )}
           <p className="job-selector-label" style={{ marginTop: 8, marginBottom: 8, fontSize: '0.8rem', color: 'var(--muted)' }}>

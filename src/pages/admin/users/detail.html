@@ -1668,27 +1668,7 @@
               currentUser = await response.json();
             }
           } catch (apiError) {
-            console.warn('[UserDetail] API取得に失敗、ローカルのworkers.jsonを試行:', apiError);
-            // APIで取得できない場合のみ、ローカルのworkers.jsonをフォールバックとして使用
-            try {
-              const timestamp = new Date().getTime();
-              const localResponse = await fetch(`/data/workers.json?t=${timestamp}&_=${Date.now()}`, {
-                cache: 'no-store'
-              });
-              if (localResponse.ok) {
-                const localWorkers = await localResponse.json();
-                if (Array.isArray(localWorkers) && localWorkers.length > 0) {
-                  const matchingUser = localWorkers.find(u => u.id === userId);
-                  if (matchingUser) {
-                    currentUser = matchingUser;
-                    console.log('[UserDetail] Found user from local data (fallback):', matchingUser.name);
-                  }
-                }
-              }
-            } catch (localError) {
-              console.log('[UserDetail] Local workers.json also not available');
-              throw apiError; // 元のAPIエラーを再スロー
-            }
+            throw apiError;
           }
 
           // APIで取得できなかった場合

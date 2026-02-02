@@ -63,8 +63,6 @@
 4. **失敗時**: `aws sts get-caller-identity` で CLI 認証確認。`aws apigateway get-resources --rest-api-id 1x0f73dj2l --region ap-northeast-1` でリソース存在確認
 5. **完了後**: ブラウザで `http://localhost:3334/misogi/#/sales/report-day` をハードリロードし、Network で以下が 403 でないことを確認: `GET /api-wr/work-report?date=...`、`POST /api-wr/upload-url`。**まだ 403 なら以下を収集して報告**: Request URL、Response Headers の `x-amzn-errortype`、Response body 全文。
 
-**補足**: 業務報告専用ゲート（1x0f73dj2l）は `create_work_report_gateway.sh` で作成したため **`/{proxy+}` リソースは存在しません**（/work-report, /upload-url, /upload-put, /work-report/{id} のみ）。別 API で `/{proxy+}` ANY が AWS_IAM の場合は `./scripts/apigw_proxy_auth_to_none.sh` の対象パスに `/{proxy+}` を含めて再実行してください。
-
 #### API Gateway コンソールでの確認・修正手順（業務報告ゲート 1x0f73dj2l）
 
 1. **API Gateway コンソール**で **API ID: 1x0f73dj2l** を開く。
@@ -102,7 +100,7 @@
 **リポジトリのスクリプトで一括実行（推奨）:**
 
 ```bash
-# 既存 API (51bhoxkbxd) の場合
+# 本番 API (51bhoxkbxd) の場合
 ./scripts/apigw_proxy_auth_to_none.sh
 # 業務報告専用ゲート (api-wr) の場合: docs/spec/WORK_REPORT_GATEWAY_URL.txt から API_ID を取得して指定
 ./scripts/apigw_proxy_auth_to_none.sh 1x0f73dj2l

@@ -72,8 +72,8 @@ export class ContextManager {
         const role = window.CognitoAuth.getUserRole(this.user);
         const modes = [];
 
-        // 管理者は全モード使用可能
-        if (role === 'admin' || role === 'developer') {
+        // 管理者・マスターは全モード使用可能
+        if (role === 'admin' || role === 'headquarters' || role === 'developer') {
             return [MODES.ADMIN, MODES.OFFICE, MODES.SALES, MODES.OPERATIONS];
         }
 
@@ -109,7 +109,7 @@ export class ContextManager {
      */
     getDefaultModeForUser() {
         const role = window.CognitoAuth.getUserRole(this.user);
-        if (role === 'admin' || role === 'developer') return 'admin';
+        if (role === 'admin' || role === 'headquarters' || role === 'developer') return 'admin';
         if (role === 'office') return 'office';
         if (role === 'sales') return 'sales';
         return 'operations';

@@ -42,6 +42,7 @@ jobs:
       - name: Build misogi
         env:
           VITE_API_BASE: ${{ vars.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod' }}
+          VITE_WORK_REPORT_API_BASE: ${{ vars.VITE_WORK_REPORT_API_BASE || 'https://1x0f73dj2l.execute-api.ap-northeast-1.amazonaws.com/prod' }}
         run: |
           if [ -f CNAME ]; then
             export VITE_BASE_PATH="/misogi/"
@@ -102,4 +103,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-

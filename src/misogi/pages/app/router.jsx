@@ -78,6 +78,7 @@ export default function Router() {
       {/* /misogi/#/admin/work-reports で確実に表示 */}
       <Route path="/admin/work-reports" element={<AdminWorkReportsPage />} />
       <Route path="/office/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
+      <Route path="/sales/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
       <Route path="/office/payroll/:userId/:yyyyMm" element={<OfficePayrollMonthPage />} />
       {/* 廃止: 旧 /report/:shareToken。参照が残っている環境でクラッシュしないようフォールバック */}
       <Route path="/report/*" element={<ReportLegacyRedirect />} />

@@ -12,7 +12,7 @@
 | stores.json | stores | 195 | 店舗マスター |
 | users.json | users | 164 | ユーザー（顧客/清掃員/営業/管理者） |
 | schedules.json | service_jobs | 2046 | スケジュール（定期/スポット契約） |
-| workers.json | provider_members | 4 | 清掃員 |
+| workers（DynamoDB） | workers | — | 清掃員・従業員（正のソースは DynamoDB。workers.json は廃止） |
 | providers.json | providers | 1 | パートナー企業 |
 | services.json | items | 32 | サービス種別マスター |
 | store_services.json | store_items | 917 | 店舗×サービス紐付け |
@@ -268,7 +268,7 @@ stores (195)
 ### Phase 2: データ補完が必要な機能
 
 1. **ユーザーロール管理** - users.jsonにroleフィールド追加
-2. **清掃員詳細** - workers.jsonにname, skills追加
+2. **清掃員詳細** - DynamoDB workers に name, skills 等（workers.json は廃止）
 3. **担当営業紐付け** - stores.jsonにsales_id追加
 
 ### Phase 3: 新規テーブルが必要な機能

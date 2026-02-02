@@ -85,8 +85,7 @@ response = WORKERS_TABLE.scan(ConsistentRead=True)
 2. AWS API（フォールバック）
 
 ### 変更後
-1. **AWS API**（最優先、強整合性読み取り）
-2. ローカルJSONファイル（APIが失敗した場合のみ）
+1. **AWS API**（唯一のソース、強整合性読み取り）。`workers.json` は廃止済みで、workers 一覧の正のソースは DynamoDB のみです。
 
 ---
 

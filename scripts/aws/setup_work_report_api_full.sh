@@ -1,13 +1,14 @@
 #!/bin/bash
 # ワークレポート API を一から揃える（リソースが無ければ作成、認証 NONE、Lambda プロキシ、prod デプロイ）
-# 実行: ./scripts/aws/setup_work_report_api_full.sh [API_ID]
+# 実行: ./scripts/aws/setup_work_report_api_full.sh [API_ID] [LAMBDA_NAME]
+# デフォルト: API 1x0f73dj2l（業務報告専用）、Lambda misesapo-work-reports（vite /api-wr のプロキシ先）
 # 仕様: docs/spec/WORK_REPORT_API_SPEC.md
 
 set -e
-REST_API_ID="${1:-51bhoxkbxd}"
+REST_API_ID="${1:-1x0f73dj2l}"
+LAMBDA_FUNCTION_NAME="${2:-misesapo-work-reports}"
 REGION="ap-northeast-1"
 STAGE="prod"
-LAMBDA_FUNCTION_NAME="misesapo-reports"
 LAMBDA_ARN="arn:aws:lambda:${REGION}:475462779604:function:${LAMBDA_FUNCTION_NAME}:${STAGE}"
 
 echo "=============================================="
@@ -136,6 +137,32 @@ if [ -z "$WORK_REPORT_ID_RESOURCE_ID" ] || [ "$WORK_REPORT_ID_RESOURCE_ID" = "nu
   aws apigateway put-integration-response --rest-api-id "$REST_API_ID" --resource-id "$WORK_REPORT_ID_RESOURCE_ID" --http-method OPTIONS --status-code 200 --response-parameters '{"method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'","method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,PUT,POST,PATCH,DELETE,OPTIONS'"'"'"}' --region "$REGION" 2>/dev/null || true
 else
   echo "[/work-report/{id}] は既に存在します (id: $WORK_REPORT_ID_RESOURCE_ID)"
+fi
+
+# --- /admin/{proxy+} が無ければ作成（管理一覧・詳細・state・payroll 用）---
+RESOURCES_JSON=$(aws apigateway get-resources --rest-api-id "$REST_API_ID" --region "$REGION" --output json)
+ADMIN_ID=$(echo "$RESOURCES_JSON" | jq -r '.items[] | select(.path == "/admin") | .id')
+ADMIN_PROXY_ID=$(echo "$RESOURCES_JSON" | jq -r '.items[] | select(.path == "/admin/{proxy+}") | .id')
+
+if [ -z "$ADMIN_ID" ] || [ "$ADMIN_ID" = "null" ]; then
+  echo ""
+  echo "[/admin] リソースが無いため作成します..."
+  ADMIN_ID=$(aws apigateway create-resource --rest-api-id "$REST_API_ID" --region "$REGION" --parent-id "$ROOT_ID" --path-part "admin" --query "id" --output text)
+  echo "  /admin (id: $ADMIN_ID) を作成しました"
+fi
+
+if [ -z "$ADMIN_PROXY_ID" ] || [ "$ADMIN_PROXY_ID" = "null" ]; then
+  echo ""
+  echo "[/admin/{proxy+}] リソースが無いため作成します（管理一覧・詳細・payroll 用）..."
+  ADMIN_PROXY_ID=$(aws apigateway create-resource --rest-api-id "$REST_API_ID" --region "$REGION" --parent-id "$ADMIN_ID" --path-part "{proxy+}" --query "id" --output text)
+  echo "  /admin/{proxy+} (id: $ADMIN_PROXY_ID) を作成しました"
+  aws apigateway put-method --rest-api-id "$REST_API_ID" --resource-id "$ADMIN_PROXY_ID" --http-method ANY --authorization-type NONE --region "$REGION"
+  aws apigateway put-integration --rest-api-id "$REST_API_ID" --resource-id "$ADMIN_PROXY_ID" --http-method ANY --type AWS_PROXY --integration-http-method POST --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" --region "$REGION"
+  aws apigateway put-method --rest-api-id "$REST_API_ID" --resource-id "$ADMIN_PROXY_ID" --http-method OPTIONS --authorization-type NONE --region "$REGION" 2>/dev/null || true
+  aws apigateway put-integration --rest-api-id "$REST_API_ID" --resource-id "$ADMIN_PROXY_ID" --http-method OPTIONS --type MOCK --request-templates '{"application/json":"{\"statusCode\":200}"}' --region "$REGION" 2>/dev/null || true
+  aws lambda add-permission --function-name "${LAMBDA_FUNCTION_NAME}:${STAGE}" --statement-id "apigw-admin-proxy-$(date +%s)-${RANDOM}" --action lambda:InvokeFunction --principal apigateway.amazonaws.com --source-arn "arn:aws:execute-api:${REGION}:475462779604:${REST_API_ID}/*/*/admin/*" --region "$REGION" 2>/dev/null || true
+else
+  echo "[/admin/{proxy+}] は既に存在します (id: $ADMIN_PROXY_ID)"
 fi
 
 echo ""

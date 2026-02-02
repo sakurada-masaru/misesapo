@@ -1,10 +1,13 @@
 /**
- * 業務報告（管理）用 API
- * GET /admin/work-reports … 一覧（from/to, states）※本番ゲート /api
- * GET /work-report?date=… … 作業者用・自分の報告のみ（専用ゲート /api-wr = 1x0f73dj2l）
+ * 業務報告（管理・作業者）用 API（すべて専用ゲート /api-wr = 1x0f73dj2l）
+ * GET /work-report?date=… … 作業者用・自分の報告のみ
+ * GET /admin/work-reports … 管理一覧（from/to, states）
+ * GET /admin/work-reports/{id} … 詳細
+ * PATCH /admin/work-reports/{id}/state … 状態変更
+ * GET /admin/payroll/{user_id}/{YYYY-MM} … 経理用月次
  */
 
-import { apiFetch, apiFetchWorkReport } from './client';
+import { apiFetchWorkReport } from './client';
 import { getAuthHeaders } from '../auth/cognitoStorage';
 
 /**
@@ -32,7 +35,7 @@ export async function getAdminWorkReports(params = {}) {
   if (params.limit != null) q.set('limit', String(params.limit));
   const qs = q.toString();
   const url = qs ? `/admin/work-reports?${qs}` : '/admin/work-reports';
-  const res = await apiFetch(url, { headers: getAuthHeaders() });
+  const res = await apiFetchWorkReport(url, { headers: getAuthHeaders() });
   return res?.items ?? res?.rows ?? [];
 }
 
@@ -41,7 +44,7 @@ export async function getAdminWorkReports(params = {}) {
  * GET /admin/work-reports/{report_id}
  */
 export async function getAdminWorkReportDetail(reportId) {
-  return apiFetch(`/admin/work-reports/${encodeURIComponent(reportId)}`, { headers: getAuthHeaders() });
+  return apiFetchWorkReport(`/admin/work-reports/${encodeURIComponent(reportId)}`, { headers: getAuthHeaders() });
 }
 
 /**
@@ -52,7 +55,7 @@ export async function getAdminWorkReportDetail(reportId) {
  *   - to: 遷移先状態（rejected のときは reason または comment 必須）
  */
 export async function patchAdminWorkReportState(reportId, body) {
-  return apiFetch(`/admin/work-reports/${encodeURIComponent(reportId)}/state`, {
+  return apiFetchWorkReport(`/admin/work-reports/${encodeURIComponent(reportId)}/state`, {
     method: 'PATCH',
     headers: getAuthHeaders(),
     body: JSON.stringify(body),
@@ -72,5 +75,5 @@ export async function getAdminPayrollMonth(userId, yyyyMm, params = {}) {
   const qs = q.toString();
   const path = `/admin/payroll/${encodeURIComponent(userId)}/${encodeURIComponent(yyyyMm)}`;
   const url = qs ? `${path}?${qs}` : path;
-  return apiFetch(url, { headers: getAuthHeaders() });
+  return apiFetchWorkReport(url, { headers: getAuthHeaders() });
 }

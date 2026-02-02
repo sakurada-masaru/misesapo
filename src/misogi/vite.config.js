@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// 業務報告専用ゲート（1x0f73dj2l = misesapo-work-report）を /api-wr で使用。/api より先に定義すること。
+// 業務報告専用ゲート（1x0f73dj2l = misesapo-work-report）。/api より先に定義すること。
 const WORK_REPORT_GATEWAY = 'https://1x0f73dj2l.execute-api.ap-northeast-1.amazonaws.com/prod';
 const proxy = {
   '/api-wr': {
@@ -22,7 +22,24 @@ const proxy = {
 };
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // /misogi のみ（末尾スラッシュなし）で開いたときに 404 にならないよう /misogi/ へリダイレクト
+    {
+      name: 'redirect-misogi-to-misogi-slash',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url === '/misogi' && req.method === 'GET') {
+            res.statusCode = 302;
+            res.setHeader('Location', '/misogi/');
+            res.end();
+            return;
+          }
+          next();
+        });
+      },
+    },
+  ],
   base: '/misogi/',
   define: {
     // amazon-cognito-identity-js の依存 (buffer) が Node の global を参照するため、ブラウザ用に差し替え

@@ -98,17 +98,9 @@
 
 ---
 
-### 原因4: ローカルJSONファイルが古い
+### 原因4: （参考）workers リストについて
 
-**問題**:
-- フォールバックとして使用される `workers.json` が古い
-
-**確認方法**:
-- `src/data/workers.json` を確認
-- 最新のデータと比較
-
-**解決策**:
-- `scripts/sync_workers_json.py` を実行して同期する
+**現在**: workers 一覧の正のソースは **DynamoDB workers テーブル**（および API）のみです。`workers.json` は廃止済みのため、ローカルJSONの古さが原因の不整合はありません。一覧は `python3 scripts/list_workers_table.py` で確認できます。
 
 ---
 

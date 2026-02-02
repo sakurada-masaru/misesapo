@@ -27,6 +27,7 @@ function isFullscreenPath(pathname) {
   if (pathname === '/admin/work-reports') return true;
   if (pathname.startsWith('/office/payroll/')) return true;
   if (pathname.startsWith('/office/work-reports/')) return true;
+  if (pathname.startsWith('/sales/work-reports/')) return true;
   return false;
 }
 

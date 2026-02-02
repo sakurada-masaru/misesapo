@@ -302,11 +302,11 @@
   }
 
   /**
-   * 管理者ロールかどうか
+   * 管理者ロールかどうか（マスター＝全閲覧可を含む）
    */
   function isAdmin() {
     const role = getCurrentRole();
-    return ['admin', 'developer', 'master'].includes(role);
+    return ['admin', 'headquarters', 'developer', 'master'].includes(role);
   }
 
   /**
@@ -314,7 +314,7 @@
    */
   function isSales() {
     const role = getCurrentRole();
-    return ['concierge', 'admin', 'developer', 'master'].includes(role);
+    return ['concierge', 'admin', 'headquarters', 'developer', 'master'].includes(role);
   }
 
   /**

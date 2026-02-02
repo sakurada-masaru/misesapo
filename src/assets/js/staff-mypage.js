@@ -538,39 +538,6 @@ async function loadCurrentUser() {
           }
         }
       }
-
-      // APIで取得できない場合のみ、ローカルのworkers.jsonをフォールバックとして使用
-      if (!currentUser || !currentUser.id) {
-        console.warn('[Mypage] API取得に失敗、ローカルのworkers.jsonを試行');
-        try {
-          const localResponse = await fetch(`/data/workers.json?t=${timestamp}&_=${Date.now()}`, {
-            cache: 'no-store'
-          });
-          if (localResponse.ok) {
-            const localWorkers = await localResponse.json();
-            if (Array.isArray(localWorkers) && localWorkers.length > 0) {
-              // メールアドレスで検索
-              if (userEmail) {
-                const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
-                if (matchingUser) {
-                  currentUser = matchingUser;
-                  console.log('[Mypage] Found user from local data (fallback):', matchingUser.name);
-                }
-              }
-              // IDで検索
-              if (!currentUser && userId) {
-                const matchingUser = localWorkers.find(u => u.id === userId);
-                if (matchingUser) {
-                  currentUser = matchingUser;
-                  console.log('[Mypage] Found user by ID from local data (fallback):', matchingUser.name);
-                }
-              }
-            }
-          }
-        } catch (localError) {
-          console.log('[Mypage] Local workers.json also not available');
-        }
-      }
     } catch (error) {
       console.error('Error fetching user info:', error);
     }
