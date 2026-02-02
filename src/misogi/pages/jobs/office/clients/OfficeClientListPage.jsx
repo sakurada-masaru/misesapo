@@ -8,7 +8,17 @@ import '../../../shared/styles/components.css';
 import './office-client-list.css';
 import './office-client-karte-panel.css';
 
-const API_BASE = '/api';
+// API ベースURL: 本番環境では直接API Gatewayエンドポイントを使用
+const API_BASE = (() => {
+  if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
+    return '/api';
+  }
+  if (import.meta.env.DEV) {
+    return '/api';
+  }
+  // 本番環境: 直接API Gatewayエンドポイントを使用
+  return import.meta.env.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+})();
 const STATUS_OPTIONS = [
   { value: 'active', label: '稼働中' },
   { value: 'contract_in_progress', label: '契約作業中' },

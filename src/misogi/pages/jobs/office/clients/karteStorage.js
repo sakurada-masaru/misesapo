@@ -6,7 +6,17 @@
 import { createKarteForStore, mergeKarteWithTemplate } from './karteTemplate.js';
 
 const STORAGE_KEY_PREFIX = 'chart_';
-const API_BASE = '/api';
+// API ベースURL: 本番環境では直接API Gatewayエンドポイントを使用
+const API_BASE = (() => {
+  if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
+    return '/api';
+  }
+  if (import.meta.env?.DEV) {
+    return '/api';
+  }
+  // 本番環境: 直接API Gatewayエンドポイントを使用
+  return import.meta.env?.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+})();
 
 function getStorageKey(storeId) {
   return `${STORAGE_KEY_PREFIX}${storeId}`;

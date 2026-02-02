@@ -343,16 +343,31 @@ export default function SalesDayReportPage() {
     setShareVerifyError(null);
     try {
       const res = await patchWorkReport(header.saved.log_id, { state: 'submitted', version: header.saved.version });
-      setHeader((h) => ({ ...h, saved: { ...h.saved, state: 'submitted', version: res?.version ?? (h.saved?.version || 0) + 1 } }));
-      setHeaderSubmitError('');
-      if (res?.log_id) {
-        setShareUrl(buildReportShareUrl(res.log_id));
-        getWorkReportById(res.log_id).catch((err) => {
-          if (err?.status === 404) setShareVerifyError('サーバーに反映されていない可能性があります。管理者に連絡してください。');
-        });
+      
+      // ✅ 必須: log_id がレスポンスに含まれている場合のみ共有URLを表示
+      if (!res || !res.log_id) {
+        const errorMsg = res ? '保存に失敗しました（log_idが返ってきません）' : '提出に失敗しました（レスポンスが空です）';
+        console.error('[handleHeaderSubmit] Missing log_id in response:', res);
+        setHeaderSubmitError(errorMsg);
+        return;
       }
+      
+      setHeader((h) => ({ ...h, saved: { ...h.saved, state: 'submitted', version: res.version ?? (h.saved?.version || 0) + 1 } }));
+      setHeaderSubmitError('');
+      
+      // log_id が確実にある場合のみ共有URLを設定
+      setShareUrl(buildReportShareUrl(res.log_id));
+      
+      // 検証: サーバーで実際に読めるか確認
+      getWorkReportById(res.log_id).catch((err) => {
+        console.error('[handleHeaderSubmit] Failed to verify saved report:', err);
+        if (err?.status === 404) {
+          setShareVerifyError('サーバーに反映されていない可能性があります。管理者に連絡してください。');
+        }
+      });
     } catch (e) {
-      const msg = e?.message || '提出に失敗しました';
+      const msg = e?.message || e?.body || '提出に失敗しました';
+      console.error('[handleHeaderSubmit] Error:', e);
       setHeaderSubmitError(msg);
       if (msg.includes('another process') || msg.includes('refresh')) {
         const logId = header.saved?.log_id;
@@ -427,16 +442,31 @@ export default function SalesDayReportPage() {
       setShareVerifyError(null);
       try {
         const res = await patchWorkReport(c.saved.log_id, { state: 'submitted', version: c.saved.version });
-        updateCase(index, (prev) => ({ ...prev, saved: { ...prev.saved, state: 'submitted', version: res?.version ?? (prev.saved?.version || 0) + 1 } }));
-        setSubmitErrors((prev) => ({ ...prev, [index]: null }));
-        if (res?.log_id) {
-          setShareUrl(buildReportShareUrl(res.log_id));
-          getWorkReportById(res.log_id).catch((err) => {
-            if (err?.status === 404) setShareVerifyError('サーバーに反映されていない可能性があります。管理者に連絡してください。');
-          });
+        
+        // ✅ 必須: log_id がレスポンスに含まれている場合のみ共有URLを表示
+        if (!res || !res.log_id) {
+          const errorMsg = res ? '保存に失敗しました（log_idが返ってきません）' : '提出に失敗しました（レスポンスが空です）';
+          console.error('[handleCaseSubmit] Missing log_id in response:', res);
+          setSubmitErrors((prev) => ({ ...prev, [index]: errorMsg }));
+          return;
         }
+        
+        updateCase(index, (prev) => ({ ...prev, saved: { ...prev.saved, state: 'submitted', version: res.version ?? (prev.saved?.version || 0) + 1 } }));
+        setSubmitErrors((prev) => ({ ...prev, [index]: null }));
+        
+        // log_id が確実にある場合のみ共有URLを設定
+        setShareUrl(buildReportShareUrl(res.log_id));
+        
+        // 検証: サーバーで実際に読めるか確認
+        getWorkReportById(res.log_id).catch((err) => {
+          console.error('[handleCaseSubmit] Failed to verify saved report:', err);
+          if (err?.status === 404) {
+            setShareVerifyError('サーバーに反映されていない可能性があります。管理者に連絡してください。');
+          }
+        });
       } catch (e) {
-        const msg = e?.message || '提出に失敗しました';
+        const msg = e?.message || e?.body || '提出に失敗しました';
+        console.error('[handleCaseSubmit] Error:', e);
         setSubmitErrors((prev) => ({ ...prev, [index]: msg }));
         if (msg.includes('another process') || msg.includes('refresh')) {
           const logId = c.saved?.log_id;

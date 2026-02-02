@@ -60,18 +60,35 @@ export async function apiFetchWorkReport(path, options = {}) {
   if (!res.ok) {
     let bodyMessage = res.statusText || 'API Error';
     let bodyText = '';
+    let bodyParsed = null;
     try {
       bodyText = await res.text();
       if (bodyText) {
-        const j = JSON.parse(bodyText);
-        bodyMessage = j?.message || j?.error || bodyMessage;
+        try {
+          bodyParsed = JSON.parse(bodyText);
+          // エラーメッセージの優先順位: message > error > reason > statusText
+          bodyMessage = bodyParsed?.message || bodyParsed?.error || bodyParsed?.reason || bodyMessage;
+        } catch (_) {
+          // JSON でない場合は bodyText をそのまま使用
+          bodyMessage = bodyText.length > 200 ? bodyText.substring(0, 200) + '...' : bodyText;
+        }
       }
-    } catch (_) {}
+    } catch (_) {
+      // テキスト読み取り失敗時は statusText を使用
+    }
     const err = new Error(bodyMessage);
     err.status = res.status;
     err.response = res;
     err.url = url;
-    err.body = bodyText;
+    err.body = bodyText; // 生のレスポンスボディ（テキスト）
+    err.bodyParsed = bodyParsed; // パース済みJSON（あれば）
+    // デバッグ用: コンソールに詳細を出力
+    console.error(`[apiFetchWorkReport] ${res.status} ${res.statusText}`, {
+      url,
+      status: res.status,
+      bodyText,
+      bodyParsed,
+    });
     throw err;
   }
   return res.json();
