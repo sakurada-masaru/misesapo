@@ -6,7 +6,7 @@
 const defaultBase = '/api';
 const workReportBase = '/api-wr';
 
-function getApiBase() {
+export function getApiBase() {
   if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') return defaultBase;
   if (import.meta.env.DEV) return defaultBase;
   return import.meta.env.VITE_API_BASE ?? defaultBase;

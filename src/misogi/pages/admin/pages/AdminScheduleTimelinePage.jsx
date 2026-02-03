@@ -2033,6 +2033,7 @@ export default function AdminScheduleTimelinePage() {
                   <button type="button" className="btn" onClick={() => shiftWeek(-1)}>← 前週</button>
                   <button type="button" className="btn" onClick={jumpThisWeek}>今週</button>
                   <button type="button" className="btn" onClick={() => shiftWeek(1)}>翌週 →</button>
+                  <button type="button" className="btn" onClick={() => setView('day')} title="日別のタイムラインに戻る">日別表示</button>
                   <label className="contactModeToggle">
                     <input type="checkbox" checked={contactMode} onChange={(e) => setContactMode(e.target.checked)} />
                     <span className="contactModeLabel">事前連絡</span>
@@ -2043,6 +2044,7 @@ export default function AdminScheduleTimelinePage() {
                   <button type="button" className="btn" onClick={() => shiftDate(-1)}>← 前日</button>
                   <button type="button" className="btn" onClick={jumpToday}>今日</button>
                   <button type="button" className="btn" onClick={() => shiftDate(1)}>翌日 →</button>
+                  <button type="button" className="btn" onClick={() => setView('week')} title="週間予定を見る">週間予定閲覧</button>
                 </>
               )}
               <button type="button" className="btnPrimary" onClick={() => openCreate(filterCleaner !== 'all' ? filterCleaner : cleanersWithUnit[0]?.id)}>＋ 割当追加</button>

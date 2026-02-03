@@ -1,10 +1,15 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Visualizer from '../../shared/ui/Visualizer/Visualizer';
 import { JOBS } from '../../shared/utils/constants';
 import { useAuth } from '../../shared/auth/useAuth';
 
 const SignInModal = React.lazy(() => import('../../shared/auth/SignInModal'));
+
+const API_BASE =
+  typeof window !== 'undefined' && window.location?.hostname === 'localhost'
+    ? '/api'
+    : (import.meta.env?.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 /**
  * 大前提（ナビゲーション）
@@ -41,8 +46,20 @@ export default function Portal() {
   const { user, isAuthenticated, isLoading, refresh, logout } = useAuth();
   const [started, setStarted] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
+  const [nonOperatingDates, setNonOperatingDates] = useState([]);
 
   const effectiveUser = user ?? { id: 'guest', name: '', role: '' };
+
+  useEffect(() => {
+    const base = API_BASE.replace(/\/$/, '');
+    fetch(`${base}/settings/portal-operating-days`, { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : { non_operating_dates: [] }))
+      .then((data) => setNonOperatingDates(Array.isArray(data.non_operating_dates) ? data.non_operating_dates : []))
+      .catch(() => setNonOperatingDates([]));
+  }, []);
+
+  const today = typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '';
+  const isNonOperatingToday = today && nonOperatingDates.includes(today);
 
   function handleEnter() {
     setStarted(true);
@@ -90,6 +107,12 @@ export default function Portal() {
       </div>
 
       <Visualizer active={false} />
+
+      {isNonOperatingToday && (
+        <p className="portal-non-operating-banner" style={{ marginTop: 16, marginBottom: 0, padding: '12px 20px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: 12, color: 'var(--text)', fontSize: '0.95rem', fontWeight: 600 }}>
+          本日は休業日です
+        </p>
+      )}
 
       {!isAuthenticated ? (
         <>

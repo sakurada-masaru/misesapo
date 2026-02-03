@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>清掃スケジュールの使い方（従業員向け）</title>
+  <style>
+    :root {
+      --ink: #1a1a1a;
+      --muted: #444;
+      --border: #ccc;
+      --head-bg: #2d5a3d;
+      --head-fg: #fff;
+      --section-bg: #f0f4f0;
+      --table-header: #e8efe8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+      line-height: 1.6;
+      color: var(--ink);
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 12mm 15mm;
+      font-size: 11pt;
+    }
+    h1 {
+      font-size: 18pt;
+      margin: 0 0 4mm 0;
+      padding-bottom: 4mm;
+      border-bottom: 2px solid var(--head-bg);
+      color: var(--head-bg);
+    }
+    .subtitle {
+      font-size: 10pt;
+      color: var(--muted);
+      margin-bottom: 6mm;
+    }
+    h2 {
+      font-size: 13pt;
+      margin: 5mm 0 3mm 0;
+      padding: 2mm 0 2mm 3mm;
+      background: var(--section-bg);
+      border-left: 4px solid var(--head-bg);
+      color: var(--ink);
+      page-break-after: avoid;
+    }
+    h3 {
+      font-size: 11pt;
+      margin: 4mm 0 2mm 0;
+      color: var(--head-bg);
+      page-break-after: avoid;
+    }
+    p { margin: 2mm 0; }
+    ul, ol { margin: 2mm 0; padding-left: 6mm; }
+    li { margin: 1mm 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 3mm 0;
+      font-size: 10pt;
+      page-break-inside: avoid;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 2mm 4mm;
+      text-align: left;
+    }
+    th {
+      background: var(--table-header);
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fafafa; }
+    .note {
+      background: #fff9e6;
+      border: 1px solid #e6d98a;
+      padding: 3mm 4mm;
+      margin: 3mm 0;
+      font-size: 10pt;
+    }
+    .page-break { page-break-before: always; }
+    .no-print { display: none; }
+    @media print {
+      body { padding: 10mm 12mm; }
+      h2 { margin-top: 4mm; }
+      a { color: var(--ink); text-decoration: none; }
+      .page-break { page-break-before: always; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>清掃スケジュールの使い方</h1>
+  <p class="subtitle">従業員配布用・清掃スケジュール画面の操作手順（PDF保存・印刷用）</p>
+
+  <h2>1. この画面でできること</h2>
+  <ul>
+    <li><strong>自分の予定（スケジュール）の確認</strong> … 日別・週間・月間で表示</li>
+    <li><strong>「入れない時間」の登録（ブロック・クローズ）</strong> … 日別表示で空き時間をタップして登録</li>
+    <li><strong>案件の店舗情報・カルテの閲覧</strong> … 予定をタップすると下部にカルテが表示されます</li>
+  </ul>
+  <p><strong>注意：</strong>予定（案件）の追加・変更・削除はできません。閲覧と「入れない時間」の登録のみ可能です。</p>
+
+  <h2>2. スケジュール画面の開き方</h2>
+  <ol>
+    <li>トップ（玄関）で「清掃」を選ぶ</li>
+    <li>清掃用の画面でログイン／入室する</li>
+    <li>画面内の「<strong>予定</strong>」をタップする → スケジュール画面が開きます</li>
+  </ol>
+
+  <h2>3. 表示の切り替え（日別・週間・月間）</h2>
+  <table>
+    <thead>
+      <tr><th>表示</th><th>内容</th><th>日付の移動</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>日別</td><td>1日分のタイムライン（時間ごと）</td><td>前日 / 今日 / 翌日</td></tr>
+      <tr><td>週間</td><td>月曜〜日曜の7日分をカード表示</td><td>前週 / 今週 / 翌週</td></tr>
+      <tr><td>月間</td><td>当月のカレンダー</td><td>前月 / 今月 / 翌月（日付をクリックするとその日を指定）</td></tr>
+    </tbody>
+  </table>
+  <p>ヘッダーにある「表示」のボタン（日・週・月のアイコン）で切り替えられます。</p>
+
+  <h2 class="page-break">4. 日別表示での操作</h2>
+
+  <h3>4.1 タイムラインの見方</h3>
+  <p>縦に時間（0:00〜24:00）、各時間に次のいずれかが表示されます。</p>
+  <ul>
+    <li><strong>案件</strong> … 割り当てられた清掃予定（店舗名・時間など）</li>
+    <li><strong>🔒 クローズ</strong> … 自分で登録した「入れない時間」</li>
+    <li><strong>空き（タップでブロック作成）</strong> … 予定のない時間。ここをタップすると「入れない時間」を登録できます</li>
+  </ul>
+
+  <h3>4.2 「入れない時間」の登録（ブロック作成）</h3>
+  <ol>
+    <li>日別表示で、空きスロットの「<strong>空き（タップでブロック作成）</strong>」を<strong>タップ</strong>（クリックまたは右クリック）</li>
+    <li>モーダルが開くので、次の項目を入力します。</li>
+  </ol>
+  <table>
+    <thead>
+      <tr><th>項目</th><th>必須</th><th>説明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>開始</td><td>○</td><td>入れない時間の開始日時（15分刻み）</td></tr>
+      <tr><td>終了</td><td>○</td><td>入れない時間の終了日時。終了は開始より後である必要があります</td></tr>
+      <tr><td>理由</td><td>○</td><td>睡眠 / 移動 / 私用 / その他から選択</td></tr>
+      <tr><td>メモ</td><td>任意</td><td>例）病院、など</td></tr>
+    </tbody>
+  </table>
+  <p>「<strong>作成</strong>」を押すと登録されます。既存の予定や他のクローズと<strong>時間が重なると登録できません</strong>。その場合は開始・終了時刻を変更して再度お試しください。</p>
+
+  <h3>4.3 案件をタップして店舗情報・カルテを見る</h3>
+  <ol>
+    <li>タイムライン上の<strong>案件（予定）のカードをタップ</strong></li>
+    <li>画面下部に<strong>カルテ</strong>が表示されます</li>
+    <li>左側：店舗名・日付・時間・種別、および店舗の連絡先・キーボックス解錠番号など</li>
+    <li>右側：店舗の詳細カルテ（閲覧のみ。編集はできません）</li>
+    <li>カルテを閉じる：カルテ上部の「×」ボタンをタップ。高さは上部のヘッダーをドラッグして変更できます</li>
+  </ol>
+
+  <h2 class="page-break">5. 週間・月間表示での操作</h2>
+  <h3>週間表示</h3>
+  <p>7日分が横並びで表示されます。各日のカード内の<strong>案件をタップ</strong>すると、日別と同様にカルテが開きます。週間表示では「入れない時間」の登録はできません。登録する場合は<strong>日別表示に切り替えて</strong>行ってください。</p>
+  <h3>月間表示</h3>
+  <p>当月のカレンダーが表示されます。<strong>日付をクリック</strong>すると、その日を基準にした表示に変わります。ブロックの登録やカルテの表示は、<strong>日別または週間に切り替えて</strong>行ってください。</p>
+
+  <h2>6. よくあるメッセージと対処</h2>
+  <table>
+    <thead>
+      <tr><th>表示される内容</th><th>対処</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>認証が必要です</td><td>エントランスに戻るリンクから再度ログインしてください</td></tr>
+      <tr><td>清掃員情報の取得に失敗しました</td><td>管理者に連絡してください。表示の「エントランスに戻る」で戻れます</td></tr>
+      <tr><td>409 Conflict（重複のため登録できません）</td><td>「入れない時間」が既存の予定や他のクローズと重なっています。開始・終了時刻を変えて再度登録してください</td></tr>
+      <tr><td>ブロックの作成に失敗しました</td><td>通信エラーなどの可能性があります。時刻を確認して再度お試しください。続く場合は管理者に連絡してください</td></tr>
+    </tbody>
+  </table>
+
+  <h2>7. 操作一覧（早見）</h2>
+  <table>
+    <thead>
+      <tr><th>やりたいこと</th><th>操作</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>自分の予定を見る</td><td>「予定」からスケジュール画面を開く。日別・週・月で表示を切り替え可能</td></tr>
+      <tr><td>日付を変える</td><td>前日/翌日・前週/翌週・前月/翌月ボタンで移動</td></tr>
+      <tr><td>入れない時間を登録する</td><td>日別表示で「空き」をタップ → 開始・終了・理由を入力 → 作成</td></tr>
+      <tr><td>案件の店舗情報・カルテを見る</td><td>案件カードをタップ → 下部にカルテ表示。×で閉じる</td></tr>
+    </tbody>
+  </table>
+
+  <p class="note" style="margin-top: 6mm;"><strong>お問い合わせ：</strong>画面の不具合や操作で困ったことがあれば、管理者までご連絡ください。</p>
+
+  <p style="margin-top: 8mm; font-size: 9pt; color: var(--muted);">清掃スケジュール操作フロー（従業員配布用）・改訂 2025-02-03</p>
+
+</body>
+</html>

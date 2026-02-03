@@ -1345,6 +1345,13 @@ def lambda_handler(event, context):
                 return create_or_update_attendance(event, headers)
             elif method == 'DELETE':
                 return delete_attendance(attendance_id, headers)
+        elif normalized_path == '/settings/portal-operating-days':
+            # 玄関（Portal）稼働日設定：非稼働日リストの取得・更新（S3保存）
+            if method == 'GET':
+                return get_portal_operating_days(headers)
+            elif method == 'PUT':
+                return put_portal_operating_days(event, headers)
+            return {'statusCode': 405, 'headers': headers, 'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)}
         elif normalized_path == '/holidays':
             # 休日・祝日の取得・作成
             if method == 'GET':
@@ -1452,6 +1459,12 @@ def lambda_handler(event, context):
                 # 画像アップロード
                 if method == 'POST':
                     return upload_report_image(event, headers)
+            elif query_params.get('type') == 'simple_cleaning':
+                # 新規：シンプル版清掃報告
+                if method == 'POST':
+                    return create_simple_cleaning_report(event, headers)
+                elif method == 'GET':
+                    return get_simple_cleaning_reports(event, headers)
             else:
                 # 既存の日報（Daily Reports）
                 if method == 'GET':
@@ -3782,6 +3795,102 @@ def create_report(event, headers):
                 'error': 'レポートの作成に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
+        }
+
+def create_simple_cleaning_report(event, headers):
+    """
+    管理者・清掃員向けの非常にシンプルなテキストベースのレポート作成
+    """
+    try:
+        body = event.get('body', '')
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+            
+        report_id = str(uuid.uuid4())
+        # JST (GMT+9) を取得。
+        now = (datetime.utcnow() + timedelta(hours=9)).isoformat() + '+09:00'
+        
+        # ユーザー情報を取得
+        headers_dict = _get_headers(event)
+        auth_header = _get_auth_header(event)
+        # X-Simple-Auth もチェック
+        simple_auth = headers_dict.get('X-Simple-Auth') or headers_dict.get('x-simple-auth')
+        
+        user_info = {}
+        token = simple_auth or (auth_header.replace('Bearer ', '') if auth_header else None)
+        
+        if token:
+            try:
+                user_info = verify_cognito_id_token(token)
+            except:
+                pass
+
+        report_item = {
+            'log_id': report_id,
+            'report_type': 'simple_cleaning',
+            'work_date': body_json.get('work_date') or body_json.get('date'),
+            'target_label': body_json.get('target_label', '不明'),
+            'created_by_name': body_json.get('created_by_name') or user_info.get('email', '不明'),
+            'work_minutes': int(body_json.get('work_minutes', 0)),
+            'report_text': body_json.get('report_text', ''),
+            'description': body_json.get('description', ''), # Fallback compatibility
+            'created_at': now,
+            'updated_at': now,
+            'status': 'submitted',
+            'state': 'submitted'
+        }
+        
+        REPORTS_TABLE.put_item(Item=report_item)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'status': 'success', 'report_id': report_id}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"[ERROR] create_simple_cleaning_report failed: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
+        }
+
+def get_simple_cleaning_reports(event, headers):
+    """
+    シンプルレポート一覧取得
+    """
+    try:
+        params = event.get('queryStringParameters') or {}
+        target_date = params.get('date') or params.get('work_date')
+        
+        # staff-reports テーブルをスキャン (小規模運用なら十分)
+        # report_type = 'simple_cleaning' でフィルタ
+        fe = Attr('report_type').eq('simple_cleaning')
+        if target_date:
+            fe = fe & (Attr('work_date').eq(target_date) | Attr('date').eq(target_date))
+        
+        resp = REPORTS_TABLE.scan(FilterExpression=fe, Limit=100)
+        items = resp.get('Items', [])
+        
+        # 最新順にソート (created_at desc)
+        items.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        # Decimal 対策
+        items_serializable = json.loads(json.dumps(items, default=str))
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(items_serializable, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"[ERROR] get_simple_cleaning_reports failed: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
         }
 
 def get_reports(event, headers):
@@ -10433,6 +10542,106 @@ def delete_holiday(holiday_id, headers):
                 'message': str(e)
             }, ensure_ascii=False)
         }
+
+
+# 玄関（Portal）稼働日設定の S3 キー
+PORTAL_OPERATING_DAYS_S3_KEY = 'config/portal-operating-days.json'
+
+
+def get_portal_operating_days(headers):
+    """
+    玄関の稼働日設定を取得（非稼働日リスト）。S3 の config/portal-operating-days.json を返す。
+    認証不要（Portal で未ログイン時も今日が休業日か表示するため）。
+    """
+    try:
+        response = s3_client.get_object(Bucket=S3_BUCKET_NAME, Key=PORTAL_OPERATING_DAYS_S3_KEY)
+        body = response['Body'].read().decode('utf-8')
+        data = json.loads(body)
+        if not isinstance(data.get('non_operating_dates'), list):
+            data['non_operating_dates'] = []
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(data, ensure_ascii=False)
+        }
+    except s3_client.exceptions.NoSuchKey:
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'non_operating_dates': []}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error getting portal operating days: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '玄関稼働日設定の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+
+def put_portal_operating_days(event, headers):
+    """
+    玄関の稼働日設定を更新（非稼働日リスト）。管理者・認証必須。
+    """
+    auth_header = event.get('headers') or {}
+    auth = auth_header.get('Authorization') or auth_header.get('authorization') or ''
+    if not auth.startswith('Bearer '):
+        return {
+            'statusCode': 401,
+            'headers': headers,
+            'body': json.dumps({'error': '認証が必要です'}, ensure_ascii=False)
+        }
+    try:
+        body_str = event.get('body') or '{}'
+        data = json.loads(body_str)
+        dates = data.get('non_operating_dates')
+        if not isinstance(dates, list):
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'non_operating_dates は配列で指定してください'}, ensure_ascii=False)
+            }
+        # YYYY-MM-DD 形式のみ許可
+        normalized = []
+        for d in dates:
+            s = str(d).strip()
+            if len(s) == 10 and s[4] == '-' and s[7] == '-':
+                normalized.append(s)
+        payload = {'non_operating_dates': sorted(set(normalized))}
+        s3_client.put_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=PORTAL_OPERATING_DAYS_S3_KEY,
+            Body=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
+            ContentType='application/json'
+        )
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'non_operating_dates': payload['non_operating_dates']
+            }, ensure_ascii=False)
+        }
+    except json.JSONDecodeError as e:
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({'error': 'JSON が不正です', 'message': str(e)}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error putting portal operating days: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '玄関稼働日設定の保存に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
 
 def delete_worker(worker_id, headers):
     """

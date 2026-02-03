@@ -105,6 +105,32 @@ def _create_history_entry(history_type, by_user, from_state, to_state, reason=No
     return entry
 
 
+def handle_public_work_report(event, headers, path, method):
+    """
+    業務報告を認証なしで1件取得（URL共有用）。
+    GET /public/work-report/{log_id} のみ対応。
+    """
+    if method != 'GET':
+        return {'statusCode': 405, 'headers': headers, 'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)}
+    path_normalized = (path or '').split('?')[0].rstrip('/')
+    parts = path_normalized.split('/')
+    # /public/work-report/{log_id}
+    if len(parts) < 4 or parts[1] != 'public' or parts[2] != 'work-report':
+        return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Not found'}, ensure_ascii=False)}
+    log_id = parts[3]
+    if not log_id:
+        return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Not found'}, ensure_ascii=False)}
+    try:
+        resp = table.get_item(Key={'log_id': log_id})
+        item = resp.get('Item')
+        if not item:
+            return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Not found'}, ensure_ascii=False)}
+        return {'statusCode': 200, 'headers': headers, 'body': json.dumps(item, ensure_ascii=False)}
+    except Exception as e:
+        logger.exception("get_public_work_report failed: %s", e)
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': 'Internal server error'}, ensure_ascii=False)}
+
+
 def handle_universal_worker_work_reports(event, headers, path, method, user_info):
     """
     Worker向け汎用業務報告API

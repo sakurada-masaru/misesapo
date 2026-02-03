@@ -36,6 +36,7 @@ export async function getAdminWorkReports(params = {}) {
   const qs = q.toString();
   const url = qs ? `/admin/work-reports?${qs}` : '/admin/work-reports';
   const res = await apiFetchWorkReport(url, { headers: getAuthHeaders() });
+  if (Array.isArray(res)) return res;
   return res?.items ?? res?.rows ?? [];
 }
 

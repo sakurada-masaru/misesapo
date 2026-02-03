@@ -2,6 +2,12 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Visualizer from '../Visualizer/Visualizer';
 import { putWorkReport, patchWorkReport, getWorkReport, getUploadUrl } from './cleaningDayReportApi';
+import { getApiBase } from '../../api/client';
+import { getAuthHeaders } from '../../auth/cognitoStorage';
+import StoreSearchField from '../Sales/StoreSearchField';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { useAuth } from '../../auth/useAuth';
 import './cleaning-day-report.css';
 
 const TEMPLATE_DAY = 'CLEANING_DAY_V1';
@@ -51,7 +57,7 @@ function deserializeStoreReport(descriptionJson, workReportItem) {
     store = d.store || {};
     services = Array.isArray(d.services) && d.services.length ? d.services : services;
     attachments = Array.isArray(d.attachments) ? d.attachments : [];
-  } catch (_) {}
+  } catch (_) { }
   return {
     enabled: true,
     store_name: store.name || workReportItem?.target_label || '',
@@ -87,8 +93,9 @@ function getInitialHeader() {
   return { work_date: date, total_minutes: 0, note: '' };
 }
 
-export default function CleaningDayReportPage() {
+export default function CleaningDayReportPage({ isAdmin = false }) {
   const location = useLocation();
+  const { user } = useAuth();
   const [header, setHeader] = useState(getInitialHeader);
   const [stores, setStores] = useState(initialStores);
   const [daySaved, setDaySaved] = useState({ log_id: null, version: null, state: null });
@@ -100,7 +107,71 @@ export default function CleaningDayReportPage() {
   const [submitErrors, setSubmitErrors] = useState({});
   const [storeUploading, setStoreUploading] = useState({});
   const [attachmentErrors, setAttachmentErrors] = useState({});
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [storeList, setStoreList] = useState([]);
   const fileInputRefs = useRef([]);
+  const printRef = useRef(null);
+
+  useEffect(() => {
+    const base = getApiBase().replace(/\/$/, '');
+    const headers = getAuthHeaders();
+    fetch(`${base}/stores`, { headers: { ...headers, 'Content-Type': 'application/json' }, cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : { items: [] }))
+      .then((data) => setStoreList(Array.isArray(data.items) ? data.items : []))
+      .catch(() => setStoreList([]));
+  }, []);
+
+  const handleSavePdf = useCallback(async () => {
+    if (!printRef.current) return;
+    setPdfGenerating(true);
+    try {
+      // 一時的に表示させる（キャプチャのため）
+      printRef.current.style.display = 'block';
+
+      const canvas = await html2canvas(printRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      // 隠す
+      printRef.current.style.display = 'none';
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.8);
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      const pdfBlob = pdf.output('blob');
+      const previewUrl = URL.createObjectURL(pdfBlob);
+      window.open(previewUrl, '_blank');
+
+    } catch (e) {
+      console.error(e);
+      setDayError('PDF生成に失敗しました: ' + (e.message || 'Error'));
+    } finally {
+      // 念のため隠す
+      if (printRef.current) printRef.current.style.display = 'none';
+      setPdfGenerating(false);
+    }
+  }, []);
 
   const enabledStores = stores.filter((s) => s.enabled);
   const storeMinutesSum = enabledStores.reduce((acc, s) => acc + (Number(s.store_minutes) || 0), 0);
@@ -448,6 +519,15 @@ export default function CleaningDayReportPage() {
             <button type="button" className="btn" onClick={handleDaySave} disabled={daySaving}>
               {daySaving ? '保存中...' : '日次サマリを下書き保存'}
             </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleSavePdf}
+              disabled={pdfGenerating}
+              style={{ marginLeft: 8 }}
+            >
+              {pdfGenerating ? 'PDF生成中...' : 'PDF保存'}
+            </button>
           </div>
           {dayError && <p className="cleaning-day-error">{dayError}</p>}
           {totalMismatch && (
@@ -497,10 +577,12 @@ export default function CleaningDayReportPage() {
                 <div className="cleaning-day-store-fields">
                   <div className="cleaning-day-field">
                     <label>店舗名（必須）</label>
-                    <input
-                      type="text"
+                    <StoreSearchField
+                      stores={storeList}
                       value={store.store_name}
-                      onChange={(e) => updateStore(index, { store_name: e.target.value })}
+                      storeKey=""
+                      onChange={(o) => updateStore(index, { store_name: o.store_name })}
+                      placeholder="法人名・ブランド名・店舗名で検索"
                     />
                   </div>
                   <div className="cleaning-day-field">
@@ -660,8 +742,96 @@ export default function CleaningDayReportPage() {
         )}
 
         <p className="report-page-back">
-          <Link to="/jobs/cleaning/entrance">入口に戻る</Link>
+          <Link to={isAdmin ? "/admin/entrance" : "/jobs/cleaning/entrance"}>{isAdmin ? "管理エントランスに戻る" : "入口に戻る"}</Link>
         </p>
+      </div>
+
+      {/* 印刷用レイアウト（普段は非表示） */}
+      <div ref={printRef} style={{ display: 'none', width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: 'white', boxSizing: 'border-box', color: '#000', fontFamily: 'serif' }}>
+        <h1 style={{ textAlign: 'center', fontSize: '24px', marginBottom: '20px', borderBottom: '2px solid #000', paddingBottom: '10px' }}>清掃業務報告書</h1>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <div>
+            <p><strong>作業日:</strong> {header.work_date}</p>
+            <p><strong>報告者:</strong> {user?.name || ''}</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p>作成日: {new Date().toLocaleDateString()}</p>
+          </div>
+        </div>
+
+        <div style={{ border: '1px solid #000', padding: '10px', marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '16px', margin: '0 0 10px 0', borderBottom: '1px solid #ccc' }}>【日次サマリ】</h2>
+          <p style={{ margin: '5px 0' }}><strong>合計作業時間:</strong> {header.total_minutes} 分</p>
+          <p style={{ margin: '5px 0' }}><strong>全体備考:</strong> {header.note}</p>
+        </div>
+
+        {stores.filter(s => s.enabled).map((store, i) => (
+          <div key={i} style={{ marginBottom: '30px', pageBreakInside: 'avoid' }}>
+            <h3 style={{ backgroundColor: '#f0f0f0', padding: '5px', borderLeft: '5px solid #666', fontSize: '16px', margin: '0 0 10px 0' }}>
+              店舗 {i + 1}: {store.store_name}
+            </h3>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px', fontSize: '12px' }}>
+              <tbody>
+                <tr>
+                  <td style={{ border: '1px solid #999', padding: '5px', width: '20%', backgroundColor: '#f9f9f9' }}>作業時間</td>
+                  <td style={{ border: '1px solid #999', padding: '5px', width: '30%' }}>
+                    {store.work_start_time} - {store.work_end_time} ({store.store_minutes}分)
+                  </td>
+                  <td style={{ border: '1px solid #999', padding: '5px', width: '20%', backgroundColor: '#f9f9f9' }}>住所</td>
+                  <td style={{ border: '1px solid #999', padding: '5px', width: '30%' }}>{store.address}</td>
+                </tr>
+                <tr>
+                  <td style={{ border: '1px solid #999', padding: '5px', backgroundColor: '#f9f9f9' }}>立会者</td>
+                  <td style={{ border: '1px solid #999', padding: '5px' }}>{store.witness}</td>
+                  <td style={{ border: '1px solid #999', padding: '5px', backgroundColor: '#f9f9f9' }}>備考</td>
+                  <td style={{ border: '1px solid #999', padding: '5px' }}>{store.note}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4 style={{ fontSize: '14px', margin: '10px 0 5px 0' }}>作業内容</h4>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px', fontSize: '12px' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#eee' }}>
+                  <th style={{ border: '1px solid #999', padding: '5px', textAlign: 'left' }}>作業名</th>
+                  <th style={{ border: '1px solid #999', padding: '5px', textAlign: 'center', width: '60px' }}>時間</th>
+                  <th style={{ border: '1px solid #999', padding: '5px', textAlign: 'left' }}>メモ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {store.services.map((sv, si) => (
+                  <tr key={si}>
+                    <td style={{ border: '1px solid #999', padding: '5px' }}>{sv.name}</td>
+                    <td style={{ border: '1px solid #999', padding: '5px', textAlign: 'center' }}>{sv.minutes}</td>
+                    <td style={{ border: '1px solid #999', padding: '5px' }}>{sv.memo}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {store.attachments && store.attachments.length > 0 && (
+              <div style={{ marginTop: '10px' }}>
+                <h4 style={{ fontSize: '14px', margin: '5px 0' }}>添付資料</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  {store.attachments.map((att, ai) => {
+                    const isImg = ['jpg', 'jpeg', 'png', 'heic'].some(ext => att.name?.toLowerCase().endsWith(ext)) || att.mime?.startsWith('image/');
+                    if (!isImg) return null; // PDFでの画像表示のみ対応
+                    return (
+                      <div key={ai} style={{ border: '1px solid #ddd', padding: '5px' }}>
+                        <img src={att.url} alt={att.name} style={{ width: '100%', height: '100px', objectFit: 'cover' }} crossOrigin="anonymous" />
+                        <p style={{ fontSize: '10px', margin: '2px 0 0 0', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{att.name}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div style={{ height: '1px', backgroundColor: '#000', margin: '20px 0' }}></div>
+          </div>
+        ))}
       </div>
     </div>
   );

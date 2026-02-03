@@ -20,7 +20,11 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig }) {
     setTab(id);
     // subItemsがない場合、toプロパティがあれば遷移
     if (!action?.subItems && action?.to) {
-      navigate(action.to);
+      if (action.to.startsWith('http')) {
+        window.location.href = action.to;
+      } else {
+        navigate(action.to);
+      }
     }
   };
 
@@ -45,6 +49,10 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig }) {
         <Visualizer
           mode={vizMode}
           onLogTransitionEnd={() => {
+            if (currentAction?.to && currentAction.to.startsWith('http')) {
+              window.location.href = currentAction.to;
+              return;
+            }
             if (jobKey === 'sales') {
               navigate('/sales/report-day');
             } else {

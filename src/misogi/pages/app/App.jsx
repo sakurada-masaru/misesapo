@@ -24,6 +24,7 @@ function isFullscreenPath(pathname) {
   if (pathname.startsWith('/office/clients/') && pathname !== '/office/clients/list' && pathname !== '/office/clients/new') return true;
   if (pathname === '/admin/entrance') return true;
   if (pathname === '/admin/work-reports') return true;
+  if (pathname === '/admin/cleaning-reports') return true;
   if (pathname === '/admin/schedule') return true;
   if (pathname === '/jobs/cleaning/schedule') return true;
   if (pathname.startsWith('/office/payroll/')) return true;

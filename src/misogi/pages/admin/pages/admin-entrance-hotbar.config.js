@@ -2,7 +2,14 @@
  * 管理エントランス用ホットバー（4枠・他エントランスと同様）
  */
 export const ADMIN_HOTBAR = [
-  { id: 'work-reports', label: '業務報告', to: '/admin/work-reports', disabled: false },
+  {
+    id: 'reports',
+    label: '業務報告',
+    subItems: [
+      { id: 'cleaning-reports', label: '清掃報告受領', path: 'https://misesapo.co.jp/admin/reports/new.html' },
+      { id: 'all-reports', label: '全報告管理', path: '/admin/work-reports' },
+    ]
+  },
   { id: 'schedule', label: '清掃スケジュール', to: '/admin/schedule', disabled: false },
   {
     id: 'clients',
@@ -14,5 +21,5 @@ export const ADMIN_HOTBAR = [
       { id: 'client-karte', label: 'カルテ', path: '/office/clients/list' },
     ]
   },
-  { id: 'workers', label: 'ワーカー管理', to: '/admin/workers', disabled: true },
+  { id: 'portal-operating-days', label: '玄関稼働日', to: '/admin/portal-operating-days', disabled: false },
 ];

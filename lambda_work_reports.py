@@ -19,11 +19,13 @@ try:
     from universal_work_reports import (
         handle_universal_worker_work_reports,
         handle_admin_work_reports,
+        handle_public_work_report,
     )
     print(f"[lambda_work_reports] ✅ Import successful: handle_universal_worker_work_reports={type(handle_universal_worker_work_reports)}, handle_admin_work_reports={type(handle_admin_work_reports)}")
 except Exception as e:
     handle_universal_worker_work_reports = None
     handle_admin_work_reports = None
+    handle_public_work_report = None
     print(f"[lambda_work_reports] ❌ universal_work_reports not available: {e}")
     import traceback
     traceback.print_exc()
@@ -294,6 +296,11 @@ def lambda_handler(event, context):
         if method == 'POST':
             return handle_upload_put(event, headers)
         return {'statusCode': 405, 'headers': headers, 'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)}
+
+    if normalized_path.startswith('/public/work-report'):
+        if handle_public_work_report:
+            return handle_public_work_report(event, headers, normalized_path, method)
+        return {'statusCode': 503, 'headers': headers, 'body': json.dumps({'error': 'Service unavailable'}, ensure_ascii=False)}
 
     if normalized_path.startswith('/admin'):
         if not handle_admin_work_reports:

@@ -3,14 +3,19 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useFlashTransition } from '../../../shared/ui/ReportTransition/reportTransition';
 import Visualizer from '../Visualizer/Visualizer';
 import { useAuth } from '../../auth/useAuth';
+import { getApiBase } from '../../api/client';
+import { getAuthHeaders } from '../../auth/cognitoStorage';
 import { putWorkReport, patchWorkReport, getWorkReportByDate, getWorkReportById, getUploadUrl, uploadPutToS3 } from './salesDayReportApi';
+import StoreSearchField from './StoreSearchField';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
-/** 営業で作成した報告の詳細URL（report_id で詳細ページへ。認証必須）。パスは末尾スラッシュ必須（Vite base /misogi/ で 404 防止） */
+/** 業務報告をURLで開くだけの共有用（認証不要）。資料として誰でも見られる */
 function buildReportShareUrl(reportId) {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const pathname = typeof window !== 'undefined' ? (window.location.pathname || '').replace(/\/$/, '') : '';
   const base = (pathname || '/misogi').replace(/\/?$/, '/');
-  return `${origin}${base}#/sales/work-reports/${encodeURIComponent(reportId)}`;
+  return `${origin}${base}work-report-view.html?id=${encodeURIComponent(reportId)}`;
 }
 import './sales-day-report.css';
 
@@ -178,10 +183,150 @@ export default function SalesDayReportPage() {
   const [shareUrlCopied, setShareUrlCopied] = useState(false);
   /** 提出成功後にサーバーで読めない場合の警告（保存が別テーブル等で反映されていない） */
   const [shareVerifyError, setShareVerifyError] = useState(null);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [storeList, setStoreList] = useState([]);
   const fileInputRefs = useRef({});
   const saveSuccessTimerRef = useRef(null);
+  const reportContentRef = useRef(null);
+
+  useEffect(() => {
+    const base = getApiBase().replace(/\/$/, '');
+    const headers = getAuthHeaders();
+    fetch(`${base}/stores`, { headers: { ...headers, 'Content-Type': 'application/json' }, cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : { items: [] }))
+      .then((data) => setStoreList(Array.isArray(data.items) ? data.items : []))
+      .catch(() => setStoreList([]));
+  }, []);
 
   const updateHeader = useCallback((next) => setHeader((h) => (typeof next === 'function' ? next(h) : { ...h, ...next })), []);
+
+  const handleSavePdf = useCallback(async () => {
+    if (!reportContentRef.current) return;
+    setPdfGenerating(true);
+    try {
+      // 1. HTML -> Canvas
+      const canvas = await html2canvas(reportContentRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff', // 背景色白
+      });
+
+      // 2. Canvas -> PDF
+      const imgData = canvas.toDataURL('image/jpeg', 0.8);
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      // 複数ページ対応
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      const pdfBlob = pdf.output('blob');
+      const filename = `report_${header.work_date || workDate}_${Date.now()}.pdf`;
+      const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+      // プレビュー: 新しいタブで開く
+      const previewUrl = URL.createObjectURL(pdfBlob);
+      window.open(previewUrl, '_blank');
+
+      // 3. Upload
+      // uploadAttachmentロジックを再利用したいが、uploadAttachmentはsetUploading等UI用stateを触るので
+      // ここで別途アップロード処理を書く（ロジックは同じ）
+      const context = 'sales-day-attachment';
+
+      const { uploadUrl, fileUrl, key: s3Key } = await getUploadUrl({
+        filename: file.name,
+        mime: file.type,
+        size: file.size,
+        context,
+        date: header.work_date || workDate,
+      });
+
+      // S3へPUT
+      // FileオブジェクトはBlobの一種なのでそのまま送る、またはBuffer化
+      // uploadPutToS3 は body を受け取る
+      // ブラウザ環境なので File/Blob をそのまま fetch の body に渡せるはずだが、
+      // 既存の uploadAttachment では FileReader で base64化している。
+      // バイナリ送信の方が効率的だが、既存に合わせる（または uploadPutToS3 がどうなっているかによる）。
+      // 既存実装: uploadPutToS3(uploadUrl, type, body) -> bodyがstringならそのまま、blobなら...
+      // ここでは既存に合わせてBase64化する（確実）
+      const fileBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result;
+          resolve(dataUrl.indexOf(',') >= 0 ? dataUrl.slice(dataUrl.indexOf(',') + 1) : dataUrl);
+        };
+        reader.onerror = () => reject(new Error('PDF変換に失敗しました'));
+        reader.readAsDataURL(file);
+      });
+
+      const res = await uploadPutToS3(uploadUrl, file.type, fileBase64);
+      if (!res.ok) throw new Error('PDFのアップロードに失敗しました');
+
+      const item = {
+        name: file.name,
+        mime: file.type,
+        size: file.size,
+        url: fileUrl,
+        key: s3Key,
+        uploaded_at: new Date().toISOString()
+      };
+
+      // 4. Headerに添付して保存
+      // まずState更新
+      let currentHeader = header;
+      setHeader((prev) => {
+        currentHeader = { ...prev, attachments: [...(prev.attachments || []), item] };
+        return currentHeader;
+      });
+
+      // そのまま保存処理へ（少し待たないとState反映されないので、直接bodyを作る）
+      const reporterName = user?.name || currentHeader.reporter_name || '';
+      const body = {
+        date: currentHeader.work_date,
+        work_date: currentHeader.work_date,
+        work_minutes: Number(currentHeader.total_minutes),
+        template_id: TEMPLATE_DAY,
+        state: 'draft',
+        target_label: 'sales-day',
+        description: JSON.stringify(serializeHeader({ ...currentHeader, reporter_name: reporterName })),
+      };
+      if (currentHeader.saved?.log_id) {
+        body.log_id = currentHeader.saved.log_id;
+        body.version = currentHeader.saved.version;
+      }
+
+      const saveRes = await putWorkReport(body);
+      if (saveRes && saveRes.log_id) {
+        const logId = saveRes.log_id;
+        const version = saveRes.version ?? currentHeader.saved?.version ?? 0;
+        const state = saveRes.state ?? 'draft';
+        setHeader((h) => ({ ...h, saved: { log_id: logId, version, state } }));
+        setHeaderSaveSuccess(true);
+        setTimeout(() => setHeaderSaveSuccess(false), 2500);
+      }
+
+    } catch (e) {
+      console.error(e);
+      setHeaderError('PDF保存に失敗しました: ' + (e.message || 'Error'));
+    } finally {
+      setPdfGenerating(false);
+    }
+  }, [header, workDate, user?.name]);
   const updateCase = useCallback((index, next) => {
     setCases((prev) => {
       const arr = [...prev];
@@ -342,7 +487,7 @@ export default function SalesDayReportPage() {
               setHeader(deserializeHeader(item.description, item));
               setHeaderError('最新の内容を反映しました。もう一度保存してください。');
             })
-            .catch(() => {});
+            .catch(() => { });
         }
       }
     } finally {
@@ -367,7 +512,7 @@ export default function SalesDayReportPage() {
     try {
       let logId = header.saved?.log_id;
       let version = header.saved?.version || 0;
-      
+
       // ✅ ステップ0: 最新の内容を下書き保存（log_idがない場合、または内容が変更されている可能性があるため）
       try {
         const reporterName = user?.name || header.reporter_name || '';
@@ -395,10 +540,10 @@ export default function SalesDayReportPage() {
         setHeaderSubmitError(`下書き保存に失敗しました: ${saveMsg}`);
         return;
       }
-      
+
       // ✅ ステップ1: 提出APIを呼び出す（下書き保存が完了したlog_idとversionを使用）
       const res = await patchWorkReport(logId, { state: 'submitted', version });
-      
+
       // ✅ ステップ2: log_id がレスポンスに含まれているか確認
       if (!res || !res.log_id) {
         const errorMsg = res ? '保存に失敗しました（log_idが返ってきません）' : '提出に失敗しました（レスポンスが空です）';
@@ -406,18 +551,18 @@ export default function SalesDayReportPage() {
         setHeaderSubmitError(errorMsg);
         return;
       }
-      
+
       // ✅ ステップ3: 保存が確実に完了したことを確認（サーバーで実際に読めるか検証）
       try {
         const verifiedItem = await getWorkReportById(res.log_id);
         if (!verifiedItem || verifiedItem.state !== 'submitted') {
           throw new Error('提出状態が確認できませんでした');
         }
-        
+
         // ✅ ステップ4: 検証成功後にのみ状態を更新
         setHeader((h) => ({ ...h, saved: { ...h.saved, state: 'submitted', version: res.version ?? (h.saved?.version || 0) + 1 } }));
         setHeaderSubmitError('');
-        
+
         // ✅ ステップ5: 保存が確実に完了したことを確認してから共有URLを設定
         setShareUrl(buildReportShareUrl(res.log_id));
       } catch (verifyErr) {
@@ -443,7 +588,7 @@ export default function SalesDayReportPage() {
               setHeader(deserializeHeader(item.description, item));
               setHeaderSubmitError('最新の内容を反映しました。もう一度提出してください。');
             })
-            .catch(() => {});
+            .catch(() => { });
         }
       }
     } finally {
@@ -494,7 +639,7 @@ export default function SalesDayReportPage() {
                 updateCase(index, () => deserializeCase(item.description, item));
                 setCaseErrors((prev) => ({ ...prev, [index]: '最新の内容を反映しました。もう一度保存してください。' }));
               })
-              .catch(() => {});
+              .catch(() => { });
           }
         }
       } finally {
@@ -516,7 +661,7 @@ export default function SalesDayReportPage() {
       try {
         let logId = c.saved?.log_id;
         let version = c.saved?.version || 0;
-        
+
         // ✅ ステップ0: 最新の内容を下書き保存（log_idがない場合、または内容が変更されている可能性があるため）
         try {
           const saveBody = {
@@ -543,10 +688,10 @@ export default function SalesDayReportPage() {
           setSubmitErrors((prev) => ({ ...prev, [index]: `下書き保存に失敗しました: ${saveMsg}` }));
           return;
         }
-        
+
         // ✅ ステップ1: 提出APIを呼び出す（下書き保存が完了したlog_idとversionを使用）
         const res = await patchWorkReport(logId, { state: 'submitted', version });
-        
+
         // ✅ ステップ2: log_id がレスポンスに含まれているか確認
         if (!res || !res.log_id) {
           const errorMsg = res ? '保存に失敗しました（log_idが返ってきません）' : '提出に失敗しました（レスポンスが空です）';
@@ -554,18 +699,18 @@ export default function SalesDayReportPage() {
           setSubmitErrors((prev) => ({ ...prev, [index]: errorMsg }));
           return;
         }
-        
+
         // ✅ ステップ3: 保存が確実に完了したことを確認（サーバーで実際に読めるか検証）
         try {
           const verifiedItem = await getWorkReportById(res.log_id);
           if (!verifiedItem || verifiedItem.state !== 'submitted') {
             throw new Error('提出状態が確認できませんでした');
           }
-          
+
           // ✅ ステップ4: 検証成功後にのみ状態を更新
           updateCase(index, (prev) => ({ ...prev, saved: { ...prev.saved, state: 'submitted', version: res.version ?? (prev.saved?.version || 0) + 1 } }));
           setSubmitErrors((prev) => ({ ...prev, [index]: null }));
-          
+
           // ✅ ステップ5: 保存が確実に完了したことを確認してから共有URLを設定
           setShareUrl(buildReportShareUrl(res.log_id));
         } catch (verifyErr) {
@@ -591,7 +736,7 @@ export default function SalesDayReportPage() {
                 updateCase(index, () => deserializeCase(item.description, item));
                 setSubmitErrors((prev) => ({ ...prev, [index]: '最新の内容を反映しました。もう一度提出してください。' }));
               })
-              .catch(() => {});
+              .catch(() => { });
           }
         }
       } finally {
@@ -638,7 +783,7 @@ export default function SalesDayReportPage() {
       <div className="report-page-viz">
         <Visualizer mode="base" className="report-page-visualizer" />
       </div>
-      <div className="report-page-content sales-day-content">
+      <div className="report-page-content sales-day-content" ref={reportContentRef}>
         {authError && (
           <div style={{ marginBottom: 16, padding: 12, background: 'rgba(255,48,48,0.15)', border: '1px solid rgba(255,48,48,0.3)', borderRadius: 8, fontSize: '0.9rem' }} role="alert">
             ログインが必要です。業務報告の取得・保存にはサインインしてください。
@@ -776,6 +921,15 @@ export default function SalesDayReportPage() {
             </button>
             <button
               type="button"
+              className="btn btn-secondary"
+              onClick={handleSavePdf}
+              disabled={pdfGenerating || headerSaving}
+              style={{ marginLeft: 8 }}
+            >
+              {pdfGenerating ? 'PDF生成中...' : 'PDF保存'}
+            </button>
+            <button
+              type="button"
               className="btn btn-primary"
               onClick={handleHeaderSubmit}
               disabled={headerSubmitting || header.saved?.state === 'submitted'}
@@ -801,7 +955,13 @@ export default function SalesDayReportPage() {
                 <div className="sales-day-fields">
                   <div className="sales-day-field">
                     <label>店舗名（必須）</label>
-                    <input type="text" value={c.store_name} onChange={(e) => updateCase(index, { store_name: e.target.value })} />
+                    <StoreSearchField
+                      stores={storeList}
+                      value={c.store_name}
+                      storeKey={c.store_key}
+                      onChange={(o) => updateCase(index, o)}
+                      placeholder="法人名・ブランド名・店舗名で検索"
+                    />
                   </div>
                   <div className="sales-day-field">
                     <label>store_key（任意）</label>
