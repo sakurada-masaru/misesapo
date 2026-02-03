@@ -5,7 +5,7 @@ import Hotbar from './Hotbar/Hotbar';
 import { useReportStyleTransition, TRANSITION_CLASS_PAGE, TRANSITION_CLASS_UI, ReportTransitionOverlay } from './ReportTransition/reportTransition.jsx';
 import { JOBS } from '../utils/constants';
 
-const JOB_KEYS = ['sales', 'cleaning', 'office', 'dev'];
+const JOB_KEYS = ['sales', 'cleaning', 'office', 'dev', 'admin'];
 
 export default function JobEntranceScreen({ job: jobKey, hotbarConfig }) {
   const navigate = useNavigate();
@@ -16,7 +16,12 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig }) {
   const [tab, setTab] = useState(actions?.[0]?.id ?? null);
 
   const onHotbar = (id) => {
+    const action = actions?.find((a) => a.id === id);
     setTab(id);
+    // subItemsがない場合、toプロパティがあれば遷移
+    if (!action?.subItems && action?.to) {
+      navigate(action.to);
+    }
   };
 
   if (!valid) {
@@ -60,7 +65,12 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig }) {
                   key={item.id}
                   type="button"
                   className="sub-hotbar-btn"
-                  onClick={() => startTransition(item.path)}
+                  onClick={() => {
+                    const path = item.path || item.to;
+                    if (path) {
+                      startTransition(path);
+                    }
+                  }}
                   disabled={isTransitioning}
                 >
                   {item.label}

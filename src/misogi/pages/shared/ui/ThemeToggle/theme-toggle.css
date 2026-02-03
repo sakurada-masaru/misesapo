@@ -18,6 +18,14 @@
   box-shadow: var(--shadow-md, 0 2px 8px rgba(0, 0, 0, 0.15));
 }
 
+/* HamburgerMenu内で使用する場合 */
+.hamburger-menu-footer .theme-toggle {
+  position: static;
+  width: 100%;
+  justify-content: center;
+  box-shadow: none;
+}
+
 .theme-toggle:hover {
   background: var(--card-bg);
   border-color: var(--accent-color);

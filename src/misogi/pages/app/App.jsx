@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Router from './router';
-import ThemeToggle from '../shared/ui/ThemeToggle/ThemeToggle';
 import HamburgerMenu from '../shared/ui/HamburgerMenu/HamburgerMenu';
 import { GlobalFlashTransition } from '../shared/ui/ReportTransition/reportTransition';
 
@@ -25,6 +24,7 @@ function isFullscreenPath(pathname) {
   if (pathname.startsWith('/office/clients/') && pathname !== '/office/clients/list' && pathname !== '/office/clients/new') return true;
   if (pathname === '/admin/entrance') return true;
   if (pathname === '/admin/work-reports') return true;
+  if (pathname === '/admin/schedule') return true;
   if (pathname.startsWith('/office/payroll/')) return true;
   if (pathname.startsWith('/office/work-reports/')) return true;
   if (pathname.startsWith('/sales/work-reports/')) return true;
@@ -38,7 +38,6 @@ export default function App() {
   return (
     <>
       <HamburgerMenu />
-      <ThemeToggle />
       <GlobalFlashTransition />
       {fullscreen ? (
         <div className="app-fullscreen">

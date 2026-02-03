@@ -1,0 +1,141 @@
+/**
+ * ScheduleLinkLine: 事前連絡(期限) ⇔ 清掃当日 を実線で可視化
+ * カード内（ScheduleCard 上部など）で使用
+ */
+
+.schedule-link-line {
+  display: grid;
+  grid-template-columns: 1fr 90px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.schedule-link-line-node {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.schedule-link-line-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+.schedule-link-line-dot--pending {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+}
+
+.schedule-link-line-dot--work {
+  background: rgba(110, 255, 180, 0.9);
+  box-shadow: 0 0 0 3px rgba(110, 255, 180, 0.2);
+}
+
+.schedule-link-line-text {
+  min-width: 0;
+}
+
+.schedule-link-line-title {
+  font-weight: 900;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text, #e9eefc);
+}
+
+.schedule-link-line-sub {
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(154, 166, 197, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ノード横の状態表示 [未連絡] [予定] */
+.schedule-link-line-status {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  margin-left: auto;
+}
+
+.schedule-link-line-connector {
+  position: relative;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.schedule-link-line-solid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+}
+
+.schedule-link-line-solid--warn {
+  background: rgba(255, 180, 70, 0.5);
+}
+
+.schedule-link-line-badge {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(18, 22, 33, 0.95);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.schedule-link-line-badge--warn {
+  border-color: rgba(255, 180, 70, 0.4);
+  background: rgba(255, 180, 70, 0.15);
+}
+
+.schedule-link-line-warn {
+  margin-right: 4px;
+}
+
+/* SP: 縦型 */
+@media (max-width: 640px) {
+  .schedule-link-line {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .schedule-link-line-connector {
+    height: 28px;
+  }
+
+  .schedule-link-line-solid {
+    left: 4px;
+    right: auto;
+    width: 2px;
+    height: 100%;
+  }
+
+  .schedule-link-line-badge {
+    transform: translateX(12px);
+  }
+}

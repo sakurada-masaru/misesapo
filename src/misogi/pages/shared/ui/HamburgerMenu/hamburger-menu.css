@@ -142,3 +142,35 @@
   outline: 2px solid var(--accent-color);
   outline-offset: -2px;
 }
+
+.hamburger-menu-footer {
+  padding: var(--space-4, 16px);
+  border-top: 1px solid var(--border);
+}
+
+.hamburger-menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+.hamburger-menu-section-title {
+  font-weight: 600;
+  font-size: var(--fs-14, 14px);
+  color: var(--fg);
+  opacity: 0.8;
+  margin-bottom: var(--space-2, 8px);
+}
+
+.hamburger-menu-section-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.hamburger-menu-footer .theme-toggle {
+  position: static;
+  width: 100%;
+  justify-content: center;
+  box-shadow: none;
+}

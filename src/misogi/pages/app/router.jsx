@@ -15,6 +15,7 @@ import Portal from '../portal/pages/Portal';
 import AdminHome from '../admin/pages/Home';
 import AdminEntrancePage from '../admin/pages/AdminEntrancePage';
 import AdminWorkReportsPage from '../admin/pages/AdminWorkReportsPage';
+import AdminScheduleTimelinePage from '../admin/pages/AdminScheduleTimelinePage';
 import HrAttendance from '../admin/pages/hr/Attendance';
 import ReportCreatePage from '../shared/ui/Report/ReportCreatePage';
 import SalesStoreKartePage from '../shared/ui/Sales/SalesStoreKartePage';
@@ -77,6 +78,7 @@ export default function Router() {
       <Route path="/admin/entrance" element={<AdminEntrancePage />} />
       {/* /misogi/#/admin/work-reports で確実に表示 */}
       <Route path="/admin/work-reports" element={<AdminWorkReportsPage />} />
+      <Route path="/admin/schedule" element={<AdminScheduleTimelinePage />} />
       <Route path="/office/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
       <Route path="/sales/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
       <Route path="/office/payroll/:userId/:yyyyMm" element={<OfficePayrollMonthPage />} />

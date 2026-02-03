@@ -87,24 +87,46 @@ export default function OfficeClientListPage() {
   const fetchData = useCallback(async () => {
     try {
       const [storesRes, clientsRes, brandsRes] = await Promise.all([
-        fetch(`${API_BASE}/stores`, { headers: headers() }).catch((e) => ({ ok: false, error: e })),
-        fetch(`${API_BASE}/clients`, { headers: headers() }).catch((e) => ({ ok: false, error: e })),
-        fetch(`${API_BASE}/brands`, { headers: headers() }).catch((e) => ({ ok: false, error: e })),
+        fetch(`${API_BASE}/stores`, { headers: headers() }).catch((e) => {
+          console.warn('[OfficeClientListPage] Failed to fetch stores:', e);
+          return { ok: false, error: e };
+        }),
+        fetch(`${API_BASE}/clients`, { headers: headers() }).catch((e) => {
+          console.warn('[OfficeClientListPage] Failed to fetch clients:', e);
+          return { ok: false, error: e };
+        }),
+        fetch(`${API_BASE}/brands`, { headers: headers() }).catch((e) => {
+          console.warn('[OfficeClientListPage] Failed to fetch brands:', e);
+          return { ok: false, error: e };
+        }),
       ]);
-      if (storesRes.ok) {
-        const data = await storesRes.json();
-        setStores(Array.isArray(data) ? data : data.items || []);
+      
+      if (storesRes.ok && !storesRes.error) {
+        try {
+          const data = await storesRes.json();
+          setStores(Array.isArray(data) ? data : data.items || []);
+        } catch (e) {
+          console.warn('[OfficeClientListPage] Failed to parse stores response:', e);
+        }
       }
-      if (clientsRes.ok) {
-        const data = await clientsRes.json();
-        setClients(Array.isArray(data) ? data : data.items || []);
+      if (clientsRes.ok && !clientsRes.error) {
+        try {
+          const data = await clientsRes.json();
+          setClients(Array.isArray(data) ? data : data.items || []);
+        } catch (e) {
+          console.warn('[OfficeClientListPage] Failed to parse clients response:', e);
+        }
       }
-      if (brandsRes.ok) {
-        const data = await brandsRes.json();
-        setBrands(Array.isArray(data) ? data : data.items || []);
+      if (brandsRes.ok && !brandsRes.error) {
+        try {
+          const data = await brandsRes.json();
+          setBrands(Array.isArray(data) ? data : data.items || []);
+        } catch (e) {
+          console.warn('[OfficeClientListPage] Failed to parse brands response:', e);
+        }
       }
     } catch (error) {
-      console.error('Failed to fetch customer data:', error);
+      console.error('[OfficeClientListPage] Failed to fetch customer data:', error);
     } finally {
       setLoading(false);
     }

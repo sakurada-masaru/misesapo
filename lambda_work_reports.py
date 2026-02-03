@@ -15,14 +15,18 @@ from datetime import datetime
 import boto3
 
 try:
+    print("[lambda_work_reports] Attempting to import universal_work_reports...")
     from universal_work_reports import (
         handle_universal_worker_work_reports,
         handle_admin_work_reports,
     )
+    print(f"[lambda_work_reports] ✅ Import successful: handle_universal_worker_work_reports={type(handle_universal_worker_work_reports)}, handle_admin_work_reports={type(handle_admin_work_reports)}")
 except Exception as e:
     handle_universal_worker_work_reports = None
     handle_admin_work_reports = None
-    print(f"[lambda_work_reports] universal_work_reports not available: {e}")
+    print(f"[lambda_work_reports] ❌ universal_work_reports not available: {e}")
+    import traceback
+    traceback.print_exc()
 
 # 業務報告専用バケット（環境変数必須）
 WORK_REPORTS_BUCKET = os.environ.get('WORK_REPORTS_BUCKET', 'misesapo-work-reports')
@@ -239,6 +243,11 @@ def lambda_handler(event, context):
     """
     業務報告専用 API（1x0f73dj2l）からの /work-report・/upload-url・/upload-put のみ処理。
     """
+    # ✅ Step 2: Handler の先頭に print デバッグ（最重要）
+    print("### HIT LAMBDA_HANDLER ###")
+    print("### EVENT_KEYS ###", list(event.keys())[:50] if isinstance(event, dict) else str(event)[:200])
+    print("### CONTEXT ###", str(context)[:200] if context else "None")
+    
     try:
         path = event.get('path', '') or event.get('requestContext', {}).get('path', '') or ''
         method = event.get('httpMethod', '') or event.get('requestContext', {}).get('http', {}).get('method', '') or ''
@@ -294,9 +303,17 @@ def lambda_handler(event, context):
         return handle_admin_work_reports(event, headers, normalized_path, method, user_info, is_hr_admin)
 
     if normalized_path.startswith('/work-report'):
+        print(f"[lambda_handler] Routing to handle_universal_worker_work_reports: path={normalized_path}, method={method}")
+        print(f"[lambda_handler] handle_universal_worker_work_reports type: {type(handle_universal_worker_work_reports)}")
+        print(f"[lambda_handler] handle_universal_worker_work_reports is None: {handle_universal_worker_work_reports is None}")
         if not handle_universal_worker_work_reports:
+            print("[lambda_handler] ERROR: handle_universal_worker_work_reports is None!")
+            print("[lambda_handler] Import error check - universal_work_reports module may not be imported correctly")
             return {'statusCode': 503, 'headers': headers, 'body': json.dumps({'error': 'Service unavailable'}, ensure_ascii=False)}
         user_info = _get_user_info_from_event(event)
-        return handle_universal_worker_work_reports(event, headers, normalized_path, method, user_info)
+        print(f"[lambda_handler] Calling handle_universal_worker_work_reports: user_info={bool(user_info)}, user_id={user_info.get('uid') if user_info else 'N/A'}")
+        result = handle_universal_worker_work_reports(event, headers, normalized_path, method, user_info)
+        print(f"[lambda_handler] handle_universal_worker_work_reports returned: statusCode={result.get('statusCode') if isinstance(result, dict) else 'N/A'}")
+        return result
 
     return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Not Found'}, ensure_ascii=False)}

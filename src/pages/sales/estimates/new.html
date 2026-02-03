@@ -601,6 +601,16 @@
         setupAiEstimateSuggestion();
       }
 
+      function getAiAuthToken() {
+        try {
+          const t = localStorage.getItem('cognito_id_token');
+          if (t) return t;
+          const a = localStorage.getItem('misesapo_auth');
+          if (a) { const p = JSON.parse(a); if (p && p.token) return p.token; }
+        } catch (e) {}
+        return null;
+      }
+
       function setupAiEstimateSuggestion() {
         const suggestBtn = document.getElementById('ai-estimate-suggest-btn');
         const memoField = document.getElementById('ai-estimate-memo');
@@ -616,14 +626,22 @@
             return;
           }
 
+          const token = getAiAuthToken();
+          if (!token) {
+            alert('AI機能を使うにはログインが必要です。');
+            return;
+          }
+
           try {
             suggestBtn.disabled = true;
             statusEl.style.display = 'flex';
 
-            const response = await fetch(`${API_BASE}/ai/process`, {
+            const apiBase = typeof API_BASE !== 'undefined' ? API_BASE : 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+            const response = await fetch(`${apiBase}/ai/process`, {
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
               },
               body: JSON.stringify({
                 action: 'suggest_estimate',

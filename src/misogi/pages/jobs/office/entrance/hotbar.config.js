@@ -5,6 +5,7 @@ export const OFFICE_HOTBAR = [
     role: 'target',
     label: '顧客',
     subItems: [
+      { id: 'client-register', label: '登録', path: '/office/clients/new' },
       { id: 'client-list', label: 'リスト', path: '/office/clients/list' },
       { id: 'client-karte', label: 'カルテ', path: '/office/clients/list' },
     ]

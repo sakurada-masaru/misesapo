@@ -2,7 +2,7 @@
  * 事務・顧客リスト用 清掃カルテ詳細パネル
  * 店舗IDに紐づくカルテは karteTemplate / karteStorage で存在保証し、表示・保存する。
  */
-import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
 import { PLAN_FREQUENCY_OPTIONS } from './karteTemplate';
 import { ensureKarteExists, saveKarte } from './karteStorage';
 
@@ -33,6 +33,8 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
   const [consumableQuantity, setConsumableQuantity] = useState('');
   const [staffName, setStaffName] = useState('');
   const [staffStartDate, setStaffStartDate] = useState('');
+  const isInitialLoadRef = useRef(true);
+  const lastSavedKarteRef = useRef(null);
 
   const safeStore = store || {};
   const brandName = (safeStore && getBrandName) ? getBrandName(safeStore) : (safeStore.brand_name ?? ((brands.find(b => String(b.id) === String(safeStore.brand_id))?.name) ?? ''));
@@ -71,6 +73,38 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
     return () => { cancelled = true; };
   }, []);
 
+  // 自動保存: karteが変更されたら1.5秒後に自動保存（デバウンス）
+  useEffect(() => {
+    if (!storeId || isLocked) return;
+    
+    // 初回ロード時は保存しない
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+      lastSavedKarteRef.current = JSON.stringify(karte);
+      return;
+    }
+
+    // 前回保存した内容と同じ場合は保存しない
+    const currentKarteStr = JSON.stringify(karte);
+    if (currentKarteStr === lastSavedKarteRef.current) {
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        await saveKarte(storeId, karte);
+        lastSavedKarteRef.current = JSON.stringify(karte);
+        console.log('[KartePanel] Auto-saved karte for store:', storeId);
+      } catch (e) {
+        console.warn('[KartePanel] Auto-save failed:', e);
+      }
+    }, 1500); // 1.5秒後に自動保存
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [karte, storeId, isLocked]);
+
   const update = (key, value) => setKarte(prev => ({ ...prev, [key]: value }));
   const updateArray = (key, updater) => setKarte(prev => ({ ...prev, [key]: updater(prev[key] || []) }));
 
@@ -97,34 +131,19 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
   };
   const removeStaffHistory = (index) => updateArray('cleaning_staff_history', list => list.filter((_, i) => i !== index));
 
-  const save = useCallback(() => {
-    return new Promise((resolve, reject) => {
-      saveResolveRef.current = { resolve, reject };
-      setShowSaveConfirm(true);
-    });
-  }, [storeId, karte]);
-
-  const onSaveConfirmOk = useCallback(async () => {
-    setShowSaveConfirm(false);
-    const ref = saveResolveRef.current;
-    saveResolveRef.current = null;
+  const save = useCallback(async () => {
+    if (!storeId || isLocked) return;
     setSaving(true);
     try {
       await saveKarte(storeId, karte);
-      ref?.resolve?.();
+      lastSavedKarteRef.current = JSON.stringify(karte);
     } catch (e) {
-      ref?.reject?.(e);
+      console.error('[KartePanel] Save failed:', e);
+      throw e;
     } finally {
       setSaving(false);
     }
-  }, [storeId, karte]);
-
-  const onSaveConfirmCancel = useCallback(() => {
-    setShowSaveConfirm(false);
-    const ref = saveResolveRef.current;
-    saveResolveRef.current = null;
-    ref?.resolve?.();
-  }, []);
+  }, [storeId, karte, isLocked]);
 
   useImperativeHandle(ref, () => ({ save }), [save]);
 

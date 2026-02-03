@@ -5,7 +5,7 @@
 export class ReportAssistant {
     constructor(stateManager) {
         this.stateManager = stateManager;
-        this.API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod/staff';
+        this.API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
         this.isRecording = false;
         this.mediaRecorder = null;
         this.audioChunks = [];
@@ -351,6 +351,261 @@ export class ReportAssistant {
                 console.error(e);
                 alert('マイクを使用できません');
             }
+        }
+    }
+}
+
+/**
+ * Schedule Assistant - スケジュール管理用AIアシスタント
+ * Draggable overlay with visualizer (球体/粒子/波形)
+ */
+export class ScheduleAssistant {
+    constructor(apiBase) {
+        this.API_BASE = apiBase || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+        this.isOpen = false;
+        this.isDragging = false;
+        this.dragOffset = { x: 0, y: 0 };
+        this.currentStatus = 'normal'; // normal / warning / danger
+        this.animationFrame = null;
+        this.canvas = null;
+        this.ctx = null;
+    }
+
+    init() {
+        console.log('[ScheduleAssistant] Initializing...');
+        this.renderUI();
+        this.bindEvents();
+        this.initVisualizer();
+    }
+
+    renderUI() {
+        // Draggable Overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'schedule-assistant-overlay';
+        overlay.id = 'schedule-assistant-overlay';
+        overlay.innerHTML = `
+            <div class="schedule-assistant-header" id="schedule-assistant-header">
+                <div class="schedule-assistant-title">
+                    <span class="schedule-assistant-icon">⚡</span>
+                    <span class="schedule-assistant-name">守護霊</span>
+                </div>
+                <button class="schedule-assistant-close-btn" id="schedule-assistant-close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="schedule-assistant-visualizer-container">
+                <canvas id="schedule-assistant-canvas" class="schedule-assistant-canvas"></canvas>
+            </div>
+            <div class="schedule-assistant-message" id="schedule-assistant-message">
+                静かに見守っています...
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        this.elements = {
+            overlay: document.getElementById('schedule-assistant-overlay'),
+            header: document.getElementById('schedule-assistant-header'),
+            closeBtn: document.getElementById('schedule-assistant-close-btn'),
+            canvas: document.getElementById('schedule-assistant-canvas'),
+            message: document.getElementById('schedule-assistant-message')
+        };
+    }
+
+    bindEvents() {
+        const els = this.elements;
+        if (!els.overlay) return;
+
+        // Toggle Open/Close
+        els.closeBtn.addEventListener('click', () => this.toggleOpen(false));
+
+        // Dragging
+        els.header.addEventListener('mousedown', (e) => this.startDrag(e));
+        document.addEventListener('mousemove', (e) => this.onDrag(e));
+        document.addEventListener('mouseup', () => this.endDrag());
+    }
+
+    startDrag(e) {
+        this.isDragging = true;
+        const rect = this.elements.overlay.getBoundingClientRect();
+        this.dragOffset = {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+        this.elements.overlay.style.cursor = 'grabbing';
+    }
+
+    onDrag(e) {
+        if (!this.isDragging) return;
+        e.preventDefault();
+        const x = e.clientX - this.dragOffset.x;
+        const y = e.clientY - this.dragOffset.y;
+        this.elements.overlay.style.left = `${x}px`;
+        this.elements.overlay.style.top = `${y}px`;
+    }
+
+    endDrag() {
+        this.isDragging = false;
+        if (this.elements.overlay) {
+            this.elements.overlay.style.cursor = 'grab';
+        }
+    }
+
+    initVisualizer() {
+        this.canvas = this.elements.canvas;
+        if (!this.canvas) return;
+        this.ctx = this.canvas.getContext('2d');
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+        this.animate();
+    }
+
+    resizeCanvas() {
+        if (!this.canvas) return;
+        const container = this.canvas.parentElement;
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        this.canvas.width = rect.width;
+        this.canvas.height = rect.height;
+    }
+
+    animate() {
+        if (!this.ctx || !this.canvas) return;
+        this.animationFrame = requestAnimationFrame(() => this.animate());
+        this.drawVisualizer();
+    }
+
+    drawVisualizer() {
+        const ctx = this.ctx;
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+        ctx.clearRect(0, 0, width, height);
+
+        const time = Date.now() * 0.001;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        // Status-based colors
+        let color1, color2, particleColor;
+        if (this.currentStatus === 'danger') {
+            color1 = 'rgba(255, 80, 80, 0.3)';
+            color2 = 'rgba(255, 120, 120, 0.2)';
+            particleColor = 'rgba(255, 100, 100, 0.6)';
+        } else if (this.currentStatus === 'warning') {
+            color1 = 'rgba(255, 200, 80, 0.3)';
+            color2 = 'rgba(255, 220, 120, 0.2)';
+            particleColor = 'rgba(255, 210, 100, 0.6)';
+        } else {
+            color1 = 'rgba(100, 150, 255, 0.3)';
+            color2 = 'rgba(120, 170, 255, 0.2)';
+            particleColor = 'rgba(110, 160, 255, 0.6)';
+        }
+
+        // Sphere (球体)
+        const sphereRadius = Math.min(width, height) * 0.15;
+        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, sphereRadius);
+        gradient.addColorStop(0, color1);
+        gradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, sphereRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Particles (粒子)
+        const particleCount = 20;
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (i / particleCount) * Math.PI * 2 + time * 0.5;
+            const radius = sphereRadius * 1.5;
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY + Math.sin(angle) * radius;
+            ctx.fillStyle = particleColor;
+            ctx.beginPath();
+            ctx.arc(x, y, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Waveform (波形)
+        const waveAmplitude = 10;
+        const waveFrequency = 2;
+        ctx.strokeStyle = color2;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let x = 0; x < width; x += 2) {
+            const y = centerY + Math.sin((x / width) * Math.PI * waveFrequency + time * 2) * waveAmplitude;
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    }
+
+    toggleOpen(isOpen) {
+        this.isOpen = isOpen;
+        const els = this.elements;
+        if (isOpen) {
+            els.overlay.classList.add('active');
+        } else {
+            els.overlay.classList.remove('active');
+        }
+    }
+
+    updateStatus(status) {
+        this.currentStatus = status || 'normal';
+        const els = this.elements;
+        if (els.overlay) {
+            els.overlay.className = `schedule-assistant-overlay status-${this.currentStatus}`;
+        }
+    }
+
+    updateMessage(text) {
+        const els = this.elements;
+        if (els.message) {
+            els.message.textContent = text || '静かに見守っています...';
+        }
+    }
+
+    getHeaders() {
+        const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    }
+
+    async processSchedule(selectedSchedule, rollingDays, visibleSchedules) {
+        try {
+            const body = {
+                action: 'schedule_assistant',
+                selected_schedule: selectedSchedule,
+                rolling_days: rollingDays,
+                visible_schedules: visibleSchedules
+            };
+
+            const response = await fetch(`${this.API_BASE}/ai/process`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) throw new Error('API Error');
+            const data = await response.json();
+            const result = data.result || {};
+
+            // Update UI based on result
+            this.updateStatus(result.status || 'normal');
+            this.updateMessage(result.message || result.notes_summary || '静かに見守っています...');
+
+            return result;
+        } catch (e) {
+            console.error('[ScheduleAssistant] Error:', e);
+            this.updateStatus('normal');
+            this.updateMessage('接続に失敗しました...');
+            return null;
+        }
+    }
+
+    destroy() {
+        if (this.animationFrame) {
+            cancelAnimationFrame(this.animationFrame);
+        }
+        if (this.elements.overlay) {
+            this.elements.overlay.remove();
         }
     }
 }

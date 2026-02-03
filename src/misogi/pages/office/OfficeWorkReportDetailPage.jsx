@@ -41,10 +41,11 @@ const TOUCH_LABELS = { visit: '訪問', call: '電話', email: 'メール', othe
 
 /**
  * 業務報告の詳細ページ（社内・認証必須）
- * /office/work-reports/:reportId
+ * /office/work-reports/:reportId または props で reportId + embed 指定で埋め込み
  */
-export default function OfficeWorkReportDetailPage() {
-  const { reportId } = useParams();
+export default function OfficeWorkReportDetailPage({ reportId: propReportId, embed = false }) {
+  const params = useParams();
+  const reportId = propReportId ?? params.reportId;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [report, setReport] = useState(null);
@@ -69,17 +70,17 @@ export default function OfficeWorkReportDetailPage() {
 
   if (loading) {
     return (
-      <div className="report-page" data-job="office" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+      <div className={`report-page office-work-report-detail ${embed ? 'embed' : ''}`} data-job="office" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
         <p>読み込み中...</p>
       </div>
     );
   }
   if (error || !report) {
     return (
-      <div className="report-page" data-job="office" style={{ padding: 24, maxWidth: 560, margin: '0 auto' }}>
-        <h1 style={{ fontSize: '1.25rem', marginBottom: 16 }}>業務報告の閲覧</h1>
+      <div className={`report-page office-work-report-detail ${embed ? 'embed' : ''}`} data-job="office" style={{ padding: 24, maxWidth: 560, margin: '0 auto' }}>
+        {!embed && <h1 style={{ fontSize: '1.25rem', marginBottom: 16 }}>業務報告の閲覧</h1>}
         <p style={{ color: 'var(--alert, #ff3030)' }}>{error}</p>
-        <p><Link to="/admin/work-reports">業務報告（管理）一覧へ</Link></p>
+        {!embed && <p><Link to="/admin/work-reports">業務報告（管理）一覧へ</Link></p>}
       </div>
     );
   }
@@ -90,14 +91,18 @@ export default function OfficeWorkReportDetailPage() {
   const isCase = report.template_id === 'SALES_CASE_V1';
 
   return (
-    <div className="report-page" data-job="office" style={{ padding: 24, maxWidth: 720, margin: '0 auto' }}>
-      <p style={{ marginBottom: 16 }}>
-        <Link to="/admin/work-reports" style={{ color: 'var(--job-office)' }}>← 業務報告（管理）一覧</Link>
-      </p>
-      <h1 style={{ fontSize: '1.25rem', marginBottom: 8 }}>業務報告（閲覧）</h1>
-      <p style={{ fontSize: '0.9rem', color: 'var(--muted)', marginBottom: 24 }}>
-        {templateLabel(report.template_id)} · {report.work_date || '—'} · {report.state || '—'}
-      </p>
+    <div className={`report-page office-work-report-detail ${embed ? 'embed' : ''}`} data-job="office" style={{ padding: 24, maxWidth: 720, margin: '0 auto' }}>
+      {!embed && (
+        <>
+          <p style={{ marginBottom: 16 }}>
+            <Link to="/admin/work-reports" style={{ color: 'var(--job-office)' }}>← 業務報告（管理）一覧</Link>
+          </p>
+          <h1 style={{ fontSize: '1.25rem', marginBottom: 8 }}>業務報告（閲覧）</h1>
+          <p style={{ fontSize: '0.9rem', color: 'var(--muted)', marginBottom: 24 }}>
+            {templateLabel(report.template_id)} · {report.work_date || '—'} · {report.state || '—'}
+          </p>
+        </>
+      )}
 
       <section style={{ background: 'var(--card-bg)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 20, marginBottom: 16 }}>
         <h2 style={{ fontSize: '1rem', margin: '0 0 12px', color: 'var(--muted)' }}>基本情報</h2>

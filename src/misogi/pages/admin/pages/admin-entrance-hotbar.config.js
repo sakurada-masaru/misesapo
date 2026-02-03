@@ -3,7 +3,16 @@
  */
 export const ADMIN_HOTBAR = [
   { id: 'work-reports', label: '業務報告', to: '/admin/work-reports', disabled: false },
+  { id: 'schedule', label: '清掃スケジュール', to: '/admin/schedule', disabled: false },
+  {
+    id: 'clients',
+    role: 'target',
+    label: '顧客',
+    subItems: [
+      { id: 'client-register', label: '登録', path: '/office/clients/new' },
+      { id: 'client-list', label: 'リスト', path: '/office/clients/list' },
+      { id: 'client-karte', label: 'カルテ', path: '/office/clients/list' },
+    ]
+  },
   { id: 'workers', label: 'ワーカー管理', to: '/admin/workers', disabled: true },
-  { id: 'store-profiles', label: 'カルテ管理', to: '/admin/store-profiles', disabled: true },
-  { id: 'store-boxes', label: '共有ボックス', to: '/admin/store-boxes', disabled: true },
 ];

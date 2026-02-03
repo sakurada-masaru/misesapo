@@ -1,3 +1,7 @@
+# ✅ Step 2: モジュール読み込み時に print デバッグ
+print("### UNIVERSAL_WORK_REPORTS MODULE LOADED ###")
+print("### MODULE FILE: universal_work_reports.py ###")
+
 import json
 import boto3
 import os
@@ -13,6 +17,7 @@ from decimal import Decimal
 # ロガー設定（CloudWatch Logs 用）
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+print("### LOGGER INITIALIZED ###")
 
 
 def decimal_handler(obj):
@@ -43,15 +48,19 @@ def json_dumps_decimal(obj, *args, **kwargs):
 json.dumps = json_dumps_decimal
 
 # DynamoDB initialization（リージョン明示で保存先を確実に）
+print("### INITIALIZING DYNAMODB ###")
 DYNAMODB_REGION = os.environ.get('AWS_REGION', 'ap-northeast-1')
 dynamodb = boto3.resource('dynamodb', region_name=DYNAMODB_REGION)
 # ✅ ハードコード排除: 環境変数から必ず取得（文字列直書き禁止）
 TABLE_NAME = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-reports')
+print(f"### TABLE_NAME from env: {TABLE_NAME} ###")
 if not TABLE_NAME:
+    print("### ERROR: UNIVERSAL_WORK_LOGS_TABLE is not set! ###")
     raise ValueError("UNIVERSAL_WORK_LOGS_TABLE environment variable is required")
 table = dynamodb.Table(TABLE_NAME)
 logger.info("[INIT] DynamoDB table=%s, region=%s", TABLE_NAME, DYNAMODB_REGION)
 print(f"[INIT] DynamoDB table={TABLE_NAME}, region={DYNAMODB_REGION}")
+print(f"### TABLE OBJECT CREATED: {type(table)} ###")
 
 def _get_jst_now():
     return datetime.now(timezone(timedelta(hours=9)))
@@ -100,18 +109,32 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
     """
     Worker向け汎用業務報告API
     """
+    # ✅ Step 2: 関数が呼ばれたことを確実に print で出力（最重要）
+    print("### HIT handle_universal_worker_work_reports ###")
+    print(f"### FUNCTION CALLED: method={method}, path={path}, user_info={bool(user_info)} ###")
+    logger.info("[handle_universal_worker_work_reports] ENTRY: method=%s, path=%s, user_info=%s", method, path, bool(user_info))
+    
     # ✅ デバッグ: event / method / path を可視化
     try:
         event_str = json.dumps(event, default=str, ensure_ascii=False)
         logger.info("[DEBUG] raw_event (first 4000 chars)=%s", event_str[:4000])
+        print(f"[DEBUG] raw_event (first 1000 chars)={event_str[:1000]}")
     except Exception as e:
         logger.warning("[DEBUG] Failed to serialize event: %s", str(e))
+        print(f"[DEBUG] Failed to serialize event: {str(e)}")
     
     # method / path の正規化（API Gateway の形式に合わせる）
     method_upper = (method or '').upper()
     path_normalized = (path or '').split('?')[0]  # クエリパラメータ除去
     
+    # パスの先頭/末尾のスラッシュを正規化
+    if path_normalized and not path_normalized.startswith('/'):
+        path_normalized = '/' + path_normalized
+    if len(path_normalized) > 1:
+        path_normalized = path_normalized.rstrip('/')
+    
     logger.info("[DEBUG] method=%s path=%s (normalized: %s)", method, path, path_normalized)
+    print(f"[DEBUG] handle_universal_worker_work_reports: method={method_upper}, path={path_normalized}, user_info={bool(user_info)}")
     
     if not user_info:
         logger.warning("[work-report] 401: user_info is None (token missing or invalid; 403 may be from API Gateway)")
@@ -122,10 +145,13 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
     parts = path_normalized.split('/')
     
     logger.info("[DEBUG] worker_id=%s, parts=%s", worker_id, parts)
+    print(f"[DEBUG] worker_id={worker_id}, parts={parts}")
     
     # GET /work-report
     # 自分の報告一覧を取得（クエリパラメータでフィルタリング可）
-    if method == 'GET' and path == '/work-report':
+    logger.info("[DEBUG] Checking GET /work-report: method_upper=%s (==GET? %s), path_normalized=%s (==/work-report? %s)", 
+                method_upper, method_upper == 'GET', path_normalized, path_normalized == '/work-report')
+    if method_upper == 'GET' and path_normalized == '/work-report':
         query_params = event.get('queryStringParameters') or {}
         month = query_params.get('month')
         date = query_params.get('date')
@@ -215,7 +241,9 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
             }
 
     # GET /work-report/{log_id} 自分の報告1件を log_id で取得
-    if method == 'GET' and len(parts) >= 3 and parts[1] == 'work-report':
+    logger.info("[DEBUG] Checking GET /work-report/{log_id}: method_upper=%s (==GET? %s), parts=%s", 
+                method_upper, method_upper == 'GET', parts)
+    if method_upper == 'GET' and len(parts) >= 3 and parts[1] == 'work-report':
         log_id = parts[2]
         try:
             resp = table.get_item(Key={'log_id': log_id})
@@ -396,11 +424,25 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                 
                 # ✅ 保存処理ログ（直前）
                 table_name = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-reports')
-                logger.info("[WORK_REPORT] saving log_id=%s, table=%s, existing=%s", log_id, table_name, bool(existing))
-                print(f"[PUT /work-report] About to save: log_id={log_id}, table={table_name}, existing={bool(existing)}")
+                logger.info("[WORK_REPORT] saving log_id=%s, table=%s, existing=%s, worker_id=%s", log_id, table_name, bool(existing), worker_id)
+                print(f"[PUT /work-report] About to save: log_id={log_id}, table={table_name}, existing={bool(existing)}, worker_id={worker_id}")
+                print(f"[PUT /work-report] Item keys: {list(item.keys())}")
+                
+                # テーブルオブジェクトが正しく初期化されているか確認
+                if not table:
+                    error_msg = f"[PUT /work-report] CRITICAL: table object is None! TABLE_NAME={table_name}"
+                    logger.error(error_msg)
+                    print(error_msg)
+                    return {
+                        'statusCode': 500,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'InternalServerError', 'message': 'DynamoDB table not initialized', 'table_name': table_name})
+                    }
 
                 if existing:
                     # 既存レコードは version で楽観ロック
+                    logger.info("[WORK_REPORT] Updating existing item: log_id=%s, version=%s -> %s", log_id, old_version, new_version)
+                    print(f"[PUT /work-report] Updating existing: log_id={log_id}, old_version={old_version}, new_version={new_version}")
                     table.put_item(
                         Item=item,
                         ConditionExpression="version = :oldv",
@@ -408,14 +450,16 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                     )
                 else:
                     # 新規作成はシンプルに attribute_not_exists(log_id) で衝突を防ぐ
+                    logger.info("[WORK_REPORT] Creating new item: log_id=%s, version=%s", log_id, new_version)
+                    print(f"[PUT /work-report] Creating new: log_id={log_id}, version={new_version}")
                     table.put_item(
                         Item=item,
                         ConditionExpression="attribute_not_exists(log_id)"
                     )
                 
                 # ✅ 保存処理ログ（直後）
-                logger.info("[WORK_REPORT] saved log_id=%s, table=%s", log_id, table_name)
-                print(f"[PUT /work-report] Saved successfully: log_id={log_id}, table={table_name}")
+                logger.info("[WORK_REPORT] saved log_id=%s, table=%s, version=%s", log_id, table_name, new_version)
+                print(f"[PUT /work-report] Saved successfully: log_id={log_id}, table={table_name}, version={new_version}")
 
             except ClientError as e:
                 error_code = e.response.get("Error", {}).get("Code", "Unknown")
@@ -452,8 +496,50 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                             "provided_version": provided_version
                         }, ensure_ascii=False)
                     }
-                print(f"[PUT /work-report] request_id={request_id}: DynamoDB ClientError - {error_code}: {str(e)}")
-                raise
+                error_msg = e.response.get("Error", {}).get("Message", str(e))
+                logger.exception(f"[WORK_REPORT] DynamoDB ClientError: code={error_code}, message={error_msg}, log_id={log_id}, table={table_name}")
+                print(f"[PUT /work-report] request_id={request_id}: DynamoDB ClientError - {error_code}: {error_msg}")
+                print(f"[PUT /work-report] Full error response: {e.response}")
+                
+                # 権限エラーの場合
+                if error_code in ['AccessDeniedException', 'UnauthorizedOperation']:
+                    return {
+                        'statusCode': 500,
+                        'headers': headers,
+                        'body': json.dumps({
+                            'error': 'InternalServerError',
+                            'message': 'DynamoDB access denied. Check IAM permissions.',
+                            'code': error_code,
+                            'table': table_name
+                        }, ensure_ascii=False)
+                    }
+                
+                # その他のDynamoDBエラー
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': 'InternalServerError',
+                        'message': f'DynamoDB error: {error_code}',
+                        'code': error_code,
+                        'table': table_name
+                    }, ensure_ascii=False)
+                }
+            except Exception as e:
+                # ClientError以外の全ての例外をキャッチ
+                logger.exception(f"[WORK_REPORT] Unexpected error during save: log_id={log_id}, table={table_name}")
+                print(f"[PUT /work-report] request_id={request_id}: Unexpected error: {type(e).__name__}: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': 'InternalServerError',
+                        'message': f'Save failed: {str(e)}',
+                        'type': type(e).__name__
+                    }, ensure_ascii=False)
+                }
 
             # ✅ 保存成功ログ（必須）
             logger.info(f"[WORK_REPORT] saved log_id={log_id}, version={new_version}, worker_id={worker_id}, template_id={item.get('template_id', 'N/A')}")
@@ -468,10 +554,15 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                     'body': json.dumps({'error': 'InternalServerError', 'message': 'log_id missing in response', 'request_id': request_id})
                 }
             
+            # ✅ レスポンスにlog_idを明示的に含める（確実性のため）
+            response_data = {**item, 'log_id': log_id}
+            logger.info(f"[WORK_REPORT] Returning response with log_id={log_id}, version={new_version}")
+            print(f"[PUT /work-report] Returning 200 with log_id={log_id}, version={new_version}")
+            
             return {
                 "statusCode": 200,
                 "headers": headers,
-                "body": json.dumps(item, ensure_ascii=False)
+                "body": json.dumps(response_data, ensure_ascii=False)
             }
 
         except json.JSONDecodeError as e:
@@ -513,7 +604,9 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
             }
 
     # POST /work-report/submit
-    if method == 'POST' and path == '/work-report/submit':
+    logger.info("[DEBUG] Checking POST /work-report/submit: method_upper=%s (==POST? %s), path_normalized=%s (==/work-report/submit? %s)", 
+                method_upper, method_upper == 'POST', path_normalized, path_normalized == '/work-report/submit')
+    if method_upper == 'POST' and path_normalized == '/work-report/submit':
         try:
             body = json.loads(event.get('body') or '{}')
             log_id = body.get('log_id')
@@ -830,7 +923,9 @@ def handle_universal_admin_work_reports(event, headers, path, method, user_info,
     
     # GET /admin/work-report
     # 未承認の報告を中心に一覧取得
-    if method == 'GET' and path == '/admin/work-report':
+    logger.info("[DEBUG] Checking GET /admin/work-report: method_upper=%s (==GET? %s), path_normalized=%s", 
+                method_upper, method_upper == 'GET', path_normalized)
+    if method_upper == 'GET' and path_normalized == '/admin/work-report':
         query_params = event.get('queryStringParameters') or {}
         state = query_params.get('state') or 'submitted'
         

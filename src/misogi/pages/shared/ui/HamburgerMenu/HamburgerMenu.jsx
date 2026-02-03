@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import './hamburger-menu.css';
 
 /**
@@ -81,6 +82,14 @@ export default function HamburgerMenu() {
               </Link>
             ))}
           </nav>
+          <div className="hamburger-menu-footer">
+            <div className="hamburger-menu-section">
+              <div className="hamburger-menu-section-title">設定</div>
+              <div className="hamburger-menu-section-content">
+                <ThemeToggle />
+              </div>
+            </div>
+          </div>
         </aside>
       </div>
     </>

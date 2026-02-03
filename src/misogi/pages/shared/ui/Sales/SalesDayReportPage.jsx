@@ -330,8 +330,9 @@ export default function SalesDayReportPage() {
 
   const handleHeaderSubmit = useCallback(async () => {
     setHeaderSubmitError('');
-    if (!header.saved?.log_id) {
-      setHeaderSubmitError('先に「日次サマリを下書き保存」を実行してください');
+    const err = validateHeader();
+    if (err) {
+      setHeaderSubmitError(err);
       return;
     }
     if (header.saved?.state === 'submitted') {
@@ -342,9 +343,41 @@ export default function SalesDayReportPage() {
     setShareUrl(null);
     setShareVerifyError(null);
     try {
-      const res = await patchWorkReport(header.saved.log_id, { state: 'submitted', version: header.saved.version });
+      let logId = header.saved?.log_id;
+      let version = header.saved?.version || 0;
       
-      // ✅ 必須: log_id がレスポンスに含まれている場合のみ共有URLを表示
+      // ✅ ステップ0: 最新の内容を下書き保存（log_idがない場合、または内容が変更されている可能性があるため）
+      try {
+        const reporterName = user?.name || header.reporter_name || '';
+        const saveBody = {
+          date: header.work_date,
+          work_date: header.work_date,
+          work_minutes: Number(header.total_minutes),
+          template_id: TEMPLATE_DAY,
+          state: 'draft',
+          target_label: 'sales-day',
+          description: JSON.stringify(serializeHeader({ ...header, reporter_name: reporterName })),
+        };
+        if (logId) {
+          saveBody.log_id = logId;
+          saveBody.version = version;
+        }
+        const saveRes = await putWorkReport(saveBody);
+        logId = saveRes.log_id;
+        version = saveRes.version;
+        // 下書き保存の状態を更新
+        setHeader((h) => ({ ...h, saved: { log_id: logId, version, state: 'draft' } }));
+      } catch (saveErr) {
+        const saveMsg = saveErr?.message || '下書き保存に失敗しました';
+        console.error('[handleHeaderSubmit] Draft save failed:', saveErr);
+        setHeaderSubmitError(`下書き保存に失敗しました: ${saveMsg}`);
+        return;
+      }
+      
+      // ✅ ステップ1: 提出APIを呼び出す（下書き保存が完了したlog_idとversionを使用）
+      const res = await patchWorkReport(logId, { state: 'submitted', version });
+      
+      // ✅ ステップ2: log_id がレスポンスに含まれているか確認
       if (!res || !res.log_id) {
         const errorMsg = res ? '保存に失敗しました（log_idが返ってきません）' : '提出に失敗しました（レスポンスが空です）';
         console.error('[handleHeaderSubmit] Missing log_id in response:', res);
@@ -352,19 +385,29 @@ export default function SalesDayReportPage() {
         return;
       }
       
-      setHeader((h) => ({ ...h, saved: { ...h.saved, state: 'submitted', version: res.version ?? (h.saved?.version || 0) + 1 } }));
-      setHeaderSubmitError('');
-      
-      // log_id が確実にある場合のみ共有URLを設定
-      setShareUrl(buildReportShareUrl(res.log_id));
-      
-      // 検証: サーバーで実際に読めるか確認
-      getWorkReportById(res.log_id).catch((err) => {
-        console.error('[handleHeaderSubmit] Failed to verify saved report:', err);
-        if (err?.status === 404) {
-          setShareVerifyError('サーバーに反映されていない可能性があります。管理者に連絡してください。');
+      // ✅ ステップ3: 保存が確実に完了したことを確認（サーバーで実際に読めるか検証）
+      try {
+        const verifiedItem = await getWorkReportById(res.log_id);
+        if (!verifiedItem || verifiedItem.state !== 'submitted') {
+          throw new Error('提出状態が確認できませんでした');
         }
-      });
+        
+        // ✅ ステップ4: 検証成功後にのみ状態を更新
+        setHeader((h) => ({ ...h, saved: { ...h.saved, state: 'submitted', version: res.version ?? (h.saved?.version || 0) + 1 } }));
+        setHeaderSubmitError('');
+        
+        // ✅ ステップ5: 保存が確実に完了したことを確認してから共有URLを設定
+        setShareUrl(buildReportShareUrl(res.log_id));
+      } catch (verifyErr) {
+        console.error('[handleHeaderSubmit] Failed to verify saved report:', verifyErr);
+        if (verifyErr?.status === 404) {
+          setHeaderSubmitError('提出は完了しましたが、サーバーに反映されていない可能性があります。管理者に連絡してください。');
+        } else {
+          setHeaderSubmitError('提出は完了しましたが、保存の確認に失敗しました。管理者に連絡してください。');
+        }
+        // 検証失敗時はモーダルを表示しない（URLを設定しない）
+        return;
+      }
     } catch (e) {
       const msg = e?.message || e?.body || '提出に失敗しました';
       console.error('[handleHeaderSubmit] Error:', e);
@@ -433,17 +476,44 @@ export default function SalesDayReportPage() {
       const err = validateCaseSubmit(c);
       setSubmitErrors((prev) => ({ ...prev, [index]: err }));
       if (err) return;
-      if (!c.saved?.log_id) {
-        setSubmitErrors((prev) => ({ ...prev, [index]: '先に「この案件を下書き保存」を実行してください' }));
-        return;
-      }
       setCaseSaving((prev) => ({ ...prev, [index]: true }));
       setShareUrl(null);
       setShareVerifyError(null);
       try {
-        const res = await patchWorkReport(c.saved.log_id, { state: 'submitted', version: c.saved.version });
+        let logId = c.saved?.log_id;
+        let version = c.saved?.version || 0;
         
-        // ✅ 必須: log_id がレスポンスに含まれている場合のみ共有URLを表示
+        // ✅ ステップ0: 最新の内容を下書き保存（log_idがない場合、または内容が変更されている可能性があるため）
+        try {
+          const saveBody = {
+            date: header.work_date || workDate,
+            work_date: header.work_date || workDate,
+            work_minutes: Number(c.work_minutes) || 0,
+            template_id: TEMPLATE_CASE,
+            state: 'draft',
+            target_label: c.store_name || `案件${index + 1}`,
+            description: JSON.stringify(serializeCase(c)),
+          };
+          if (logId) {
+            saveBody.log_id = logId;
+            saveBody.version = version;
+          }
+          const saveRes = await putWorkReport(saveBody);
+          logId = saveRes.log_id;
+          version = saveRes.version;
+          // 下書き保存の状態を更新
+          updateCase(index, (prev) => ({ ...prev, saved: { log_id: logId, version, state: 'draft' } }));
+        } catch (saveErr) {
+          const saveMsg = saveErr?.message || '下書き保存に失敗しました';
+          console.error('[handleCaseSubmit] Draft save failed:', saveErr);
+          setSubmitErrors((prev) => ({ ...prev, [index]: `下書き保存に失敗しました: ${saveMsg}` }));
+          return;
+        }
+        
+        // ✅ ステップ1: 提出APIを呼び出す（下書き保存が完了したlog_idとversionを使用）
+        const res = await patchWorkReport(logId, { state: 'submitted', version });
+        
+        // ✅ ステップ2: log_id がレスポンスに含まれているか確認
         if (!res || !res.log_id) {
           const errorMsg = res ? '保存に失敗しました（log_idが返ってきません）' : '提出に失敗しました（レスポンスが空です）';
           console.error('[handleCaseSubmit] Missing log_id in response:', res);
@@ -451,19 +521,29 @@ export default function SalesDayReportPage() {
           return;
         }
         
-        updateCase(index, (prev) => ({ ...prev, saved: { ...prev.saved, state: 'submitted', version: res.version ?? (prev.saved?.version || 0) + 1 } }));
-        setSubmitErrors((prev) => ({ ...prev, [index]: null }));
-        
-        // log_id が確実にある場合のみ共有URLを設定
-        setShareUrl(buildReportShareUrl(res.log_id));
-        
-        // 検証: サーバーで実際に読めるか確認
-        getWorkReportById(res.log_id).catch((err) => {
-          console.error('[handleCaseSubmit] Failed to verify saved report:', err);
-          if (err?.status === 404) {
-            setShareVerifyError('サーバーに反映されていない可能性があります。管理者に連絡してください。');
+        // ✅ ステップ3: 保存が確実に完了したことを確認（サーバーで実際に読めるか検証）
+        try {
+          const verifiedItem = await getWorkReportById(res.log_id);
+          if (!verifiedItem || verifiedItem.state !== 'submitted') {
+            throw new Error('提出状態が確認できませんでした');
           }
-        });
+          
+          // ✅ ステップ4: 検証成功後にのみ状態を更新
+          updateCase(index, (prev) => ({ ...prev, saved: { ...prev.saved, state: 'submitted', version: res.version ?? (prev.saved?.version || 0) + 1 } }));
+          setSubmitErrors((prev) => ({ ...prev, [index]: null }));
+          
+          // ✅ ステップ5: 保存が確実に完了したことを確認してから共有URLを設定
+          setShareUrl(buildReportShareUrl(res.log_id));
+        } catch (verifyErr) {
+          console.error('[handleCaseSubmit] Failed to verify saved report:', verifyErr);
+          if (verifyErr?.status === 404) {
+            setSubmitErrors((prev) => ({ ...prev, [index]: '提出は完了しましたが、サーバーに反映されていない可能性があります。管理者に連絡してください。' }));
+          } else {
+            setSubmitErrors((prev) => ({ ...prev, [index]: '提出は完了しましたが、保存の確認に失敗しました。管理者に連絡してください。' }));
+          }
+          // 検証失敗時はモーダルを表示しない（URLを設定しない）
+          return;
+        }
       } catch (e) {
         const msg = e?.message || e?.body || '提出に失敗しました';
         console.error('[handleCaseSubmit] Error:', e);

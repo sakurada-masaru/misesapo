@@ -197,3 +197,87 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ========================================= */
+/* ライトモード対応                         */
+/* ========================================= */
+
+[data-theme="light"] .office-client-karte-panel {
+  color: #1e293b;
+}
+
+[data-theme="light"] .office-karte-panel-actions {
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .office-karte-panel-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+[data-theme="light"] .office-karte-panel-btn:hover {
+  background: #e2e8f0;
+}
+
+[data-theme="light"] .office-karte-panel-link {
+  color: #1e293b;
+}
+
+[data-theme="light"] .office-karte-panel-section-title {
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .office-karte-panel-subtitle {
+  color: #1e293b;
+}
+
+[data-theme="light"] .office-karte-panel-field label {
+  color: #475569;
+}
+
+[data-theme="light"] .office-karte-panel-value {
+  color: #0f172a;
+}
+
+[data-theme="light"] .office-karte-panel-input {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .office-karte-panel-input:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="light"] .office-karte-panel-input::placeholder {
+  color: #94a3b8;
+}
+
+[data-theme="light"] .office-karte-panel-check {
+  color: #1e293b;
+}
+
+[data-theme="light"] .office-karte-panel-check input[type="checkbox"] {
+  accent-color: #3b82f6;
+}
+
+[data-theme="light"] .office-karte-panel-muted {
+  color: #64748b;
+}
+
+[data-theme="light"] .office-karte-panel-list-item {
+  border-color: #e2e8f0;
+  color: #1e293b;
+}
+
+[data-theme="light"] .office-karte-panel-list-remove {
+  color: #64748b;
+}
+
+[data-theme="light"] .office-karte-panel-list-remove:hover {
+  color: #ef4444;
+}

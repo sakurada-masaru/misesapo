@@ -1061,8 +1061,8 @@ def lambda_handler(event, context):
             if method == 'POST':
                 return handle_upload_put(event, headers)
             return {'statusCode': 405, 'headers': headers, 'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)}
-        elif normalized_path == '/ai/process':
-            # AIによるデータ処理（要約・生成・分析）
+        elif normalized_path == '/ai/process' or normalized_path == '/staff/ai/process':
+            # AIによるデータ処理（要約・生成・分析）。/staff/ai/process も同一ハンドラにフォールスルー
             if method == 'POST':
                 return handle_ai_process(event, headers)
         elif normalized_path == '/chat':
@@ -1379,6 +1379,15 @@ def lambda_handler(event, context):
             # Googleカレンダーには一切触れない（システム側のみクリア）
             if method in ['POST', 'DELETE']:
                 return clear_all_schedules(event, headers)
+            return {
+                'statusCode': 405,
+                'headers': headers,
+                'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+            }
+        elif normalized_path == '/admin/import/google-ics':
+            # GoogleカレンダーICS取り込み（管理者のみ）
+            if method == 'POST':
+                return import_google_ics(event, headers)
             return {
                 'statusCode': 405,
                 'headers': headers,
@@ -5002,43 +5011,91 @@ def create_schedule(event, headers):
 def get_schedules(event, headers):
     """
     スケジュール一覧を取得
+    クエリパラメータ:
+    - status: ステータスでフィルタ
+    - date: 単一の日付でフィルタ (YYYY-MM-DD)
+    - date_from: 開始日でフィルタ (YYYY-MM-DD)
+    - date_to: 終了日でフィルタ (YYYY-MM-DD)
+    - assigned_to: 担当者IDでフィルタ
+    - worker_id: 清掃員IDでフィルタ
+    - limit: 最大取得件数（デフォルト: 1000）
     """
     try:
         # クエリパラメータからフィルタ条件を取得
         query_params = event.get('queryStringParameters') or {}
         status = query_params.get('status')
         date = query_params.get('date')
+        date_from = query_params.get('date_from')
+        date_to = query_params.get('date_to')
         assigned_to = query_params.get('assigned_to')
+        worker_id = query_params.get('worker_id')
+        limit = int(query_params.get('limit', 1000))
         
-        # スキャンまたはクエリを実行
+        # フィルタ式を構築
+        filter_expressions = []
+        
         if status:
-            # ステータスでフィルタ（GSIを使用する場合）
-            response = SCHEDULES_TABLE.scan(
-                FilterExpression=Attr('status').eq(status)
+            filter_expressions.append(Attr('status').eq(status))
+        
+        if date:
+            # 単一の日付でフィルタ（date または scheduled_date の両方をチェック）
+            filter_expressions.append(
+                (Attr('date').eq(date) | Attr('scheduled_date').eq(date))
             )
-        elif date:
-            # 日付でフィルタ
+        elif date_from or date_to:
+            # 日付範囲でフィルタ
+            if date_from and date_to:
+                filter_expressions.append(
+                    (Attr('date').between(date_from, date_to) | Attr('scheduled_date').between(date_from, date_to))
+                )
+            elif date_from:
+                filter_expressions.append(
+                    (Attr('date').gte(date_from) | Attr('scheduled_date').gte(date_from))
+                )
+            elif date_to:
+                filter_expressions.append(
+                    (Attr('date').lte(date_to) | Attr('scheduled_date').lte(date_to))
+                )
+        
+        if assigned_to:
+            filter_expressions.append(Attr('assigned_to').eq(assigned_to))
+        
+        if worker_id:
+            filter_expressions.append(Attr('worker_id').eq(worker_id))
+        
+        # フィルタ式を結合
+        if filter_expressions:
+            filter_expr = filter_expressions[0]
+            for expr in filter_expressions[1:]:
+                filter_expr = filter_expr & expr
             response = SCHEDULES_TABLE.scan(
-                FilterExpression=Attr('date').eq(date)
-            )
-        elif assigned_to:
-            # 担当者でフィルタ（GSIを使用する場合）
-            response = SCHEDULES_TABLE.scan(
-                FilterExpression=Attr('assigned_to').eq(assigned_to)
+                FilterExpression=filter_expr,
+                Limit=limit
             )
         else:
-            # 全件取得
-            response = SCHEDULES_TABLE.scan()
+            # 全件取得（制限付き）
+            response = SCHEDULES_TABLE.scan(Limit=limit)
         
         schedules = response.get('Items', [])
+        
+        # ページネーション対応（LastEvaluatedKeyがある場合は警告を出す）
+        has_more = 'LastEvaluatedKey' in response
+        if has_more:
+            print(f"Warning: More than {limit} schedules found. Consider using pagination.")
         
         return {
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps(schedules, ensure_ascii=False, default=str)
+            'body': json.dumps({
+                'items': schedules,
+                'count': len(schedules),
+                'has_more': has_more
+            }, ensure_ascii=False, default=str)
         }
     except Exception as e:
         print(f"Error getting schedules: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
         return {
             'statusCode': 500,
             'headers': headers,
@@ -5555,6 +5612,423 @@ def clear_all_schedules(event, headers):
                 'message': str(e)
             }, ensure_ascii=False)
         }
+
+def import_google_ics(event, headers):
+    """
+    GoogleカレンダーICS取り込み（管理者のみ）
+    POST /admin/import/google-ics
+    body: {
+        "ics_url": "<iCal URL>",
+        "from": "YYYY-MM-DD",
+        "to": "YYYY-MM-DD",
+        "dry_run": false
+    }
+    """
+    try:
+        # 認証: 管理者のみ
+        auth_header = _get_auth_header(event)
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized', 'message': 'Authorization: Bearer <id_token> が必要です'}, ensure_ascii=False)
+            }
+        id_token = auth_header.replace('Bearer ', '').strip()
+        user_info = verify_cognito_id_token(id_token)
+        if not user_info or not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized', 'message': 'トークンが無効または期限切れです'}, ensure_ascii=False)
+            }
+        
+        # 管理者権限チェック
+        role = user_info.get('role', '')
+        groups = user_info.get('groups', [])
+        is_admin = role == 'admin' or 'admin' in [g.lower() for g in groups]
+        if not is_admin:
+            return {
+                'statusCode': 403,
+                'headers': headers,
+                'body': json.dumps({'error': 'Forbidden', 'message': '管理者権限が必要です'}, ensure_ascii=False)
+            }
+
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        ics_url = body_json.get('ics_url', '').strip()
+        from_date = body_json.get('from', '').strip()
+        to_date = body_json.get('to', '').strip()
+        dry_run = body_json.get('dry_run', False)
+        
+        if not ics_url:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'ics_url is required'}, ensure_ascii=False)
+            }
+        
+        # ICSファイルを取得
+        try:
+            req = urllib.request.Request(ics_url)
+            req.add_header('User-Agent', 'MISOGI-ICS-Importer/1.0')
+            with urllib.request.urlopen(req, timeout=30) as response:
+                ics_content = response.read().decode('utf-8')
+        except Exception as e:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'ICS取得失敗',
+                    'message': f'ICS URLの取得に失敗しました: {str(e)}'
+                }, ensure_ascii=False)
+            }
+        
+        # ICSをパース
+        events = parse_ics_content(ics_content, from_date, to_date)
+        
+        if dry_run:
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': True,
+                    'dry_run': True,
+                    'found': len(events),
+                    'range': {'from': from_date, 'to': to_date},
+                    'events': events[:10]  # 最初の10件をプレビュー
+                }, ensure_ascii=False, default=str)
+            }
+        
+        # 既存のexternal_idをチェック（重複防止）
+        existing_external_ids = set()
+        try:
+            scan_response = SCHEDULES_TABLE.scan(
+                ProjectionExpression='external_id',
+                FilterExpression=Attr('external_id').exists()
+            )
+            for item in scan_response.get('Items', []):
+                ext_id = item.get('external_id')
+                if ext_id:
+                    existing_external_ids.add(ext_id)
+        except Exception as e:
+            print(f"Warning: Failed to check existing external_ids: {str(e)}")
+        
+        # 日付ごとにグループ化して、各日付の最大連番を事前に取得（パフォーマンス最適化）
+        date_to_max_seq = {}
+        unique_dates = set()
+        for event_data in events:
+            date_str = event_data.get('date')
+            if date_str:
+                unique_dates.add(date_str)
+        
+        # 各日付の最大連番を一度だけ取得
+        for date_str in unique_dates:
+            try:
+                date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+                date_prefix = date_obj.strftime('%Y%m%d')
+                max_seq = get_max_sequence_for_date(SCHEDULES_TABLE, date_prefix)
+                date_to_max_seq[date_str] = max_seq
+            except Exception as e:
+                print(f"Warning: Failed to get max sequence for {date_str}: {str(e)}")
+                date_to_max_seq[date_str] = 0
+        
+        # 日付ごとの連番カウンター
+        date_seq_counters = {date: date_to_max_seq[date] for date in unique_dates}
+        
+        # スケジュールを作成
+        inserted = 0
+        skipped = 0
+        errors = []
+        
+        for event_data in events:
+            external_id = event_data.get('uid')
+            if not external_id:
+                errors.append({'event': event_data.get('summary', 'Unknown'), 'error': 'UID not found'})
+                continue
+            
+            # 重複チェック
+            if external_id in existing_external_ids:
+                skipped += 1
+                continue
+            
+            try:
+                # スケジュールID生成（事前取得した最大連番を使用）
+                date_str = event_data.get('date')
+                if not date_str:
+                    errors.append({'event': event_data.get('summary', 'Unknown'), 'error': 'Date not found'})
+                    continue
+                
+                date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+                date_prefix = date_obj.strftime('%Y%m%d')
+                
+                # 日付ごとの連番をインクリメント
+                if date_str not in date_seq_counters:
+                    date_seq_counters[date_str] = 0
+                date_seq_counters[date_str] += 1
+                seq_str = str(date_seq_counters[date_str]).zfill(3)
+                schedule_id = f"SCH-{date_prefix}-{seq_str}"
+                
+                now = datetime.utcnow().isoformat() + 'Z'
+                
+                schedule_item = {
+                    'id': schedule_id,
+                    'scheduled_date': event_data['date'],
+                    'date': event_data['date'],  # 互換性のため
+                    'start_time': event_data.get('start_time', '09:00'),
+                    'end_time': event_data.get('end_time', '10:00'),
+                    'start_min': event_data.get('start_min', 540),  # 9:00
+                    'end_min': event_data.get('end_min', 600),  # 10:00
+                    'service': 'cleaning',
+                    'status': 'scheduled',
+                    'work_type': 'external',  # 外部取り込み
+                    'origin': 'google_ics',
+                    'external_id': external_id,
+                    'target_name': event_data.get('summary', '外部予定'),
+                    'location': event_data.get('location', ''),
+                    'description': event_data.get('description', ''),
+                    'raw': json.dumps({
+                        'summary': event_data.get('summary'),
+                        'location': event_data.get('location'),
+                        'description': event_data.get('description', '')[:500]  # 長すぎる場合は切り詰め
+                    }, ensure_ascii=False),
+                    'created_at': now,
+                    'updated_at': now
+                }
+                
+                # store_id/worker_idはnullでOK（後で手動で紐づけ可能）
+                if event_data.get('store_id'):
+                    schedule_item['store_id'] = event_data['store_id']
+                if event_data.get('worker_id'):
+                    schedule_item['worker_id'] = event_data['worker_id']
+                
+                SCHEDULES_TABLE.put_item(Item=schedule_item)
+                existing_external_ids.add(external_id)
+                inserted += 1
+            except Exception as e:
+                errors.append({
+                    'event': event_data.get('summary', 'Unknown'),
+                    'error': str(e)
+                })
+                print(f"Error creating schedule for {external_id}: {str(e)}")
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'success': True,
+                'inserted': inserted,
+                'skipped': skipped,
+                'errors': errors[:10],  # 最初の10件のエラーのみ
+                'range': {'from': from_date, 'to': to_date}
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error importing Google ICS: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'success': False,
+                'error': 'ICS取り込みに失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def parse_ics_content(ics_content, from_date=None, to_date=None):
+    """
+    ICSコンテンツをパースしてイベントリストを返す（最小実装）
+    返却形式: [
+        {
+            'uid': '...',
+            'date': 'YYYY-MM-DD',
+            'start_time': 'HH:MM',
+            'end_time': 'HH:MM',
+            'start_min': int,
+            'end_min': int,
+            'summary': '...',
+            'location': '...',
+            'description': '...'
+        },
+        ...
+    ]
+    """
+    events = []
+    current_event = {}
+    in_vevent = False
+    
+    # 日付範囲のパース
+    from_dt = None
+    to_dt = None
+    if from_date:
+        try:
+            from_dt = datetime.strptime(from_date, '%Y-%m-%d')
+        except:
+            pass
+    if to_date:
+        try:
+            to_dt = datetime.strptime(to_date, '%Y-%m-%d')
+        except:
+            pass
+    
+    lines = ics_content.split('\n')
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        
+        # VEVENT開始
+        if line == 'BEGIN:VEVENT':
+            in_vevent = True
+            current_event = {}
+            i += 1
+            continue
+        
+        # VEVENT終了
+        if line == 'END:VEVENT':
+            if in_vevent and current_event.get('uid'):
+                # 日付範囲チェック
+                event_date = current_event.get('date')
+                if event_date:
+                    try:
+                        event_dt = datetime.strptime(event_date, '%Y-%m-%d')
+                        if from_dt and event_dt < from_dt:
+                            i += 1
+                            continue
+                        if to_dt and event_dt > to_dt:
+                            i += 1
+                            continue
+                    except:
+                        pass
+                events.append(current_event)
+            in_vevent = False
+            current_event = {}
+            i += 1
+            continue
+        
+        # プロパティのパース（継続行対応）
+        if in_vevent and ':' in line:
+            # 継続行の結合
+            full_line = line
+            j = i + 1
+            while j < len(lines) and lines[j].startswith(' '):
+                full_line += lines[j].lstrip()
+                j += 1
+            
+            parts = full_line.split(':', 1)
+            if len(parts) == 2:
+                key_part = parts[0].split(';')[0]  # パラメータを除去
+                value = parts[1]
+                
+                # DTSTART/DTEND
+                if key_part == 'DTSTART':
+                    dt_start = parse_ics_datetime(value)
+                    if dt_start:
+                        current_event['date'] = dt_start.strftime('%Y-%m-%d')
+                        current_event['start_time'] = dt_start.strftime('%H:%M')
+                        current_event['start_min'] = dt_start.hour * 60 + dt_start.minute
+                
+                if key_part == 'DTEND':
+                    dt_end = parse_ics_datetime(value)
+                    if dt_end:
+                        current_event['end_time'] = dt_end.strftime('%H:%M')
+                        current_event['end_min'] = dt_end.hour * 60 + dt_end.minute
+                
+                # UID
+                if key_part == 'UID':
+                    current_event['uid'] = value.strip()
+                
+                # SUMMARY
+                if key_part == 'SUMMARY':
+                    current_event['summary'] = unescape_ics_text(value.strip())
+                
+                # LOCATION
+                if key_part == 'LOCATION':
+                    current_event['location'] = unescape_ics_text(value.strip())
+                
+                # DESCRIPTION
+                if key_part == 'DESCRIPTION':
+                    current_event['description'] = unescape_ics_text(value.strip())
+            
+            i = j
+        else:
+            i += 1
+    
+    return events
+
+def parse_ics_datetime(ics_dt_str):
+    """
+    ICS日時文字列をdatetimeに変換（Asia/Tokyo前提）
+    対応形式:
+    - 20250101T090000 (DATE-TIME, local)
+    - 20250101T090000Z (UTC)
+    - 20250101 (DATE only)
+    """
+    try:
+        ics_dt_str = ics_dt_str.strip()
+        
+        # UTC判定
+        is_utc = ics_dt_str.endswith('Z')
+        if is_utc:
+            ics_dt_str = ics_dt_str[:-1]
+        
+        # T区切りをチェック
+        if 'T' in ics_dt_str:
+            date_part, time_part = ics_dt_str.split('T', 1)
+            if len(time_part) >= 6:
+                hour = int(time_part[0:2])
+                minute = int(time_part[2:4])
+                second = int(time_part[4:6]) if len(time_part) >= 6 else 0
+            else:
+                hour = minute = second = 0
+        else:
+            date_part = ics_dt_str
+            hour = minute = second = 0
+        
+        # 日付パース
+        if len(date_part) >= 8:
+            year = int(date_part[0:4])
+            month = int(date_part[4:6])
+            day = int(date_part[6:8])
+        else:
+            return None
+        
+        dt = datetime(year, month, day, hour, minute, second)
+        
+        # UTCの場合はAsia/Tokyoに変換
+        if is_utc:
+            dt = dt.replace(tzinfo=timezone.utc)
+            # UTCからJSTへの変換（+9時間）
+            dt = dt + timedelta(hours=9)
+            dt = dt.replace(tzinfo=None)
+        
+        return dt
+    except Exception as e:
+        print(f"Error parsing ICS datetime '{ics_dt_str}': {str(e)}")
+        return None
+
+def unescape_ics_text(text):
+    """
+    ICSテキストのエスケープを解除
+    \\ -> \
+    \\n -> \n
+    \\, -> ,
+    """
+    if not text:
+        return ''
+    text = text.replace('\\n', '\n')
+    text = text.replace('\\,', ',')
+    text = text.replace('\\\\', '\\')
+    return text
 
 # ==================== 見積もり関連の関数 ====================
 
@@ -12408,9 +12882,26 @@ def handle_chat(event, headers):
 
 def handle_ai_process(event, headers):
     """
-    AI処理のエンドポイント
+    AI処理のエンドポイント。Cognito ID トークン検証必須。
     """
     try:
+        # 認証必須: Cognito ID トークン
+        auth_header = _get_auth_header(event)
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized', 'message': 'Authorization: Bearer <id_token> が必要です'}, ensure_ascii=False)
+            }
+        id_token = auth_header.replace('Bearer ', '').strip()
+        user_info = verify_cognito_id_token(id_token)
+        if not user_info or not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized', 'message': 'トークンが無効または期限切れです'}, ensure_ascii=False)
+            }
+
         body = json.loads(event.get('body') or '{}')
         action = body.get('action')
         input_text = body.get('text', '')
@@ -12455,7 +12946,7 @@ def handle_ai_process(event, headers):
             media = {'mime_type': clean_mime, 'data': image_data}
             if not input_text: input_text = "この画像を解析してください。"
 
-        allowed_actions = {'suggest_request_form', 'suggest_estimate'}
+        allowed_actions = {'suggest_request_form', 'suggest_estimate', 'schedule_assistant'}
         if action not in allowed_actions:
             return {
                 'statusCode': 403,
@@ -12466,11 +12957,43 @@ def handle_ai_process(event, headers):
                 }, ensure_ascii=False)
             }
 
+        # schedule_assistant: 選択スケジュール・rollingDays・visible schedules を context に重複・過密・事前連絡期限・注意事項要約を返す
+        if action == 'schedule_assistant':
+            selected_schedule = body.get('selected_schedule') or body.get('selectedSchedule')
+            rolling_days = body.get('rolling_days') or body.get('rollingDays') or []
+            visible_schedules = body.get('visible_schedules') or body.get('visibleSchedules') or []
+            context_text = json.dumps({
+                'selected_schedule': selected_schedule,
+                'rolling_days': rolling_days,
+                'visible_schedules': visible_schedules
+            }, ensure_ascii=False, indent=2)
+            system_instruction = """あなたは和風の守護霊のような存在です。断定せず、静かに助言する口調で話してください。
+
+入力は selected_schedule（選択中の案件）、rolling_days（表示中の日付リスト）、visible_schedules（表示中の全案件リスト）のJSONです。
+
+以下の4項目を必ず含むJSONのみで答えてください。余計な文章は書かないこと。
+- overlaps: 重複している案件があれば簡潔に説明（配列または文字列）。なければ空配列または「なし」
+- congestion: 過密（同じ担当・同日に詰まり）があれば簡潔に説明。なければ「なし」
+- contact_deadline: 事前連絡の期限に注意が必要な案件があれば説明。なければ「なし」
+- notes_summary: 注意事項の要約（1〜3文、和風守護霊調で）。特になければ「特になし」
+- status: 状態を "normal" / "warning" / "danger" のいずれかで返す（通常/注意/危険）
+- message: 和風守護霊調の短いメッセージ（1〜2文）。断定せず、静かな助言として。
+出力はJSONのみ。"""
+            result_text = call_gemini_api(f"スケジュールcontext:\n{context_text}", system_instruction, None)
+            payload = _extract_json_payload(result_text)
+            # schedule_assistant は sales schema で検証しない
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'status': 'success', 'result': payload}, ensure_ascii=False)
+            }
+
         if action == 'suggest_request_form':
             system_instruction = """営業報告から作業依頼書の構造化JSONを抽出してください。
 出力はJSONのみ。余計な文章は書かないこと。"""
             result_text = call_gemini_api(f"解析対象:\n{input_text}", system_instruction, media)
         else:
+            # suggest_estimate
             system_instruction = """営業報告から見積に必要な情報を構造化JSONで抽出してください。
 出力はJSONのみ。余計な文章は書かないこと。"""
             result_text = call_gemini_api(f"解析対象:\n{input_text}", system_instruction, media)

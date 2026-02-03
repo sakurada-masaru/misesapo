@@ -1844,6 +1844,9 @@ function setupAiRequestSuggestion() {
   // --- Main AI Processing Function ---
   async function processAiRequest(params) {
     try {
+      const authHeaders = await getAuthHeaders();
+      if (!authHeaders) return;
+
       suggestBtn.disabled = true;
       voiceRecordBtn.disabled = true;
       statusEl.style.display = 'flex';
@@ -1851,9 +1854,7 @@ function setupAiRequestSuggestion() {
 
       const response = await fetch(`${API_BASE}/ai/process`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: authHeaders,
         body: JSON.stringify({
           action: 'suggest_request_form',
           ...params
